@@ -47,7 +47,7 @@ namespace DeploySharp.Log
         /// </summary>
         public static void InitializeDefault()
         {
-            Initialize(LogLevel.DEBUG, LogOutput.Console);
+            Initialize(LogLevel.DEBUG, LogOutput.All);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace DeploySharp.Log
         /// <param name="level">Minimum log level to output</param>
         /// <param name="output">Output targets (Console/File/All)</param>
         /// <param name="logPath">Directory path for log files (default: "Logs")</param>
-        public static void Initialize(LogLevel level, LogOutput output, string logPath = "Logs")
+        public static void Initialize(LogLevel level, LogOutput output, string logPath = "DeploySharpLogs")
         {
             lock (_lock)
             {

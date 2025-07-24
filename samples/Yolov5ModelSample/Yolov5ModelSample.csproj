@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LoggerSample\LoggerSample.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp\DeploySharp.csproj" />
   </ItemGroup>
 
 </Project>

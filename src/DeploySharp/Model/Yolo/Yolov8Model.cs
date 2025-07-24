@@ -11,40 +11,70 @@ using static OpenCvSharp.FileStorage;
 
 namespace DeploySharp.Model
 {
+    /// <summary>
+    /// Implementation of YOLOv8 model for object detection
+    /// </summary>
     public class Yolov8Model : IModel
     {
-        public Yolov8Model(ModelConfig config):base(config) { }
+        /// <summary>
+        /// Constructor that initializes with model configuration
+        /// </summary>
+        /// <param name="config">Model configuration parameters</param>
+        public Yolov8Model(ModelConfig config) : base(config) { }
+
+        /// <summary>
+        /// Main prediction method that processes input image
+        /// </summary>
+        /// <param name="img">Input image in OpenCV Mat format</param>
+        /// <returns>Detection results containing bounding boxes, class IDs and confidence scores</returns>
+        public DetResult Predict(Mat img)
+        {
+            return base.Predict(img) as DetResult;
+        }
+
+        /// <summary>
+        /// Post-processes raw model output to extract detection results
+        /// </summary>
+        /// <param name="dataTensor">Raw output tensor from model</param>
+        /// <returns>Processed detection results</returns>
         protected override BaseResult Postprocess(DataTensor dataTensor)
         {
+            // Get raw output data from model
             float[] result = (float[])dataTensor[0].Buffer;
-            // 初始化存储容器
-            List<Rect> positionBoxes = new List<Rect>();  // 矩形框
-            List<int> classIds = new List<int>();             // 类别ID
-            List<float> confidences = new List<float>();      // 置信度
 
-            int outputSize = config.OutputSizes[0][2];
-            int categNum = config.OutputSizes[0][1] - 4;
-            // 解析模型输出（8400个预测框）
+            // Initialize containers for detection results
+            List<Rect> positionBoxes = new List<Rect>();  // Bounding box coordinates
+            List<int> classIds = new List<int>();         // Detected class IDs
+            List<float> confidences = new List<float>();  // Confidence scores
+
+            // Get output dimensions from config
+            int outputSize = config.OutputSizes[0][2]; // Number of predictions (8400)
+            int categNum = config.OutputSizes[0][1] - 4;// Number of classes
+   
+
+            // Parse model output (8400 predictions)
             for (int i = 0; i < outputSize; i++)
             {
-                for (int j = 4; j < (categNum + 4); j++)  // 遍历每个类别
+                for (int j = 4; j < (categNum + 4); j++)  // Iterate through each class
                 {
                     float conf = result[outputSize * j + i];
                     int label = j - 4;
-                    if (conf > 0.2)  // 置信度阈值过滤
+                    if (conf > 0.2)  // Confidence threshold filtering
                     {
-                        // 解析中心点坐标、宽高和旋转角度
+                        // Parse center coordinates, width and height
                         float cx = result[outputSize * 0 + i];
                         float cy = result[outputSize * 1 + i];
                         float ow = result[outputSize * 2 + i];
                         float oh = result[outputSize * 3 + i];
+
+                        // Convert to absolute coordinates
                         int x = (int)((cx - 0.5 * ow) * scales.X);
                         int y = (int)((cy - 0.5 * oh) * scales.X);
                         int width = (int)(ow * scales.X);
                         int height = (int)(oh * scales.X);
                         Rect box = new Rect(x, y, width, height);
 
-                        // 存储检测结果
+                        // Store detection results
                         positionBoxes.Add(box);
                         classIds.Add(label);
                         confidences.Add(conf);
@@ -52,35 +82,43 @@ namespace DeploySharp.Model
                 }
             }
 
-            // 执行非极大值抑制（NMS）
+            // Apply Non-Maximum Suppression (NMS) to filter overlapping boxes
             int[] indexes = new int[positionBoxes.Count];
             CvDnn.NMSBoxes(positionBoxes, confidences, config.ConfidenceThreshold, config.NmsThreshold, out indexes);
 
-            // 封装最终结果
+            // Package final results
             DetResult results = new DetResult();
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
-
                 results.Add(classIds[index], confidences[index], positionBoxes[index]);
             }
             return results;
-
         }
 
+        /// <summary>
+        /// Preprocesses input image for model inference
+        /// </summary>
+        /// <param name="img">Input image in OpenCV Mat format</param>
+        /// <returns>Processed tensor ready for model input</returns>
         protected override DataTensor Preprocess(Mat img)
         {
-            int inputSize = config.InputSizes[0][2];
-            // 创建临时Mat对象并转换颜色空间（BGR→RGB）
+            int inputSize = config.InputSizes[0][2]; ;  // Model input size
+
+            // Convert color space (BGR→RGB)
             Mat mat = new Mat();
             Cv2.CvtColor(img, mat, ColorConversionCodes.BGR2RGB);
 
+            // Resize image with letterbox (maintain aspect ratio)
             Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.X);
             scales.Y = scales.X;
+
+            // Normalize and permute image data
             mat = Normalize.Run(mat1, true);
             float[] array = Permute.Run(mat1);
-            DataTensor dataTensors = new DataTensor();
 
+            // Create input tensor
+            DataTensor dataTensors = new DataTensor();
             dataTensors.AddNode(config.InputNames[0],
                 0,
                 TensorType.Input,
