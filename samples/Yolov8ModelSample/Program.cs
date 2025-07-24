@@ -10,14 +10,14 @@ namespace Yolov8ModelSample
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-            Yolov8Config config = new Yolov8Config(@"E:\Model\Yolo\yolov8s.onnx");
+            Console.WriteLine("Hello, World,This is a test!");
+            Yolov8Config config = new Yolov8Config(@"C:\Users\G56827\Desktop\models\detect\yolov8n.onnx");
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             config.SetTargetDeviceType(DeviceType.CPU);
             config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.OpenVINO);
 
             Yolov8Model yolov8Model = new Yolov8Model(config);
-            Mat img = Cv2.ImRead(@"E:\Data\image\bus.jpg");
+            Mat img = Cv2.ImRead(@"C:\Users\G56827\Desktop\models\detect\test.jpg");
             DetResult result = (DetResult)yolov8Model.Predict(img);
             Stopwatch sw = Stopwatch.StartNew();
             result = (DetResult)yolov8Model.Predict(img);
