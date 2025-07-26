@@ -1,6 +1,7 @@
 ﻿using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,59 +9,47 @@ using System.Threading.Tasks;
 namespace DeploySharp.Data
 {
     /// <summary>
-    /// Object detection result data.
+    /// Object segmentation result data.
     /// </summary>
-    public class ObbData : IResultData
+    public class SegData : DetData, IResultData
     {
         /// <summary>
-        /// Identification result class index.
+        /// Split Region
         /// </summary>
-        public int index;
-        /// <summary>
-        /// Identification result class lable.
-        /// </summary>
-        public string lable;
-        /// <summary>
-        /// Confidence value.
-        /// </summary>
-        public float score;
-        /// <summary>
-        /// Prediction RotatedRect.
-        /// </summary>
-        public RotatedRect box;
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ObbData() { }
+        public Mat mask;
+        public SegData() { }
         /// <summary>
         /// Parameter construction.
         /// </summary>
-        /// <param name="index">Identification result number.</param>
-        /// <param name="lable">Identification result label.</param>
-        /// <param name="score">Identification result score.</param>
-        /// <param name="box">Identification result box.</param>
-        public ObbData(int index, string lable, float score, RotatedRect box)
+        /// <param name="index">Target segmentation recognition result  number.</param>
+        /// <param name="lable">Target segmentation recognition result  label.</param>
+        /// <param name="score">Target segmentation recognition result  score.</param>
+        /// <param name="box">Target segmentation recognition result  box.</param>
+        /// <param name="mask">Target segmentation recognition result split region.</param>
+        public SegData(int index, string lable, float score, Rect box, Mat mask)
         {
             this.index = index;
             this.lable = lable;
             this.score = score;
             this.box = box;
+            this.mask = mask;
         }
         /// <summary>
         /// Parameter construction.
         /// </summary>
-        /// <param name="index">Identification result number.</param>
-        /// <param name="score">Identification result score.</param>
-        /// <param name="box">Identification result box.</param>
-        public ObbData(int index, float score, RotatedRect box)
-            : this(index, index.ToString(), score, box)
+        /// <param name="index">Target segmentation recognition result  number.</param>
+        /// <param name="score">Target segmentation recognition result  score.</param>
+        /// <param name="box">Target segmentation recognition result  box.</param>
+        /// <param name="mask">Target segmentation recognition result split region.</param>
+        public SegData(int index, float score, Rect box, Mat mask)
+            : this(index, index.ToString(), score, box, mask)
         { }
         /// <summary>
         /// Update lable.
         /// </summary>
         /// <param name="lables">Lable array.</param>
         /// <returns>DetData class.</returns>
-        public ObbData UpdateLable(List<string> lables)
+        public SegData UpdateLable(List<string> lables)
         {
             this.lable = lables[this.index];
             return this;
@@ -70,7 +59,7 @@ namespace DeploySharp.Data
         /// </summary>
         /// <param name="lables">Lable array.</param>
         /// <returns>DetData class.</returns>
-        public ObbData UpdateLable(string[] lables)
+        public SegData UpdateLable(string[] lables)
         {
             this.lable = lables[this.index];
             return this;
@@ -79,7 +68,7 @@ namespace DeploySharp.Data
         /// Converts the numeric value of this instance to its equivalent string representation.
         /// </summary>
         /// <param name="format">A numeric format string.</param>
-        /// <returns>DetData string.</returns>
+        /// <returns>SegData string.</returns>
         public string ToString(string format = "0.00")
         {
             string msg = "";
@@ -91,59 +80,35 @@ namespace DeploySharp.Data
             return msg;
         }
     };
-
     /// <summary>
-    /// Object detection result class.
+    /// Object segmentation result class.
     /// </summary>
-    public class ObbResult : Result<ObbData>
+    public class SegResult : Result<SegData>
     {
         /// <summary>
         /// Add data.
         /// </summary>
-        /// <param name="index">Identification result number.</param>
-        /// <param name="score">Identification result score.</param>
-        /// <param name="box">Identification result box.</param>
-        public override void Add(int index, float score, RotatedRect box)
+        /// <param name="index">Target segmentation recognition result  number.</param>
+        /// <param name="score">Target segmentation recognition result  score.</param>
+        /// <param name="box">Target segmentation recognition result  box.</param>
+        /// <param name="mask">Target segmentation recognition result split region.</param>
+        public void Add(int index, float score, Rect box, Mat mask)
         {
-            ObbData data = new ObbData(index, score, box);
+            SegData data = new SegData(index, score, box, mask);
             this.Add(data);
         }
         /// <summary>
         /// Add data.
         /// </summary>
-        /// <param name="index">Identification result number.</param>
-        /// <param name="lable">Identification result label.</param>
-        /// <param name="score">Identification result score.</param>
-        /// <param name="box">Identification result box.</param>
-        public override void Add(int index, string lable, float score, RotatedRect box)
+        /// <param name="index">Target segmentation recognition result  number.</param>
+        /// <param name="lable">Target segmentation recognition result  label.</param>
+        /// <param name="score">Target segmentation recognition result  score.</param>
+        /// <param name="box">Target segmentation recognition result  box.</param>
+        /// <param name="mask">Target segmentation recognition result split region.</param>
+        public void Add(int index, string lable, float score, Rect box, Mat mask)
         {
-            ObbData data = new ObbData(index, lable, score, box);
+            SegData data = new SegData(index, lable, score, box, mask);
             this.Add(data);
-        }
-
-        /// <summary>
-        /// Update lable.
-        /// </summary>
-        /// <param name="lables">Lable array.</param>
-        /// <returns>DetData class.</returns>
-        public override void UpdateLable(List<string> lables)
-        {
-            foreach (ObbData data in this.datas)
-            {
-                data.UpdateLable(lables);
-            }
-        }
-        /// <summary>
-        /// Update lable.
-        /// </summary>
-        /// <param name="lables">Lable array.</param>
-        /// <returns>DetData class.</returns>
-        public override void UpdateLable(string[] lables)
-        {
-            foreach (ObbData data in this.datas)
-            {
-                data.UpdateLable(lables);
-            }
         }
         /// <summary>
         /// Sorts the index elements in the entire inference results using the default comparer.
@@ -173,10 +138,33 @@ namespace DeploySharp.Data
         /// <param name="flag"></param>
         public override void SortByBbox(bool flag)
         {
-            datas.OrderBy(t => t.box.Center.X).ThenBy(t => t.box.Center.Y).ToList();
+            datas.OrderBy(t => t.box.Location.X).ThenBy(t => t.box.Location.Y).ToList();
 
         }
-
+        /// <summary>
+        /// Update lable.
+        /// </summary>
+        /// <param name="lables">Lable array.</param>
+        /// <returns>DetData class.</returns>
+        public override void UpdateLable(List<string> lables)
+        {
+            foreach (SegData data in this.datas)
+            {
+                data.UpdateLable(lables);
+            }
+        }
+        /// <summary>
+        /// Update lable.
+        /// </summary>
+        /// <param name="lables">Lable array.</param>
+        /// <returns>DetData class.</returns>
+        public override void UpdateLable(string[] lables)
+        {
+            foreach (SegData data in this.datas)
+            {
+                data.UpdateLable(lables);
+            }
+        }
         /// <summary>
         /// Print the inference results.
         /// </summary>
@@ -184,7 +172,7 @@ namespace DeploySharp.Data
         public override void Print(string format = "0.00")
         {
             INFO("Detection results:");
-            foreach (ObbData data in this.datas)
+            foreach (SegData data in this.datas)
             {
                 INFO(data.ToString(format));
             }

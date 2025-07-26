@@ -223,7 +223,7 @@ namespace DeploySharp.Engine
                     var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
 
 
-                    if (outputTensor.get_element_type().get_type() == ElementType.F16)
+                    if (outputTensor.get_element_type().get_type() == ElementType.F16 || outputTensor.get_element_type().get_type() == ElementType.F32)
                     {
                         float[] data = outputTensor.get_data<float>((int)outputTensor.get_size());
                         dataTensor.AddNode(modelConfig.OutputNames[i],

@@ -1,4 +1,4 @@
-﻿using OpenCvSharp;
+﻿
 using System;
 using System.Collections.Generic;
 
@@ -22,110 +22,110 @@ namespace DeploySharp.Data
     /// </summary>
     public class BaseResult
     {
-        /// <summary>
-        /// Adds a detection result with index, score, bounding box and mask
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="mask">Segmentation mask</param>
-        public virtual void Add(int index, float score, Rect box, Mat mask) { }
-        /// <summary>
-        /// Adds a labeled detection result with index, score, bounding box and mask
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="mask">Segmentation mask</param>
-        public virtual void Add(int index, string lable, float score, Rect box, Mat mask) { }
+        ///// <summary>
+        ///// Adds a detection result with index, score, bounding box and mask
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="mask">Segmentation mask</param>
+        //public virtual void Add(int index, float score, Rect box, Mat mask) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with index, score, bounding box and mask
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="mask">Segmentation mask</param>
+        //public virtual void Add(int index, string lable, float score, Rect box, Mat mask) { }
 
-        /// <summary>
-        /// Adds a labeled detection result with pose points
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="point">Pose keypoints</param>
-        public virtual void Add(int index, string lable, float score, Rect box, PosePoint point) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with pose points
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="point">Pose keypoints</param>
+        //public virtual void Add(int index, string lable, float score, Rect box, PosePoint point) { }
 
-        /// <summary>
-        /// Adds a labeled detection result with pose data and scale
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="poseData">Pose data array</param>
-        /// <param name="scales">Scale factor</param>
-        public virtual void Add(int index, string lable, float score, Rect box, float[] poseData, float scales) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with pose data and scale
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="poseData">Pose data array</param>
+        ///// <param name="scales">Scale factor</param>
+        //public virtual void Add(int index, string lable, float score, Rect box, float[] poseData, float scales) { }
 
-        /// <summary>
-        /// Adds a detection result with pose points (without index)
-        /// </summary>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="point">Pose keypoints</param>
-        public virtual void Add(float score, Rect box, PosePoint point) { }
+        ///// <summary>
+        ///// Adds a detection result with pose points (without index)
+        ///// </summary>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="point">Pose keypoints</param>
+        //public virtual void Add(float score, Rect box, PosePoint point) { }
 
-        /// <summary>
-        /// Adds a detection result with pose data and scale (without index)
-        /// </summary>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        /// <param name="poseData">Pose data array</param>
-        /// <param name="scales">Scale factor</param>
-        public virtual void Add(float score, Rect box, float[] poseData, float scales) { }
+        ///// <summary>
+        ///// Adds a detection result with pose data and scale (without index)
+        ///// </summary>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        ///// <param name="poseData">Pose data array</param>
+        ///// <param name="scales">Scale factor</param>
+        //public virtual void Add(float score, Rect box, float[] poseData, float scales) { }
 
-        /// <summary>
-        /// Adds a basic detection result with index, score and bounding box
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        public virtual void Add(int index, float score, Rect box) { }
+        ///// <summary>
+        ///// Adds a basic detection result with index, score and bounding box
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        //public virtual void Add(int index, float score, Rect box) { }
 
-        /// <summary>
-        /// Adds a labeled detection result with index, score and bounding box
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Bounding rectangle</param>
-        public virtual void Add(int index, string lable, float score, Rect box) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with index, score and bounding box
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Bounding rectangle</param>
+        //public virtual void Add(int index, string lable, float score, Rect box) { }
 
-        /// <summary>
-        /// Adds a detection result with rotated bounding box
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Rotated bounding rectangle</param>
-        public virtual void Add(int index, float score, RotatedRect box) { }
+        ///// <summary>
+        ///// Adds a detection result with rotated bounding box
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Rotated bounding rectangle</param>
+        //public virtual void Add(int index, float score, RotatedRect box) { }
 
-        /// <summary>
-        /// Adds a labeled detection result with rotated bounding box
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        /// <param name="box">Rotated bounding rectangle</param>
-        public virtual void Add(int index, string lable, float score, RotatedRect box) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with rotated bounding box
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        ///// <param name="box">Rotated bounding rectangle</param>
+        //public virtual void Add(int index, string lable, float score, RotatedRect box) { }
 
-        /// <summary>
-        /// Adds a basic detection result with index and score only
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="score">Confidence score</param>
-        public virtual void Add(int index, float score) { }
+        ///// <summary>
+        ///// Adds a basic detection result with index and score only
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="score">Confidence score</param>
+        //public virtual void Add(int index, float score) { }
 
-        /// <summary>
-        /// Adds a labeled detection result with index and score only
-        /// </summary>
-        /// <param name="index">Detection index</param>
-        /// <param name="lable">Class label</param>
-        /// <param name="score">Confidence score</param>
-        public virtual void Add(int index, string lable, float score) { }
+        ///// <summary>
+        ///// Adds a labeled detection result with index and score only
+        ///// </summary>
+        ///// <param name="index">Detection index</param>
+        ///// <param name="lable">Class label</param>
+        ///// <param name="score">Confidence score</param>
+        //public virtual void Add(int index, string lable, float score) { }
 
         /// <summary>
         /// Sorts results by index (ascending by default)

@@ -11,9 +11,9 @@ using System.Runtime.InteropServices;
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// YOLOv8 segmentation model implementation for instance segmentation tasks
+    /// YOLOv5 segmentation model implementation for instance segmentation tasks
     /// </summary>
-    public class Yolov8SegModel : IModel
+    public class Yolov5SegModel : IModel
     {
         // Stores original image dimensions (width, height)
         protected List<int> m_image_size = new List<int>();
@@ -22,7 +22,7 @@ namespace DeploySharp.Model
         /// Constructor that initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public Yolov8SegModel(ModelConfig config) : base(config) { }
+        public Yolov5SegModel(ModelConfig config) : base(config) { }
 
         /// <summary>
         /// Main prediction method that processes input image
@@ -50,21 +50,22 @@ namespace DeploySharp.Model
         /// </summary>
         /// <param name="img">Input image in OpenCV Mat format</param>
         /// <returns>Processed tensor ready for model input</returns>
-        protected override DataTensor Preprocess(Mat img)
+        protected override DataTensor Preprocess(object img)
         {
+            Mat img1 = img as Mat;
             // Store original image dimensions
-            m_image_size = new List<int> { (int)img.Size().Width, (int)img.Size().Height };
+            m_image_size = new List<int> { (int)img1.Size().Width, (int)img1.Size().Height };
 
             // Get model input size from configuration
             int inputSize = config.InputSizes[0][2];
 
             // Create temporary Mat and convert color space (BGR→RGB)
             Mat mat = new Mat();
-            Cv2.CvtColor(img, mat, ColorConversionCodes.BGR2RGB);
+            Cv2.CvtColor(img1, mat, ColorConversionCodes.BGR2RGB);
 
             // Resize image with letterbox (maintain aspect ratio)
-            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.X);
-            scales.Y = scales.X;
+            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.First);
+            scales.Second = scales.First;
 
             // Normalize pixel values and permute dimensions
             mat = Normalize.Run(mat1, true);
@@ -92,49 +93,41 @@ namespace DeploySharp.Model
             List<int> classIds = new List<int>();             // 类别ID
             List<float> confidences = new List<float>();      // 置信度
             List<Mat> masks = new List<Mat>();
-       
-
-            // Get output dimensions from config
-            int outputSize = config.OutputSizes[0][2]; // Number of predictions (8400)
             int maskLen = dataTensor[1].Shape[1];
-            int categNum = config.OutputSizes[0][1] - 4 - maskLen;// Number of classes
-     
-
-            // Parse model output (8400 predictions)
+            int outputSize = config.OutputSizes[0][1]; // 25200
+            int outputSize1 = config.OutputSizes[0][2];  // 117
+            // 解析模型输出（8400个预测框）
             for (int i = 0; i < outputSize; i++)
             {
-                for (int j = 4; j < (categNum + 4); j++)  // Iterate through each class
+                float conf = result0[outputSize1 * i + 4];
+                if (conf > 0.25)  // 置信度阈值过滤
                 {
-                    float conf = result0[outputSize * j + i];
-                    int label = j - 4;
-                    if (conf > 0.2)  // Confidence threshold filtering
+                    for (int j = 5; j < outputSize1 - maskLen; j++)  // 遍历每个类别
                     {
-                        // Parse center coordinates, width and height
-                        float cx = result0[outputSize * 0 + i];
-                        float cy = result0[outputSize * 1 + i];
-                        float ow = result0[outputSize * 2 + i];
-                        float oh = result0[outputSize * 3 + i];
-
-                        // Convert to absolute coordinates
-                        int x = (int)((cx - 0.5 * ow) * scales.X);
-                        int y = (int)((cy - 0.5 * oh) * scales.X);
-                        int width = (int)(ow * scales.X);
-                        int height = (int)(oh * scales.X);
-                        Rect box = new Rect(x, y, width, height);
-
-                        // Store detection results
-                        positionBoxes.Add(box);
-                        classIds.Add(label);
-                        confidences.Add(conf);
-                        
-                        float[] data = new float[maskLen];
-                        for (int l = categNum + 4; l < config.OutputSizes[0][1]; ++l) 
+                        float conf1 = result0[outputSize1 * i + j];
+                        int label = j - 5;
+                        if (conf1 > 0.2)  // 置信度阈值过滤
                         {
-                            data[l- categNum-4] = result0[outputSize * l + i];
+                            // 解析中心点坐标、宽高和旋转角度
+                            float cx = result0[outputSize1 * i + 0];
+                            float cy = result0[outputSize1 * i + 1];
+                            float ow = result0[outputSize1 * i + 2];
+                            float oh = result0[outputSize1 * i + 3];
+                            int x = (int)((cx - 0.5 * ow) * scales.First);
+                            int y = (int)((cy - 0.5 * oh) * scales.First);
+                            int width = (int)(ow * scales.First);
+                            int height = (int)(oh * scales.First);
+                            Rect box = new Rect(x, y, width, height);
+
+                            // 存储检测结果
+                            positionBoxes.Add(box);
+                            classIds.Add(label);
+                            confidences.Add(conf1);
+                            masks.Add(Mat.FromPixelData(1, maskLen, MatType.CV_32FC1, Marshal.UnsafeAddrOfPinnedArrayElement(result0, (outputSize1 * i + outputSize1 - maskLen))));
                         }
-                        masks.Add(Mat.FromPixelData(1, dataTensor[1].Shape[1], MatType.CV_32FC1, data));
                     }
                 }
+
             }
 
             // 执行非极大值抑制（NMS）
@@ -167,10 +160,10 @@ namespace DeploySharp.Model
                 //Console.WriteLine("m1.size = {0}", m1.Size());
 
                 // Split size after scaling
-                int mx1 = Math.Max(0, (int)((box_x1 / scales.X) * 0.25));
-                int mx2 = Math.Min(dataTensor[1].Shape[2], (int)((box_x2 / scales.X) * 0.25));
-                int my1 = Math.Max(0, (int)((box_y1 / scales.X) * 0.25));
-                int my2 = Math.Min(dataTensor[1].Shape[2], (int)((box_y2 / scales.X) * 0.25));
+                int mx1 = Math.Max(0, (int)((box_x1 / scales.First) * 0.25));
+                int mx2 = Math.Min(dataTensor[1].Shape[2], (int)((box_x2 / scales.First) * 0.25));
+                int my1 = Math.Max(0, (int)((box_y1 / scales.First) * 0.25));
+                int my2 = Math.Min(dataTensor[1].Shape[2], (int)((box_y2 / scales.First) * 0.25));
                 // Crop Split Region
                 Mat mask_roi = new Mat(reshape_mask, new OpenCvSharp.Range(my1, my2), new OpenCvSharp.Range(mx1, mx2));
                 // Convert the segmented area to the actual size of the image

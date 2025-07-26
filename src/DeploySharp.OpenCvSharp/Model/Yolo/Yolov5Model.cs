@@ -72,10 +72,10 @@ namespace DeploySharp.Model
                             float oh = result[outputSize1 * i + 3]; // Height
 
                             // Convert to absolute coordinates
-                            int x = (int)((cx - 0.5 * ow) * scales.X);
-                            int y = (int)((cy - 0.5 * oh) * scales.X);
-                            int width = (int)(ow * scales.X);
-                            int height = (int)(oh * scales.X);
+                            int x = (int)((cx - 0.5 * ow) * scales.First);
+                            int y = (int)((cy - 0.5 * oh) * scales.First);
+                            int width = (int)(ow * scales.First);
+                            int height = (int)(oh * scales.First);
                             Rect box = new Rect(x, y, width, height);
 
                             // Store detection components
@@ -109,17 +109,17 @@ namespace DeploySharp.Model
         /// </summary>
         /// <param name="img">Input image in OpenCV Mat format</param>
         /// <returns>Processed tensor ready for model input</returns>
-        protected override DataTensor Preprocess(Mat img)
+        protected override DataTensor Preprocess(object img)
         {
             int inputSize = config.InputSizes[0][2]; ; // Model input dimension
 
             // Convert BGR to RGB color space
             Mat mat = new Mat();
-            Cv2.CvtColor(img, mat, ColorConversionCodes.BGR2RGB);
+            Cv2.CvtColor(img as Mat, mat, ColorConversionCodes.BGR2RGB);
 
             // Resize with letterboxing (maintain aspect ratio)
-            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.X);
-            scales.Y = scales.X;
+            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.First);
+            scales.Second = scales.First;
 
             // Normalize pixel values (0-255 to 0-1)
             mat = Normalize.Run(mat1, true);

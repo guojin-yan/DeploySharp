@@ -187,7 +187,7 @@ namespace DeploySharp.Data
         /// <param name="score">Confidence score</param>
         /// <param name="box">Bounding box</param>
         /// <param name="point">Pose keypoints</param>
-        public override void Add(int index, string lable, float score, Rect box, PosePoint point)
+        public void Add(int index, string lable, float score, Rect box, PosePoint point)
         {
             PoseData data = new PoseData(index, lable, score, box, point);
             this.Add(data);
@@ -202,7 +202,7 @@ namespace DeploySharp.Data
         /// <param name="box">Bounding box</param>
         /// <param name="pose_data">Pose data array</param>
         /// <param name="scales">Scale factor for pose data</param>
-        public override void Add(int index, string lable, float score, Rect box, float[] pose_data, float scales)
+        public  void Add(int index, string lable, float score, Rect box, float[] pose_data, float scales)
         {
             PoseData data = new PoseData(index, lable, score, box, pose_data, scales);
             this.Add(data);
@@ -214,7 +214,7 @@ namespace DeploySharp.Data
         /// <param name="score">Confidence score</param>
         /// <param name="box">Bounding box</param>
         /// <param name="point">Pose keypoints</param>
-        public override void Add(float score, Rect box, PosePoint point)
+        public void Add(float score, Rect box, PosePoint point)
         {
             PoseData data = new PoseData(score, box, point);
             this.Add(data);
@@ -227,7 +227,7 @@ namespace DeploySharp.Data
         /// <param name="box">Bounding box</param>
         /// <param name="pose_data">Pose data array</param>
         /// <param name="scales">Scale factor for pose data</param>
-        public override void Add(float score, Rect box, float[] pose_data, float scales)
+        public void Add(float score, Rect box, float[] pose_data, float scales)
         {
             PoseData data = new PoseData(score, box, pose_data, scales);
             this.Add(data);

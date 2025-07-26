@@ -1,35 +1,30 @@
-﻿using DeploySharp.Data;
+﻿using OpenCvSharp.Dnn;
 using OpenCvSharp;
-using OpenCvSharp.Dnn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenCvSharp.FileStorage;
+using DeploySharp.Data;
 
 namespace DeploySharp.Model
 {
-    /// <summary>
-    /// Implementation of YOLOv8 model for object detection
-    /// </summary>
-    public class Yolov8Model : IModel
+    public class Yolov8ObbModel : IModel
     {
         /// <summary>
         /// Constructor that initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public Yolov8Model(ModelConfig config) : base(config) { }
+        public Yolov8ObbModel(ModelConfig config) : base(config) { }
 
         /// <summary>
         /// Main prediction method that processes input image
         /// </summary>
         /// <param name="img">Input image in OpenCV Mat format</param>
         /// <returns>Detection results containing bounding boxes, class IDs and confidence scores</returns>
-        public DetResult Predict(Mat img)
+        public ObbResult Predict(Mat img)
         {
-            return base.Predict(img) as DetResult;
+            return base.Predict(img) as ObbResult;
         }
 
         /// <summary>
@@ -42,52 +37,52 @@ namespace DeploySharp.Model
             // Get raw output data from model
             float[] result = (float[])dataTensor[0].Buffer;
 
-            // Initialize containers for detection results
-            List<Rect> positionBoxes = new List<Rect>();  // Bounding box coordinates
-            List<int> classIds = new List<int>();         // Detected class IDs
-            List<float> confidences = new List<float>();  // Confidence scores
-
-            // Get output dimensions from config
+            // 初始化存储容器
+            List<RotatedRect> positionBoxes = new List<RotatedRect>();  // 矩形框
+            List<int> classIds = new List<int>();             // 类别ID
+            List<float> confidences = new List<float>();      // 置信度
+            List<float> rotations = new List<float>();        // 旋转角度
+                                                              // Get output dimensions from config
             int outputSize = config.OutputSizes[0][2]; // Number of predictions (8400)
-            int categNum = config.OutputSizes[0][1] - 4;// Number of classes
-   
-
-            // Parse model output (8400 predictions)
+            int categNum = config.OutputSizes[0][1] - 5;// Number of classes
+            // 解析模型输出（8400个预测框）
             for (int i = 0; i < outputSize; i++)
             {
-                for (int j = 4; j < (categNum + 4); j++)  // Iterate through each class
+                for (int j = 4; j < (categNum + 4); j++)  // 遍历每个类别
                 {
                     float conf = result[outputSize * j + i];
                     int label = j - 4;
-                    if (conf > 0.2)  // Confidence threshold filtering
+                    if (conf > 0.2)  // 置信度阈值过滤
                     {
-                        // Parse center coordinates, width and height
+                        // 解析中心点坐标、宽高和旋转角度
                         float cx = result[outputSize * 0 + i];
                         float cy = result[outputSize * 1 + i];
                         float ow = result[outputSize * 2 + i];
                         float oh = result[outputSize * 3 + i];
+                        float rotation = result[outputSize * (categNum + 4) + i];
 
-                        // Convert to absolute coordinates
-                        int x = (int)((cx - 0.5 * ow) * scales.X);
-                        int y = (int)((cy - 0.5 * oh) * scales.X);
-                        int width = (int)(ow * scales.X);
-                        int height = (int)(oh * scales.X);
-                        Rect box = new Rect(x, y, width, height);
+                        // 创建旋转矩形框（考虑预处理时的缩放）
+                        RotatedRect box = new RotatedRect(
+                            new Point2f(cx * scales.First, cy * scales.First),
+                            new Size2f(ow * scales.First, oh * scales.First),
+                            (float)(rotation * 180.0 / Math.PI));
 
-                        // Store detection results
+                        // 存储检测结果
                         positionBoxes.Add(box);
                         classIds.Add(label);
                         confidences.Add(conf);
+                        rotations.Add(rotation);
                     }
                 }
             }
 
-            // Apply Non-Maximum Suppression (NMS) to filter overlapping boxes
+            // 执行非极大值抑制（NMS）
             int[] indexes = new int[positionBoxes.Count];
-            CvDnn.NMSBoxes(positionBoxes, confidences, config.ConfidenceThreshold, config.NmsThreshold, out indexes);
+            CvDnn.NMSBoxes(positionBoxes, confidences, 0.5f, 0.3f, out indexes);
+
 
             // Package final results
-            DetResult results = new DetResult();
+            ObbResult results = new ObbResult();
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
@@ -101,17 +96,17 @@ namespace DeploySharp.Model
         /// </summary>
         /// <param name="img">Input image in OpenCV Mat format</param>
         /// <returns>Processed tensor ready for model input</returns>
-        protected override DataTensor Preprocess(Mat img)
+        protected override DataTensor Preprocess(object img)
         {
             int inputSize = config.InputSizes[0][2]; ;  // Model input size
 
             // Convert color space (BGR→RGB)
             Mat mat = new Mat();
-            Cv2.CvtColor(img, mat, ColorConversionCodes.BGR2RGB);
+            Cv2.CvtColor(img as Mat, mat, ColorConversionCodes.BGR2RGB);
 
             // Resize image with letterbox (maintain aspect ratio)
-            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.X);
-            scales.Y = scales.X;
+            Mat mat1 = Resize.LetterboxImg(mat, inputSize, out scales.First);
+            scales.Second = scales.First;
 
             // Normalize and permute image data
             mat = Normalize.Run(mat1, true);

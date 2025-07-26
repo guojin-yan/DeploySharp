@@ -11,13 +11,13 @@ namespace Yolov5SegModelSample
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World!");
-            Yolov5SegConfig config = new Yolov5SegConfig(@"E:\Model\Yolo\yolov5s-seg.onnx");
+            Yolov5SegConfig config = new Yolov5SegConfig(@"E:\Model\Yolo\yolov5s-seg-1.onnx");
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             config.SetTargetDeviceType(DeviceType.CPU);
             //config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.OpenVINO);
 
             Yolov5SegModel yolov5Model = new Yolov5SegModel(config);
-            Mat img = Cv2.ImRead(@"E:\Data\image\bus.jpg");
+            Mat img = Cv2.ImRead(@"E:\Data\image\demo_12.jpg");
             SegResult result = (SegResult)yolov5Model.Predict(img);
             Stopwatch sw = Stopwatch.StartNew();
             result = (SegResult)yolov5Model.Predict(img);

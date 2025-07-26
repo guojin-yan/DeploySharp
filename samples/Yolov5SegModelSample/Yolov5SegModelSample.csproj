@@ -12,6 +12,6 @@
     <PackageReference Include="OpenVINO.runtime.win" Version="2025.1.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DeploySharp\DeploySharp.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.OpenCvSharp\DeploySharp.OpenCvSharp.csproj" />
   </ItemGroup>
 </Project>

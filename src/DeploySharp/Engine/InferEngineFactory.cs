@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Engine
 {
-    internal class InferEngineFactory
+    public class InferEngineFactory
     {
         public static IModelInferEngine Create(InferenceBackend backend)
         {

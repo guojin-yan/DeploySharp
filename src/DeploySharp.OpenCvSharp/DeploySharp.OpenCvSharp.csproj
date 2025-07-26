@@ -5,13 +5,13 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <LangVersion>12.0</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>DeploySharp</PackageId>
+    <PackageId>DeploySharp.OpenCvSharp</PackageId>
     <!--Set NuGet Message-->
-    <Title>DeploySharp</Title>
+    <Title>DeploySharp.OpenCvSharp</Title>
     <Version>0.0.1</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
-    <Product>DeploySharp</Product>
+    <Product>DeploySharp.OpenCvSharp</Product>
     <Description>
       、
     </Description>
@@ -23,8 +23,8 @@
     <!--PackageIcon>logo.png</PackageIcon-->
     <!--PackageReadmeFile>README.md</PackageReadmeFile-->
     <PackageReleaseNotes></PackageReleaseNotes>
-    <RootNamespace>DeploySharp</RootNamespace>
-    <AssemblyName>DeploySharp</AssemblyName>
+    <RootNamespace>DeploySharp.OpenCvSharp</RootNamespace>
+    <AssemblyName>DeploySharp.OpenCvSharp</AssemblyName>
     <PackageTags>Model-Deploy;OpenVINO;CSharp;C#-API;ONNX</PackageTags>
     <!--PackageLicenseFile>LICENSE.txt</PackageLicenseFile-->
     <!--PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance-->
@@ -33,7 +33,13 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="3.1.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
+    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
     <PackageReference Include="OpenVINO.CSharp.API" Version="2025.1.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp\DeploySharp.csproj" />
+  </ItemGroup>
+
 
 </Project>

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DeploySharp\DeploySharp.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.OpenCvSharp\DeploySharp.OpenCvSharp.csproj" />
   </ItemGroup>
 
 </Project>
