@@ -92,18 +92,17 @@ namespace DeploySharp.Log
                 // Configure file appender if File output is enabled
                 if (output.HasFlag(LogOutput.File))
                 {
-
-                    Directory.CreateDirectory((logPath));
+                    Directory.CreateDirectory(logPath);
 
                     var fileAppender = new RollingFileAppender
                     {
                         Name = "ProjectMainLoggerAppender",
-                        File = (logPath)+"/",
+                        File = Path.Combine(logPath, "DeploySharp.log"),
                         AppendToFile = true,
                         RollingStyle = RollingFileAppender.RollingMode.Composite,
                         MaxSizeRollBackups = 10,
                         MaximumFileSize = "10MB",
-                        DatePattern = "'DeploySharp_'yyyy-MM'.log'",
+                        DatePattern = "'_'yyyy-MM",
                         LockingModel = new FileAppender.MinimalLock(),
                         Layout = new CustomPatternLayout
                         {
@@ -112,17 +111,12 @@ namespace DeploySharp.Log
                         PreserveLogFileNameExtension = true,
                         ImmediateFlush = true,
                         StaticLogFileName = false
-
                     };
                     ((PatternLayout)fileAppender.Layout).ActivateOptions();
                     fileAppender.ActivateOptions();
-
-
                     defaultLogger.AddAppender(fileAppender);
-                  
-
-                   
                 }
+
                 defaultLogger.Level = ConvertLevel(level);
                 defaultLogger.Additivity = false;
                 hierarchy.Configured = true;

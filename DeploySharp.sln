@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov5ModelSample", "sample
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov5SegModelSample", "samples\Yolov5SegModelSample\Yolov5SegModelSample.csproj", "{C42500F2-9E48-4CBF-BDE7-62D019D6A9B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov8SegModelSample", "samples\Yolov8SegModelSample\Yolov8SegModelSample.csproj", "{F5D14F3A-01D3-46AA-BB30-B68E3931F098}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{C42500F2-9E48-4CBF-BDE7-62D019D6A9B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C42500F2-9E48-4CBF-BDE7-62D019D6A9B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C42500F2-9E48-4CBF-BDE7-62D019D6A9B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5D14F3A-01D3-46AA-BB30-B68E3931F098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D14F3A-01D3-46AA-BB30-B68E3931F098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D14F3A-01D3-46AA-BB30-B68E3931F098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D14F3A-01D3-46AA-BB30-B68E3931F098}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,5 +68,6 @@ Global
 		{A2546E2F-B952-4D76-8DF8-B3D7071DC495} = {251AE010-41FC-4970-9920-AF5793B0B690}
 		{746D0C27-6857-424C-8663-FFB1A351CE7A} = {251AE010-41FC-4970-9920-AF5793B0B690}
 		{C42500F2-9E48-4CBF-BDE7-62D019D6A9B8} = {251AE010-41FC-4970-9920-AF5793B0B690}
+		{F5D14F3A-01D3-46AA-BB30-B68E3931F098} = {251AE010-41FC-4970-9920-AF5793B0B690}
 	EndGlobalSection
 EndGlobal
