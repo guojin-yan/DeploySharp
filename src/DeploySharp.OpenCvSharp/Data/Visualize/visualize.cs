@@ -24,11 +24,11 @@ namespace DeploySharp.Data
             for (int i = 0; i < result.count; i++)
             {
                 //Console.WriteLine(result.rects[i]);
-                Cv2.Rectangle(image, result.datas[i].box, new Scalar(0, 0, 255), 2, LineTypes.Link8);
-                Cv2.Rectangle(image, new Point(result.datas[i].box.TopLeft.X, result.datas[i].box.TopLeft.Y + 30),
-                    new Point(result.datas[i].box.BottomRight.X, result.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
+                Cv2.Rectangle(image, CvDataExtensions.ToRect(result.datas[i].box), new Scalar(0, 0, 255), 2, LineTypes.Link8);
+                Cv2.Rectangle(image, new OpenCvSharp.Point(result.datas[i].box.TopLeft.X, result.datas[i].box.TopLeft.Y + 30),
+                    new OpenCvSharp.Point(result.datas[i].box.BottomRight.X, result.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
                 Cv2.PutText(image, result.datas[i].lable + "-" + result.datas[i].score.ToString("0.00"),
-                    new Point(result.datas[i].box.X, result.datas[i].box.Y + 25),
+                    new OpenCvSharp.Point(result.datas[i].box.X, result.datas[i].box.Y + 25),
                     HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
             }
             return image;
@@ -46,13 +46,13 @@ namespace DeploySharp.Data
             // Draw recognition results on the image
             for (int i = 0; i < result.count; i++)
             {
-                Point2f[] points = result.datas[i].box.Points();
+                Point2f[] points = CvDataExtensions.ToRotatedRect(result.datas[i].box).Points();
                 for (int j = 0; j < 4; j++)
                 {
-                    Cv2.Line(image, (Point)points[j], (Point)points[(j + 1) % 4], new Scalar(255, 100, 200), 2);
+                    Cv2.Line(image, (OpenCvSharp.Point)points[j], (OpenCvSharp.Point)points[(j + 1) % 4], new Scalar(255, 100, 200), 2);
                 }
                 Cv2.PutText(image, result.datas[i].lable + "-" + result.datas[i].score.ToString("0.00"),
-                    (Point)points[0], HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
+                    (OpenCvSharp.Point)points[0], HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
             }
             return image;
         }
@@ -70,13 +70,13 @@ namespace DeploySharp.Data
             // Draw recognition results on the image
             for (int i = 0; i < result.count; i++)
             {
-                Cv2.Rectangle(image, result.datas[i].box, new Scalar(0, 0, 255), 2, LineTypes.Link8);
-                Cv2.Rectangle(image, new Point(result.datas[i].box.TopLeft.X, result.datas[i].box.TopLeft.Y + 30),
-                    new Point(result.datas[i].box.BottomRight.X, result.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
+                Cv2.Rectangle(image, CvDataExtensions.ToRect(result.datas[i].box), new Scalar(0, 0, 255), 2, LineTypes.Link8);
+                Cv2.Rectangle(image, new OpenCvSharp.Point(result.datas[i].box.TopLeft.X, result.datas[i].box.TopLeft.Y + 30),
+                    new OpenCvSharp.Point(result.datas[i].box.BottomRight.X, result.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
                 Cv2.PutText(image, result.datas[i].lable + "-" + result.datas[i].score.ToString("0.00"),
-                    new Point(result.datas[i].box.X, result.datas[i].box.Y + 25),
+                    new OpenCvSharp.Point(result.datas[i].box.X, result.datas[i].box.Y + 25),
                     HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
-                Cv2.AddWeighted(image, 0.5, result.datas[i].mask, 0.5, 0, masked_img);
+                Cv2.AddWeighted(image, 0.5, CvDataExtensions.ToMat(result.datas[i].mask), 0.5, 0, masked_img);
             }
             return masked_img;
         }
@@ -112,16 +112,16 @@ namespace DeploySharp.Data
                         continue;
                     }
 
-                    Cv2.Circle(image, pose.datas[i].pose_point.point[p], 2, colors[p], -1);
+                    Cv2.Circle(image, CvDataExtensions.ToPoint(pose.datas[i].pose_point.point[p]), 2, colors[p], -1);
                     //Console.WriteLine(pose.point[p]);
                 }
                 // draw
 
-                Cv2.Rectangle(image, pose.datas[i].box, new Scalar(0, 0, 255), 2, LineTypes.Link8);
-                Cv2.Rectangle(image, new Point(pose.datas[i].box.TopLeft.X, pose.datas[i].box.TopLeft.Y + 30),
-                    new Point(pose.datas[i].box.BottomRight.X, pose.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
+                Cv2.Rectangle(image, CvDataExtensions.ToRect(pose.datas[i].box), new OpenCvSharp.Scalar(0, 0, 255), 2, LineTypes.Link8);
+                Cv2.Rectangle(image, new OpenCvSharp.Point(pose.datas[i].box.TopLeft.X, pose.datas[i].box.TopLeft.Y + 30),
+                    new OpenCvSharp.Point(pose.datas[i].box.BottomRight.X, pose.datas[i].box.TopLeft.Y), new Scalar(0, 255, 255), -1);
                 Cv2.PutText(image, point_str[pose.datas[i].index] + "-" + pose.datas[i].score.ToString("0.00"),
-                    new Point(pose.datas[i].box.X, pose.datas[i].box.Y + 25),
+                    new OpenCvSharp.Point(pose.datas[i].box.X, pose.datas[i].box.Y + 25),
                     HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
 
                 for (int p = 0; p < 17; p++)
@@ -137,12 +137,12 @@ namespace DeploySharp.Data
                     float[] point_y = new float[] { pose.datas[i].pose_point.point[edgs[p, 0]].Y,
                         pose.datas[i].pose_point.point[edgs[p, 1]].Y };
 
-                    Point center_point = new Point((int)((point_x[0] + point_x[1]) / 2), (int)((point_y[0] + point_y[1]) / 2));
+                    OpenCvSharp.Point center_point = new OpenCvSharp.Point((int)((point_x[0] + point_x[1]) / 2), (int)((point_y[0] + point_y[1]) / 2));
                     double length = Math.Sqrt(Math.Pow((double)(point_x[0] - point_x[1]), 2.0) + Math.Pow((double)(point_y[0] - point_y[1]), 2.0));
                     int stick_width = 2;
-                    Size axis = new Size(length / 2, stick_width);
+                    OpenCvSharp.Size axis = new OpenCvSharp.Size(length / 2, stick_width);
                     double angle = (Math.Atan2((double)(point_y[0] - point_y[1]), (double)(point_x[0] - point_x[1]))) * 180 / Math.PI;
-                    Point[] polygon = Cv2.Ellipse2Poly(center_point, axis, (int)angle, 0, 360, 1);
+                    OpenCvSharp.Point[] polygon = Cv2.Ellipse2Poly(center_point, axis, (int)angle, 0, 360, 1);
                     Cv2.FillConvexPoly(image, polygon, colors[p]);
 
                 }

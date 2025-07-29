@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DeploySharp.Data;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace DeploySharp.Model
 {
@@ -84,12 +85,14 @@ namespace DeploySharp.Model
         }
         protected override BaseResult Postprocess(DataTensor dataTensor)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            stopwatch.Start();
             float[] result0 = (float[])dataTensor[0].Buffer;
 
             Mat result1 = Mat.FromPixelData(dataTensor[1].Shape[1], dataTensor[1].Shape[2] * dataTensor[1].Shape[3], MatType.CV_32FC1, dataTensor[1].Buffer);
 
             // 初始化存储容器
-            List<Rect> positionBoxes = new List<Rect>();  // 矩形框
+            List<OpenCvSharp.Rect> positionBoxes = new List<OpenCvSharp.Rect>();  // 矩形框
             List<int> classIds = new List<int>();             // 类别ID
             List<float> confidences = new List<float>();      // 置信度
             List<Mat> masks = new List<Mat>();
@@ -117,7 +120,7 @@ namespace DeploySharp.Model
                             int y = (int)((cy - 0.5 * oh) * scales.First);
                             int width = (int)(ow * scales.First);
                             int height = (int)(oh * scales.First);
-                            Rect box = new Rect(x, y, width, height);
+                            OpenCvSharp.Rect box = new OpenCvSharp.Rect(x, y, width, height);
 
                             // 存储检测结果
                             positionBoxes.Add(box);
@@ -135,14 +138,14 @@ namespace DeploySharp.Model
             CvDnn.NMSBoxes(positionBoxes, confidences, config.ConfidenceThreshold, config.NmsThreshold, out indexes);
 
             SegResult result = new SegResult();
-            Mat rgb_mask = Mat.Zeros(new Size(m_image_size[0], m_image_size[1]), MatType.CV_8UC3);
+            Mat rgb_mask = Mat.Zeros(new OpenCvSharp.Size(m_image_size[0], m_image_size[1]), MatType.CV_8UC3);
             Random rd = new Random(); // Generate Random Numbers
 
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
                 // Division scope
-                Rect box = positionBoxes[index];
+                OpenCvSharp.Rect box = positionBoxes[index];
                 int box_x1 = Math.Max(0, box.X);
                 int box_y1 = Math.Max(0, box.Y);
                 int box_x2 = Math.Max(0, box.BottomRight.X);
@@ -168,7 +171,7 @@ namespace DeploySharp.Model
                 Mat mask_roi = new Mat(reshape_mask, new OpenCvSharp.Range(my1, my2), new OpenCvSharp.Range(mx1, mx2));
                 // Convert the segmented area to the actual size of the image
                 Mat actual_maskm = new Mat();
-                Cv2.Resize(mask_roi, actual_maskm, new Size(box_x2 - box_x1, box_y2 - box_y1));
+                Cv2.Resize(mask_roi, actual_maskm, new OpenCvSharp.Size(box_x2 - box_x1, box_y2 - box_y1));
                 // Binary segmentation region
                 for (int r = 0; r < actual_maskm.Rows; r++)
                 {
@@ -199,14 +202,17 @@ namespace DeploySharp.Model
                     box_x2 = m_image_size[0] - 1;
                 }
                 // Obtain segmentation area
-                Mat mask = Mat.Zeros(new Size(m_image_size[0], m_image_size[1]), MatType.CV_8UC1);
+                Mat mask = Mat.Zeros(new OpenCvSharp.Size(m_image_size[0], m_image_size[1]), MatType.CV_8UC1);
                 bin_mask = new Mat(bin_mask, new OpenCvSharp.Range(0, box_y2 - box_y1), new OpenCvSharp.Range(0, box_x2 - box_x1));
-                Rect roi1 = new Rect(box_x1, box_y1, box_x2 - box_x1, box_y2 - box_y1);
+                OpenCvSharp.Rect roi1 = new OpenCvSharp.Rect(box_x1, box_y1, box_x2 - box_x1, box_y2 - box_y1);
                 bin_mask.CopyTo(new Mat(mask, roi1));
                 // Color segmentation area
                 Cv2.Add(rgb_mask, new Scalar(rd.Next(0, 255), rd.Next(0, 255), rd.Next(0, 255)), rgb_mask, mask);
-                result.Add(classIds[index], confidences[index], positionBoxes[index], rgb_mask.Clone());
+                result.Add(classIds[index], confidences[index], CvDataExtensions.ToCvRect(positionBoxes[index]), CvDataExtensions.ToImageDataB(rgb_mask.Clone()));
             }
+
+            stopwatch.Stop();
+            Console.WriteLine("时间为： " + stopwatch.ElapsedMilliseconds);
             return result;
 
         }

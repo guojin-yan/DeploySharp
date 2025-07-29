@@ -1,5 +1,4 @@
-﻿using OpenCvSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -16,7 +15,7 @@ namespace DeploySharp.Data
         /// <summary>
         /// Split Region
         /// </summary>
-        public Mat mask;
+        public ImageDataB mask;
         public SegData() { }
         /// <summary>
         /// Parameter construction.
@@ -26,7 +25,7 @@ namespace DeploySharp.Data
         /// <param name="score">Target segmentation recognition result  score.</param>
         /// <param name="box">Target segmentation recognition result  box.</param>
         /// <param name="mask">Target segmentation recognition result split region.</param>
-        public SegData(int index, string lable, float score, Rect box, Mat mask)
+        public SegData(int index, string lable, float score, Rect box, ImageDataB mask)
         {
             this.index = index;
             this.lable = lable;
@@ -41,7 +40,7 @@ namespace DeploySharp.Data
         /// <param name="score">Target segmentation recognition result  score.</param>
         /// <param name="box">Target segmentation recognition result  box.</param>
         /// <param name="mask">Target segmentation recognition result split region.</param>
-        public SegData(int index, float score, Rect box, Mat mask)
+        public SegData(int index, float score, Rect box, ImageDataB mask)
             : this(index, index.ToString(), score, box, mask)
         { }
         /// <summary>
@@ -92,7 +91,7 @@ namespace DeploySharp.Data
         /// <param name="score">Target segmentation recognition result  score.</param>
         /// <param name="box">Target segmentation recognition result  box.</param>
         /// <param name="mask">Target segmentation recognition result split region.</param>
-        public void Add(int index, float score, Rect box, Mat mask)
+        public void Add(int index, float score, Rect box, ImageDataB mask)
         {
             SegData data = new SegData(index, score, box, mask);
             this.Add(data);
@@ -105,7 +104,7 @@ namespace DeploySharp.Data
         /// <param name="score">Target segmentation recognition result  score.</param>
         /// <param name="box">Target segmentation recognition result  box.</param>
         /// <param name="mask">Target segmentation recognition result split region.</param>
-        public void Add(int index, string lable, float score, Rect box, Mat mask)
+        public void Add(int index, string lable, float score, Rect box, ImageDataB mask)
         {
             SegData data = new SegData(index, lable, score, box, mask);
             this.Add(data);

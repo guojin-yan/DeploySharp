@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static OpenCvSharp.FileStorage;
+using Rect = OpenCvSharp.Rect;
 
 namespace DeploySharp.Model
 {
@@ -91,7 +92,7 @@ namespace DeploySharp.Model
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
-                results.Add(classIds[index], confidences[index], positionBoxes[index]);
+                results.Add(classIds[index], confidences[index], CvDataExtensions.ToCvRect(positionBoxes[index]));
             }
             return results;
         }

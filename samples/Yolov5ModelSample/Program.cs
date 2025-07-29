@@ -13,8 +13,8 @@ namespace Yolov5ModelSample
         {
             Console.WriteLine("Hello, World!");
             Yolov5Config config = new Yolov5Config(@"E:\Model\Yolo\yolov5s.onnx");
-            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            config.SetTargetDeviceType(DeviceType.CPU);
+            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            //config.SetTargetDeviceType(DeviceType.CPU);
             //config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.OpenVINO);
 
             Yolov5Model yolov5Model = new Yolov5Model(config);

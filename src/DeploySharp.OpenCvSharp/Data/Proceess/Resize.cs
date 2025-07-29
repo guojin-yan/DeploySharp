@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Size = OpenCvSharp.Size;
 
 namespace DeploySharp.Data
 {
@@ -58,7 +57,7 @@ namespace DeploySharp.Data
             resize_w = Math.Max((int)(Math.Round((float)(resize_w) / 32.0f) * 32), 32);
 
             Mat resize_img = new Mat();
-            Cv2.Resize(img, resize_img, new Size(resize_w, resize_h));
+            Cv2.Resize(img, resize_img, new OpenCvSharp.Size(resize_w, resize_h));
             ratio_h = (float)(resize_h) / (float)(h);
             ratio_w = (float)(resize_w) / (float)(w);
             return resize_img;
@@ -78,7 +77,7 @@ namespace DeploySharp.Data
             else
                 resize_w = (int)(Math.Ceiling(imgH * ratio));
             Mat resize_img = new Mat();
-            Cv2.Resize(img, resize_img, new Size(resize_w, imgH), 0.0f, 0.0f, InterpolationFlags.Linear);
+            Cv2.Resize(img, resize_img, new OpenCvSharp.Size(resize_w, imgH), 0.0f, 0.0f, InterpolationFlags.Linear);
             return resize_img;
         }
 
@@ -100,7 +99,7 @@ namespace DeploySharp.Data
             else
                 resize_w = (int)(Math.Ceiling(imgH * ratio));
             Mat resize_img = new Mat();
-            Cv2.Resize(img, resize_img, new Size(resize_w, imgH), 0.0f, 0.0f, InterpolationFlags.Linear);
+            Cv2.Resize(img, resize_img, new OpenCvSharp.Size(resize_w, imgH), 0.0f, 0.0f, InterpolationFlags.Linear);
             Cv2.CopyMakeBorder(resize_img, resize_img, 0, 0, 0, (int)(imgW - resize_img.Cols), BorderTypes.Constant, new Scalar(127, 127, 127));
             return resize_img;
         }
@@ -110,20 +109,20 @@ namespace DeploySharp.Data
             Mat mat = new Mat();
 
             // 根据图像长宽比计算缩放比例
-            Rect roi = new Rect();
+            OpenCvSharp.Rect roi = new OpenCvSharp.Rect();
 
             if (img.Cols > img.Rows)  // 宽>高的情况
             {
 
                 scales = (float)img.Cols / (float)length;
-                Cv2.Resize(img, mat, new Size(length, img.Rows / scales));
-                roi = new Rect(0, 0, length, (int)(img.Rows / scales));
+                Cv2.Resize(img, mat, new OpenCvSharp.Size(length, img.Rows / scales));
+                roi = new OpenCvSharp.Rect(0, 0, length, (int)(img.Rows / scales));
             }
             else  // 高≥宽的情况
             {
                 scales = (float)img.Rows / (float)length;
-                Cv2.Resize(img, mat, new Size(img.Cols / scales, length));
-                roi = new Rect(0, 0, (int)(img.Cols / scales), length);
+                Cv2.Resize(img, mat, new OpenCvSharp.Size(img.Cols / scales, length));
+                roi = new OpenCvSharp.Rect(0, 0, (int)(img.Cols / scales), length);
             }
 
             // 创建640x640的黑色背景Mat

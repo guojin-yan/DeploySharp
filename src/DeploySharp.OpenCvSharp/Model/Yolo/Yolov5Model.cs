@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using DeploySharp.Data;
+using System.Collections.Concurrent;
+using System.Numerics;
+using System.Diagnostics;
 
 namespace DeploySharp.Model
 {
@@ -39,11 +42,13 @@ namespace DeploySharp.Model
         /// <returns>Processed detection results</returns>
         protected override BaseResult Postprocess(DataTensor dataTensor)
         {
+            //Stopwatch stopwatch = Stopwatch.StartNew();
+            //stopwatch.Start();
             // Get raw output buffer from tensor
             float[] result = (float[])dataTensor[0].Buffer;
 
             // Initialize containers for detection components
-            List<Rect> positionBoxes = new List<Rect>();  // Bounding boxes
+            List<OpenCvSharp.Rect> positionBoxes = new List<OpenCvSharp.Rect>();  // Bounding boxes
             List<int> classIds = new List<int>();         // Class IDs
             List<float> confidences = new List<float>();  // Confidence scores
 
@@ -76,7 +81,7 @@ namespace DeploySharp.Model
                             int y = (int)((cy - 0.5 * oh) * scales.First);
                             int width = (int)(ow * scales.First);
                             int height = (int)(oh * scales.First);
-                            Rect box = new Rect(x, y, width, height);
+                            OpenCvSharp.Rect box = new OpenCvSharp.Rect(x, y, width, height);
 
                             // Store detection components
                             positionBoxes.Add(box);
@@ -99,10 +104,15 @@ namespace DeploySharp.Model
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
-                results.Add(classIds[index], confidences[index], positionBoxes[index]);
+                results.Add(classIds[index], confidences[index], CvDataExtensions.ToCvRect(positionBoxes[index]));
             }
+
+            //stopwatch.Stop();
+            //Console.WriteLine("时间为： " + stopwatch.ElapsedMilliseconds);
             return results;
         }
+
+      
 
         /// <summary>
         /// Preprocesses input image for model inference
