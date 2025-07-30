@@ -27,6 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp", "src\DeploySharp\DeploySharp.csproj", "{1F5D508C-23A9-4492-8648-7D599137CB51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ImageSharp", "src\DeploySharp.ImageSharp\DeploySharp.ImageSharp.csproj", "{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov5ModelImageSharpSample", "samples\Yolov5ModelImageSharpSample\Yolov5ModelImageSharpSample.csproj", "{20ACA920-41E1-4B78-9512-AB0EC37DA8A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +73,14 @@ Global
 		{1F5D508C-23A9-4492-8648-7D599137CB51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F5D508C-23A9-4492-8648-7D599137CB51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F5D508C-23A9-4492-8648-7D599137CB51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20ACA920-41E1-4B78-9512-AB0EC37DA8A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20ACA920-41E1-4B78-9512-AB0EC37DA8A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20ACA920-41E1-4B78-9512-AB0EC37DA8A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20ACA920-41E1-4B78-9512-AB0EC37DA8A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,5 +95,7 @@ Global
 		{8C3B7578-362B-40EA-92F6-BEE4407008B3} = {251AE010-41FC-4970-9920-AF5793B0B690}
 		{2B8CC03E-8C75-48F1-A67C-0AE5B5172593} = {A5A2226C-ECA3-43FA-B19E-DF334FD86002}
 		{1F5D508C-23A9-4492-8648-7D599137CB51} = {A5A2226C-ECA3-43FA-B19E-DF334FD86002}
+		{54AED825-DA2F-4C08-B1B1-0D6D5D4C6902} = {A5A2226C-ECA3-43FA-B19E-DF334FD86002}
+		{20ACA920-41E1-4B78-9512-AB0EC37DA8A2} = {251AE010-41FC-4970-9920-AF5793B0B690}
 	EndGlobalSection
 EndGlobal
