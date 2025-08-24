@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net5.0;netcoreapp3.1;net47;net471;net472;net48;net481</TargetFrameworks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <LangVersion>12.0</LangVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>JYPPX.DeploySharp</PackageId>
+    <!--Set NuGet Message-->
+    <Title>DeploySharp</Title>
+    <Version>0.0.1</Version>
+    <Authors>Guojin Yan</Authors>
+    <Company>Guojin Yan</Company>
+    <Product>DeploySharp</Product>
+    <Description>
+      、
+    </Description>
+    <PackageProjectUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>../../nuget</PackageOutputPath>
+    <NeutralLanguage>zh</NeutralLanguage>
+    <!--PackageIcon>logo.png</PackageIcon-->
+    <!--PackageReadmeFile>README.md</PackageReadmeFile-->
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <RootNamespace>DeploySharp</RootNamespace>
+    <AssemblyName>DeploySharp</AssemblyName>
+    <PackageTags>Model-Deploy;OpenVINO;CSharp;C#-API;ONNX</PackageTags>
+    <!--PackageLicenseFile>LICENSE.txt</PackageLicenseFile-->
+    <!--PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Clipper2" Version="1.5.4" />
+    <PackageReference Include="log4net" Version="3.2.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.2" />
+    <PackageReference Include="OpenVINO.CSharp.API" Version="2025.1.0.1" />
+  </ItemGroup>
+
+</Project>

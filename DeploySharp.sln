@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6B950306-D04C-406C-9FE6-9A812ED7941D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp", "src\DeploySharp\DeploySharp.csproj", "{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ImageSharp", "src\DeploySharp.ImageSharp\DeploySharp.ImageSharp.csproj", "{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{89C78B4A-98C2-428A-807C-D2E935E114E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ImageSharp-DemoPlatform", "samples\DeploySharp.ImageSharp-DemoPlatform\DeploySharp.ImageSharp-DemoPlatform.csproj", "{44159A1D-C7B7-4F90-A335-924522C667E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp", "src\DeploySharp.OpenCvSharp\DeploySharp.OpenCvSharp.csproj", "{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp-DemoPlatform", "samples\DeploySharp.OpenCvSharp-DemoPlatform\DeploySharp.OpenCvSharp-DemoPlatform.csproj", "{08C2A14B-8C01-4ECC-AB96-761708CB871D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44159A1D-C7B7-4F90-A335-924522C667E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44159A1D-C7B7-4F90-A335-924522C667E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44159A1D-C7B7-4F90-A335-924522C667E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44159A1D-C7B7-4F90-A335-924522C667E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08C2A14B-8C01-4ECC-AB96-761708CB871D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08C2A14B-8C01-4ECC-AB96-761708CB871D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08C2A14B-8C01-4ECC-AB96-761708CB871D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08C2A14B-8C01-4ECC-AB96-761708CB871D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CE5DCF9E-B2C1-4FE7-BFDE-787AFD9CF476} = {6B950306-D04C-406C-9FE6-9A812ED7941D}
+		{3CFA2B48-B7A8-4B6D-A39E-1DB1EF22EFC8} = {6B950306-D04C-406C-9FE6-9A812ED7941D}
+		{44159A1D-C7B7-4F90-A335-924522C667E5} = {89C78B4A-98C2-428A-807C-D2E935E114E5}
+		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646} = {6B950306-D04C-406C-9FE6-9A812ED7941D}
+		{08C2A14B-8C01-4ECC-AB96-761708CB871D} = {89C78B4A-98C2-428A-807C-D2E935E114E5}
+	EndGlobalSection
+EndGlobal

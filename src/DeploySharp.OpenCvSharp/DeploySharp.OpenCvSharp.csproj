@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net5.0;netcoreapp3.1;net47;net471;net472;net48;net481</TargetFrameworks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <LangVersion>12.0</LangVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>JYPPX.DeploySharp.OpenCvSharp</PackageId>
+    <!--Set NuGet Message-->
+    <Title>DeploySharp.ImageSharp</Title>
+    <Version>0.0.1</Version>
+    <Authors>Guojin Yan</Authors>
+    <Company>Guojin Yan</Company>
+    <Product>DeploySharp</Product>
+    <Description>
+      、
+    </Description>
+    <PackageProjectUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>../../nuget</PackageOutputPath>
+    <NeutralLanguage>zh</NeutralLanguage>
+    <!--PackageIcon>logo.png</PackageIcon-->
+    <!--PackageReadmeFile>README.md</PackageReadmeFile-->
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <RootNamespace>DeploySharp</RootNamespace>
+    <AssemblyName>DeploySharp.OpenCvSharp</AssemblyName>
+    <PackageTags>Model-Deploy;OpenVINO;CSharp;C#-API;ONNX</PackageTags>
+    <!--PackageLicenseFile>LICENSE.txt</PackageLicenseFile-->
+    <!--PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp\DeploySharp.csproj" />
+  </ItemGroup>
+
+</Project>
