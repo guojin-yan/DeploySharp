@@ -12,7 +12,6 @@ using System.Configuration;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.Buffers;
-using DeploySharp.ImageSharp.Data;
 
 namespace DeploySharp.Model
 {

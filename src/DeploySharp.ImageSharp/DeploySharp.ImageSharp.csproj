@@ -23,7 +23,7 @@
     <!--PackageIcon>logo.png</PackageIcon-->
     <!--PackageReadmeFile>README.md</PackageReadmeFile-->
     <PackageReleaseNotes></PackageReleaseNotes>
-    <RootNamespace>DeploySharp.ImageSharp</RootNamespace>
+    <RootNamespace>DeploySharp</RootNamespace>
     <AssemblyName>DeploySharp.ImageSharp</AssemblyName>
     <PackageTags>Model-Deploy;OpenVINO;CSharp;C#-API;ONNX</PackageTags>
     <!--PackageLicenseFile>LICENSE.txt</PackageLicenseFile-->

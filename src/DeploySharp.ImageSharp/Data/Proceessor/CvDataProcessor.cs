@@ -10,7 +10,7 @@ using SixLabors.ImageSharp.Processing;
 using ResizeMode = DeploySharp.Data.ResizeMode;
 using Size = DeploySharp.Data.Size;
 
-namespace DeploySharp.ImageSharp.Data
+namespace DeploySharp.Data
 {
     public static class CvDataProcessor
     {

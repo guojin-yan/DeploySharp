@@ -1,76 +1,70 @@
-﻿using System;
+﻿using DeploySharp.Data;
+
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using DeploySharp.Data;
-using System.Collections.Concurrent;
-using System.Numerics;
-using System.Diagnostics;
-using System.Configuration;
-
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// Implementation of YOLOv5 model for object detection
-    /// Inherits from base IModel interface
+    /// Implementation of YOLOv8 model for object detection
     /// </summary>
-    public abstract class IYolov5DetModel : IModel
+    public abstract class IYolov8DetModel : IModel
     {
         /// <summary>
-        /// Constructor initializes with model configuration
+        /// Constructor that initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov5DetModel(Yolov5DetConfig config) : base(config) { }
+        public IYolov8DetModel(Yolov8DetConfig config) : base(config) { }
 
         /// <summary>
-        /// Predicts objects in input image and returns detection results
+        /// Main prediction method that processes input image
         /// </summary>
         /// <param name="img">Input image in OpenCV Mat format</param>
-        /// <returns>Detection results container</returns>
+        /// <returns>Detection results containing bounding boxes, class IDs and confidence scores</returns>
         public DetResult[] Predict(object img)
         {
             return base.Predict(img) as DetResult[];
         }
 
-
         /// <summary>
         /// Post-processes raw model output to extract detection results
         /// </summary>
-        /// <param name="dataTensor">Raw model output tensor</param>
+        /// <param name="dataTensor">Raw output tensor from model</param>
         /// <returns>Processed detection results</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
             var config = (Yolov5DetConfig)this.config;
-            int rowResultNum = config.OutputSizes[0][1];
-            int oneResultLen = config.OutputSizes[0][2];
+            int rowResultNum = config.OutputSizes[0][2];
+            int oneResultLen = config.OutputSizes[0][1] - 4;
 
             var candidateBoxes = new ConcurrentBag<BoundingBox>();
 
             // 4. 并行处理候选框检测
             Parallel.For(0, rowResultNum, i =>
             {
-                float conf = result0[oneResultLen * i + 4];
-                if (conf <= 0.25f) return;
-
-                for (int j = 5; j < oneResultLen; j++)
+                for (int j = 4; j < (oneResultLen + 4); j++)  // Iterate through each class
                 {
-                    float conf1 = result0[oneResultLen * i + j];
-                    if (conf1 > config.ConfidenceThreshold)
+                    float conf = result0[rowResultNum * j + i];
+                    int label = j - 4;
+                    if (conf > config.ConfidenceThreshold)  // Confidence threshold filtering
                     {
-                        float cx = result0[oneResultLen * i];
-                        float cy = result0[oneResultLen * i + 1];
-                        float ow = result0[oneResultLen * i + 2];
-                        float oh = result0[oneResultLen * i + 3];
+                        // Parse center coordinates, width and height
+                        float cx = result0[rowResultNum * 0 + i];
+                        float cy = result0[rowResultNum * 1 + i];
+                        float ow = result0[rowResultNum * 2 + i];
+                        float oh = result0[rowResultNum * 3 + i];
 
                         candidateBoxes.Add(new BoundingBox
                         {
                             Index = i,
-                            NameIndex = j - 5,
-                            Confidence = conf1,
+                            NameIndex = label,
+                            Confidence = conf,
                             Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
                             Angle = 0.0f
                         });
@@ -97,6 +91,6 @@ namespace DeploySharp.Model
             return detResult;
         }
 
+       
     }
-
 }

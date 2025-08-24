@@ -11,7 +11,7 @@ namespace DeploySharp.Engine
     /// <summary>
     /// Defines the core interface for model inference engines
     /// </summary>
-    public interface IModelInferEngine
+    public interface IModelInferEngine : IDisposable
     {
         /// <summary>
         /// Performs model prediction/inference on the input tensor

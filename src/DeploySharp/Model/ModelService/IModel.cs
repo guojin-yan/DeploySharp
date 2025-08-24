@@ -14,7 +14,7 @@ namespace DeploySharp.Model
     /// Abstract base class for AI model inference
     /// 模型推理的抽象基类
     /// </summary>
-    public abstract class IModel
+    public abstract class IModel : IDisposable
     {
         protected readonly ILogger _logger;
         protected IConfig config;          // Model configuration/模型配置
@@ -119,6 +119,11 @@ namespace DeploySharp.Model
         /// 输出后处理的抽象方法
         /// </summary>
         protected abstract Result[] Postprocess(DataTensor result, ImageAdjustmentParam imageAdjustmentParam);
+
+        public void Dispose()
+        {
+            engine.Dispose();
+        }
     }
 
 }
