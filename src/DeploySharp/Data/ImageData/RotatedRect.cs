@@ -68,5 +68,10 @@ namespace DeploySharp.Data
             r.Height -= r.Y - 1;
             return r;
         }
+
+        public override string ToString()
+        {
+            return $"Center: [{Center.X:F1}, {Center.Y:F1}] " + $"Size: {Size.Width:F1}x{Size.Height:F1} " + $"Angle: {Angle:F1}°";
+        }
     }
 }

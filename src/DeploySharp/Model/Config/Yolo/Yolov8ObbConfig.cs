@@ -1,4 +1,5 @@
-﻿using DeploySharp.Engine;
+﻿using DeploySharp.Data;
+using DeploySharp.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace DeploySharp.Model
 {
     public class Yolov8ObbConfig : YoloConfig
     {
+        public ObbNonMaxSuppression NonMaxSuppression = new ObbNonMaxSuppression();
         public Yolov8ObbConfig() { }
 
         public Yolov8ObbConfig(string modelPath,
@@ -16,7 +18,8 @@ namespace DeploySharp.Model
             DeviceType deviceType = DeviceType.CPU,
             float confidenceThreshold = 0.5f,
             float nmsThreshold = 0.5f,
-             int inferBatch = 1)
+            int inferBatch = 1,
+            ResizeMode resizeMode = ResizeMode.Pad)
         {
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
@@ -24,6 +27,7 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.NmsThreshold = nmsThreshold;
             this.InferBatch = inferBatch;
+            this.ImgResizeMode = resizeMode;
 
         }
     }
