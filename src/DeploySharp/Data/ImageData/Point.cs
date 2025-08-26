@@ -99,5 +99,7 @@ namespace DeploySharp.Data
         }
 
         #endregion
+
+        public override string ToString() => $"Point(X={X}, Y={Y})";
     }
 }

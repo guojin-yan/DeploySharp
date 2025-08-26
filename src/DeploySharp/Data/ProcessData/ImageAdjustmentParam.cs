@@ -79,6 +79,24 @@ namespace DeploySharp.Data
             return new Rect((int)x, (int)y, (int)w, (int)h);
         }
 
+        public RectF AdjustRectF(RectF rectangle)
+        {
+            var x = (rectangle.X - Padding.First) / Ratio.First;
+            var y = (rectangle.Y - Padding.Second) / Ratio.Second;
+            var w = rectangle.Width / Ratio.First;
+            var h = rectangle.Height / Ratio.Second;
+
+            return new RectF(x, y, w, h);
+        }
+
+        public Point AdjustPoint(Point point)
+        {
+            var x = (point.X - Padding.First) / Ratio.First;
+            var y = (point.Y - Padding.Second) / Ratio.Second;
+
+            return new Point(x, y);
+        }
+
 
         public static ImageAdjustmentParam CreateFromImageInfo(Size inputSize, Size imgSize, ResizeMode resizeMode)
         {

@@ -12,7 +12,8 @@ namespace DeploySharp.Data
     {
         //------------------------- 可配置选项 -------------------------
         public float MaskAlpha { get; set; } = 0.5f;
-        public float MaskMinimumConfidence { get; set; } = 0.5f;
+        public float MaskMinConfidence { get; set; } = 0.5f;
+        public float KeyPointMinConfidence { get; set; } = 0.5f;
         public float FontSize { get; set; } = 0.5f;
         public float BorderThickness { get; set; } = 2;
         public HersheyFonts FontType { get; set; } = HersheyFonts.HersheySimplex; // OpenCV的字体类型
