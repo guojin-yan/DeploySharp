@@ -55,25 +55,75 @@ namespace DeploySharp.OpenCvSharp_DemoPlatform
             //}
 
 
-            Yolov8DetConfig config = new Yolov8DetConfig(@"E:\Model\Yolo\yolov8s.onnx");
-            config.SetTargetDeviceType(DeviceType.GPU0);
-            Yolov8DetModel yolov8Model = new Yolov8DetModel(config);
+            //Yolov8DetConfig config = new Yolov8DetConfig(@"E:\Model\Yolo\yolov8s.onnx");
+            //config.SetTargetDeviceType(DeviceType.GPU0);
+            //Yolov8DetModel yolov8Model = new Yolov8DetModel(config);
+            //VisualizeOptions visualizeOptions = new VisualizeOptions(1.0f);
+            //// 1. 使用ImageSharp加载图像
+            //using (var image = Cv2.ImRead(@"E:\Data\image\bus.jpg"))
+            //{
+            //    Stopwatch sw = Stopwatch.StartNew();
+            //    DetResult[] result = yolov8Model.Predict(image);
+            //    sw.Stop();
+            //    textBox1.Text = sw.ElapsedMilliseconds.ToString();
+            //    Mat resultImg = Visualize.DrawDetResult(result, image, visualizeOptions);
+
+            //    pictureBox1.BackgroundImage = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(CvDataProcessor.Resize(resultImg, new Data.Size(pictureBox1.Width, pictureBox1.Height), ResizeMode.Pad));
+            //}
+            //yolov8Model.Dispose();
+
+            //Yolov8SegConfig config = new Yolov8SegConfig(@"E:\Model\Yolo\yolov8s-seg.onnx");
+            //config.SetTargetDeviceType(DeviceType.GPU0);
+            //Yolov8SegModel yolov8Model = new Yolov8SegModel(config);
+            //VisualizeOptions visualizeOptions = new VisualizeOptions(1.0f);
+            //// 1. 使用ImageSharp加载图像
+            //using (var image = Cv2.ImRead(@"E:\Data\image\demo_2.jpg"))
+            //{
+            //    Stopwatch sw = Stopwatch.StartNew();
+            //    SegResult[] result = yolov8Model.Predict(image);
+            //    sw.Stop();
+            //    textBox1.Text = sw.ElapsedMilliseconds.ToString();
+            //    Mat resultImg = Visualize.DrawSegResult(result, image, visualizeOptions);
+
+            //    pictureBox1.BackgroundImage = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(CvDataProcessor.Resize(resultImg, new Data.Size(pictureBox1.Width, pictureBox1.Height), ResizeMode.Pad));
+            //}
+            //yolov8Model.Dispose();
+
+
+
+            //Yolov8ObbConfig config = new Yolov8ObbConfig(@"E:\Model\Yolo\yolov8s-obb.onnx");
+            //config.SetTargetDeviceType(DeviceType.GPU0);
+            //Yolov8ObbModel yolov8Model = new Yolov8ObbModel(config);
+            //VisualizeOptions visualizeOptions = new VisualizeOptions(1.0f);
+            //// 1. 使用ImageSharp加载图像
+            //using (var image = Cv2.ImRead(@"E:\Data\image\plane.png"))
+            //{
+            //    Stopwatch sw = Stopwatch.StartNew();
+            //    ObbResult[] result = yolov8Model.Predict(image);
+            //    sw.Stop();
+            //    textBox1.Text = sw.ElapsedMilliseconds.ToString();
+            //    Mat resultImg = Visualize.DrawObbResult(result, image, visualizeOptions);
+
+            //    pictureBox1.BackgroundImage = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(CvDataProcessor.Resize(resultImg, new Data.Size(pictureBox1.Width, pictureBox1.Height), ResizeMode.Pad));
+            //}
+            //yolov8Model.Dispose();
+
+            Yolov8PoseConfig config = new Yolov8PoseConfig(@"E:\Model\Yolo\yolov8s-pose.onnx");
+            config.SetTargetDeviceType(DeviceType.CPU);
+            Yolov8PoseModel yolov8Model = new Yolov8PoseModel(config);
             VisualizeOptions visualizeOptions = new VisualizeOptions(1.0f);
             // 1. 使用ImageSharp加载图像
-            using (var image = Cv2.ImRead(@"E:\Data\image\bus.jpg"))
+            using (var image = Cv2.ImRead(@"E:\Data\image\demo_9.jpg"))
             {
                 Stopwatch sw = Stopwatch.StartNew();
-                DetResult[] result = yolov8Model.Predict(image);
+                KeyPointResult[] result = yolov8Model.Predict(image);
                 sw.Stop();
                 textBox1.Text = sw.ElapsedMilliseconds.ToString();
-                Mat resultImg = Visualize.DrawDetResult(result, image, visualizeOptions);
+                Mat resultImg = Visualize.DrawPoses(result, image, visualizeOptions);
 
                 pictureBox1.BackgroundImage = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(CvDataProcessor.Resize(resultImg, new Data.Size(pictureBox1.Width, pictureBox1.Height), ResizeMode.Pad));
             }
             yolov8Model.Dispose();
-
-
-
         }
     }
 }

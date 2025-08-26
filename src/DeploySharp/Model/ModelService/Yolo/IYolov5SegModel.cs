@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using OpenCvSharp;
 
 
 namespace DeploySharp.Model
@@ -43,7 +44,7 @@ namespace DeploySharp.Model
             float[] result0 = dataTensor[0].DataBuffer as float[];
             float[] result1 = dataTensor[1].DataBuffer as float[];
 
-            var config = (Yolov5DetConfig)this.config;
+            var config = (Yolov5SegConfig)this.config;
             int rowResultNum = config.OutputSizes[0][1];
             int oneResultLen = config.OutputSizes[0][2];
             int maskLen = config.OutputSizes[1][1];
@@ -98,7 +99,7 @@ namespace DeploySharp.Model
             var segResults = new SegResult[boxes.Count()];
             Parallel.For(0, boxes.Count(), index =>
             {
-                float[] rawMaskData = new float[initialWidth * initialHeight];
+                float[] rawMaskData = new float[validMaskWidth * validMaskHeight];
                 var box = boxes[index];
                 var bounds = imageAdjustmentParam.AdjustRect(box.Box);
 
@@ -113,7 +114,7 @@ namespace DeploySharp.Model
                 //Array.Clear(rawMaskData);
                 for (int y = 0; y < validMaskHeight; y++)
                 {
-                    int baseOffset = (y + maskPaddingY) * initialWidth + maskPaddingX;
+                    int baseOffset = (y + maskPaddingY) * validMaskWidth + maskPaddingX;
                     for (int x = 0; x < validMaskWidth; x++)
                     {
                         float sum = 0;
@@ -131,20 +132,20 @@ namespace DeploySharp.Model
                     for (var x = 0; x < bounds.Width; x++)
                     {
                         // Calculate source coordinates
-                        var sourceX = (float)(x + bounds.Location.X) * (initialWidth - 1) / (imageAdjustmentParam.RowImgSize.Width - 1);
+                        var sourceX = (float)(x + bounds.Location.X) * (validMaskWidth - 1) / (imageAdjustmentParam.RowImgSize.Width - 1);
                         var sourceY = (float)(y + bounds.Location.Y) * (initialHeight - 1) / (imageAdjustmentParam.RowImgSize.Height - 1);
 
                         // Check if source coordinates are out of bounds
-                        if (sourceY < 0 || sourceY >= initialHeight ||
-                            sourceX < 0 || sourceX >= initialWidth)
+                        if (sourceY < 0 || sourceY >= validMaskHeight ||
+                            sourceX < 0 || sourceX >= validMaskWidth)
                         {
                             targetMask[y * bounds.Width + x] = 0f;
                             continue;
                         }
 
                         // Ensure coordinates are within valid range for interpolation
-                        var x0 = Math.Max(0, Math.Min((int)sourceX, initialWidth - 2));
-                        var y0 = Math.Max(0, Math.Min((int)sourceY, initialHeight - 2));
+                        var x0 = Math.Max(0, Math.Min((int)sourceX, validMaskWidth - 2));
+                        var y0 = Math.Max(0, Math.Min((int)sourceY, validMaskHeight - 2));
 
                         var x1 = x0 + 1;
                         var y1 = y0 + 1;
@@ -154,8 +155,8 @@ namespace DeploySharp.Model
                         var yLerp = sourceY - y0;
 
                         // Perform bilinear interpolation
-                        var top = Lerp(rawMaskData[y0 * initialWidth + x0], rawMaskData[y0 * initialWidth + x1], xLerp);
-                        var bottom = Lerp(rawMaskData[y1 * initialWidth + x0], rawMaskData[y1 * initialWidth + x1], xLerp);
+                        var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
+                        var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
 
                         targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
                     }

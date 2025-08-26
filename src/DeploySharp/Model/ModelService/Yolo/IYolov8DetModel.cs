@@ -41,14 +41,14 @@ namespace DeploySharp.Model
 
             var config = (Yolov5DetConfig)this.config;
             int rowResultNum = config.OutputSizes[0][2];
-            int oneResultLen = config.OutputSizes[0][1] - 4;
+            int oneResultLen = config.OutputSizes[0][1];
 
             var candidateBoxes = new ConcurrentBag<BoundingBox>();
 
             // 4. 并行处理候选框检测
             Parallel.For(0, rowResultNum, i =>
             {
-                for (int j = 4; j < (oneResultLen + 4); j++)  // Iterate through each class
+                for (int j = 4; j < oneResultLen; j++)  // Iterate through each class
                 {
                     float conf = result0[rowResultNum * j + i];
                     int label = j - 4;
