@@ -1,4 +1,5 @@
-﻿using DeploySharp.Engine;
+﻿using DeploySharp.Data;
+using DeploySharp.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class Yolov8SegConfig : YoloConfig
+    public class Yolov8SegConfig : Yolov5DetConfig
     {
         public Yolov8SegConfig() { }
 
@@ -16,7 +17,8 @@ namespace DeploySharp.Model
             DeviceType deviceType = DeviceType.CPU,
             float confidenceThreshold = 0.5f,
             float nmsThreshold = 0.5f,
-             int inferBatch = 1)
+            int inferBatch = 1,
+            ResizeMode resizeMode = ResizeMode.Pad)
         {
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
@@ -24,6 +26,7 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.NmsThreshold = nmsThreshold;
             this.InferBatch = inferBatch;
+            this.ImgResizeMode = resizeMode;
 
         }
     }
