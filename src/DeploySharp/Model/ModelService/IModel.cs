@@ -16,7 +16,6 @@ namespace DeploySharp.Model
     /// </summary>
     public abstract class IModel : IDisposable
     {
-        protected readonly ILogger _logger;
         protected IConfig config;          // Model configuration/模型配置
         protected IModelInferEngine engine;    // Inference engine instance/推理引擎实例
 

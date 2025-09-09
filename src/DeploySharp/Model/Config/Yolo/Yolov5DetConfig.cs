@@ -11,7 +11,7 @@ namespace DeploySharp.Model
     public class Yolov5DetConfig : YoloConfig
     {
 
-        public NonMaxSuppression NonMaxSuppression = new NonMaxSuppression();
+
         public Yolov5DetConfig() { }
 
         public Yolov5DetConfig(string modelPath,
@@ -20,7 +20,8 @@ namespace DeploySharp.Model
             float confidenceThreshold = 0.5f,
             float nmsThreshold = 0.5f,
             int inferBatch = 1,
-            ResizeMode resizeMode = ResizeMode.Stretch)
+            ImageResizeMode resizeMode = ImageResizeMode.Stretch,
+            ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
@@ -28,8 +29,9 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.NmsThreshold = nmsThreshold;
             this.InferBatch = inferBatch;
-            this.ImgResizeMode = resizeMode;
-
+            this.DataProcessor.ResizeMode = resizeMode;
+            this.DataProcessor.NormalizationType = normalizationType;
+            NonMaxSuppression = new RectNonMaxSuppression();
         }
     }
 }

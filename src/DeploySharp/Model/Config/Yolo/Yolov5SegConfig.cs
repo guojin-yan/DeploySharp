@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class Yolov5SegConfig : Yolov5DetConfig
+    public class Yolov5SegConfig : YoloConfig
     {
         public Yolov5SegConfig() { }
-
         public Yolov5SegConfig(string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
             float confidenceThreshold = 0.5f,
             float nmsThreshold = 0.5f,
             int inferBatch = 1,
-            ResizeMode resizeMode = ResizeMode.Stretch)
+            ImageResizeMode resizeMode = ImageResizeMode.Stretch,
+            ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
@@ -26,8 +26,9 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.NmsThreshold = nmsThreshold;
             this.InferBatch = inferBatch;
-            this.ImgResizeMode = resizeMode;
-
+            this.DataProcessor.ResizeMode = resizeMode;
+            this.DataProcessor.NormalizationType = normalizationType;
+            NonMaxSuppression = new RectNonMaxSuppression();
         }
     }
 }

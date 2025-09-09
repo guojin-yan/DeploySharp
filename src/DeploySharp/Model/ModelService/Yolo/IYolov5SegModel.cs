@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using DeploySharp.Data;
-
 using System.Runtime.CompilerServices;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using OpenCvSharp;
 
 
 namespace DeploySharp.Model
@@ -182,159 +180,6 @@ namespace DeploySharp.Model
         // 优化的线性插值
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float Lerp(float a, float b, float t) => a + (b - a) * t;
-
-
-
-        ///// <summary>
-        ///// Post-processes raw model output to extract detection results
-        ///// </summary>
-        ///// <param name="dataTensor">Raw model output tensor</param>
-        ///// <returns>Processed detection results</returns>
-        //protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
-        //{
-        //    // Get raw output buffer from tensor
-        //    float[] result0 = dataTensor[0].GetMemory<float>().ToArray();
-        //    float[] result1 = dataTensor[1].GetMemory<float>().ToArray();
-
-        //    List<BoundingBox> candidateBoxes = new List<BoundingBox>();
-
-        //    int rowResultNum = config.OutputSizes[0][1];
-        //    int oneResultLen = config.OutputSizes[0][2];
-
-        //    var maskWidth = config.OutputSizes[1][3];
-        //    var maskHeight = config.OutputSizes[1][2];
-        //    var maskLen = config.OutputSizes[1][1];
-
-        //    var maskPaddingX = imageAdjustmentParam.Padding.First * maskWidth / imageAdjustmentParam.RowImgSize.Width;
-        //    var maskPaddingY = imageAdjustmentParam.Padding.Second * maskHeight / imageAdjustmentParam.RowImgSize.Height;
-
-        //    maskWidth -= maskPaddingX * 2;
-        //    maskHeight -= maskPaddingY * 2;
-
-        //    for (int i = 0; i < rowResultNum; i++)
-        //    {
-        //        float conf = result0[oneResultLen * i + 4];
-        //        if (conf > 0.25)
-        //        {
-        //            for (int j = 5; j < oneResultLen - maskLen; j++)
-        //            {
-        //                float conf1 = result0[oneResultLen * i + j];
-        //                int label = j - 5;
-        //                if (conf1 > ((YoloConfig)config).ConfidenceThreshold)
-        //                {
-        //                    float cx = result0[oneResultLen * i];
-        //                    float cy = result0[oneResultLen * i + 1];
-        //                    float ow = result0[oneResultLen * i + 2];
-        //                    float oh = result0[oneResultLen * i + 3];
-        //                    candidateBoxes.Add(
-        //                        new BoundingBox
-        //                        {
-        //                            Index = i,
-        //                            NameIndex = label,
-        //                            Confidence = conf1,
-        //                            Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
-        //                            Angle = 0.0f
-        //                        });
-
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    var boxes = ((Yolov5DetConfig)config).NonMaxSuppression.Run(candidateBoxes, ((Yolov5DetConfig)config).NmsThreshold);
-
-
-        //    float[] rawMaskData = new float[maskWidth * maskHeight];
-
-        //    var segResult = new SegResult[boxes.Length];
-        //    for (var index = 0; index < boxes.Length; index++)
-        //    {
-        //        var box = boxes[index];
-        //        var boxIndex = box.Index;
-
-        //        var bounds = imageAdjustmentParam.AdjustRect(box.Box);
-
-
-        //        float[] maskData = new float[maskLen];
-        //        int offset = oneResultLen * boxIndex + oneResultLen - maskLen;
-        //        Array.Copy(result0, offset, maskData, 0, maskLen);
-
-
-        //        Array.Clear(rawMaskData, 0, rawMaskData.Length);
-
-        //        for (var y = 0; y < maskHeight; y++)
-        //        {
-        //            for (var x = 0; x < maskWidth; x++)
-        //            {
-        //                var value = 0f;
-
-        //                for (var i = 0; i < maskLen; i++)
-        //                {
-        //                    value += result1[i * maskWidth * maskHeight + (y + maskPaddingY) * maskWidth + x + maskPaddingX] * maskData[i];
-        //                }
-
-        //                rawMaskData[y * maskWidth + x] = Sigmoid(value);
-        //            }
-        //        }
-        //        float[] targetMaskData = new float[bounds.Height * bounds.Width];
-
-        //        for (var y = 0; y < bounds.Height; y++)
-        //        {
-        //            for (var x = 0; x < bounds.Width; x++)
-        //            {
-        //                // Calculate source coordinates
-        //                var sourceX = (float)(x + bounds.Location.X) * (maskWidth - 1) / (imageAdjustmentParam.RowImgSize.Width - 1);
-        //                var sourceY = (float)(y + bounds.Location.Y) * (maskHeight - 1) / (imageAdjustmentParam.RowImgSize.Height - 1);
-
-        //                // Check if source coordinates are out of bounds
-        //                if (sourceY < 0 || sourceY >= maskHeight ||
-        //                    sourceX < 0 || sourceX >= maskWidth)
-        //                {
-        //                    targetMaskData[y * bounds.Width + x] = 0f;
-        //                    continue;
-        //                }
-
-        //                // Ensure coordinates are within valid range for interpolation
-        //                var x0 = Math.Max(0, Math.Min((int)sourceX, maskWidth - 2));
-        //                var y0 = Math.Max(0, Math.Min((int)sourceY, maskHeight - 2));
-
-        //                var x1 = x0 + 1;
-        //                var y1 = y0 + 1;
-
-        //                // Calculate interpolation factors
-        //                var xLerp = sourceX - x0;
-        //                var yLerp = sourceY - y0;
-
-        //                // Perform bilinear interpolation
-        //                var top = Lerp(rawMaskData[y0 * maskWidth + x0], rawMaskData[y0 * maskWidth + x1], xLerp);
-        //                var bottom = Lerp(rawMaskData[y1 * maskWidth + x0], rawMaskData[y1 * maskWidth + x1], xLerp);
-
-        //                targetMaskData[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
-        //            }
-        //        }
-
-        //        segResult[index] = new SegResult
-        //        {
-        //            Mask = new ImageDataF(targetMaskData, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
-        //            Id = box.NameIndex,
-        //            Bounds = bounds,
-        //            Confidence = box.Confidence
-        //        };
-
-        //        //Mat mat = new Mat(bounds.Width, bounds.Height, MatType.CV_32FC1, targetMaskData);
-        //        //Cv2.ImShow("mat", mat);
-        //        //Cv2.WaitKey(0);
-        //    }
-
-
-
-        //    return segResult;
-        //}
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private static float Lerp(float a, float b, float t) => a + (b - a) * t;
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private static float Sigmoid(float value) => (float)(1 / (1 + Math.Exp(-value)));
-
     }
 
 }

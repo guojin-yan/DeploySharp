@@ -98,7 +98,7 @@ namespace DeploySharp.Data
         }
 
 
-        public static ImageAdjustmentParam CreateFromImageInfo(Size inputSize, Size imgSize, ResizeMode resizeMode)
+        public static ImageAdjustmentParam CreateFromImageInfo(Size inputSize, Size imgSize, ImageResizeMode resizeMode)
         {
             // 确保输入尺寸合法
             if (inputSize.Width <= 0 || inputSize.Height <= 0 || imgSize.Width <= 0 || imgSize.Height <= 0)
@@ -114,7 +114,7 @@ namespace DeploySharp.Data
 
             switch (resizeMode)
             {
-                case ResizeMode.Stretch:
+                case ImageResizeMode.Stretch:
                     // 直接拉伸，比例各自独立
                     widthRatio = targetWidth / srcWidth;
                     heightRatio = targetHeight / srcHeight;
@@ -127,7 +127,7 @@ namespace DeploySharp.Data
                         inputSize
                     );
 
-                case ResizeMode.Pad:
+                case ImageResizeMode.Pad:
                     // 等比缩放，计算单边填充
                     float scale = Math.Min(targetWidth / srcWidth, targetHeight / srcHeight);
                     widthRatio = heightRatio = scale;
@@ -145,7 +145,7 @@ namespace DeploySharp.Data
                         inputSize
                     );
 
-                case ResizeMode.Max:
+                case ImageResizeMode.Max:
                     // 等比缩放，不超过目标尺寸
                     float maxScale = Math.Min(targetWidth / srcWidth, targetHeight / srcHeight);
                     widthRatio = heightRatio = maxScale;
@@ -158,7 +158,7 @@ namespace DeploySharp.Data
                         inputSize
                     );
 
-                case ResizeMode.Crop:
+                case ImageResizeMode.Crop:
                     // 等比缩放后裁剪，计算需要裁剪的部分
                     float cropScale = Math.Max(targetWidth / srcWidth, targetHeight / srcHeight);
                     widthRatio = heightRatio = cropScale;

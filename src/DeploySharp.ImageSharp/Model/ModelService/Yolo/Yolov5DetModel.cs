@@ -27,23 +27,18 @@ namespace DeploySharp.Model
         /// <param name="config">Model configuration parameters</param>
         public Yolov5DetModel(Yolov5DetConfig config) : base(config) { }
 
-
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
             int inputSize = config.InputSizes[0][2];
             var image = (Image<Rgb24>)img;
-
-            // 使用ImageSharp进行letterbox处理
-            Image<Rgb24> processedImage = CvDataProcessor.Resize(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((Yolov5DetConfig)config).ImgResizeMode);
-
             // 归一化处理 (0-255 to 0-1)
-            float[] normalizedData = CvDataProcessor.Normalize(processedImage, true);
-
+            float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((YoloConfig)config).DataProcessor);
 
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(image.Size()),
-                ((Yolov5DetConfig)config).ImgResizeMode);
+                 ((YoloConfig)config).DataProcessor.ResizeMode);
+
 
             DataTensor dataTensors = new DataTensor();
             dataTensors.AddNode(

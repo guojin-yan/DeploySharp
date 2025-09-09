@@ -15,18 +15,12 @@ namespace DeploySharp.Model
         {
             int inputSize = config.InputSizes[0][2];
             var image = (Mat)img;
-
-            // 使用ImageSharp进行letterbox处理
-            Mat processedImage = CvDataProcessor.Resize(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((Yolov8SegConfig)config).ImgResizeMode);
-
             // 归一化处理 (0-255 to 0-1)
-            float[] normalizedData = CvDataProcessor.Normalize(processedImage, true);
-
-
+            float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((YoloConfig)config).DataProcessor);
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(image.Size()),
-                ((Yolov8SegConfig)config).ImgResizeMode);
+                 ((YoloConfig)config).DataProcessor.ResizeMode);
 
 
             DataTensor dataTensors = new DataTensor();

@@ -33,8 +33,8 @@ namespace DeploySharp.Model
         /// </summary>
         public List<string> CategoryNames { get; set; }
 
-        public ResizeMode ImgResizeMode = ResizeMode.Pad;
-
+        public DataProcessorConfig DataProcessor = new DataProcessorConfig();
+        public NonMaxSuppression NonMaxSuppression;
 
         /// <summary>
         /// 生成配置摘要（仅显示已赋值的属性）

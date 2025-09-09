@@ -9,7 +9,7 @@ namespace DeploySharp.Data
     /// <summary>
     /// Provides enumeration over how the image should be resized.
     /// </summary>
-    public enum ResizeMode
+    public enum ImageResizeMode
     {
 
         /// <summary>

@@ -7,13 +7,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp.Processing;
-using ResizeMode = DeploySharp.Data.ResizeMode;
+using ResizeMode = DeploySharp.Data.ImageResizeMode;
 using Size = DeploySharp.Data.Size;
 
 namespace DeploySharp.Data
 {
     public static class CvDataProcessor
     {
+
+        public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
+        {
+            return Normalize(Resize((Image<Rgb24>)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
+        }
+
+
         /// <summary>
         /// 根据指定的 ResizeMode 调整图像尺寸
         /// </summary>
@@ -25,7 +32,7 @@ namespace DeploySharp.Data
         public static Image<Rgb24> Resize(
             Image<Rgb24> image,
             Size size,
-            ResizeMode resizeMode)
+            ImageResizeMode resizeMode)
         {
             var options = new ResizeOptions
             {
@@ -36,19 +43,19 @@ namespace DeploySharp.Data
             Image<Rgb24> img = image.Clone();
             switch (resizeMode)
             {
-                case ResizeMode.Stretch:
+                case ImageResizeMode.Stretch:
                     options.Mode = SixLabors.ImageSharp.Processing.ResizeMode.Stretch;
                     break;
 
-                case ResizeMode.Pad:
+                case ImageResizeMode.Pad:
                     options.Mode = SixLabors.ImageSharp.Processing.ResizeMode.Pad;
                     options.PadColor = Color.Black; // 默认填充黑色
                     break;
 
-                case ResizeMode.Max:
+                case ImageResizeMode.Max:
                     options.Mode = SixLabors.ImageSharp.Processing.ResizeMode.Max;
                     break;
-                case ResizeMode.Crop:
+                case ImageResizeMode.Crop:
                     options.Mode = SixLabors.ImageSharp.Processing.ResizeMode.Crop;
                     break;
 
@@ -114,6 +121,33 @@ namespace DeploySharp.Data
 
             return result;
         }
+
+        /// <summary>
+        /// 执行归一化 (伪代码示例)
+        /// </summary>
+        public static float[] Normalize(Image<Rgb24> image, ImageNormalizationType type, NormalizationParams customParams = null)
+        {
+            var parameters = type == ImageNormalizationType.CustomStandard
+                ? customParams
+                : NormalizationParamsFactory.GetParams(type);
+
+            switch (type)
+            {
+                case ImageNormalizationType.Scale_0_1:
+                    return Normalize(image, true);
+
+                case ImageNormalizationType.Scale_Neg1_1:
+                    return null;
+
+                case ImageNormalizationType.ImageNetStandard:
+                case ImageNormalizationType.CustomStandard:
+                    return Normalize(image, parameters.Mean, parameters.Std, true);
+
+                default:
+                    return Normalize(image, false);
+            }
+        }
+
     }
 }
 

@@ -12,7 +12,6 @@ namespace DeploySharp.Data
 {
     public class NonMaxSuppression
     {
-
         public BoundingBox[] Run(BoundingBox[] candidateBoxes, float iouThreshold) => Run(new List<BoundingBox>(candidateBoxes), iouThreshold);
         public BoundingBox[] Run(List<BoundingBox> candidateBoxes, float iouThreshold)
         {
@@ -65,6 +64,14 @@ namespace DeploySharp.Data
         }
 
         protected virtual float CalculateIntersectionOverUnion(BoundingBox boxA, BoundingBox boxB)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class RectNonMaxSuppression : NonMaxSuppression
+    {
+
+        protected override float CalculateIntersectionOverUnion(BoundingBox boxA, BoundingBox boxB)
         {
             var rectangleA = boxA.Box;
             var rectangleB = boxB.Box;

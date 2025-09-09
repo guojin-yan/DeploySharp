@@ -13,13 +13,20 @@ namespace DeploySharp.Data
 {
     public static class CvDataProcessor
     {
+
+        public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
+        {
+            return Normalize(Resize((Mat)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
+        }
+
+
         /// <summary>
         /// 根据指定的ResizeMode调整图像尺寸（OpenCVSharp实现）
         /// </summary>
         public static Mat Resize(
             Mat img,
             Size size,
-            ResizeMode resizeMode,
+            ImageResizeMode resizeMode,
             InterpolationFlags interpolation = InterpolationFlags.Lanczos4)
         {
             if (img.Empty())
@@ -30,11 +37,11 @@ namespace DeploySharp.Data
 
             switch (resizeMode)
             {
-                case ResizeMode.Stretch:
+                case ImageResizeMode.Stretch:
                     Cv2.Resize(img, output, targetSize, 0, 0, interpolation);
                     break;
 
-                case ResizeMode.Pad:
+                case ImageResizeMode.Pad:
                     // 计算宽高比例并保持原比例
                     double scale = Math.Min(
                         (double)size.Width / img.Width,
@@ -60,14 +67,14 @@ namespace DeploySharp.Data
                     resized.Dispose();
                     break;
 
-                case ResizeMode.Max:
+                case ImageResizeMode.Max:
                     double ratio = Math.Min(
                         (double)size.Width / img.Width,
                         (double)size.Height / img.Height);
                     Cv2.Resize(img, output, new OpenCvSharp.Size(), ratio, ratio, interpolation);
                     break;
 
-                case ResizeMode.Crop:
+                case ImageResizeMode.Crop:
                     double cropRatio = Math.Max(
                         (double)size.Width / img.Width,
                         (double)size.Height / img.Height);
@@ -132,7 +139,7 @@ namespace DeploySharp.Data
                     for (int x = 0; x < width; x++)
                     {
                         result[channelOffset + y * width + x] =
-                            (indexer[y, x] - currentMean) * currentScale;
+                            (indexer[y, x] - currentMean) / currentScale;
                     }
                 }
             });
@@ -182,6 +189,33 @@ namespace DeploySharp.Data
         }
 
 
+
+        /// <summary>
+        /// 执行归一化 (伪代码示例)
+        /// </summary>
+        public static float[] Normalize(Mat image, ImageNormalizationType type, NormalizationParams customParams = null)
+        {
+            Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);
+            var parameters = type == ImageNormalizationType.CustomStandard
+                ? customParams
+                : NormalizationParamsFactory.GetParams(type);
+
+            switch (type)
+            {
+                case ImageNormalizationType.Scale_0_1:
+                    return Normalize(image, true);
+
+                case ImageNormalizationType.Scale_Neg1_1:
+                    return null;
+
+                case ImageNormalizationType.ImageNetStandard:
+                case ImageNormalizationType.CustomStandard:
+                    return Normalize(image, parameters.Mean, parameters.Std, true);
+
+                default:
+                    return Normalize(image, false);
+            }
+        }
 
 
     }

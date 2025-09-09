@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class Yolov8DetConfig : Yolov5DetConfig
+    public class Yolov8DetConfig : YoloConfig
     {
         public Yolov8DetConfig() { }
 
@@ -18,7 +18,8 @@ namespace DeploySharp.Model
             float confidenceThreshold = 0.5f,
             float nmsThreshold = 0.5f,
             int inferBatch = 1,
-            ResizeMode resizeMode = ResizeMode.Pad)
+            ImageResizeMode resizeMode = ImageResizeMode.Pad,
+            ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
@@ -26,8 +27,9 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.NmsThreshold = nmsThreshold;
             this.InferBatch = inferBatch;
-            this.ImgResizeMode = resizeMode;
-
+            this.DataProcessor.ResizeMode = resizeMode;
+            this.DataProcessor.NormalizationType = normalizationType;
+            NonMaxSuppression = new RectNonMaxSuppression();
         }
     }
 }

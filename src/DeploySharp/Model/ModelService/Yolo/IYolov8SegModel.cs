@@ -1,5 +1,4 @@
 ﻿using DeploySharp.Data;
-using OpenCvSharp;
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -124,7 +123,6 @@ namespace DeploySharp.Model
                     }
                 }
 
-                Mat mat = Mat.FromPixelData(validMaskHeight,validMaskWidth, MatType.CV_32FC1, rawMaskData);
                 var targetMask = new float[bounds.Height * bounds.Width];
 
                 for (var y = 0; y < bounds.Height; y++)
