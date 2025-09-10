@@ -162,9 +162,18 @@ namespace DeploySharp.Engine
                 string name = input.Key;
                 config.InputNames.Add(name);
                 inputNodeTypes.Add(input.Value.ElementType);
+                var shape = input.Value.Dimensions;
+                foreach (var dim in shape) 
+                {
+                    if(dim <= 0)
+                    {
+                        config.DynamicInput = true;
+                        break;
+                    }
+                }
                 if (!config.DynamicInput)
                 {
-                    var shape = input.Value.Dimensions;
+                   
                     config.InputSizes.Add(shape);
                     MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {input.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
                 }
@@ -179,9 +188,18 @@ namespace DeploySharp.Engine
                 string name = output.Key;
                 config.OutputNames.Add(name);
                 outputNodeTypes.Add(output.Value.ElementType);
-                if (!config.DynamicInput)
+                var shape = output.Value.Dimensions;
+                foreach (var dim in shape)
                 {
-                    var shape = output.Value.Dimensions;
+                    if (dim <= 0)
+                    {
+                        config.DynamicOutput = true;
+                        break;
+                    }
+                }
+                if (!config.DynamicOutput)
+                {
+     
                     config.OutputSizes.Add(shape);
                     MyLogger.Log.Debug($"模型输出节点: {name}, 类型: {output.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
                 }
@@ -230,11 +248,18 @@ namespace DeploySharp.Engine
 
                 // 处理输出结果
                 DataTensor dataTensor = new DataTensor();
+                if (modelConfig.DynamicOutput)
+                {
+                    modelConfig.OutputSizes.Clear();
+                }
                 for (int i = 0; i < outputs.Count; i++)
                 {
                     var resultData = outputs[i];
                     var shape = resultData.GetTensorTypeAndShape().Shape;
-
+                    if (modelConfig.DynamicOutput) 
+                    {
+                        modelConfig.OutputSizes.Add(shape.Select(item => (int)item).ToArray());
+                    }
                     TensorElementType type = resultData.GetTensorTypeAndShape().ElementDataType;
                     if (type == TensorElementType.Float)
                     {

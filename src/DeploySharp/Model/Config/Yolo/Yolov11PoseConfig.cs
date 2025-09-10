@@ -12,6 +12,19 @@ namespace DeploySharp.Model
     public class Yolov11PoseConfig : Yolov8PoseConfig
     {
         public Yolov11PoseConfig() { }
+
+        public Yolov11PoseConfig(string modelPath)
+        {
+            this.ModelPath = modelPath;
+            this.TargetInferenceBackend = InferenceBackend.OpenVINO;
+            this.TargetDeviceType = DeviceType.CPU;
+            this.ConfidenceThreshold = 0.5f;
+            this.NmsThreshold = 0.5f;
+            this.InferBatch = 1;
+            this.DataProcessor.ResizeMode = ImageResizeMode.Pad;
+            this.DataProcessor.NormalizationType = ImageNormalizationType.Scale_0_1;
+            NonMaxSuppression = new RectNonMaxSuppression();
+        }
         public Yolov11PoseConfig(string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,

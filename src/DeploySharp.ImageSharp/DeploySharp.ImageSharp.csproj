@@ -8,15 +8,14 @@
     <PackageId>JYPPX.DeploySharp.ImageSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.1</Version>
+    <Version>0.0.2-beta</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
     <Description>
-      、
     </Description>
-    <PackageProjectUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/guojin-yan/OpenVINO-CSharp-API</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/guojin-yan/DeploySharp.git</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/guojin-yan/DeploySharp.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <NeutralLanguage>zh</NeutralLanguage>

@@ -17,7 +17,7 @@ namespace DeploySharp.Model
         /// Constructor initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov11SegModel(Yolov8SegConfig config) : base(config) { }
+        public IYolov11SegModel(Yolov11SegConfig config) : base(config) { }
 
         /// <summary>
         /// Predicts objects in input image and returns detection results

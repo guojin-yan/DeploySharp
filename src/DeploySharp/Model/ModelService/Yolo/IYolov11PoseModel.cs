@@ -16,7 +16,7 @@ namespace DeploySharp.Model
         /// Constructor that initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov11PoseModel(Yolov8PoseConfig config) : base(config) { }
+        public IYolov11PoseModel(Yolov11PoseConfig config) : base(config) { }
 
         /// <summary>
         /// Main prediction method that processes input image

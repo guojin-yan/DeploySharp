@@ -123,18 +123,26 @@ namespace DeploySharp.Engine
                 MyLogger.Log.Info($"模型输入节点数: {inputNodeSize}, 输出节点数: {outputNodeSize}");
 
                 List<Input> inputs = model.inputs();
-                if (!config.DynamicInput)
-                {
-                    config.InputSizes.Clear();
-                    config.OutputSizes.Clear();
-                }
-                config.InputNames.Clear();
-                config.OutputNames.Clear();
                 foreach (Input input in inputs)
                 {
                     string name = input.get_any_name();
                     config.InputNames.Add(name);
                     inputNodeTypes.Add(input.get_element_type());
+                    if (input.get_partial_shape().is_dynamic())
+                    {
+                        config.DynamicInput = true;
+                    }
+                    else
+                    {
+                        foreach (var s in input.get_partial_shape().get_dimensions())
+                        {
+                            if(s.is_dynamic())
+                            {
+                                config.DynamicInput = true;
+                                break;
+                            }
+                        }
+                    }
                     if (!config.DynamicInput)
                     {
                         var shape = input.get_shape().Select(x => (int)x).ToArray();
@@ -154,7 +162,23 @@ namespace DeploySharp.Engine
                     string name = output.get_any_name();
                     config.OutputNames.Add(name);
                     outputNodeTypes.Add(output.get_element_type());
-                    if (!config.DynamicInput)
+
+                    if (output.get_partial_shape().is_dynamic())
+                    {
+                        config.DynamicOutput = true;
+                    }
+                    else
+                    {
+                        foreach (var s in output.get_partial_shape().get_dimensions())
+                        {
+                            if (s.is_dynamic())
+                            {
+                                config.DynamicOutput = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!config.DynamicOutput)
                     {
                         var shape = output.get_shape().Select(x => (int)x).ToArray();
                         config.OutputSizes.Add(shape);
@@ -199,7 +223,10 @@ namespace DeploySharp.Engine
                 {
                     Tensor inputTensor = inferRequests[0].get_input_tensor((ulong)i);
                     NodeData data = inputs[i];
-
+                    if (modelConfig.DynamicInput) 
+                    {
+                        inputTensor.set_shape( new Shape(modelConfig.InputSizes[0]));
+                    }
                     if (data.DataType == typeof(float))
                     {
                         inputTensor.set_data<float>(data.DataBuffer as float[]);
@@ -219,12 +246,19 @@ namespace DeploySharp.Engine
 
                 // 处理输出结果
                 DataTensor dataTensor = new DataTensor();
+                if (modelConfig.DynamicInput)
+                {
+                    modelConfig.OutputSizes.Clear();
+                }
                 for (int i = 0; i < outputNodeSize; i++)
                 {
                     Tensor outputTensor = inferRequests[0].get_output_tensor((ulong)i);
                     var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
 
-
+                    if (modelConfig.DynamicInput)
+                    {
+                        modelConfig.OutputSizes.Add(shape);
+                    }
                     if (outputTensor.get_element_type().get_type() == ElementType.F16 || outputTensor.get_element_type().get_type() == ElementType.F32)
                     {
                         float[] data = outputTensor.get_data<float>((int)outputTensor.get_size());

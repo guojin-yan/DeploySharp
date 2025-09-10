@@ -22,6 +22,11 @@ namespace DeploySharp.Model
         /// </summary>
         public bool DynamicInput { get; set; } = false;
 
+        /// <summary>
+        /// 是否为动态输出模型，根据具体模型配置
+        /// </summary>
+        public bool DynamicOutput { get; set; } = false;
+
         // 输入参数配置
         /// <summary>
         /// 输入张量名称列表（多输入模型需要按顺序指定）

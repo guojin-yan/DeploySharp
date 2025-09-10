@@ -11,7 +11,18 @@ namespace DeploySharp.Model
     public class Yolov12DetConfig : Yolov8DetConfig
     {
         public Yolov12DetConfig() { }
-
+        public Yolov12DetConfig(string modelPath)
+        {
+            this.ModelPath = modelPath;
+            this.TargetInferenceBackend = InferenceBackend.OpenVINO;
+            this.TargetDeviceType = DeviceType.CPU;
+            this.ConfidenceThreshold = 0.5f;
+            this.NmsThreshold = 0.5f;
+            this.InferBatch = 1;
+            this.DataProcessor.ResizeMode = ImageResizeMode.Pad;
+            this.DataProcessor.NormalizationType = ImageNormalizationType.Scale_0_1;
+            NonMaxSuppression = new RectNonMaxSuppression();
+        }
         public Yolov12DetConfig(string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,

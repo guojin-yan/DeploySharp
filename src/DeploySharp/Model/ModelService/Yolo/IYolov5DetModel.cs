@@ -42,6 +42,8 @@ namespace DeploySharp.Model
         /// <returns>Processed detection results</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
             var config = (Yolov5DetConfig)this.config;
@@ -94,6 +96,8 @@ namespace DeploySharp.Model
                 };
             }
 
+            sw.Stop();
+            Console.WriteLine($"Yolov5Det Postprocess Time: {sw.ElapsedMilliseconds} ms");
             return detResult;
         }
 

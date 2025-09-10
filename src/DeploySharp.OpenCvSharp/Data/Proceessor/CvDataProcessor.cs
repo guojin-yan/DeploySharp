@@ -99,93 +99,100 @@ namespace DeploySharp.Data
         /// <summary>
         /// 图像归一化处理（OpenCVSharp实现）
         /// </summary>
-        public static float[] Normalize(Mat image, float[] mean, float[] scale, bool isScale)
+        public static float[] Normalize(Mat im, float[] mean, float[] scale, bool isScale)
         {
-            if (image.Channels() != 3)
+            if (im.Channels() != 3)
                 throw new ArgumentException("Input image must have 3 channels");
             if (mean == null || mean.Length < 3 || scale == null || scale.Length < 3)
                 throw new ArgumentException("Mean and scale arrays must have 3 elements each");
 
-            // 提前计算归一化因子
-            double normFactor = isScale ? 1.0 / 255.0 : 1.0;
-
-            // 转换为浮点型Mat（直接操作原图）
-            image.ConvertTo(image, MatType.CV_32FC3, normFactor);
-
-            // 分离通道（避免后续频繁提取）
-            Mat[] channels = new Mat[3];
-            Cv2.Split(image, out channels);
-
-            int height = image.Rows;
-            int width = image.Cols;
-            float[] result = new float[3 * height * width];
-
-            // 并行处理三个通道
-            Parallel.For(0, 3, c =>
+            double e = 1.0;
+            if (isScale)
             {
-                using Mat channel = channels[c];
-                float currentMean = mean[c];
-                float currentScale = scale[c];
+                e /= 255.0;
+            }
+            im.ConvertTo(im, MatType.CV_32FC3, e);
+            Mat[] bgr_channels = new Mat[3];
+            Cv2.Split(im, out bgr_channels);
+            //for (var i = 0; i < bgr_channels.Length; i++)
+            //{
+            //    bgr_channels[i].ConvertTo(bgr_channels[i], MatType.CV_32FC1, 1.0 * scale[i],
+            //        (0.0 - mean[i]) * scale[i]);
+            //}
 
-                // 使用Mat的索引器高效访问数据
-                var indexer = channel.GetGenericIndexer<float>();
-
-                // 计算结果数组中的起始位置
-                int channelOffset = c * height * width;
-
-                // 处理当前通道的所有像素
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        result[channelOffset + y * width + x] =
-                            (indexer[y, x] - currentMean) / currentScale;
-                    }
-                }
+            Parallel.For(0, 3, i =>
+            {
+                bgr_channels[i].ConvertTo(bgr_channels[i], MatType.CV_32FC1, 1.0 * scale[i],
+                          (0.0 - mean[i]) * scale[i]);
             });
+            Mat re = new Mat();
+            Cv2.Merge(bgr_channels, re);
+            int rh = im.Rows;
+            int rw = im.Cols;
+            int rc = im.Channels();
+            float[] res = new float[rh * rw * rc];
 
-            // 释放临时Mat资源
-            foreach (var channel in channels) channel.Dispose();
-            return result;
+            GCHandle resultHandle = default;
+            try
+            {
+                resultHandle = GCHandle.Alloc(res, GCHandleType.Pinned);
+                IntPtr resultPtr = resultHandle.AddrOfPinnedObject();
+                Parallel.For(0, rc, i =>
+                {
+                    using Mat dest = Mat.FromPixelData(rh, rw, MatType.CV_32FC1, resultPtr + i * rh * rw * sizeof(float));
+                    Cv2.ExtractChannel(im, dest, i);
+                });
+                //    for (int i = 0; i < rc; ++i)
+                //{
+                //    using Mat dest = Mat.FromPixelData(rh, rw, MatType.CV_32FC1, resultPtr + i * rh * rw * sizeof(float));
+                //    Cv2.ExtractChannel(im, dest, i);
+                //}
+            }
+            finally
+            {
+                resultHandle.Free();
+            }
+            return res;
         }
 
-        public static float[] Normalize(Mat image, bool isScale)
+        public static float[] Normalize(Mat im, bool isScale)
         {
             // 参数校验
-            if (image == null)
-                throw new ArgumentNullException(nameof(image));
+            if (im == null)
+                throw new ArgumentNullException(nameof(im));
 
-            // 转换像素值为浮点数
-            double scaleFactor = isScale ? 1.0 / 255.0 : 1.0;
-            image.ConvertTo(image, MatType.CV_32FC3, scaleFactor);
-
-            int height = image.Rows;
-            int width = image.Cols;
-            int channels = image.Channels();
-            float[] result = new float[height * width * channels];
-
-            // 并行处理每个通道
-            Parallel.For(0, channels, c =>
+            double e = 1.0;
+            if (isScale)
             {
-                // 提取单通道数据
-                using Mat channelMat = new Mat();
-                Cv2.ExtractChannel(image, channelMat, c);
+                e /= 255.0;
+            }
+            im.ConvertTo(im, MatType.CV_32FC3, e);
+            int rh = im.Rows;
+            int rw = im.Cols;
+            int rc = im.Channels();
+            float[] res = new float[rh * rw * rc];
 
-                // 直接访问Mat数据
-                var indexer = channelMat.GetGenericIndexer<float>();
-                int channelOffset = c * height * width;
-
-                // 填充结果数组
-                for (int y = 0; y < height; y++)
+            GCHandle resultHandle = default;
+            try
+            {
+                resultHandle = GCHandle.Alloc(res, GCHandleType.Pinned);
+                IntPtr resultPtr = resultHandle.AddrOfPinnedObject();
+                Parallel.For(0, rc, i =>
                 {
-                    for (int x = 0; x < width; x++)
-                    {
-                        result[channelOffset + y * width + x] = indexer[y, x];
-                    }
-                }
-            });
-
-            return result;
+                    using Mat dest = Mat.FromPixelData(rh, rw, MatType.CV_32FC1, resultPtr + i * rh * rw * sizeof(float));
+                    Cv2.ExtractChannel(im, dest, i);
+                });
+                //    for (int i = 0; i < rc; ++i)
+                //{
+                //    using Mat dest = Mat.FromPixelData(rh, rw, MatType.CV_32FC1, resultPtr + i * rh * rw * sizeof(float));
+                //    Cv2.ExtractChannel(im, dest, i);
+                //}
+            }
+            finally
+            {
+                resultHandle.Free();
+            }
+            return res;
         }
 
 

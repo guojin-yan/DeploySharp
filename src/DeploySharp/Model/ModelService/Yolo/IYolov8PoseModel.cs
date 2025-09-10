@@ -37,7 +37,7 @@ namespace DeploySharp.Model
         {
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
-            var config = (Yolov5DetConfig)this.config;
+            var config = (Yolov8PoseConfig)this.config;
             int rowResultNum = config.OutputSizes[0][2];
             int oneResultLen = config.OutputSizes[0][1];
 

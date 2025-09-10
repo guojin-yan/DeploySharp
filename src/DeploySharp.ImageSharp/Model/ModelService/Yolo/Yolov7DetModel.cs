@@ -1,6 +1,4 @@
-﻿using OpenCvSharp.Dnn;
-using OpenCvSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,29 +8,29 @@ using DeploySharp.Data;
 using System.Collections.Concurrent;
 using System.Numerics;
 using System.Diagnostics;
+using System.Configuration;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.Buffers;
 
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// Implementation of YOLOv5 model for object detection
+    /// Implementation of YOLOv7 model for object detection
     /// Inherits from base IModel interface
     /// </summary>
-    public class Yolov5DetModel : IYolov5DetModel
+    public class Yolov7DetModel : IYolov7DetModel
     {
         /// <summary>
         /// Constructor initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public Yolov5DetModel(Yolov5DetConfig config) : base(config) { }
-
+        public Yolov7DetModel(Yolov7DetConfig config) : base(config) { }
 
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
             int inputSize = config.InputSizes[0][2];
-            var image = (Mat)img;
+            var image = (Image<Rgb24>)img;
             // 归一化处理 (0-255 to 0-1)
             float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((YoloConfig)config).DataProcessor);
 
@@ -41,7 +39,7 @@ namespace DeploySharp.Model
                 CvDataExtensions.ToCvSize(image.Size()),
                  ((YoloConfig)config).DataProcessor.ResizeMode);
 
-           
+
             DataTensor dataTensors = new DataTensor();
             dataTensors.AddNode(
                 config.InputNames[0],
@@ -51,8 +49,6 @@ namespace DeploySharp.Model
                 config.InputSizes[0],
                 typeof(float));
 
-            sw.Stop();
-            Console. WriteLine($"Yolov5DetModel Preprocess Time: {sw.ElapsedMilliseconds} ms");
             return dataTensors;
         }
     }

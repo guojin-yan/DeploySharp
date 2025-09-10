@@ -82,6 +82,11 @@ namespace DeploySharp.Model
             }
         }
 
+        public Task<Result[]> PredictAsync(object img)
+        {
+            return Task.Run(() => Predict(img));
+        }
+
         /// <summary>
         /// Batch prediction for multiple inputs
         /// 批量输入预测方法
