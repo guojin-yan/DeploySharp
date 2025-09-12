@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DeploySharp.Common.Speed
+namespace DeploySharp.Common
 {
     public class PredictorTimer
     {
@@ -32,12 +32,12 @@ namespace DeploySharp.Common.Speed
             stopwatch.Restart();
         }
 
-        public RunSpeed Stop()
+        public ModelInferenceTimeRecord Stop()
         {
             postprocess = stopwatch.Elapsed;
             stopwatch.Stop();
 
-            return new RunSpeed(preprocess, inference, postprocess);
+            return new ModelInferenceTimeRecord(preprocess.TotalMilliseconds, inference.TotalMilliseconds, postprocess.TotalMilliseconds);
         }
     }
 }

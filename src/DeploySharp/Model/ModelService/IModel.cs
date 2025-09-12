@@ -1,4 +1,5 @@
-﻿using DeploySharp.Data;
+﻿using DeploySharp.Common;
+using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp.Log;
 using log4net.Core;
@@ -18,6 +19,9 @@ namespace DeploySharp.Model
     {
         protected IConfig config;          // Model configuration/模型配置
         protected IModelInferEngine engine;    // Inference engine instance/推理引擎实例
+
+        public ModelInferenceProfiler ModelInferenceProfiler { get; } = new ModelInferenceProfiler();
+        protected PredictorTimer predictorTimer = new PredictorTimer();
 
         /// <summary>
         /// Constructor initializes model with configuration
@@ -70,9 +74,13 @@ namespace DeploySharp.Model
 
             try
             {
+                predictorTimer.StartPreprocess();
                 var input = Preprocess(img, out var imageAdjustmentParam);
+                predictorTimer.StartInference();
                 var output = engine.Predict(input);
+                predictorTimer.StartPostprocess();
                 var result = Postprocess(output, imageAdjustmentParam);
+                ModelInferenceProfiler.Record(predictorTimer.Stop());
                 return result;
             }
             catch (Exception ex)
