@@ -14,5 +14,7 @@ namespace DeploySharp.Data
 
         public ImageDataB(byte[] data, int width, int height, int channels, DataFormat format = DataFormat.HWC)
             : base(data, width, height, channels, format) { }
+
+        public byte[] GetRawByteData() => GetRawData();
     }
 }
