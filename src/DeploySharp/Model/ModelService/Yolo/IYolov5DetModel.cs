@@ -42,8 +42,6 @@ namespace DeploySharp.Model
         /// <returns>Processed detection results</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
             var config = (Yolov5DetConfig)this.config;
@@ -88,16 +86,16 @@ namespace DeploySharp.Model
             for (var i = 0; i < boxes.Length; i++)
             {
                 var box = boxes[i];
+                int classID = box.NameIndex;
+                bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
                 detResult[i] = new DetResult
                 {
-                    Id = box.NameIndex,
+                    Id = classID,
                     Bounds = imageAdjustmentParam.AdjustRect(box.Box),
-                    Confidence = box.Confidence
+                    Confidence = box.Confidence,
+                    Category = categoryFlag ? category : classID.ToString(),
                 };
             }
-
-            sw.Stop();
-            Console.WriteLine($"Yolov5Det Postprocess Time: {sw.ElapsedMilliseconds} ms");
             return detResult;
         }
 

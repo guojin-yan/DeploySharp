@@ -157,6 +157,7 @@ namespace DeploySharp.Engine
             }
 
             inferenceSession = new InferenceSession(config.ModelPath, sessionOptions);
+            config.CategoryDict = OnnxParamParse.ParseLabelString( inferenceSession.ModelMetadata.CustomMetadataMap["names"]);
             foreach (var input in inferenceSession.InputMetadata)
             {
                 string name = input.Key;

@@ -83,11 +83,15 @@ namespace DeploySharp.Model
             for (var i = 0; i < boxes.Length; i++)
             {
                 var box = boxes[i];
+
+                int classID = box.NameIndex;
+                bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
                 detResult[i] = new ObbResult
                 {
-                    Id = box.NameIndex,
+                    Id = classID,
                     Bounds = RotatedRect.FromAxisAlignedRect(imageAdjustmentParam.AdjustRectF(box.Box), box.Angle),
-                    Confidence = box.Confidence
+                    Confidence = box.Confidence,
+                    Category = categoryFlag ? category : classID.ToString(),
                 };
             }
 

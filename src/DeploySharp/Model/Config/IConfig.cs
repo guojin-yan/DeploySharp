@@ -1,4 +1,5 @@
-﻿using DeploySharp.Engine;
+﻿using DeploySharp.Data;
+using DeploySharp.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,8 @@ namespace DeploySharp.Model
         /// 是否为动态输出模型，根据具体模型配置
         /// </summary>
         public bool DynamicOutput { get; set; } = false;
+
+        public Dictionary<int, string> CategoryDict { get; set; } = new Dictionary<int, string>();
 
         // 输入参数配置
         /// <summary>
@@ -154,7 +157,7 @@ namespace DeploySharp.Model
                 }
             }
 
-
+            sb.AppendLine("Category Dict:" + $" {(CategoryDict.Count > 0 ? (string.Join(",", CategoryDict.Select(p => $"{p.Key}: '{p.Value}'"))) : "NotSet")}");
             AppendIfSet(sb, "Max Batch Size", MaxBatchSize, 1);
             AppendIfSet(sb, "GPU Enabled", UseGPU);
             AppendIfSet(sb, "Threads", NumThreads, Environment.ProcessorCount);

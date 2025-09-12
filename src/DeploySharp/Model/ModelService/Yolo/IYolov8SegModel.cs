@@ -160,12 +160,17 @@ namespace DeploySharp.Model
                     }
                 }
 
+
+                int classID = box.NameIndex;
+                bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+
                 segResults[index] = new SegResult
                 {
                     Mask = new ImageDataF(targetMask, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
-                    Id = box.NameIndex,
-                    Bounds = bounds,
-                    Confidence = box.Confidence
+                    Id = classID,
+                    Bounds = imageAdjustmentParam.AdjustRect(box.Box),
+                    Confidence = box.Confidence,
+                    Category = categoryFlag ? category : classID.ToString(),
                 };
 
             }

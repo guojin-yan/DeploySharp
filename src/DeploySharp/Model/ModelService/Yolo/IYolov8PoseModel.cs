@@ -86,12 +86,15 @@ namespace DeploySharp.Model
                     keyPoints[k].Point = imageAdjustmentParam.AdjustPoint(new Point(result0[rowResultNum * (5 + 3 * k + 0) + box.Index], result0[rowResultNum * (5 + 3 * k + 1) + box.Index]));
                 }
 
+                int classID = box.NameIndex;
+                bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
 
                 keyPointResults[i] = (new KeyPointResult
                 {
-                    Id = box.NameIndex,
+                    Id = classID,
                     Bounds = imageAdjustmentParam.AdjustRect(box.Box),
                     Confidence = box.Confidence,
+                    Category = categoryFlag ? category : classID.ToString(),
                     KeyPoints = keyPoints
                 });
             }

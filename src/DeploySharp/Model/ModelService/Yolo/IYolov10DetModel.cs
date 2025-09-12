@@ -63,11 +63,14 @@ namespace DeploySharp.Model
                 box.Width = width;
                 box.Height = height;
 
+                int classID = (int)result0[s + 4];
+                bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
                 detResults.Add(new DetResult
                 {
-                    Id = (int)result0[s + 4],
+                    Id = classID,
                     Bounds = imageAdjustmentParam.AdjustRect(box),
-                    Confidence = result0[s + 5]
+                    Confidence = result0[s + 5],
+                    Category = categoryFlag ? category : classID.ToString(),
                 });
             }
 
