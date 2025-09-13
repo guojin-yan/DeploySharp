@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public enum ModelList
+    public enum ModelType
     {
         // Yolo系列
         YOLOv5Det,
