@@ -176,9 +176,9 @@ namespace DeploySharp.ImageSharp_DemoPlatform
 
         private void MainForm_Load(object sender, EventArgs e)
         { 
-            string[] enumStrings = Enum.GetNames(typeof(ModelList));
+            string[] enumStrings = Enum.GetNames(typeof(ModelType));
        
-            ModelList[] enumValues = (ModelList[])Enum.GetValues(typeof(ModelList));
+            ModelType[] enumValues = (ModelType[])Enum.GetValues(typeof(ModelType));
 
             foreach (var enumString in enumValues) 
             {

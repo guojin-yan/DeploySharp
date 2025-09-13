@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp-Dem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDemoOpenCvSharp", "samples\TestDemoOpenCvSharp\TestDemoOpenCvSharp.csproj", "{FD6B8D7F-E1C3-43B9-BA1D-1042DB9F2833}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDemoImageSharp", "TestDemoImageSharp\TestDemoImageSharp.csproj", "{933E41B4-2524-4C96-A46E-7ED05CE4A9BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{FD6B8D7F-E1C3-43B9-BA1D-1042DB9F2833}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD6B8D7F-E1C3-43B9-BA1D-1042DB9F2833}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD6B8D7F-E1C3-43B9-BA1D-1042DB9F2833}.Release|Any CPU.Build.0 = Release|Any CPU
+		{933E41B4-2524-4C96-A46E-7ED05CE4A9BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{933E41B4-2524-4C96-A46E-7ED05CE4A9BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{933E41B4-2524-4C96-A46E-7ED05CE4A9BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{933E41B4-2524-4C96-A46E-7ED05CE4A9BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,5 +66,6 @@ Global
 		{D65B21B1-58C3-4047-9BF8-6B6C4A4E8646} = {6B950306-D04C-406C-9FE6-9A812ED7941D}
 		{08C2A14B-8C01-4ECC-AB96-761708CB871D} = {89C78B4A-98C2-428A-807C-D2E935E114E5}
 		{FD6B8D7F-E1C3-43B9-BA1D-1042DB9F2833} = {89C78B4A-98C2-428A-807C-D2E935E114E5}
+		{933E41B4-2524-4C96-A46E-7ED05CE4A9BB} = {89C78B4A-98C2-428A-807C-D2E935E114E5}
 	EndGlobalSection
 EndGlobal
