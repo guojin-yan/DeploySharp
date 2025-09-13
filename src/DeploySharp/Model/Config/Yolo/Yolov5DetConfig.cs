@@ -13,6 +13,7 @@ namespace DeploySharp.Model
         public Yolov5DetConfig() { }
         public Yolov5DetConfig(string modelPath)
         {
+            this.ModelType = ModelType.YOLOv5Det;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = InferenceBackend.OpenVINO;
             this.TargetDeviceType = DeviceType.CPU;
@@ -32,6 +33,7 @@ namespace DeploySharp.Model
             ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
+            this.ModelType = ModelType.YOLOv5Det;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;

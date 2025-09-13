@@ -27,12 +27,6 @@ namespace DeploySharp.Model
         /// </summary>
         public float NmsThreshold { get; set; } = 0.5f;
 
-        /// <summary>
-        /// 类别名称列表（与模型输出类别索引对应）
-        /// 示例：new List<string>{ "person", "car", "dog" }
-        /// </summary>
-        public List<string> CategoryNames { get; set; }
-
         public DataProcessorConfig DataProcessor = new DataProcessorConfig();
         public NonMaxSuppression NonMaxSuppression;
 
@@ -44,7 +38,6 @@ namespace DeploySharp.Model
             var sb = new StringBuilder();
             AppendIfSet(sb, "Confidence Threshold", ConfidenceThreshold, 0.5f);
             AppendIfSet(sb, "NMS Threshold", NmsThreshold);
-            AppendIfSet(sb, "Categories", CategoryNames != null ? string.Join(", ", CategoryNames.Take(3)) + "..." : null);
             return base.ToString() + sb.ToString();
 
         }

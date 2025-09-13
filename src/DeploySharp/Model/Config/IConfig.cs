@@ -28,6 +28,8 @@ namespace DeploySharp.Model
         /// </summary>
         public bool DynamicOutput { get; set; } = false;
 
+        public ModelType ModelType { get; set; }
+
         public Dictionary<int, string> CategoryDict { get; set; } = new Dictionary<int, string>();
 
         // 输入参数配置
@@ -98,7 +100,10 @@ namespace DeploySharp.Model
         /// 是否启用GPU加速（默认false）
         /// 需要对应后端支持
         /// </summary>
-        public bool UseGPU { get; set; } = false;
+        public bool UseGPU
+        {
+            get { return TargetDeviceType == DeviceType.GPU1 || TargetDeviceType == DeviceType.GPU0; }
+        }
 
         /// <summary>
         /// CPU推理线程数（默认使用全部逻辑核心）
@@ -125,14 +130,15 @@ namespace DeploySharp.Model
         }
         public override string ToString() 
         {
-            var sb = new StringBuilder("Model Configuration:");
-
+            var sb = new StringBuilder("Model Configuration:\n");
+            AppendIfSet(sb, "ModelType", ModelType);
+            
             // 只显示非空/非默认值的属性
             AppendIfSet(sb, "Path", ModelPath);
 
-            AppendIfSet(sb, "TargetDeviceType", $"{TargetInferenceBackend.GetDisplayName()}");
+            AppendIfSet(sb, "TargetInferenceBackend", $"{TargetInferenceBackend.GetDisplayName()}");
             AppendIfSet(sb, "TargetDeviceType", $"{TargetDeviceType.GetDisplayName()} ({PrecisionMode})");
-
+            AppendIfSet(sb, "TargetOnnxRuntimeDeviceType", $"{TargetOnnxRuntimeDeviceType.GetDisplayName()}");
             AppendIfSet(sb, "InferBatch", $"{InferBatch}");
 
             if (InputNames?.Count > 0)
@@ -159,7 +165,7 @@ namespace DeploySharp.Model
 
             sb.AppendLine("Category Dict:" + $" {(CategoryDict.Count > 0 ? (string.Join(",", CategoryDict.Select(p => $"{p.Key}: '{p.Value}'"))) : "NotSet")}");
             AppendIfSet(sb, "Max Batch Size", MaxBatchSize, 1);
-            AppendIfSet(sb, "GPU Enabled", UseGPU);
+            AppendIfSet(sb, "GPU Enabled", UseGPU, false);
             AppendIfSet(sb, "Threads", NumThreads, Environment.ProcessorCount);
 
             return sb.ToString();

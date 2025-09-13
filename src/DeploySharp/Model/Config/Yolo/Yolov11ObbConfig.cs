@@ -13,6 +13,7 @@ namespace DeploySharp.Model
         public Yolov11ObbConfig() { }
         public Yolov11ObbConfig(string modelPath)
         {
+            this.ModelType = ModelType.YOLOv11Det;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = InferenceBackend.OpenVINO;
             this.TargetDeviceType = DeviceType.CPU;
@@ -32,6 +33,7 @@ namespace DeploySharp.Model
             ImageResizeMode resizeMode = ImageResizeMode.Pad,
             ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
+            this.ModelType = ModelType.YOLOv11Det;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;
