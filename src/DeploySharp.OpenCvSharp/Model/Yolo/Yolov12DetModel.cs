@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class Yolov8PoseModel : IYolov8PoseModel
+    public class Yolov12DetModel : IYolov12DetModel
     {
         /// <summary>
         /// Constructor initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public Yolov8PoseModel(Yolov8PoseConfig config) : base(config) { }
+        public Yolov12DetModel(Yolov12DetConfig config) : base(config) { }
 
 
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
