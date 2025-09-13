@@ -1,4 +1,5 @@
 ﻿using DeploySharp.Data;
+using DeploySharp.Log;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,10 @@ namespace DeploySharp.Model
         /// Constructor initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov9DetModel(Yolov9DetConfig config) : base(config) { }
+        public IYolov9DetModel(Yolov9DetConfig config) : base(config)
+        {
+            MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
+        }
 
         /// <summary>
         /// Predicts objects in input image and returns detection results

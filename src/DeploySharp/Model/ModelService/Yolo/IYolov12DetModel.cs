@@ -1,5 +1,5 @@
 ﻿using DeploySharp.Data;
-
+using DeploySharp.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,8 +18,10 @@ namespace DeploySharp.Model
         /// Constructor that initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov12DetModel(Yolov12DetConfig config) : base(config) { }
-
+        public IYolov12DetModel(Yolov12DetConfig config) : base(config)
+        {
+            MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
+        }
         /// <summary>
         /// Main prediction method that processes input image
         /// </summary>

@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Numerics;
 using System.Diagnostics;
 using System.Configuration;
+using DeploySharp.Log;
 
 namespace DeploySharp.Model
 {
@@ -22,7 +23,10 @@ namespace DeploySharp.Model
         /// Constructor initializes with model configuration
         /// </summary>
         /// <param name="config">Model configuration parameters</param>
-        public IYolov5DetModel(Yolov5DetConfig config) : base(config) { }
+        public IYolov5DetModel(Yolov5DetConfig config) : base(config)
+        {
+            MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
+        }
 
         /// <summary>
         /// Predicts objects in input image and returns detection results
