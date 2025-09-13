@@ -250,4 +250,24 @@ namespace DeploySharp.Data
         }
 
     }
+
+    public class VisualizeHandler
+    {
+        // 定义绘图委托类型
+        public delegate Mat VisualizeDelegate(Result[] results, Mat image, VisualizeOptions options);
+
+        private readonly VisualizeDelegate _drawingMethod;
+
+        // 构造函数注入具体方法
+        public VisualizeHandler(VisualizeDelegate drawingMethod)
+        {
+            _drawingMethod = drawingMethod;
+        }
+
+        // 统一调用入口
+        public Mat ExecuteDrawing(Result[] results, Mat image, VisualizeOptions options)
+        {
+            return _drawingMethod(results, image, options);
+        }
+    }
 }
