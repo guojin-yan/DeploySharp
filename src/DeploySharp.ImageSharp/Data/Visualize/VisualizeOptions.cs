@@ -11,10 +11,8 @@ namespace DeploySharp.Data
     public class VisualizeOptions
     {
         public float MaskAlpha { get; set; } = 0.5f;
-
-
         public float MaskMinimumConfidence { get; set; } = 0.5f;
-
+        public float PointDrawThreshold{ get; set; } = 0.5f;
         private FontFamily FontFamily { get; set; } = GetDefaultFontFamily();
 
         public float FontSize { get; set; } = 12f;
