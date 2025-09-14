@@ -43,15 +43,15 @@ namespace DeploySharp.Model
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
             var config = (Yolov10DetConfig)this.config;
-            int rowResultNum = config.OutputSizes[0][0];
-            int oneResultLen = config.OutputSizes[0][1];
+            int rowResultNum = config.OutputSizes[0][1];
+            int oneResultLen = config.OutputSizes[0][2];
 
 
             List<DetResult> detResults = new List<DetResult>();
             for (var i = 0; i < rowResultNum; i++)
             {
-                int s = 7 * i;
-                if (result0[s + 5] > config.ConfidenceThreshold)
+                int s = 6 * i;
+                if (result0[s + 4] < config.ConfidenceThreshold)
                 {
                     continue;
                 }
@@ -67,13 +67,13 @@ namespace DeploySharp.Model
                 box.Width = width;
                 box.Height = height;
 
-                int classID = (int)result0[s + 4];
+                int classID = (int)result0[s + 5];
                 bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
                 detResults.Add(new DetResult
                 {
                     Id = classID,
                     Bounds = imageAdjustmentParam.AdjustRect(box),
-                    Confidence = result0[s + 5],
+                    Confidence = result0[s + 4],
                     Category = categoryFlag ? category : classID.ToString(),
                 });
             }

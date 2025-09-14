@@ -49,7 +49,7 @@ namespace DeploySharp.Model
             for (var i = 0; i < rowResultNum; i++)
             {
                 int s = 7 * i;
-                if (result0[s + 6] > config.ConfidenceThreshold) 
+                if (result0[s + 6] < config.ConfidenceThreshold) 
                 {
                     continue;
                 }
