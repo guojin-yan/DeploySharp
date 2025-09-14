@@ -171,7 +171,7 @@ namespace DeploySharp.Engine
                     {
                         foreach (var s in output.get_partial_shape().get_dimensions())
                         {
-                            if (s.is_dynamic())
+                            if (s.get_min()!=s.get_max())
                             {
                                 config.DynamicOutput = true;
                                 break;
@@ -246,7 +246,7 @@ namespace DeploySharp.Engine
 
                 // 处理输出结果
                 DataTensor dataTensor = new DataTensor();
-                if (modelConfig.DynamicInput)
+                if (modelConfig.DynamicOutput)
                 {
                     modelConfig.OutputSizes.Clear();
                 }
@@ -255,7 +255,7 @@ namespace DeploySharp.Engine
                     Tensor outputTensor = inferRequests[0].get_output_tensor((ulong)i);
                     var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
 
-                    if (modelConfig.DynamicInput)
+                    if (modelConfig.DynamicOutput)
                     {
                         modelConfig.OutputSizes.Add(shape);
                     }
