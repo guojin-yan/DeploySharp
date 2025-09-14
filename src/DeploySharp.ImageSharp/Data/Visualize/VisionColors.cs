@@ -128,7 +128,7 @@ namespace DeploySharp.Data
         {
             // 手动实现Clamp功能
             if (classId < 0) return 0;
-            if (classId > max) return max;
+            if (classId > max) return max - 1;
             return classId;
         }
     }
