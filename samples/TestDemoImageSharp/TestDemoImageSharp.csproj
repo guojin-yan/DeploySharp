@@ -10,10 +10,9 @@
   <ItemGroup>
     <PackageReference Include="OpenVINO.runtime.win" Version="2025.1.0.1" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\src\DeploySharp.ImageSharp\DeploySharp.ImageSharp.csproj" />
-    <ProjectReference Include="..\src\DeploySharp\DeploySharp.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.ImageSharp\DeploySharp.ImageSharp.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp\DeploySharp.csproj" />
   </ItemGroup>
 
 </Project>
