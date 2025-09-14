@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 
 namespace DeploySharp
 {
-    public class Pipeline
+    public class Pipeline : IDisposable
     {
+
+    
         private IModel model;
         //private ModelType modelType;
         private VisualizeHandler visualizeHandler;
@@ -200,7 +202,17 @@ namespace DeploySharp
                 throw;
             }
         }
-
+        public void Dispose()
+        {
+            model?.Dispose();
+            model = null;
+            visualizeHandler = null;
+            GC.SuppressFinalize(this);
+        }
+        ~Pipeline()
+        {
+            Dispose();
+        }
         public Result[] Predict(Mat img)
         {
             MyLogger.Log.Debug("开始执行 Predict 同步推理");

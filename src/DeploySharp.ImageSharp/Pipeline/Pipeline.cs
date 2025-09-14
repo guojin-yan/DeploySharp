@@ -11,7 +11,7 @@ using DeploySharp.Engine;
 
 namespace DeploySharp
 {
-    public class Pipeline
+    public class Pipeline : IDisposable
     {
         private IModel model;
         private VisualizeHandler visualizeHandler;
@@ -199,7 +199,17 @@ namespace DeploySharp
                 throw;
             }
         }
-
+        public void Dispose()
+        {
+            model?.Dispose();
+            model = null;
+            visualizeHandler = null;
+            GC.SuppressFinalize(this);
+        }
+        ~Pipeline()
+        {
+            Dispose();
+        }
 
         public Result[] Predict(Image<Rgb24> img)
         {
