@@ -110,23 +110,27 @@ namespace DeploySharp.Model
         /// </summary>
         public int NumThreads { get; set; } = Environment.ProcessorCount;
 
-        public void SetModelPath(string path)
+        public IConfig SetModelPath(string path)
         {
             ModelPath = path;
+            return this;
         }
 
-        public void SetTargetDeviceType(DeviceType targetDeviceType)
+        public IConfig SetTargetDeviceType(DeviceType targetDeviceType)
         {
             TargetDeviceType = targetDeviceType;
+            return this;
         }
 
-        public void SetTargetInferenceBackend(InferenceBackend inferenceBackend)
+        public IConfig SetTargetInferenceBackend(InferenceBackend inferenceBackend)
         {
             TargetInferenceBackend = inferenceBackend;
+            return this;
         }
-        public void SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType onnxRuntimeDeviceType)
+        public IConfig SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType onnxRuntimeDeviceType)
         {
             TargetOnnxRuntimeDeviceType = onnxRuntimeDeviceType;
+            return this;
         }
         public override string ToString() 
         {
