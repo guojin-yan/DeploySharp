@@ -74,113 +74,125 @@ namespace DeploySharp.Common
         }
 
         /// <summary>
-        /// 打印所有记录的详细时间信息
+        /// 打印并返回所有记录的详细时间信息
         /// </summary>
-        public void PrintAllRecords()
+        /// <returns>格式化后的记录字符串</returns>
+        public string PrintAllRecords()
         {
             if (_records.Count == 0)
             {
-                Console.WriteLine("No inference records available.");
-                return;
+                var message = "No inference records available.";
+                Console.WriteLine(message);
+                return message;
             }
 
-            Console.WriteLine("Inference Time Records:");
-            Console.WriteLine("Index\tPreprocess(ms)\tInference(ms)\tPostprocess(ms)\tTotal(ms)");
+            var builder = new StringBuilder();
+            builder.AppendLine("Inference Time Records:");
+            builder.AppendLine("Index\tPreprocess(ms)\tInference(ms)\tPostprocess(ms)\tTotal(ms)");
 
             int index = 1;
             foreach (var record in _records)
             {
-                Console.WriteLine($"{index}\t{record.PreprocessTime:F2}\t\t{record.InferenceTime:F2}\t\t" +
+                builder.AppendLine($"{index}\t{record.PreprocessTime:F2}\t\t{record.InferenceTime:F2}\t\t" +
                                  $"{record.PostprocessTime:F2}\t\t{record.TotalTime:F2}");
                 index++;
             }
+
+            var result = builder.ToString();
+            Console.WriteLine(result);
+            return result;
         }
 
         /// <summary>
-        /// 打印统计信息（次数和平均时间）
+        /// 打印并返回统计信息（次数和平均时间）
         /// </summary>
-        public void PrintStatistics()
+        /// <returns>格式化后的统计信息字符串</returns>
+        public string PrintStatistics()
         {
             if (_records.Count == 0)
             {
-                Console.WriteLine("No inference records available for statistics.");
-                return;
+                var message = "No inference records available for statistics.";
+                Console.WriteLine(message);
+                return message;
             }
 
             var avgPreprocess = GetAveragePreprocessTime();
             var avgInference = GetAverageInferenceTime();
             var avgPostprocess = GetAveragePostprocessTime();
             var avgTotal = GetAverageTotalTime();
-
-            Console.WriteLine("Inference Statistics:");
-            Console.WriteLine($"Record Count: {_records.Count}");
-            Console.WriteLine($"Average Preprocess Time: {avgPreprocess:F2} ms");
-            Console.WriteLine($"Average Inference Time: {avgInference:F2} ms");
-            Console.WriteLine($"Average Postprocess Time: {avgPostprocess:F2} ms");
-            Console.WriteLine($"Average Total Time: {avgTotal:F2} ms");
-        }
-
-        /// <summary>
-        /// 打印汇总信息（平均时间和FPS）
-        /// </summary>
-        public void PrintSummary()
-        {
-            if (_records.Count == 0)
-            {
-                Console.WriteLine("No inference records available for summary.");
-                return;
-            }
-
-            var avgTotal = GetAverageTotalTime();
             var fps = GetAverageFPS();
 
-            Console.WriteLine("Inference Summary:");
-            Console.WriteLine($"Average Total Time: {avgTotal:F2} ms");
-            Console.WriteLine($"Throughput: {fps:F2} FPS");
-        }
+            var builder = new StringBuilder();
+            builder.AppendLine("Inference Statistics:");
+            builder.AppendLine($"Record Count: {_records.Count}");
+            builder.AppendLine($"Average Preprocess Time: {avgPreprocess:F2} ms");
+            builder.AppendLine($"Average Inference Time: {avgInference:F2} ms");
+            builder.AppendLine($"Average Postprocess Time: {avgPostprocess:F2} ms");
+            builder.AppendLine($"Average Total Time: {avgTotal:F2} ms");
+            builder.AppendLine($"Throughput: {fps:F2} FPS");
 
+            var result = builder.ToString();
+            Console.WriteLine(result);
+            return result;
+        }
         // 以下为各个统计指标的获取方法
 
         /// <summary>
-        /// 获取平均预处理时间(ms)
+        /// 获取平均预处理时间(ms)，移除第一次记录(如果有多次记录)
         /// </summary>
         public double GetAveragePreprocessTime()
         {
-            return _records.Average(r => r.PreprocessTime);
+            if (_records.Count <= 1)
+                return _records.Count == 1 ? _records.First().PreprocessTime : 0;
+
+            return _records.Skip(1).Average(r => r.PreprocessTime);
         }
 
         /// <summary>
-        /// 获取平均推理时间(ms)
+        /// 获取平均推理时间(ms)，移除第一次记录(如果有多次记录)
         /// </summary>
         public double GetAverageInferenceTime()
         {
-            return _records.Average(r => r.InferenceTime);
+            if (_records.Count <= 1)
+                return _records.Count == 1 ? _records.First().InferenceTime : 0;
+
+            return _records.Skip(1).Average(r => r.InferenceTime);
         }
 
         /// <summary>
-        /// 获取平均后处理时间(ms)
+        /// 获取平均后处理时间(ms)，移除第一次记录(如果有多次记录)
         /// </summary>
         public double GetAveragePostprocessTime()
         {
-            return _records.Average(r => r.PostprocessTime);
+            if (_records.Count <= 1)
+                return _records.Count == 1 ? _records.First().PostprocessTime : 0;
+
+            return _records.Skip(1).Average(r => r.PostprocessTime);
         }
 
         /// <summary>
-        /// 获取平均总时间(ms)
+        /// 获取平均总时间(ms)，移除第一次记录(如果有多次记录)
         /// </summary>
         public double GetAverageTotalTime()
         {
-            return _records.Average(r => r.TotalTime);
+            if (_records.Count <= 1)
+                return _records.Count == 1 ? _records.First().TotalTime : 0;
+
+            return _records.Skip(1).Average(r => r.TotalTime);
         }
 
         /// <summary>
-        /// 获取平均FPS
+        /// 获取平均FPS，移除第一次记录(如果有多次记录)
         /// </summary>
         public double GetAverageFPS()
         {
-            var avgTotalSeconds = GetAverageTotalTime() / 1000f; // 转换为秒
-            return 1f / avgTotalSeconds; // FPS = 1 / 每帧耗时(秒)
+            if (_records.Count <= 1)
+                return _records.Count == 1 ? 1000f / _records.First().TotalTime : 0;
+
+            var avgTotalSeconds = _records.Skip(1).Average(r => r.TotalTime) / 1000f;
+            return 1f / avgTotalSeconds;
         }
+
     }
 
 }
