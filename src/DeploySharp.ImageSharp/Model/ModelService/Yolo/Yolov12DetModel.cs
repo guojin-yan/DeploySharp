@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DeploySharp.Model;
 using DeploySharp.Data;
+using DeploySharp.Log;
 
 
 namespace DeploySharp.Model
@@ -23,27 +24,20 @@ namespace DeploySharp.Model
 
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            int inputSize = config.InputSizes[0][2];
-            var image = (Image<Rgb24>)img;
-            // 归一化处理 (0-255 to 0-1)
-            float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((YoloConfig)config).DataProcessor);
+            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
 
-            imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
-                new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
-                CvDataExtensions.ToCvSize(image.Size()),
-                 ((YoloConfig)config).DataProcessor.ResizeMode);
-
-
-            DataTensor dataTensors = new DataTensor();
-            dataTensors.AddNode(
-                config.InputNames[0],
-                0,
-                TensorType.Input,
-                normalizedData,
-                config.InputSizes[0],
-                typeof(float));
-
-            return dataTensors;
+            try
+            {
+                return CvDataProcessor.ImageProcessToDataTensor(
+                    (Image<Rgb24>)img,
+                    config,
+                    out imageAdjustmentParam);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.Log.Error($"预处理过程中发生异常: {ex.Message}", ex);
+                throw;
+            }
         }
     }
 }
