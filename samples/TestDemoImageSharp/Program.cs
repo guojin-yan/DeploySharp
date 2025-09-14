@@ -1,11 +1,14 @@
-﻿using OpenCvSharp;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System;
 using DeploySharp.Model;
-using DeploySharp.Data;
 using DeploySharp.Engine;
+using DeploySharp.Data;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.PixelFormats;
 using DeploySharp;
-namespace TestDemoOpenCvSharp
+
+namespace TestDemoImageSharp
 {
     internal class Program
     {
@@ -55,52 +58,52 @@ namespace TestDemoOpenCvSharp
 
 
             // 1. 使用ImageSharp加载图像
-            using (var image = Cv2.ImRead(@"E:\Data\image\demo_2.jpg"))
+            using (var image = Image.Load(@"E:\Data\image\demo_2.jpg"))
             {
-                Mat YOLOv5DetResult = YOLOv5DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv5Det.ToString()}.jpg", YOLOv5DetResult);
-                Mat YOLOv5SegResult = YOLOv5SegPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv5Seg.ToString()}.jpg", YOLOv5SegResult);
-                Mat YOLOv6DetResult = YOLOv6DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv6Det.ToString()}.jpg", YOLOv6DetResult);
-                Mat YOLOv7DetResult = YOLOv7DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv7Det.ToString()}.jpg", YOLOv7DetResult);
-                Mat YOLOv8DetResult = YOLOv8DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv8Det.ToString()}.jpg", YOLOv8DetResult);
-                Mat YOLOv8SegResult = YOLOv8SegPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv8Seg.ToString()}.jpg", YOLOv8SegResult);
-                Mat YOLOv9DetResult = YOLOv9DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv9Det.ToString()}.jpg", YOLOv9DetResult);
-                Mat YOLOv9SegResult = YOLOv9SegPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv9Seg.ToString()}.jpg", YOLOv9SegResult);
-                Mat YOLOv10DetResult = YOLOv10DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv10Det.ToString()}.jpg", YOLOv10DetResult);
-                Mat YOLOv11DetResult = YOLOv11DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv11Det.ToString()}.jpg", YOLOv11DetResult);
-                Mat YOLOv11SegResult = YOLOv11SegPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv11Seg.ToString()}.jpg", YOLOv11SegResult);
-                Mat YOLOv12DetResult = YOLOv12DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv12Det.ToString()}.jpg", YOLOv12DetResult);
-                Mat YOLOv13DetResult = YOLOv13DetPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv13Det.ToString()}.jpg", YOLOv13DetResult);
+                Image<Rgb24> YOLOv5DetResult = YOLOv5DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv5DetResult.Save(@$"./result/result_{ModelType.YOLOv5Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv5SegResult = YOLOv5SegPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv5SegResult.Save(@$"./result/result_{ModelType.YOLOv5Seg.ToString()}.jpg");
+                Image<Rgb24> YOLOv6DetResult = YOLOv6DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv6DetResult.Save(@$"./result/result_{ModelType.YOLOv6Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv7DetResult = YOLOv7DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv7DetResult.Save(@$"./result/result_{ModelType.YOLOv7Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv8DetResult = YOLOv8DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv8DetResult.Save(@$"./result/result_{ModelType.YOLOv8Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv8SegResult = YOLOv8SegPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv8SegResult.Save(@$"./result/result_{ModelType.YOLOv8Seg.ToString()}.jpg");
+                Image<Rgb24> YOLOv9DetResult = YOLOv9DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv9DetResult.Save(@$"./result/result_{ModelType.YOLOv9Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv9SegResult = YOLOv9SegPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv9SegResult.Save(@$"./result/result_{ModelType.YOLOv9Seg.ToString()}.jpg");
+                Image<Rgb24> YOLOv10DetResult = YOLOv10DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv10DetResult.Save(@$"./result/result_{ModelType.YOLOv10Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv11DetResult = YOLOv11DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv11DetResult.Save(@$"./result/result_{ModelType.YOLOv11Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv11SegResult = YOLOv11SegPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv11SegResult.Save(@$"./result/result_{ModelType.YOLOv11Seg.ToString()}.jpg");
+                Image<Rgb24> YOLOv12DetResult = YOLOv12DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv12DetResult.Save(@$"./result/result_{ModelType.YOLOv12Det.ToString()}.jpg");
+                Image<Rgb24> YOLOv13DetResult = YOLOv13DetPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv13DetResult.Save(@$"./result/result_{ModelType.YOLOv13Det.ToString()}.jpg");
             }
 
-            using (var image = Cv2.ImRead(@"E:\Data\image\plane.png"))
+            using (var image = Image.Load(@"E:\Data\image\plane.png"))
             {
-                Mat YOLOv8ObbResult = YOLOv8ObbPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv8Obb.ToString()}.jpg", YOLOv8ObbResult);
-                Mat YOLOv11ObbResult = YOLOv11ObbPipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv11Obb.ToString()}.jpg", YOLOv11ObbResult);
+                Image<Rgb24> YOLOv8ObbResult = YOLOv8ObbPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv8ObbResult.Save(@$"./result/result_{ModelType.YOLOv8Obb.ToString()}.jpg");
+                Image<Rgb24> YOLOv11ObbResult = YOLOv11ObbPipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv11ObbResult.Save(@$"./result/result_{ModelType.YOLOv11Obb.ToString()}.jpg");
             }
 
             // 1. 使用ImageSharp加载图像
-            using (var image = Cv2.ImRead(@"E:\Data\image\demo_9.jpg"))
-            {
-                Mat YOLOv8PoseResult = YOLOv8PosePipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv8Pose.ToString()}.jpg", YOLOv8PoseResult);
-                Mat YOLOv11PoseResult = YOLOv11PosePipeline.PredictAndDrawing(image as Mat);
-                Cv2.ImWrite(@$"./result/result_{ModelType.YOLOv11Pose.ToString()}.jpg", YOLOv8PoseResult);
-
+            using (var image = Image.Load(@"E:\Data\image\demo_9.jpg"))
+            { 
+                Image<Rgb24> YOLOv8PoseResult = YOLOv8PosePipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv8PoseResult.Save(@$"./result/result_{ModelType.YOLOv8Pose.ToString()}.jpg");
+                Image<Rgb24> YOLOv11PoseResult = YOLOv11PosePipeline.PredictAndDrawing(image as Image<Rgb24>);
+                YOLOv11PoseResult.Save(@$"./result/result_{ModelType.YOLOv11Pose.ToString()}.jpg");
+               
 
             }
         }
