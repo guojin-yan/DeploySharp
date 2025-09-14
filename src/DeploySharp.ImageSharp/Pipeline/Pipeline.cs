@@ -7,24 +7,110 @@ using SixLabors.ImageSharp;
 using System;
 using System.Threading.Tasks;
 using static DeploySharp.Data.Visualize;
+using DeploySharp.Engine;
 
 namespace DeploySharp
 {
     public class Pipeline
     {
         private IModel model;
-        private ModelType modelType;
         private VisualizeHandler visualizeHandler;
-        public Pipeline(ModelType modelType, string modelPath) : this(modelType, new IConfig() { ModelPath = modelPath })
+        public Pipeline(ModelType modelType, string modelPath, InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
+            DeviceType deviceType = DeviceType.CPU)
         {
-            MyLogger.Log.Debug($"Pipeline 构造函数调用 (重载), ModelType: {modelType}, ModelPath: {modelPath}");
+            MyLogger.Log.Info($"初始化 Pipeline, ModelType: {modelType},  ModelPath: {modelPath}");
+            try
+            {
+                MyLogger.Log.Debug("开始创建模型实例和可视化处理器...");
+
+                switch (modelType)
+                {
+                    case ModelType.YOLOv5Det:
+                        model = new Yolov5DetModel(new Yolov5DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv5Seg:
+                        model = new Yolov5SegModel(new Yolov5SegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv6Det:
+                        model = new Yolov6DetModel(new Yolov6DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv7Det:
+                        model = new Yolov7DetModel(new Yolov7DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv8Det:
+                        model = new Yolov8DetModel(new Yolov8DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv8Seg:
+                        model = new Yolov8SegModel(new Yolov8SegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv8Obb:
+                        model = new Yolov8ObbModel(new Yolov8ObbConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawObbResult);
+                        break;
+                    case ModelType.YOLOv8Pose:
+                        model = new Yolov8PoseModel(new Yolov8PoseConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawPoses);
+                        break;
+                    case ModelType.YOLOv9Det:
+                        model = new Yolov9DetModel(new Yolov9DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv9Seg:
+                        model = new Yolov9SegModel(new Yolov9SegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv10Det:
+                        model = new Yolov10DetModel(new Yolov10DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv11Det:
+                        model = new Yolov11DetModel(new Yolov11DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv11Seg:
+                        model = new Yolov11SegModel(new Yolov11SegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv11Obb:
+                        model = new Yolov11ObbModel(new Yolov11ObbConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawObbResult);
+                        break;
+                    case ModelType.YOLOv11Pose:
+                        model = new Yolov11PoseModel(new Yolov11PoseConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawPoses);
+                        break;
+                    case ModelType.YOLOv12Det:
+                        model = new Yolov12DetModel(new Yolov12DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv13Det:
+                        model = new Yolov13DetModel(new Yolov13DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    default:
+                        string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
+                        MyLogger.Log.Error(errorMsg);
+                        throw new DeploySharpException(errorMsg);
+                }
+
+                MyLogger.Log.Info($"成功创建 {modelType} 模型实例和可视化处理器");
+            }
+            catch (Exception ex)
+            {
+                MyLogger.Log.Error($"初始化 Pipeline 时发生错误: {ex.Message}", ex);
+                throw;
+            }
         }
 
         public Pipeline(ModelType modelType, IConfig config)
         {
-            MyLogger.Log.Info($"初始化 Pipeline, ModelType: {modelType}");
-
-            this.modelType = modelType;
+            MyLogger.Log.Info($"初始化 Pipeline, ModelType: {modelType},  ModelPath: {config.ModelPath}");
             try
             {
                 MyLogger.Log.Debug("开始创建模型实例和可视化处理器...");
@@ -93,6 +179,10 @@ namespace DeploySharp
                         break;
                     case ModelType.YOLOv12Det:
                         model = new Yolov12DetModel(config as Yolov12DetConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv13Det:
+                        model = new Yolov13DetModel(config as Yolov13DetConfig);
                         visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                         break;
                     default:
