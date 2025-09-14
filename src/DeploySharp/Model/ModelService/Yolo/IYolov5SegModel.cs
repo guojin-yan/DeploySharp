@@ -92,8 +92,8 @@ namespace DeploySharp.Model
             //Span<float> rawMaskData = rawMaskBuffer.AsSpan(0, initialWidth * initialHeight);
 
 
-            var maskPaddingX = imageAdjustmentParam.Padding.First * initialWidth / imageAdjustmentParam.RowImgSize.Width;
-            var maskPaddingY = imageAdjustmentParam.Padding.Second * initialHeight / imageAdjustmentParam.RowImgSize.Height;
+            var maskPaddingX = imageAdjustmentParam.Padding.First * initialWidth / imageAdjustmentParam.TargetImgSize.Width;
+            var maskPaddingY = imageAdjustmentParam.Padding.Second * initialHeight / imageAdjustmentParam.TargetImgSize.Height;
             int validMaskWidth = initialWidth - 2 * maskPaddingX;
             int validMaskHeight = initialHeight - 2 * maskPaddingY;
 
@@ -116,13 +116,13 @@ namespace DeploySharp.Model
                 //Array.Clear(rawMaskData);
                 for (int y = 0; y < validMaskHeight; y++)
                 {
-                    int baseOffset = (y + maskPaddingY) * validMaskWidth + maskPaddingX;
+                    int baseOffset = (y + maskPaddingY) * initialWidth;
                     for (int x = 0; x < validMaskWidth; x++)
                     {
                         float sum = 0;
                         for (int i = 0; i < maskLen; i++)
                         {
-                            sum += result1[i * initialWidth * initialHeight + baseOffset + x] * maskData[i];
+                            sum += result1[i * initialWidth * initialHeight + baseOffset + x + maskPaddingX] * maskData[i];
                         }
                         rawMaskData[y * validMaskWidth + x] = Sigmoid(sum);
                     }
@@ -135,7 +135,7 @@ namespace DeploySharp.Model
                     {
                         // Calculate source coordinates
                         var sourceX = (float)(x + bounds.Location.X) * (validMaskWidth - 1) / (imageAdjustmentParam.RowImgSize.Width - 1);
-                        var sourceY = (float)(y + bounds.Location.Y) * (initialHeight - 1) / (imageAdjustmentParam.RowImgSize.Height - 1);
+                        var sourceY = (float)(y + bounds.Location.Y) * (validMaskHeight - 1) / (imageAdjustmentParam.RowImgSize.Height - 1);
 
                         // Check if source coordinates are out of bounds
                         if (sourceY < 0 || sourceY >= validMaskHeight ||

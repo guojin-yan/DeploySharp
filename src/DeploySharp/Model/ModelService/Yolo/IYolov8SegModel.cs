@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static DeploySharp.Data.ImageData<float>;
 
 namespace DeploySharp.Model
 {
@@ -88,8 +89,8 @@ namespace DeploySharp.Model
             //Span<float> rawMaskData = rawMaskBuffer.AsSpan(0, initialWidth * initialHeight);
 
 
-            var maskPaddingX = imageAdjustmentParam.Padding.First * initialWidth / imageAdjustmentParam.RowImgSize.Width;
-            var maskPaddingY = imageAdjustmentParam.Padding.Second * initialHeight / imageAdjustmentParam.RowImgSize.Height;
+            var maskPaddingX = imageAdjustmentParam.Padding.First * initialWidth / imageAdjustmentParam.TargetImgSize.Width;
+            var maskPaddingY = imageAdjustmentParam.Padding.Second * initialHeight / imageAdjustmentParam.TargetImgSize.Height;
             int validMaskWidth = initialWidth - 2 * maskPaddingX;
             int validMaskHeight = initialHeight - 2 * maskPaddingY;
 
@@ -115,19 +116,24 @@ namespace DeploySharp.Model
                 //Array.Clear(rawMaskData);
                 for (int y = 0; y < validMaskHeight; y++)
                 {
-                    int baseOffset = (y + maskPaddingY) * validMaskWidth + maskPaddingX;
+                    int baseOffset = (y + maskPaddingY) * initialWidth;
                     for (int x = 0; x < validMaskWidth; x++)
                     {
                         float sum = 0;
                         for (int i = 0; i < maskLen; i++)
                         {
-                            sum += result1[i * initialWidth * initialHeight + baseOffset + x] * maskData[i];
+                            sum += result1[i * initialWidth * initialHeight + baseOffset + x + maskPaddingX] * maskData[i];
                         }
                         rawMaskData[y * validMaskWidth + x] = Sigmoid(sum);
                     }
                 }
 
+                //OpenCvSharp.Cv2.ImShow("rawMaskData", Mat.FromPixelData(validMaskHeight, validMaskWidth, MatType.CV_32FC1, rawMaskData));
                 var targetMask = new float[bounds.Height * bounds.Width];
+                //var targetMask =new ImageDataF(bounds.Width, bounds.Height, 1, DataFormat.CHW);
+
+                //ResizeToTarget(new ImageDataF(rawMaskData, validMaskWidth, validMaskHeight, 1, DataFormat.CHW),
+                //    targetMask, bounds.Location, imageAdjustmentParam.RowImgSize);
 
                 for (var y = 0; y < bounds.Height; y++)
                 {
@@ -156,21 +162,33 @@ namespace DeploySharp.Model
                         var xLerp = sourceX - x0;
                         var yLerp = sourceY - y0;
 
+                        //if (imageAdjustmentParam.RowImgSize.Width < imageAdjustmentParam.RowImgSize.Height)
+                        //{
+                        //    var top = Lerp(rawMaskData[y0 * validMaskHeight + x0], rawMaskData[y0 * validMaskHeight + x1], xLerp);
+                        //    var bottom = Lerp(rawMaskData[y1 * validMaskHeight + x0], rawMaskData[y1 * validMaskHeight + x1], xLerp);
+                        //    targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
+                        //}
+                        //else
+                        //{
+                            var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
+                            var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
+                            targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
+                        //}
                         // Perform bilinear interpolation
-                        var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
-                        var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
 
-                        targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
+
+                        
                     }
                 }
 
 
                 int classID = box.NameIndex;
                 bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
-
+                //OpenCvSharp.Cv2.ImShow("targetMask", Mat.FromPixelData(bounds.Height, bounds.Width, MatType.CV_32FC1, targetMask));
+                //Cv2.WaitKey(0);
                 segResults[index] = new SegResult
                 {
-                    Mask = new ImageDataF(targetMask, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
+                    Mask =  new ImageDataF(targetMask, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
                     Id = classID,
                     Bounds = imageAdjustmentParam.AdjustRect(box.Box),
                     Confidence = box.Confidence,
