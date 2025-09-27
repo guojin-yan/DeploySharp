@@ -134,6 +134,7 @@ namespace DeploySharp.Model
     {
 
         public MetaDataConfig MetaData = new MetaDataConfig();
+        public bool UseMetaData = false;
         public DataProcessorConfig DataProcessor = new DataProcessorConfig();
         public AnomalibConfig() { }
 
@@ -149,6 +150,7 @@ namespace DeploySharp.Model
             {
                 MetaData = JsonConfigParser.ParseConfig(metaDataConfigPath);
                 JsonConfigParser.PrintConfigDetails(MetaData);
+                UseMetaData = true;
             }
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
