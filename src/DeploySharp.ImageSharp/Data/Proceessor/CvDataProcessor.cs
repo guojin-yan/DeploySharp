@@ -71,9 +71,8 @@ namespace DeploySharp.Data
         /// <summary>
         /// 根据指定的 ResizeMode 调整图像尺寸
         /// </summary>
-        /// <param name="img">原始图像</param>
-        /// <param name="targetWidth">目标宽度</param>
-        /// <param name="targetHeight">目标高度</param>
+        /// <param name="image">原始图像</param>
+        /// <param name="size">目标尺寸</param>
         /// <param name="resizeMode">调整模式</param>
         /// <returns>调整后的图像</returns>
         public static Image<Rgb24> Resize(
