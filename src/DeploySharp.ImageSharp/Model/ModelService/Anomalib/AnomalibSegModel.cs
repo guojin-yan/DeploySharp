@@ -1,11 +1,12 @@
 ﻿using DeploySharp.Data;
-using DeploySharp.Log;
-using OpenCvSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DeploySharp.Log;
 
 namespace DeploySharp.Model
 {
@@ -17,12 +18,12 @@ namespace DeploySharp.Model
 
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Mat)?.Size()}");
+            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
 
             try
             {
                 return CvDataProcessor.ImageProcessToDataTensor(
-                    (Mat)img,
+                    (Image<Rgb24>)img,
                     config,
                     out imageAdjustmentParam);
             }
