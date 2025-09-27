@@ -147,8 +147,6 @@ namespace DeploySharp.Data
                 matType);
             mat.SetArray(rawData);
             return mat;
-
-
         }
 
         // 从Mat创建ImageData
@@ -165,6 +163,52 @@ namespace DeploySharp.Data
             return new ImageDataB(byteData, mat.Width, mat.Height, mat.Channels());
         }
 
+
+
+        // 将ImageData转换为Mat
+        public static OpenCvSharp.Mat ToMat(this ImageDataF imageData)
+        {
+            if (imageData == null)
+                throw new ArgumentNullException(nameof(imageData));
+            if (imageData.Width <= 0 || imageData.Height <= 0)
+                throw new ArgumentException("Image dimensions must be positive");
+
+            // 获取原始数据(避免多次调用GetRawData)
+            float[] rawData = imageData.GetRawData();
+
+            // 根据通道数创建适当类型的Mat
+            OpenCvSharp.MatType matType = imageData.Channels switch
+            {
+                1 => OpenCvSharp.MatType.CV_32FC1,
+                3 => OpenCvSharp.MatType.CV_32FC3,
+                4 => OpenCvSharp.MatType.CV_32FC4,
+                _ => throw new NotSupportedException($"Unsupported channel count: {imageData.Channels}")
+            };
+
+            // 一次性创建正确通道数的Mat(避免Reshape操作)
+
+            // 直接使用指针创建Mat，避免数据拷贝
+            Mat mat = new OpenCvSharp.Mat(
+                imageData.Height,
+                imageData.Width,
+                matType);
+            mat.SetArray(rawData);
+            return mat;
+        }
+
+        // 从Mat创建ImageData
+        public static ImageDataF ToImageDataF(this OpenCvSharp.Mat mat)
+        {
+            if (mat.Empty()) throw new ArgumentException("输入Mat为空");
+
+            // 获取原始字节数据
+            float[] byteData = new float[mat.Total() * mat.Channels()];
+            //mat.GetArray(out byteData);
+            Marshal.Copy(mat.Ptr(0), byteData, 0, byteData.Length);
+
+
+            return new ImageDataF(byteData, mat.Width, mat.Height, mat.Channels());
+        }
 
     }
 }
