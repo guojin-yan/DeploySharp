@@ -10,7 +10,7 @@ namespace DeploySharp.Model
 {
     public class AnomalibSegModel : IAnomalibSegModel
     {
-        public AnomalibSegModel(AnomalibConfig config) : base(config)
+        public AnomalibSegModel(AnomalibSegConfig config) : base(config)
         {
         }
 
@@ -19,12 +19,12 @@ namespace DeploySharp.Model
             int inputSize = config.InputSizes[0][2];
             var image = (Mat)img;
             // 归一化处理 (0-255 to 0-1)
-            float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((AnomalibConfig)config).DataProcessor);
+            float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((AnomalibSegConfig)config).DataProcessor);
 
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(image.Size()),
-                 ((AnomalibConfig)config).DataProcessor.ResizeMode);
+                 ((AnomalibSegConfig)config).DataProcessor.ResizeMode);
 
 
             DataTensor dataTensors = new DataTensor();
