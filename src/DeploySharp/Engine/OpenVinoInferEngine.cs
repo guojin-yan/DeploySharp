@@ -281,6 +281,18 @@ namespace DeploySharp.Engine
                             typeof(int));
                         MyLogger.Log.Debug($"获取输出节点张量{i}: {modelConfig.OutputNames[0]},形状: int[{string.Join(",", shape)}]");
                     }
+                    else if (outputTensor.get_element_type().get_type() == ElementType.BOOLEAN)
+                    {
+                        ulong a = outputTensor.get_size();
+                        byte[] data = outputTensor.get_data<byte>((int)outputTensor.get_size());
+                        dataTensor.AddNode(modelConfig.OutputNames[i],
+                            0,
+                            TensorType.Output,
+                            data,
+                            shape,
+                            typeof(byte));
+                        MyLogger.Log.Debug($"获取输出节点张量{i}: {modelConfig.OutputNames[0]},形状: int[{string.Join(",", shape)}]");
+                    }
                 }
 
                 MyLogger.Log.Info("推理结果处理完成");
