@@ -11,7 +11,7 @@ namespace DeploySharp.Model
 {
     public class IAnomalibSegModel : IModel
     {
-        public IAnomalibSegModel(AnomalibConfig config) : base(config) { }
+        public IAnomalibSegModel(AnomalibSegConfig config) : base(config) { }
 
         /// <summary>
         /// Predicts objects in input image and returns detection results
@@ -88,7 +88,7 @@ namespace DeploySharp.Model
                 float[] result0 = dataTensor[0].DataBuffer as float[];
 
                 float[] mask = new float[result0.Length];
-                var config = (AnomalibConfig)this.config;
+                var config = (AnomalibSegConfig)this.config;
                 float d = config.MetaData.MaxValue - config.MetaData.MinValue;
                 float confidenceThreshold = (config.MetaData.PixelThreshold - config.MetaData.MinValue) / d;
                 float maxScore = result0.Max();

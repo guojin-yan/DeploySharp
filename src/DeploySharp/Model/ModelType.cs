@@ -26,5 +26,8 @@ namespace DeploySharp.Model
         YOLOv11Pose,
         YOLOv12Det,
         YOLOv13Det,
+
+        // 其他检测模型
+        AnomalibSeg,
     };
 }

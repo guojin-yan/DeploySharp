@@ -130,15 +130,15 @@ namespace DeploySharp.Model
     }
 
 
-    public class AnomalibConfig : IConfig
+    public class AnomalibSegConfig : IConfig
     {
 
         public MetaDataConfig MetaData = new MetaDataConfig();
         public bool UseMetaData = false;
         public DataProcessorConfig DataProcessor = new DataProcessorConfig();
-        public AnomalibConfig() { }
+        public AnomalibSegConfig() { }
 
-        public AnomalibConfig(string modelPath,
+        public AnomalibSegConfig(string modelPath,
             string metaDataConfigPath = null,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
