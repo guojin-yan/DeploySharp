@@ -6,6 +6,10 @@ namespace DeploySharp.Data
     {
         public Rect Bounds { get; set; }
 
+        public DetResult()
+        {
+            Type = ResultType.Detection;
+        }
 
         public override string ToString()
         {

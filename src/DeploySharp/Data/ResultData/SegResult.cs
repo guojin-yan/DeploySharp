@@ -9,5 +9,10 @@ namespace DeploySharp.Data
     public class SegResult : DetResult
     {
         public ImageDataF Mask { get; set; }
+
+        public SegResult()
+        {
+            Type = ResultType.Segmentation;
+        }
     }
 }

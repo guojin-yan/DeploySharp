@@ -7,9 +7,13 @@ using System.Threading.Tasks;
 namespace DeploySharp.Data
 {
 
-    public class AnomalySegResult : Result
+    public class AnomalySegResult : SegResult
     {
         public ImageDataF RawMask { get; set; }
-        public ImageDataF Mask { get; set; }
+
+        public AnomalySegResult()
+        {
+            Type = ResultType.AnomalySegmentation;
+        }
     }
 }

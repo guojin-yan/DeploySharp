@@ -4,6 +4,7 @@ namespace DeploySharp.Data
 {
     public class Result
     {
+        public ResultType Type { get; set; } = ResultType.Classification;
         public Size ImageSize { get; set; }
         public int Id { get; set; }
 
@@ -27,4 +28,13 @@ namespace DeploySharp.Data
         }
     }
 
+    public enum ResultType
+    {
+        Classification,
+        Detection,
+        OrientedBoundingBoxes,
+        Segmentation,
+        KeyPoints,
+        AnomalySegmentation
+    }
 }

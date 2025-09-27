@@ -26,6 +26,10 @@ namespace DeploySharp.Data
         //    KeyPoints = keypoints ?? throw new ArgumentNullException(nameof(keypoints));
         //}
 
+        public KeyPointResult()
+        {
+            Type = ResultType.KeyPoints;
+        }
         public KeyPoint this[int index] => KeyPoints[index];
 
 

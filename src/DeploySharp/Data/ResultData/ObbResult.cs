@@ -8,7 +8,12 @@ namespace DeploySharp.Data
 {
     public class ObbResult : Result
     {
-       public RotatedRect Bounds { get; set; }
+        public RotatedRect Bounds { get; set; }
+
+        public ObbResult()
+        {
+            Type = ResultType.OrientedBoundingBoxes;
+        }
 
         public override string ToString()
         {
