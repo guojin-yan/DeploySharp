@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net5.0;netcoreapp3.1;net47;net471;net472;net48;net481</TargetFrameworks>
@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp.ImageSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.2-beta</Version>
+    <Version>0.0.4</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>

@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp</Title>
-    <Version>0.0.2-beta</Version>
+    <Version>0.0.4</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
@@ -33,7 +33,7 @@
     <PackageReference Include="Clipper2" Version="1.5.4" />
     <PackageReference Include="log4net" Version="3.2.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.2" />
-    <PackageReference Include="OpenVINO.CSharp.API" Version="2025.1.0.2" />
+    <PackageReference Include="OpenVINO.CSharp.API" Version="2025.3.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
