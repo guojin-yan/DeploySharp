@@ -12,13 +12,35 @@ using static DeploySharp.Data.ImageData<float>;
 
 namespace DeploySharp.Model
 {
-
+    /// <summary>
+    /// Abstract base implementation of YOLOv8 model for object Segmentation
+    /// YOLOv8分割模型的抽象基类实现
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Provides standard YOLOv8 Segmentation pipeline including:
+    /// 提供标准YOLOv8检测流程，包括：
+    /// - Input preprocessing
+    ///   输入预处理
+    /// - Output decoding
+    ///   输出解码
+    /// - Confidence filtering
+    ///   置信度过滤
+    /// - Non-Maximum Suppression
+    ///   非极大值抑制
+    /// </para>
+    /// <para>
+    /// Inherits from base IModel interface and implements YOLOv8-specific processing
+    /// 继承自基础IModel接口并实现YOLOv8特定处理
+    /// </para>
+    /// </remarks>
     public abstract class IYolov8SegModel : IModel
     {
         /// <summary>
-        /// Constructor initializes with model configuration
+        /// Initializes a new instance of YOLOv8 detector
+        /// 初始化YOLOv8检测器的新实例
         /// </summary>
-        /// <param name="config">Model configuration parameters</param>
+        /// <param name="config">Model configuration parameters/模型配置参数</param>
         public IYolov8SegModel(Yolov8SegConfig config) : base(config)
         {
             MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
@@ -26,17 +48,22 @@ namespace DeploySharp.Model
 
         /// <summary>
         /// Predicts objects in input image and returns detection results
+        /// 预测输入图像中的目标并返回检测结果
         /// </summary>
-        /// <param name="img">Input image in OpenCV Mat format</param>
-        /// <returns>Detection results container</returns>
+        /// <param name="img">Input image in ImageSharp format/OpenCV Mat格式的输入图像</param>
+        /// <returns>Array of detection results/检测结果数组</returns>
         public SegResult[] Predict(object img)
         {
             return base.Predict(img) as SegResult[];
         }
 
         /// <summary>
-        /// 优化后的后处理方法 (性能关键版本)
+        /// Post-processes raw model output to extract detection results
+        /// 对原始模型输出进行后处理以提取检测结果
         /// </summary>
+        /// <param name="dataTensor">Raw model output tensor/原始模型输出张量</param>
+        /// <param name="imageAdjustmentParam">Image transformation parameters/图像变换参数</param>
+        /// <returns>Array of processed detection results/处理后的检测结果数组</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
 
@@ -128,12 +155,7 @@ namespace DeploySharp.Model
                     }
                 }
 
-                //OpenCvSharp.Cv2.ImShow("rawMaskData", Mat.FromPixelData(validMaskHeight, validMaskWidth, MatType.CV_32FC1, rawMaskData));
                 var targetMask = new float[bounds.Height * bounds.Width];
-                //var targetMask =new ImageDataF(bounds.Width, bounds.Height, 1, DataFormat.CHW);
-
-                //ResizeToTarget(new ImageDataF(rawMaskData, validMaskWidth, validMaskHeight, 1, DataFormat.CHW),
-                //    targetMask, bounds.Location, imageAdjustmentParam.RowImgSize);
 
                 for (var y = 0; y < bounds.Height; y++)
                 {
@@ -162,22 +184,10 @@ namespace DeploySharp.Model
                         var xLerp = sourceX - x0;
                         var yLerp = sourceY - y0;
 
-                        //if (imageAdjustmentParam.RowImgSize.Width < imageAdjustmentParam.RowImgSize.Height)
-                        //{
-                        //    var top = Lerp(rawMaskData[y0 * validMaskHeight + x0], rawMaskData[y0 * validMaskHeight + x1], xLerp);
-                        //    var bottom = Lerp(rawMaskData[y1 * validMaskHeight + x0], rawMaskData[y1 * validMaskHeight + x1], xLerp);
-                        //    targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
-                        //}
-                        //else
-                        //{
-                            var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
-                            var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
-                            targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
-                        //}
-                        // Perform bilinear interpolation
-
-
-                        
+                        var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
+                        var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
+                        targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
+            
                     }
                 }
 

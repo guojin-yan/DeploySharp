@@ -13,15 +13,34 @@ using DeploySharp.Log;
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// Implementation of YOLOv5 model for object detection
-    /// Inherits from base IModel interface
+    /// Abstract base implementation of YOLOv5 model for object Segmentation
+    /// YOLOv5分割模型的抽象基类实现
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Provides standard YOLOv5 Segmentation pipeline including:
+    /// 提供标准YOLOv5检测流程，包括：
+    /// - Input preprocessing
+    ///   输入预处理
+    /// - Output decoding
+    ///   输出解码
+    /// - Confidence filtering
+    ///   置信度过滤
+    /// - Non-Maximum Suppression
+    ///   非极大值抑制
+    /// </para>
+    /// <para>
+    /// Inherits from base IModel interface and implements YOLOv5-specific processing
+    /// 继承自基础IModel接口并实现YOLOv5特定处理
+    /// </para>
+    /// </remarks>
     public abstract class IYolov5SegModel : IModel
     {
         /// <summary>
-        /// Constructor initializes with model configuration
+        /// Initializes a new instance of YOLOv5 detector
+        /// 初始化YOLOv5检测器的新实例
         /// </summary>
-        /// <param name="config">Model configuration parameters</param>
+        /// <param name="config">Model configuration parameters/模型配置参数</param>
         public IYolov5SegModel(Yolov5SegConfig config) : base(config)
         {
             MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
@@ -29,17 +48,22 @@ namespace DeploySharp.Model
 
         /// <summary>
         /// Predicts objects in input image and returns detection results
+        /// 预测输入图像中的目标并返回检测结果
         /// </summary>
-        /// <param name="img">Input image in OpenCV Mat format</param>
-        /// <returns>Detection results container</returns>
+        /// <param name="img">Input image in ImageSharp format/OpenCV Mat格式的输入图像</param>
+        /// <returns>Array of detection results/检测结果数组</returns>
         public SegResult[] Predict(object img)
         {
             return base.Predict(img) as SegResult[];
         }
 
         /// <summary>
-        /// 优化后的后处理方法 (性能关键版本)
+        /// Post-processes raw model output to extract detection results
+        /// 对原始模型输出进行后处理以提取检测结果
         /// </summary>
+        /// <param name="dataTensor">Raw model output tensor/原始模型输出张量</param>
+        /// <param name="imageAdjustmentParam">Image transformation parameters/图像变换参数</param>
+        /// <returns>Array of processed detection results/处理后的检测结果数组</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
 

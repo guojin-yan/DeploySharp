@@ -10,6 +10,14 @@ namespace DeploySharp.Model
 {
     public class Yolov13DetConfig : Yolov8DetConfig
     {
+        /// <summary>
+        /// Initializes a new instance with default values
+        /// 使用默认值初始化新实例
+        /// </summary>
+        /// <remarks>
+        /// The model path must be set separately before use.
+        /// 使用前需要单独设置模型路径。
+        /// </remarks>
         public Yolov13DetConfig() { }
         public Yolov13DetConfig(string modelPath)
         {

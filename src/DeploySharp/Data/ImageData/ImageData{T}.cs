@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,40 +8,266 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Data
 {
+    //public class ImageData<T> where T : unmanaged
+    //{
+    //    public enum DataFormat { CHW, HWC }
+
+    //    private readonly int width;
+    //    private readonly int height;
+    //    private readonly int channels;
+    //    private readonly DataFormat format;
+    //    private readonly Memory<T> buffer;
+
+    //    public int Width => width;
+    //    public int Height => height;
+    //    public int Channels => channels;
+    //    public DataFormat Format => format;
+
+    //    /// <summary>
+    //    /// Initializes a new blank image with the specified dimensions and format.
+    //    /// </summary>
+    //    public ImageData(int width, int height, int channels, DataFormat format = DataFormat.HWC)
+    //    {
+    //        if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
+    //        if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
+    //        if (channels <= 0) throw new ArgumentOutOfRangeException(nameof(channels));
+
+    //        this.width = width;
+    //        this.height = height;
+    //        this.channels = channels;
+    //        this.format = format;
+    //        buffer = new Memory<T>(new T[width * height * channels]);
+    //    }
+
+    //    /// <summary>
+    //    /// Initializes a new image from existing data.
+    //    /// </summary>
+    //    public ImageData(T[] data, int width, int height, int channels, DataFormat format = DataFormat.HWC)
+    //    {
+    //        if (data == null) throw new ArgumentNullException(nameof(data));
+    //        if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
+    //        if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
+    //        if (channels <= 0) throw new ArgumentOutOfRangeException(nameof(channels));
+    //        if (data.Length != width * height * channels)
+    //            throw new ArgumentException("Data length doesn't match image dimensions");
+
+    //        this.width = width;
+    //        this.height = height;
+    //        this.channels = channels;
+    //        this.format = format;
+    //        buffer = new Memory<T>(data);
+    //    }
+
+    //    /// <summary>
+    //    /// Gets or sets a single pixel value for the specified channel (CHW format)
+    //    /// </summary>
+    //    public T this[int channel, int y, int x]
+    //    {
+    //        get
+    //        {
+    //            if (format != DataFormat.CHW)
+    //                throw new InvalidOperationException("Channel access only supported in CHW format");
+    //            return buffer.Span[GetCHWIndex(channel, y, x)];
+    //        }
+    //        set
+    //        {
+    //            if (format != DataFormat.CHW)
+    //                throw new InvalidOperationException("Channel access only supported in CHW format");
+    //            buffer.Span[GetCHWIndex(channel, y, x)] = value;
+    //        }
+    //    }
+
+    //    public Span<T> GetChannelSpan(int channel)
+    //    {
+    //        if (format != DataFormat.CHW)
+    //            throw new InvalidOperationException("Channel span only available in CHW format");
+
+    //        int channelSize = width * height;
+    //        return buffer.Span.Slice(channel * channelSize, channelSize);
+    //    }
+
+    //    public void SetPixel(int y, int x, ReadOnlySpan<T> pixel)
+    //    {
+    //        if (format != DataFormat.HWC)
+    //            throw new InvalidOperationException("SetPixel only supported in HWC format");
+    //        if (pixel.Length != channels)
+    //            throw new ArgumentException($"Pixel must have {channels} components");
+
+    //        int index = GetHWCIndex(y, x);
+    //        pixel.CopyTo(buffer.Span.Slice(index, channels));
+    //    }
+
+    //    public T[] GetPixel(int y, int x)
+    //    {
+    //        if (format != DataFormat.HWC)
+    //            throw new InvalidOperationException("GetPixel only supported in HWC format");
+
+    //        T[] pixel = new T[channels];
+    //        int index = GetHWCIndex(y, x);
+    //        buffer.Span.Slice(index, channels).CopyTo(pixel);
+    //        return pixel;
+    //    }
+
+    //    public void SetChannelPixel(int channel, int y, int x, T value)
+    //    {
+    //        if (format != DataFormat.CHW)
+    //            throw new InvalidOperationException("Channel pixel access only supported in CHW format");
+    //        buffer.Span[GetCHWIndex(channel, y, x)] = value;
+    //    }
+
+    //    public T GetChannelPixel(int channel, int y, int x)
+    //    {
+    //        if (format != DataFormat.CHW)
+    //            throw new InvalidOperationException("Channel pixel access only supported in CHW format");
+    //        return buffer.Span[GetCHWIndex(channel, y, x)];
+    //    }
+
+    //    public Span<T> GetRawSpan() => buffer.Span;
+    //    public T[] GetRawData() => buffer.ToArray();
+    //    public void Clear() => buffer.Span.Clear();
+
+    //    public void Fill(T value) => buffer.Span.Fill(value);
+
+    //    public ImageData<T> Clone()
+    //    {
+    //        T[] copy = new T[buffer.Length];
+    //        buffer.CopyTo(copy);
+    //        return new ImageData<T>(copy, width, height, channels, format);
+    //    }
+
+    //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //    private int GetHWCIndex(int y, int x)
+    //    {
+    //        if (y < 0 || y >= height) throw new ArgumentOutOfRangeException(nameof(y));
+    //        if (x < 0 || x >= width) throw new ArgumentOutOfRangeException(nameof(x));
+    //        return (y * width + x) * channels;
+    //    }
+
+    //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //    private int GetCHWIndex(int channel, int y, int x)
+    //    {
+    //        if (channel < 0 || channel >= channels) throw new ArgumentOutOfRangeException(nameof(channel));
+    //        if (y < 0 || y >= height) throw new ArgumentOutOfRangeException(nameof(y));
+    //        if (x < 0 || x >= width) throw new ArgumentOutOfRangeException(nameof(x));
+    //        return channel * (width * height) + y * width + x;
+    //    }
+
+    //    // HWC格式下的通道像素访问辅助方法
+    //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //    private T GetChannelPixelHWC(int y, int x, int channel)
+    //    {
+    //        return buffer.Span[(y * width + x) * channels + channel];
+    //    }
+    //}
+
+
+    /// <summary>
+    /// Generic image container supporting both CHW (channel-height-width) and HWC (height-width-channel) layouts
+    /// 支持CHW(通道-高度-宽度)和HWC(高度-宽度-通道)布局的通用图像容器
+    /// </summary>
+    /// <typeparam name="T">Pixel component type (must be unmanaged) 像素组件类型(必须是非托管类型)</typeparam>
+    /// <remarks>
+    /// This class provides:
+    /// - Memory-efficient storage with Span support
+    /// - Type-safe pixel/channel access
+    /// - Conversion-free interoperability with native code
+    /// - Support for common image formats (float, byte, etc.)
+    /// 
+    /// 本类提供：
+    /// - 支持Span的高效内存存储
+    /// - 类型安全的像素/通道访问
+    /// - 与本地代码的无转换互操作
+    /// - 支持常见图像格式(float、byte等)
+    /// </remarks>
     public class ImageData<T> where T : unmanaged
     {
-        public enum DataFormat { CHW, HWC }
+        /// <summary>
+        /// Supported data layout formats
+        /// 支持的数据布局格式
+        /// </summary>
+        public enum DataFormat
+        {
+            /// <summary>
+            /// Channel-Height-Width (planar format)
+            /// 通道-高度-宽度(平面格式)
+            /// </summary>
+            CHW,
 
-        private readonly int _width;
-        private readonly int _height;
-        private readonly int _channels;
-        private readonly DataFormat _format;
-        private readonly Memory<T> _buffer;
+            /// <summary>
+            /// Height-Width-Channel (interleaved format)
+            /// 高度-宽度-通道(交错格式)
+            /// </summary>
+            HWC
+        }
 
-        public int Width => _width;
-        public int Height => _height;
-        public int Channels => _channels;
-        public DataFormat Format => _format;
+        private readonly int width;
+        private readonly int height;
+        private readonly int channels;
+        private readonly DataFormat format;
+        private readonly Memory<T> buffer;
 
         /// <summary>
-        /// Initializes a new blank image with the specified dimensions and format.
+        /// Image width in pixels 图像宽度(像素)
         /// </summary>
+        public int Width => width;
+
+        /// <summary>
+        /// Image height in pixels 图像高度(像素)
+        /// </summary>
+        public int Height => height;
+
+        /// <summary>
+        /// Number of color channels 颜色通道数
+        /// </summary>
+        public int Channels => channels;
+
+        /// <summary>
+        /// Data layout format 数据布局格式
+        /// </summary>
+        public DataFormat Format => format;
+
+        /// <summary>
+        /// Total number of elements in the buffer 缓冲区中的元素总数
+        /// </summary>
+        public int Length => buffer.Length;
+
+        /// <summary>
+        /// Initializes a new blank image with the specified dimensions and format
+        /// 使用指定尺寸和格式初始化新的空白图像
+        /// </summary>
+        /// <param name="width">Image width (>0) 图像宽度(>0)</param>
+        /// <param name="height">Image height (>0) 图像高度(>0)</param>
+        /// <param name="channels">Number of channels (>0) 通道数(>0)</param>
+        /// <param name="format">Data layout format 数据布局格式</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when any dimension is ≤0 当任何维度≤0时抛出
+        /// </exception>
         public ImageData(int width, int height, int channels, DataFormat format = DataFormat.HWC)
         {
-            if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
-            if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
-            if (channels <= 0) throw new ArgumentOutOfRangeException(nameof(channels));
+            if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width), "Width must be positive");
+            if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height), "Height must be positive");
+            if (channels <= 0) throw new ArgumentOutOfRangeException(nameof(channels), "Channels must be positive");
 
-            _width = width;
-            _height = height;
-            _channels = channels;
-            _format = format;
-            _buffer = new Memory<T>(new T[width * height * channels]);
+            this.width = width;
+            this.height = height;
+            this.channels = channels;
+            this.format = format;
+            buffer = new Memory<T>(new T[width * height * channels]);
         }
 
         /// <summary>
-        /// Initializes a new image from existing data.
+        /// Initializes a new image from existing data
+        /// 从现有数据初始化新图像
         /// </summary>
+        /// <param name="data">Pixel data array 像素数据数组</param>
+        /// <param name="width">Image width (>0) 图像宽度(>0)</param>
+        /// <param name="height">Image height (>0) 图像高度(>0)</param>
+        /// <param name="channels">Number of channels (>0) 通道数(>0)</param>
+        /// <param name="format">Data layout format 数据布局格式</param>
+        /// <exception cref="ArgumentNullException">Thrown when data is null 当数据为null时抛出</exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when data length doesn't match dimensions 当数据长度不匹配维度时抛出
+        /// </exception>
         public ImageData(T[] data, int width, int height, int channels, DataFormat format = DataFormat.HWC)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
@@ -48,263 +275,154 @@ namespace DeploySharp.Data
             if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
             if (channels <= 0) throw new ArgumentOutOfRangeException(nameof(channels));
             if (data.Length != width * height * channels)
-                throw new ArgumentException("Data length doesn't match image dimensions");
+                throw new ArgumentException($"Data length ({data.Length}) doesn't match image dimensions ({width}x{height}x{channels})");
 
-            _width = width;
-            _height = height;
-            _channels = channels;
-            _format = format;
-            _buffer = new Memory<T>(data);
+            this.width = width;
+            this.height = height;
+            this.channels = channels;
+            this.format = format;
+            buffer = new Memory<T>(data);
         }
 
         /// <summary>
-        /// Gets or sets a single pixel value for the specified channel (CHW format)
+        /// Gets or sets a single channel pixel value (CHW format only)
+        /// 获取或设置单个通道像素值(仅CHW格式)
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when accessed in HWC format 在HWC格式下访问时抛出
+        /// </exception>
+        /// <exception cref="IndexOutOfRangeException">
+        /// Thrown when coordinates are out of bounds 当坐标越界时抛出
+        /// </exception>
         public T this[int channel, int y, int x]
         {
             get
             {
-                if (_format != DataFormat.CHW)
-                    throw new InvalidOperationException("Channel access only supported in CHW format");
-                return _buffer.Span[GetCHWIndex(channel, y, x)];
+                if (format != DataFormat.CHW)
+                    throw new InvalidOperationException("Channel indexing only supported in CHW format");
+                return buffer.Span[GetCHWIndex(channel, y, x)];
             }
             set
             {
-                if (_format != DataFormat.CHW)
-                    throw new InvalidOperationException("Channel access only supported in CHW format");
-                _buffer.Span[GetCHWIndex(channel, y, x)] = value;
+                if (format != DataFormat.CHW)
+                    throw new InvalidOperationException("Channel indexing only supported in CHW format");
+                buffer.Span[GetCHWIndex(channel, y, x)] = value;
             }
         }
 
-        public Span<T> GetChannelSpan(int channel)
+        /// <summary>
+        /// Gets a span covering all pixels in specified channel (CHW format only)
+        /// 获取覆盖指定通道所有像素的Span(仅CHW格式)
+        /// </summary>
+        /// <param name="channel">Channel index (0-based) 通道索引(从0开始)</param>
+        /// <returns>Read-only span of channel data 通道数据的只读Span</returns>
+        public ReadOnlySpan<T> GetChannelSpan(int channel)
         {
-            if (_format != DataFormat.CHW)
+            if (format != DataFormat.CHW)
                 throw new InvalidOperationException("Channel span only available in CHW format");
 
-            int channelSize = _width * _height;
-            return _buffer.Span.Slice(channel * channelSize, channelSize);
+            int channelSize = width * height;
+            return buffer.Span.Slice(channel * channelSize, channelSize);
         }
 
+        /// <summary>
+        /// Sets all components of a pixel (HWC format only)
+        /// 设置像素的所有分量(仅HWC格式)
+        /// </summary>
+        /// <param name="y">Row index (0-based) 行索引(从0开始)</param>
+        /// <param name="x">Column index (0-based) 列索引(从0开始)</param>
+        /// <param name="pixel">Pixel components 像素分量</param>
         public void SetPixel(int y, int x, ReadOnlySpan<T> pixel)
         {
-            if (_format != DataFormat.HWC)
+            if (format != DataFormat.HWC)
                 throw new InvalidOperationException("SetPixel only supported in HWC format");
-            if (pixel.Length != _channels)
-                throw new ArgumentException($"Pixel must have {_channels} components");
+            if (pixel.Length != channels)
+                throw new ArgumentException($"Pixel must have {channels} components");
 
             int index = GetHWCIndex(y, x);
-            pixel.CopyTo(_buffer.Span.Slice(index, _channels));
+            pixel.CopyTo(buffer.Span.Slice(index, channels));
         }
 
+        /// <summary>
+        /// Gets all components of a pixel (HWC format only)
+        /// 获取像素的所有分量(仅HWC格式)
+        /// </summary>
+        /// <param name="y">Row index 行索引</param>
+        /// <param name="x">Column index 列索引</param>
+        /// <returns>Array containing pixel components 包含像素分量的数组</returns>
         public T[] GetPixel(int y, int x)
         {
-            if (_format != DataFormat.HWC)
+            if (format != DataFormat.HWC)
                 throw new InvalidOperationException("GetPixel only supported in HWC format");
 
-            T[] pixel = new T[_channels];
+            T[] pixel = new T[channels];
             int index = GetHWCIndex(y, x);
-            _buffer.Span.Slice(index, _channels).CopyTo(pixel);
+            buffer.Span.Slice(index, channels).CopyTo(pixel);
             return pixel;
         }
 
-        public void SetChannelPixel(int channel, int y, int x, T value)
-        {
-            if (_format != DataFormat.CHW)
-                throw new InvalidOperationException("Channel pixel access only supported in CHW format");
-            _buffer.Span[GetCHWIndex(channel, y, x)] = value;
-        }
+        /// <summary>
+        /// Gets direct access to the underlying buffer span
+        /// 直接访问底层缓冲区Span
+        /// </summary>
+        /// <returns>Span covering entire buffer 覆盖整个缓冲区的Span</returns>
+        public Span<T> GetRawSpan() => buffer.Span;
 
-        public T GetChannelPixel(int channel, int y, int x)
-        {
-            if (_format != DataFormat.CHW)
-                throw new InvalidOperationException("Channel pixel access only supported in CHW format");
-            return _buffer.Span[GetCHWIndex(channel, y, x)];
-        }
+        /// <summary>
+        /// Gets a copy of the underlying data array
+        /// 获取底层数据数组的副本
+        public T[] GetRawData() => buffer.ToArray();
 
-        public Span<T> GetRawSpan() => _buffer.Span;
-        public T[] GetRawData() => _buffer.ToArray();
-        public void Clear() => _buffer.Span.Clear();
+        /// <summary>
+        /// Clears the image buffer (sets all elements to default(T))
+        /// 清除图像缓冲区(将所有元素设置为default(T))
+        /// </summary>
+        public void Clear() => buffer.Span.Clear();
 
-        public void Fill(T value) => _buffer.Span.Fill(value);
+        /// <summary>
+        /// Fills the image buffer with specified value
+        /// 使用指定值填充图像缓冲区
+        /// </summary>
+        /// <param name="value">Fill value 填充值</param>
+        public void Fill(T value) => buffer.Span.Fill(value);
 
+        /// <summary>
+        /// Creates a deep copy of the image
+        /// 创建图像的深拷贝
+        /// </summary>
+        /// <returns>New independent image instance 新的独立图像实例</returns>
         public ImageData<T> Clone()
         {
-            T[] copy = new T[_buffer.Length];
-            _buffer.CopyTo(copy);
-            return new ImageData<T>(copy, _width, _height, _channels, _format);
+            T[] copy = new T[buffer.Length];
+            buffer.CopyTo(copy);
+            return new ImageData<T>(copy, width, height, channels, format);
         }
 
-
-        //    /// <summary>
-        //    /// Resizes the image using bilinear interpolation
-        //    /// </summary>
-        //    public ImageData<T> Resize(int newWidth, int newHeight)
-        //    {
-        //        if (newWidth <= 0 || newHeight <= 0)
-        //            throw new ArgumentOutOfRangeException("Invalid target dimensions");
-
-        //        var result = new ImageData<T>(newWidth, newHeight, _channels, _format);
-
-        //        if (_format == DataFormat.HWC)
-        //        {
-        //            // HWC格式处理
-        //            for (int y = 0; y < newHeight; y++)
-        //            {
-        //                float srcY = (float)y * (_height - 1) / (newHeight - 1);
-        //                int y0 = (int)Math.Min(srcY, _height - 2);
-        //                float yLerp = srcY - y0;
-
-        //                for (int x = 0; x < newWidth; x++)
-        //                {
-        //                    float srcX = (float)x * (_width - 1) / (newWidth - 1);
-        //                    int x0 = (int)Math.Min(srcX, _width - 2);
-        //                    float xLerp = srcX - x0;
-
-        //                    // 对每个通道插值
-        //                    Span<T> pixel = stackalloc T[_channels];
-        //                    for (int c = 0; c < _channels; c++)
-        //                    {
-        //                        // 获取四个邻近点
-        //                        var q11 = GetChannelPixelHWC(y0, x0, c);
-        //                        var q21 = GetChannelPixelHWC(y0, x0 + 1, c);
-        //                        var q12 = GetChannelPixelHWC(y0 + 1, x0, c);
-        //                        var q22 = GetChannelPixelHWC(y0 + 1, x0 + 1, c);
-
-        //                        // 双线性插值（需动态调用Lerp）
-        //                        pixel[c] = NumericHelper.Lerp(
-        //                            NumericHelper.Lerp(q11, q21, xLerp),
-        //                            NumericHelper.Lerp(q12, q22, xLerp),
-        //                            yLerp
-        //                        );
-        //                    }
-        //                    result.SetPixel(y, x, pixel);
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            // CHW格式处理（逐通道独立缩放）
-        //            for (int c = 0; c < _channels; c++)
-        //            {
-        //                var channelSpan = GetChannelSpan(c);
-        //                var resultChannel = result.GetChannelSpan(c);
-
-        //                for (int y = 0; y < newHeight; y++)
-        //                {
-        //                    float srcY = (float)y * (_height - 1) / (newHeight - 1);
-        //                    int y0 = (int)Math.Min(srcY, _height - 2);
-        //                    float yLerp = srcY - y0;
-
-        //                    for (int x = 0; x < newWidth; x++)
-        //                    {
-        //                        float srcX = (float)x * (_width - 1) / (newWidth - 1);
-        //                        int x0 = (int)Math.Min(srcX, _width - 2);
-        //                        float xLerp = srcX - x0;
-
-        //                        // 当前通道的四个邻近点
-        //                        int i00 = y0 * _width + x0;
-        //                        int i10 = y0 * _width + x0 + 1;
-        //                        int i01 = (y0 + 1) * _width + x0;
-        //                        int i11 = (y0 + 1) * _width + x0 + 1;
-
-        //                        // 插值计算
-        //                        resultChannel[y * newWidth + x] = NumericHelper.Lerp(
-        //                            NumericHelper.Lerp(channelSpan[i00], channelSpan[i10], xLerp),
-        //                            NumericHelper.Lerp(channelSpan[i01], channelSpan[i11], xLerp),
-        //                            yLerp
-        //                        );
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        return result;
-        //    }
-
-
-        //    /// <summary>
-        //    /// Applies thresholding to the image (supports per-channel thresholds)
-        //    /// </summary>
-        //    public void Threshold(ReadOnlySpan<T> thresholds, T maxValue = default, bool isBinary = true)
-        //    {
-        //        if (thresholds.Length != _channels)
-        //            throw new ArgumentException($"Threshold count must match channels ({_channels})");
-
-        //        if (_format == DataFormat.HWC)
-        //        {
-        //            for (int y = 0; y < _height; y++)
-        //            {
-        //                for (int x = 0; x < _width; x++)
-        //                {
-        //                    int baseIdx = GetHWCIndex(y, x);
-        //                    for (int c = 0; c < _channels; c++)
-        //                    {
-        //                        ref T pixel = ref _buffer.Span[baseIdx + c];
-        //                        if (NumericHelper.GreaterThan(pixel, thresholds[c]))
-        //                            pixel = isBinary ? maxValue : pixel;
-        //                        else if (isBinary)
-        //                            pixel = default;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            for (int c = 0; c < _channels; c++)
-        //            {
-        //                var channelSpan = GetChannelSpan(c);
-        //                T threshold = thresholds[c];
-        //                for (int i = 0; i < channelSpan.Length; i++)
-        //                {
-        //                    if (NumericHelper.GreaterThan(channelSpan[i], threshold))
-        //                        channelSpan[i] = isBinary ? maxValue : channelSpan[i];
-        //                    else if (isBinary)
-        //                        channelSpan[i] = default;
-        //                }
-        //            }
-        //        }
-        //    }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetHWCIndex(int y, int x)
         {
-            if (y < 0 || y >= _height) throw new ArgumentOutOfRangeException(nameof(y));
-            if (x < 0 || x >= _width) throw new ArgumentOutOfRangeException(nameof(x));
-            return (y * _width + x) * _channels;
+            if (y < 0 || y >= height) throw new ArgumentOutOfRangeException(nameof(y));
+            if (x < 0 || x >= width) throw new ArgumentOutOfRangeException(nameof(x));
+            return (y * width + x) * channels;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetCHWIndex(int channel, int y, int x)
         {
-            if (channel < 0 || channel >= _channels) throw new ArgumentOutOfRangeException(nameof(channel));
-            if (y < 0 || y >= _height) throw new ArgumentOutOfRangeException(nameof(y));
-            if (x < 0 || x >= _width) throw new ArgumentOutOfRangeException(nameof(x));
-            return channel * (_width * _height) + y * _width + x;
+            if (channel < 0 || channel >= channels) throw new ArgumentOutOfRangeException(nameof(channel));
+            if (y < 0 || y >= height) throw new ArgumentOutOfRangeException(nameof(y));
+            if (x < 0 || x >= width) throw new ArgumentOutOfRangeException(nameof(x));
+            return channel * (width * height) + y * width + x;
         }
 
-        // HWC格式下的通道像素访问辅助方法
+        /// <summary>
+        /// Gets a channel pixel value (HWC format private access)
+        /// 获取通道像素值(HWC格式内部访问)
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T GetChannelPixelHWC(int y, int x, int channel)
         {
-            return _buffer.Span[(y * _width + x) * _channels + channel];
+            return buffer.Span[(y * width + x) * channels + channel];
         }
     }
-
-
-    //internal static class NumericHelper
-    //{
-    //    // 泛型线性插值
-    //    public static T Lerp<T>(T a, T b, float t) where T : unmanaged
-    //    {
-    //        dynamic da = a, db = b;
-    //        return da + (db - da) * t;
-    //    }
-
-    //    // 泛型比较
-    //    public static bool GreaterThan<T>(T a, T b) where T : unmanaged
-    //    {
-    //        dynamic da = a, db = b;
-    //        return da > db;
-    //    }
-    //}
-
 }
