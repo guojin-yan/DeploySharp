@@ -36,7 +36,7 @@ namespace DeploySharp.Data
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(img.Size()),
-                ((AnomalibSegConfig)config).DataProcessor.ResizeMode);
+                ((IImgConfig)config).DataProcessor.ResizeMode);
 
             MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
                              $"原始尺寸: {img.Size()}, " +
