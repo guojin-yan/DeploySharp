@@ -12,7 +12,7 @@ namespace DeploySharp.Model
     /// 机器学习模型配置类，包含模型路径、输入输出参数、推理设置等
     /// 实现IConfig接口保证配置可序列化
     /// </summary>
-    public class YoloConfig : IConfig
+    public class YoloConfig : IImgConfig
     {
         // 推理参数
         /// <summary>
@@ -27,7 +27,6 @@ namespace DeploySharp.Model
         /// </summary>
         public float NmsThreshold { get; set; } = 0.5f;
 
-        public DataProcessorConfig DataProcessor = new DataProcessorConfig();
         public NonMaxSuppression NonMaxSuppression;
 
         /// <summary>

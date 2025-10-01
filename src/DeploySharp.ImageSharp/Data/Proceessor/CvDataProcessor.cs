@@ -22,7 +22,7 @@ namespace DeploySharp.Data
             int inputSize = config.InputSizes[0][2];
 
             MyLogger.Log.Debug($"配置输入尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
-                              $"缩放模式: {((YoloConfig)config).DataProcessor.ResizeMode}");
+                              $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
 
             // 记录归一化处理开始
             MyLogger.Log.Debug("开始图像归一化处理 (0-255 to 0-1)...");
@@ -30,18 +30,18 @@ namespace DeploySharp.Data
             float[] normalizedData = CvDataProcessor.ProcessToFloat(
                 img,
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
-                ((YoloConfig)config).DataProcessor);
+                ((IImgConfig)config).DataProcessor);
 
             // 创建图像调整参数
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(img.Size()),
-                ((YoloConfig)config).DataProcessor.ResizeMode);
+                ((AnomalibSegConfig)config).DataProcessor.ResizeMode);
 
             MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
                              $"原始尺寸: {img.Size()}, " +
                              $"目标尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
-                             $"缩放模式: {((YoloConfig)config).DataProcessor.ResizeMode}");
+                             $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
 
             // 构造数据张量
             MyLogger.Log.Debug("构造输入DataTensor...");
@@ -117,22 +117,60 @@ namespace DeploySharp.Data
 
         public static float[] Normalize(Image<Rgb24> image, float[] mean, float[] scale, bool isScale)
         {
-            var normalizedData = ImageToFloatArray(image, isScale);
+            //var normalizedData = ImageToFloatArray(image, isScale);
 
-            int pixelCount = image.Width * image.Height;
-            for (int c = 0; c < 3; c++)
+            //int pixelCount = image.Width * image.Height;
+            //for (int c = 0; c < 3; c++)
+            //{
+            //    int channelOffset = c * pixelCount;
+            //    float channelScale = scale[c];
+            //    float channelMean = mean[c];
+
+            //    for (int i = 0; i < pixelCount; i++)
+            //    {
+            //        normalizedData[channelOffset + i] = (normalizedData[channelOffset + i] - channelMean) * channelScale;
+            //    }
+            //}
+
+            //return normalizedData;
+
+            int width = image.Width;
+            int height = image.Height;
+            int pixelCount = width * height;
+            float[] result = new float[3 * pixelCount];
+            float alpha = isScale ? 1.0f / 255.0f : 1.0f;
+            // 先将完整图像复制到内存中
+            Rgb24[] pixelArray = new Rgb24[pixelCount];
+            image.CopyPixelDataTo(pixelArray);
+
+            // 然后安全并行处理
+            Parallel.For(0, height, y =>
             {
-                int channelOffset = c * pixelCount;
-                float channelScale = scale[c];
-                float channelMean = mean[c];
-
-                for (int i = 0; i < pixelCount; i++)
+                for (int x = 0; x < width; x++)
                 {
-                    normalizedData[channelOffset + i] = (normalizedData[channelOffset + i] - channelMean) * channelScale;
+                    int srcIndex = y * width + x;
+                    int pixelIndex = y * width + x;
+                    result[pixelIndex] = pixelArray[srcIndex].R * alpha * scale[0] - mean[0] * scale[0];
+                    result[pixelIndex + pixelCount] = pixelArray[srcIndex].G * alpha * scale[1] - mean[1] * scale[1];
+                    result[pixelIndex + 2 * pixelCount] = pixelArray[srcIndex].B * alpha * scale[2] - mean[2] * scale[2];
                 }
-            }
+            });
 
-            return normalizedData;
+            //for (int y = 0; y < height; y++)
+            //{
+            //    for (int x = 0; x < width; x++)
+            //    {
+            //        int srcIndex = y * width + x;
+            //        int pixelIndex = y * width + x;
+            //        result[pixelIndex] = pixelArray[srcIndex].R * alpha * scale[0] - mean[0] * scale[0];
+            //        result[pixelIndex + pixelCount] = pixelArray[srcIndex].G * alpha * scale[1] - mean[1] * scale[1];
+            //        result[pixelIndex + 2 * pixelCount] = pixelArray[srcIndex].B * alpha * scale[2] - mean[2] * scale[2];
+            //    }
+            //}
+
+
+            return result;
+
         }
 
         public static float[] Normalize(Image<Rgb24> image, bool isScale)

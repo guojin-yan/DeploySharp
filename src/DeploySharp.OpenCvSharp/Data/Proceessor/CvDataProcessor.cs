@@ -21,7 +21,7 @@ namespace DeploySharp.Data
             var image = (Mat)img;
 
             MyLogger.Log.Debug($"配置输入尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
-                              $"缩放模式: {((YoloConfig)config).DataProcessor.ResizeMode}");
+                              $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
 
             // 记录归一化处理开始
             MyLogger.Log.Debug("开始图像归一化处理 (0-255 to 0-1)...");
@@ -29,18 +29,18 @@ namespace DeploySharp.Data
             float[] normalizedData = CvDataProcessor.ProcessToFloat(
                 image,
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
-                ((YoloConfig)config).DataProcessor);
+                ((IImgConfig)config).DataProcessor);
 
             // 创建图像调整参数
             imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
                 new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
                 CvDataExtensions.ToCvSize(image.Size()),
-                ((YoloConfig)config).DataProcessor.ResizeMode);
+                ((IImgConfig)config).DataProcessor.ResizeMode);
 
             MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
                              $"原始尺寸: {image.Size()}, " +
                              $"目标尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
-                             $"缩放模式: {((YoloConfig)config).DataProcessor.ResizeMode}");
+                             $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
 
             // 构造数据张量
             MyLogger.Log.Debug("构造输入DataTensor...");
@@ -186,7 +186,7 @@ namespace DeploySharp.Data
                 Parallel.For(0, rc, i =>
                 {
                     using Mat dest = Mat.FromPixelData(rh, rw, MatType.CV_32FC1, resultPtr + i * rh * rw * sizeof(float));
-                    Cv2.ExtractChannel(im, dest, i);
+                    Cv2.ExtractChannel(re, dest, i);
                 });
                 //    for (int i = 0; i < rc; ++i)
                 //{
