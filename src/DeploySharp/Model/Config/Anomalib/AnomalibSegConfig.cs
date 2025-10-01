@@ -130,12 +130,11 @@ namespace DeploySharp.Model
     }
 
 
-    public class AnomalibSegConfig : IConfig
+    public class AnomalibSegConfig : IImgConfig
     {
 
         public MetaDataConfig MetaData = new MetaDataConfig();
         public bool UseMetaData = false;
-        public DataProcessorConfig DataProcessor = new DataProcessorConfig();
         public AnomalibSegConfig() { }
 
         public AnomalibSegConfig(string modelPath,
@@ -144,7 +143,7 @@ namespace DeploySharp.Model
             DeviceType deviceType = DeviceType.CPU,
             int inferBatch = 1,
             ImageResizeMode resizeMode = ImageResizeMode.Pad,
-            ImageNormalizationType normalizationType = ImageNormalizationType.ImageNetStandard)
+            ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
             if (metaDataConfigPath != null)
             {
