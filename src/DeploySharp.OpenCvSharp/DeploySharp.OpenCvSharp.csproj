@@ -12,23 +12,40 @@
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
-    <Description>
-    </Description>
+    <Description>DeploySharp is a cross-platform model deployment framework designed for C# developers, offering end-to-end solutions from model loading and configuration management to inference execution. Its modular namespace architecture significantly reduces the complexity of integrating deep learning models into the C# ecosystem.</Description>
     <PackageProjectUrl>https://github.com/guojin-yan/DeploySharp.git</PackageProjectUrl>
     <RepositoryUrl>https://github.com/guojin-yan/DeploySharp.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <NeutralLanguage>zh</NeutralLanguage>
-    <!--PackageIcon>logo.png</PackageIcon-->
-    <!--PackageReadmeFile>README.md</PackageReadmeFile-->
+    <PackageIcon>logo.jpg</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes></PackageReleaseNotes>
     <RootNamespace>DeploySharp</RootNamespace>
     <AssemblyName>DeploySharp.OpenCvSharp</AssemblyName>
     <PackageTags>Model-Deploy;OpenVINO;CSharp;C#-API;ONNX</PackageTags>
-    <!--PackageLicenseFile>LICENSE.txt</PackageLicenseFile-->
-    <!--PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance-->
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <Copyright>Copyright © 2025 Yan Guojin. All Rights Reserved.</Copyright>
   </PropertyGroup>
 
+
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\nuget\logo.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
   </ItemGroup>
