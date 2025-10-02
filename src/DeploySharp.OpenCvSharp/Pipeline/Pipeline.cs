@@ -95,6 +95,10 @@ namespace DeploySharp
                         model = new Yolov13DetModel(new Yolov13DetConfig(modelPath, inferenceBackend, deviceType));
                         visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                         break;
+                    case ModelType.AnomalibSeg:
+                        model = new AnomalibSegModel(new AnomalibSegConfig(modelPath: modelPath, inferenceBackend: inferenceBackend, deviceType: deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
                     default:
                         string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
                         MyLogger.Log.Error(errorMsg);
@@ -187,6 +191,10 @@ namespace DeploySharp
                     case ModelType.YOLOv13Det:
                         model = new Yolov13DetModel(config as Yolov13DetConfig);
                         visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.AnomalibSeg:
+                        model = new AnomalibSegModel(config as AnomalibSegConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
                         break;
                     default:
                         string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
