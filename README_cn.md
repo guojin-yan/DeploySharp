@@ -255,8 +255,8 @@ namespace DeploySharp.OpenCvSharp.Demo
 
 |  案例类型  |               框架               |                             链接                             |
 | :--------: | :------------------------------: | :----------------------------------------------------------: |
-|  桌面应用  |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET Framework 4.8/DeploySharp.ImageSharp-ApplicationPlatform) |
-|  桌面应用  |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET 6.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
+|  桌面应用  |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%20Framework%204.8/DeploySharp.ImageSharp-ApplicationPlatform) |
+|  桌面应用  |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%206.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
 | 控制台应用 | .NET Framework 4.8、.NET 6.0-9.0 | [DeploySharp.samples](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/samples) |
 
 ## 🗂文档

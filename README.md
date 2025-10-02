@@ -253,8 +253,8 @@ namespace DeploySharp.OpenCvSharp.Demo
 
 |    Type     |            Framework             |                             Link                             |
 | :---------: | :------------------------------: | :----------------------------------------------------------: |
-| Desktop App |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET Framework 4.8/DeploySharp.ImageSharp-ApplicationPlatform) |
-| Desktop App |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET 6.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
+| Desktop App |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%20Framework%204.8/DeploySharp.ImageSharp-ApplicationPlatform) |
+| Desktop App |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%206.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
 | Console App | .NET Framework 4.8、.NET 6.0-9.0 | [DeploySharp.samples](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/samples) |
 
 ## 🗂Documentation
