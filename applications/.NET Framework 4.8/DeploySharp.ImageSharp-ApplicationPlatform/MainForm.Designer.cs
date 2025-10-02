@@ -65,7 +65,7 @@
             // tbModelPath
             // 
             this.tbModelPath.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbModelPath.Location = new System.Drawing.Point(141, 97);
+            this.tbModelPath.Location = new System.Drawing.Point(148, 91);
             this.tbModelPath.Margin = new System.Windows.Forms.Padding(2);
             this.tbModelPath.Name = "tbModelPath";
             this.tbModelPath.Size = new System.Drawing.Size(467, 32);
@@ -75,7 +75,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.Location = new System.Drawing.Point(17, 103);
+            this.label1.Location = new System.Drawing.Point(24, 97);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(109, 22);
@@ -85,7 +85,7 @@
             // buttonInfer
             // 
             this.buttonInfer.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.buttonInfer.Location = new System.Drawing.Point(114, 472);
+            this.buttonInfer.Location = new System.Drawing.Point(105, 452);
             this.buttonInfer.Margin = new System.Windows.Forms.Padding(2);
             this.buttonInfer.Name = "buttonInfer";
             this.buttonInfer.Size = new System.Drawing.Size(203, 66);
@@ -108,7 +108,7 @@
             // buttonSelectModelPath
             // 
             this.buttonSelectModelPath.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.buttonSelectModelPath.Location = new System.Drawing.Point(664, 96);
+            this.buttonSelectModelPath.Location = new System.Drawing.Point(671, 90);
             this.buttonSelectModelPath.Margin = new System.Windows.Forms.Padding(2);
             this.buttonSelectModelPath.Name = "buttonSelectModelPath";
             this.buttonSelectModelPath.Size = new System.Drawing.Size(80, 36);
@@ -121,7 +121,7 @@
             // 
             this.comboEngineType.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboEngineType.FormattingEnabled = true;
-            this.comboEngineType.Location = new System.Drawing.Point(176, 304);
+            this.comboEngineType.Location = new System.Drawing.Point(166, 259);
             this.comboEngineType.Margin = new System.Windows.Forms.Padding(2);
             this.comboEngineType.Name = "comboEngineType";
             this.comboEngineType.Size = new System.Drawing.Size(218, 32);
@@ -131,7 +131,7 @@
             // 
             this.comboBoxDeviceType.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxDeviceType.FormattingEnabled = true;
-            this.comboBoxDeviceType.Location = new System.Drawing.Point(176, 353);
+            this.comboBoxDeviceType.Location = new System.Drawing.Point(166, 313);
             this.comboBoxDeviceType.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxDeviceType.Name = "comboBoxDeviceType";
             this.comboBoxDeviceType.Size = new System.Drawing.Size(218, 32);
@@ -141,7 +141,7 @@
             // 
             this.comboBoxONNXType.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxONNXType.FormattingEnabled = true;
-            this.comboBoxONNXType.Location = new System.Drawing.Point(176, 408);
+            this.comboBoxONNXType.Location = new System.Drawing.Point(166, 368);
             this.comboBoxONNXType.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxONNXType.Name = "comboBoxONNXType";
             this.comboBoxONNXType.Size = new System.Drawing.Size(218, 32);
@@ -151,7 +151,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(30, 304);
+            this.label3.Location = new System.Drawing.Point(20, 259);
             this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(113, 22);
@@ -161,7 +161,7 @@
             // tbImagePath
             // 
             this.tbImagePath.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbImagePath.Location = new System.Drawing.Point(141, 152);
+            this.tbImagePath.Location = new System.Drawing.Point(148, 146);
             this.tbImagePath.Margin = new System.Windows.Forms.Padding(2);
             this.tbImagePath.Name = "tbImagePath";
             this.tbImagePath.Size = new System.Drawing.Size(467, 32);
@@ -171,7 +171,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label4.Location = new System.Drawing.Point(17, 158);
+            this.label4.Location = new System.Drawing.Point(24, 152);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(107, 22);
@@ -181,7 +181,7 @@
             // buttonSelectImagePath
             // 
             this.buttonSelectImagePath.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.buttonSelectImagePath.Location = new System.Drawing.Point(664, 148);
+            this.buttonSelectImagePath.Location = new System.Drawing.Point(671, 142);
             this.buttonSelectImagePath.Margin = new System.Windows.Forms.Padding(2);
             this.buttonSelectImagePath.Name = "buttonSelectImagePath";
             this.buttonSelectImagePath.Size = new System.Drawing.Size(80, 36);
@@ -203,7 +203,7 @@
             // 
             this.comboBoxModelType.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxModelType.FormattingEnabled = true;
-            this.comboBoxModelType.Location = new System.Drawing.Point(176, 247);
+            this.comboBoxModelType.Location = new System.Drawing.Point(166, 202);
             this.comboBoxModelType.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxModelType.Name = "comboBoxModelType";
             this.comboBoxModelType.Size = new System.Drawing.Size(218, 32);
@@ -213,7 +213,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.Location = new System.Drawing.Point(32, 247);
+            this.label5.Location = new System.Drawing.Point(22, 202);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(111, 22);
@@ -224,7 +224,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label6.Location = new System.Drawing.Point(30, 358);
+            this.label6.Location = new System.Drawing.Point(20, 318);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(112, 22);
@@ -235,7 +235,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label7.Location = new System.Drawing.Point(30, 408);
+            this.label7.Location = new System.Drawing.Point(20, 368);
             this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(111, 22);
@@ -245,7 +245,7 @@
             // buttonLoadModel
             // 
             this.buttonLoadModel.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.buttonLoadModel.Location = new System.Drawing.Point(823, 116);
+            this.buttonLoadModel.Location = new System.Drawing.Point(830, 110);
             this.buttonLoadModel.Margin = new System.Windows.Forms.Padding(2);
             this.buttonLoadModel.Name = "buttonLoadModel";
             this.buttonLoadModel.Size = new System.Drawing.Size(170, 50);
