@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\OpenVINO.runtime.win.2025.3.0\build\net\OpenVINO.runtime.win.props" Condition="Exists('..\..\packages\OpenVINO.runtime.win.2025.3.0\build\net\OpenVINO.runtime.win.props')" />
   <Import Project="..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.props" Condition="Exists('..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.props')" />
   <Import Project="..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.props" Condition="Exists('..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.props')" />
-  <Import Project="..\..\packages\OpenVINO.runtime.win.2025.1.0.1\build\net\OpenVINO.runtime.win.props" Condition="Exists('..\..\packages\OpenVINO.runtime.win.2025.1.0.1\build\net\OpenVINO.runtime.win.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -69,11 +69,11 @@
     <Reference Include="Clipper2Lib, Version=1.5.4.0, Culture=neutral, PublicKeyToken=ddeb3f68c442d6e4, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Clipper2.1.5.4\lib\netstandard2.0\Clipper2Lib.dll</HintPath>
     </Reference>
-    <Reference Include="DeploySharp, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\JYPPX.DeploySharp.0.0.3\lib\net48\DeploySharp.dll</HintPath>
+    <Reference Include="DeploySharp, Version=0.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\JYPPX.DeploySharp.0.0.4\lib\net48\DeploySharp.dll</HintPath>
     </Reference>
-    <Reference Include="DeploySharp.ImageSharp, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\JYPPX.DeploySharp.ImageSharp.0.0.3\lib\net48\DeploySharp.ImageSharp.dll</HintPath>
+    <Reference Include="DeploySharp.ImageSharp, Version=0.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\JYPPX.DeploySharp.ImageSharp.0.0.4\lib\net48\DeploySharp.ImageSharp.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=3.2.0.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\log4net.3.2.0\lib\net462\log4net.dll</HintPath>
@@ -84,8 +84,8 @@
     <Reference Include="Microsoft.ML.OnnxRuntime, Version=1.22.2.0, Culture=neutral, PublicKeyToken=f27f157f0a5b7bb6, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.ML.OnnxRuntime.Managed.1.22.2\lib\netstandard2.0\Microsoft.ML.OnnxRuntime.dll</HintPath>
     </Reference>
-    <Reference Include="OpenVINO_CSharp_API, Version=2025.1.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\OpenVINO.CSharp.API.2025.1.0.2\lib\net48\OpenVINO_CSharp_API.dll</HintPath>
+    <Reference Include="OpenVINO_CSharp_API, Version=2025.3.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\OpenVINO.CSharp.API.2025.3.0.1\lib\net48\OpenVINO_CSharp_API.dll</HintPath>
     </Reference>
     <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
@@ -188,13 +188,13 @@
     <PropertyGroup>
       <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\OpenVINO.runtime.win.2025.1.0.1\build\net\OpenVINO.runtime.win.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\OpenVINO.runtime.win.2025.1.0.1\build\net\OpenVINO.runtime.win.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.ML.OnnxRuntime.Managed.1.22.2\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ML.OnnxRuntime.Managed.1.22.2\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ML.OnnxRuntime.DirectML.1.22.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.DirectML.targets'))" />
     <Error Condition="!Exists('..\..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+    <Error Condition="!Exists('..\..\packages\OpenVINO.runtime.win.2025.3.0\build\net\OpenVINO.runtime.win.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\OpenVINO.runtime.win.2025.3.0\build\net\OpenVINO.runtime.win.props'))" />
   </Target>
   <Import Project="..\..\packages\Microsoft.ML.OnnxRuntime.Managed.1.22.2\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets" Condition="Exists('..\..\packages\Microsoft.ML.OnnxRuntime.Managed.1.22.2\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets')" />
   <Import Project="..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.targets" Condition="Exists('..\..\packages\Microsoft.AI.DirectML.1.15.4\build\Microsoft.AI.DirectML.targets')" />

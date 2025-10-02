@@ -197,6 +197,12 @@ namespace DeploySharp.OpenCvSharp_DemoPlatform
                     model = new Yolov13DetModel(new Yolov13DetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov13DetConfig);
                     visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                     break;
+                case ModelType.AnomalibSeg:
+                    AnomalibSegConfig config = new AnomalibSegConfig(modelPath: modelPath, inferenceBackend: inferenceBackend, deviceType: deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as AnomalibSegConfig;
+                    config.InputSizes.Add(new int[4] { 1, 3, 256, 256 });
+                    model = new AnomalibSegModel(config);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                    break;
                 default:
                     string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
 
