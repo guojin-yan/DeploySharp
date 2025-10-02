@@ -49,38 +49,38 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
+using System.Diagnostics;
+using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
-using DeploySharp.Model;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using System;
+using DeploySharp;
+using System.Net.Http.Headers;
+using OpenCvSharp;
 
-namespace DeploySharp.ImageSharp.Demo
+namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class AnomalibSegDemos
+    public class YOLOv8SegDemo
     {
         public static void Run()
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\anomalib\Padim\model\padim.onnx";
+            string modelPath = @"E:\Model\Yolo\yolov8s-seg.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Model\anomalib\Padim\images\broken_small\000.png";
-           
-            AnomalibSegConfig config = new AnomalibSegConfig(modelPath);
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            config.InputSizes.Add(new int[4] { 1, 3, 256, 256 });
-            AnomalibSegModel model = new AnomalibSegModel(config);
+            string imagePath = @"E:\Data\image\bus.jpg";
 
-            var img = Image.Load(imagePath);
+            Yolov8SegConfig config = new Yolov8SegConfig(modelPath);
+            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            Yolov8SegModel model = new Yolov8SegModel(config);
+            Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
-            var resultImg = Visualize.DrawSegResult(result, img as Image<Rgb24>, new VisualizeOptions(1.0f));
-            resultImg.Save(@$"./result_{ModelType.AnomalibSeg.ToString()}.jpg");
+            var resultImg = Visualize.DrawSegResult(result, img, new VisualizeOptions(1.0f));
+            Cv2.ImShow("image", resultImg);
+            Cv2.WaitKey();
         }
     }
 }
