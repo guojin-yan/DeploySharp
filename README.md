@@ -133,7 +133,7 @@ JYPPX.DeploySharp.OpenCvSharp
 JYPPX.DeploySharp
 JYPPX.DeploySharp.ImageSharp
 
-Microsoft.ML.OnnxRuntime.Openvino
+Intel.ML.OnnxRuntime.OpenVino
 ```
 
 - **ONNX Runtime(DML) inference+ImageSharp image processing**
