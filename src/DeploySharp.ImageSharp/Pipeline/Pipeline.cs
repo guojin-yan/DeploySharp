@@ -11,10 +11,43 @@ using DeploySharp.Engine;
 
 namespace DeploySharp
 {
+    /// <summary>
+    /// Main pipeline for computer vision model inference and visualization
+    /// 计算机视觉模型推理和可视化的主流水线
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Encapsulates model inference operations with built-in visualization capabilities.
+    /// Supports multiple YOLO versions (v5-v13) and tasks (detection, segmentation, pose etc.).
+    /// 封装了模型推理操作并内置可视化能力。
+    /// 支持多个YOLO版本(v5-v13)和任务(检测、分割、姿态等)。
+    /// </para>
+    /// <para>
+    /// Implements both synchronous and asynchronous operations with proper resource cleanup.
+    /// 实现了同步和异步操作，并包含正确的资源清理。
+    /// </para>
+    /// </remarks>
     public class Pipeline : IDisposable
     {
         private IModel model;
         private VisualizeHandler visualizeHandler;
+
+        /// <summary>
+        /// Initializes pipeline with model path and configuration
+        /// 使用模型路径和配置初始化流水线
+        /// </summary>
+        /// <param name="modelType">Type of YOLO model/YOLO模型类型</param>
+        /// <param name="modelPath">Path to model file/模型文件路径</param>
+        /// <param name="inferenceBackend">Inference backend (default: OpenVINO)/推理后端(默认:OpenVINO)</param>
+        /// <param name="deviceType">Device type (default: CPU)/设备类型(默认:CPU)</param>
+        /// <exception cref="DeploySharpException">
+        /// Thrown when model type is not supported
+        /// 当模型类型不受支持时抛出
+        /// </exception>
+        /// <exception cref="Exception">
+        /// Thrown when initialization fails
+        /// 当初始化失败时抛出
+        /// </exception>
         public Pipeline(ModelType modelType, string modelPath, InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU)
         {
@@ -107,7 +140,12 @@ namespace DeploySharp
                 throw;
             }
         }
-
+        /// <summary>
+        /// Initializes pipeline with existing configuration
+        /// 使用现有配置初始化流水线
+        /// </summary>
+        /// <param name="modelType">Type of YOLO model/YOLO模型类型</param>
+        /// <param name="config">Model configuration object/模型配置对象</param>
         public Pipeline(ModelType modelType, IConfig config)
         {
             MyLogger.Log.Info($"初始化 Pipeline, ModelType: {modelType},  ModelPath: {config.ModelPath}");
@@ -199,6 +237,11 @@ namespace DeploySharp
                 throw;
             }
         }
+
+        /// <summary>
+        /// Releases all resources
+        /// 释放所有资源
+        /// </summary>
         public void Dispose()
         {
             model?.Dispose();
@@ -210,7 +253,12 @@ namespace DeploySharp
         {
             Dispose();
         }
-
+        /// <summary>
+        /// Performs synchronous inference
+        /// 执行同步推理
+        /// </summary>
+        /// <param name="img">Input image/输入图像</param>
+        /// <returns>Array of inference results/推理结果数组</returns>
         public Result[] Predict(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 Predict 同步推理");
@@ -227,6 +275,10 @@ namespace DeploySharp
             }
         }
 
+        /// <summary>
+        /// Performs synchronous inference with visualization
+        /// 执行带可视化的同步推理
+        /// </summary>
         public Image<Rgb24> PredictAndDrawing(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAndDrawing 同步推理与可视化");
@@ -243,6 +295,10 @@ namespace DeploySharp
             }
         }
 
+        /// <summary>
+        /// Performs asynchronous inference
+        /// 执行异步推理
+        /// </summary>
         public async Task<Result[]> PredictAsync(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAsync 异步推理");
@@ -259,6 +315,10 @@ namespace DeploySharp
             }
         }
 
+        /// <summary>
+        /// Performs asynchronous inference with visualization
+        /// 执行带可视化的异步推理
+        /// </summary>
         public async Task<Image<Rgb24>> PredictAsyncAndDrawing(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAsyncAndDrawing 异步推理与可视化");

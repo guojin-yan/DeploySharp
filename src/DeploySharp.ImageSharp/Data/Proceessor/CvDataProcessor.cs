@@ -14,9 +14,44 @@ using DeploySharp.Model;
 
 namespace DeploySharp.Data
 {
+    /// <summary>
+    /// Provides image processing utilities for computer vision tasks
+    /// 提供计算机视觉任务的图像处理工具
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Handles essential image preprocessing operations including:
+    /// 处理关键的图像预处理操作包括:
+    /// - Resizing with various modes
+    ///   多种模式调整尺寸
+    /// - Normalization (multiple schemes)
+    ///   标准化(多种方案)
+    /// - Tensor conversion
+    ///   张量转换
+    /// </para>
+    /// <para>
+    /// Optimized implementations leveraging parallelism where possible
+    /// 尽可能利用并行化的优化实现
+    /// </para>
+    /// </remarks>
     public static class CvDataProcessor
     {
-
+        /// <summary>
+        /// Processes image into DataTensor format
+        /// 将图像处理为DataTensor格式
+        /// </summary>
+        /// <param name="img">Input RGB image/输入RGB图像</param>
+        /// <param name="config">Model configuration/模型配置</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters/输出调整参数</param>
+        /// <returns>Processed tensor data/处理后的张量数据</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when input or config is null
+        /// 当输入或配置为null时抛出
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when processing fails
+        /// 当处理失败时抛出
+        /// </exception>
         public static DataTensor ImageProcessToDataTensor(Image<Rgb24> img, IConfig config, out ImageAdjustmentParam imageAdjustmentParam)
         {
             int inputSize = config.InputSizes[0][2];
@@ -61,7 +96,10 @@ namespace DeploySharp.Data
             return dataTensors;
         }
 
-
+        /// <summary>
+        /// Full preprocessing pipeline (resize + normalize)
+        /// 完整的预处理流程(调整尺寸 + 标准化)
+        /// </summary>
         public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
         {
             return Normalize(Resize((Image<Rgb24>)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
@@ -69,12 +107,15 @@ namespace DeploySharp.Data
 
 
         /// <summary>
-        /// 根据指定的 ResizeMode 调整图像尺寸
+        /// Resizes image using specified mode
+        /// 使用指定模式调整图像尺寸
         /// </summary>
-        /// <param name="image">原始图像</param>
-        /// <param name="size">目标尺寸</param>
-        /// <param name="resizeMode">调整模式</param>
-        /// <returns>调整后的图像</returns>
+        /// <param name="image">Source image/源图像</param>
+        /// <param name="size">Target dimensions/目标尺寸</param>
+        /// <param name="resizeMode">Resizing strategy/尺寸调整策略</param>
+        /// <returns>Resized image/调整后的图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown for invalid resize mode/当调整模式无效时抛出</exception>
         public static Image<Rgb24> Resize(
             Image<Rgb24> image,
             Size size,
@@ -114,7 +155,19 @@ namespace DeploySharp.Data
         }
 
 
-
+        /// <summary>
+        /// Normalizes image with mean subtraction and scaling
+        /// 使用均值减除和缩放标准化图像
+        /// </summary>
+        /// <param name="image">Source image/源图像</param>
+        /// <param name="mean">Channel means/通道均值</param>
+        /// <param name="scale">Channel scales/通道缩放</param>
+        /// <param name="isScale">Whether to apply 0-1 scaling/是否应用0-1缩放</param>
+        /// <returns>Normalized float array/标准化后的浮点数组</returns>
+        /// <remarks>
+        /// Uses parallel processing for better performance on large images
+        /// 对大图像使用并行处理以提高性能
+        /// </remarks>
         public static float[] Normalize(Image<Rgb24> image, float[] mean, float[] scale, bool isScale)
         {
             //var normalizedData = ImageToFloatArray(image, isScale);
@@ -172,12 +225,18 @@ namespace DeploySharp.Data
             return result;
 
         }
-
+        /// <summary>
+        /// Applies basic 0-1 or no normalization
+        /// 应用基础的0-1标准化或不处理
+        /// </summary>
         public static float[] Normalize(Image<Rgb24> image, bool isScale)
         {
             return ImageToFloatArray(image, isScale);
         }
-
+        /// <summary>
+        /// Converts image to float array with optional scaling
+        /// 将图像转为浮点数组并可选缩放
+        /// </summary>
         private static float[] ImageToFloatArray(Image<Rgb24> image, bool normalize)
         {
             int width = image.Width;
@@ -207,8 +266,14 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// 执行归一化 (伪代码示例)
+        /// Normalizes image using specified scheme
+        /// 使用指定方案标准化图像
         /// </summary>
+        /// <param name="image">Source image/源图像</param>
+        /// <param name="type">Normalization type/标准化类型</param>
+        /// <param name="customParams">Custom parameters when type is CustomStandard/当类型为CustomStandard时的自定义参数</param>
+        /// <returns>Normalized float array/标准化后的浮点数组</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
         public static float[] Normalize(Image<Rgb24> image, ImageNormalizationType type, NormalizationParams customParams = null)
         {
             var parameters = type == ImageNormalizationType.CustomStandard

@@ -13,8 +13,44 @@ using Rect = OpenCvSharp.Rect;
 
 namespace DeploySharp.Data
 {
+    /// <summary>
+    /// Provides image processing utilities for computer vision tasks
+    /// 提供计算机视觉任务的图像处理工具
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Handles essential image preprocessing operations including:
+    /// 处理关键的图像预处理操作包括:
+    /// - Resizing with various modes
+    ///   多种模式调整尺寸
+    /// - Normalization (multiple schemes)
+    ///   标准化(多种方案)
+    /// - Tensor conversion
+    ///   张量转换
+    /// </para>
+    /// <para>
+    /// Optimized implementations leveraging parallelism where possible
+    /// 尽可能利用并行化的优化实现
+    /// </para>
+    /// </remarks>
     public static class CvDataProcessor
     {
+        /// <summary>
+        /// Processes image into DataTensor format
+        /// 将图像处理为DataTensor格式
+        /// </summary>
+        /// <param name="img">Input RGB image/输入RGB图像</param>
+        /// <param name="config">Model configuration/模型配置</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters/输出调整参数</param>
+        /// <returns>Processed tensor data/处理后的张量数据</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when input or config is null
+        /// 当输入或配置为null时抛出
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when processing fails
+        /// 当处理失败时抛出
+        /// </exception>
         public static DataTensor ImageProcessToDataTensor(Mat img, IConfig config, out ImageAdjustmentParam imageAdjustmentParam)
         {
             int inputSize = config.InputSizes[0][2];
@@ -59,7 +95,10 @@ namespace DeploySharp.Data
 
             return dataTensors;
         }
-
+        /// <summary>
+        /// Full preprocessing pipeline (resize + normalize)
+        /// 完整的预处理流程(调整尺寸 + 标准化)
+        /// </summary>
         public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
         {
             return Normalize(Resize((Mat)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
@@ -67,8 +106,15 @@ namespace DeploySharp.Data
 
 
         /// <summary>
-        /// 根据指定的ResizeMode调整图像尺寸（OpenCVSharp实现）
+        /// Resizes image using specified mode
+        /// 使用指定模式调整图像尺寸
         /// </summary>
+        /// <param name="img">Source image/源图像</param>
+        /// <param name="size">Target dimensions/目标尺寸</param>
+        /// <param name="resizeMode">Resizing strategy/尺寸调整策略</param>
+        /// <returns>Resized image/调整后的图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown for invalid resize mode/当调整模式无效时抛出</exception>
         public static Mat Resize(
             Mat img,
             Size size,
@@ -143,8 +189,18 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// 图像归一化处理（OpenCVSharp实现）
+        /// Normalizes image with mean subtraction and scaling
+        /// 使用均值减除和缩放标准化图像
         /// </summary>
+        /// <param name="im">Source image/源图像</param>
+        /// <param name="mean">Channel means/通道均值</param>
+        /// <param name="scale">Channel scales/通道缩放</param>
+        /// <param name="isScale">Whether to apply 0-1 scaling/是否应用0-1缩放</param>
+        /// <returns>Normalized float array/标准化后的浮点数组</returns>
+        /// <remarks>
+        /// Uses parallel processing for better performance on large images
+        /// 对大图像使用并行处理以提高性能
+        /// </remarks>
         public static float[] Normalize(Mat im, float[] mean, float[] scale, bool isScale)
         {
             if (im.Channels() != 3)
@@ -200,7 +256,10 @@ namespace DeploySharp.Data
             }
             return res;
         }
-
+        /// <summary>
+        /// Applies basic 0-1 or no normalization
+        /// 应用基础的0-1标准化或不处理
+        /// </summary>
         public static float[] Normalize(Mat im, bool isScale)
         {
             // 参数校验
@@ -242,10 +301,15 @@ namespace DeploySharp.Data
         }
 
 
-
         /// <summary>
-        /// 执行归一化 (伪代码示例)
+        /// Normalizes image using specified scheme
+        /// 使用指定方案标准化图像
         /// </summary>
+        /// <param name="image">Source image/源图像</param>
+        /// <param name="type">Normalization type/标准化类型</param>
+        /// <param name="customParams">Custom parameters when type is CustomStandard/当类型为CustomStandard时的自定义参数</param>
+        /// <returns>Normalized float array/标准化后的浮点数组</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
         public static float[] Normalize(Mat image, ImageNormalizationType type, NormalizationParams customParams = null)
         {
             Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);

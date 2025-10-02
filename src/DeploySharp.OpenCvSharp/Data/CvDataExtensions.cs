@@ -10,9 +10,32 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Data
 {
+    /// <summary>
+    /// Provides extension methods for converting between OpenCvSharp and DeploySharp CVData data structures
+    /// 提供OpenCvSharp和DeploySharp CVData数据结构之间的转换扩展方法
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class helps bridge between OpenCvSharp and DeploySharp CVData types
+    /// 该类帮助在OpenCvSharp和DeploySharp CVData类型之间建立桥梁
+    /// </para>
+    /// <para>
+    /// Supported conversions include:
+    /// 支持的转换包括:
+    /// - Point/PointF types  点/浮点类型
+    /// - Size/SizeF types    尺寸/浮点尺寸类型  
+    /// - Rectangle/Rect types 矩形类型
+    /// - Image data conversion 图像数据转换
+    /// </para>
+    /// </remarks>
     public static class CvDataExtensions
     {
-
+        /// <summary>
+        /// Converts OpenCvSharp PointF to DeploySharp CVData PointF
+        /// 将OpenCvSharp的PointF转换为DeploySharp CVData的PointF
+        /// </summary>
+        /// <param name="point">OpenCvSharp point/OpenCvSharp点</param>
+        /// <returns>DeploySharp CVData point/DeploySharp CVData点</returns>
         public static PointF ToCvPointF(OpenCvSharp.Point2f point)
         {
             return new PointF(
@@ -20,7 +43,12 @@ namespace DeploySharp.Data
                 point.Y
             );
         }
-
+        /// <summary>
+        /// Converts DeploySharp CVData PointF to OpenCvSharp PointF
+        /// 将DeploySharp CVData的PointF转换为OpenCvSharp的PointF
+        /// </summary>
+        /// <param name="point">DeploySharp CVData point/DeploySharp CVData点</param>
+        /// <returns>OpenCvSharp point/OpenCvSharp点</returns>
         public static OpenCvSharp.Point2f ToPointF(PointF point)
         {
             return new OpenCvSharp.Point2f(
@@ -29,7 +57,12 @@ namespace DeploySharp.Data
             );
         }
 
-
+        /// <summary>
+        /// Converts OpenCvSharp Point to DeploySharp CVData Point
+        /// 将OpenCvSharp的Point转换为DeploySharp CVData的Point
+        /// </summary>
+        /// <param name="point">OpenCvSharp point/OpenCvSharp点</param>
+        /// <returns>DeploySharp CVData point/DeploySharp CVData点</returns>
         public static Point ToCvPoint(OpenCvSharp.Point point)
         {
             return new Point(
@@ -37,7 +70,12 @@ namespace DeploySharp.Data
                 point.Y
             );
         }
-
+        /// <summary>
+        /// Converts DeploySharp CVData Point to OpenCvSharp Point
+        /// 将DeploySharp CVData的Point转换为OpenCvSharp的Point
+        /// </summary>
+        /// <param name="point">DeploySharp CVData point/DeploySharp CVData点</param>
+        /// <returns>OpenCvSharp point/OpenCvSharp点</returns>
         public static OpenCvSharp.Point ToPoint(Point point)
         {
             return new OpenCvSharp.Point(
@@ -46,6 +84,12 @@ namespace DeploySharp.Data
             );
         }
 
+        /// <summary>
+        /// Converts OpenCvSharp SizeF to DeploySharp CVData SizeF
+        /// 将OpenCvSharp的SizeF转换为DeploySharp CVData的SizeF
+        /// </summary>
+        /// <param name="size">OpenCvSharp size/OpenCvSharp尺寸</param>
+        /// <returns>DeploySharp CVData size/DeploySharp CVData尺寸</returns>
         public static SizeF ToCvSizeF(OpenCvSharp.Size2f size)
         {
             return new SizeF(
@@ -53,7 +97,12 @@ namespace DeploySharp.Data
                 size.Height
             );
         }
-
+        /// <summary>
+        /// Converts DeploySharp CVData SizeF to OpenCvSharp SizeF
+        /// 将DeploySharp CVData的SizeF转换为OpenCvSharp的SizeF
+        /// </summary>
+        /// <param name="size">DeploySharp CVData size/DeploySharp CVData尺寸</param>
+        /// <returns>OpenCvSharp size/OpenCvSharp尺寸</returns>
         public static OpenCvSharp.Size2f ToSizeF(SizeF size)
         {
             return new OpenCvSharp.Size2f(
@@ -61,7 +110,12 @@ namespace DeploySharp.Data
                 size.Height
             );
         }
-
+        /// <summary>
+        /// Converts OpenCvSharp Size to DeploySharp CVData Size
+        /// 将OpenCvSharp的Size转换为DeploySharp CVData的Size
+        /// </summary>
+        /// <param name="size">OpenCvSharp size/OpenCvSharp尺寸</param>
+        /// <returns>DeploySharp CVData size/DeploySharp CVData尺寸</returns>
         public static Size ToCvSize(OpenCvSharp.Size size)
         {
             return new Size(
@@ -69,7 +123,12 @@ namespace DeploySharp.Data
                 size.Height
             );
         }
-
+        /// <summary>
+        /// Converts DeploySharp CVData Size to OpenCvSharp Size
+        /// 将DeploySharp CVData的Size转换为OpenCvSharp的Size
+        /// </summary>
+        /// <param name="size">DeploySharp CVData size/DeploySharp CVData尺寸</param>
+        /// <returns>OpenCvSharp size/OpenCvSharp尺寸</returns>
         public static OpenCvSharp.Size ToSize(Size size)
         {
             return new OpenCvSharp.Size(
@@ -77,6 +136,12 @@ namespace DeploySharp.Data
                 size.Height
             );
         }
+        /// <summary>
+        /// Converts OpenCvSharp Rectangle to DeploySharp CVData Rect
+        /// 将OpenCvSharp的Rectangle转换为DeploySharp CVData的Rect
+        /// </summary>
+        /// <param name="rect">OpenCvSharp rectangle/OpenCvSharp矩形</param>
+        /// <returns>DeploySharp CVData rectangle/DeploySharp CVData矩形</returns>
         public static Rect ToCvRect(OpenCvSharp.Rect rect)
         {
             return new Rect(
@@ -87,6 +152,12 @@ namespace DeploySharp.Data
             );
         }
 
+        /// <summary>
+        /// Converts DeploySharp CVData Rect to OpenCvSharp Rectangle
+        /// 将DeploySharp CVData的Rect转换为OpenCvSharp的Rectangle
+        /// </summary>
+        /// <param name="rect">DeploySharp CVData rectangle/DeploySharp CVData矩形</param>
+        /// <returns>OpenCvSharp rectangle/OpenCvSharp矩形</returns>
         public static OpenCvSharp.Rect ToRect(Rect rect)
         {
             return new OpenCvSharp.Rect(
@@ -96,7 +167,12 @@ namespace DeploySharp.Data
                 Height: rect.Height
             );
         }
-
+        /// <summary>
+        /// Converts OpenCvSharp RotatedRect to DeploySharp CVData RotatedRect
+        /// 将OpenCvSharp的RotatedRect转换为DeploySharp CVData的RotatedRect
+        /// </summary>
+        /// <param name="rect">OpenCvSharp RotatedRect/OpenCvSharp旋转矩形</param>
+        /// <returns>DeploySharp CVData RotatedRect/DeploySharp CVData旋转矩形</returns>
         public static RotatedRect ToCvRotatedRect(OpenCvSharp.RotatedRect rect)
         {
             return new RotatedRect(
@@ -106,7 +182,12 @@ namespace DeploySharp.Data
             );
 
         }
-
+        /// <summary>
+        /// Converts DeploySharp CVData RotatedRect to OpenCvSharp RotatedRect
+        /// 将DeploySharp CVData的RotatedRect转换为OpenCvSharp的RotatedRect
+        /// </summary>
+        /// <param name="rect">DeploySharp CVData RotatedRect/DeploySharp CVData 旋转矩形</param>
+        /// <returns>OpenCvSharp RotatedRect/OpenCvSharp 旋转矩形</returns>
         public static OpenCvSharp.RotatedRect ToRotatedRect(RotatedRect rect)
         {
             return new OpenCvSharp.RotatedRect(
@@ -118,7 +199,15 @@ namespace DeploySharp.Data
 
 
 
-        // 将ImageData转换为Mat
+        /// <summary>
+        /// Converts ImageDataB to OpenCvSharp Mat;
+        /// 将ImageDataB转换为 OpenCvSharp Mat;
+        /// </summary>
+        /// <param name="imageData">Source image data/源图像数据</param>
+        /// <returns> OpenCvSharp Mat/ OpenCvSharp Mat图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when imageData is null/当imageData为null时抛出</exception>
+        /// <exception cref="ArgumentException">Thrown when image dimensions are invalid/当图像尺寸无效时抛出</exception>
+        /// <exception cref="NotSupportedException">Thrown when channel count is unsupported/当通道数不支持时抛出</exception>
         public static OpenCvSharp.Mat ToMat(this ImageDataB imageData)
         {
             if (imageData == null)
@@ -149,7 +238,13 @@ namespace DeploySharp.Data
             return mat;
         }
 
-        // 从Mat创建ImageData
+        /// <summary>
+        /// Converts  OpenCvSharp Mat to ImageDataB
+        /// 将 OpenCvSharp Mat转换为ImageDataB
+        /// </summary>
+        /// <param name="mat">Source RGB image/源RGB图像</param>
+        /// <returns>Image data buffer/图像数据缓冲区</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
         public static ImageDataB ToImageDataB(this OpenCvSharp.Mat mat) 
         {
             if (mat.Empty()) throw new ArgumentException("输入Mat为空");
@@ -165,7 +260,15 @@ namespace DeploySharp.Data
 
 
 
-        // 将ImageData转换为Mat
+        /// <summary>
+        /// Converts ImageDataB to OpenCvSharp Mat;
+        /// 将ImageDataB转换为 OpenCvSharp Mat;
+        /// </summary>
+        /// <param name="imageData">Source image data/源图像数据</param>
+        /// <returns> OpenCvSharp Mat/ OpenCvSharp Mat图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when imageData is null/当imageData为null时抛出</exception>
+        /// <exception cref="ArgumentException">Thrown when image dimensions are invalid/当图像尺寸无效时抛出</exception>
+        /// <exception cref="NotSupportedException">Thrown when channel count is unsupported/当通道数不支持时抛出</exception>
         public static OpenCvSharp.Mat ToMat(this ImageDataF imageData)
         {
             if (imageData == null)
@@ -196,7 +299,14 @@ namespace DeploySharp.Data
             return mat;
         }
 
-        // 从Mat创建ImageData
+
+        /// <summary>
+        /// Converts  OpenCvSharp Mat to ImageDataB
+        /// 将 OpenCvSharp Mat转换为ImageDataB
+        /// </summary>
+        /// <param name="mat">Source RGB image/源RGB图像</param>
+        /// <returns>Image data buffer/图像数据缓冲区</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null/当image为null时抛出</exception>
         public static ImageDataF ToImageDataF(this OpenCvSharp.Mat mat)
         {
             if (mat.Empty()) throw new ArgumentException("输入Mat为空");
