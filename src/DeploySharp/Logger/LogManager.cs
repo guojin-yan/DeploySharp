@@ -121,7 +121,7 @@ namespace DeploySharp.Log
                         Name = "ProjectMainLoggerAppender",
                         Layout = new CustomPatternLayout
                         {
-                            ConversionPattern = "[%date] [%thread] [%-5level] (%filename:%line) - %message%newline%exception"
+                            ConversionPattern = "[%date] [%thread] [%-5level] - %message%newline%exception"
                         },
                     };
 
@@ -148,7 +148,7 @@ namespace DeploySharp.Log
                         LockingModel = new FileAppender.MinimalLock(),
                         Layout = new CustomPatternLayout
                         {
-                            ConversionPattern = "[%date] [%thread] [%-5level] (%filename:%line) - %message%newline%exception"
+                            ConversionPattern = "[%date] [%thread] [%-5level] - %message%newline%exception"
                         },
                         PreserveLogFileNameExtension = true,
                         ImmediateFlush = true,                   // Immediate disk write for crash safety 立即写入磁盘以确保崩溃安全
