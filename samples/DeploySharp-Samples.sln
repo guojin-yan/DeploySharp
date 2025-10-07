@@ -9,6 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov5-det_opencvsharp", "y
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov5-seg_imagesharp", "yolov5\yolov5-seg_imagesharp\yolov5-seg_imagesharp.csproj", "{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "anomalibseg", "anomalibseg", "{7492482C-FA5A-42B2-AF4C-4C8FB830AF5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "anomalibseg_imagesharp", "anomalibseg\anomalibseg_imagesharp\anomalibseg_imagesharp.csproj", "{446A91EF-148D-43CA-AAED-34E485BBBA39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "anomalibseg_opencvsharp", "anomalibseg\anomalibseg_opencvsharp\anomalibseg_opencvsharp.csproj", "{40487828-19CF-4A04-AA8C-819FF3542BE6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +29,14 @@ Global
 		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{446A91EF-148D-43CA-AAED-34E485BBBA39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{446A91EF-148D-43CA-AAED-34E485BBBA39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{446A91EF-148D-43CA-AAED-34E485BBBA39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{446A91EF-148D-43CA-AAED-34E485BBBA39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40487828-19CF-4A04-AA8C-819FF3542BE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40487828-19CF-4A04-AA8C-819FF3542BE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40487828-19CF-4A04-AA8C-819FF3542BE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40487828-19CF-4A04-AA8C-819FF3542BE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,5 +44,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B2BF643E-EF33-44DE-BA48-1FBF731E1C23} = {D0784099-C9D3-42E4-B0F9-44DD590C961F}
 		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF} = {D0784099-C9D3-42E4-B0F9-44DD590C961F}
+		{446A91EF-148D-43CA-AAED-34E485BBBA39} = {7492482C-FA5A-42B2-AF4C-4C8FB830AF5E}
+		{40487828-19CF-4A04-AA8C-819FF3542BE6} = {7492482C-FA5A-42B2-AF4C-4C8FB830AF5E}
 	EndGlobalSection
 EndGlobal
