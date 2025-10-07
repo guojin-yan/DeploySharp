@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "yolov5", "yolov5", "{D07840
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov5-det_opencvsharp", "yolov5\yolov5-det_opencvsharp\yolov5-det_opencvsharp.csproj", "{B2BF643E-EF33-44DE-BA48-1FBF731E1C23}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov5-seg_imagesharp", "yolov5\yolov5-seg_imagesharp\yolov5-seg_imagesharp.csproj", "{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,11 +19,16 @@ Global
 		{B2BF643E-EF33-44DE-BA48-1FBF731E1C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2BF643E-EF33-44DE-BA48-1FBF731E1C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2BF643E-EF33-44DE-BA48-1FBF731E1C23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B2BF643E-EF33-44DE-BA48-1FBF731E1C23} = {D0784099-C9D3-42E4-B0F9-44DD590C961F}
+		{1E4349CB-1DC4-4F08-80CA-B3B4AC8F9BFF} = {D0784099-C9D3-42E4-B0F9-44DD590C961F}
 	EndGlobalSection
 EndGlobal
