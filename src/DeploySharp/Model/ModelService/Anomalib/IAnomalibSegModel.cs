@@ -118,7 +118,7 @@ namespace DeploySharp.Model
                         dataTensor["anomaly_map"].Shape[2],
                         dataTensor["anomaly_map"].Shape[3],
                         1, ImageDataF.DataFormat.CHW),
-                    Mask = new ImageDataF(targetMask, bounds.Height, bounds.Width, 1, ImageDataF.DataFormat.CHW),
+                    Mask = new ImageDataF(targetMask, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
                     Confidence = (dataTensor["pred_score"].DataBuffer as float[])[0],
                     Id = (dataTensor["pred_label"].DataBuffer as byte[])[0],
                     Category = "anomaly",

@@ -278,7 +278,7 @@ namespace DeploySharp.Model
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
             int inferBatch = 1,
-            ImageResizeMode resizeMode = ImageResizeMode.Pad,
+            ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
             if (metaDataConfigPath != null)
