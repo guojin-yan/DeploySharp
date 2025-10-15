@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DeploySharp.Common;
+using System;
 
 namespace DeploySharp.Data
 {
@@ -92,7 +93,11 @@ namespace DeploySharp.Data
         /// </remarks>
         public void UpdateCategory(string[] categories)
         {
-            Category = categories.Length > 0 ? categories[0] : null;
+            if (categories.Length < Id) 
+            {
+                throw new DeploySharpException($"categories.Length({categories.Length}) < Result.Id({Id}), The categorys data length is illegal.");
+            }
+            Category = categories.Length > 0 ? categories[Id] : null;
         }
 
         /// <summary>
