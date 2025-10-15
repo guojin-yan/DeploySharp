@@ -58,8 +58,8 @@ namespace DeploySharp.ImageSharp.Demo
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World!");
-            //AnomalibSegDemos.Run();
-            YOLOv5DetDemo.Run();
+            AnomalibSegDemos.Run();
+            //YOLOv5DetDemo.Run();
         }
     }
 }

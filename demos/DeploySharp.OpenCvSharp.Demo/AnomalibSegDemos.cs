@@ -65,9 +65,9 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\anomalib\Padim\model\padim.onnx";
+            string modelPath = @"E:\Model\anomalib\test\model.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Model\anomalib\Padim\images\broken_small\000.png";
+            string imagePath = @"E:\Model\anomalib\test\image\good\2_1_2025_09_17_09_52_10_924_2.bmp";
             AnomalibSegConfig config = new AnomalibSegConfig(modelPath);
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             config.InputSizes.Add(new int[4] { 1, 3, 256, 256 });

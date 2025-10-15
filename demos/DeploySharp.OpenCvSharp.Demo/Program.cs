@@ -56,12 +56,16 @@ namespace DeploySharp.OpenCvSharp.Demo
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World!");
-            AnomalibSegDemos.Run();
-            YOLOv5DetDemo.Run();
-            YOLOv8DetDemo.Run();
-            YOLOv8SegDemo.Run();
-            YOLOv8ObbDemo.Run();
-            YOLOv8PoseDemo.Run();
+            //AnomalibSegDemos.Run();
+            //YOLOv5DetDemo.Run();
+            for(int i = 0; i < 1; i++)
+            {
+                YOLOv8DetDemo.Run();
+            }
+       
+            //YOLOv8SegDemo.Run();
+            //YOLOv8ObbDemo.Run();
+            //YOLOv8PoseDemo.Run();
         }
     }
 }
