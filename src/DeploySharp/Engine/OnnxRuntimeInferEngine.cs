@@ -502,6 +502,10 @@ namespace DeploySharp.Engine
 
                 // Step 2: Execute inference
                 var outputs = ExecuteModelInference(inputsData);
+                foreach (var input in inputsData)
+                {
+                    input.Value.Dispose();
+                }
 
                 // Step 3: Process output tensors
                 return ProcessOutputTensors(outputs);
@@ -629,6 +633,10 @@ namespace DeploySharp.Engine
             }
 
             MyLogger.Log.Info("Output processing completed");
+            foreach (var output in outputs)
+            {
+                output.Dispose();
+            }
             return dataTensor;
         }
         /// <summary>
