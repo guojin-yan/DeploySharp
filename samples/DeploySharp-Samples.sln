@@ -19,6 +19,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "yolov11", "yolov11", "{2645
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov11-det_opencvsharp", "yolov11\yolov11-det_opencvsharp\yolov11-det_opencvsharp.csproj", "{7F24591A-62C0-487D-A3B8-A37B915B71D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov11-seg_opencvsharp", "yolov11\yolov11-seg_opencvsharp\yolov11-seg_opencvsharp.csproj", "{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov11-obb_opencvsharp", "yolov11\yolov11-obb_opencvsharp\yolov11-obb_opencvsharp.csproj", "{952F88C1-6046-4CDF-9D16-884F87345326}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{7F24591A-62C0-487D-A3B8-A37B915B71D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F24591A-62C0-487D-A3B8-A37B915B71D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F24591A-62C0-487D-A3B8-A37B915B71D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{952F88C1-6046-4CDF-9D16-884F87345326}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{952F88C1-6046-4CDF-9D16-884F87345326}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{952F88C1-6046-4CDF-9D16-884F87345326}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{952F88C1-6046-4CDF-9D16-884F87345326}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,5 +67,7 @@ Global
 		{446A91EF-148D-43CA-AAED-34E485BBBA39} = {7492482C-FA5A-42B2-AF4C-4C8FB830AF5E}
 		{40487828-19CF-4A04-AA8C-819FF3542BE6} = {7492482C-FA5A-42B2-AF4C-4C8FB830AF5E}
 		{7F24591A-62C0-487D-A3B8-A37B915B71D9} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
+		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
+		{952F88C1-6046-4CDF-9D16-884F87345326} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
 	EndGlobalSection
 EndGlobal
