@@ -23,42 +23,47 @@ namespace DeploySharp.Data
         /// <returns></returns>
         public static Mat DrawDetResult(Result[] bresult, Mat image, VisualizeOptions options)
         {
-            DetResult[] result = bresult as DetResult[];
+             return DrawDetResult(bresult, image, options);
+        }
+        public static Mat DrawDetResult(DetResult[] result, Mat image, VisualizeOptions options)
+        {            
             // Draw recognition results on the image
             for (int i = 0; i < result.Length; i++)
             {
                 var box = result[i].Bounds;
                 //Console.WriteLine(result.rects[i]);
-                Cv2.Rectangle(image, 
-                    CvDataExtensions.ToRect(box), 
-                    options.Colors.GetBoundingBoxColor(result[i].Id), 
+                Cv2.Rectangle(image,
+                    CvDataExtensions.ToRect(box),
+                    options.Colors.GetBoundingBoxColor(result[i].Id),
                     (int)options.BorderThickness,
                     LineTypes.Link8);
-                Cv2.Rectangle(image, 
+                Cv2.Rectangle(image,
                     new OpenCvSharp.Point(box.TopLeft.X, box.TopLeft.Y + options.FontHeight),
-                    new OpenCvSharp.Point(box.BottomRight.X, box.TopLeft.Y), 
-                    new Scalar(0, 255, 255), 
+                    new OpenCvSharp.Point(box.BottomRight.X, box.TopLeft.Y),
+                    new Scalar(0, 255, 255),
                     -1);
-                Cv2.PutText(image, 
+                Cv2.PutText(image,
                     result[i].Category + "-" + result[i].Confidence.ToString("0.00"),
                     new OpenCvSharp.Point(box.X, box.Y + options.FontHeight - 5),
-                    options.FontType, 
-                    options.FontSize, 
-                    new Scalar(0, 0, 0), 
+                    options.FontType,
+                    options.FontSize,
+                    new Scalar(0, 0, 0),
                     1);
             }
             return image;
         }
-
         /// <summary>
         /// Result drawing
         /// </summary>
         /// <param name="bresult">recognition result</param>
         /// <param name="image"></param>
         /// <returns></returns>
-        public static Mat DrawObbResult(Result[] bresult, Mat image, VisualizeOptions options)
+        public static Mat DrawObbResult(Result[] bresult, Mat image, VisualizeOptions options) 
         {
-            ObbResult[] result = bresult as ObbResult[];
+            return DrawObbResult(bresult as ObbResult[], image, options);
+        }
+        public static Mat DrawObbResult(ObbResult[] result, Mat image, VisualizeOptions options)
+        {
             // Draw recognition results on the image
             for (int i = 0; i < result.Length; i++)
             {
@@ -110,10 +115,12 @@ namespace DeploySharp.Data
         /// <param name="bresult">recognition result</param>
         /// <param name="image"></param>
         /// <returns></returns>
-        public static Mat DrawSegResult(Result[] bresult, Mat img, VisualizeOptions options)
+        public static Mat DrawSegResult(Result[] bresult, Mat img, VisualizeOptions options) 
         {
-            SegResult[] result = bresult as SegResult[];
-
+            return DrawSegResult(bresult, img, options);
+        }
+        public static Mat DrawSegResult(SegResult[] result, Mat img, VisualizeOptions options)
+        {
 
             Mat image = img.Clone();
             // 将原始图像转换为BGRA格式（如果还不是）
@@ -183,9 +190,12 @@ namespace DeploySharp.Data
         /// </summary>
         /// <param name="bresult">Key point data</param>
         /// <param name="img">image</param>
-        public static Mat DrawPoses(Result[] bresult, Mat img, VisualizeOptions options)
+        public static Mat DrawPoses(Result[] bresult, Mat img, VisualizeOptions options) 
         {
-            KeyPointResult[] result = bresult as KeyPointResult[];
+            return DrawPoses(bresult as KeyPointResult[], img, options);
+        }
+        public static Mat DrawPoses(KeyPointResult[] result, Mat img, VisualizeOptions options)
+        {
             Mat image = img.Clone();
             // Connection point relationship
             int[,] edgs = new int[17, 2] { { 0, 1 }, { 0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {6, 8},

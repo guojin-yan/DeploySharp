@@ -49,9 +49,12 @@ namespace DeploySharp.Data
         /// var visualized = Visualize.DrawDetResult(results, image, options);
         /// </code>
         /// </example>
-        public static Image<Rgb24> DrawDetResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options)
+        public static Image<Rgb24> DrawDetResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
-            DetResult[] result = bresult as DetResult[];
+            return DrawDetResult(bresult as DetResult[], image, options);
+        }
+        public static Image<Rgb24> DrawDetResult(DetResult[] result, Image<Rgb24> image, VisualizeOptions options)
+        {
 
             // Create image copy to avoid modifying original
             // 创建图像副本以避免修改原始图像
@@ -101,9 +104,12 @@ namespace DeploySharp.Data
         /// Draws quadrilateral boxes with angle information
         /// 绘制带有角度信息的四边形框
         /// </remarks>
-        public static Image<Rgb24> DrawObbResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options)
+        public static Image<Rgb24> DrawObbResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
-            ObbResult[] result = bresult as ObbResult[];
+            return DrawObbResult(bresult as ObbResult[], image, options);
+        }
+        public static Image<Rgb24> DrawObbResult(ObbResult[] result, Image<Rgb24> image, VisualizeOptions options)
+        {
             var output = image.Clone();
 
             for (int i = 0; i < result.Length; i++)
@@ -143,9 +149,12 @@ namespace DeploySharp.Data
         /// Combines semi-transparent colored masks with bounding boxes
         /// 将半透明彩色掩膜与边界框结合起来
         /// </remarks>
-        public static Image<Rgb24> DrawSegResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options)
+        public static Image<Rgb24> DrawSegResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
-            SegResult[] result = bresult as SegResult[];
+            return DrawSegResult(bresult as SegResult[], image, options);
+        }
+        public static Image<Rgb24> DrawSegResult(SegResult[] result, Image<Rgb24> image, VisualizeOptions options)
+        {
             var output = image.Clone();
 
             for (int i = 0; i < result.Length; i++)
@@ -220,7 +229,10 @@ namespace DeploySharp.Data
         /// </remarks>
         public static Image<Rgb24> DrawPoses(Result[] bresult, Image<Rgb24> img, VisualizeOptions options)
         {
-            KeyPointResult[] pose = bresult as KeyPointResult[];
+            return DrawPoses(bresult as KeyPointResult[], img, options);
+        }
+        public static Image<Rgb24> DrawPoses(KeyPointResult[] pose, Image<Rgb24> img, VisualizeOptions options)
+        {
             var output = img.Clone();
 
             // Keypoint connection relationships
