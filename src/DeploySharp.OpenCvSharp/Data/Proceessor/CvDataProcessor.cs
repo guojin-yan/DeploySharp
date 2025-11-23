@@ -221,11 +221,11 @@ namespace DeploySharp.Data
             //    bgr_channels[i].ConvertTo(bgr_channels[i], MatType.CV_32FC1, 1.0 * scale[i],
             //        (0.0 - mean[i]) * scale[i]);
             //}
-
+            //Mat[] rgbChannels = new Mat[] { bgr_channels[2], bgr_channels[1], bgr_channels[0] };
             Parallel.For(0, 3, i =>
             {
-                bgr_channels[i].ConvertTo(bgr_channels[i], MatType.CV_32FC1, 1.0 * scale[i],
-                          (0.0 - mean[i]) * scale[i]);
+                bgr_channels[i].ConvertTo(bgr_channels[i], MatType.CV_32FC1, 1.0f / scale[i],
+                          (0.0f - mean[i]) / scale[i]);
             });
             Mat re = new Mat();
             Cv2.Merge(bgr_channels, re);
