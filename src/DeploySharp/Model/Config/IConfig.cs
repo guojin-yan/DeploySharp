@@ -220,14 +220,10 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
-        /// Number of CPU threads for inference
-        /// CPU推理线程数
+        /// Maximum infer requests num
+        /// 
         /// </summary>
-        /// <value>
-        /// Uses all logical cores by default.
-        /// 默认使用所有逻辑核心。
-        /// </value>
-        public int NumThreads { get; set; } = Environment.ProcessorCount;
+        public int MaxInferRequests { get; set; } = 1;
 
         /// <summary>
         /// Sets the model path using fluent interface pattern
@@ -278,6 +274,18 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
+        /// Sets the number of CPU threads for inference
+        /// 设置最大推理请求数量
+        /// </summary>
+        /// <param name="numInferRequests">num Infer Requests 推理请求数量 </param>
+        /// <returns>Current config instance 当前配置实例</returns>
+        public IConfig SetMaxInferRequests(int numInferRequests)
+        {
+            MaxInferRequests = numInferRequests;
+            return this;
+        }
+
+        /// <summary>
         /// Generates detailed configuration summary string
         /// 生成详细的配置摘要字符串
         /// </summary>
@@ -320,7 +328,7 @@ namespace DeploySharp.Model
             sb.AppendLine("Category Dict:" + $" {(CategoryDict.Count > 0 ? (string.Join(",", CategoryDict.Select(p => $"{p.Key}: '{p.Value}'"))) : "NotSet")}");
             AppendIfSet(sb, "Max Batch Size", MaxBatchSize, 1);
             AppendIfSet(sb, "GPU Enabled", UseGPU, false);
-            AppendIfSet(sb, "Threads", NumThreads, Environment.ProcessorCount);
+            AppendIfSet(sb, "MaxInferRequests", MaxInferRequests, 1);
 
             return sb.ToString();
         }

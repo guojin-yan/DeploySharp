@@ -11,6 +11,8 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.IO;
+using Clipper2Lib;
+using DeploySharp.Common;
 
 namespace DeploySharp.Engine
 {
@@ -350,7 +352,13 @@ namespace DeploySharp.Engine
         /// Pool of inference requests for parallel processing
         /// 推理请求池（用于并行处理）
         /// </summary>
-        private List<InferRequest> inferRequests = new List<InferRequest>();
+        private List<Triplet<int, InferRequest, bool>> inferRequests = new List<Triplet<int, InferRequest, bool>> ();
+
+        /// <summary>
+        /// Lock object for synchronizing inference request access
+        /// 用于同步推理请求访问的锁定对象
+        /// </summary>
+        private readonly object inferRequestLock = new object();
 
         /// <summary>
         /// Number of input nodes in the model
@@ -405,7 +413,7 @@ namespace DeploySharp.Engine
                 // Dispose inference requests in parallel
                 Parallel.ForEach(inferRequests, request =>
                 {
-                    request.Dispose();
+                    request.Second.Dispose();
                     MyLogger.Log.Debug("Inference request disposed");
                 });
 
@@ -439,7 +447,7 @@ namespace DeploySharp.Engine
             LoadModelInternal(config.ModelPath);
             AnalyzeModelStructure(ref config);
             CompileModel(config);
-            InitializeInferenceRequests();
+            InitializeInferenceRequests(config);
 
             modelConfig = config;
             MyLogger.Log.Info($"Model loaded successfully: {config.ModelPath}");
@@ -468,20 +476,41 @@ namespace DeploySharp.Engine
 
             MyLogger.Log.Info("Starting inference execution");
             var timer = Stopwatch.StartNew();
+            int availableRequestIndex = -1;
+            lock (inferRequestLock) 
+            {
+                while (availableRequestIndex == -1) 
+                {
+                    for (int i = 0; i < modelConfig.MaxInferRequests; ++i)
+                    {
+                        if (inferRequests[i].Third)
+                        {
+                            availableRequestIndex = i;
+                            inferRequests[i].Third = false;
+                            break;
+                        }
+                    }
+                    if (availableRequestIndex == -1) 
+                    {
+                        MyLogger.Log.Error("Unable to obtain inference request object, repeat attempts, allocate more inference request objects in the gap.");
+                    }
+                }
 
+            }
             try
             {
                 // Step 1: Prepare input tensors
-                SetInputTensors(inputs);
+                SetInputTensors(inferRequests[availableRequestIndex].Second, inputs);
 
                 // Step 2: Execute inference
-                ExecuteInference();
+                ExecuteInference(inferRequests[availableRequestIndex].Second);
 
                 // Step 3: Process output tensors
-                return ProcessOutputs();
+                return ProcessOutputs(inferRequests[availableRequestIndex].Second);
             }
             finally
             {
+                inferRequests[availableRequestIndex].Third = true;
                 MyLogger.Log.Info($"Inference completed in {timer.ElapsedMilliseconds}ms");
             }
         }
@@ -574,6 +603,8 @@ namespace DeploySharp.Engine
             config.InputNames.Clear();
             inputNodeTypes.Clear();
 
+            int inputNodesCount = 0;
+
             foreach (Input input in model.inputs())
             {
                 string name = input.get_any_name();
@@ -591,6 +622,48 @@ namespace DeploySharp.Engine
                 }
                 else
                 {
+
+                    if (config.InputSizes.Count == inputNodesCount) 
+                    {
+                        if (config.InferBatch >= 1)
+                        {
+                            MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
+                            PartialShape shape = input.get_partial_shape();
+                            // Check for dynamic batch dimension
+                            Dimension rank = shape.get_rank();
+                            if (!rank.is_dynamic())
+                            {
+                                List<int> newShape = new List<int>();
+                                for (int i = 0; i < (int)rank.get_max(); ++i) 
+                                {
+                                    newShape.Add(0);
+                                }
+                                bool hasDynamicDim = false;
+                                Dimension[] dimensions = shape.get_dimensions();
+                                for (int i = 1; i < dimensions.Length; ++i)
+                                {
+                                    if (dimensions[i].is_dynamic())
+                                    {
+                                        hasDynamicDim = true;
+                                        break;
+                                    }
+                                    newShape[i] = (int)dimensions[i].get_max();
+                                }
+                                if (!hasDynamicDim)
+                                {
+                                    newShape[0] = config.InferBatch;
+                                    config.InputSizes.Add(newShape.ToArray());
+                                    inputNodesCount ++;
+                                }
+                            }
+                        }
+                
+                    }
+
+                    if (config.InputSizes.Count == 0) 
+                    {
+                        throw new DeploySharpException($"The model input is a dynamic shape, and the model input shape needs to be set.  modelConfig.InputSizes.Count == 0");
+                    }
                     MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {input.get_element_type()}");
                 }
             }
@@ -657,10 +730,14 @@ namespace DeploySharp.Engine
             MyLogger.Log.Info($"Model compiled successfully for {deviceName}");
         }
 
-        private void InitializeInferenceRequests()
+        private void InitializeInferenceRequests(IConfig config)
         {
             MyLogger.Log.Info("Initializing inference requests");
-            inferRequests.Add(compiledModel.create_infer_request());
+            for(int i = 0; i < config.MaxInferRequests; ++i) 
+            {
+                inferRequests.Add(new Triplet<int, InferRequest, bool>(i, compiledModel.create_infer_request(), true));
+            }
+            
             MyLogger.Log.Info($"Created {inferRequests.Count} inference requests");
         }
         /// <summary>
@@ -677,11 +754,11 @@ namespace DeploySharp.Engine
         /// Sets input tensors for inference
         /// 为推理设置输入张量
         /// </summary>
-        private void SetInputTensors(DataTensor inputs)
+        private void SetInputTensors(InferRequest inferRequest, DataTensor inputs)
         {
             for (int i = 0; i < inputs.Count; i++)
             {
-                Tensor inputTensor = inferRequests[0].get_input_tensor((ulong)i);
+                Tensor inputTensor = inferRequest.get_input_tensor((ulong)i);
                 NodeData data = inputs[i];
 
                 if (modelConfig.DynamicInput)
@@ -722,17 +799,17 @@ namespace DeploySharp.Engine
         /// Executes synchronous inference
         /// 执行同步推理
         /// </summary>
-        private void ExecuteInference()
+        private void ExecuteInference(InferRequest inferRequest)
         {
             MyLogger.Log.Debug("Executing inference");
-            inferRequests[0].infer();
+            inferRequest.infer();
             MyLogger.Log.Debug("Inference execution completed");
         }
         /// <summary>
         /// Processes and collects all output tensors
         /// 处理并收集所有输出张量
         /// </summary>
-        private DataTensor ProcessOutputs()
+        private DataTensor ProcessOutputs(InferRequest inferRequest)
         {
             DataTensor result = new DataTensor();
 
@@ -741,7 +818,7 @@ namespace DeploySharp.Engine
 
             for (int i = 0; i < OutputNodeCount; i++)
             {
-                Tensor outputTensor = inferRequests[0].get_output_tensor((ulong)i);
+                Tensor outputTensor = inferRequest.get_output_tensor((ulong)i);
                 var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
 
                 if (modelConfig.DynamicOutput)

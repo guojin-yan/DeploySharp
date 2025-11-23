@@ -269,13 +269,14 @@ namespace DeploySharp.Engine
             {
                 config.CategoryDict = OnnxParamParse.ParseLabelString(labes);
             }
-            
+            int inputNodesCount = 0;
             foreach (var input in inferenceSession.InputMetadata)
             {
                 string name = input.Key;
                 config.InputNames.Add(name);
                 inputNodeTypes.Add(input.Value.ElementType);
                 var shape = input.Value.Dimensions;
+
                 foreach (var dim in shape) 
                 {
                     if(dim <= 0)
@@ -292,6 +293,45 @@ namespace DeploySharp.Engine
                 }
                 else
                 {
+                    
+                    if (config.InputSizes.Count == inputNodesCount)
+                    {
+                        if (config.InferBatch >= 1)
+                        {
+                            MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
+                            
+                          
+                                List<int> newShape = new List<int>();
+                                for (int i = 0; i < shape.Length; ++i)
+                                {
+                                    newShape.Add(0);
+                                }
+                                bool hasDynamicDim = false;
+                                
+                                for (int i = 1; i < shape.Length; ++i)
+                                {
+                                    if (shape[i] <= 0)
+                                    {
+                                        hasDynamicDim = true;
+                                        break;
+                                    }
+                                    newShape[i] = (int)shape[i];
+                                }
+                                if (!hasDynamicDim)
+                                {
+                                    newShape[0] = config.InferBatch;
+                                    config.InputSizes.Add(newShape.ToArray());
+                                    inputNodesCount++;
+                                }
+                            
+                        }
+
+                    }
+
+                    if (config.InputSizes.Count == 0)
+                    {
+                        throw new DeploySharpException($"The model input is a dynamic shape, and the model input shape needs to be set.  modelConfig.InputSizes.Count == 0");
+                    }
                     MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {input.Value.ElementType.ToString()}");
                 }
             }
