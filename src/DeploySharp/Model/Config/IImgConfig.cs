@@ -40,6 +40,17 @@ namespace DeploySharp.Model
     public class IImgConfig : IConfig
     {
         /// <summary>
+        /// Confidence threshold for prediction filtering (0-1 range)
+        /// 预测结果过滤的置信度阈值（0-1范围）
+        /// </summary>
+        /// <value>
+        /// Predictions with confidence below this value will be discarded.
+        /// Default: 0.5f (50% confidence).
+        /// 置信度低于此值的预测结果将被丢弃。
+        /// 默认值：0.5f (50%置信度)。
+        /// </value>
+        public float ConfidenceThreshold { get; set; } = 0.5f;
+        /// <summary>
         /// Configuration for image data processing pipeline
         /// 图像数据处理管道的配置
         /// </summary>
