@@ -544,16 +544,29 @@ namespace DeploySharp.Engine
                             (float[])data.DataBuffer,
                             data.Shape.Select(x => (long)x).ToArray());
                         break;
-
+                    case Type t when t == typeof(double):
+                        inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                            (double[])data.DataBuffer,
+                            data.Shape.Select(x => (long)x).ToArray());
+                        break;
                     case Type t when t == typeof(int):
                         inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
                             (int[])data.DataBuffer,
                             data.Shape.Select(x => (long)x).ToArray());
                         break;
-
+                    case Type t when t == typeof(long):
+                        inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                            (long[])data.DataBuffer,
+                            data.Shape.Select(x => (long)x).ToArray());
+                        break;
+                    case Type t when t == typeof(short):
+                        inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                            (short[])data.DataBuffer,
+                            data.Shape.Select(x => (long)x).ToArray());
+                        break;
                     case Type t when t == typeof(bool):
                         // Convert bool to byte as ONNX represents bool as byte
-                        var byteData = ((bool[])data.DataBuffer).Select(b => b ? (byte)1 : (byte)0).ToArray();
+                        var byteData = ((bool[])data.DataBuffer).Select(b => b ? true : false).ToArray();
                         inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
                             byteData,
                             data.Shape.Select(x => (long)x).ToArray());
@@ -618,15 +631,52 @@ namespace DeploySharp.Engine
                     case TensorElementType.Float:
                         ProcessFloatOutput(dataTensor, outputName, resultData, shape);
                         break;
+                    case TensorElementType.UInt8:
+                        ProcessUInt8Output(dataTensor, outputName, resultData, shape);
+                        break;
+                    case TensorElementType.Int8:
+                        ProcessInt8Output(dataTensor, outputName, resultData, shape);
+                        break;
 
+                    case TensorElementType.UInt16:
+                        ProcessUInt16Output(dataTensor, outputName, resultData, shape);
+                        break;
+                    case TensorElementType.Int16:
+                        ProcessInt16Output(dataTensor, outputName, resultData, shape);
+                        break;
                     case TensorElementType.Int32:
                         ProcessIntOutput(dataTensor, outputName, resultData, shape);
                         break;
-
+                    case TensorElementType.Int64:
+                        ProcessInt64Output(dataTensor, outputName, resultData, shape);
+                        break;
+                    case TensorElementType.String:
+                        throw new NotSupportedException($"Unsupported output type: {tensorInfo.ElementDataType}");
+                        break;
                     case TensorElementType.Bool:
                         ProcessBoolOutput(dataTensor, outputName, resultData, shape);
                         break;
+                    case TensorElementType.Float16:
+                        throw new NotSupportedException($"Unsupported output type: {tensorInfo.ElementDataType}");
+                        break;
+                    case TensorElementType.Double:
+                        ProcessDoubleOutput(dataTensor, outputName, resultData, shape);
+                        break;
+                    case TensorElementType.UInt32:
+                        ProcessUInt32Output(dataTensor, outputName, resultData, shape);
+                        break;
+                    case TensorElementType.UInt64:
+                        ProcessUInt64Output(dataTensor, outputName, resultData, shape);
+                        break;
 
+                    // 注意：Complex64, Complex128, BFloat16 需要特殊处理，无法直接GetTensorDataAsSpan<T>
+                    case TensorElementType.Complex64:
+                        throw new NotSupportedException($"Direct processing of {tensorInfo.ElementDataType} is not supported in standard ORT C# API. Process as two float tensors instead.");
+
+                    case TensorElementType.Complex128:
+                        throw new NotSupportedException($"Direct processing of {tensorInfo.ElementDataType} is not supported in standard ORT C# API. Process as two double tensors instead.");
+                    case TensorElementType.BFloat16:
+                        throw new NotSupportedException($"Direct processing of {tensorInfo.ElementDataType} is not supported in standard ORT C# API.");
                     default:
                         throw new NotSupportedException($"Unsupported output type: {tensorInfo.ElementDataType}");
                 }
@@ -695,6 +745,77 @@ namespace DeploySharp.Engine
                 typeof(byte));
 
             MyLogger.Log.Debug($"Processed bool output: {outputName}, shape: [{string.Join(",", shape)}]");
+        }
+
+
+
+        private void ProcessUInt8Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var byteData = ortValue.GetTensorDataAsSpan<byte>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, byteData, shape.Select(x => (int)x).ToArray(), typeof(byte));
+            MyLogger.Log.Debug($"Processed UInt8 output: {outputName}");
+        }
+        private void ProcessInt8Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var sbyteData = ortValue.GetTensorDataAsSpan<sbyte>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, sbyteData, shape.Select(x => (int)x).ToArray(), typeof(sbyte));
+            MyLogger.Log.Debug($"Processed Int8 output: {outputName}");
+        }
+        private void ProcessUInt16Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var ushortData = ortValue.GetTensorDataAsSpan<ushort>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, ushortData, shape.Select(x => (int)x).ToArray(), typeof(ushort));
+            MyLogger.Log.Debug($"Processed UInt16 output: {outputName}");
+        }
+        private void ProcessInt16Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var shortData = ortValue.GetTensorDataAsSpan<short>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, shortData, shape.Select(x => (int)x).ToArray(), typeof(short));
+            MyLogger.Log.Debug($"Processed Int16 output: {outputName}");
+        }
+
+        private void ProcessInt64Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var longData = ortValue.GetTensorDataAsSpan<long>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, longData, shape.Select(x => (int)x).ToArray(), typeof(long));
+            MyLogger.Log.Debug($"Processed Int64 output: {outputName}");
+        }
+        //private void ProcessStringOutput(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        //{
+        //    // 字符串张量的处理方式不同，使用 AsEnumerable<string>()
+        //    var stringData = ortValue.GetTensorDataAsSpan<string>().ToArray();
+        //    dataTensor.AddNode(outputName, 0, TensorType.Output, stringData, shape.Select(x => (int)x).ToArray(), typeof(string));
+        //    MyLogger.Log.Debug($"Processed String output: {outputName}");
+        //}
+
+
+        //private void ProcessFloat16Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        //{
+        //    // 需要 .NET 5+ 或 System.Runtime.CompilerServices.Unsafe 包来支持 System.Half
+        //    var halfData = ortValue.GetTensorDataAsSpan<System.Half>().ToArray();
+        //    // 通常需要转换为 float 以便后续处理
+        //    var floatData = Array.ConvertAll(halfData, h => (float)h);
+
+        //    dataTensor.AddNode(outputName, 0, TensorType.Output, floatData, shape.Select(x => (int)x).ToArray(), typeof(float));
+        //    MyLogger.Log.Debug($"Processed Float16 (Half) output: {outputName}, converted to float array.");
+        //}
+        private void ProcessDoubleOutput(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var doubleData = ortValue.GetTensorDataAsSpan<double>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, doubleData, shape.Select(x => (int)x).ToArray(), typeof(double));
+            MyLogger.Log.Debug($"Processed double output: {outputName}");
+        }
+        private void ProcessUInt32Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var uintData = ortValue.GetTensorDataAsSpan<uint>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, uintData, shape.Select(x => (int)x).ToArray(), typeof(uint));
+            MyLogger.Log.Debug($"Processed UInt32 output: {outputName}");
+        }
+        private void ProcessUInt64Output(DataTensor dataTensor, string outputName, OrtValue ortValue, long[] shape)
+        {
+            var ulongData = ortValue.GetTensorDataAsSpan<ulong>().ToArray();
+            dataTensor.AddNode(outputName, 0, TensorType.Output, ulongData, shape.Select(x => (int)x).ToArray(), typeof(ulong));
+            MyLogger.Log.Debug($"Processed UInt64 output: {outputName}");
         }
         #endregion
     }

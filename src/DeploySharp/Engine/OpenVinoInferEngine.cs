@@ -685,7 +685,7 @@ namespace DeploySharp.Engine
                 NodeData data = inputs[i];
 
                 if (modelConfig.DynamicInput)
-                    inputTensor.set_shape(new Shape(modelConfig.InputSizes[0]));
+                    inputTensor.set_shape(new Shape(modelConfig.InputSizes[i]));
 
                 switch (data.DataType)
                 {
@@ -693,12 +693,26 @@ namespace DeploySharp.Engine
                         inputTensor.set_data(data.DataBuffer as float[]);
                         MyLogger.Log.Debug($"Set input tensor {i}: float[{string.Join(",", data.Shape)}]");
                         break;
-
+                    case Type t when t == typeof(double):
+                        inputTensor.set_data(data.DataBuffer as double[]);
+                        MyLogger.Log.Debug($"Set input tensor {i}: double[{string.Join(",", data.Shape)}]");
+                        break;
                     case Type t when t == typeof(int):
                         inputTensor.set_data(data.DataBuffer as int[]);
                         MyLogger.Log.Debug($"Set input tensor {i}: int[{string.Join(",", data.Shape)}]");
                         break;
-
+                    case Type t when t == typeof(long):
+                        inputTensor.set_data(data.DataBuffer as long[]);
+                        MyLogger.Log.Debug($"Set input tensor {i}: long[{string.Join(",", data.Shape)}]");
+                        break;
+                    case Type t when t == typeof(short):
+                        inputTensor.set_data(data.DataBuffer as short[]);
+                        MyLogger.Log.Debug($"Set input tensor {i}: short[{string.Join(",", data.Shape)}]");
+                        break;
+                    case Type t when t == typeof(byte):
+                        inputTensor.set_data(data.DataBuffer as byte[]);
+                        MyLogger.Log.Debug($"Set input tensor {i}: byte[{string.Join(",", data.Shape)}]");
+                        break;
                     default:
                         throw new NotSupportedException($"Unsupported input type: {data.DataType}");
                 }
@@ -753,7 +767,12 @@ namespace DeploySharp.Engine
                         floatData, shape, typeof(float));
                     MyLogger.Log.Debug($"Processed output {index}: float[{string.Join(",", shape)}]");
                     break;
-
+                case ElementType.I16:
+                    short[] shortData = outputTensor.get_data<short>((int)outputTensor.get_size());
+                    result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
+                        shortData, shape, typeof(short));
+                    MyLogger.Log.Debug($"Processed output {index}: short[{string.Join(",", shape)}]");
+                    break;
                 case ElementType.I32:
                     int[] intData = outputTensor.get_data<int>((int)outputTensor.get_size());
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
@@ -767,7 +786,12 @@ namespace DeploySharp.Engine
                         boolData, shape, typeof(byte));
                     MyLogger.Log.Debug($"Processed output {index}: byte[{string.Join(",", shape)}]");
                     break;
-
+                case ElementType.I64:
+                    long[] longData = outputTensor.get_data<long>((int)outputTensor.get_size());
+                    result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
+                        longData, shape, typeof(long));
+                    MyLogger.Log.Debug($"Processed output {index}: long[{string.Join(",", shape)}]");
+                    break;
                 default:
                     throw new NotSupportedException(
                         $"Unsupported output type: {outputTensor.get_element_type().get_type()}");
