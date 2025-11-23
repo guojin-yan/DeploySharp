@@ -168,6 +168,12 @@ namespace DeploySharp.Model
         /// 专为制造业缺陷检测设计
         /// </remarks>
         AnomalibSeg,
+
+
+        DEIMv2Det,
+        IFDETRDet,
+        PPYOLOETDet,
+
         #endregion
     }
 }

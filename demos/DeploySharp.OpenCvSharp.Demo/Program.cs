@@ -49,6 +49,8 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
+using DeploySharp.ImageSharp.Demo;
+
 namespace DeploySharp.OpenCvSharp.Demo
 {
     internal class Program
@@ -58,14 +60,16 @@ namespace DeploySharp.OpenCvSharp.Demo
             Console.WriteLine("Hello, World!");
             //AnomalibSegDemos.Run();
             //YOLOv5DetDemo.Run();
-            for(int i = 0; i < 1; i++)
-            {
-                YOLOv8DetDemo.Run();
-            }
-       
+            //for(int i = 0; i < 1; i++)
+            //{
+            //    YOLOv8DetDemo.Run();
+            //}
+
             //YOLOv8SegDemo.Run();
             //YOLOv8ObbDemo.Run();
             //YOLOv8PoseDemo.Run();
+            //DEIMv2DetDemo.Run();
+            IFDETRDetDemo.Run();
         }
     }
 }
