@@ -90,12 +90,11 @@ namespace DeploySharp.Model
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
             float confidenceThreshold = 0.5f,
-            float nmsThreshold = 0.5f,
             int inferBatch = 1,
             ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.ImageNetStandard)
         {
-            this.ModelType = ModelType.YOLOv5Det;
+            this.ModelType = ModelType.IFDETRDet;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;

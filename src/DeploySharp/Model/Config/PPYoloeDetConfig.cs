@@ -97,7 +97,7 @@ namespace DeploySharp.Model
             ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.Scale_0_1)
         {
-            this.ModelType = ModelType.YOLOv5Det;
+            this.ModelType = ModelType.PPYOLOETDet;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;

@@ -68,9 +68,9 @@ namespace DeploySharp.OpenCvSharp.Demo
             //YOLOv8SegDemo.Run();
             //YOLOv8ObbDemo.Run();
             //YOLOv8PoseDemo.Run();
-            //DEIMv2DetDemo.Run();
+            DEIMv2DetDemo.Run();
             //IFDETRDetDemo.Run();
-            PPYoloeDetDemo.Run();
+            //PPYoloeDetDemo.Run();
         }
     }
 }

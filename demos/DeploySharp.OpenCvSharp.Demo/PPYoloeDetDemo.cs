@@ -1,7 +1,6 @@
 ﻿using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp.Model;
-using DeploySharp.Model.ModelService;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -23,8 +22,8 @@ namespace DeploySharp.OpenCvSharp.Demo
             string imagePath = @"E:\Data\image\bus.jpg";
 
             PPYoloeDetConfig config = new PPYoloeDetConfig(modelPath);
-            config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
-            config.InputSizes.Add(new int[] { 1, 2 });
+            //config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
+            //config.InputSizes.Add(new int[] { 1, 2 });
             //config.SetTargetDeviceType(DeviceType.GPU0);
             //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             PPYoloeDetModel model = new PPYoloeDetModel(config);
