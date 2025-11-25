@@ -171,7 +171,8 @@ namespace DeploySharp.Model
 
 
         DEIMv2Det,
-        IFDETRDet,
+        RFDETRDet,
+        RTDETRDet,
         PPYOLOETDet,
 
         #endregion

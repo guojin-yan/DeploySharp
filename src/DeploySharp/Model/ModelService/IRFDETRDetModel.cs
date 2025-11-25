@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public abstract class IIFDETRDetModel : IModel
+    public abstract class IRFDETRDetModel : IModel
     {
-        public IIFDETRDetModel(IConfig config) : base(config)
+        public IRFDETRDetModel(IConfig config) : base(config)
         {
             MyLogger.Log.Info($"初始化 {this.GetType().Name}, \n {config.ToString()}");
         }
@@ -35,7 +35,7 @@ namespace DeploySharp.Model
         /// <returns>Array of processed detection results/处理后的检测结果数组</returns>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
-            var config = (IFDETRDetConfig)this.config;
+            var config = (RFDETRDetConfig)this.config;
             float[] resultScores = dataTensor[1].DataBuffer as float[];
             float[] resultBoxes = dataTensor[0].DataBuffer as float[];
             int resultCount = dataTensor[1].Shape[1];

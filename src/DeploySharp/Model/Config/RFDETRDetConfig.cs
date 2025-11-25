@@ -41,7 +41,7 @@ namespace DeploySharp.Model
     /// </code>
     /// </example>
     /// </remarks>
-    public class IFDETRDetConfig : IImgConfig
+    public class RFDETRDetConfig : IImgConfig
     {
         /// <summary>
         /// Initializes a new instance with default values
@@ -51,7 +51,7 @@ namespace DeploySharp.Model
         /// The model path must be set separately before use.
         /// 使用前需要单独设置模型路径。
         /// </remarks>
-        public IFDETRDetConfig() { }
+        public RFDETRDetConfig() { }
 
         /// <summary>
         /// Initializes a new instance with model path and recommended defaults
@@ -61,7 +61,7 @@ namespace DeploySharp.Model
         /// Path to the YOLOv5 model file (.onnx/.ir)
         /// YOLOv5模型文件路径 (.onnx/.ir)
         /// </param>
-        public IFDETRDetConfig(string modelPath)
+        public RFDETRDetConfig(string modelPath)
         {
             this.ModelType = ModelType.YOLOv5Det;
             this.ModelPath = modelPath;
@@ -85,7 +85,7 @@ namespace DeploySharp.Model
         /// <param name="inferBatch">Batch size for inference (default: 1) 推理批量大小(默认:1)</param>
         /// <param name="resizeMode">Image resize mode (default: Stretch) 图像缩放模式(默认:拉伸)</param>
         /// <param name="normalizationType">Normalization method (default: Scale_0_1) 标准化方法(默认:0-1缩放)</param>
-        public IFDETRDetConfig(
+        public RFDETRDetConfig(
             string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
@@ -94,7 +94,7 @@ namespace DeploySharp.Model
             ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.ImageNetStandard)
         {
-            this.ModelType = ModelType.IFDETRDet;
+            this.ModelType = ModelType.RFDETRDet;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;

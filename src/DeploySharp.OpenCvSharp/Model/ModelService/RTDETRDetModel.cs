@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class IFDETRDetModel : IIFDETRDetModel
+    public class RTDETRDetModel : IRTDETRDetModel
     {
-        public IFDETRDetModel(IConfig config) : base(config)
+        public RTDETRDetModel(IConfig config) : base(config)
         {
         }
 
@@ -21,10 +21,22 @@ namespace DeploySharp.Model
 
             try
             {
-                return CvDataProcessor.ImageProcessToDataTensor(
+                DataTensor dataTensors = CvDataProcessor.ImageProcessToDataTensor(
                     (Mat)img,
                     config,
                     out imageAdjustmentParam);
+
+                long[] data = new long[config.InputSizes[1][1]];
+                data[0] = (long)imageAdjustmentParam.RowImgSize.Width;
+                data[1] = (long)imageAdjustmentParam.RowImgSize.Height;
+                dataTensors.AddNode(
+                    config.InputNames[1],
+                    0,
+                    TensorType.Input,
+                    data,
+                    config.InputSizes[1],
+                    typeof(long));
+                return dataTensors;
             }
             catch (Exception ex)
             {
@@ -34,3 +46,4 @@ namespace DeploySharp.Model
         }
     }
 }
+

@@ -119,7 +119,7 @@ namespace DeploySharp.Data
             Mat img,
             Size size,
             ImageResizeMode resizeMode,
-            InterpolationFlags interpolation = InterpolationFlags.Lanczos4)
+            InterpolationFlags interpolation = InterpolationFlags.Linear)
         {
             if (img.Empty())
                 throw new ArgumentException("Input image is empty");
@@ -144,7 +144,7 @@ namespace DeploySharp.Data
                         (int)(img.Height * scale));
 
                     Mat resized = new Mat();
-                    Cv2.Resize(img, resized, scaledSize, 0, 0, interpolation);
+                    Cv2.Resize(img, resized, scaledSize, 0f, 0f, interpolation);
 
                     // 创建目标图像并填充黑色
                     output = new Mat(size.Height, size.Width, img.Type(), Scalar.Black);
@@ -157,6 +157,8 @@ namespace DeploySharp.Data
                     Mat roi = new Mat(output, new OpenCvSharp.Rect(x, y, resized.Width, resized.Height));
                     resized.CopyTo(roi);
                     resized.Dispose();
+
+
                     break;
 
                 case ImageResizeMode.Max:
@@ -187,7 +189,6 @@ namespace DeploySharp.Data
 
             return output;
         }
-
         /// <summary>
         /// Normalizes image with mean subtraction and scaling
         /// 使用均值减除和缩放标准化图像

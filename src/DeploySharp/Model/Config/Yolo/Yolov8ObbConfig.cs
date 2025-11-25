@@ -66,7 +66,7 @@ namespace DeploySharp.Model
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = InferenceBackend.OpenVINO;
             this.TargetDeviceType = DeviceType.CPU;
-            this.ConfidenceThreshold = 0.5f;
+            this.ConfidenceThreshold = 0.6f;
             this.NmsThreshold = 0.5f;
             this.InferBatch = 1;
             this.DataProcessor.ResizeMode = ImageResizeMode.Pad;
@@ -88,7 +88,7 @@ namespace DeploySharp.Model
         public Yolov8ObbConfig(string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
-            float confidenceThreshold = 0.5f,
+            float confidenceThreshold = 0.6f,
             float nmsThreshold = 0.5f,
             int inferBatch = 1,
             ImageResizeMode resizeMode = ImageResizeMode.Pad,

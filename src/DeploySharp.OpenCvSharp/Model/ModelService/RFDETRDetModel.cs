@@ -1,7 +1,6 @@
 ﻿using DeploySharp.Data;
 using DeploySharp.Log;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,20 +9,20 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    public class IFDETRDetModel : IRFDETRDetModel
+    public class RFDETRDetModel : IRFDETRDetModel
     {
-        public IFDETRDetModel(IConfig config) : base(config)
+        public RFDETRDetModel(IConfig config) : base(config)
         {
         }
 
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
+            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Mat)?.Size()}");
 
             try
             {
                 return CvDataProcessor.ImageProcessToDataTensor(
-                    (Image<Rgb24>)img,
+                    (Mat)img,
                     config,
                     out imageAdjustmentParam);
             }
