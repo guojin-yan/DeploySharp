@@ -190,9 +190,9 @@ namespace DeploySharp.Data
             // Initialize selected boxes with the highest confidence box
             // 用置信度最高的边界框初始化选中框集合
             var selectedBoxes = new List<BoundingBox>(capacity: 8)
-        {
-            candidateBoxes[0]
-        };
+            {
+                candidateBoxes[0]
+            };
 
             // Process remaining candidate boxes
             // 处理剩余的候选边界框

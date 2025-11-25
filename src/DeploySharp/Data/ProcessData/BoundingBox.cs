@@ -95,7 +95,7 @@ namespace DeploySharp.Data
         /// Sorting with this comparer orders boxes from highest to lowest confidence.
         /// 使用此比较器对框进行排序时，将按置信度从高到低的顺序排列。
         /// </remarks>
-        public int CompareTo(BoundingBox other) => other.Confidence.CompareTo(this.Confidence);
+        public int CompareTo(BoundingBox other) => this.Confidence.CompareTo( other.Confidence);
     }
 
 }
