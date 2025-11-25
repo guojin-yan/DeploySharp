@@ -1,17 +1,16 @@
 ﻿using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp.Model;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DeploySharp.ImageSharp.Demo
+namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class IFDETRDetDemo
+    public class RFDETRDetDemo
     {
         public static void Run()
         {
@@ -22,20 +21,22 @@ namespace DeploySharp.ImageSharp.Demo
             //string imagePath = @"E:\Model\rf-detr\scratches_125.jpg";
             string imagePath = @"E:\Data\image\bus.jpg";
 
-            IFDETRDetConfig config = new IFDETRDetConfig(modelPath);
+            RFDETRDetConfig config = new RFDETRDetConfig(modelPath);
             //config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
             //config.InputSizes.Add(new int[] { 1, 2 });
             config.SetTargetDeviceType(DeviceType.GPU0);
             //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            IFDETRDetModel model = new IFDETRDetModel(config);
-            var img = Image.Load(imagePath);
+            RFDETRDetModel model = new RFDETRDetModel(config);
+            Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
-            var resultImg = Visualize.DrawDetResult(result, img as Image<Rgb24>, new VisualizeOptions(1.0f));
-            resultImg.Save(@$"./result_{ModelType.IFDETRDet.ToString()}.jpg");
+            var resultImg = Visualize.DrawDetResult(result, img, new VisualizeOptions(1.0f));
+
+            Cv2.ImShow("image", resultImg);
+            Cv2.WaitKey();
         }
     }
 }

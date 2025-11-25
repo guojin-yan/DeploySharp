@@ -62,7 +62,8 @@ namespace DeploySharp.ImageSharp.Demo
             //YOLOv5DetDemo.Run();
             //DEIMv2DetDemo.Run();
             //IFDETRDetDemo.Run();
-            PPYoloeDetDemo.Run();
+            //PPYoloeDetDemo.Run();
+            RTDETRDetDemo.Run();
         }
     }
 }
