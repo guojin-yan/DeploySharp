@@ -10,7 +10,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -270,6 +269,7 @@ namespace DeploySharp.Engine
             {
                 config.CategoryDict = OnnxParamParse.ParseLabelString(labes);
             }
+            int inputNodesCount = 0;
             foreach (var input in inferenceSession.InputMetadata)
             {
                 string name = input.Key;
@@ -290,71 +290,51 @@ namespace DeploySharp.Engine
                    
                     config.InputSizes.Add(shape);
                     MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {input.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
-                    config.InputShapeType = config.InputShapeType > IOShapeType.StaticShape ? config.InputShapeType : IOShapeType.StaticShape;
                 }
                 else
                 {
-                    MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
-   
-                    for (int i = 0; i < shape.Length; ++i)
+                    
+                    if (config.InputSizes.Count == inputNodesCount)
                     {
-                        if (shape[i] <= 0)
+                        if (config.InferBatch >= 1)
                         {
-                            if (i == 0)
-                            {
-                                config.InputShapeType = config.InputShapeType > IOShapeType.BatchDynamicShape ? config.InputShapeType : IOShapeType.BatchDynamicShape;
-                            }
-                            else
-                            {
-                                config.InputShapeType = config.InputShapeType > IOShapeType.PartiallyDynamicShape ? config.InputShapeType : IOShapeType.PartiallyDynamicShape;
-                            }
-                            continue;
+                            MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
+                            
+                          
+                                List<int> newShape = new List<int>();
+                                for (int i = 0; i < shape.Length; ++i)
+                                {
+                                    newShape.Add(0);
+                                }
+                                bool hasDynamicDim = false;
+                                
+                                for (int i = 1; i < shape.Length; ++i)
+                                {
+                                    if (shape[i] <= 0)
+                                    {
+                                        hasDynamicDim = true;
+                                        break;
+                                    }
+                                    newShape[i] = (int)shape[i];
+                                }
+                                if (!hasDynamicDim)
+                                {
+                                    newShape[0] = config.InferBatch;
+                                    config.InputSizes.Add(newShape.ToArray());
+                                    inputNodesCount++;
+                                }
+                            
                         }
-                        
+
+                    }
+
+                    if (config.InputSizes.Count == 0)
+                    {
+                        throw new DeploySharpException($"The model input is a dynamic shape, and the model input shape needs to be set.  modelConfig.InputSizes.Count == 0");
                     }
                     MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {input.Value.ElementType.ToString()}");
                 }
             }
-
-            if (config.InputShapeType == IOShapeType.BatchDynamicShape)
-            {
-                config.InputSizes.Clear();
-            }
-            if (config.InputShapeType >= IOShapeType.BatchDynamicShape) 
-            {
-                foreach (var input in inferenceSession.InputMetadata)
-                {
-                    string name = input.Key;
-                    var shape = input.Value.Dimensions;
-                    List<int> newShape = new List<int>();
-                    if (config.InputShapeType == IOShapeType.BatchDynamicShape)
-                    {
-                        for (int i = 0; i < shape.Length; ++i)
-                        {
-                            newShape.Add(config.MaxBatchSize);
-                        }
-                        for (int i = 0; i < shape.Length; ++i)
-                        {
-                            if (shape[i] <= 0)
-                            {
-                                continue;
-                            }
-                            newShape[i] = (int)shape[i];
-                        }
-                        config.InputSizes.Add(newShape.ToArray());
-                    }
-                    if (config.InputShapeType >= IOShapeType.PartiallyDynamicShape)
-                    {
-                        if (config.InputSizes.Count != (int)inferenceSession.InputMetadata.Count)
-                        {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the input shape.");
-                        }
-                    }
-
-                    MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {input.Value.ElementType.ToString()}");
-                }
-            }
-
 
             foreach (var output in inferenceSession.OutputMetadata)
             {
@@ -366,77 +346,21 @@ namespace DeploySharp.Engine
                 {
                     if (dim <= 0)
                     {
-                        config.DynamicInput = true;
+                        config.DynamicOutput = true;
                         break;
                     }
                 }
-                if (!config.DynamicInput)
+                if (!config.DynamicOutput)
                 {
-                    config.InputSizes.Add(shape);
-                    MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {output.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
-                    config.OutputShapeType = config.OutputShapeType > IOShapeType.StaticShape ? config.OutputShapeType : IOShapeType.StaticShape;
+     
+                    config.OutputSizes.Add(shape);
+                    MyLogger.Log.Debug($"模型输出节点: {name}, 类型: {output.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
                 }
                 else
                 {
-                    MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
-                    for (int i = 0; i < shape.Length; ++i)
-                    {
-                        if (shape[i] <= 0)
-                        {
-                            if (i == 0)
-                            {
-                                config.OutputShapeType = config.OutputShapeType > IOShapeType.BatchDynamicShape ? config.OutputShapeType : IOShapeType.BatchDynamicShape;
-                            }
-                            else
-                            {
-                                config.OutputShapeType = config.OutputShapeType > IOShapeType.PartiallyDynamicShape ? config.OutputShapeType : IOShapeType.PartiallyDynamicShape;
-                            }
-                            break;
-                        }
-                    }
                     MyLogger.Log.Debug($"模型输出节点: {name}, 类型:{output.Value.ElementType.ToString()}");
                 }
-            }
 
-
-
-            if (config.OutputShapeType == IOShapeType.BatchDynamicShape)
-            {
-                config.OutputSizes.Clear();
-            }
-            if (config.OutputShapeType >= IOShapeType.BatchDynamicShape)
-            {
-                foreach (var output in inferenceSession.OutputMetadata)
-                {
-                    string name = output.Key;
-                    var shape = output.Value.Dimensions;
-                    List<int> newShape = new List<int>();
-                    if (config.OutputShapeType == IOShapeType.BatchDynamicShape)
-                    {
-                        for (int i = 0; i < shape.Length; ++i)
-                        {
-                            newShape.Add(config.MaxBatchSize);
-                        }
-                        for (int i = 0; i < shape.Length; ++i)
-                        {
-                            if (shape[i] <= 0)
-                            {
-                                continue;
-                            }
-                            newShape[i] = (int)shape[i];
-                        }
-                        config.OutputSizes.Add(newShape.ToArray());
-                    }
-                    if (config.OutputShapeType >= IOShapeType.PartiallyDynamicShape)
-                    {
-                        if (config.OutputSizes.Count != (int)inferenceSession.InputMetadata.Count)
-                        {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the output shape.");
-                        }
-                    }
-
-                    MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {output.Value.ElementType.ToString()}");
-                }
             }
 
             modelConfig = config;

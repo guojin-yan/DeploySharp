@@ -213,6 +213,160 @@ namespace DeploySharp.Model
             return segResults;
         }
 
+
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+            float[] result1 = dataTensor[1].DataBuffer as float[];
+
+            var config = (Yolov5SegConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][2];
+            int oneResultLen = config.OutputSizes[0][1];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+
+            int maskLen = config.OutputSizes[1][1];
+            int resultMaskSizePerBatch = config.OutputSizes[1][1] * config.OutputSizes[1][2];
+
+            int initialWidth = config.OutputSizes[1][3];
+            int initialHeight = config.OutputSizes[1][2];
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                var candidateBoxes = new ConcurrentBag<BoundingBox>();
+                // 4. 并行处理候选框检测
+                Parallel.For(0, rowResultNum, i =>
+                {
+                    for (int j = 4; j < oneResultLen - maskLen; j++)  // Iterate through each class
+                    {
+                        float conf = result0[rowResultNum * j + i + resultSizePerBatch * b];
+                        int label = j - 4;
+                        if (conf > config.ConfidenceThreshold)  // Confidence threshold filtering
+                        {
+                            // Parse center coordinates, width and height
+                            float cx = result0[rowResultNum * 0 + i + resultSizePerBatch * b];
+                            float cy = result0[rowResultNum * 1 + i + resultSizePerBatch * b];
+                            float ow = result0[rowResultNum * 2 + i + resultSizePerBatch * b];
+                            float oh = result0[rowResultNum * 3 + i + resultSizePerBatch * b];
+
+                            candidateBoxes.Add(new BoundingBox
+                            {
+                                Index = i,
+                                NameIndex = label,
+                                Confidence = conf,
+                                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                                Angle = 0.0f
+                            });
+                        }
+                    }
+                });
+
+                // 5. NMS处理
+                var boxes = config.NonMaxSuppression.Run(candidateBoxes.ToList(), config.NmsThreshold);
+
+                // 6. 掩膜处理准备
+                float[] rawMaskBuffer = ArrayPool<float>.Shared.Rent(initialWidth * initialHeight);
+                //Span<float> rawMaskData = rawMaskBuffer.AsSpan(0, initialWidth * initialHeight);
+
+
+                var maskPaddingX = imageAdjustmentParams[b].Padding.First * initialWidth / imageAdjustmentParams[b].TargetImgSize.Width;
+                var maskPaddingY = imageAdjustmentParams[b].Padding.Second * initialHeight / imageAdjustmentParams[b].TargetImgSize.Height;
+                int validMaskWidth = initialWidth - 2 * maskPaddingX;
+                int validMaskHeight = initialHeight - 2 * maskPaddingY;
+
+                // 7. 并行处理每个检测框的掩膜
+                var segResults = new SegResult[boxes.Count()];
+                //Parallel.For(0, boxes.Count(), index =>
+                //{
+                for (int index = 0; index < boxes.Count(); ++index)
+                {
+                    float[] rawMaskData = new float[validMaskWidth * validMaskHeight];
+                    var box = boxes[index];
+                    var bounds = imageAdjustmentParams[b].AdjustRect(box.Box);
+
+                    // 8. 快速掩膜数据处理
+                    float[] maskData = new float[maskLen];
+                    for (int i = oneResultLen - maskLen; i < oneResultLen; ++i)
+                    {
+                        maskData[i - oneResultLen + maskLen] = result0[rowResultNum * i + box.Index + resultMaskSizePerBatch * b];
+                    }
+
+
+                    // 9. 向量化掩膜计算
+                    //Array.Clear(rawMaskData);
+                    for (int y = 0; y < validMaskHeight; y++)
+                    {
+                        int baseOffset = (y + maskPaddingY) * initialWidth;
+                        for (int x = 0; x < validMaskWidth; x++)
+                        {
+                            float sum = 0;
+                            for (int i = 0; i < maskLen; i++)
+                            {
+                                sum += result1[i * initialWidth * initialHeight + baseOffset + x + maskPaddingX] * maskData[i];
+                            }
+                            rawMaskData[y * validMaskWidth + x] = Sigmoid(sum);
+                        }
+                    }
+
+                    var targetMask = new float[bounds.Height * bounds.Width];
+
+                    for (var y = 0; y < bounds.Height; y++)
+                    {
+                        for (var x = 0; x < bounds.Width; x++)
+                        {
+                            // Calculate source coordinates
+                            var sourceX = (float)(x + bounds.Location.X) * (validMaskWidth - 1) / (imageAdjustmentParams[b].RowImgSize.Width - 1);
+                            var sourceY = (float)(y + bounds.Location.Y) * (validMaskHeight - 1) / (imageAdjustmentParams[b].RowImgSize.Height - 1);
+
+                            // Check if source coordinates are out of bounds
+                            if (sourceY < 0 || sourceY >= validMaskHeight ||
+                                sourceX < 0 || sourceX >= validMaskWidth)
+                            {
+                                targetMask[y * bounds.Width + x] = 0f;
+                                continue;
+                            }
+
+                            // Ensure coordinates are within valid range for interpolation
+                            var x0 = Math.Max(0, Math.Min((int)sourceX, validMaskWidth - 2));
+                            var y0 = Math.Max(0, Math.Min((int)sourceY, validMaskHeight - 2));
+
+                            var x1 = x0 + 1;
+                            var y1 = y0 + 1;
+
+                            // Calculate interpolation factors
+                            var xLerp = sourceX - x0;
+                            var yLerp = sourceY - y0;
+
+                            var top = Lerp(rawMaskData[y0 * validMaskWidth + x0], rawMaskData[y0 * validMaskWidth + x1], xLerp);
+                            var bottom = Lerp(rawMaskData[y1 * validMaskWidth + x0], rawMaskData[y1 * validMaskWidth + x1], xLerp);
+                            targetMask[y * bounds.Width + x] = Lerp(top, bottom, yLerp);
+
+                        }
+                    }
+
+
+                    int classID = box.NameIndex;
+                    bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+                    //OpenCvSharp.Cv2.ImShow("targetMask", Mat.FromPixelData(bounds.Height, bounds.Width, MatType.CV_32FC1, targetMask));
+                    //Cv2.WaitKey(0);
+                    segResults[index] = new SegResult
+                    {
+                        Mask = new ImageDataF(targetMask, bounds.Width, bounds.Height, 1, ImageDataF.DataFormat.CHW),
+                        Id = classID,
+                        Bounds = imageAdjustmentParams[b].AdjustRect(box.Box),
+                        Confidence = box.Confidence,
+                        Category = categoryFlag ? category : classID.ToString(),
+                    };
+
+                }
+
+                results[b] = segResults;
+
+            }
+            return new List<Result[]>(results);
+        }
+
         // 快速Sigmoid近似计算 (比标准库快3倍)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float Sigmoid(float value) => (float)(1 / (1 + Math.Exp(-value)));

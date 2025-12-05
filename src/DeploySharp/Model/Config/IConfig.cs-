@@ -8,16 +8,6 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-
-    public enum IOShapeType
-    {
-        NotSet = 0,
-        StaticShape = 1,
-        BatchDynamicShape  = 2,
-        PartiallyDynamicShape = 3,
-        FullyDynamicShape = 4,
-    }
-
     /// <summary>
     /// Configuration interface for AI model deployment and inference parameters
     /// AI模型部署和推理参数的配置接口
@@ -88,8 +78,6 @@ namespace DeploySharp.Model
         /// </value>
         public bool DynamicOutput { get; set; } = false;
 
-        public IOShapeType InputShapeType { get; set; } = IOShapeType.NotSet;
-        public IOShapeType OutputShapeType { get; set; } = IOShapeType.NotSet;
         /// <summary>
         /// Type of the AI model (classification/detection/etc)
         /// AI模型类型（分类/检测等）

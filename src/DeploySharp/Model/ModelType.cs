@@ -172,6 +172,7 @@ namespace DeploySharp.Model
 
         DEIMv2Det,
         RFDETRDet,
+        RFDETRSeg,
         RTDETRDet,
         PPYOLOETDet,
 

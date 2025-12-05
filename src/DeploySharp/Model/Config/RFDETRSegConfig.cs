@@ -24,7 +24,7 @@ namespace DeploySharp.Model
     /// <example>
     /// Basic initialization:
     /// <code>
-    /// var config = new IFDETRDetConfig("yolov5s.onnx")
+    /// var config = new RFDETRSegConfig("yolov5s.onnx")
     /// {
     ///     TargetInferenceBackend = InferenceBackend.OpenVINO,
     ///     TargetDeviceType = DeviceType.CPU
@@ -41,7 +41,7 @@ namespace DeploySharp.Model
     /// </code>
     /// </example>
     /// </remarks>
-    public class RFDETRDetConfig : IImgConfig
+    public class RFDETRSegConfig : IImgConfig
     {
         /// <summary>
         /// Initializes a new instance with default values
@@ -51,7 +51,7 @@ namespace DeploySharp.Model
         /// The model path must be set separately before use.
         /// 使用前需要单独设置模型路径。
         /// </remarks>
-        public RFDETRDetConfig() { }
+        public RFDETRSegConfig() { }
 
         /// <summary>
         /// Initializes a new instance with model path and recommended defaults
@@ -61,16 +61,16 @@ namespace DeploySharp.Model
         /// Path to the YOLOv5 model file (.onnx/.ir)
         /// YOLOv5模型文件路径 (.onnx/.ir)
         /// </param>
-        public RFDETRDetConfig(string modelPath)
+        public RFDETRSegConfig(string modelPath)
         {
-            this.ModelType = ModelType.RFDETRDet;
+            this.ModelType = ModelType.RFDETRSeg;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = InferenceBackend.OpenVINO;
             this.TargetDeviceType = DeviceType.CPU;
             this.ConfidenceThreshold = 0.5f;
             this.InferBatch = 1;
-            this.DataProcessor.ResizeMode = ImageResizeMode.Stretch;
-            this.DataProcessor.NormalizationType = ImageNormalizationType.ImageNetStandard;
+            this.DataProcessor.ResizeMode = ImageResizeMode.Pad;
+            this.DataProcessor.NormalizationType = ImageNormalizationType.Scale_0_1;
         }
 
         /// <summary>
@@ -81,11 +81,10 @@ namespace DeploySharp.Model
         /// <param name="inferenceBackend">Inference backend (default: OpenVINO) 推理后端(默认:OpenVINO)</param>
         /// <param name="deviceType">Target device type (default: CPU) 目标设备类型(默认:CPU)</param>
         /// <param name="confidenceThreshold">Detection confidence threshold (default: 0.5) 检测置信度阈值(默认:0.5)</param>
-        /// <param name="nmsThreshold">NMS overlap threshold (default: 0.5) NMS重叠阈值(默认:0.5)</param>
         /// <param name="inferBatch">Batch size for inference (default: 1) 推理批量大小(默认:1)</param>
         /// <param name="resizeMode">Image resize mode (default: Stretch) 图像缩放模式(默认:拉伸)</param>
         /// <param name="normalizationType">Normalization method (default: Scale_0_1) 标准化方法(默认:0-1缩放)</param>
-        public RFDETRDetConfig(
+        public RFDETRSegConfig(
             string modelPath,
             InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU,
@@ -94,7 +93,7 @@ namespace DeploySharp.Model
             ImageResizeMode resizeMode = ImageResizeMode.Stretch,
             ImageNormalizationType normalizationType = ImageNormalizationType.ImageNetStandard)
         {
-            this.ModelType = ModelType.RFDETRDet;
+            this.ModelType = ModelType.RFDETRSeg;
             this.ModelPath = modelPath;
             this.TargetInferenceBackend = inferenceBackend;
             this.TargetDeviceType = deviceType;

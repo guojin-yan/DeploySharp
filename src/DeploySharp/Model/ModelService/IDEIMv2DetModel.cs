@@ -81,6 +81,66 @@ namespace DeploySharp.Model
             }
             return detResults.ToArray();
         }
-        
+
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            var config = (DEIMv2DetConfig)this.config;
+            float[] resultScores = dataTensor[2].DataBuffer as float[];
+            long[] resultLables = dataTensor[0].DataBuffer as long[];
+            float[] resultBoxes = dataTensor[1].DataBuffer as float[];
+            int batchSize = config.InferBatch;
+
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                // 获取有效检测（分数高于阈值）
+                List<DetResult> detResults = new List<DetResult>();
+                for (int i = 0; i < resultScores.Length / batchSize; i++)
+                {
+                    if (resultScores[i + 300 * b] < config.ConfidenceThreshold)
+                    {
+                        continue;
+                    }
+                    int s = 4 * i;
+                    // Parse bounding box coordinates (x1,y1,x2,y2 format)
+                    // 解析边界框坐标(x1,y1,x2,y2格式)
+                    float cx = resultBoxes[s + 0 + 4 * 300 * b];
+                    float cy = resultBoxes[s + 1 + 4 * 300 * b];
+                    float dx = resultBoxes[s + 2 + 4 * 300 * b];
+                    float dy = resultBoxes[s + 3 + 4 * 300 * b];
+
+                    // Convert to width/height format
+                    // 转换为宽/高格式
+                    int width = (int)((dx - cx));
+                    int height = (int)((dy - cy));
+
+                    Rect box = new Rect
+                    {
+                        X = (int)cx,
+                        Y = (int)cy,
+                        Width = width,
+                        Height = height
+                    };
+                    int classID = (int)resultLables[i +  300 * b];
+                    bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+
+                    // Create detection result with adjusted coordinates
+                    // 创建带有调整坐标的检测结果
+                    detResults.Add(new DetResult
+                    {
+                        Id = classID,                               // Class ID/类别ID
+                        Bounds = (box), // Adjusted rectangle/调整后的矩形
+                        Confidence = resultScores[i + 300 * b],                // Detection confidence/检测置信度
+                        Category = categoryFlag ? category : classID.ToString() // Fallback to ID if category not found/如果类别不存在则回退到ID
+                    });
+                }
+
+                results[b] = detResults.ToArray();
+
+            }
+            return new List<Result[]>(results);
+        }
+
     }
 }

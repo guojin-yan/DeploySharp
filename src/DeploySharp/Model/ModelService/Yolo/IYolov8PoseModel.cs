@@ -165,6 +165,102 @@ namespace DeploySharp.Model
 
             return keyPointResults;
         }
+
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+
+            var config = (Yolov8DetConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][2];
+            int oneResultLen = config.OutputSizes[0][1];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                var candidateBoxes = new ConcurrentBag<BoundingBox>();
+
+                // Parallel processing of detection candidates
+                // 并行处理检测候选
+                Parallel.For(0, rowResultNum, i =>
+                {
+                    // Only process person class (class index 0)
+                    // 只处理人类类别(类别索引0)
+                    for (int j = 4; j < 5; j++)
+                    {
+                        float conf = result0[rowResultNum * j + i + resultSizePerBatch * b];
+                        if (conf > config.ConfidenceThreshold)
+                        {
+                            // Parse bounding box coordinates (cx,cy,w,h format)
+                            // 解析边界框坐标(cx,cy,w,h格式)
+                            float cx = result0[rowResultNum * 0 + i + resultSizePerBatch * b];
+                            float cy = result0[rowResultNum * 1 + i + resultSizePerBatch * b];
+                            float ow = result0[rowResultNum * 2 + i + resultSizePerBatch * b];
+                            float oh = result0[rowResultNum * 3 + i + resultSizePerBatch * b];
+
+                            candidateBoxes.Add(new BoundingBox
+                            {
+                                Index = i,
+                                NameIndex = 0,  // Only person class/仅人类类别
+                                Confidence = conf,
+                                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                                Angle = 0.0f
+                            });
+                        }
+                    }
+                });
+
+                // Apply Non-Maximum Suppression to remove duplicate detections
+                // 应用非极大值抑制去除重复检测
+                var boxes = config.NonMaxSuppression.Run(candidateBoxes.ToList(), config.NmsThreshold);
+
+                // Calculate the number of keypoints: (output_length - 5(box+conf)) / 3(x,y,conf)
+                // 计算关键点数量: (输出长度 - 5(框+置信度)) / 3(x,y,置信度)
+                int pointNum = (oneResultLen - 5) / 3;
+                var keyPointResults = new KeyPointResult[boxes.Length];
+
+                // Process each valid detection after NMS
+                // 处理NMS后的每个有效检测
+                for (var i = 0; i < boxes.Length; i++)
+                {
+                    var box = boxes[i];
+                    KeyPoint[] keyPoints = new KeyPoint[pointNum];
+
+                    // Extract and adjust each keypoint
+                    // 提取并调整每个关键点
+                    for (int k = 0; k < pointNum; ++k)
+                    {
+                        keyPoints[k] = new KeyPoint
+                        {
+                            Point = imageAdjustmentParams[b].AdjustPoint(
+                                new Point(
+                                    result0[rowResultNum * (5 + 3 * k + 0) + box.Index + resultSizePerBatch * b],  // Keypoint X
+                                    result0[rowResultNum * (5 + 3 * k + 1) + box.Index + resultSizePerBatch * b]   // Keypoint Y
+                                )),
+                            Confidence = result0[rowResultNum * (5 + 3 * k + 2) + box.Index + resultSizePerBatch * b]  // Keypoint confidence
+                        };
+                    }
+
+                    // Get category name (should always be "person" for pose estimation)
+                    // 获取类别名称(姿态估计应始终为"person")
+                    bool categoryFlag = config.CategoryDict.TryGetValue(box.NameIndex, out string category);
+
+                    keyPointResults[i] = new KeyPointResult
+                    {
+                        Id = box.NameIndex,
+                        Bounds = imageAdjustmentParams[b].AdjustRect(box.Box),
+                        Confidence = box.Confidence,
+                        Category = categoryFlag ? category : box.NameIndex.ToString(),
+                        KeyPoints = keyPoints
+                    };
+                }
+
+                results[b] = keyPointResults;
+
+            }
+            return new List<Result[]>(results);
+        }
     }
 
 }

@@ -137,6 +137,76 @@ namespace DeploySharp.Model
 
             return detResults.ToArray();
         }
+
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+
+            var config = (Yolov10DetConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][1];
+            int oneResultLen = config.OutputSizes[0][2];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                List<DetResult> detResults = new List<DetResult>();
+
+                // Process each detection candidate
+                // 处理每个检测候选
+                for (var i = 0; i < rowResultNum; i++)
+                {
+                    int s = 6 * i;  // Starting index for each detection/每个检测的起始索引
+
+                    // Skip low-confidence detections
+                    // 跳过低置信度检测
+                    if (result0[s + 4] < config.ConfidenceThreshold)
+                    {
+                        continue;
+                    }
+
+                    // Parse bounding box coordinates (x1,y1,x2,y2 format)
+                    // 解析边界框坐标(x1,y1,x2,y2格式)
+                    float cx = result0[s + 0 + b * resultSizePerBatch];
+                    float cy = result0[s + 1 + b * resultSizePerBatch];
+                    float dx = result0[s + 2 + b * resultSizePerBatch];
+                    float dy = result0[s + 3 + b * resultSizePerBatch];
+
+                    // Convert to width/height format
+                    // 转换为宽/高格式
+                    int width = (int)((dx - cx));
+                    int height = (int)((dy - cy));
+
+                    RectF box = new RectF
+                    {
+                        X = cx,
+                        Y = cy,
+                        Width = width,
+                        Height = height
+                    };
+
+                    // Get class information
+                    // 获取类别信息
+                    int classID = (int)result0[s + 5 + b * resultSizePerBatch];
+                    bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+
+                    // Create detection result with adjusted coordinates
+                    // 创建带有调整坐标的检测结果
+                    detResults.Add(new DetResult
+                    {
+                        Id = classID,                               // Class ID/类别ID
+                        Bounds = imageAdjustmentParams[b].AdjustRect(box), // Adjusted rectangle/调整后的矩形
+                        Confidence = result0[s + 4 + b * resultSizePerBatch],                // Detection confidence/检测置信度
+                        Category = categoryFlag ? category : classID.ToString() // Fallback to ID if category not found/如果类别不存在则回退到ID
+                    });
+                }
+
+                results[b] = detResults.ToArray();
+
+            }
+            return new List<Result[]>(results);
+        }
     }
 
 }

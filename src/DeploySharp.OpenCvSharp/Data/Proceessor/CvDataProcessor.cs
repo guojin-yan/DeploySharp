@@ -95,6 +95,64 @@ namespace DeploySharp.Data
 
             return dataTensors;
         }
+
+        public static DataTensor ImageListProcessToDataTensor(List<Mat> imgs, IConfig config, out ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            MyLogger.Log.Debug($"配置输入尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
+                  $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
+
+            // 记录归一化处理开始
+            MyLogger.Log.Debug("开始图像归一化处理 (0-255 to 0-1)...");
+            List<float[]> normalizedDatas = new List<float[]>();
+            List<ImageAdjustmentParam> imageAdjustmentParamList = new List<ImageAdjustmentParam>();
+            int dataLength = 0;
+            for (int i = 0; i < imgs.Count; i++)
+            {
+                var image = (Mat)imgs[i];
+                float[] normalizedData = CvDataProcessor.ProcessToFloat(
+                image,
+                new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
+                ((IImgConfig)config).DataProcessor);
+
+                dataLength += normalizedData.Length;
+                normalizedDatas.Add(normalizedData);
+
+                imageAdjustmentParamList.Add( ImageAdjustmentParam.CreateFromImageInfo(
+                    new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
+                    CvDataExtensions.ToCvSize(image.Size()),
+                    ((IImgConfig)config).DataProcessor.ResizeMode));
+
+
+                MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
+                     $"原始尺寸: {image.Size()}, " +
+                     $"目标尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
+                     $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
+            }
+            imageAdjustmentParams = imageAdjustmentParamList.ToArray();
+            List<float> imageDatas = new List<float>(dataLength);
+            foreach (var item in normalizedDatas)
+            {
+                imageDatas.AddRange(item);
+            }
+
+            // 构造数据张量
+            MyLogger.Log.Debug("构造输入DataTensor...");
+            DataTensor dataTensors = new DataTensor();
+            dataTensors.AddNode(
+                config.InputNames[0],
+                0,
+                TensorType.Input,
+                imageDatas.ToArray(),
+                config.InputSizes[0],
+                typeof(float));
+
+            MyLogger.Log.Debug($"DataTensor构造完成，输入名称: {config.InputNames[0]}, " +
+                             $"数据类型: {typeof(float)}, " +
+                             $"数据长度: {imageDatas.Count}");
+
+            return dataTensors;
+
+        }
         /// <summary>
         /// Full preprocessing pipeline (resize + normalize)
         /// 完整的预处理流程(调整尺寸 + 标准化)

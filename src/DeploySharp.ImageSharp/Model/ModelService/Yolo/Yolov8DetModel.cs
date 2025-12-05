@@ -21,7 +21,12 @@ namespace DeploySharp.Model
         /// <param name="config">Model configuration parameters</param>
         public Yolov8DetModel(Yolov8DetConfig config) : base(config) { }
 
-
+        public List<Result[]> PredictBatch(List<Image<Rgb24>> imgs)
+        {
+            return base.PredictBatch(imgs.Cast<object>().ToList())
+                .Cast<Result[]>()
+                .ToList();
+        }
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
@@ -30,6 +35,23 @@ namespace DeploySharp.Model
             {
                 return CvDataProcessor.ImageProcessToDataTensor(
                     (Image<Rgb24>)img,
+                    config,
+                    out imageAdjustmentParam);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.Log.Error($"预处理过程中发生异常: {ex.Message}", ex);
+                throw;
+            }
+        }
+        protected override DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam)
+        {
+            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {img.Count}");
+
+            try
+            {
+                return CvDataProcessor.ImageListProcessToDataTensor(
+                    img.OfType<Image<Rgb24>>().ToList(),
                     config,
                     out imageAdjustmentParam);
             }

@@ -132,6 +132,85 @@ namespace DeploySharp.Model
             }
             return detResult;
         }
+
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParam) 
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+
+            var config = (Yolov5DetConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][1];
+            int oneResultLen = config.OutputSizes[0][2];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+            
+            Result[][] results = new Result[batchSize][];
+
+
+            for (var b = 0; b < batchSize; b++) 
+            {
+                var candidateBoxes = new ConcurrentBag<BoundingBox>();
+
+                // Parallel candidate box processing
+                // 并行候选框处理
+                Parallel.For(0, rowResultNum, i =>
+                {
+                    // Filter by object confidence (P0)
+                    // 通过物体置信度(P0)过滤
+                    float conf = result0[oneResultLen * i + 4 + resultSizePerBatch * b];
+                    if (conf <= 0.25f) return;
+
+                    // Check class probabilities (P5-Pn)
+                    // 检查类别概率(P5-Pn)
+                    for (int j = 5; j < oneResultLen; j++)
+                    {
+                        float conf1 = result0[oneResultLen * i + j + resultSizePerBatch * b];
+                        if (conf1 > config.ConfidenceThreshold)
+                        {
+                            // Decode box coordinates (cx,cy,w,h)
+                            // 解码框坐标(cx,cy,w,h)
+                            float cx = result0[oneResultLen * i + resultSizePerBatch * b];
+                            float cy = result0[oneResultLen * i + 1 + resultSizePerBatch * b];
+                            float ow = result0[oneResultLen * i + 2 + resultSizePerBatch * b];
+                            float oh = result0[oneResultLen * i + 3 + resultSizePerBatch * b];
+
+                            candidateBoxes.Add(new BoundingBox
+                            {
+                                Index = i,
+                                NameIndex = j - 5,
+                                Confidence = conf1,
+                                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                                Angle = 0.0f
+                            });
+                        }
+                    }
+                });
+
+                // Apply Non-Maximum Suppression
+                // 应用非极大值抑制
+                var boxes = config.NonMaxSuppression.Run(candidateBoxes.ToList(), config.NmsThreshold);
+
+                // Package final detection results
+                // 封装最终检测结果
+                var detResult = new DetResult[boxes.Length];
+                for (var i = 0; i < boxes.Length; i++)
+                {
+                    var box = boxes[i];
+                    int classID = box.NameIndex;
+                    bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+                    detResult[i] = new DetResult
+                    {
+                        Id = classID,
+                        Bounds = imageAdjustmentParam[b].AdjustRect(box.Box),
+                        Confidence = box.Confidence,
+                        Category = categoryFlag ? category : classID.ToString(),
+                    };
+                }
+                results[b] = detResult;
+
+            }
+            return new List<Result[]>(results);
+        }
+
     }
 
 

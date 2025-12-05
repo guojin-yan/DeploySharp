@@ -125,6 +125,16 @@ namespace DeploySharp.Model
 
             try
             {
+                if (config.InputShapeType.HasFlag(IOShapeType.BatchDynamicShape))
+                {
+                    for (int i = 0; i < config.InputSizes.Count; ++i)
+                    {
+                        config.InputSizes[i][0] = 1;
+                    }
+                }
+                else 
+                {
+                }
                 // Execute prediction pipeline stages
                 // 执行预测流程的各个阶段
                 predictorTimer.StartPreprocess();
@@ -179,7 +189,7 @@ namespace DeploySharp.Model
         /// <exception cref="ArgumentNullException">
         /// Thrown when input list is null
         /// </exception>
-        public List<Result[]> Predict(List<object> imgs)
+        public List<Result[]> PredictBatch(List<object> imgs)
         {
             if (imgs == null)
             {
@@ -189,19 +199,56 @@ namespace DeploySharp.Model
             var results = new List<Result[]>();
             var timer = System.Diagnostics.Stopwatch.StartNew();
 
-            for (int i = 0; i < imgs.Count; i++)
+            if (config.InputShapeType.HasFlag(IOShapeType.StaticShape))
+            {
+                for (int i = 0; i < imgs.Count; i++)
+                {
+                    try
+                    {
+                        results.Add(Predict(imgs[i]));
+                    }
+                    catch (Exception ex)
+                    {
+                        MyLogger.Log.Error($"[Batch Prediction] Failed processing item {i}", ex);
+                        MyLogger.Log.Error($"[批量预测] 处理项 {i} 失败", ex);
+                        throw;
+                    }
+                }
+            }
+            else if (config.InputShapeType.HasFlag(IOShapeType.BatchDynamicShape))
             {
                 try
                 {
-                    results.Add(Predict(imgs[i]));
+                    predictorTimer.Reset();
+                    for (int beginBatch = 0; beginBatch < imgs.Count; beginBatch += config.MaxBatchSize) 
+                    {
+                        predictorTimer.StartPreprocess();
+                        int nowBatch = Math.Min(config.MaxBatchSize, imgs.Count - beginBatch);
+                        for (int i = 0; i < config.InputSizes.Count; ++i) 
+                        {
+                            config.InputSizes[i][0] = nowBatch;
+                        }
+                        config.InferBatch = nowBatch;
+                        
+                        var batchImgs = imgs.GetRange(beginBatch, nowBatch);
+                        var inputTensor = PreprocessBatch(batchImgs, out var imageAdjustmentParams);
+                        predictorTimer.StartBatchInference();
+                        var outputTensor = engine.Predict(inputTensor);
+                        predictorTimer.StartBatchPostprocess();
+                        results.AddRange(PostprocessBatch(outputTensor, imageAdjustmentParams));
+                        predictorTimer.StopBatch();
+                    }
+                    ModelInferenceProfiler.Record(predictorTimer.GetBatchRecord());
                 }
                 catch (Exception ex)
                 {
-                    MyLogger.Log.Error($"[Batch Prediction] Failed processing item {i}", ex);
-                    MyLogger.Log.Error($"[批量预测] 处理项 {i} 失败", ex);
+                    MyLogger.Log.Error("[Batch Prediction] Failed processing batch", ex);
+                    MyLogger.Log.Error("[批量预测] 处理批次失败", ex);
                     throw;
                 }
+
             }
+
 
             MyLogger.Log.Info($"[Batch Prediction] Completed {imgs.Count} items in {timer.ElapsedMilliseconds}ms");
             MyLogger.Log.Info($"[批量预测] 完成 {imgs.Count} 项，耗时 {timer.ElapsedMilliseconds}ms");
@@ -226,6 +273,12 @@ namespace DeploySharp.Model
         /// </returns>
         protected abstract DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam);
 
+        protected virtual DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam) 
+        {
+            imageAdjustmentParam = new ImageAdjustmentParam[img.Count];
+            return new DataTensor();
+        }
+
         /// <summary>
         /// Abstract method for output postprocessing
         /// 输出后处理的抽象方法
@@ -243,7 +296,10 @@ namespace DeploySharp.Model
         /// 处理后的检测/预测结果
         /// </returns>
         protected abstract Result[] Postprocess(DataTensor result, ImageAdjustmentParam imageAdjustmentParam);
-
+        protected virtual List<Result[]> PostprocessBatch(DataTensor result, ImageAdjustmentParam[] imageAdjustmentParam) 
+        {
+            return new List<Result[]>();
+        }
         /// <summary>
         /// Releases model resources
         /// 释放模型资源

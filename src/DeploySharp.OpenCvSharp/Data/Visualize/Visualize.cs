@@ -23,7 +23,7 @@ namespace DeploySharp.Data
         /// <returns></returns>
         public static Mat DrawDetResult(Result[] bresult, Mat image, VisualizeOptions options)
         {
-             return DrawDetResult(bresult, image, options);
+             return DrawDetResult(bresult as DetResult[], image, options);
         }
         public static Mat DrawDetResult(DetResult[] result, Mat image, VisualizeOptions options)
         {            

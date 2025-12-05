@@ -42,6 +42,14 @@ namespace DeploySharp.Common
         /// </summary>
         private TimeSpan postprocess;
 
+
+        public void Reset()
+        {
+            preprocess = TimeSpan.Zero;
+            inference = TimeSpan.Zero;
+            postprocess = TimeSpan.Zero;
+            stopwatch.Reset();
+        }
         /// <summary>
         /// Starts timing for preprocessing phase.
         /// 开始预处理阶段的计时。
@@ -69,6 +77,11 @@ namespace DeploySharp.Common
             preprocess = stopwatch.Elapsed;
             stopwatch.Restart();
         }
+        public void StartBatchInference()
+        {
+            preprocess += stopwatch.Elapsed;
+            stopwatch.Restart();
+        }
 
         /// <summary>
         /// Starts timing for postprocessing phase and records inference duration.
@@ -82,6 +95,11 @@ namespace DeploySharp.Common
         public void StartPostprocess()
         {
             inference = stopwatch.Elapsed;
+            stopwatch.Restart();
+        }
+        public void StartBatchPostprocess()
+        {
+            inference += stopwatch.Elapsed;
             stopwatch.Restart();
         }
 
@@ -103,6 +121,20 @@ namespace DeploySharp.Common
             postprocess = stopwatch.Elapsed;
             stopwatch.Stop();
 
+            return new ModelInferenceTimeRecord(
+                preprocess.TotalMilliseconds,
+                inference.TotalMilliseconds,
+                postprocess.TotalMilliseconds);
+        }
+
+        public void StopBatch()
+        {
+            postprocess += stopwatch.Elapsed;
+            stopwatch.Stop();
+        }
+
+        public ModelInferenceTimeRecord GetBatchRecord()
+        {
             return new ModelInferenceTimeRecord(
                 preprocess.TotalMilliseconds,
                 inference.TotalMilliseconds,

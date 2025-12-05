@@ -27,6 +27,7 @@ namespace DeploySharp.Engine
     /// </remarks>
     public interface IModelInferEngine : IDisposable
     {
+
         /// <summary>
         /// Performs model prediction/inference on the input tensor.
         /// 对输入张量执行模型预测/推理

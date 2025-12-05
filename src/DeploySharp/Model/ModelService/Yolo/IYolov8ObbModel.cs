@@ -153,5 +153,95 @@ namespace DeploySharp.Model
 
             return detResult;
         }
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+
+            var config = (Yolov8DetConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][2];
+            int oneResultLen = config.OutputSizes[0][1];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                var candidateBoxes = new ConcurrentBag<BoundingBox>();
+
+                // Parallel processing of detection candidates
+                // 并行处理检测候选
+                Parallel.For(0, rowResultNum, i =>
+                {
+                    // Process each class probability (skip first 4 channels: cx,cy,w,h)
+                    // 处理每个类别概率(跳过前4个通道: cx,cy,w,h)
+                    for (int j = 4; j < oneResultLen - 1; j++)
+                    {
+                        float conf = result0[rowResultNum * j + i + resultSizePerBatch * b];
+                        int label = j - 4;  // Convert channel index to class ID/转换通道索引为类别ID
+
+                        // Confidence threshold filtering
+                        // 置信度阈值过滤
+                        if (conf > config.ConfidenceThreshold)
+                        {
+                            // Get box coordinates and angle
+                            // 获取框坐标和角度
+                            float cx = result0[rowResultNum * 0 + i + resultSizePerBatch * b];  // Center x/中心x坐标
+                            float cy = result0[rowResultNum * 1 + i + resultSizePerBatch * b];  // Center y/中心y坐标
+                            float ow = result0[rowResultNum * 2 + i + resultSizePerBatch * b];  // Width/宽度
+                            float oh = result0[rowResultNum * 3 + i + resultSizePerBatch * b];  // Height/高度
+                            float angle = result0[rowResultNum * (oneResultLen - 1) + i + resultSizePerBatch * b];  // Rotation angle/旋转角度
+
+                            // Normalize angle to [-π/2, π/2] range
+                            // 将角度归一化到[-π/2, π/2]范围
+                            if (angle >= Math.PI && angle <= 0.75 * Math.PI)
+                            {
+                                angle -= (float)Math.PI;
+                            }
+                            angle *= (float)(180f / Math.PI);  // Convert to degrees/转换为角度制
+
+                            candidateBoxes.Add(new BoundingBox
+                            {
+                                Index = i,
+                                NameIndex = label,
+                                Confidence = conf,
+                                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                                Angle = angle
+                            });
+                        }
+                    }
+                });
+
+                // Apply Non-Maximum Suppression
+                // 应用非极大值抑制
+                var boxes = config.NonMaxSuppression.Run(candidateBoxes.ToList(), config.NmsThreshold);
+
+                // Convert to final results with rotated rectangles
+                // 转换为带旋转矩形的最终结果
+                var detResult = new ObbResult[boxes.Length];
+                for (var i = 0; i < boxes.Length; i++)
+                {
+                    var box = boxes[i];
+                    int classID = box.NameIndex;
+
+                    detResult[i] = new ObbResult
+                    {
+                        Id = classID,
+                        Bounds = RotatedRect.FromAxisAlignedRect(
+                            imageAdjustmentParams[b].AdjustRectF(box.Box),
+                            box.Angle),
+                        Confidence = box.Confidence,
+                        Category = config.CategoryDict.TryGetValue(classID, out string category)
+                                   ? category
+                                   : classID.ToString(),
+                    };
+                }
+                results[b] = detResult;
+
+            }
+            return new List<Result[]>(results);
+        }
+
+
+
     }
 }

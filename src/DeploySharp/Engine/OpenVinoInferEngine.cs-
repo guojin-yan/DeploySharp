@@ -13,7 +13,6 @@ using System.Diagnostics;
 using System.IO;
 using Clipper2Lib;
 using DeploySharp.Common;
-using System.Xml.Linq;
 
 namespace DeploySharp.Engine
 {
@@ -604,6 +603,8 @@ namespace DeploySharp.Engine
             config.InputNames.Clear();
             inputNodeTypes.Clear();
 
+            int inputNodesCount = 0;
+
             foreach (Input input in model.inputs())
             {
                 string name = input.get_any_name();
@@ -611,93 +612,61 @@ namespace DeploySharp.Engine
                 inputNodeTypes.Add(input.get_element_type());
 
                 bool isDynamic = IsShapeDynamic(input.get_partial_shape());
-                
+                config.DynamicInput |= isDynamic;
 
                 if (!isDynamic)
                 {
                     var shape = input.get_shape().Select(x => (int)x).ToArray();
                     config.InputSizes.Add(shape);
                     MyLogger.Log.Debug($"Input node: {name}, Type: {input.get_element_type()}, Shape: [{string.Join(",", shape)}]");
-                    config.InputShapeType = config.InputShapeType > IOShapeType.StaticShape ? config.InputShapeType : IOShapeType.StaticShape;
                 }
                 else
                 {
-                    MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
-                    PartialShape shape = input.get_partial_shape();
-                    // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
-                    
 
-                    if (!rank.is_dynamic())
+                    if (config.InputSizes.Count == inputNodesCount) 
                     {
-                        Dimension[] dimensions = shape.get_dimensions();
-                        for (int i = 0; i < dimensions.Length; ++i)
+                        if (config.InferBatch >= 1)
                         {
-                            if (dimensions[i].is_dynamic())
+                            MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
+                            PartialShape shape = input.get_partial_shape();
+                            // Check for dynamic batch dimension
+                            Dimension rank = shape.get_rank();
+                            if (!rank.is_dynamic())
                             {
-                                if (i == 0)
+                                List<int> newShape = new List<int>();
+                                for (int i = 0; i < (int)rank.get_max(); ++i) 
                                 {
-                                    config.InputShapeType = config.InputShapeType > IOShapeType.BatchDynamicShape ? config.InputShapeType : IOShapeType.BatchDynamicShape;
+                                    newShape.Add(0);
                                 }
-                                else
+                                bool hasDynamicDim = false;
+                                Dimension[] dimensions = shape.get_dimensions();
+                                for (int i = 1; i < dimensions.Length; ++i)
                                 {
-                                    config.InputShapeType = config.InputShapeType > IOShapeType.PartiallyDynamicShape ? config.InputShapeType : IOShapeType.PartiallyDynamicShape;
+                                    if (dimensions[i].is_dynamic())
+                                    {
+                                        hasDynamicDim = true;
+                                        break;
+                                    }
+                                    newShape[i] = (int)dimensions[i].get_max();
                                 }
-                                continue;
+                                if (!hasDynamicDim)
+                                {
+                                    newShape[0] = config.InferBatch;
+                                    config.InputSizes.Add(newShape.ToArray());
+                                    inputNodesCount ++;
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        config.InputShapeType = config.InputShapeType > IOShapeType.FullyDynamicShape ? config.InputShapeType : IOShapeType.FullyDynamicShape;
-                    }
-                }
-            }
-
-            if (config.InputShapeType == IOShapeType.BatchDynamicShape) 
-            {
-                config.InputSizes.Clear();
-            }
-            if (config.InputShapeType >= IOShapeType.BatchDynamicShape)
-            {
-                foreach (Input input in model.inputs())
-                {
-                    string name = input.get_any_name();
-                    PartialShape shape = input.get_partial_shape();
-                    // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
-                    List<int> newShape = new List<int>();
-                    if (config.InputShapeType == IOShapeType.BatchDynamicShape)
-                    {
-                        for (int i = 0; i < (int)rank.get_max(); ++i)
-                        {
-                            newShape.Add(config.MaxBatchSize);
-                        }
-                        Dimension[] dimensions = shape.get_dimensions();
-                        for (int i = 0; i < dimensions.Length; ++i)
-                        {
-                            if (dimensions[i].is_dynamic())
-                            {
-                                continue;
-                            }
-                            newShape[i] = (int)dimensions[i].get_max();
-                        }
-                        config.InputSizes.Add(newShape.ToArray());
-                    }
-                    if (config.InputShapeType >= IOShapeType.PartiallyDynamicShape)
-                    {
-                        if (config.InputSizes.Count != (int)model.get_inputs_size())
-                        {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the input shape.");
-                        }
+                
                     }
 
+                    if (config.InputSizes.Count == 0) 
+                    {
+                        throw new DeploySharpException($"The model input is a dynamic shape, and the model input shape needs to be set.  modelConfig.InputSizes.Count == 0");
+                    }
                     MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {input.get_element_type()}");
                 }
             }
-            
-
-
         }
         /// <summary>
         /// Analyzes and records model output node properties
@@ -715,98 +684,19 @@ namespace DeploySharp.Engine
                 outputNodeTypes.Add(output.get_element_type());
 
                 bool isDynamic = IsShapeDynamic(output.get_partial_shape());
-                
+                config.DynamicOutput |= isDynamic;
 
                 if (!isDynamic)
                 {
                     var shape = output.get_shape().Select(x => (int)x).ToArray();
                     config.OutputSizes.Add(shape);
                     MyLogger.Log.Debug($"Output node: {name}, Type: {output.get_element_type()}, Shape: [{string.Join(",", shape)}]");
-                    config.OutputShapeType = config.OutputShapeType > IOShapeType.StaticShape ? config.OutputShapeType : IOShapeType.StaticShape;
                 }
                 else
                 {
-                    MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
-                    PartialShape shape = output.get_partial_shape();
-                    // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
-
-                    if (!rank.is_dynamic())
-                    {
-                        Dimension[] dimensions = shape.get_dimensions();
-                        for (int i = 0; i < dimensions.Length; ++i)
-                        {
-                            if (dimensions[i].is_dynamic())
-                            {
-                                if (i == 0)
-                                {
-                                    config.OutputShapeType = config.OutputShapeType > IOShapeType.BatchDynamicShape ? config.OutputShapeType : IOShapeType.BatchDynamicShape;
-                                }
-                                else
-                                {
-                                    config.OutputShapeType = config.OutputShapeType > IOShapeType.PartiallyDynamicShape ? config.OutputShapeType : IOShapeType.PartiallyDynamicShape;
-                                }
-                                continue;
-                            }
-
-                        }
-                    }
-                    else
-                    {
-        
-                        config.OutputShapeType = config.OutputShapeType > IOShapeType.FullyDynamicShape ? config.OutputShapeType : IOShapeType.FullyDynamicShape;
-                    }
-
-                    MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {output.get_element_type()}");
+                    MyLogger.Log.Debug($"Dynamic output node: {name}, Type: {output.get_element_type()}");
                 }
             }
-
-
-
-
-
-            if (config.OutputShapeType == IOShapeType.BatchDynamicShape)
-            {
-                config.OutputSizes.Clear();
-            }
-            if (config.OutputShapeType >= IOShapeType.BatchDynamicShape)
-            {
-                foreach (Output output in model.outputs())
-                {
-                    string name = output.get_any_name();
-                    PartialShape shape = output.get_partial_shape();
-                    // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
-                    List<int> newShape = new List<int>();
-                    if (config.OutputShapeType == IOShapeType.BatchDynamicShape)
-                    {
-                        for (int i = 0; i < (int)rank.get_max(); ++i)
-                        {
-                            newShape.Add(config.MaxBatchSize);
-                        }
-                        Dimension[] dimensions = shape.get_dimensions();
-                        for (int i = 1; i < dimensions.Length; ++i)
-                        {
-                            if (dimensions[i].is_dynamic())
-                            {
-                                continue;
-                            }
-                            newShape[i] = (int)dimensions[i].get_max();
-                        }
-                        config.OutputSizes.Add(newShape.ToArray());
-                    }
-                    if (config.OutputShapeType >= IOShapeType.PartiallyDynamicShape)
-                    {
-                        if (config.OutputSizes.Count != (int)model.get_inputs_size())
-                        {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the output shape.");
-                        }
-                    }
-
-                    MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {output.get_element_type()}");
-                }
-            }
-
         }
         /// <summary>
         /// Determines if a PartialShape contains dynamic dimensions
@@ -871,7 +761,7 @@ namespace DeploySharp.Engine
                 Tensor inputTensor = inferRequest.get_input_tensor((ulong)i);
                 NodeData data = inputs[i];
 
-                if (modelConfig.InputShapeType != IOShapeType.StaticShape)
+                if (modelConfig.DynamicInput)
                     inputTensor.set_shape(new Shape(modelConfig.InputSizes[i]));
 
                 switch (data.DataType)

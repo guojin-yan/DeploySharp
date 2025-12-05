@@ -49,15 +49,17 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
-using OpenCvSharp;
+
 using System.Diagnostics;
 using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp;
 using System.Net.Http.Headers;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
-namespace DeploySharp.OpenCvSharp.Demo
+namespace DeploySharp.ImageSharp.Demo
 {
     public class YOLOv8DetDemo
     {
@@ -91,23 +93,23 @@ namespace DeploySharp.OpenCvSharp.Demo
             }
             config.CategoryDict = CategoryDict;
             Yolov8DetModel model = new Yolov8DetModel(config);
-            Mat img = Cv2.ImRead(imagePath);
-            Mat img1 = Cv2.ImRead(imagePath1);
-            List<Mat> images = new List<Mat> { img, img1, img, img1, img, img1, img, img1, img };
+            var img = Image.Load(imagePath);
+            var img1 = Image.Load(imagePath1);
+            List<Image> images = new List<Image> { img, img1, img, img1, img, img1, img, img1, img };
             List<Result[]> result = model.PredictBatch(images.OfType<object>().ToList());
             //result = model.Predict(img);
             //result = model.Predict(img);
             //result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
-            List<Mat> resultsMat = new List<Mat>();
+            List<Image<Rgb24>> resultsMat = new List<Image<Rgb24>>();
             for (int i = 0; i < result.Count; i++) 
             {
-                var resultImg = Visualize.DrawDetResult(result[i], images[i], new VisualizeOptions(1.0f));
-                resultsMat.Add(resultImg);
-                Cv2.ImShow("image"+i.ToString(), resultImg);
+                var resultImg = Visualize.DrawDetResult(result[i], (Image<Rgb24>)images[i], new VisualizeOptions(1.0f));
+     
+                resultImg.Save(@$"./result_{i}.jpg");
             }
 
-            Cv2.WaitKey();
+
         }
     }
 }

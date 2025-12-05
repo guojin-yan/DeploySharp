@@ -120,6 +120,71 @@ namespace DeploySharp.Model
             return detResult;
         }
 
-       
+        protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParam)
+        {
+            float[] result0 = dataTensor[0].DataBuffer as float[];
+
+            var config = (Yolov8DetConfig)this.config;
+            int rowResultNum = config.OutputSizes[0][2];
+            int oneResultLen = config.OutputSizes[0][1];
+            int batchSize = config.InferBatch;
+            int resultSizePerBatch = rowResultNum * oneResultLen;
+            Result[][] results = new Result[batchSize][];
+
+            for (var b = 0; b < batchSize; b++)
+            {
+                var candidateBoxes = new ConcurrentBag<BoundingBox>();
+
+                // 4. 并行处理候选框检测
+                Parallel.For(0, rowResultNum, i =>
+                {
+                    for (int j = 4; j < oneResultLen; j++)  // Iterate through each class
+                    {
+                        float conf = result0[rowResultNum * j + i + resultSizePerBatch * b];
+                        int label = j - 4;
+                        if (conf > config.ConfidenceThreshold)  // Confidence threshold filtering
+                        {
+                            // Parse center coordinates, width and height
+                            float cx = result0[rowResultNum * 0 + i + resultSizePerBatch * b];
+                            float cy = result0[rowResultNum * 1 + i + resultSizePerBatch * b];
+                            float ow = result0[rowResultNum * 2 + i + resultSizePerBatch * b];
+                            float oh = result0[rowResultNum * 3 + i + resultSizePerBatch * b];
+
+                            candidateBoxes.Add(new BoundingBox
+                            {
+                                Index = i,
+                                NameIndex = label,
+                                Confidence = conf,
+                                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                                Angle = 0.0f
+                            });
+                        }
+                    }
+                });
+
+                // 5. NMS处理
+                var boxes = config.NonMaxSuppression.Run(candidateBoxes.ToList(), config.NmsThreshold);
+
+                var detResult = new DetResult[boxes.Length];
+
+                for (var i = 0; i < boxes.Length; i++)
+                {
+                    var box = boxes[i];
+                    int classID = box.NameIndex;
+                    bool categoryFlag = config.CategoryDict.TryGetValue(classID, out string category);
+                    detResult[i] = new DetResult
+                    {
+                        Id = classID,
+                        Bounds = imageAdjustmentParam[b].AdjustRect(box.Box),
+                        Confidence = box.Confidence,
+                        Category = categoryFlag ? category : classID.ToString(),
+                    };
+                }
+                results[b] = detResult;
+
+            }
+            return new List<Result[]>(results);
+        }
+
     }
 }

@@ -21,7 +21,7 @@ namespace DeploySharp.ImageSharp.Demo
             string imagePath = @"E:\Model\DEIMv2\170.jpg";
 
             DEIMv2DetConfig config = new DEIMv2DetConfig(modelPath);
-            //config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
+            //config.InputSizes.Add(new int[] { 2, 3, 640, 640 });
             //config.InputSizes.Add(new int[] { 1, 2 });
             //config.SetTargetDeviceType(DeviceType.GPU0);
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);

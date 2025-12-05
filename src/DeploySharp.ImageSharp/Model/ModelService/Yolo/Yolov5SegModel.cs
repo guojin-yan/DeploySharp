@@ -43,6 +43,23 @@ namespace DeploySharp.Model
                 throw;
             }
         }
+        protected override DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam)
+        {
+            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {img.Count}");
+
+            try
+            {
+                return CvDataProcessor.ImageListProcessToDataTensor(
+                    img.OfType<Image<Rgb24>>().ToList(),
+                    config,
+                    out imageAdjustmentParam);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.Log.Error($"预处理过程中发生异常: {ex.Message}", ex);
+                throw;
+            }
+        }
     }
 
 }
