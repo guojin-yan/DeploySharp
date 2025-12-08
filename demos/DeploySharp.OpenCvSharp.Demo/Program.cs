@@ -63,6 +63,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             //for(int i = 0; i < 1; i++)
             //{
             //YOLOv8DetDemo.Run();
+            YOLOv8DetDemo.RunBatch();
             //}
 
             //YOLOv8SegDemo.Run();
@@ -72,7 +73,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             //IFDETRDetDemo.Run();
             //PPYoloeDetDemo.Run();
             //RTDETRDetDemo.Run();
-            RFDETRSegDemo.Run();
+            //RFDETRSegDemo.Run();
         }
     }
 }

@@ -723,7 +723,7 @@ namespace DeploySharp.Engine
             var dataTensor = new DataTensor();
 
             // Clear dynamic output sizes if needed
-            if (modelConfig.DynamicOutput)
+            if (modelConfig.InputShapeType!= IOShapeType.StaticShape)
             {
                 modelConfig.OutputSizes.Clear();
             }
@@ -736,7 +736,7 @@ namespace DeploySharp.Engine
                 string outputName = modelConfig.OutputNames[i];
 
                 // Update dynamic output sizes
-                if (modelConfig.DynamicOutput)
+                if (modelConfig.InputShapeType != IOShapeType.StaticShape)
                 {
                     modelConfig.OutputSizes.Add(shape.Select(x => (int)x).ToArray());
                 }

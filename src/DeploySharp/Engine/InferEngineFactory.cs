@@ -73,6 +73,7 @@ namespace DeploySharp.Engine
             {
                 InferenceBackend.OpenVINO => new OpenVinoInferEngine(),
                 InferenceBackend.OnnxRuntime => new OnnxRuntimeInferEngine(),
+                InferenceBackend.TensorRT => new TensorRtInferEngine(),
                 _ => throw new NotSupportedException(
                     $"Unsupported inference backend: {backend}. " +
                     $"Supported backends: {string.Join(", ", Enum.GetValues(typeof(InferenceBackend)))}")

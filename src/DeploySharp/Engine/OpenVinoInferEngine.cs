@@ -476,7 +476,7 @@ namespace DeploySharp.Engine
             ValidateInputTensor(inputs);
 
             MyLogger.Log.Info("Starting inference execution");
-            var timer = Stopwatch.StartNew();
+            
             int availableRequestIndex = -1;
             lock (inferRequestLock) 
             {
@@ -512,7 +512,6 @@ namespace DeploySharp.Engine
             finally
             {
                 inferRequests[availableRequestIndex].Third = true;
-                MyLogger.Log.Info($"Inference completed in {timer.ElapsedMilliseconds}ms");
             }
         }
 
@@ -923,7 +922,7 @@ namespace DeploySharp.Engine
         {
             DataTensor result = new DataTensor();
 
-            if (modelConfig.DynamicOutput)
+            if (modelConfig.InputShapeType != IOShapeType.StaticShape)
                 modelConfig.OutputSizes.Clear();
 
             for (int i = 0; i < OutputNodeCount; i++)
@@ -931,7 +930,7 @@ namespace DeploySharp.Engine
                 Tensor outputTensor = inferRequest.get_output_tensor((ulong)i);
                 var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
 
-                if (modelConfig.DynamicOutput)
+                if (modelConfig.InputShapeType != IOShapeType.StaticShape)
                     modelConfig.OutputSizes.Add(shape);
 
                 ProcessOutputTensor(result, outputTensor, i, shape);

@@ -65,14 +65,60 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\Yolo\yolov8s_b.onnx";
+            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolov8s.engine";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\bus.jpg";
+            string imagePath = @"E:\Text_dataset\YOLOv5\0001.jpg";
             string imagePath1 = @"E:\Data\image\demo_2.jpg";
 
             Yolov8DetConfig config = new Yolov8DetConfig(modelPath);
             config.MaxBatchSize = 2;
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
+
+            List<string> d = new List<string> { "person", "bicycle", "car", "motorcycle", "airplane", "bus",
+                "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+                "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack",
+                "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+                "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass",
+                "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot",
+                "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet",
+                "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
+                "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush" };
+
+            Dictionary<int, string> CategoryDict = new Dictionary<int, string>();
+            for (int i = 0; i < d.Count; i++)
+            {
+                CategoryDict[i] = d[i];
+            }
+            config.CategoryDict = CategoryDict;
+            Yolov8DetModel model = new Yolov8DetModel(config);
+            Mat img = Cv2.ImRead(imagePath);
+            
+            Result[] result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            model.ModelInferenceProfiler.PrintAllRecords();
+            List<Mat> resultsMat = new List<Mat>();
+ 
+            var resultImg = Visualize.DrawDetResult(result, img, new VisualizeOptions(1.0f));
+            resultsMat.Add(resultImg);
+            Cv2.ImShow("image" , resultImg);
+        
+
+            Cv2.WaitKey();
+        }
+        public static void RunBatch()
+        {
+            // 模型和测试图片可以前往QQ群(945057948)下载
+            // 将下面的模型路径替换为你自己的模型路径
+            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolov8s_b.engine";
+            // 将下面的图片路径替换为你自己的图片路径
+            string imagePath = @"E:\Text_dataset\YOLOv5\0001.jpg";
+            string imagePath1 = @"E:\Text_dataset\YOLOv5\0002.jpg";
+
+            Yolov8DetConfig config = new Yolov8DetConfig(modelPath);
+            config.MaxBatchSize = 16;
+            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
 
             List<string> d = new List<string> { "person", "bicycle", "car", "motorcycle", "airplane", "bus", 
                 "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", 
@@ -93,21 +139,21 @@ namespace DeploySharp.OpenCvSharp.Demo
             Yolov8DetModel model = new Yolov8DetModel(config);
             Mat img = Cv2.ImRead(imagePath);
             Mat img1 = Cv2.ImRead(imagePath1);
-            List<Mat> images = new List<Mat> { img, img1, img, img1, img, img1, img, img1, img };
+            List<Mat> images = new List<Mat> { img, img1, img, img1, img, img1, img, img1 ,img, img1, img, img1, img, img1 };
             List<Result[]> result = model.PredictBatch(images.OfType<object>().ToList());
             //result = model.Predict(img);
             //result = model.Predict(img);
             //result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
             List<Mat> resultsMat = new List<Mat>();
-            for (int i = 0; i < result.Count; i++) 
-            {
-                var resultImg = Visualize.DrawDetResult(result[i], images[i], new VisualizeOptions(1.0f));
-                resultsMat.Add(resultImg);
-                Cv2.ImShow("image"+i.ToString(), resultImg);
-            }
+            //for (int i = 0; i < result.Count; i++) 
+            //{
+            //    var resultImg = Visualize.DrawDetResult(result[i], images[i], new VisualizeOptions(1.0f));
+            //    resultsMat.Add(resultImg);
+            //    Cv2.ImShow("image"+i.ToString(), resultImg);
+            //}
 
-            Cv2.WaitKey();
+            //Cv2.WaitKey();
         }
     }
 }
