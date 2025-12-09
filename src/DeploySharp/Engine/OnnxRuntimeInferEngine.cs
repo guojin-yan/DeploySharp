@@ -277,15 +277,16 @@ namespace DeploySharp.Engine
                 inputNodeTypes.Add(input.Value.ElementType);
                 var shape = input.Value.Dimensions;
 
+                bool dynamicFlag = false;
                 foreach (var dim in shape) 
                 {
                     if(dim <= 0)
                     {
-                        config.DynamicInput = true;
+                        dynamicFlag = true;
                         break;
                     }
                 }
-                if (!config.DynamicInput)
+                if (!dynamicFlag)
                 {
                    
                     config.InputSizes.Add(shape);
@@ -362,17 +363,18 @@ namespace DeploySharp.Engine
                 config.OutputNames.Add(name);
                 outputNodeTypes.Add(output.Value.ElementType);
                 var shape = output.Value.Dimensions;
+                bool dynamicFlag = false;
                 foreach (var dim in shape)
                 {
                     if (dim <= 0)
                     {
-                        config.DynamicInput = true;
+                        dynamicFlag = true;
                         break;
                     }
                 }
-                if (!config.DynamicInput)
+                if (!dynamicFlag)
                 {
-                    config.InputSizes.Add(shape);
+                    config.OutputSizes.Add(shape);
                     MyLogger.Log.Debug($"模型输入节点: {name}, 类型: {output.Value.ElementType.ToString()}, 形状: [{string.Join(",", shape)}]");
                     config.OutputShapeType = config.OutputShapeType > IOShapeType.StaticShape ? config.OutputShapeType : IOShapeType.StaticShape;
                 }

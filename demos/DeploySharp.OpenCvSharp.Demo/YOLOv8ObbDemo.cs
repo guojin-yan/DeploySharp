@@ -71,7 +71,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             string imagePath = @"E:\Model\upan_test\1.jpg";
 
             Yolov8ObbConfig config = new Yolov8ObbConfig(modelPath);
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             Yolov8ObbModel model = new Yolov8ObbModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);

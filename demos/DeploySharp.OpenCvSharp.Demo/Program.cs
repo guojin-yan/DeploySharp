@@ -63,11 +63,11 @@ namespace DeploySharp.OpenCvSharp.Demo
             //for(int i = 0; i < 1; i++)
             //{
             //YOLOv8DetDemo.Run();
-            YOLOv8DetDemo.RunBatch();
+            //YOLOv8DetDemo.RunBatch();
             //}
 
             //YOLOv8SegDemo.Run();
-            //YOLOv8ObbDemo.Run();
+            YOLOv8ObbDemo.Run();
             //YOLOv8PoseDemo.Run();
             //DEIMv2DetDemo.Run();
             //IFDETRDetDemo.Run();
