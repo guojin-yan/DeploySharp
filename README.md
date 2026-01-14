@@ -52,23 +52,32 @@ Licensed under **Apache License 2.0**. Future updates will expand TensorRT suppo
 
 |  Model Name  |       Model Type        | OpenVINO | ONNX Runtime | TensorRT |
 | :----------: | :---------------------: | :------: | :----------: | :------: |
-|  **YOLOv5**  |        Detection        |    ✅     |      ✅       |  ing...  |
-|  **YOLOv5**  |      Segmentation       |    ✅     |      ✅       |  ing...  |
-|  **YOLOv6**  |        Detection        |    ✅     |      ✅       |  ing...  |
-|  **YOLOv7**  |        Detection        |    ✅     |      ✅       |  ing...  |
-|  **YOLOv8**  |        Detection        |    ✅     |      ✅       |  ing...  |
-|  **YOLOv8**  |      Segmentation       |    ✅     |      ✅       |  ing...  |
-|  **YOLOv8**  |          Pose           |    ✅     |      ✅       |  ing...  |
-|  **YOLOv8**  | Oriented Bounding Boxes |    ✅     |      ✅       |  ing...  |
-|  **YOLOv9**  |        Detection        |    ✅     |      ✅       |  ing...  |
-|  **YOLOv9**  |      Segmentation       |    ✅     |      ✅       |  ing...  |
-| **YOLOv10**  |        Detection        |    ✅     |      ✅       |  ing...  |
-| **YOLOv11**  |        Detection        |    ✅     |      ✅       |  ing...  |
-| **YOLOv11**  |      Segmentation       |    ✅     |      ✅       |  ing...  |
-| **YOLOv11**  |          Pose           |    ✅     |      ✅       |  ing...  |
-| **YOLOv11**  | Oriented Bounding Boxes |    ✅     |      ✅       |  ing...  |
-| **YOLOv12**  |        Detection        |    ✅     |      ✅       |  ing...  |
-| **Anomalib** |      Segmentation       |    ✅     |      ✅       |  ing...  |
+|  **YOLOv5**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLOv5**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+|  **YOLOv6**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLOv7**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLOv8**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLOv8**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+|  **YOLOv8**  |          Pose           |    ✅     |      ✅       |    ✅     |
+|  **YOLOv8**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
+|  **YOLOv9**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLOv9**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+| **YOLOv10**  |        Detection        |    ✅     |      ✅       |    ✅     |
+| **YOLOv11**  |        Detection        |    ✅     |      ✅       |    ✅     |
+| **YOLOv11**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+| **YOLOv11**  |          Pose           |    ✅     |      ✅       |    ✅     |
+| **YOLOv11**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
+| **YOLOv12**  |        Detection        |    ✅     |      ✅       |    ✅     |
+| **Anomalib** |      Segmentation       |    ✅     |      ✅       |    ✅     |
+| **PP-YOLOE** |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **DEIMv2**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **RFDETR**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **RFDETR**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+|  **RTDETR**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |          Pose           |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
 
 
 # <img title="NuGet" src="https://s2.loli.net/2023/08/08/jE6BHu59L4WXQFg.png" alt="" width="40">NuGet Package
