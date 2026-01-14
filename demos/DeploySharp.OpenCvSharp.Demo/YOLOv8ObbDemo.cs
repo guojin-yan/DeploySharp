@@ -60,7 +60,7 @@ using Size = OpenCvSharp.Size;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class YOLOv8ObbDemo
+    public class Yolov8ObbDemo
     {
         public static void Run()
         {

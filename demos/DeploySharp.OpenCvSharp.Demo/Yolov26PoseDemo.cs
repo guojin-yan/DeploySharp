@@ -59,19 +59,19 @@ using System.Net.Http.Headers;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class Yolov8PoseDemo
+    public class Yolov26PoseDemo
     {
         public static void Run()
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\Yolo\yolov8s-pose.onnx";
+            string modelPath = @"E:\Model\yolov28\yolo26s-pose.onnx";
             // 将下面的图片路径替换为你自己的图片路径
             string imagePath = @"E:\Data\image\demo_9.jpg";
 
-            Yolov8PoseConfig config = new Yolov8PoseConfig(modelPath);
+            Yolov26PoseConfig config = new Yolov26PoseConfig(modelPath);
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            Yolov8PoseModel model = new Yolov8PoseModel(config);
+            Yolov26PoseModel model = new Yolov26PoseModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
             result = model.Predict(img);

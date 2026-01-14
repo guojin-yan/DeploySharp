@@ -15,7 +15,7 @@
 //  【功能简介】
 //  1. 支持 OpenVINO、ONNX Runtime、TensorRT 等主流模型格式部署。
 //  2. 支持目标检测、图像分割、关键点检测等多种任务。
-//  3. 支持 YOLOv5-v12全系列模型部署，同时支持更多其它模型部署。
+//  3. 支持 Yolov5-v12全系列模型部署，同时支持更多其它模型部署。
 //  4. 支持 C# .NET Framework 4.8 、.NET 6/7/8/9 桌面端和服务器端部署。
 //  5. 支持 ImageSharp 和 OpenCvSharp 两大图像处理库。
 //  6. 支持单张图片和批量图片多种推理方式。
@@ -59,21 +59,26 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             Console.WriteLine("Hello, World!");
             //AnomalibSegDemos.Run();
-            //YOLOv5DetDemo.Run();
+            //Yolov5DetDemo.Run();
             //for(int i = 0; i < 1; i++)
             //{
-            //YOLOv8DetDemo.Run();
-            //YOLOv8DetDemo.RunBatch();
+            //Yolov8DetDemo.Run();
+            //Yolov8DetDemo.RunBatch();
             //}
 
-            //YOLOv8SegDemo.Run();
-            YOLOv8ObbDemo.Run();
-            //YOLOv8PoseDemo.Run();
+            //Yolov8SegDemo.Run();
+            //Yolov8ObbDemo.Run();
+            //Yolov8PoseDemo.Run();
             //DEIMv2DetDemo.Run();
             //IFDETRDetDemo.Run();
             //PPYoloeDetDemo.Run();
             //RTDETRDetDemo.Run();
             //RFDETRSegDemo.Run();
+
+            Yolov26DetDemo.Run();
+            //Yolov26ObbDemo.Run();
+            //Yolov26SegDemo.Run();
+            //Yolov26PoseDemo.Run();
         }
     }
 }

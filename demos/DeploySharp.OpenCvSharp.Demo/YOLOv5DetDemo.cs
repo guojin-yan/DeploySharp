@@ -59,7 +59,7 @@ using System.Net.Http.Headers;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class YOLOv5DetDemo
+    public class Yolov5DetDemo
     {
         public static void Run()
         {

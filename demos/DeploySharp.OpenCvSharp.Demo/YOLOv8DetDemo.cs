@@ -59,20 +59,19 @@ using System.Net.Http.Headers;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class YOLOv8DetDemo
+    public class Yolov8DetDemo
     {
         public static void Run()
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolov8s.engine";
+            string modelPath = @"E:\Model\yolo\yolo11s.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Text_dataset\YOLOv5\0001.jpg";
-            string imagePath1 = @"E:\Data\image\demo_2.jpg";
+            string imagePath = @"E:\Data\image\bus.jpg";
 
             Yolov8DetConfig config = new Yolov8DetConfig(modelPath);
             config.MaxBatchSize = 2;
-            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
+            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
 
             List<string> d = new List<string> { "person", "bicycle", "car", "motorcycle", "airplane", "bus",
                 "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",

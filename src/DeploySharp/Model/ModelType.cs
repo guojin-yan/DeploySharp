@@ -156,6 +156,32 @@ namespace DeploySharp.Model
         /// YOLOv13目标检测模型
         /// </summary>
         YOLOv13Det,
+
+        // YOLOv26 Family
+        /// <summary>
+        /// YOLOv26 Object Detection model
+        /// YOLOv26目标检测模型
+        /// </summary>
+        YOLOv26Det,
+
+        /// <summary>
+        /// YOLOv26 Instance Segmentation model
+        /// YOLOv26实例分割模型
+        /// </summary>
+        YOLOv26Seg,
+
+        /// <summary>
+        /// YOLOv26 Oriented Bounding Box model
+        /// YOLOv26旋转框检测模型
+        /// </summary>
+        YOLOv26Obb,
+
+        /// <summary>
+        /// YOLOv26 Human Pose Estimation model
+        /// YOLOv26人体姿态估计模型
+        /// </summary>
+        YOLOv26Pose,
+
         #endregion
 
         #region Special-Purpose Models

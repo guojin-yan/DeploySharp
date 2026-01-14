@@ -49,39 +49,45 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
-using OpenCvSharp;
-using System.Diagnostics;
-using DeploySharp.Model;
+
+using DeploySharp;
 using DeploySharp.Data;
 using DeploySharp.Engine;
-using DeploySharp;
+using DeploySharp.Model;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
-namespace DeploySharp.OpenCvSharp.Demo
+
+namespace DeploySharp.ImageSharp.Demo
 {
-    public class Yolov8PoseDemo
+    public class Yolov26ObbDemo
     {
         public static void Run()
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\Yolo\yolov8s-pose.onnx";
+            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolo26s-obb.engine";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\demo_9.jpg";
+            string imagePath = @"E:\Data\image\plane.png";
 
-            Yolov8PoseConfig config = new Yolov8PoseConfig(modelPath);
-            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            Yolov8PoseModel model = new Yolov8PoseModel(config);
-            Mat img = Cv2.ImRead(imagePath);
-            var result = model.Predict(img);
+            Yolov26ObbConfig config = new Yolov26ObbConfig(modelPath);
+            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
+            Yolov26ObbModel model = new Yolov26ObbModel(config);
+            var img = Image.Load(imagePath);
+
+
+            ObbResult[] result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
-            result = model.Predict(img);
-            Console.WriteLine(result[0].ToString());
             model.ModelInferenceProfiler.PrintAllRecords();
-            var resultImg = Visualize.DrawPoses(result, img, new VisualizeOptions(1.0f));
-            Cv2.ImShow("image", resultImg);
-            Cv2.WaitKey();
+            List<Image<Rgb24>> resultsMat = new List<Image<Rgb24>>();
+
+            var resultImg = Visualize.DrawObbResult(result, (Image<Rgb24>)img, new VisualizeOptions(1.0f));
+
+            resultImg.Save(@$"./result_{config.ModelType}.jpg");
+
         }
     }
 }

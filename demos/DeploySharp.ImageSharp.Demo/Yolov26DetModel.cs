@@ -49,39 +49,65 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
-using OpenCvSharp;
+
 using System.Diagnostics;
 using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp;
 using System.Net.Http.Headers;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
-namespace DeploySharp.OpenCvSharp.Demo
+namespace DeploySharp.ImageSharp.Demo
 {
-    public class Yolov8PoseDemo
+    public class YOLOv26DetDemo
     {
         public static void Run()
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\Yolo\yolov8s-pose.onnx";
+            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolo26s.engine";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\demo_9.jpg";
+            string imagePath = @"E:\Data\image\bus.jpg";
 
-            Yolov8PoseConfig config = new Yolov8PoseConfig(modelPath);
-            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            Yolov8PoseModel model = new Yolov8PoseModel(config);
-            Mat img = Cv2.ImRead(imagePath);
-            var result = model.Predict(img);
+
+            Yolov26DetConfig config = new Yolov26DetConfig(modelPath);
+            config.MaxBatchSize = 2;
+            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
+
+            List<string> d = new List<string> { "person", "bicycle", "car", "motorcycle", "airplane", "bus",
+                "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+                "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack",
+                "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+                "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass",
+                "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot",
+                "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet",
+                "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
+                "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush" };
+
+            Dictionary<int, string> CategoryDict = new Dictionary<int, string>();
+            for (int i = 0; i < d.Count; i++)
+            {
+                CategoryDict[i] = d[i];
+            }
+            config.CategoryDict = CategoryDict;
+            Yolov26DetModel model = new Yolov26DetModel(config);
+            var img = Image.Load(imagePath);
+
+
+            DetResult[] result = model.Predict(img);
             result = model.Predict(img);
             result = model.Predict(img);
-            result = model.Predict(img);
-            Console.WriteLine(result[0].ToString());
             model.ModelInferenceProfiler.PrintAllRecords();
-            var resultImg = Visualize.DrawPoses(result, img, new VisualizeOptions(1.0f));
-            Cv2.ImShow("image", resultImg);
-            Cv2.WaitKey();
+            List<Image<Rgb24>> resultsMat = new List<Image<Rgb24>>();
+
+            var resultImg = Visualize.DrawDetResult(result, (Image<Rgb24>)img, new VisualizeOptions(1.0f));
+
+            resultImg.Save(@$"./result_{config.ModelType}.jpg");
+
+
+
         }
     }
 }

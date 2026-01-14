@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.runtime.win-x64.cuda11" Version="0.0.5" />
     <PackageReference Include="OpenVINO.runtime.win" Version="2025.1.0.1" />
   </ItemGroup>
   <ItemGroup>
