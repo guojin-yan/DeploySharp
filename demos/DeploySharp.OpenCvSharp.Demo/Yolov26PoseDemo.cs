@@ -50,12 +50,11 @@
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
 using OpenCvSharp;
-using System.Diagnostics;
 using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp;
-using System.Net.Http.Headers;
+
 
 namespace DeploySharp.OpenCvSharp.Demo
 {

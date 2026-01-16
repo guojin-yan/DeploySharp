@@ -75,9 +75,9 @@ namespace DeploySharp.OpenCvSharp.Demo
             //RTDETRDetDemo.Run();
             //RFDETRSegDemo.Run();
 
-            Yolov26DetDemo.Run();
+            //Yolov26DetDemo.Run();
             //Yolov26ObbDemo.Run();
-            //Yolov26SegDemo.Run();
+            Yolov26SegDemo.Run();
             //Yolov26PoseDemo.Run();
         }
     }

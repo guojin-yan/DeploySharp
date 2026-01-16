@@ -50,13 +50,11 @@
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
 using OpenCvSharp;
-using System.Diagnostics;
 using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp;
-using System.Net.Http.Headers;
-using Size = OpenCvSharp.Size;
+
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
@@ -66,18 +64,19 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\yolov28\yolo26s-obb.onnx";
+            //string modelPath = @"E:\Model\yolov28\yolo26s-obb.onnx";
+            string modelPath = @"D:\Program Files\TensorRT-10.13.0.35-cu11\bin\yolo26s-obb.engine";
             // 将下面的图片路径替换为你自己的图片路径
             string imagePath = @"E:\Data\image\plane.png";
 
             Yolov26ObbConfig config = new Yolov26ObbConfig(modelPath);
-            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetInferenceBackend(InferenceBackend.TensorRT);
             Yolov26ObbModel model = new Yolov26ObbModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
-            //result = model.Predict(img);
-            //result = model.Predict(img);
-            //result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
             var resultImg = Visualize.DrawObbResult(result, img, new VisualizeOptions(1.0f));
             //Cv2.Resize(resultImg, resultImg, new Size(resultImg.Width / 4, resultImg.Height / 4));

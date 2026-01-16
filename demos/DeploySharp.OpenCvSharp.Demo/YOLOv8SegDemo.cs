@@ -59,7 +59,7 @@ using OpenCvSharp;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    public class YOLOv8SegDemo
+    public class Yolov8SegDemo
     {
         public static void Run()
         {

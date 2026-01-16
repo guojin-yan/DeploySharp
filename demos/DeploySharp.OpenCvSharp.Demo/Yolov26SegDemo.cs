@@ -50,13 +50,10 @@
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
 using OpenCvSharp;
-using System.Diagnostics;
 using DeploySharp.Model;
 using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp;
-using System.Net.Http.Headers;
-using Size = OpenCvSharp.Size;
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
@@ -68,19 +65,22 @@ namespace DeploySharp.OpenCvSharp.Demo
             // 将下面的模型路径替换为你自己的模型路径
             string modelPath = @"E:\Model\yolov28\yolo26s-seg.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\bus.jpg";
+            //string imagePath = @"E:\Data\image\bus.jpg";
+            string imagePath = @"E:\Data\image\demo_2.jpg";
 
             Yolov26SegConfig config = new Yolov26SegConfig(modelPath);
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetDeviceType(DeviceType.GPU0);
+            config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.DML);
             Yolov26SegModel model = new Yolov26SegModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
-            //result = model.Predict(img);
-            //result = model.Predict(img);
-            //result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
+            Cv2.ImShow("imageq", result[0].Mask.ToMat()); 
             var resultImg = Visualize.DrawSegResult(result, img, new VisualizeOptions(1.0f));
-            //Cv2.Resize(resultImg, resultImg, new Size(resultImg.Width / 4, resultImg.Height / 4));
             Cv2.ImShow("image", resultImg);
             Cv2.WaitKey();
         }
