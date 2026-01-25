@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8B06B6A-ACAC-49D7-A658-9E019B6DE3AE}"
 EndProject
@@ -20,6 +20,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp.Demo", "demos\DeploySharp.OpenCvSharp.Demo\DeploySharp.OpenCvSharp.Demo.csproj", "{CC71CB64-D55C-4BED-8599-5073F43C479A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ImageSharp.Demo", "demos\DeploySharp.ImageSharp.Demo\DeploySharp.ImageSharp.Demo.csproj", "{986F2626-B30E-443C-A5FE-99D12702C99F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp.Demo.NetFramework", "demos\DeploySharp.OpenCvSharp.Demo.NetFramework\DeploySharp.OpenCvSharp.Demo.NetFramework.csproj", "{56D67A34-2046-4A54-8183-4F10ED32C9E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp.PaddleOcr.Demo", "demos\DeploySharp.OpenCvSharp.PaddleOcr.Demo\DeploySharp.OpenCvSharp.PaddleOcr.Demo.csproj", "{629F6CB2-D606-49F9-8588-B912D5A69851}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +59,14 @@ Global
 		{986F2626-B30E-443C-A5FE-99D12702C99F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{986F2626-B30E-443C-A5FE-99D12702C99F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{986F2626-B30E-443C-A5FE-99D12702C99F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56D67A34-2046-4A54-8183-4F10ED32C9E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56D67A34-2046-4A54-8183-4F10ED32C9E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56D67A34-2046-4A54-8183-4F10ED32C9E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56D67A34-2046-4A54-8183-4F10ED32C9E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{629F6CB2-D606-49F9-8588-B912D5A69851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{629F6CB2-D606-49F9-8588-B912D5A69851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{629F6CB2-D606-49F9-8588-B912D5A69851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{629F6CB2-D606-49F9-8588-B912D5A69851}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +79,10 @@ Global
 		{936CB93B-680D-45D3-B2B2-C1F087C93309} = {AB66CDF5-7A91-4B92-AF92-E65AECF3C6D5}
 		{CC71CB64-D55C-4BED-8599-5073F43C479A} = {AB66CDF5-7A91-4B92-AF92-E65AECF3C6D5}
 		{986F2626-B30E-443C-A5FE-99D12702C99F} = {AB66CDF5-7A91-4B92-AF92-E65AECF3C6D5}
+		{56D67A34-2046-4A54-8183-4F10ED32C9E0} = {AB66CDF5-7A91-4B92-AF92-E65AECF3C6D5}
+		{629F6CB2-D606-49F9-8588-B912D5A69851} = {AB66CDF5-7A91-4B92-AF92-E65AECF3C6D5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C346CBE9-0B35-43D3-BA91-1D98BF868E9F}
 	EndGlobalSection
 EndGlobal
