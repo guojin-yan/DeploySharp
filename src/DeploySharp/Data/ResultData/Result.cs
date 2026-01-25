@@ -170,7 +170,11 @@ namespace DeploySharp.Data
         /// Anomaly segmentation results
         /// 异常分割结果
         /// </summary>
-        AnomalySegmentation
+        AnomalySegmentation,
+
+        TextRecResult,
+ 
+        OcrResult
     }
 
 }

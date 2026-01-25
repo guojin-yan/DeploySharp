@@ -85,7 +85,13 @@ namespace DeploySharp.Data
         /// 
         /// 适用于分类任务，其中保留中心内容很重要。
         /// </remarks>
-        Crop
+        Crop,
+
+        /// <summary>
+        /// CRNN 专用：保持高度，宽度根据 wh_ratio 动态计算，不足部分在右侧填充灰色(127)。
+        /// 常用于 OCR 文字识别预处理。
+        /// </summary>
+        CrnnPad
     }
 
 }

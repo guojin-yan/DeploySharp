@@ -184,6 +184,8 @@ namespace DeploySharp.Data
             pt[3].Y = 2 * Center.Y - pt[1].Y;
 
             return pt;
+
+
         }
 
         /// <summary>

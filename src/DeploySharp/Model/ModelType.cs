@@ -202,6 +202,10 @@ namespace DeploySharp.Model
         RTDETRDet,
         PPYOLOETDet,
 
+        PaddleOcrDet,
+        PaddleOcrCls,
+        PaddleOcrRec,
+
         #endregion
     }
 }

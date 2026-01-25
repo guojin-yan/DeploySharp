@@ -685,11 +685,16 @@ namespace DeploySharp.Engine
                     }
                     if (config.InputShapeType >= IOShapeType.PartiallyDynamicShape)
                     {
-                        if (config.InputSizes.Count != (int)model.get_inputs_size())
+                        if (!config.DynamicByInput)
                         {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the input shape.");
+                            if (config.InputSizes.Count != (int)model.get_inputs_size())
+                            {
+                                throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the input shape.");
+                            }
                         }
                     }
+
+
 
                     MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {input.get_element_type()}");
                 }
@@ -796,10 +801,14 @@ namespace DeploySharp.Engine
                     }
                     if (config.OutputShapeType >= IOShapeType.PartiallyDynamicShape)
                     {
-                        if (config.OutputSizes.Count != (int)model.get_inputs_size())
+                        if (!config.DynamicByInput)
                         {
-                            throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the output shape.");
+                            if (config.OutputSizes.Count != (int)model.get_inputs_size())
+                            {
+                                throw new DeploySharpException("The model attribute shape is fully dynamic and requires setting the output shape.");
+                            }
                         }
+         
                     }
 
                     MyLogger.Log.Debug($"Dynamic input node: {name}, Type: {output.get_element_type()}");

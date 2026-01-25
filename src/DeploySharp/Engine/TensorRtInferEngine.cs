@@ -9,6 +9,7 @@ using Microsoft.ML.OnnxRuntime;
 using OpenVinoSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -72,7 +73,6 @@ namespace DeploySharp.Engine
         /// </summary>
         private IConfig modelConfig;
 
-        List<object> dataMems;
         /// <summary>
         /// Initializes a new instance of TensorRt inference engine
         /// 初始化TensorRt推理引擎
@@ -85,7 +85,83 @@ namespace DeploySharp.Engine
         }
         public void Dispose()
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < modelConfig.MaxInferRequests; ++i)
+            {
+             
+                for (int j = 0; j < modelConfig.InputSizes.Count; ++j)
+                {
+                    TrtDataType dataType = inputNodeTypes[j];
+
+                    if (dataType == TrtDataType.kFLOAT)
+                    {
+                        (inputCuda1DMemorys[i][j] as Cuda1DMemory<float>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kINT32)
+                    {
+                        (inputCuda1DMemorys[i][j] as Cuda1DMemory<int>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kINT8)
+                    {
+                        (inputCuda1DMemorys[i][j] as Cuda1DMemory<sbyte>).Dispose();
+
+                    }
+                    else if (dataType == TrtDataType.kINT64)
+                    {
+                        (inputCuda1DMemorys[i][j] as Cuda1DMemory<long>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kBOOL)
+                    {
+                        (inputCuda1DMemorys[i][j] as Cuda1DMemory<byte>).Dispose();
+                    }
+                    else
+                    {
+                        throw new DeploySharpException($"Unsupported input data type: {dataType.ToString()}");
+                    }
+
+                }
+
+
+
+                for (int j = 0; j < modelConfig.OutputSizes.Count; ++j)
+                {
+
+                    TrtDataType dataType = outputNodeTypes[j];
+                    if (dataType == TrtDataType.kFLOAT)
+                    {
+                        (outputCuda1DMemorys[i][j] as Cuda1DMemory<float>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kINT32)
+                    {
+                        (outputCuda1DMemorys[i][j] as Cuda1DMemory<int>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kINT8)
+                    {
+                        (outputCuda1DMemorys[i][j] as Cuda1DMemory<sbyte>).Dispose();
+
+                    }
+                    else if (dataType == TrtDataType.kINT64)
+                    {
+                        (outputCuda1DMemorys[i][j] as Cuda1DMemory<long>).Dispose();
+                    }
+                    else if (dataType == TrtDataType.kBOOL)
+                    {
+                        (outputCuda1DMemorys[i][j] as Cuda1DMemory<byte>).Dispose();
+                    }
+                    else
+                    {
+                        throw new DeploySharpException($"Unsupported input data type: {dataType.ToString()}");
+                    }
+
+                }
+                //outputCuda1DMemorys.Add(outputCuda1DMemory);
+            }
+
+            for (int i = 0; i < modelConfig.MaxInferRequests; ++i)
+            {
+                executionContexts[i].Second.Dispose();
+            }
+
+            cudaEngine.Dispose();
         }
 
         public void LoadModel(ref IConfig config)
@@ -131,15 +207,16 @@ namespace DeploySharp.Engine
                 foreach (var input in inputSizes)
                 {
 
+                    bool isDynamic = false; 
                     foreach (var dim in input)
                     {
                         if (dim <= 0)
                         {
-                            config.DynamicInput = true;
+                            isDynamic = true;
                             break;
                         }
                     }
-                    if (!config.DynamicInput)
+                    if (!isDynamic)
                     {
                         config.InputSizes.Add(input);
                         config.InputShapeType = config.InputShapeType > IOShapeType.StaticShape ? config.InputShapeType : IOShapeType.StaticShape;
@@ -206,16 +283,16 @@ namespace DeploySharp.Engine
 
                 foreach (var outnput in outputSizes)
                 {
-
+                    bool isDynamic = false;
                     foreach (var dim in outnput)
                     {
                         if (dim <= 0)
                         {
-                            config.DynamicInput = true;
+                            isDynamic = true;
                             break;
                         }
                     }
-                    if (!config.DynamicInput)
+                    if (!isDynamic)
                     {
                         config.OutputSizes.Add(outnput);
                         config.OutputShapeType = config.OutputShapeType > IOShapeType.StaticShape ? config.OutputShapeType : IOShapeType.StaticShape;
@@ -436,13 +513,24 @@ namespace DeploySharp.Engine
             }
             try
             {
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
                 // Step 1: Prepare input tensors
                 SetInputTensors(executionContexts[availableRequestIndex].Second, availableRequestIndex, input);
 
+                //sw.Stop();
+                //MyLogger.Log.Error($"Input tensor preparation time: {sw.ElapsedMilliseconds} ms");
+                //sw.Restart();
                 // Step 2: Execute inference
                 ExecuteInference(executionContexts[availableRequestIndex].Second, availableRequestIndex);
-
+                //sw.Stop();
+                //MyLogger.Log.Error($"Inference execution time: {sw.ElapsedMilliseconds} ms");
+                //sw.Restart();
                 // Step 3: Process output tensors
+                //DataTensor datas =  ProcessOutputs(availableRequestIndex);
+                //sw.Stop();
+                //MyLogger.Log.Error($"Output tensor processing time: {sw.ElapsedMilliseconds} ms");
+                //return datas;
                 return ProcessOutputs(availableRequestIndex);
             }
             finally
@@ -526,14 +614,15 @@ namespace DeploySharp.Engine
 
             for (int i = 0; i < OutputNodeCount; i++)
             {
-                int[] shape = DimsToArray(executionContexts[availableRequestIndex].Second.getTensorShape(modelConfig.OutputNames[availableRequestIndex]));
-
+                Dims dims = executionContexts[availableRequestIndex].Second.getTensorShape(modelConfig.OutputNames[availableRequestIndex]);
+                int[] shape = DimsToArray(dims);
+                long len = dims.GetElementProduct();
                 if (modelConfig.InputShapeType != IOShapeType.StaticShape)
                     modelConfig.OutputSizes.Add(shape);
                 switch (outputNodeTypes[i])
                 {
                     case TrtDataType.kFLOAT:
-                        float[] floatData = new float[outputLengths[i]];
+                        float[] floatData = new float[len];
                         (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<float>).copyToHostAsync(floatData, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,

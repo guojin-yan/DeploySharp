@@ -199,7 +199,7 @@ namespace DeploySharp.Model
             var results = new List<Result[]>();
             var timer = System.Diagnostics.Stopwatch.StartNew();
 
-            if (config.InputShapeType.HasFlag(IOShapeType.StaticShape))
+            if (config.InputShapeType == IOShapeType.StaticShape)
             {
                 for (int i = 0; i < imgs.Count; i++)
                 {
@@ -215,21 +215,21 @@ namespace DeploySharp.Model
                     }
                 }
             }
-            else if (config.InputShapeType.HasFlag(IOShapeType.BatchDynamicShape))
+            else if (config.InputShapeType == IOShapeType.BatchDynamicShape)
             {
                 try
                 {
                     predictorTimer.Reset();
-                    for (int beginBatch = 0; beginBatch < imgs.Count; beginBatch += config.MaxBatchSize) 
+                    for (int beginBatch = 0; beginBatch < imgs.Count; beginBatch += config.MaxBatchSize)
                     {
                         predictorTimer.StartPreprocess();
                         int nowBatch = Math.Min(config.MaxBatchSize, imgs.Count - beginBatch);
-                        for (int i = 0; i < config.InputSizes.Count; ++i) 
+                        for (int i = 0; i < config.InputSizes.Count; ++i)
                         {
                             config.InputSizes[i][0] = nowBatch;
                         }
                         config.InferBatch = nowBatch;
-                        
+
                         var batchImgs = imgs.GetRange(beginBatch, nowBatch);
                         var inputTensor = PreprocessBatch(batchImgs, out var imageAdjustmentParams);
                         predictorTimer.StartBatchInference();
@@ -248,9 +248,32 @@ namespace DeploySharp.Model
                 }
 
             }
+            else
+            {
+                try
+                {
+                    predictorTimer.Reset();
+
+           
+                    var inputTensor = PreprocessBatch(imgs, out var imageAdjustmentParams);
+                    predictorTimer.StartBatchInference();
+                    var outputTensor = engine.Predict(inputTensor);
+                    predictorTimer.StartBatchPostprocess();
+                    results.AddRange(PostprocessBatch(outputTensor, imageAdjustmentParams));
+                    predictorTimer.StopBatch();
+                    
+                    ModelInferenceProfiler.Record(predictorTimer.GetBatchRecord());
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.Log.Error("[Batch Prediction] Failed processing batch", ex);
+                    MyLogger.Log.Error("[批量预测] 处理批次失败", ex);
+                    throw;
+                }
+            }
 
 
-            MyLogger.Log.Info($"[Batch Prediction] Completed {imgs.Count} items in {timer.ElapsedMilliseconds}ms");
+                MyLogger.Log.Info($"[Batch Prediction] Completed {imgs.Count} items in {timer.ElapsedMilliseconds}ms");
             MyLogger.Log.Info($"[批量预测] 完成 {imgs.Count} 项，耗时 {timer.ElapsedMilliseconds}ms");
             return results;
         }

@@ -64,29 +64,8 @@ namespace DeploySharp.Model
         /// </value>
         public string ModelPath { get; set; }
 
-        /// <summary>
-        /// Whether the model expects dynamic input shapes
-        /// 模型是否接受动态输入形状
-        /// </summary>
-        /// <value>
-        /// True for models that can handle varying input dimensions.
-        /// Default: false.
-        /// 对于可以处理不同输入维度的模型为true。
-        /// 默认值：false。
-        /// </value>
-        public bool DynamicInput { get; set; } = false;
-
-        /// <summary>
-        /// Whether the model produces dynamic output shapes
-        /// 模型是否产生动态输出形状
-        /// </summary>
-        /// <value>
-        /// True for models with variable-sized outputs.
-        /// Default: false.
-        /// 对于输出大小可变的模型为true。
-        /// 默认值：false。
-        /// </value>
-        public bool DynamicOutput { get; set; } = false;
+        
+        public bool DynamicByInput { get; set; } = false;
 
         public IOShapeType InputShapeType { get; set; } = IOShapeType.NotSet;
         public IOShapeType OutputShapeType { get; set; } = IOShapeType.NotSet;
@@ -204,6 +183,9 @@ namespace DeploySharp.Model
         /// </value>
         public string PrecisionMode { get; set; } = "FP32";
 
+
+
+        protected int maxBatchSize = 8;
         /// <summary>
         /// Maximum batch size capacity
         /// 最大批处理大小
@@ -214,7 +196,17 @@ namespace DeploySharp.Model
         /// 影响内存占用和吞吐量。
         /// 默认值：1。
         /// </value>
-        public int MaxBatchSize { get; set; } = 1;
+        public virtual int MaxBatchSize
+        {
+            get
+            {
+                return maxBatchSize;
+            }
+            set
+            {
+                maxBatchSize = value;
+            }
+        }
 
         /// <summary>
         /// Whether GPU acceleration is enabled

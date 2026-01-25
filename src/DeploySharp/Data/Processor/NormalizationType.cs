@@ -131,7 +131,8 @@ namespace DeploySharp.Data
 
                 [ImageNormalizationType.Scale_Neg1_1] = new NormalizationParams
                 {
-                    MaxPixelValue = 127.5f
+                    Mean = new[] { 0.5f, 0.5f, 0.5f },
+                    Std = new[] { 0.5f, 0.5f, 0.5f }
                 }
             };
 

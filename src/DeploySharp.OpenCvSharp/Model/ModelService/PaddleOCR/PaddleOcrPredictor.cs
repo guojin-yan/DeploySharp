@@ -1,0 +1,371 @@
+﻿//using DeploySharp.Data;
+//using OpenCvSharp;
+//using Org.BouncyCastle.Ocsp;
+//using Org.BouncyCastle.Utilities;
+//using System;
+//using System.Collections.Generic;
+//using System.Diagnostics;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
+
+//namespace DeploySharp.Model
+//{
+//    public class PaddleOcrPredictor : IDisposable
+//    {
+//        public PaddleOCRConfig config;
+
+//        public PPOcrDet ocrDetPredictor;
+//        public PPOcrCls ocrClsPredictor;
+//        public PPOcrRec ocrRecPredictor;
+//        public PaddleOcrPredictor(PaddleOCRConfig config)
+//        {
+//            this.config = config;
+//            ocrDetPredictor = new PPOcrDet(config.DetConfig);
+//            ocrClsPredictor = new PPOcrCls(config.ClsConfig);
+//            ocrRecPredictor = new PPOcrRec(config.RecConfig);
+//        }
+
+//        public void Dispose()
+//        {
+//            ocrDetPredictor.Dispose();
+//            ocrClsPredictor.Dispose();
+//            ocrRecPredictor.Dispose();
+
+//        }
+
+//        public OcrResult Predict(Mat img, bool useDet = true, bool useCls = false, bool useRec = true, int inferBatch = 8)
+//        {
+//            Stopwatch sw = Stopwatch.StartNew();
+//            OcrResult ocrResult = new OcrResult();
+
+//            // 1. 检测阶段
+//            if (useDet)
+//            {
+//                ObbResult[] detResult = ocrDetPredictor.Predict(img);
+//                sw.Stop();
+//                Console.WriteLine($"Detection Time: {sw.ElapsedMilliseconds} ms");
+//                sw.Restart();
+
+//                if (detResult.Length == 0)
+//                {
+//                    return ocrResult;
+//                }
+//                ocrResult.TextAreas = detResult;
+
+//                // 优化：直接初始化数组大小
+//                var img_list = new Mat[detResult.Length];
+
+//                // 并行裁剪：保持并行，但注意 Mat 在多线程下的操作，OpenCV通常支持读取但写入需注意
+//                // 这里每个线程写独立的数组索引，是线程安全的
+//                Parallel.For(0, detResult.Length, r =>
+//                {
+//                    // 假设 GetRotateCropImageByRect 返回的是新分配的 Mat
+//                    img_list[r] = CvPPOcrDataProcessor.GetRotateCropImageByRect(img, detResult[r].Bounds);
+//                });
+
+//                sw.Stop();
+//                Console.WriteLine($"Crop Time: {sw.ElapsedMilliseconds} ms");
+//                sw.Restart();
+
+//                // 2. 识别阶段
+//                TextRecResult[] textRecResults = new TextRecResult[detResult.Length];
+
+//                // 移除了宽高比排序逻辑，因为对于固定 Batch Size 的推理，
+//                // 排序带来的乱序访问 CPU 缓存的开销可能比收益还大，除非你做了基于宽高比的动态分组。
+//                // 如果不做动态分组，直接顺序处理是最快的。
+
+//                for (int beg_img_no = 0; beg_img_no < detResult.Length; beg_img_no += inferBatch)
+//                {
+//                    int end_img_no = Math.Min(detResult.Length, beg_img_no + inferBatch);
+//                    int currentBatchSize = end_img_no - beg_img_no;
+
+//                    // 优化：使用 List 存储 Batch，但避免 CopyTo
+//                    // 直接将 img_list 中的 Mat 引用加入 batch，不进行深拷贝
+//                    List<Mat> norm_img_batch = new List<Mat>(currentBatchSize);
+//                    for (int ino = beg_img_no; ino < end_img_no; ino++)
+//                    {
+//                        norm_img_batch.Add(img_list[ino]);
+//                    }
+
+//                    Stopwatch sw1 = Stopwatch.StartNew();
+
+//                    // 3. 方向分类
+//                    if (useCls)
+//                    {
+//                        // Cls 内部通常会做预处理，确保它不修改输入 Mat，或者只修改像素数据
+//                        List<Result[]> cls_img_batch = ocrClsPredictor.PredictBatch(norm_img_batch);
+
+//                        for (int i = 0; i < currentBatchSize; i++)
+//                        {
+//                            // 获取结果
+//                            var res = cls_img_batch[i][0];
+//                            // 修正：这里应该旋转 norm_img_batch[i]，也就是 img_list 中对应的引用
+//                            // 这样后续 Rec 才能拿到旋转后的图
+//                            if (res.Id == 1 && res.Confidence > config.ClsConfig.ConfidenceThreshold)
+//                            {
+//                                Cv2.Rotate(norm_img_batch[i], norm_img_batch[i], RotateFlags.Rotate180);
+//                            }
+//                        }
+//                    }
+//                    sw1.Stop();
+//                    Console.WriteLine($"Cls Time: {sw1.ElapsedMilliseconds} ms");
+//                    sw1.Restart();
+
+//                    // 4. 文字识别
+//                    // 传入的 norm_img_batch 中的 Mat 此时可能已经被 Cls 旋转过了
+//                    List<TextRecResult[]> texts = ocrRecPredictor.PredictBatch(norm_img_batch);
+
+//                    sw1.Stop();
+//                    Console.WriteLine($"Rec one Time: {sw1.ElapsedMilliseconds} ms");
+
+//                    // 5. 结果回填
+//                    // 因为移除了排序，索引是线性的，直接回填
+//                    for (int i = 0; i < currentBatchSize; i++)
+//                    {
+//                        textRecResults[beg_img_no + i] = texts[i][0];
+//                    }
+//                }
+
+//                // 手动释放 Crop 出来的 Mat 内存，防止内存泄漏
+//                // 如果 img_list 中的 Mat 被 norm_img_batch 引用并传递到了底层 unsafe 代码，
+//                // 请确保 PredictBatch 不会负责 Dispose 它们。
+//                // 在此调用 Dispose 是安全的，因为我们已经不再需要这些图了。
+//                foreach (var mat in img_list)
+//                {
+//                    mat?.Dispose();
+//                }
+
+//                ocrResult.TextContents = textRecResults;
+//            }
+//            else
+//            {
+//                // 不使用检测时的处理逻辑
+//                // ... (保持原样或类似优化) ...
+//            }
+
+//            sw.Stop();
+//            Console.WriteLine($"Total Rec Time: {sw.ElapsedMilliseconds} ms");
+
+//            return ocrResult;
+//        }
+
+//    }
+//}
+
+
+using DeploySharp.Common;
+using DeploySharp.Data;
+using DeploySharp.Log;
+using DeploySharp.Model;
+using OpenCvSharp;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+namespace DeploySharp.Model
+{
+    /// <summary>
+    /// PaddleOCR 预测器主类
+    /// 负责 OCR 全流程（检测、分类、识别）的编排与调度
+    /// </summary>
+    public class PaddleOcrPredictor : IDisposable
+    {
+        private readonly PaddleOCRConfig _config;
+
+        // 预测器实例
+        private PPOcrDet _ocrDetPredictor;
+        private PPOcrCls _ocrClsPredictor;
+        private PPOcrRec _ocrRecPredictor;
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="config">OCR 配置对象</param>
+        public PaddleOcrPredictor(PaddleOCRConfig config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+
+            // 初始化前校验配置
+            _config.Validate();
+            // 按需初始化预测器
+            if (_config.UseDet) _ocrDetPredictor = new PPOcrDet(_config.DetConfig);
+            if (_config.UseCls) _ocrClsPredictor = new PPOcrCls(_config.ClsConfig);
+            if (_config.UseRec) _ocrRecPredictor = new PPOcrRec(_config.RecConfig);
+        }
+        /// <summary>
+        /// 执行预测（使用配置中的默认设置）
+        /// </summary>
+        public OcrResult Predict(Mat img)
+        {
+            return Predict(img, _config.UseDet, _config.UseCls, _config.UseRec);
+        }
+        /// <summary>
+        /// 执行预测（覆盖部分流程开关，但必须符合逻辑依赖）
+        /// 例如：即使配置了 UseCls=true，也可以强制传 false 关闭
+        /// </summary>
+        public OcrResult Predict(Mat img, bool? useDet = null, bool? useCls = null, bool? useRec = null)
+        {
+            if (img == null || img.Empty()) throw new ArgumentException("输入图像无效");
+            // 解析实际使用的开关，参数优先于配置
+            bool runDet = useDet ?? _config.UseDet;
+            bool runCls = useCls ?? _config.UseCls;
+            bool runRec = useRec ?? _config.UseRec;
+            // 逻辑一致性检查
+            if (!runDet && runCls)
+                throw new InvalidOperationException("无法在未运行检测的情况下运行分类;");
+            var result = new OcrResult();
+            var totalSw = Stopwatch.StartNew();
+            // ---------------------------------------------------------
+            // 模式 A: 完整流程 (Det -> Cls -> Rec)
+            // ---------------------------------------------------------
+            if (runDet)
+            {
+                var detSw = Stopwatch.StartNew();
+
+                // 1. 检测
+                ObbResult[] detResults = _ocrDetPredictor.Predict(img);
+                MyLogger.Log.Info($"Detection Finished. Count: {detResults.Length}, Time: {detSw.ElapsedMilliseconds}ms");
+                if (detResults.Length == 0) return result;
+                result.TextAreas = detResults;
+                // 2. 并行裁剪
+                var cropSw = Stopwatch.StartNew();
+                var croppedMats = CropImages(img, detResults);
+                MyLogger.Log.Info($"Crop Finished. Time: {cropSw.ElapsedMilliseconds}ms");
+                // 3. 批处理分类与识别
+                // 注意：如果配置了 UseCls 但预测时强制不使用，则跳过
+                ProcessRecBatch(croppedMats, out TextRecResult[] textRecResult, runCls && _config.UseCls);
+
+                result.TextContents = textRecResult; // 假设 ObbResult 里有 RecResult 属性，或者你用单独的列表管理
+
+                // 4. 清理裁剪内存
+                ReleaseMats(croppedMats);
+            }
+            // ---------------------------------------------------------
+            // 模式 B: 仅识别模式 (Rec Only / Rec + Cls)
+            // 用于用户已经做好了裁剪，或者只需要识别整张图
+            // ---------------------------------------------------------
+            else if (runRec)
+            {
+                // 将整张图作为一个 Batch 处理
+                var singleImageList = new List<Mat> { img };
+                // 伪造一个 detResults 结构用于回填，或者修改 ProcessRecBatch 接口
+                // 这里假设我们只需要文字内容，不关心位置
+                // 简单处理：直接调用 Rec 预测
+                var recResults = _ocrRecPredictor.PredictBatch(singleImageList);
+                result.TextContents = recResults.SelectMany(r => r).ToArray();
+            }
+            MyLogger.Log.Info($"Total Predict Time: {totalSw.ElapsedMilliseconds}ms");
+            return result;
+        }
+        /// <summary>
+        /// 裁剪图像：使用并行加速，并使用 try-catch 保证单个失败不影响整体
+        /// </summary>
+        private Mat[] CropImages(Mat srcImg, ObbResult[] detResults)
+        {
+            Mat[] croppedMats = new Mat[detResults.Length];
+
+            // 使用 ParallelOptions 限制最大并行度，防止内存爆炸
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.For(0, detResults.Length, parallelOptions, i =>
+            {
+                try
+                {
+                    // 假设 GetRotateCropImageByRect 是线程安全的（不修改共享状态）
+                    croppedMats[i] = CvPPOcrDataProcessor.GetRotateCropImageByRect(srcImg, detResults[i].Bounds);
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.Log.Info($"Crop image at index {i} failed: {ex.Message}");
+                    // 即使失败也分配一个空 Mat 占位，防止后续空引用
+                    croppedMats[i] = new Mat();
+                }
+            });
+            return croppedMats;
+        }
+        /// <summary>
+        /// 批量处理识别与分类
+        /// </summary>
+        private void ProcessRecBatch(Mat[] imgList, out TextRecResult[] results, bool enableCls)
+        {
+            int batchSize = _config.GlobalMaxBatchSize;
+            int imgCount = imgList.Length;
+            results = new TextRecResult[imgCount];
+            for (int beg = 0; beg < imgCount; beg += batchSize)
+            {
+                int end = Math.Min(imgCount, beg + batchSize);
+                int currentBatchSize = end - beg;
+
+                // 准备当前 Batch 的数据
+                var batchMats = new List<Mat>(currentBatchSize);
+                for (int i = beg; i < end; i++) batchMats.Add(imgList[i]);
+                var clsSw = Stopwatch.StartNew();
+                // --- 方向分类 ---
+                if (enableCls && _ocrClsPredictor != null)
+                {
+                    // 假设 PredictBatch 返回 List<Result[]>，Result包含 Label/Score
+                    var clsResults = _ocrClsPredictor.PredictBatch(batchMats);
+                    for (int i = 0; i < currentBatchSize; i++)
+                    {
+                        // 判断是否需要旋转 (假设 Label 1 或 '180' 表示需要旋转)
+                        var res = clsResults[i][0];
+                        if (res.Id == 1 && res.Confidence > _config.ClsConfig.ConfidenceThreshold)
+                        {
+                            Cv2.Rotate(batchMats[i], batchMats[i], RotateFlags.Rotate180);
+                        }
+                    }
+                    MyLogger.Log.Info($"Cls Batch ({beg}-{end}) Time: {clsSw.ElapsedMilliseconds}ms");
+                }
+                var recSw = Stopwatch.StartNew();
+                // --- 文字识别 ---
+                if (_ocrRecPredictor != null)
+                {
+                    var recResults = _ocrRecPredictor.PredictBatch(batchMats);
+                    // 回填结果
+                    for (int i = 0; i < currentBatchSize; i++)
+                    {
+                        // 将识别结果关联到对应的检测结果对象上
+                        // 假设 ObbResult 类有 RecText 和 RecScore 属性
+                        if (recResults[i] != null && recResults[i].Length > 0)
+                        {
+                            results[beg + i] = recResults[i][0];
+                            // detResults[beg + i].Text = recResults[i][0].Str; // 根据实际数据结构调整
+                        }
+                    }
+                    MyLogger.Log.Info($"Rec Batch ({beg}-{end}) Time: {recSw.ElapsedMilliseconds}ms");
+                }
+            }
+        }
+
+        public string PrintTimeProfiling()
+        {
+
+            string msg = "---- Detection ----\n";
+            Console.WriteLine("---- Detection ----");
+            msg += _ocrDetPredictor.ModelInferenceProfiler.PrintAllRecords();
+            msg += "---- Classification ----\n";
+            Console.WriteLine("---- Classification ----");
+            msg += _ocrClsPredictor.ModelInferenceProfiler.PrintAllRecords();
+            msg += "---- Recognition ----\n";
+            Console.WriteLine("---- Recognition ----");
+            msg += _ocrRecPredictor.ModelInferenceProfiler.PrintAllRecords();
+            return msg;
+        }
+
+        private void ReleaseMats(Mat[] mats)
+        {
+            foreach (var mat in mats)
+            {
+                try { mat?.Dispose(); } catch { }
+            }
+        }
+        public void Dispose()
+        {
+            _ocrDetPredictor?.Dispose();
+            _ocrClsPredictor?.Dispose();
+            _ocrRecPredictor?.Dispose();
+            MyLogger.Log.Info("PaddleOcrPredictor Disposed.");
+        }
+    }
+  
+}

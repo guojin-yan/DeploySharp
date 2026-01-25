@@ -323,6 +323,51 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
+        /// 将基于预处理图像（缩放、填充后）的 RotatedRect 映射回原图坐标系。
+        /// </summary>
+        public RotatedRect AdjustRotatedRect(RotatedRect rectangle)
+        {
+            // 1. 获取 RotatedRect 的 4 个顶点
+            PointF[] points = rectangle.Points();
+            // 2. 遍历每个顶点，将其坐标从预处理图映射回原图
+            // 公式：原图坐标 = (预处理坐标 - Padding) / Ratio
+            for (int i = 0; i < points.Length; i++)
+            {
+                points[i].X = (points[i].X - Padding.First) / Ratio.First;
+                points[i].Y = (points[i].Y - Padding.Second) / Ratio.Second;
+            }
+            // 此时 points[] 变成了平行四边形的 4 个顶点。
+            // 根据矩形性质，索引顺序为：0->1->2->3 (顺时针或逆时针)
+
+            // 3. 计算中心点
+            // 旋转矩形的中心点就是其对角线的交点。
+            // 索引 0 和 2 是对角点，1 和 3 是对角点。
+            float centerX = (points[0].X + points[2].X) * 0.5f;
+            float centerY = (points[0].Y + points[2].Y) * 0.5f;
+            // 4. 计算新的宽度
+            // 对应边 0->1 的向量长度
+            float dxW = points[1].X - points[0].X;
+            float dyW = points[1].Y - points[0].Y;
+            float newWidth = (float)Math.Sqrt(dxW * dxW + dyW * dyW);
+            // 5. 计算新的高度
+            // 对应边 1->2 的向量长度
+            float dxH = points[2].X - points[1].X;
+            float dyH = points[2].Y - points[1].Y;
+            float newHeight = (float)Math.Sqrt(dxH * dxH + dyH * dyH);
+            // 6. 计算新的角度
+            // OpenCV 的 RotatedRect 角度定义为：X轴正方向旋转到矩形宽边(points[0]->points[1])的角度。
+            // 使用 Math.Atan2 计算弧度并转换为角度。
+            double angleRad = Math.Atan2(dyW, dxW);
+            double angleDeg = angleRad * (180.0 / Math.PI);
+            // 7. 构建并返回新的 RotatedRect
+            return new RotatedRect(
+                new PointF(centerX, centerY),
+                new SizeF(newWidth, newHeight),
+                (float)angleDeg
+            );
+        }
+
+        /// <summary>
         /// Creates adjustment parameters from image specifications
         /// 根据图像信息创建调整参数
         /// </summary>
@@ -419,8 +464,20 @@ namespace DeploySharp.Data
                         imgSize,
                         inputSize
                     );
+                case ImageResizeMode.CrnnPad:
+                    // 直接拉伸，比例各自独立
+                    widthRatio = targetWidth / srcWidth;
+                    heightRatio = targetHeight / srcHeight;
 
+                    // 拉伸模式下无填充
+                    return new ImageAdjustmentParam(
+                        new Pair<int, int>(0, 0),
+                        new Pair<float, float>(widthRatio, heightRatio),
+                        imgSize,
+                        inputSize
+                    );
                 default:
+              
                     throw new ArgumentOutOfRangeException(nameof(resizeMode));
             }
         }

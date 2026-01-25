@@ -1,5 +1,6 @@
 ﻿using DeploySharp.Log;
 using DeploySharp.Model;
+using iTextSharp.text.pdf;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -111,21 +112,21 @@ namespace DeploySharp.Data
                 var image = (Mat)imgs[i];
                 float[] normalizedData = CvDataProcessor.ProcessToFloat(
                 image,
-                new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
+                new Data.Size(config.InputSizes[0][3], config.InputSizes[0][2]),
                 ((IImgConfig)config).DataProcessor);
 
                 dataLength += normalizedData.Length;
                 normalizedDatas.Add(normalizedData);
 
                 imageAdjustmentParamList.Add( ImageAdjustmentParam.CreateFromImageInfo(
-                    new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
+                    new Data.Size(config.InputSizes[0][3], config.InputSizes[0][2]),
                     CvDataExtensions.ToCvSize(image.Size()),
                     ((IImgConfig)config).DataProcessor.ResizeMode));
 
 
                 MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
                      $"原始尺寸: {image.Size()}, " +
-                     $"目标尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
+                     $"目标尺寸: {config.InputSizes[0][3]}x{config.InputSizes[0][2]}, " +
                      $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
             }
             imageAdjustmentParams = imageAdjustmentParamList.ToArray();
@@ -159,7 +160,7 @@ namespace DeploySharp.Data
         /// </summary>
         public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
         {
-            return Normalize(Resize((Mat)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
+            return Normalize(Resize((Mat)input, size, processorConfig.ResizeMode, InterpolationFlags.Linear), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
         }
 
 
@@ -240,7 +241,87 @@ namespace DeploySharp.Data
                     output = scaled[new OpenCvSharp.Rect(cropX, cropY, size.Width, size.Height)].Clone();
                     scaled.Dispose();
                     break;
+                case ImageResizeMode.CrnnPad:
+                    // --- 模式：CRNN 专用 (右侧灰色填充) ---
+                    // 逻辑复用自 PaddleOCR 的预处理函数
 
+                    //// 1. 确定固定高度
+                    //int imgH = size.Height;
+
+                    //// 2. 根据宽高比动态计算目标宽度 (如果不传 whRatio，默认使用 size 的宽度)
+                    //int imgW = (whRatio > 0) ? (int)(imgH * whRatio) : size.Width;
+                    //// 3. 计算原图宽高比
+                    //float ratio_f = (float)(img.Cols) / (float)(img.Rows);
+
+                    //// 4. 计算缩放后的宽度
+                    //// 限制：缩放后的宽度不能超过 imgW (这是模型输入的最大限制)
+                    //int resize_w;
+                    //if (Math.Ceiling(imgH * ratio_f) > imgW)
+                    //    resize_w = imgW;
+                    //else
+                    //    resize_w = (int)(Math.Ceiling(imgH * ratio_f));
+                    //// 5. 执行缩放 (高度固定为 imgH，宽度按比例)
+                    //Mat crnnResized = new Mat();
+                    //Cv2.Resize(img, crnnResized, new OpenCvSharp.Size(resize_w, imgH), 0.0f, 0.0f, interpolation);
+                    //// 6. 右侧填充
+                    //// 填充颜色：灰色 (127, 127, 127)，这是 CRNN 训练时常用的 Padding 值
+                    //Cv2.CopyMakeBorder(
+                    //    crnnResized,
+                    //    crnnResized,
+                    //    0, 0, 0,
+                    //    (int)(imgW - crnnResized.Cols), // 只在右侧补齐
+                    //    BorderTypes.Constant,
+                    //    new Scalar(127, 127, 127));
+                    //output = crnnResized;
+                    //Cv2.ImShow("11", output);
+                    //Cv2.WaitKey(0);
+
+
+
+                    // 1. 默认填充颜色为中灰色
+                    Scalar gray =  new Scalar(128, 128, 128);
+                    // 2. 计算按高度缩放的比例
+                    double scale1 = (double)size.Height / img.Height;
+
+                    // 3. 第一次缩放：仅根据高度调整
+                    using (Mat tempResized = new Mat())
+                    {
+                        Cv2.Resize(img, tempResized, new OpenCvSharp.Size(0, 0), scale1, scale1, InterpolationFlags.Linear);
+                        int currentWidth = tempResized.Width;
+                        int currentHeight = tempResized.Height; // 应该等于 targetHeight
+                        Mat result = new Mat();
+                        // 4. 判断宽度情况
+                        if (currentWidth < size.Width)
+                        {
+                            // --- 情况 A: 宽度不足，右侧填充灰色 ---
+
+                            // 创建一个目标大小的灰色背景
+                            result = new Mat(size.Height, size.Width, img.Type(), gray);
+                            // 将缩放后的图像拷贝到背景的左侧
+                            // Rect(起始X, 起始Y, 宽, 高)
+                            OpenCvSharp.Rect roi1 = new OpenCvSharp.Rect(0, 0, currentWidth, currentHeight);
+                            tempResized.CopyTo(new Mat(result, roi1));
+                        }
+                        else if (currentWidth > size.Width)
+                        {
+                            // --- 情况 B: 宽度过大，压缩宽度 ---
+
+                            // 计算宽度的缩放比例 (高度保持不变，所以高度比例为 1.0)
+                            double widthScale = (double)size.Width / currentWidth;
+
+                            // 强制将宽度压缩到目标宽度
+                            Cv2.Resize(tempResized, result, new OpenCvSharp.Size(size.Width, size.Height), 0, 0, InterpolationFlags.Linear);
+                        }
+                        else
+                        {
+                            // --- 情况 C: 宽度正好相等 ---
+                            // 直接返回
+                            return tempResized.Clone();
+                        }
+
+                        output = result;
+                    }
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resizeMode));
             }
@@ -382,7 +463,7 @@ namespace DeploySharp.Data
                     return Normalize(image, true);
 
                 case ImageNormalizationType.Scale_Neg1_1:
-                    return null;
+                    //return null;
 
                 case ImageNormalizationType.ImageNetStandard:
                 case ImageNormalizationType.CustomStandard:

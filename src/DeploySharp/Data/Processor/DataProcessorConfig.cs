@@ -105,6 +105,7 @@ namespace DeploySharp.Data
         /// Default is <see cref="ImageResizeMode.Stretch"/>
         /// </value>
         public ImageResizeMode ResizeMode { get; set; } = ImageResizeMode.Stretch;
+
     }
 
 }

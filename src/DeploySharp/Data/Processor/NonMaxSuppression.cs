@@ -182,7 +182,7 @@ namespace DeploySharp.Data
             {
                 return Array.Empty<BoundingBox>();
             }
-
+            candidateBoxes.RemoveAll(box => box == null);
             // Sort boxes by confidence score in descending order
             // 按置信度分数降序排序边界框
             candidateBoxes.Sort((boxA, boxB) => boxB.CompareTo(boxA));

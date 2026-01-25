@@ -1,6 +1,8 @@
 ﻿
 using Clipper2Lib;
+using iTextSharp.awt.geom;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
 using OpenVinoSharp;
 using System;
 using System.Collections.Generic;
@@ -257,6 +259,49 @@ namespace DeploySharp.Data
             }
             return image;
 
+        }
+
+        public static Mat DrawOcrResult(Mat srcimg, OcrResult ocrResult, VisualizeOptions options)
+        {
+            // Draw recognition results on the image
+            for (int i = 0; i < ocrResult.TextAreas.Length; i++)
+            {
+                var box = ocrResult.TextAreas[i].Bounds.BoundingRect();
+                Point2f[] points = CvDataExtensions.ToRotatedRect(ocrResult.TextAreas[i].Bounds).Points();
+                for (int j = 0; j < 4; j++)
+                {
+                    Cv2.Line(srcimg, (OpenCvSharp.Point)points[j], (OpenCvSharp.Point)points[(j + 1) % 4], options.Colors.GetBoundingBoxColor(0), (int)options.BorderThickness);
+                }
+
+               
+            }
+            System.Drawing.Image im = BitmapConverter.ToBitmap(srcimg) as System.Drawing.Image;
+            Graphics graphics = Graphics.FromImage(im);
+
+            SolidBrush brush = new SolidBrush(Color.Red);
+            for (int n = 0; n < ocrResult.TextContents.Length; n++)
+            {
+                if (ocrResult.TextContents[n].Confidence < 0.7) continue;
+                PointF[] points = ocrResult.TextAreas[n].Bounds.Points();
+                int w = (int)Math.Ceiling((double)(ocrResult.TextAreas[n].Bounds.Size.Width) / 3.0) + 1;
+                int h = (int)Math.Ceiling((double)(ocrResult.TextAreas[n].Bounds.Size.Height) / 3.0) + 1;
+                int min = w < h ? w : h;
+                System.Drawing.Font font = new System.Drawing.Font("Arial", min);
+                float y = (float)points[0].Y;
+                if (y > min * 1.5)
+                {
+                    y -= (int)(min * 1.5);
+                }
+                // 设置文本位置（左上角）
+               System.Drawing.PointF point = new System.Drawing.PointF(points[2].X, y);
+                string text = ocrResult.TextContents[n].Text;
+                // 将文本绘制到图像上
+                graphics.DrawString(text, font, brush, point);
+            }
+
+            srcimg = BitmapConverter.ToMat((Bitmap)im);
+
+            return srcimg;
         }
 
     }
