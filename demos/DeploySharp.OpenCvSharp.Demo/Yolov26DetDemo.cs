@@ -66,7 +66,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             // 将下面的模型路径替换为你自己的模型路径
             string modelPath = @"E:\Model\yolov28\yolo26s.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\bus.jpg";
+            string imagePath = @"E:\Data\image\demo_2.jpg";
 
 
             Yolov26DetConfig config = new Yolov26DetConfig(modelPath);

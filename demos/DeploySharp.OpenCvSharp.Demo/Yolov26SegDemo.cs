@@ -65,13 +65,13 @@ namespace DeploySharp.OpenCvSharp.Demo
             // 将下面的模型路径替换为你自己的模型路径
             string modelPath = @"E:\Model\yolov28\yolo26s-seg.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            //string imagePath = @"E:\Data\image\bus.jpg";
-            string imagePath = @"E:\Data\image\demo_2.jpg";
+            string imagePath = @"E:\Data\image\bus.jpg";
+            //string imagePath = @"E:\Data\image\demo_2.jpg";
 
             Yolov26SegConfig config = new Yolov26SegConfig(modelPath);
-            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
-            config.SetTargetDeviceType(DeviceType.GPU0);
-            config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.DML);
+            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            //config.SetTargetDeviceType(DeviceType.GPU0);
+            //config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.DML);
             Yolov26SegModel model = new Yolov26SegModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
