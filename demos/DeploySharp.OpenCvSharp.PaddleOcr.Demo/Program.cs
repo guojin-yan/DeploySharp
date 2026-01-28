@@ -90,21 +90,24 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
 
 
             string imagePath = @"E:\Data\ocr\demo_1.jpg";
+
+            //string imagePath = @"E:\Data\ocr\demo_16.bmp";
             string imagePath1 = @"E:\Data\ocr\demo_2.jpg";
             Mat img = Cv2.ImRead(imagePath);
 
             Mat img1 = Cv2.ImRead(imagePath1);
 
             PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
-                detModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_det_onnx.engine",
-                clsModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_cls_onnx.engine",
-                recModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_rec_onnx.engine",
+                detModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_det_f16_onnx.engine",
+                clsModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_cls_f16_onnx.engine",
+                recModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_rec_f16_onnx.engine",
                 recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
                 );
 
 
             paddleOCRConfig.GlobalInferenceBackend = InferenceBackend.TensorRT;
             paddleOCRConfig.GlobalDeviceType = DeviceType.GPU0;
+            paddleOCRConfig.GlobalOnnxRuntimeDeviceType = OnnxRuntimeDeviceType.Cuda;
             paddleOCRConfig.GlobalMaxBatchSize = 8;
             ////paddleOCRConfig.DetConfig.InputSizes.Add(new int[] { 1, 3, 960, 960 });
             ////paddleOCRConfig.DetConfig.OutputSizes.Add(new int[] { 1, 1, 960, 960 });
@@ -135,6 +138,9 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
                 //for (int i = 0; i < 10; i++)
                     ocrResult = paddleOcrPredictor.Predict(img);
                 sw.Stop();
+
+                Console.WriteLine(ocrResult.ToString());
+
                 Console.WriteLine("---- Profiling Time ----");
 
                 paddleOcrPredictor.PrintTimeProfiling();
@@ -142,8 +148,7 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
 
                 Mat resultMat = Visualize.DrawOcrResult(img, ocrResult, new VisualizeOptions(1.0f));
 
-
-
+     
 
                 Cv2.ImShow("image", resultMat);
 

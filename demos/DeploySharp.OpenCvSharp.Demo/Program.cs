@@ -70,12 +70,12 @@ namespace DeploySharp.OpenCvSharp.Demo
             //Yolov8ObbDemo.Run();
             //Yolov8PoseDemo.Run();
             //DEIMv2DetDemo.Run();
-            //IFDETRDetDemo.Run();
+            RFDETRDetDemo.Run();
             //PPYoloeDetDemo.Run();
             //RTDETRDetDemo.Run();
             //RFDETRSegDemo.Run();
 
-            Yolov26DetDemo.Run();
+            //Yolov26DetDemo.Run();
             //Yolov26ObbDemo.Run();
             //Yolov26SegDemo.Run();
             //Yolov26PoseDemo.Run();

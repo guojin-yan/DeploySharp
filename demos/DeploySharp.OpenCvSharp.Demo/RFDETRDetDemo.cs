@@ -16,7 +16,8 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\rf-detr\rf-detr-small.onnx";
+            //string modelPath = @"E:\Model\rf-detr\rf-detr-small.onnx";
+            string modelPath = @"E:\inference_model.onnx";
             // 将下面的图片路径替换为你自己的图片路径
             //string imagePath = @"E:\Model\rf-detr\scratches_125.jpg";
             string imagePath = @"E:\Data\image\bus.jpg";
@@ -24,8 +25,8 @@ namespace DeploySharp.OpenCvSharp.Demo
             RFDETRDetConfig config = new RFDETRDetConfig(modelPath);
             //config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
             //config.InputSizes.Add(new int[] { 1, 2 });
-            config.SetTargetDeviceType(DeviceType.GPU0);
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            //config.SetTargetDeviceType(DeviceType.GPU0);
+            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
             RFDETRDetModel model = new RFDETRDetModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
