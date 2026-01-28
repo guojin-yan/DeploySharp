@@ -72,6 +72,25 @@ namespace DeploySharp.Model
 
         // --- 3. 全局控制属性 (仅作用于已加载的模块) ---
 
+        private int _maxConcurrency = 4;
+        /// <summary>
+        /// Gets or sets the maximum number of concurrent operations allowed.
+        /// 获取或设置允许的最大并发操作数。
+        /// </summary>
+        /// <remarks>
+        /// Set this property to limit the number of operations that can run in parallel.
+        /// Adjusting this value can help control resource usage and throughput.
+        /// 设置此属性以限制可以并行运行的操作数量。调整此值可以帮助控制资源使用和吞吐量。
+        /// </remarks>
+        public int MaxConcurrency
+        {
+            get => _maxConcurrency;
+            set
+            {
+                _maxConcurrency = value;
+            }
+        }
+
         private int _globalMaxBatchSize = 8;
         /// <summary>
         /// 全局最大批次大小。仅更新当前已加载的模型配置。
@@ -206,13 +225,13 @@ namespace DeploySharp.Model
                 throw new InvalidOperationException("配置无效：未加载任何模型。");
             }
 
-            // 依赖关系检查：
-            // 如果没有 Det，通常意味着用户输入的是裁剪好的图片。
-            // 如果没有 Det，Cls（方向分类）就没有意义（因为它是基于检测框的）。
-            if (!UseDet && UseCls)
-            {
-                throw new InvalidOperationException("配置逻辑错误：启用了分类模块(Cls)，但未启用检测模块。");
-            }
+            //// 依赖关系检查：
+            //// 如果没有 Det，通常意味着用户输入的是裁剪好的图片。
+            //// 如果没有 Det，Cls（方向分类）就没有意义（因为它是基于检测框的）。
+            //if (!UseDet && UseCls)
+            //{
+            //    throw new InvalidOperationException("配置逻辑错误：启用了分类模块(Cls)，但未启用检测模块。");
+            //}
 
             // 字典有效性检查
             if (UseRec && (RecConfig.DictChars == null || RecConfig.DictChars.Count == 0))

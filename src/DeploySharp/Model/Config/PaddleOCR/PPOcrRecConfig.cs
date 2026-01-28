@@ -90,7 +90,7 @@ namespace DeploySharp.Model
         /// <param name="modelPath">模型文件路径</param>
         /// <param name="dictPath">字典文件路径</param>
         public PPOcrRecConfig(string modelPath, string dictPath)
-            : this(modelPath, dictPath, 48, 1024, 8, 1, 0.5f, ImageResizeMode.CrnnPad, ImageNormalizationType.Scale_Neg1_1, true)
+            : this(modelPath, dictPath, 48, 1024, 8, 1, 0.2f, ImageResizeMode.CrnnPad, ImageNormalizationType.Scale_Neg1_1, true)
         {
         }
 
@@ -114,7 +114,7 @@ namespace DeploySharp.Model
             int maxImageWidth = 1024,
             int maxBatchSize = 8,
             int inferBatch = 1,
-            float confidenceThreshold = 0.5f,
+            float confidenceThreshold = 0.2f,
             ImageResizeMode resizeMode = ImageResizeMode.CrnnPad,
             ImageNormalizationType normalizationType = ImageNormalizationType.Scale_Neg1_1,
             bool dynamicByInput = true)

@@ -210,6 +210,17 @@ namespace DeploySharp.Engine
                 else
                 {
                     sessionOptions.AppendExecutionProvider_CUDA(0);
+                    //// 2. 图优化级别：设置为 Disable (0)
+                    //// 原因：ONNX 模型通常在导出前已经优化好了。运行时再次优化不仅耗时，
+                    //// 而且对于 GPU 执行来说，OR默认的算子融合可能不如 CUDA TensorRT 原生的融合高效。
+                    //sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_DISABLE_ALL;
+                    //// 如果模型未优化，可选 ORT_ENABLE_EXTENDED，但 Disable 启动最快且通常性能足够。
+                    //// 3. 禁用 ORT 内部的并行线程池
+                    //// 原因：我们希望在 C# 层面通过多线程控制并发，而不是让 ORT 内部自己开线程抢 GPU 资源。
+                    //// 这样可以避免 GPU Context 的频繁切换开销。
+                    //sessionOptions.IntraOpNumThreads = 1;
+                    //sessionOptions.InterOpNumThreads = 1;
+
                 }
 
             }
@@ -683,11 +694,13 @@ namespace DeploySharp.Engine
                             data.Shape.Select(x => (long)x).ToArray());
                         break;
                     case Type t when t == typeof(bool):
-                        // Convert bool to byte as ONNX represents bool as byte
-                        var byteData = ((bool[])data.DataBuffer).Select(b => b ? true : false).ToArray();
+                        //// Convert bool to byte as ONNX represents bool as byte
+                        //var byteData = ((bool[])data.DataBuffer).Select(b => b ? true : false).ToArray();
+                        //inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                        //    byteData,
+                        //    data.Shape.Select(x => (long)x).ToArray());
                         inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
-                            byteData,
-                            data.Shape.Select(x => (long)x).ToArray());
+                            (bool[])data.DataBuffer, data.Shape.Select(x => (long)x).ToArray());
                         break;
 
                     default:

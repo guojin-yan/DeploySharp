@@ -28,6 +28,7 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <Copyright>Copyright © 2025 Yan Guojin. All Rights Reserved.</Copyright>
     <PackAsTool>False</PackAsTool>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,11 +48,11 @@
 
   <ItemGroup>
     <PackageReference Include="Clipper2" Version="1.5.4" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API" Version="0.0.5.2" />
     <PackageReference Include="log4net" Version="3.2.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.20.1" />
     <PackageReference Include="OpenVINO.CSharp.API" Version="2025.4.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
-    <PackageReference Include="JYPPX.TensorRT.CSharp.API" Version="0.0.5" />
   </ItemGroup>
 
 </Project>

@@ -94,10 +94,8 @@ using DeploySharp.Data;
 using DeploySharp.Log;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DeploySharp.Model
 {
@@ -120,6 +118,7 @@ namespace DeploySharp.Model
         {
             return PostprocessBatch(dataTensor, new ImageAdjustmentParam[] { imageAdjustmentParam })[0];
         }
+
 
         protected override List<Result[]> PostprocessBatch(DataTensor dataTensor, ImageAdjustmentParam[] imageAdjustmentParams)
         {
@@ -194,10 +193,10 @@ namespace DeploySharp.Model
 
                     // 更新上一次的有效字符索引
                     // 只有当当前字符不是 Blank 时，才更新 lastIndex，否则重复字符逻辑会出错
-                    if (charIndex > 0)
-                    {
-                        lastIndex = charIndex;
-                    }
+                    //if (charIndex > 0)
+                    //{
+                    lastIndex = charIndex;
+                    //}
                 }
 
                 float finalScore = validCharCount > 0 ? scoreSum / validCharCount : 0f;

@@ -270,7 +270,8 @@ namespace DeploySharp.Data
                 Point2f[] points = CvDataExtensions.ToRotatedRect(ocrResult.TextAreas[i].Bounds).Points();
                 for (int j = 0; j < 4; j++)
                 {
-                    Cv2.Line(srcimg, (OpenCvSharp.Point)points[j], (OpenCvSharp.Point)points[(j + 1) % 4], options.Colors.GetBoundingBoxColor(0), (int)options.BorderThickness);
+                    Cv2.Line(srcimg, (OpenCvSharp.Point)points[j], (OpenCvSharp.Point)points[(j + 1) % 4], 
+                        options.Colors.GetBoundingBoxColor(5), (int)options.BorderThickness);
                 }
 
                
@@ -287,13 +288,13 @@ namespace DeploySharp.Data
                 int h = (int)Math.Ceiling((double)(ocrResult.TextAreas[n].Bounds.Size.Height) / 3.0) + 1;
                 int min = w < h ? w : h;
                 System.Drawing.Font font = new System.Drawing.Font("Arial", min);
-                float y = (float)points[0].Y;
+                float y = (float)points[1].Y;
                 if (y > min * 1.5)
                 {
                     y -= (int)(min * 1.5);
                 }
-                // 设置文本位置（左上角）
-               System.Drawing.PointF point = new System.Drawing.PointF(points[2].X, y);
+                //设置文本位置（左上角）
+               System.Drawing.PointF point = new System.Drawing.PointF(points[0].X, y);
                 string text = ocrResult.TextContents[n].Text;
                 // 将文本绘制到图像上
                 graphics.DrawString(text, font, brush, point);

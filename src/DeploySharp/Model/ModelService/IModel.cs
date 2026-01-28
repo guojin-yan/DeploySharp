@@ -138,16 +138,20 @@ namespace DeploySharp.Model
                 // Execute prediction pipeline stages
                 // 执行预测流程的各个阶段
                 predictorTimer.StartPreprocess();
-                var input = Preprocess(img, out var imageAdjustmentParam);
+                using (var input = Preprocess(img, out var imageAdjustmentParam))
+                {
+                    predictorTimer.StartInference();
 
-                predictorTimer.StartInference();
-                var output = engine.Predict(input);
+                    using (var output = engine.Predict(input)) 
+                    {
+                        predictorTimer.StartPostprocess();
+                        var result = Postprocess(output, imageAdjustmentParam);
+                        ModelInferenceProfiler.Record(predictorTimer.Stop());
+                        return result;
+                    }
+                }
 
-                predictorTimer.StartPostprocess();
-                var result = Postprocess(output, imageAdjustmentParam);
 
-                ModelInferenceProfiler.Record(predictorTimer.Stop());
-                return result;
             }
             catch (Exception ex)
             {

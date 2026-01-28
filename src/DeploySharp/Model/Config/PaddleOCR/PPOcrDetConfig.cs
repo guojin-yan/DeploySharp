@@ -96,7 +96,7 @@ namespace DeploySharp.Model
             string modelPath,
             float dbBoxThresh = 0.75f,
             int limitInputSize = 960,
-            float dbUnclipRatio = 2.0f,
+            float dbUnclipRatio = 1.5f,
             string dbScoreMode = "",
             float confidenceThreshold = 0.5f,
             int maxBatchSize = 8,

@@ -323,7 +323,7 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// 将基于预处理图像（缩放、填充后）的 RotatedRect 映射回原图坐标系。
+        /// 将基于预处理图像的 RotatedRect 映射回原图坐标系。
         /// </summary>
         public RotatedRect AdjustRotatedRect(RotatedRect rectangle)
         {
@@ -336,33 +336,52 @@ namespace DeploySharp.Data
                 points[i].X = (points[i].X - Padding.First) / Ratio.First;
                 points[i].Y = (points[i].Y - Padding.Second) / Ratio.Second;
             }
-            // 此时 points[] 变成了平行四边形的 4 个顶点。
-            // 根据矩形性质，索引顺序为：0->1->2->3 (顺时针或逆时针)
-
-            // 3. 计算中心点
-            // 旋转矩形的中心点就是其对角线的交点。
-            // 索引 0 和 2 是对角点，1 和 3 是对角点。
+            // 3. 计算中心点 (对角线交点)
             float centerX = (points[0].X + points[2].X) * 0.5f;
             float centerY = (points[0].Y + points[2].Y) * 0.5f;
-            // 4. 计算新的宽度
-            // 对应边 0->1 的向量长度
+            // 4. 计算宽度 (向量 0->1 的长度)
             float dxW = points[1].X - points[0].X;
             float dyW = points[1].Y - points[0].Y;
-            float newWidth = (float)Math.Sqrt(dxW * dxW + dyW * dyW);
-            // 5. 计算新的高度
-            // 对应边 1->2 的向量长度
+            float width = (float)Math.Sqrt(dxW * dxW + dyW * dyW);
+            // 5. 计算高度 (向量 1->2 的长度)
             float dxH = points[2].X - points[1].X;
             float dyH = points[2].Y - points[1].Y;
-            float newHeight = (float)Math.Sqrt(dxH * dxH + dyH * dyH);
-            // 6. 计算新的角度
-            // OpenCV 的 RotatedRect 角度定义为：X轴正方向旋转到矩形宽边(points[0]->points[1])的角度。
-            // 使用 Math.Atan2 计算弧度并转换为角度。
+            float height = (float)Math.Sqrt(dxH * dxH + dyH * dyH);
+            // 6. 计算原始角度 (X轴 到 向量 0->1 的角度)
             double angleRad = Math.Atan2(dyW, dxW);
             double angleDeg = angleRad * (180.0 / Math.PI);
-            // 7. 构建并返回新的 RotatedRect
+            // 7. 【关键修复】规范化角度和宽高
+            // OpenCV 的 RotatedRect 定义中，角度必须接近 0 (或 -0) 时，对应的边才是 "Width"。
+            // 如果计算出的角度接近 90 或 -90，说明我们将"高度边"误认为"宽度边"了。
+            // 此时需要：将角度修正为 0，并交换宽高。
+
+            // 容差范围，例如 5 度以内
+            float tolerance = 5.0f;
+            if (Math.Abs(angleDeg - 90) < tolerance || Math.Abs(angleDeg + 90) < tolerance)
+            {
+                // 情况A：接近 90 度或 -90 度
+                angleDeg = 0;
+
+                // 交换宽高
+                float temp = width;
+                width = height;
+                height = temp;
+            }
+            else if (angleDeg > 90 - tolerance)
+            {
+                // 情况B：接近 90 度（大于90的情况，防止Atan2直接返回大于90的值）
+                angleDeg -= 180; // 转到负半轴
+                                 // 交换宽高
+                float temp = width;
+                width = height;
+                height = temp;
+            }
+            // 注意：OpenCV 角度范围通常是 [-90, 0)。
+            // 如果计算出的角度是正数且接近 0，或者是非常小的负数，通常不需要修正。
+            // 只有当角度很大（接近垂直）时才需要交换。
             return new RotatedRect(
                 new PointF(centerX, centerY),
-                new SizeF(newWidth, newHeight),
+                new SizeF(width, height),
                 (float)angleDeg
             );
         }

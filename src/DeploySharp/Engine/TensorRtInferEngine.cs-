@@ -66,6 +66,8 @@ namespace DeploySharp.Engine
         private List<List<object>> outputCuda1DMemorys = new List<List<object>>();
 
 
+        private List<List<object>> outputCudaPinnedMemorys = new List<List<object>>();
+
 
         private List<CudaStream> cudaStreams = new List<CudaStream>();
         /// <summary>
@@ -370,6 +372,7 @@ namespace DeploySharp.Engine
 
                     List<object> inputCuda1DMemory = new List<object>();
                     List<object> outputCuda1DMemory = new List<object>();
+                    List<object> outputCudaPinnedMemory = new List<object>();
                     for (int j = 0; j < config.InputSizes.Count; ++j) 
                     {
                         long totalSize = 1;
@@ -383,7 +386,9 @@ namespace DeploySharp.Engine
                         if (dataType == TrtDataType.kFLOAT)
                         {
                             Cuda1DMemory<float> deviceMemory = new Cuda1DMemory<float>((ulong)totalSize);
+                            
                             inputCuda1DMemory.Add(deviceMemory);
+                            
                             executionContexts[i].Second.setInputTensorAddress(config.InputNames[j], deviceMemory.get());
                         }
                         else if (dataType == TrtDataType.kINT32)
@@ -423,10 +428,10 @@ namespace DeploySharp.Engine
 
                     for (int j = 0; j < config.OutputSizes.Count; ++j)
                     {
-                        long totalSize = 1;
+                        ulong totalSize = 1;
                         foreach (var dim in config.OutputSizes[j])
                         {
-                            totalSize *= dim;
+                            totalSize *= (ulong)dim;
                         }
                         outputLengths.Add((ulong)totalSize);
                         TrtDataType dataType = outputNodeTypes[j];
@@ -435,31 +440,40 @@ namespace DeploySharp.Engine
                         {
                             Cuda1DMemory<float> deviceMemory = new Cuda1DMemory<float>((ulong)totalSize);
                             outputCuda1DMemory.Add(deviceMemory);
+                            CudaPinnedMemory<float> cudaPinned = new CudaPinnedMemory<float>(totalSize);
+                            outputCudaPinnedMemory.Add(cudaPinned);
                             executionContexts[i].Second.setOutputTensorAddress(config.OutputNames[j], deviceMemory.get());
                         }
                         else if (dataType == TrtDataType.kINT32)
                         {
-
                             Cuda1DMemory<int> deviceMemory = new Cuda1DMemory<int>((ulong)totalSize);
                             outputCuda1DMemory.Add(deviceMemory);
+                            CudaPinnedMemory<int> cudaPinned = new CudaPinnedMemory<int>(totalSize);
+                            outputCudaPinnedMemory.Add(cudaPinned);
                             executionContexts[i].Second.setOutputTensorAddress(config.OutputNames[j], deviceMemory.get());
                         }
                         else if (dataType == TrtDataType.kINT8)
                         {
                             Cuda1DMemory<sbyte> deviceMemory = new Cuda1DMemory<sbyte>((ulong)totalSize);
                             outputCuda1DMemory.Add(deviceMemory);
+                            CudaPinnedMemory<sbyte> cudaPinned = new CudaPinnedMemory<sbyte>(totalSize);
+                            outputCudaPinnedMemory.Add(cudaPinned);
                             executionContexts[i].Second.setOutputTensorAddress(config.OutputNames[j], deviceMemory.get());
                         }
                         else if (dataType == TrtDataType.kINT64)
                         {
                             Cuda1DMemory<long> deviceMemory = new Cuda1DMemory<long>((ulong)totalSize);
                             outputCuda1DMemory.Add(deviceMemory);
+                            CudaPinnedMemory<long> cudaPinned = new CudaPinnedMemory<long>(totalSize);
+                            outputCudaPinnedMemory.Add(cudaPinned);
                             executionContexts[i].Second.setOutputTensorAddress(config.OutputNames[j], deviceMemory.get());
                         }
                         else if (dataType == TrtDataType.kBOOL)
                         {
                             Cuda1DMemory<byte> deviceMemory = new Cuda1DMemory<byte>((ulong)totalSize);
                             outputCuda1DMemory.Add(deviceMemory);
+                            CudaPinnedMemory<byte> cudaPinned = new CudaPinnedMemory<byte>(totalSize);
+                            outputCudaPinnedMemory.Add(cudaPinned);
                             executionContexts[i].Second.setOutputTensorAddress(config.OutputNames[j], deviceMemory.get());
                         }
                         else
@@ -469,6 +483,7 @@ namespace DeploySharp.Engine
 
                     }
                     outputCuda1DMemorys.Add(outputCuda1DMemory);
+                    outputCudaPinnedMemorys.Add(outputCudaPinnedMemory);
                 }
 
                 MyLogger.Log.Info($"Created {executionContexts.Count} execution context");
@@ -626,42 +641,50 @@ namespace DeploySharp.Engine
                         float[] floatData = new float[len];
                         Stopwatch sw = new Stopwatch();
                         sw.Start();
-                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<float>).copyToHostAsync(floatData, cudaStreams[availableRequestIndex]);
+                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<float>).copyToHostAsync(outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<float>, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
                         sw.Stop();
-                        MyLogger.Log.Error($"Output tensor copy time: {sw.ElapsedMilliseconds} ms");
+                        MyLogger.Log.Error($"Output tensor async copy time: {sw.ElapsedMilliseconds} ms");
+                        sw.Restart();
+                        (outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<float>).CopyTo(floatData);
+                        sw.Stop();
+                        MyLogger.Log.Error($"Output tensor copy time: {sw.ElapsedMilliseconds} ms, data len = {len}");
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,
                             floatData, shape, typeof(float));
                         MyLogger.Log.Debug($"Processed output {i}: float[{string.Join(",", shape)}]");
                         break;
                     case TrtDataType.kINT32:
                         int[] intData = new int[outputLengths[i]];
-                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<int>).copyToHostAsync(intData, cudaStreams[availableRequestIndex]);
+                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<int>).copyToHostAsync(outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<int>, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
+                        (outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<int>).CopyTo(intData);
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,
                             intData, shape, typeof(int));
                         MyLogger.Log.Debug($"Processed output {i}: float[{string.Join(",", shape)}]");
                         break;
                     case TrtDataType.kINT8:
                         sbyte[] sbyteData = new sbyte[outputLengths[i]];
-                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<sbyte>).copyToHostAsync(sbyteData, cudaStreams[availableRequestIndex]);
+                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<sbyte>).copyToHostAsync(outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<sbyte>, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
+                        (outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<sbyte>).CopyTo(sbyteData);
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,
                             sbyteData, shape, typeof(sbyte));
                         MyLogger.Log.Debug($"Processed output {i}: float[{string.Join(",", shape)}]");
                         break;
                     case TrtDataType.kINT64:
                         long[] longData = new long[outputLengths[i]];
-                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<long>).copyToHostAsync(longData, cudaStreams[availableRequestIndex]);
+                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<long>).copyToHostAsync(outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<long>, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
+                        (outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<long>).CopyTo(longData);
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,
                             longData, shape, typeof(long));
                         MyLogger.Log.Debug($"Processed output {i}: float[{string.Join(",", shape)}]");
                         break;
                     case TrtDataType.kBOOL:
                         byte[] byteData = new byte[outputLengths[i]];
-                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<byte>).copyToHostAsync(byteData, cudaStreams[availableRequestIndex]);
+                        (outputCuda1DMemorys[availableRequestIndex][i] as Cuda1DMemory<byte>).copyToHostAsync(outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<byte>, cudaStreams[availableRequestIndex]);
                         cudaStreams[availableRequestIndex].Synchronize();
+                        (outputCudaPinnedMemorys[availableRequestIndex][i] as CudaPinnedMemory<byte>).CopyTo(byteData);
                         result.AddNode(modelConfig.OutputNames[i], 0, TensorType.Output,
                             byteData, shape, typeof(byte));
                         MyLogger.Log.Debug($"Processed output {i}: float[{string.Join(",", shape)}]");

@@ -1168,7 +1168,9 @@ namespace DeploySharp.Data
         /// 返回值优化：直接返回 List<OpenCvSharp.Rect>，减少中间数据结构的转换。
         /// </summary>
 
-        public static List<(OpenCvSharp.RotatedRect, float)> BoxesFromBitmap(Mat pred, Mat bitmap, float boxThresh, float detDbUnclipRatio, string detDbScoreMode)
+        public static List<(OpenCvSharp.RotatedRect, float)> BoxesFromBitmap(Mat pred,
+            Mat bitmap, 
+            float boxThresh, float detDbUnclipRatio, string detDbScoreMode)
         {
             int width = bitmap.Cols;
             int height = bitmap.Rows;
@@ -1222,7 +1224,7 @@ namespace DeploySharp.Data
                 }
                 // 将修正后的顶点重新转换回 RotatedRect
                 // 使用 MinAreaRect 可以反向计算出包含这四个点的最小旋转矩形
-                OpenCvSharp.RotatedRect finalBox = Cv2.MinAreaRect(points);
+                OpenCvSharp.RotatedRect finalBox = NormalizeRotatedRect( Cv2.MinAreaRect(points));
                 // 可选：再次验证修正后的尺寸，防止 Clamp 导致矩形过小
                 // 这里仅作为简单的有效性检查
                 if (finalBox.Size.Width < 1.0f || finalBox.Size.Height < 1.0f) continue;
@@ -1231,6 +1233,38 @@ namespace DeploySharp.Data
                 boxes.Add((finalBox, score));
             }
             return boxes;
+        }
+
+        /// <summary>
+        /// 规范化 RotatedRect，将 90 度（或 -90 度）转换为 0 度，并调整宽高
+        /// </summary>
+        public static OpenCvSharp.RotatedRect NormalizeRotatedRect(OpenCvSharp.RotatedRect rect)
+        {
+            float angle = rect.Angle;
+            Size2f size = rect.Size;
+            // 定义修正的阈值范围。
+            // 范围 [-90, -88] 和 [-2, 0] 是 OpenCV 常见的表现形式。
+            // 我们扩大到 [-90, -45] 以便把视觉上“直立”的都统一转为水平。
+            bool shouldNormalize = false;
+            // 1. 判断是否需要修正 (接近 -90, 90 或 在第三象限)
+            if (Math.Abs(angle - 90) < 5.0f || Math.Abs(angle + 90) < 5.0f || (angle <= -45.0f))
+            {
+                shouldNormalize = true;
+            }
+
+            // 2. 执行修正
+            if (shouldNormalize)
+            {
+                // 强制角度为 0
+                angle = 0;
+                // 交换宽和高 (这是关键，否则矩形旋转 90 度后形状会错位)
+                float width = size.Width;
+                size.Width = size.Height;
+                size.Height = width;
+            }
+
+            // 4. 返回修正后的矩形
+            return new OpenCvSharp.RotatedRect(rect.Center, size, angle);
         }
         //public static List<(RectF, float)> BoxesFromBitmap(Mat pred, Mat bitmap, float boxThresh, float detDbUnclipRatio, string detDbScoreMode)
         //{
