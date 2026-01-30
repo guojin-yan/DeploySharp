@@ -48,8 +48,6 @@
 
 
 
-该项目开源遵循 Apache License 2.0 协议，开发者可通过 QQ 群、微信公众号等渠道获取支持。未来版本计划扩展 TensorRT 支持并优化现有引擎的异构计算能力。
-
 # 🎨模型支持列表
 
 |  Model Name  |       Model Type        | OpenVINO | ONNX Runtime | TensorRT |
@@ -270,6 +268,7 @@ namespace DeploySharp.OpenCvSharp.Demo
 |  桌面应用  |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%20Framework%204.8/DeploySharp.ImageSharp-ApplicationPlatform) |
 |  桌面应用  |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%206.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
 | 控制台应用 | .NET Framework 4.8、.NET 6.0-9.0 | [DeploySharp.samples](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/samples) |
+|  桌面应用  |             .NET 8.0             | [JYPPX.DeploySharp.OpenCvSharp.PaddleOcr ](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET 8.0/JYPPX.DeploySharp.OpenCvSharp.PaddleOcr) |
 
 ## 🗂文档
 
@@ -285,6 +284,42 @@ namespace DeploySharp.OpenCvSharp.Demo
 
 &emsp;    本项目的发布受[Apache 2.0 license](https://github.com/guojin-yan/OpenVINO-CSharp-API/blob/csharp3.0/LICENSE.txt)许可认证。
 
- &emsp;   最后如果各位开发者在使用中有任何问题，欢迎大家与我联系。
+## 🧑‍🔧技术支持
+
+ &emsp;  如有问题或建议，欢迎通过以下方式交流：
+
+- 📧 **GitHub Issues**：在项目仓库提 Issue 或 Pull Request
+- 💬 **QQ 交流群**：加入 **945057948**，回复更方便更快哦
+
+
+
+## 📢软件声明
+
+**1. 开源协议声明** 
+
+作者所有开源项目代码均遵循 **Apache License 2.0** 开源协议。 
+
+*特别说明：本项目集成了若干第三方库。若任何第三方库的许可协议与 Apache 2.0 协议存在冲突或不一致，均以该第三方库的原始许可协议为准。本项目不包含也不代表这些第三方库的授权声明，使用前请务必阅读并遵守第三方库的相关许可。*
+
+**2. 代码开发与质量说明**
+
+- **AI 辅助开发**：本代码在开发过程中使用了人工智能（AI）辅助生成与优化，并非完全由人工逐行编写。
+- **安全性承诺**：**作者郑重声明，本代码中绝无任何有意设置的后门、病毒、木马或旨在破坏用户设备、窃取数据的恶意代码。**
+- **技术局限性**：受限于作者个人的技术水平与能力，代码中可能存在因逻辑不严谨、优化不足或经验欠缺导致的低级问题（例如但不限于内存泄漏、偶发崩溃、资源未释放等）。这些问题纯属能力不足所致，并非主观故意。
+- **测试范围**：由于作者精力有限，未对本软件进行全方位、覆盖所有边缘场景的完整测试。
+
+**3. 免责声明（重要）** 
+
+**请在将本代码应用于任何实际项目（特别是商业、工业或关键任务环境）之前，务必进行详尽、严格的自行测试与验证。** 鉴于上述可能存在的代码缺陷及测试覆盖不足，**因使用本代码而导致的任何直接或间接损失（包括但不限于设备故障、数据丢失、系统瘫痪或利润损失等），本作者概不负责。** 一旦您开始使用本代码，即表示您已知晓上述风险并同意自行承担一切后果，相关问题与本作者无关。
+
+**4. 代码开源范围** 
+
+本项目承诺核心逻辑代码完全开源，但上述提到的“第三方库”的二进制文件、源代码或相关资源不在本项目的开源义务范围内，请根据其各自的指引获取。
+
+**5. 社区与反馈** 
+
+尽管存在上述不足，我们仍欢迎大家下载使用、提交 Issue 或参与测试，共同完善项目。如果您在使用过程中发现 Bug、内存溢出或有改进建议，欢迎通过项目主页提供的联系方式与作者取得联系，我们将尽力在有限的时间内提供协助。
+
+
 
 ![image-20250224211044113](https://ygj-images-container.oss-cn-nanjing.aliyuncs.com/BlogGallery/202502242110187.png)

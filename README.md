@@ -269,6 +269,9 @@ namespace DeploySharp.OpenCvSharp.Demo
 | Desktop App |        .NET Framework 4.8        | [DeploySharp.ImageSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%20Framework%204.8/DeploySharp.ImageSharp-ApplicationPlatform) |
 | Desktop App |             .NET 6.0             | [DeploySharp.OpenCvSharp-ApplicationPlatform](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET%206.0/DeploySharp.OpenCvSharp-ApplicationPlatform) |
 | Console App | .NET Framework 4.8、.NET 6.0-9.0 | [DeploySharp.samples](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/samples) |
+| Desktop App |             .NET 8.0             | [JYPPX.DeploySharp.OpenCvSharp.PaddleOcr ](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV1.0/applications/.NET 8.0/JYPPX.DeploySharp.OpenCvSharp.PaddleOcr) |
+
+
 
 ## 🗂Documentation
 
@@ -284,7 +287,41 @@ namespace DeploySharp.OpenCvSharp.Demo
 
 &emsp;    The release of this project is certified under the [Apache 2.0 license](https://github.com/guojin-yan/OpenVINO-CSharp-API/blob/csharp3.0/LICENSE.txt).
 
-&emsp;    Finally, if any developers have any questions during use, please feel free to contact me.
+## 🧑‍🔧 Technical Support
+
+&emsp;If you have any questions or suggestions, feel free to reach out via the following channels:
+
+- 📧 **GitHub Issues**: Submit an Issue or Pull Request in the project repository.
+- 💬 **QQ Group**: Join **945057948** for faster and more convenient responses.
+
+
+
+## 📢Software Notice
+
+**1. Open Source License Statement** 
+
+All open source project code of the author follows the **Apache License 2.0** open source agreement.
+
+**Special Note:** This project integrates several third-party libraries. If the license terms of any third-party library conflict with or are inconsistent with the Apache License 2.0, the original license terms of the specific third-party library shall prevail. This project does not include nor represent the authorization declarations of these third-party libraries. Please be sure to read and comply with the relevant licenses of the third-party libraries before use.
+
+**2. Code Development and Quality Description**
+
+- **AI-Assisted Development:** Artificial Intelligence (AI) was used to assist in the generation and optimization of this code; it was not written entirely line-by-line by a human.
+- **Safety Commitment:** The author solemnly declares that there are absolutely no intentional backdoors, viruses, trojans, or malicious code designed to damage user equipment or steal data in this code.
+- **Technical Limitations:** Due to the author's personal technical level and ability limitations, there may be rudimentary issues in the code caused by loose logic, insufficient optimization, or lack of experience (including but not limited to memory leaks, occasional crashes, unreleased resources, etc.). These issues are purely due to insufficient ability and are not subjective intent.
+- **Testing Scope:** Due to the author's limited energy, comprehensive testing covering all edge scenarios has not been performed on this software.
+
+**3. Disclaimer (Important)** 
+
+Please perform detailed and rigorous self-testing and verification before applying this code to any actual project (especially commercial, industrial, or critical mission environments). In view of the potential code defects and insufficient test coverage mentioned above, the author assumes no responsibility for any direct or indirect losses caused by the use of this code (including but not limited to equipment failure, data loss, system paralysis, or loss of profits). Once you start using this code, it indicates that you are aware of the above risks and agree to bear all consequences yourself; related issues have nothing to do with the author.
+
+**4. Open Source Scope** 
+
+This project commits to fully open-sourcing the core logic code. However, the binary files, source code, or related resources of the "third-party libraries" mentioned above are not within the scope of this project's open-source obligation; please obtain them according to their respective guidelines.
+
+**5. Community and Feedback** 
+
+Despite the aforementioned shortcomings, we still welcome everyone to download, use, submit Issues, or participate in testing to improve the project together. If you discover bugs, memory overflows, or have suggestions for improvement during use, please contact the author via the contact information provided on the project homepage, and we will do our best to assist within our limited time.
 
 ![image-20250224211044113](https://ygj-images-container.oss-cn-nanjing.aliyuncs.com/BlogGallery/202502242110187.png)
 
