@@ -399,6 +399,7 @@ namespace DeploySharp.Engine
         {
             MyLogger.Log.Info("Initializing OpenVINO inference engine");
             core = new Core();
+
             MyLogger.Log.Debug("OpenVINO core instance created");
         }
 
@@ -843,7 +844,11 @@ namespace DeploySharp.Engine
         {
             string deviceName = config.TargetDeviceType.GetDisplayName();
             MyLogger.Log.Info($"Compiling model for device: {deviceName}");
-
+            //Dictionary<string, string> properties = new Dictionary<string, string>();
+            //properties["EXECUTION_MODE_HINT"] = "PERFORMANCE";
+            //core.set_property(deviceName, properties);
+            //Dictionary<string,string> properties = new Dictionary<string,string>();
+            //properties["PERFORMANCE_HINT"] = "THROUGHPUT";
             compiledModel = core.compile_model(model, deviceName);
             MyLogger.Log.Info($"Model compiled successfully for {deviceName}");
         }

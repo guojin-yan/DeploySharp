@@ -331,7 +331,7 @@ namespace DeploySharp.Model
 
             // 确定最大并发数，通常建议根据 GPU 数量或 CPU 核心数设置
             // 这里的 4 应该对应你拥有的物理设备数量（例如 4 张 GPU 或 4 个 CPU 核心组）
-            _maxConcurrency = 4; // 建议通过配置传入，例如 Environment.ProcessorCount 或 GPU 数量
+            _maxConcurrency = config.MaxConcurrency; // 建议通过配置传入，例如 Environment.ProcessorCount 或 GPU 数量
 
             // 1. 初始化检测
             if (_config.UseDet) _ocrDetPredictor = new PPOcrDet(_config.DetConfig);

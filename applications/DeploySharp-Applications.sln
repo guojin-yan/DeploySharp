@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ImageSharp-ApplicationPlatform", ".NET Framework 4.8\DeploySharp.ImageSharp-ApplicationPlatform\DeploySharp.ImageSharp-ApplicationPlatform.csproj", "{44159A1D-C7B7-4F90-A335-924522C667E5}"
 EndProject
@@ -10,6 +10,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET 6.0", ".NET 6.0", "{2B91DB5B-8A73-48C4-8640-A39CDCECDC77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.OpenCvSharp-ApplicationPlatform", ".NET 6.0\DeploySharp.OpenCvSharp-ApplicationPlatform\DeploySharp.OpenCvSharp-ApplicationPlatform.csproj", "{DB287F83-93E1-4BBF-B88A-D8DC5BAB0987}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET 8.0", ".NET 8.0", "{F4BC5528-8243-492B-BFCF-253319EF18BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JYPPX.DeploySharp.OpenCvSharp.PaddleOcr", ".NET 8.0\JYPPX.DeploySharp.OpenCvSharp.PaddleOcr\JYPPX.DeploySharp.OpenCvSharp.PaddleOcr.csproj", "{8E944D83-BD63-8EF8-5C0B-954136CA14ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +29,10 @@ Global
 		{DB287F83-93E1-4BBF-B88A-D8DC5BAB0987}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB287F83-93E1-4BBF-B88A-D8DC5BAB0987}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB287F83-93E1-4BBF-B88A-D8DC5BAB0987}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E944D83-BD63-8EF8-5C0B-954136CA14ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E944D83-BD63-8EF8-5C0B-954136CA14ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E944D83-BD63-8EF8-5C0B-954136CA14ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E944D83-BD63-8EF8-5C0B-954136CA14ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +40,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{44159A1D-C7B7-4F90-A335-924522C667E5} = {7B0628AF-3B14-4781-82BE-F4901045BCA8}
 		{DB287F83-93E1-4BBF-B88A-D8DC5BAB0987} = {2B91DB5B-8A73-48C4-8640-A39CDCECDC77}
+		{8E944D83-BD63-8EF8-5C0B-954136CA14ED} = {F4BC5528-8243-492B-BFCF-253319EF18BF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C6DAD9C7-64E1-401D-8173-2D45E7C7F828}
 	EndGlobalSection
 EndGlobal

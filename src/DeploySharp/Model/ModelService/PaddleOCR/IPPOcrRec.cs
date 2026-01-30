@@ -133,37 +133,51 @@ namespace DeploySharp.Model
             int batchSize = dataTensor[0].Shape[0]; // 通常是 recConfig.InferBatch
             int timeSteps = dataTensor[0].Shape[1]; // 代码中用的 resultCount
             int numClasses = dataTensor[0].Shape[2]; // 代码中用的 oneResultSize
-            int stepSize = numClasses;
-            int batchSizeStride = timeSteps * stepSize;
-
+            int oneResultSize = numClasses * timeSteps;
             for (int b = 0; b < batchSize; b++)
             {
                 // 2. Argmax 计算 (移除 Parallel.For，改用普通循环，因为 T 通常很小，线程切换开销 > 计算开销)
                 // 用于存储每个时间步的 argmax 结果
                 var maxIndices = new int[timeSteps];
                 var maxValues = new float[timeSteps];
-
-                int batchOffset = b * batchSizeStride;
-
-                for (int t = 0; t < timeSteps; t++)
+                if (numClasses == 2)
                 {
-                    float maxVal = float.MinValue;
-                    int maxIdx = -1;
-                    int stepOffset = batchOffset + (t * stepSize);
-
-                    // 手动展开或简单的循环查找最大值
-                    for (int c = 0; c < numClasses; c++)
+                    for (int t = 0; t < timeSteps; t++)
                     {
-                        float val = rawData[stepOffset + c];
-                        if (val > maxVal)
-                        {
-                            maxVal = val;
-                            maxIdx = c;
-                        }
+                        maxIndices[t] = (int)rawData[b * oneResultSize + 2 * t + 1];
+                        maxValues[t] = rawData[b * oneResultSize + 2 * t];
                     }
-                    maxIndices[t] = maxIdx;
-                    maxValues[t] = maxVal;
                 }
+                else
+                {
+
+                    int stepSize = numClasses;
+                    int batchSizeStride = timeSteps * stepSize;
+                    int batchOffset = b * batchSizeStride;
+
+                    for (int t = 0; t < timeSteps; t++)
+                    {
+                        float maxVal = float.MinValue;
+                        int maxIdx = -1;
+                        int stepOffset = batchOffset + (t * stepSize);
+
+                        // 手动展开或简单的循环查找最大值
+                        for (int c = 0; c < numClasses; c++)
+                        {
+                            float val = rawData[stepOffset + c];
+                            if (val > maxVal)
+                            {
+                                maxVal = val;
+                                maxIdx = c;
+                            }
+                        }
+                        maxIndices[t] = maxIdx;
+                        maxValues[t] = maxVal;
+                    }
+                }
+
+
+             
 
                 // 3. CTC 解码与字符串构建
                 // 使用 StringBuilder 优化字符串拼接性能
@@ -212,6 +226,11 @@ namespace DeploySharp.Model
                 // 这里为了兼容接口，必须包装。
                 results.Add(new TextRecResult[] { recResult });
             }
+
+
+
+ 
+           
 
             return results;
         }

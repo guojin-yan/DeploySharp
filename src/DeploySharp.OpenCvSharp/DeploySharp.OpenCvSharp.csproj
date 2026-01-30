@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp.OpenCvSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.6.2</Version>
+    <Version>0.0.6.3</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
@@ -47,12 +47,11 @@
   </ItemGroup>
   
   <ItemGroup>
-	<PackageReference Include="iTextSharp" Version="5.5.13.4" />
+	<PackageReference Include="iTextSharp" Version="5.5.13.5" />
 	<PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
 	<PackageReference Include="OpenCvSharp4.Extensions" Version="4.11.0.20250507" />
 	<PackageReference Include="OpenVINO.CSharp.API" Version="2025.4.0" />
-	<PackageReference Include="SharpCompress" Version="0.40.0" />
-	<PackageReference Include="Spire.XLS" Version="15.1.3" />
+	<PackageReference Include="SharpCompress" Version="0.44.5" />
   </ItemGroup>
 
   <ItemGroup>
