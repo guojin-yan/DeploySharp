@@ -80,10 +80,14 @@ using DeploySharp.Data;
 using DeploySharp.Engine;
 using DeploySharp.Log;
 using OpenCvSharp;
+using OpenVinoSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Policy;
 
 namespace DeploySharp.Model
 {
@@ -177,6 +181,10 @@ namespace DeploySharp.Model
                     // 更新配置中的输入尺寸 [Batch, Channel, Height, Width]
                     recConfig.InputSizes.Clear();
                     recConfig.InputSizes.Add(new int[] { batchSize, DefaultImageChannels, recConfig.InferImageHeight, targetWidth });
+
+
+                    // 直接输入图片
+                    //recConfig.InputSizes.Add(new int[] { batchSize, recConfig.InferImageHeight, targetWidth, DefaultImageChannels });
                 }
                 // --- End 动态尺寸计算 ---
 
@@ -192,9 +200,77 @@ namespace DeploySharp.Model
 
                 sw.Stop();
                 // 只有在 Debug 模式或采样模式下才打印日志，避免高频日志拖慢速度
-                // MyLogger.Log.Debug($"Rec Preprocess Finished. Batch: {batchSize}, Time: {sw.ElapsedMilliseconds}ms");
+                MyLogger.Log.Debug($"Rec Preprocess Finished. Batch: {batchSize}, Time: {sw.ElapsedMilliseconds}ms");
+
 
                 return tensor;
+
+
+
+
+
+
+
+
+
+                //List<byte[]> normalizedDatas = new List<byte[]>();
+                //List<ImageAdjustmentParam> imageAdjustmentParamList = new List<ImageAdjustmentParam>();
+                //int dataLength = 0;
+                //for (int i = 0; i < imgs.Count; i++)
+                //{
+                //    var image = (Mat)imgs[i];
+
+                //    Mat im = CvDataProcessor.Resize((Mat)imgs[i],
+                //        new Data.Size(config.InputSizes[0][2], config.InputSizes[0][1]), ImageResizeMode.Stretch, InterpolationFlags.Linear);
+                //    //byte[] data = im.ToBytes(); ;
+                //    //im.GetArray(out data);
+
+
+                //    //byte[] data = new byte[im.Total() * im.ElemSize()];
+                //    //// 2. 获取数据指针
+                //    //IntPtr ptr = im.Data;
+                //    //// 3. 从非托管内存拷贝到托管数组
+                //    //// mat.DataStart 到 mat.DataEnd 之间可能包含对齐填充，
+                //    //// 但这里我们直接按计算出的 expectedSize 拷贝，确保没有多余字节。
+                //    //Marshal.Copy(ptr, data, 0, data.Length);
+
+                //    byte[] data = MatToBytesSafe(im);
+
+                //    normalizedDatas.Add(data);
+                //    dataLength += data.Length;
+                //    imageAdjustmentParamList.Add(ImageAdjustmentParam.CreateFromImageInfo(
+                //        new Data.Size(config.InputSizes[0][2], config.InputSizes[0][1]),
+                //        CvDataExtensions.ToCvSize(image.Size()),
+                //        ((IImgConfig)config).DataProcessor.ResizeMode));
+
+
+                //    MyLogger.Log.Debug($"创建ImageAdjustmentParam完成，" +
+                //         $"原始尺寸: {image.Size()}, " +
+                //         $"目标尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][1]}, " +
+                //         $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
+                //}
+                //List<byte> imageDatas = new List<byte>(dataLength);
+                //foreach (var item in normalizedDatas)
+                //{
+                //    imageDatas.AddRange(item);
+                //}
+
+
+                //DataTensor dataTensors = new DataTensor();
+                //dataTensors.AddNode(
+                //    config.InputNames[0],
+                //    0,
+                //    TensorType.Input,
+                //    imageDatas.ToArray(),
+                //    config.InputSizes[0],
+                //    typeof(byte));
+
+                //MyLogger.Log.Debug($"DataTensor构造完成，输入名称: {config.InputNames[0]}, " +
+                //                 $"数据类型: {typeof(float)}, " +
+                //                 $"数据长度: {imageDatas.Count}");
+
+                //imageAdjustmentParam = imageAdjustmentParamList.ToArray();
+                //return dataTensors;
             }
             catch (Exception ex)
             {
@@ -203,6 +279,28 @@ namespace DeploySharp.Model
                 MyLogger.Log.Error($"PPOcrRec Preprocess Exception: {ex.Message}", ex);
                 throw;
             }
+        }
+
+        public byte[] MatToBytesSafe(Mat mat)
+        {
+            int width = mat.Cols;
+            int height = mat.Rows;
+            int channels = mat.Channels();
+            byte[] data = new byte[width * height * channels];
+            int index = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // 获取像素的3个通道值
+                    Vec3b color = mat.Get<Vec3b>(y, x);
+
+                    data[index++] = color.Item0; // B
+                    data[index++] = color.Item1; // G
+                    data[index++] = color.Item2; // R
+                }
+            }
+            return data;
         }
     }
 }

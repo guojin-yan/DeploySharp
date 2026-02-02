@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp.OpenCvSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.6.3</Version>
+    <Version>0.0.7</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>

@@ -144,8 +144,11 @@ namespace DeploySharp.Model
                 {
                     for (int t = 0; t < timeSteps; t++)
                     {
+
                         maxIndices[t] = (int)rawData[b * oneResultSize + 2 * t + 1];
                         maxValues[t] = rawData[b * oneResultSize + 2 * t];
+                        //maxValues [t] = rawData[b * oneResultSize + 2 * t + 1];
+                        //maxIndices[t] = (int)rawData[b * oneResultSize + 2 * t];
                     }
                 }
                 else

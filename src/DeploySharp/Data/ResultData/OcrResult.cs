@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DeploySharp.Data
@@ -77,5 +78,106 @@ namespace DeploySharp.Data
             sb.AppendLine("========================================");
             return sb.ToString();
         }
+
+
+        #region 同步排序方法
+        /// <summary>
+        /// 辅助方法：根据排序后的索引，重组三个数组，确保它们一一对应。
+        /// </summary>
+        private void ReorderArrays(int[] sortedIndices)
+        {
+            if (sortedIndices == null || sortedIndices.Length == 0) return;
+            var newTextAreas = new ObbResult[sortedIndices.Length];
+            var newTextOrientations = new Result[sortedIndices.Length];
+            var newTextContents = new TextRecResult[sortedIndices.Length];
+            for (int i = 0; i < sortedIndices.Length; i++)
+            {
+                int oldIndex = sortedIndices[i];
+                newTextAreas[i] = TextAreas[oldIndex];
+                newTextOrientations[i] = TextOrientations[oldIndex];
+                newTextContents[i] = TextContents[oldIndex];
+            }
+            // 更新属性
+            TextAreas = newTextAreas;
+            TextOrientations = newTextOrientations;
+            TextContents = newTextContents;
+        }
+        /// <summary>
+        /// 按照横坐标（X）排序，同步更新 Orientations 和 Contents
+        /// </summary>
+        public void SortByX(bool ascending = true)
+        {
+            if (TextAreas == null) return;
+            int[] indices = ascending
+                ? TextAreas.Select((t, i) => new { Index = i, Val = t.Bounds.Center.X }).OrderBy(x => x.Val).Select(x => x.Index).ToArray()
+                : TextAreas.Select((t, i) => new { Index = i, Val = t.Bounds.Center.X }).OrderByDescending(x => x.Val).Select(x => x.Index).ToArray();
+            ReorderArrays(indices);
+        }
+        /// <summary>
+        /// 按照纵坐标（Y）排序，同步更新 Orientations 和 Contents
+        /// </summary>
+        public void SortByY(bool ascending = true)
+        {
+            if (TextAreas == null) return;
+            int[] indices = ascending
+                ? TextAreas.Select((t, i) => new { Index = i, Val = t.Bounds.Center.Y }).OrderBy(x => x.Val).Select(x => x.Index).ToArray()
+                : TextAreas.Select((t, i) => new { Index = i, Val = t.Bounds.Center.Y }).OrderByDescending(x => x.Val).Select(x => x.Index).ToArray();
+            ReorderArrays(indices);
+        }
+        /// <summary>
+        /// 按照 Y 然后 X 排序，同步更新 Orientations 和 Contents
+        /// </summary>
+        public void SortByYThenX(bool yAscending = true, bool xAscending = true)
+        {
+            if (TextAreas == null) return;
+            int[] indices;
+            if (yAscending)
+            {
+                if (xAscending)
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderBy(o => o.Y).ThenBy(o => o.X).Select(o => o.Index).ToArray();
+                else
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderBy(o => o.Y).ThenByDescending(o => o.X).Select(o => o.Index).ToArray();
+            }
+            else
+            {
+                if (xAscending)
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderByDescending(o => o.Y).ThenBy(o => o.X).Select(o => o.Index).ToArray();
+                else
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderByDescending(o => o.Y).ThenByDescending(o => o.X).Select(o => o.Index).ToArray();
+            }
+            ReorderArrays(indices);
+        }
+        /// <summary>
+        /// 按照 X 然后 Y 排序，同步更新 Orientations 和 Contents
+        /// </summary>
+        public void SortByXThenY(bool xAscending = true, bool yAscending = true)
+        {
+            if (TextAreas == null) return;
+            int[] indices;
+            if (xAscending)
+            {
+                if (yAscending)
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderBy(o => o.X).ThenBy(o => o.Y).Select(o => o.Index).ToArray();
+                else
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderBy(o => o.X).ThenByDescending(o => o.Y).Select(o => o.Index).ToArray();
+            }
+            else
+            {
+                if (yAscending)
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderByDescending(o => o.X).ThenBy(o => o.Y).Select(o => o.Index).ToArray();
+                else
+                    indices = TextAreas.Select((t, i) => new { Index = i, X = t.Bounds.Center.X, Y = t.Bounds.Center.Y })
+                                       .OrderByDescending(o => o.X).ThenByDescending(o => o.Y).Select(o => o.Index).ToArray();
+            }
+            ReorderArrays(indices);
+        }
+        #endregion
     }
 }

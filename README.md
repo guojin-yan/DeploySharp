@@ -78,10 +78,10 @@ Licensed under **Apache License 2.0**. Future updates will expand TensorRT suppo
 |  **YOLO26**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
 |  **YOLO26**  |          Pose           |    ✅     |      ✅       |    ✅     |
 |  **YOLO26**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
-|  **PaddleOCR V5**  |      Detection       |    ✅     |      ✅       |    ✅     |
-|  **PaddleOCR V5**  |          Classification           |    ✅     |      ✅       |    ✅     |
-|  **PaddleOCR V5**  | Recognize |    ✅     |      ✅       |    ✅     |
-|  **PaddleOCR V5**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅     |
+|  **PP-OCRv5**  |      Detection       |    ✅     |      ✅       |    ✅     |
+|  **PP-OCRv5**  |          Classification           |    ✅     |      ✅       |    ✅     |
+|  **PP-OCRv5**  | Recognize |    ✅     |      ✅       |    ✅     |
+|  **PP-OCRv5**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅     |
 
 
 # <img title="NuGet" src="https://s2.loli.net/2023/08/08/jE6BHu59L4WXQFg.png" alt="" width="40">NuGet Package

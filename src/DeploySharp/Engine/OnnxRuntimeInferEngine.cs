@@ -702,7 +702,15 @@ namespace DeploySharp.Engine
                         inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
                             (bool[])data.DataBuffer, data.Shape.Select(x => (long)x).ToArray());
                         break;
-
+                    case Type t when t == typeof(byte):
+                        //// Convert bool to byte as ONNX represents bool as byte
+                        //var byteData = ((bool[])data.DataBuffer).Select(b => b ? true : false).ToArray();
+                        //inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                        //    byteData,
+                        //    data.Shape.Select(x => (long)x).ToArray());
+                        inputsData[data.Name] = OrtValue.CreateTensorValueFromMemory(
+                            (byte[])data.DataBuffer, data.Shape.Select(x => (long)x).ToArray());
+                        break;
                     default:
                         throw new NotSupportedException($"Unsupported input data type: {data.DataType}");
                 }
