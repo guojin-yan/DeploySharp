@@ -34,6 +34,8 @@ namespace DeploySharp.Model
     /// </summary>
     public class PaddleOCRConfig
     {
+        
+
         // --- 1. 子配置 (均为可空) ---
 
         /// <summary>
@@ -273,5 +275,35 @@ namespace DeploySharp.Model
             // 如果有复杂的初始化逻辑，建议反序列化后手动调用 Validate 或修正逻辑
             return JsonSerializer.Deserialize<PaddleOCRConfig>(json);
         }
+
+
+
+
+        public static PaddleOCRConfig GetPPOCRv5Config(
+            string detModelPath = null,
+            string clsModelPath = null,
+            string recModelPath = null,
+            string recDictPath = null)
+        { 
+            return new PaddleOCRConfig(detModelPath, clsModelPath, recModelPath, recDictPath);
+
+        }
+
+        public static PaddleOCRConfig GetPPOCRv4Config(
+            string detModelPath = null,
+            string clsModelPath = null,
+            string recModelPath = null,
+            string recDictPath = null)
+        {
+            PaddleOCRConfig config = new PaddleOCRConfig(detModelPath, clsModelPath, recModelPath, recDictPath);
+            if (config.ClsConfig != null) 
+            {
+                config.ClsConfig.ClsImageHeight = 48;
+                config.ClsConfig.ClsImageWidth = 192;
+            }
+            return config;
+
+        }
+
     }
 }

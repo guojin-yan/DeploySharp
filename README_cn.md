@@ -46,7 +46,17 @@
 - 提供可视化结果展示方案
 - 提供完善的示例代码库
 
+# 📄技术博客
 
+- [DeploySharp开源发布：让C#部署深度学习模型更加简单](https://mp.weixin.qq.com/s/K1mYc-R3CNkoi3GxeCb75Q)
+
+- [基于DeploySharp 的深度学习模型部署测试平台：支持YOLO全系列模型](https://mp.weixin.qq.com/s/vs4ZyA-UPe5EWG7Zj2mNGA)
+
+- [手把手运行教大家运行基于DeploySharp 的深度学习模型部署测试平台：快速实现在C#平台进行模型部署](https://mp.weixin.qq.com/s/DGqyNQ-iLDjJcEAmdd2nLw)
+
+- [DeploySharp 全面支持 YOLO26 系列，助力开发者快速部署落地应用](https://mp.weixin.qq.com/s/Zjk4-tVa-GA5MUqFwswqPA)
+
+- [使用 JYPPX.DeploySharp 高效部署 PaddleOCR，解锁多种高性能 OCR 文字识别方案](https://mp.weixin.qq.com/s/Luf10qJdO-XfxvVN-Qhj6Q)
 
 # 🎨模型支持列表
 
@@ -78,10 +88,14 @@
 |  **YOLO26**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
 |  **YOLO26**  |          Pose           |    ✅     |      ✅       |    ✅     |
 |  **YOLO26**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
-|  **PP-OCRv5**  |      Detection       |    ✅     |      ✅       |    ✅     |
-|  **PP-OCRv5**  |          Classification           |    ✅     |      ✅       |    ✅     |
-|  **PP-OCRv5**  | Recognize |    ✅     |      ✅       |    ✅     |
-|  **PP-OCRv5**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v5**  |      Detection       |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v5**  |     Classification     |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v5**  | Recognize |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v5**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅    |
+|  **PP-OCR v4**  |      Detection       |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v4**  |     Classification     |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v4**  | Recognize |    ✅     |      ✅       |    ✅     |
+|  **PP-OCR v4**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅    |
 
 # <img title="NuGet" src="https://s2.loli.net/2023/08/08/jE6BHu59L4WXQFg.png" alt="" width="40">NuGet Package
 

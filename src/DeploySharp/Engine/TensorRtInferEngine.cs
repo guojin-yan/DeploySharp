@@ -514,24 +514,24 @@ namespace DeploySharp.Engine
             }
             try
             {
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
                 // Step 1: Prepare input tensors
                 SetInputTensors(executionContexts[availableRequestIndex].Second, availableRequestIndex, input);
 
-                sw.Stop();
-                MyLogger.Log.Error($"Input tensor preparation time: {sw.ElapsedMilliseconds} ms");
-                sw.Restart();
+                //sw.Stop();
+                //MyLogger.Log.Error($"Input tensor preparation time: {sw.ElapsedMilliseconds} ms");
+                //sw.Restart();
                 // Step 2: Execute inference
                 ExecuteInference(executionContexts[availableRequestIndex].Second, availableRequestIndex);
-                sw.Stop();
-                MyLogger.Log.Error($"Inference execution time: {sw.ElapsedMilliseconds} ms");
-                sw.Restart();
+                //sw.Stop();
+                //MyLogger.Log.Error($"Inference execution time: {sw.ElapsedMilliseconds} ms");
+                //sw.Restart();
                 // Step 3: Process output tensors
-                DataTensor datas = ProcessOutputs(availableRequestIndex);
-                sw.Stop();
-                MyLogger.Log.Error($"Output tensor processing time: {sw.ElapsedMilliseconds} ms");
-                return datas;
+                //DataTensor datas = ProcessOutputs(availableRequestIndex);
+                //sw.Stop();
+                //MyLogger.Log.Error($"Output tensor processing time: {sw.ElapsedMilliseconds} ms");
+                //return datas;
                 return ProcessOutputs(availableRequestIndex);
             }
             finally

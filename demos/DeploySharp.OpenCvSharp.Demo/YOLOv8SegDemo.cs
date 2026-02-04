@@ -65,12 +65,14 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\Yolo\yolov8s-seg.onnx";
+            string modelPath = @"E:\Model\Yolo\yolov8n-seg.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\bus.jpg";
+            string imagePath = @"E:\Data\image\boy.jpg";
 
             Yolov8SegConfig config = new Yolov8SegConfig(modelPath);
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetDeviceType(DeviceType.GPU0);
+            config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.Cuda);
             Yolov8SegModel model = new Yolov8SegModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);

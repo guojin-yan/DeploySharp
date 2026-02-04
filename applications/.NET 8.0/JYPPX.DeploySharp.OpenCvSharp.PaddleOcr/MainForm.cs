@@ -154,6 +154,10 @@ namespace PaddleOcr.Demo
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            ComboBoxModelVersion.Items.Add("PP-OCR v4");
+            ComboBoxModelVersion.Items.Add("PP-OCR v5");
+            ComboBoxModelVersion.SelectedIndex = 1;
+
             string[] enumInferenceBackendStrings = Enum.GetNames(typeof(InferenceBackend));
             foreach (var enumString in enumInferenceBackendStrings)
             {
@@ -182,7 +186,7 @@ namespace PaddleOcr.Demo
             }
             ComboBoxConcurrency.SelectedIndex = 3;
 
-            for (int i = 1; i < 17; ++i) 
+            for (int i = 1; i < 17; ++i)
             {
                 ComboBoxBatchSize.Items.Add(i.ToString());
             }
@@ -200,12 +204,24 @@ namespace PaddleOcr.Demo
             string dictPath = string.IsNullOrWhiteSpace(TextBoxDictPath.Text) ? null : TextBoxDictPath.Text;
             // 2. 实例化配置对象
             // 注意：这里我们将处理后的变量（可能为 null）传入构造函数
-            PaddleOCRConfig oCRConfig = new PaddleOCRConfig(
-                detModelPath: detPath,
-                clsModelPath: clsPath,
-                recModelPath: recPath,
-                recDictPath: dictPath
-            );
+            PaddleOCRConfig oCRConfig = null;
+            if (ComboBoxModelVersion.SelectedIndex == 0) 
+            {
+                oCRConfig = PaddleOCRConfig.GetPPOCRv4Config(
+                    detModelPath: detPath,
+                    clsModelPath: clsPath,
+                    recModelPath: recPath,
+                    recDictPath: dictPath);
+            }
+            else if (ComboBoxModelVersion.SelectedIndex == 1)
+            {
+                oCRConfig = PaddleOCRConfig.GetPPOCRv5Config(
+                    detModelPath: detPath,
+                    clsModelPath: clsPath,
+                    recModelPath: recPath,
+                    recDictPath: dictPath);
+            }
+
             oCRConfig.GlobalMaxBatchSize = ComboBoxBatchSize.SelectedIndex + 1;
             oCRConfig.MaxConcurrency = ComboBoxConcurrency.SelectedIndex + 1;
             InferenceBackend inferenceBackend = enumInferenceBackendValues[ComboEngineType.SelectedIndex];
@@ -215,17 +231,37 @@ namespace PaddleOcr.Demo
             oCRConfig.GlobalDeviceType = deviceType;
             oCRConfig.GlobalOnnxRuntimeDeviceType = onnxType;
 
-            if (detPath == null) 
+            oCRConfig.DetConfig.LimitInputSize = TextBoxDetMaxSize.Text != "" ? int.Parse(TextBoxDetMaxSize.Text) : 960;
+            oCRConfig.ClsConfig.ClsImageWidth = TextBoxClsInputWidth.Text != "" ? int.Parse(TextBoxClsInputWidth.Text) : 192;
+            oCRConfig.ClsConfig.ClsImageHeight = TextBoxClsInputHeight.Text != "" ? int.Parse(TextBoxClsInputHeight.Text) : 48;
+            oCRConfig.RecConfig.MaxImageWidth = TextBoxRecMaxWidth.Text != "" ? int.Parse(TextBoxRecMaxWidth.Text) : 960;
+            oCRConfig.RecConfig.InferImageHeight = TextBoxRecInputHeight.Text != "" ? int.Parse(TextBoxRecInputHeight.Text) : 48;
+
+            if (detPath == null)
             {
                 CheckBoxUseDet.Checked = false;
+            }
+            else
+            {
+                oCRConfig.DetConfig.LimitInputSize = int.Parse(TextBoxDetMaxSize.Text);
             }
             if (clsPath == null)
             {
                 CheckBoxUseCls.Checked = false;
             }
+            else
+            {
+                oCRConfig.ClsConfig.ClsImageWidth = int.Parse(TextBoxClsInputWidth.Text);
+                oCRConfig.ClsConfig.ClsImageHeight = int.Parse(TextBoxClsInputHeight.Text);
+            }
             if (recPath == null || dictPath == null)
             {
                 CheckBoxUseRec.Checked = false;
+            }
+            else
+            {
+                oCRConfig.RecConfig.MaxImageWidth = int.Parse(TextBoxRecMaxWidth.Text);
+                oCRConfig.RecConfig.InferImageHeight = int.Parse(TextBoxRecInputHeight.Text);
             }
 
             if (paddleOcrPredictor != null)
@@ -251,15 +287,9 @@ namespace PaddleOcr.Demo
                 Mat img = Cv2.ImRead(imagePath);
                 // 2. 进行预测
                 Stopwatch sw = new Stopwatch();
-                OcrResult result = paddleOcrPredictor.Predict(
-                    img, 
-                    ComboBoxBatchSize.SelectedIndex + 1,
-                    CheckBoxUseDet.Checked,
-                    CheckBoxUseCls.Checked,
-                    CheckBoxUseRec.Checked
-                    );
+
                 sw.Start();
-                result = paddleOcrPredictor.Predict(
+                OcrResult result = paddleOcrPredictor.Predict(
                     img,
                     ComboBoxBatchSize.SelectedIndex + 1,
                     CheckBoxUseDet.Checked,
@@ -268,9 +298,13 @@ namespace PaddleOcr.Demo
                     );
                 sw.Stop();
                 // 3. 显示结果
+                result.SortByYThenX();
+                TextBoxResultText.Text = result.TextContentsToString();
                 TextBoxResult.Text = result.ToString();
                 Mat resultMat = Visualize.DrawOcrResult(img, result, new VisualizeOptions(1.0f));
-                TextBoxTime.Text = $"Inference time: {sw.ElapsedMilliseconds} ms\n" + paddleOcrPredictor.PrintTimeProfiling();
+
+                TextBoxInferTime.Text = sw.ElapsedMilliseconds.ToString();
+                TextBoxTime.Text = paddleOcrPredictor.PrintTimeProfiling();
                 PictureBoxResult.BackgroundImage = BitmapConverter.ToBitmap(resultMat);
             }
             else
@@ -309,9 +343,13 @@ namespace PaddleOcr.Demo
 
                 sw.Stop();
                 // 3. 显示结果
+                result.SortByYThenX();
+                TextBoxResultText.Text = result.TextContentsToString();
                 TextBoxResult.Text = result.ToString();
                 Mat resultMat = Visualize.DrawOcrResult(img, result, new VisualizeOptions(1.0f));
-                TextBoxTime.Text = $"Inference time: {sw.ElapsedMilliseconds / 10} ms\n" + paddleOcrPredictor.PrintTimeProfiling();
+
+                TextBoxInferTime.Text = (sw.ElapsedMilliseconds/10).ToString();
+                TextBoxTime.Text = paddleOcrPredictor.PrintTimeProfiling();
                 PictureBoxResult.BackgroundImage = BitmapConverter.ToBitmap(resultMat);
 
             }
@@ -328,6 +366,28 @@ namespace PaddleOcr.Demo
             {
                 paddleOcrPredictor.Dispose();
                 paddleOcrPredictor = null;
+            }
+        }
+
+        private void ComboBoxModelVersion_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ComboBoxModelVersion.SelectedIndex == 0)
+            {
+                TextBoxDetModelPath.Text = "./test_demo/PP-OCRv4_mobile_det_onnx.onnx";
+                TextBoxClsModelPath.Text = "./test_demo/PP-OCRv4_mobile_cls_onnx.onnx";
+                TextBoxRecModelPath.Text = "./test_demo/PP-OCRv4_mobile_rec_onnx.onnx";
+                TextBoxDictPath.Text = "./test_demo/ppocrv4_dict.txt";
+                TextBoxClsInputWidth.Text = "192";
+                TextBoxClsInputHeight.Text = "48";
+            }
+            else if (ComboBoxModelVersion.SelectedIndex == 1)
+            {
+                TextBoxDetModelPath.Text = "./test_demo/PP-OCRv5_mobile_det_onnx.onnx";
+                TextBoxClsModelPath.Text = "./test_demo/PP-OCRv5_mobile_cls_onnx.onnx";
+                TextBoxRecModelPath.Text = "./test_demo/PP-OCRv5_mobile_rec_onnx.onnx";
+                TextBoxDictPath.Text = "./test_demo/ppocrv5_dict.txt";
+                TextBoxClsInputWidth.Text = "160";
+                TextBoxClsInputHeight.Text = "80";
             }
         }
     }
