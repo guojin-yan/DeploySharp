@@ -96,26 +96,58 @@ namespace DeploySharp.Model
                 // 2.1 候选框提取 (使用 List 代替 ConcurrentBag 提升性能)
                 var candidateBoxes = new List<BoundingBox>();
 
-                // 并行处理 Grid
-                Parallel.For(0, rowResultNum, i =>
-                {
-                    // 预计算该 Grid 点在 result0 中的基准偏移
-                    int baseIdx = batchOffset + i;
+                //// 并行处理 Grid
+                //Parallel.For(0, rowResultNum, i =>
+                //{
+                //    // 预计算该 Grid 点在 result0 中的基准偏移
+                //    int baseIdx = batchOffset + i;
 
-                    // 提取坐标 (所有类别共享)
+                //    // 提取坐标 (所有类别共享)
+                //    float cx = result0[baseIdx];
+                //    float cy = result0[baseIdx + rowResultNum];
+                //    float ow = result0[baseIdx + rowResultNum * 2];
+                //    float oh = result0[baseIdx + rowResultNum * 3];
+                //    // 遍历类别
+                //    for (int j = 4; j < oneResultLen - maskLen; j++)
+                //    {
+                //        float conf = result0[baseIdx + rowResultNum * j];
+                //        if (conf > confThreshold)
+                //        {
+                //            int label = j - 4;
+                //            // 坐标转换: cx, cy, w, h -> x, y, w, h
+                //            candidateBoxes.Add(new BoundingBox
+                //            {
+                //                Index = i,
+                //                NameIndex = label,
+                //                Confidence = conf,
+                //                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                //                Angle = 0.0f
+                //            });
+                //        }
+                //    }
+                //});
+
+
+                // 1. 准备并行数据源（索引 0 到 rowResultNum）
+                var parallelQuery = ParallelEnumerable.Range(0, rowResultNum);
+                // 2. 并行处理并收集结果到线程安全集合
+                // ConcurrentBag 是线程安全的无序集合
+                var concurrentBoxes = new ConcurrentBag<BoundingBox>();
+                parallelQuery.ForAll(i =>
+                {
+                    int baseIdx = batchOffset + i;
                     float cx = result0[baseIdx];
                     float cy = result0[baseIdx + rowResultNum];
                     float ow = result0[baseIdx + rowResultNum * 2];
                     float oh = result0[baseIdx + rowResultNum * 3];
-                    // 遍历类别
                     for (int j = 4; j < oneResultLen - maskLen; j++)
                     {
                         float conf = result0[baseIdx + rowResultNum * j];
                         if (conf > confThreshold)
                         {
                             int label = j - 4;
-                            // 坐标转换: cx, cy, w, h -> x, y, w, h
-                            candidateBoxes.Add(new BoundingBox
+                            // 使用 Add 替代
+                            concurrentBoxes.Add(new BoundingBox
                             {
                                 Index = i,
                                 NameIndex = label,
@@ -126,6 +158,8 @@ namespace DeploySharp.Model
                         }
                     }
                 });
+                // 3. (可选) 如果后续需要 List，再转换回来
+                candidateBoxes = concurrentBoxes.ToList();
                 // 2.2 NMS
                 var boxes = config.NonMaxSuppression.Run(candidateBoxes, config.NmsThreshold);
                 int boxCount = boxes.Count();

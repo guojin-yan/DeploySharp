@@ -104,8 +104,44 @@ namespace DeploySharp.Model
                 // 2.1 候选框提取
                 // 使用 List 避免 ConcurrentBag 的锁开销
                 var candidateBoxes = new List<BoundingBox>();
-                // 并行处理 Grid
-                Parallel.For(0, rowResultNum, i =>
+                //// 并行处理 Grid
+                //Parallel.For(0, rowResultNum, i =>
+                //{
+                //    // 预计算该 Grid 点在 result0 中的基准偏移
+                //    int baseIdx = batchOffset + i * oneResultLen;
+                //    // 1. 快速检查 Objectness (索引 4)
+                //    float objConf = result0[baseIdx + 4];
+                //    if (objConf <= objThreshold) return;
+                //    // 2. 提取坐标 (索引 0-3)
+                //    float cx = result0[baseIdx];
+                //    float cy = result0[baseIdx + 1];
+                //    float ow = result0[baseIdx + 2];
+                //    float oh = result0[baseIdx + 3];
+                //    // 3. 遍历类别 (索引 5 到 oneResultLen - maskLen)
+                //    for (int j = 5; j < oneResultLen - maskLen; j++)
+                //    {
+                //        float classConf = result0[baseIdx + j];
+                //        // 注意：原代码逻辑只用了 classConf，未乘以 objConf。
+                //        // 如果 NMS 需要乘积，需在此处修改。
+                //        if (classConf > confThreshold)
+                //        {
+                //            candidateBoxes.Add(new BoundingBox
+                //            {
+                //                Index = i,
+                //                NameIndex = j - 5,
+                //                Confidence = classConf,
+                //                Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
+                //                Angle = 0.0f
+                //            });
+                //        }
+                //    }
+                //});
+
+                // 1. 使用 ConcurrentBag 来收集结果，保证线程安全
+                var concurrentBoxes = new ConcurrentBag<BoundingBox>();
+                // 2. 生成索引范围 并开启并行查询
+                // ParallelEnumerable.Range(0, rowResultNum) 等同于 Enumerable.Range(...).AsParallel()
+                ParallelEnumerable.Range(0, rowResultNum).ForAll(i =>
                 {
                     // 预计算该 Grid 点在 result0 中的基准偏移
                     int baseIdx = batchOffset + i * oneResultLen;
@@ -121,21 +157,22 @@ namespace DeploySharp.Model
                     for (int j = 5; j < oneResultLen - maskLen; j++)
                     {
                         float classConf = result0[baseIdx + j];
-                        // 注意：原代码逻辑只用了 classConf，未乘以 objConf。
-                        // 如果 NMS 需要乘积，需在此处修改。
                         if (classConf > confThreshold)
                         {
-                            candidateBoxes.Add(new BoundingBox
+                            // 3. 线程安全地添加到集合中
+                            concurrentBoxes.Add(new BoundingBox
                             {
                                 Index = i,
                                 NameIndex = j - 5,
                                 Confidence = classConf,
+                                // 坐标转换: cx, cy, w, h -> x, y, w, h
                                 Box = new RectF(cx - 0.5f * ow, cy - 0.5f * oh, ow, oh),
                                 Angle = 0.0f
                             });
                         }
                     }
                 });
+                candidateBoxes = concurrentBoxes.ToList();
                 // 2.2 NMS
                 var boxes = config.NonMaxSuppression.Run(candidateBoxes, config.NmsThreshold);
                 int boxCount = boxes.Count();
