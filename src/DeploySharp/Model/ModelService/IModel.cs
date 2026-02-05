@@ -257,8 +257,8 @@ namespace DeploySharp.Model
                 try
                 {
                     predictorTimer.Reset();
+                    predictorTimer.StartPreprocess();
 
-           
                     var inputTensor = PreprocessBatch(imgs, out var imageAdjustmentParams);
                     predictorTimer.StartBatchInference();
                     var outputTensor = engine.Predict(inputTensor);
