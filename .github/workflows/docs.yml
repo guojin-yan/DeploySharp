@@ -86,11 +86,13 @@ jobs:
           fi
           docfx --version
 
-      # Build the solution to generate XML documentation (net10.0 only)
-      # 构建解决方案以生成XML文档（仅net10.0）
-      - name: Build Solution
+      # Build core projects to generate XML documentation (net10.0 only)
+      # 构建核心项目以生成XML文档（仅net10.0）
+      - name: Build Core Projects
         run: |
-          dotnet build DeploySharp.sln --configuration Release -f net10.0
+          dotnet build src/DeploySharp/DeploySharp.csproj --configuration Release -f net10.0
+          dotnet build src/DeploySharp.ImageSharp/DeploySharp.ImageSharp.csproj --configuration Release -f net10.0
+          dotnet build src/DeploySharp.OpenCvSharp/DeploySharp.OpenCvSharp.csproj --configuration Release -f net10.0
 
       # Generate API Documentation using DocFX
       # 使用DocFX生成API文档
