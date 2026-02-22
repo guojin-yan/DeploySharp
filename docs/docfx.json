@@ -19,7 +19,7 @@
       "disableDefaultFilter": false,
       "filter": "filterConfig.yml",
       "properties": {
-        "TargetFramework": "net8.0"
+        "TargetFramework": "net10.0"
       }
     }
   ],
@@ -74,9 +74,9 @@
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
     "globalMetadata": {
-      "_appTitle": "DeploySharp API Documentation",
-      "_appName": "DeploySharp",
-      "_appFooter": "Copyright © 2024 DeploySharp. Licensed under Apache 2.0",
+      "_appTitle": "DeploySharp API Documentation / DeploySharp API 文档",
+      "_appName": "DeploySharp / 部署Sharp",
+      "_appFooter": "Copyright © 2024 DeploySharp. Licensed under Apache 2.0 / 版权所有 © 2024 DeploySharp. Apache 2.0 许可证",
       "_enableSearch": true,
       "_enableNewTab": true,
       "_disableContribution": false,

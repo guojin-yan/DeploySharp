@@ -52,6 +52,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Copy README_cn.md to docs directory
+      # 复制 README_cn.md 到 docs 目录
+      - name: Copy README_cn.md
+        run: |
+          cp README_cn.md docs/README_cn.md
+          echo "Copied README_cn.md to docs directory"
+
       # Setup .NET SDK
       # 设置.NET SDK
       - name: Setup .NET
@@ -135,6 +142,21 @@ jobs:
     if: github.event_name != 'pull_request'
     
     steps:
+      # Checkout the repository
+      # 检出代码库
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Download build artifacts
+      # 下载构建产物
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: docs/_site
+
       # Deploy to GitHub Pages
       # 部署到GitHub Pages
       - name: Deploy to GitHub Pages
