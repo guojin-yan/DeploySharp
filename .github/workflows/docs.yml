@@ -57,10 +57,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            8.0.x
-            9.0.x
+          dotnet-version: '10.0.x'
 
       # Setup Node.js (required for some DocFX plugins)
       # 设置Node.js（某些DocFX插件需要）
@@ -89,11 +86,11 @@ jobs:
           fi
           docfx --version
 
-      # Build the solution to generate XML documentation
-      # 构建解决方案以生成XML文档
+      # Build the solution to generate XML documentation (net10.0 only)
+      # 构建解决方案以生成XML文档（仅net10.0）
       - name: Build Solution
         run: |
-          dotnet build DeploySharp.sln --configuration Release
+          dotnet build DeploySharp.sln --configuration Release -f net10.0
 
       # Generate API Documentation using DocFX
       # 使用DocFX生成API文档

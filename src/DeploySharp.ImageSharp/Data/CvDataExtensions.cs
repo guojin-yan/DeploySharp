@@ -365,9 +365,9 @@ namespace DeploySharp.Data
 
             return imageData.Channels switch
             {
-                1 => Image.WrapMemory&lt;L8&gt;(rawData, imageData.Width, imageData.Height).CloneAs&lt;Rgb24&gt;(),
-                3 => Image.WrapMemory&lt;Rgb24&gt;(rawData, imageData.Width, imageData.Height),
-                4 => Image.WrapMemory&lt;Rgba32&gt;(rawData, imageData.Width, imageData.Height).CloneAs&lt;Rgb24&gt;(),
+                1 => Image.LoadPixelData<L8>(rawData, imageData.Width, imageData.Height).CloneAs<Rgb24>(),
+                3 => Image.LoadPixelData<Rgb24>(rawData, imageData.Width, imageData.Height),
+                4 => Image.LoadPixelData<Rgba32>(rawData, imageData.Width, imageData.Height).CloneAs<Rgb24>(),
                 _ => throw new NotSupportedException($"Unsupported channel count: {imageData.Channels}")
             };
         }
