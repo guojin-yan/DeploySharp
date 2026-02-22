@@ -52,12 +52,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Copy README_cn.md to docs directory
-      # 复制 README_cn.md 到 docs 目录
-      - name: Copy README_cn.md
+      # Copy README_cn.md to docs/index.md for homepage
+      # 复制 README_cn.md 到 docs/index.md 作为主页
+      - name: Copy README_cn.md to index.md
         run: |
-          cp README_cn.md docs/README_cn.md
-          echo "Copied README_cn.md to docs directory"
+          cp README_cn.md docs/index.md
+          echo "Copied README_cn.md to docs/index.md"
 
       # Setup .NET SDK
       # 设置.NET SDK
