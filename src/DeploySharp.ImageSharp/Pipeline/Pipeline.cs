@@ -1,4 +1,4 @@
-﻿using DeploySharp.Common;
+using DeploySharp.Common;
 using DeploySharp.Data;
 using DeploySharp.Log;
 using DeploySharp.Model;
@@ -12,21 +12,58 @@ using DeploySharp.Engine;
 namespace DeploySharp
 {
     /// <summary>
-    /// Main pipeline for computer vision model inference and visualization
-    /// 计算机视觉模型推理和可视化的主流水线
+    /// Main pipeline for computer vision model inference and visualization using ImageSharp
+    /// 使用ImageSharp的计算机视觉模型推理和可视化的主流水线
     /// </summary>
     /// <remarks>
     /// <para>
     /// Encapsulates model inference operations with built-in visualization capabilities.
-    /// Supports multiple YOLO versions (v5-v13) and tasks (detection, segmentation, pose etc.).
+    /// Supports multiple YOLO versions (v5-v13) and tasks (detection, segmentation, pose, OBB).
     /// 封装了模型推理操作并内置可视化能力。
-    /// 支持多个YOLO版本(v5-v13)和任务(检测、分割、姿态等)。
+    /// 支持多个YOLO版本(v5-v13)和任务(检测、分割、姿态、OBB)。
     /// </para>
     /// <para>
-    /// Implements both synchronous and asynchronous operations with proper resource cleanup.
-    /// 实现了同步和异步操作，并包含正确的资源清理。
+    /// The Pipeline class provides a high-level API that combines:
+    /// Pipeline类提供高级API，结合了:
+    /// - Model loading and initialization
+    ///   模型加载和初始化
+    /// - Automatic visualization method selection based on model type
+    ///   基于模型类型的自动可视化方法选择
+    /// - Synchronous and asynchronous inference operations
+    ///   同步和异步推理操作
+    /// - Proper resource cleanup via IDisposable
+    ///   通过IDisposable进行适当的资源清理
+    /// </para>
+    /// <para>
+    /// Model types supported:
+    /// 支持的模型类型:
+    /// - Detection: YOLOv5Det, YOLOv6Det, YOLOv7Det, YOLOv8Det, YOLOv9Det, YOLOv10Det, YOLOv11Det, YOLOv12Det, YOLOv13Det
+    /// - Segmentation: YOLOv5Seg, YOLOv8Seg, YOLOv9Seg, YOLOv11Seg, AnomalibSeg
+    /// - Pose: YOLOv8Pose, YOLOv11Pose
+    /// - OBB: YOLOv8Obb, YOLOv11Obb
     /// </para>
     /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// // Create pipeline for YOLOv8 detection
+    /// using var pipeline = new Pipeline(
+    ///     ModelType.YOLOv8Det, 
+    ///     "models/yolov8n.onnx",
+    ///     InferenceBackend.OpenVINO,
+    ///     DeviceType.GPU
+    /// );
+    /// 
+    /// // Load image with ImageSharp
+    /// using var image = Image.Load&lt;Rgb24&gt;("input.jpg");
+    /// 
+    /// // Run inference with visualization
+    /// using var result = pipeline.PredictAndDrawing(image);
+    /// result.Save("output.jpg");
+    /// </code>
+    /// </example>
+    /// <seealso cref="IModel"/>
+    /// <seealso cref="VisualizeHandler"/>
+    /// <seealso cref="VisualizeOptions"/>
     public class Pipeline : IDisposable
     {
         private IModel model;
@@ -36,18 +73,34 @@ namespace DeploySharp
         /// Initializes pipeline with model path and configuration
         /// 使用模型路径和配置初始化流水线
         /// </summary>
-        /// <param name="modelType">Type of YOLO model/YOLO模型类型</param>
-        /// <param name="modelPath">Path to model file/模型文件路径</param>
-        /// <param name="inferenceBackend">Inference backend (default: OpenVINO)/推理后端(默认:OpenVINO)</param>
-        /// <param name="deviceType">Device type (default: CPU)/设备类型(默认:CPU)</param>
+        /// <param name="modelType">Type of YOLO model / YOLO模型类型</param>
+        /// <param name="modelPath">Path to model file (.onnx, .xml, etc.) / 模型文件路径(.onnx, .xml等)</param>
+        /// <param name="inferenceBackend">Inference backend (default: OpenVINO) / 推理后端(默认:OpenVINO)</param>
+        /// <param name="deviceType">Device type (default: CPU) / 设备类型(默认:CPU)</param>
         /// <exception cref="DeploySharpException">
         /// Thrown when model type is not supported
         /// 当模型类型不受支持时抛出
         /// </exception>
         /// <exception cref="Exception">
-        /// Thrown when initialization fails
-        /// 当初始化失败时抛出
+        /// Thrown when initialization fails (file not found, invalid model, etc.)
+        /// 当初始化失败时抛出(文件未找到、模型无效等)
         /// </exception>
+        /// <remarks>
+        /// Automatically selects the appropriate model class and visualization handler
+        /// based on the model type. Supports multiple inference backends (OpenVINO, ONNX Runtime, TensorRT).
+        /// 根据模型类型自动选择适当的模型类和可视化处理器。支持多种推理后端(OpenVINO、ONNX Runtime、TensorRT)。
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// // GPU inference with OpenVINO
+        /// var pipeline = new Pipeline(
+        ///     ModelType.YOLOv8Det,
+        ///     "model.onnx",
+        ///     InferenceBackend.OpenVINO,
+        ///     DeviceType.GPU
+        /// );
+        /// </code>
+        /// </example>
         public Pipeline(ModelType modelType, string modelPath, InferenceBackend inferenceBackend = InferenceBackend.OpenVINO,
             DeviceType deviceType = DeviceType.CPU)
         {
@@ -144,12 +197,38 @@ namespace DeploySharp
                 throw;
             }
         }
+
         /// <summary>
-        /// Initializes pipeline with existing configuration
-        /// 使用现有配置初始化流水线
+        /// Initializes pipeline with existing configuration object
+        /// 使用现有配置对象初始化流水线
         /// </summary>
-        /// <param name="modelType">Type of YOLO model/YOLO模型类型</param>
-        /// <param name="config">Model configuration object/模型配置对象</param>
+        /// <param name="modelType">Type of YOLO model / YOLO模型类型</param>
+        /// <param name="config">Model configuration object / 模型配置对象</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when config is null
+        /// 当config为null时抛出
+        /// </exception>
+        /// <exception cref="DeploySharpException">
+        /// Thrown when model type is not supported
+        /// 当模型类型不受支持时抛出
+        /// </exception>
+        /// <remarks>
+        /// Alternative constructor for advanced scenarios where you need full control over configuration.
+        /// 用于需要完全控制配置的高级场景的替代构造函数。
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// var config = new Yolov8DetConfig("model.onnx")
+        /// {
+        ///     InputSizes = new[] { new[] { 1, 3, 640, 640 } },
+        ///     DataProcessor = new DataProcessorConfig 
+        ///     { 
+        ///         NormalizationType = ImageNormalizationType.ImageNetStandard 
+        ///     }
+        /// };
+        /// var pipeline = new Pipeline(ModelType.YOLOv8Det, config);
+        /// </code>
+        /// </example>
         public Pipeline(ModelType modelType, IConfig config)
         {
             MyLogger.Log.Info($"初始化 Pipeline, ModelType: {modelType},  ModelPath: {config.ModelPath}");
@@ -247,9 +326,14 @@ namespace DeploySharp
         }
 
         /// <summary>
-        /// Releases all resources
-        /// 释放所有资源
+        /// Releases all resources used by the pipeline
+        /// 释放流水线使用的所有资源
         /// </summary>
+        /// <remarks>
+        /// Disposes the model and clears references. This method is called automatically
+        /// when using 'using' statement or when the finalizer runs.
+        /// 释放模型并清除引用。使用'using'语句或终结器运行时自动调用此方法。
+        /// </remarks>
         public void Dispose()
         {
             model?.Dispose();
@@ -257,16 +341,48 @@ namespace DeploySharp
             visualizeHandler = null;
             GC.SuppressFinalize(this);
         }
+
+        /// <summary>
+        /// Finalizer ensures resources are cleaned up if Dispose is not called
+        /// 如果未调用Dispose，终结器确保资源被清理
+        /// </summary>
         ~Pipeline()
         {
             Dispose();
         }
+
         /// <summary>
-        /// Performs synchronous inference
-        /// 执行同步推理
+        /// Performs synchronous inference on an image
+        /// 对图像执行同步推理
         /// </summary>
-        /// <param name="img">Input image/输入图像</param>
-        /// <returns>Array of inference results/推理结果数组</returns>
+        /// <param name="img">Input image in RGB24 format / RGB24格式的输入图像</param>
+        /// <returns>Array of detection results / 检测结果数组</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when img is null
+        /// 当img为null时抛出
+        /// </exception>
+        /// <exception cref="Exception">
+        /// Thrown when inference fails
+        /// 当推理失败时抛出
+        /// </exception>
+        /// <remarks>
+        /// Returns typed results based on model type:
+        /// 根据模型类型返回类型化结果:
+        /// - DetResult[] for detection models
+        /// - SegResult[] for segmentation models
+        /// - KeyPointResult[] for pose models
+        /// - ObbResult[] for OBB models
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// using var image = Image.Load&lt;Rgb24&gt;("input.jpg");
+        /// var results = pipeline.Predict(image);
+        /// foreach (var det in results)
+        /// {
+        ///     Console.WriteLine($"{det.Category}: {det.Confidence:F2}");
+        /// }
+        /// </code>
+        /// </example>
         public Result[] Predict(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 Predict 同步推理");
@@ -284,9 +400,27 @@ namespace DeploySharp
         }
 
         /// <summary>
-        /// Performs synchronous inference with visualization
-        /// 执行带可视化的同步推理
+        /// Performs synchronous inference and returns visualized image
+        /// 执行同步推理并返回可视化图像
         /// </summary>
+        /// <param name="img">Input image / 输入图像</param>
+        /// <returns>New image with detection results drawn / 绘制了检测结果的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when img is null
+        /// 当img为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Combines inference and visualization in one call. The returned image
+        /// shows bounding boxes, labels, and masks (depending on model type).
+        /// 在一个调用中结合推理和可视化。返回的图像显示边界框、标签和掩膜（取决于模型类型）。
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// using var image = Image.Load&lt;Rgb24&gt;("input.jpg");
+        /// using var result = pipeline.PredictAndDrawing(image);
+        /// result.Save("output.jpg");
+        /// </code>
+        /// </example>
         public Image<Rgb24> PredictAndDrawing(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAndDrawing 同步推理与可视化");
@@ -304,9 +438,24 @@ namespace DeploySharp
         }
 
         /// <summary>
-        /// Performs asynchronous inference
-        /// 执行异步推理
+        /// Performs asynchronous inference on an image
+        /// 对图像执行异步推理
         /// </summary>
+        /// <param name="img">Input image / 输入图像</param>
+        /// <returns>Task with detection results / 带有检测结果的任务</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when img is null
+        /// 当img为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Use this method for non-blocking inference in UI applications.
+        /// 在UI应用程序中使用此方法进行非阻塞推理。
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// var results = await pipeline.PredictAsync(image);
+        /// </code>
+        /// </example>
         public async Task<Result[]> PredictAsync(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAsync 异步推理");
@@ -327,6 +476,22 @@ namespace DeploySharp
         /// Performs asynchronous inference with visualization
         /// 执行带可视化的异步推理
         /// </summary>
+        /// <param name="img">Input image / 输入图像</param>
+        /// <returns>Task with visualized image / 带有可视化图像的任务</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when img is null
+        /// 当img为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Combines async inference and visualization for responsive applications.
+        /// 为响应式应用程序结合异步推理和可视化。
+        /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// using var result = await pipeline.PredictAsyncAndDrawing(image);
+        /// result.Save("output.jpg");
+        /// </code>
+        /// </example>
         public async Task<Image<Rgb24>> PredictAsyncAndDrawing(Image<Rgb24> img)
         {
             MyLogger.Log.Debug("开始执行 PredictAsyncAndDrawing 异步推理与可视化");

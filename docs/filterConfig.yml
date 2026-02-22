@@ -1,0 +1,41 @@
+# DocFX API Filter Configuration
+# DocFX API 过滤配置
+
+apiRules:
+# Exclude System.Object methods from documentation to reduce noise
+# 排除System.Object方法以减少文档噪音
+- exclude:
+    uidRegex: ^System\.Object\..*$
+    type: Method
+
+# Exclude compiler-generated attributes
+# 排除编译器生成的属性
+- exclude:
+    uidRegex: ^System\.Runtime\.CompilerServices\..*$
+    type: Type
+
+# Exclude internal namespaces
+# 排除内部命名空间
+- exclude:
+    uidRegex: ^\.\. obj\.
+    type: Namespace
+
+# Exclude test namespaces
+# 排除测试命名空间
+- exclude:
+    uidRegex: \.Tests?\.
+    type: Namespace
+
+# Exclude private/internal members
+# 排除私有/内部成员
+- exclude:
+    hasAttribute:
+      uid: System.ComponentModel.EditorBrowsableAttribute
+      ctorArguments:
+      - System.ComponentModel.EditorBrowsableState.Never
+
+# Include all DeploySharp namespaces
+# 包含所有DeploySharp命名空间
+- include:
+    uidRegex: ^DeploySharp
+    type: Namespace

@@ -189,7 +189,17 @@ namespace DeploySharp.Engine
             {
                 if (config.TargetOnnxRuntimeDeviceType == OnnxRuntimeDeviceType.TensorRT)
                 {
-                    sessionOptions.AppendExecutionProvider_Tensorrt(0);
+                    OrtTensorRTProviderOptions ortTensorRTProviderOptions = new OrtTensorRTProviderOptions();
+                    ortTensorRTProviderOptions.UpdateOptions(new Dictionary<string, string>
+                    {
+                        { "device_id", "0" },
+                        { "trt_fp16_enable", "1" },
+                        { "trt_int8_enable", "0" },
+                        { "trt_engine_cache_enable", "1" },
+                        { "trt_dump_ep_context_model", "1" },
+                        { "trt_ep_context_file_path", "./trt_cache/" }
+                    });
+                    sessionOptions.AppendExecutionProvider_Tensorrt(ortTensorRTProviderOptions);
                 }
                 else if (config.TargetOnnxRuntimeDeviceType == OnnxRuntimeDeviceType.OpenVINO)
                 {
@@ -209,17 +219,21 @@ namespace DeploySharp.Engine
                 }
                 else
                 {
-                    sessionOptions.AppendExecutionProvider_CUDA(0);
-                    //// 2. 图优化级别：设置为 Disable (0)
-                    //// 原因：ONNX 模型通常在导出前已经优化好了。运行时再次优化不仅耗时，
-                    //// 而且对于 GPU 执行来说，OR默认的算子融合可能不如 CUDA TensorRT 原生的融合高效。
-                    //sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_DISABLE_ALL;
-                    //// 如果模型未优化，可选 ORT_ENABLE_EXTENDED，但 Disable 启动最快且通常性能足够。
-                    //// 3. 禁用 ORT 内部的并行线程池
-                    //// 原因：我们希望在 C# 层面通过多线程控制并发，而不是让 ORT 内部自己开线程抢 GPU 资源。
-                    //// 这样可以避免 GPU Context 的频繁切换开销。
-                    //sessionOptions.IntraOpNumThreads = 1;
-                    //sessionOptions.InterOpNumThreads = 1;
+                   
+
+                    var cudaProviderOptions = new OrtCUDAProviderOptions(); // Dispose this finally
+
+                    var providerOptionsDict = new Dictionary<string, string>();
+                    providerOptionsDict["device_id"] = "0";
+                    providerOptionsDict["gpu_mem_limit"] = "2147483648";
+                    providerOptionsDict["arena_extend_strategy"] = "kSameAsRequested";
+                    providerOptionsDict["cudnn_conv_algo_search"] = "DEFAULT";
+                    providerOptionsDict["do_copy_in_default_stream"] = "1";
+                    providerOptionsDict["cudnn_conv_use_max_workspace"] = "1";
+                    providerOptionsDict["cudnn_conv1d_pad_to_nc1d"] = "1";
+
+                    cudaProviderOptions.UpdateOptions(providerOptionsDict);
+                    sessionOptions.AppendExecutionProvider_CUDA(cudaProviderOptions);
 
                 }
 
@@ -228,7 +242,17 @@ namespace DeploySharp.Engine
             {
                 if (config.TargetOnnxRuntimeDeviceType == OnnxRuntimeDeviceType.TensorRT)
                 {
-                    sessionOptions.AppendExecutionProvider_Tensorrt(1);
+                    //sessionOptions.AppendExecutionProvider_Tensorrt(1);
+                    OrtTensorRTProviderOptions ortTensorRTProviderOptions = new OrtTensorRTProviderOptions();
+                    ortTensorRTProviderOptions.UpdateOptions(new Dictionary<string, string>
+                    {
+                        { "device_id", "1" },
+                        { "trt_fp16_enable", "1" },
+                        { "trt_int8_enable", "0" },
+                        { "trt_engine_cache_enable", "1" },
+                        { "trt_engine_cache_path", "./trt_cache/" }
+                    });
+                    sessionOptions.AppendExecutionProvider_Tensorrt(ortTensorRTProviderOptions);
                 }
                 else if (config.TargetOnnxRuntimeDeviceType == OnnxRuntimeDeviceType.OpenVINO)
                 {
@@ -248,7 +272,22 @@ namespace DeploySharp.Engine
                 }
                 else
                 {
-                    sessionOptions.AppendExecutionProvider_CUDA(1);
+                    //sessionOptions.AppendExecutionProvider_CUDA(1);
+
+
+                    var cudaProviderOptions = new OrtCUDAProviderOptions(); // Dispose this finally
+
+                    var providerOptionsDict = new Dictionary<string, string>();
+                    providerOptionsDict["device_id"] = "1";
+                    providerOptionsDict["gpu_mem_limit"] = "2147483648";
+                    providerOptionsDict["arena_extend_strategy"] = "kSameAsRequested";
+                    providerOptionsDict["cudnn_conv_algo_search"] = "DEFAULT";
+                    providerOptionsDict["do_copy_in_default_stream"] = "1";
+                    providerOptionsDict["cudnn_conv_use_max_workspace"] = "1";
+                    providerOptionsDict["cudnn_conv1d_pad_to_nc1d"] = "1";
+
+                    cudaProviderOptions.UpdateOptions(providerOptionsDict);
+                    sessionOptions.AppendExecutionProvider_CUDA(cudaProviderOptions);
                 }
             }
             else if (config.TargetDeviceType == DeviceType.AUTO) 

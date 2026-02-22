@@ -132,38 +132,38 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
             Mat img = Cv2.ImRead(imagePath);
 
             // 创建 PP-OCR v5 配置
-            //PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
-            //    detModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx",
-            //    clsModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx",
-            //    recModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx",
-            //    recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
-            //);
-
-
             PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
-                detModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_det_f16_onnx.engine",
-                clsModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_cls_f16_onnx.engine",
-                recModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_rec_onnx_combined.engine",  //@"E:\Model\ppocrv5\ppocrv5_rec_combined.onnx",//
+                detModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx",
+                clsModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx",
+                recModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx",
                 recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
-                );
+            );
+
+
+            //PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
+            //    detModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_det_f16_onnx.engine",
+            //    clsModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_cls_f16_onnx.engine",
+            //    recModelPath: @"E:\Model\ppocrv5\cuda12\PP-OCRv5_mobile_rec_onnx_combined.engine",  //@"E:\Model\ppocrv5\ppocrv5_rec_combined.onnx",//
+            //    recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
+            //    );
 
 
             // 配置推理引擎和设备
             // 1. 设置全局推理后端为 ONNX Runtime
-            paddleOCRConfig.GlobalInferenceBackend = InferenceBackend.TensorRT;
+            paddleOCRConfig.GlobalInferenceBackend = InferenceBackend.OnnxRuntime;
 
             // 2. 配置硬件加速设备
             paddleOCRConfig.GlobalDeviceType = DeviceType.GPU0;
             // GlobalOnnxRuntimeDeviceType 指定 ONNX Runtime 具体使用的执行提供者（EP）
             // OnnxRuntimeDeviceType.Cuda 表示启用 CUDA 加速（需确保安装了 CUDA 和 cuDNN）
-            paddleOCRConfig.GlobalOnnxRuntimeDeviceType = OnnxRuntimeDeviceType.Cuda;
+            paddleOCRConfig.GlobalOnnxRuntimeDeviceType = OnnxRuntimeDeviceType.TensorRT;
 
             // 3. 设置并发与批处理参数
             // MaxConcurrency: 并发处理的最大线程数，设为 4 可充分利用 CPU 多核能力或 GPU 并行能力
-            paddleOCRConfig.MaxConcurrency = 2;
+            paddleOCRConfig.MaxConcurrency = 4;
             // GlobalMaxBatchSize: 动态批处理的最大批次大小
             // 设为 4 允许引擎将 4 张图片打包一次性推理，大幅提升 GPU 利用率和吞吐量
-            paddleOCRConfig.GlobalMaxBatchSize = 8;
+            paddleOCRConfig.GlobalMaxBatchSize = 4;
 
             // 4. 配置识别模型的具体参数
             // InferImageHeight: 统一将输入图片的高度缩放到 48 像素，这是 PP-OCRv5 识别模型的固定要求

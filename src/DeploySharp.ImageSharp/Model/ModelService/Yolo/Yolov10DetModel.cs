@@ -1,4 +1,4 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
@@ -12,16 +12,72 @@ using DeploySharp.Log;
 
 namespace DeploySharp.Model
 {
-
+    /// <summary>
+    /// YOLOv10 object detection model implementation
+    /// YOLOv10目标检测模型实现
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// YOLOv10 is an advanced version in the YOLO series with improved accuracy and efficiency.
+    /// It introduces architectural improvements for better feature extraction and detection performance.
+    /// YOLOv10是YOLO系列中的先进版本，具有改进的准确性和效率。
+    /// 它引入了架构改进以实现更好的特征提取和检测性能。
+    /// </para>
+    /// <para>
+    /// Key improvements in YOLOv10:
+    /// YOLOv10的主要改进:
+    /// - Enhanced backbone architecture
+    ///   增强的骨干架构
+    /// - Improved feature fusion
+    ///   改进的特征融合
+    /// - Better handling of small objects
+    ///   更好地处理小目标
+    /// - Optimized for both speed and accuracy
+    ///   针对速度和准确性进行优化
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// var config = new Yolov10DetConfig("yolov10.onnx");
+    /// using var model = new Yolov10DetModel(config);
+    /// using var image = Image.Load&lt;Rgb24&gt;("input.jpg");
+    /// var results = model.Predict(image);
+    /// foreach (var det in results)
+    /// {
+    ///     Console.WriteLine($"{det.Category}: {det.Confidence:F2}");
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="IYolov10DetModel"/>
+    /// <seealso cref="Yolov10DetConfig"/>
     public class Yolov10DetModel : IYolov10DetModel
     {
         /// <summary>
         /// Constructor initializes with model configuration
+        /// 构造函数使用模型配置初始化
         /// </summary>
-        /// <param name="config">Model configuration parameters</param>
+        /// <param name="config">Model configuration parameters / 模型配置参数</param>
+        /// <exception cref="ArgumentNullException">Thrown when config is null / 当config为null时抛出</exception>
+        /// <exception cref="FileNotFoundException">Thrown when model file not found / 当模型文件未找到时抛出</exception>
+        /// <remarks>
+        /// Initializes the YOLOv10 model with specified configuration and loads the model weights.
+        /// 使用指定配置初始化YOLOv10模型并加载模型权重。
+        /// </remarks>
         public Yolov10DetModel(Yolov10DetConfig config) : base(config) { }
 
 
+        /// <summary>
+        /// Preprocesses a single image for YOLOv10 inference
+        /// 为YOLOv10推理预处理单张图像
+        /// </summary>
+        /// <param name="img">Input image (expected Image&lt;Rgb24&gt;) / 输入图像（预期为Image&lt;Rgb24&gt;）</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters for coordinate mapping / 用于坐标映射的输出调整参数</param>
+        /// <returns>Preprocessed DataTensor / 预处理后的DataTensor</returns>
+        /// <exception cref="InvalidCastException">Thrown when img is not Image&lt;Rgb24&gt; / 当img不是Image&lt;Rgb24&gt;时抛出</exception>
+        /// <remarks>
+        /// Applies standard YOLO preprocessing: resize, normalize, and convert to tensor format.
+        /// 应用标准YOLO预处理：调整大小、归一化并转换为张量格式。
+        /// </remarks>
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
@@ -39,6 +95,18 @@ namespace DeploySharp.Model
                 throw;
             }
         }
+
+        /// <summary>
+        /// Preprocesses a batch of images for YOLOv10 inference
+        /// 为YOLOv10推理预处理批量图像
+        /// </summary>
+        /// <param name="img">List of input images / 输入图像列表</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters array / 输出调整参数数组</param>
+        /// <returns>Preprocessed DataTensor for batch / 批量预处理后的DataTensor</returns>
+        /// <remarks>
+        /// Processes multiple images as a batch for improved throughput.
+        /// 将多张图像作为批次处理以提高吞吐量。
+        /// </remarks>
         protected override DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {img.Count}");

@@ -1,4 +1,4 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
@@ -12,16 +12,29 @@ using DeploySharp.Log;
 
 namespace DeploySharp.Model
 {
-
+    /// <summary>
+    /// YOLOv26 instance segmentation model implementation
+    /// YOLOv26实例分割模型实现
+    /// </summary>
+    /// <remarks>
+    /// YOLOv26 segmentation variant for pixel-level instance segmentation with bounding boxes.
+    /// YOLOv26分割变体，用于带边界框的像素级实例分割。
+    /// </remarks>
+    /// <seealso cref="IYolov26SegModel"/>
     public class Yolov26SegModel : IYolov26SegModel
     {
         /// <summary>
-        /// Constructor initializes with model configuration
+        /// Constructor initializes with segmentation model configuration
+        /// 构造函数使用分割模型配置初始化
         /// </summary>
-        /// <param name="config">Model configuration parameters</param>
+        /// <param name="config">Model configuration parameters / 模型配置参数</param>
         public Yolov26SegModel(Yolov26SegConfig config) : base(config) { }
 
 
+        /// <summary>
+        /// Preprocesses image for instance segmentation
+        /// 为实例分割预处理图像
+        /// </summary>
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
@@ -39,6 +52,11 @@ namespace DeploySharp.Model
                 throw;
             }
         }
+
+        /// <summary>
+        /// Preprocesses batch of images for instance segmentation
+        /// 为实例分割预处理批量图像
+        /// </summary>
         protected override DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {img.Count}");

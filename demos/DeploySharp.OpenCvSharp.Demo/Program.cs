@@ -60,13 +60,14 @@ namespace DeploySharp.OpenCvSharp.Demo
             Console.WriteLine("Hello, World!");
             //AnomalibSegDemos.Run();
             //Yolov5DetDemo.Run();
+            Yolov5SegDemo.Run();
             //for(int i = 0; i < 1; i++)
             //{
             //Yolov8DetDemo.Run();
             //Yolov8DetDemo.RunBatch();
             //}
 
-            Yolov8SegDemo.Run();
+            //Yolov8SegDemo.Run();
             //Yolov8ObbDemo.Run();
             //Yolov8PoseDemo.Run();
             //DEIMv2DetDemo.Run();

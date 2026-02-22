@@ -1,0 +1,171 @@
+# GitHub Actions Workflow for Generating and Deploying API Documentation
+# GitHub Actions 工作流：生成和部署API文档
+
+name: Generate and Deploy API Documentation
+
+on:
+  # Trigger on push to DeploySharpV1.0 branch
+  # 在推送到 DeploySharpV1.0 分支时触发
+  push:
+    branches: [ DeploySharpV1.0 ]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  
+  # Trigger on pull request to DeploySharpV1.0 branch
+  # 在针对 DeploySharpV1.0 分支的拉取请求时触发
+  pull_request:
+    branches: [ DeploySharpV1.0 ]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+  
+  # Allow manual trigger
+  # 允许手动触发
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# 设置GITHUB_TOKEN权限以允许部署到GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued
+# 仅允许一个并发部署，跳过正在运行和最新排队之间的运行
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  # 构建任务
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the repository
+      # 检出代码库
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Setup .NET SDK
+      # 设置.NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+            9.0.x
+
+      # Setup Node.js (required for some DocFX plugins)
+      # 设置Node.js（某些DocFX插件需要）
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Cache DocFX
+      # 缓存DocFX
+      - name: Cache DocFX
+        id: cache-docfx
+        uses: actions/cache@v4
+        with:
+          path: ~/.dotnet/tools
+          key: ${{ runner.os }}-docfx-${{ hashFiles('docs/docfx.json') }}
+          restore-keys: |
+            ${{ runner.os }}-docfx-
+
+      # Install DocFX
+      # 安装DocFX
+      - name: Install DocFX
+        run: |
+          if ! command -v docfx &> /dev/null; then
+            dotnet tool install -g docfx
+          fi
+          docfx --version
+
+      # Build the solution to generate XML documentation
+      # 构建解决方案以生成XML文档
+      - name: Build Solution
+        run: |
+          dotnet build DeploySharp.sln --configuration Release
+
+      # Generate API Documentation using DocFX
+      # 使用DocFX生成API文档
+      - name: Generate API Documentation
+        run: |
+          cd docs
+          docfx docfx.json
+
+      # Create .nojekyll file to disable Jekyll processing
+      # 创建.nojekyll文件以禁用Jekyll处理
+      - name: Create .nojekyll
+        run: |
+          touch docs/_site/.nojekyll
+
+      # Upload build artifacts
+      # 上传构建产物
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: docs/_site
+          retention-days: 7
+
+      # Upload static files for GitHub Pages
+      # 上传静态文件到GitHub Pages
+      - name: Upload to GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+  # Deploy job
+  # 部署任务
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      # Deploy to GitHub Pages
+      # 部署到GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Verify links job
+  # 验证链接任务
+  verify-links:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      # Download build artifacts
+      # 下载构建产物
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: docs/_site
+
+      # Check for broken links
+      # 检查损坏的链接
+      - name: Check for Broken Links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: |
+            --verbose
+            --no-progress
+            --timeout 60
+            docs/_site/**/*.html
+          fail: false

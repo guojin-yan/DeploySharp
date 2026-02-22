@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -17,41 +17,54 @@ using DeploySharp.Log;
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// Implementation of YOLOv5 model for object detection
-    /// Inherits from base IModel interface
+    /// YOLOv5 object detection model implementation
+    /// YOLOv5目标检测模型实现
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// YOLOv5 is a widely-used object detection model known for its balance of speed and accuracy.
+    /// It introduced significant improvements over YOLOv4 with PyTorch-based implementation
+    /// and better training strategies.
+    /// YOLOv5是一种广泛使用的目标检测模型，以其速度和准确性的平衡而闻名。
+    /// 它通过基于PyTorch的实现和更好的训练策略，相比YOLOv4引入了显著改进。
+    /// </para>
+    /// <para>
+    /// YOLOv5 characteristics:
+    /// YOLOv5特性:
+    /// - Anchor-based detection with auto-anchor calculation
+    ///   基于锚点的检测，带有自动锚点计算
+    /// - Mosaic augmentation for training
+    ///   用于训练的Mosaic增强
+    /// - Multiple model sizes (n, s, m, l, x)
+    ///   多种模型大小(n, s, m, l, x)
+    /// - Strong community support and ecosystem
+    ///   强大的社区支持和生态系统
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// var config = new Yolov5DetConfig("yolov5s.onnx");
+    /// using var model = new Yolov5DetModel(config);
+    /// using var image = Image.Load&lt;Rgb24&gt;("input.jpg");
+    /// var results = model.Predict(image);
+    /// </code>
+    /// </example>
+    /// <seealso cref="IYolov5DetModel"/>
     public class Yolov5DetModel : IYolov5DetModel
     {
         /// <summary>
         /// Constructor initializes with model configuration
+        /// 构造函数使用模型配置初始化
         /// </summary>
-        /// <param name="config">Model configuration parameters</param>
+        /// <param name="config">YOLOv5 detection model configuration / YOLOv5检测模型配置</param>
         public Yolov5DetModel(Yolov5DetConfig config) : base(config) { }
 
+        /// <summary>
+        /// Preprocesses image for YOLOv5 inference
+        /// 为YOLOv5推理预处理图像
+        /// </summary>
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            //int inputSize = config.InputSizes[0][2];
-            //var image = (Image<Rgb24>)img;
-            //// 归一化处理 (0-255 to 0-1)
-            //float[] normalizedData = CvDataProcessor.ProcessToFloat(image, new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]), ((YoloConfig)config).DataProcessor);
-
-            //imageAdjustmentParam = ImageAdjustmentParam.CreateFromImageInfo(
-            //    new Data.Size(config.InputSizes[0][2], config.InputSizes[0][3]),
-            //    CvDataExtensions.ToCvSize(image.Size()),
-            //     ((YoloConfig)config).DataProcessor.ResizeMode);
-
-
-            //DataTensor dataTensors = new DataTensor();
-            //dataTensors.AddNode(
-            //    config.InputNames[0],
-            //    0,
-            //    TensorType.Input,
-            //    normalizedData,
-            //    config.InputSizes[0],
-            //    typeof(float));
-
-            //return dataTensors;
-
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Image<Rgb24>)?.Size()}");
 
             try
@@ -67,6 +80,11 @@ namespace DeploySharp.Model
                 throw;
             }
         }
+
+        /// <summary>
+        /// Preprocesses batch of images for YOLOv5 inference
+        /// 为YOLOv5推理预处理批量图像
+        /// </summary>
         protected override DataTensor PreprocessBatch(List<object> img, out ImageAdjustmentParam[] imageAdjustmentParam)
         {
             MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {img.Count}");

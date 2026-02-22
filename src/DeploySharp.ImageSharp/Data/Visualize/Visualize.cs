@@ -1,4 +1,4 @@
-﻿using SixLabors.Fonts;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -12,47 +12,118 @@ using static System.Net.Mime.MediaTypeNames;
 namespace DeploySharp.Data
 {
     /// <summary>
-    /// Static class providing visualization methods for different computer vision results
-    /// 提供不同计算机视觉结果可视化方法的静态类
+    /// Static class providing visualization methods for different computer vision results using ImageSharp
+    /// 使用ImageSharp为不同计算机视觉结果提供可视化方法的静态类
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Contains specialized rendering methods for:
-    /// 包含专门的渲染方法用于:
-    /// - Object detection (bounding boxes)
-    ///   目标检测(边界框)
-    /// - Oriented bounding boxes (OBB)
-    ///   定向边界框(OBB)
-    /// - Semantic segmentation (masks)
-    ///   语义分割(掩膜)
-    /// - Human pose estimation (keypoints)
-    ///   人体姿态估计(关键点)
+    /// Contains specialized rendering methods for various computer vision tasks:
+    /// 包含针对各种计算机视觉任务的专门渲染方法:
+    /// - Object detection (DetResult): Bounding boxes with labels and confidence scores
+    ///   目标检测(DetResult): 带标签和置信度分数的边界框
+    /// - Oriented bounding boxes (ObbResult): Rotated boxes for aerial/rotated object detection
+    ///   定向边界框(ObbResult): 用于航拍/旋转目标检测的旋转框
+    /// - Semantic segmentation (SegResult): Pixel-level masks with boundary boxes
+    ///   语义分割(SegResult): 带边界框的像素级掩膜
+    /// - Human pose estimation (KeyPointResult): Skeleton connections and keypoints
+    ///   人体姿态估计(KeyPointResult): 骨架连接和关键点
     /// </para>
     /// <para>
-    /// All methods return new Image&lt;Rgb24&gt; instances leaving original images unmodified
-    /// 所有方法都返回新的Image&lt;Rgb24&gt;实例，原始图像不被修改
+    /// All methods follow these principles:
+    /// 所有方法遵循以下原则:
+    /// - Return new Image&lt;Rgb24&gt; instances, leaving original images unmodified
+    ///   返回新的Image&lt;Rgb24&gt;实例，原始图像不被修改
+    /// - Use consistent color schemes from VisionColors for class identification
+    ///   使用VisionColors中的一致配色方案进行类别识别
+    /// - Support customizable visualization through VisualizeOptions
+    ///   通过VisualizeOptions支持可自定义的可视化
+    /// - Handle edge cases like out-of-bounds coordinates gracefully
+    ///   优雅地处理边界情况，如越界坐标
+    /// </para>
+    /// <para>
+    /// Performance considerations:
+    /// 性能考虑:
+    /// - Uses ImageSharp's Mutate for efficient in-place drawing operations
+    ///   使用ImageSharp的Mutate进行高效的就地绘制操作
+    /// - Creates cloned images to avoid modifying inputs
+    ///   创建克隆图像以避免修改输入
+    /// - Leverages hardware-accelerated drawing where available
+    ///   利用硬件加速绘制（如果可用）
     /// </para>
     /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// // Load image and run detection
+    /// using var image = Image.Load&lt;Rgb24&gt;("photo.jpg");
+    /// var results = model.Predict(image);
+    /// 
+    /// // Visualize results
+    /// var options = new VisualizeOptions(1.0f);
+    /// using var visualized = Visualize.DrawDetResult(results, image, options);
+    /// visualized.Save("output.jpg");
+    /// </code>
+    /// </example>
+    /// <seealso cref="VisualizeOptions"/>
+    /// <seealso cref="VisionColors"/>
+    /// <seealso cref="DetResult"/>
+    /// <seealso cref="ObbResult"/>
+    /// <seealso cref="SegResult"/>
+    /// <seealso cref="KeyPointResult"/>
     public static class Visualize
     {
         /// <summary>
-        /// Draws detection results (bounding boxes) on the image
-        /// 在图像上绘制检测结果(边界框)
+        /// Draws detection results with bounding boxes, labels, and confidence scores
+        /// 绘制带边界框、标签和置信度分数的检测结果
         /// </summary>
-        /// <param name="bresult">Detection results array/检测结果数组</param>
-        /// <param name="image">Source image/源图像</param>
-        /// <param name="options">Visualization options/可视化选项</param>
-        /// <returns>New image with rendered detections/渲染了检测结果的新图像</returns>
+        /// <param name="bresult">Detection results array (polymorphic, will be cast to DetResult[]) / 检测结果数组（多态，将被转换为DetResult[]）</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options for colors, fonts, and sizes / 用于颜色、字体和大小的可视化选项</param>
+        /// <returns>New image with rendered detections / 渲染了检测结果的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when image or options is null
+        /// 当image或options为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Each detection is rendered with:
+        /// 每个检测结果渲染包含:
+        /// - Colored bounding box (color based on class ID)
+        ///   彩色边界框（颜色基于类别ID）
+        /// - Yellow label background for text readability
+        ///   黄色标签背景以提高文本可读性
+        /// - Class name and confidence score (e.g., "person-0.95")
+        ///   类别名称和置信度分数（例如 "person-0.95"）
+        /// </remarks>
         /// <example>
-        /// <code>
+        /// <code language="csharp">
         /// var results = model.Predict(image);
-        /// var visualized = Visualize.DrawDetResult(results, image, options);
+        /// var options = new VisualizeOptions(1.0f);
+        /// using var visualized = Visualize.DrawDetResult(results, image, options);
+        /// visualized.Save("detections.jpg");
         /// </code>
         /// </example>
+        /// <seealso cref="DrawDetResult(DetResult[], Image{Rgb24}, VisualizeOptions)"/>
         public static Image<Rgb24> DrawDetResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
             return DrawDetResult(bresult as DetResult[], image, options);
         }
+
+        /// <summary>
+        /// Draws detection results with bounding boxes, labels, and confidence scores
+        /// 绘制带边界框、标签和置信度分数的检测结果
+        /// </summary>
+        /// <param name="result">Detection results array / 检测结果数组</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered detections / 渲染了检测结果的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when result, image, or options is null
+        /// 当result、image或options为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Internal implementation called by the polymorphic overload.
+        /// 由多态重载调用的内部实现。
+        /// </remarks>
+        /// <seealso cref="DrawDetResult(Result[], Image{Rgb24}, VisualizeOptions)"/>
         public static Image<Rgb24> DrawDetResult(DetResult[] result, Image<Rgb24> image, VisualizeOptions options)
         {
 
@@ -93,21 +164,63 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Draws oriented bounding box (OBB) results
-        /// 绘制定向边界框(OBB)结果
+        /// Draws oriented bounding box (OBB) results with rotated rectangles
+        /// 使用旋转矩形绘制定向边界框(OBB)结果
         /// </summary>
-        /// <param name="bresult">OBB results array/OBB结果数组</param>
-        /// <param name="image">Source image/源图像</param>
-        /// <param name="options">Visualization options/可视化选项</param>
-        /// <returns>New image with rendered OBBs/渲染了OBB的新图像</returns>
+        /// <param name="bresult">OBB results array (polymorphic, will be cast to ObbResult[]) / OBB结果数组（多态，将被转换为ObbResult[]）</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered OBBs / 渲染了OBB的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when image or options is null
+        /// 当image或options为null时抛出
+        /// </exception>
         /// <remarks>
-        /// Draws quadrilateral boxes with angle information
-        /// 绘制带有角度信息的四边形框
+        /// <para>
+        /// Draws quadrilateral boxes with angle information.
+        /// Unlike axis-aligned bounding boxes, OBBs have 4 corner points
+        /// that can represent rotated objects like ships, vehicles in aerial images,
+        /// or text at various angles.
+        /// 绘制带角度信息的四边形框。
+        /// 与轴对齐边界框不同，OBB有4个角点，可以表示航拍图像中的
+        /// 旋转对象，如船只、车辆，或各种角度的文本。
+        /// </para>
+        /// <para>
+        /// Lines are drawn between consecutive corner points to form the rotated box.
+        /// 在连续角点之间绘制线条形成旋转框。
+        /// </para>
         /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// var results = obbModel.Predict(aerialImage);
+        /// using var visualized = Visualize.DrawObbResult(results, aerialImage, options);
+        /// visualized.Save("obb_detections.jpg");
+        /// </code>
+        /// </example>
+        /// <seealso cref="DrawObbResult(ObbResult[], Image{Rgb24}, VisualizeOptions)"/>
+        /// <seealso cref="ObbResult"/>
         public static Image<Rgb24> DrawObbResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
             return DrawObbResult(bresult as ObbResult[], image, options);
         }
+
+        /// <summary>
+        /// Draws oriented bounding box (OBB) results with rotated rectangles
+        /// 使用旋转矩形绘制定向边界框(OBB)结果
+        /// </summary>
+        /// <param name="result">OBB results array / OBB结果数组</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered OBBs / 渲染了OBB的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when result, image, or options is null
+        /// 当result、image或options为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Internal implementation that draws 4 lines connecting the corner points.
+        /// 连接角点绘制4条线的内部实现。
+        /// </remarks>
+        /// <seealso cref="DrawObbResult(Result[], Image{Rgb24}, VisualizeOptions)"/>
         public static Image<Rgb24> DrawObbResult(ObbResult[] result, Image<Rgb24> image, VisualizeOptions options)
         {
             var output = image.Clone();
@@ -138,21 +251,70 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Draws segmentation results
-        /// 绘制分割结果
+        /// Draws segmentation results with masks and bounding boxes
+        /// 绘制带掩膜和边界框的分割结果
         /// </summary>
-        /// <param name="bresult">Segmentation results array/分割结果数组</param>
-        /// <param name="image">Source image/源图像</param>
-        /// <param name="options">Visualization options/可视化选项</param>
-        /// <returns>New image with rendered masks/渲染了掩膜的新图像</returns>
+        /// <param name="bresult">Segmentation results array (polymorphic, will be cast to SegResult[]) / 分割结果数组（多态，将被转换为SegResult[]）</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered masks / 渲染了掩膜的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when image or options is null
+        /// 当image或options为null时抛出
+        /// </exception>
         /// <remarks>
-        /// Combines semi-transparent colored masks with bounding boxes
-        /// 将半透明彩色掩膜与边界框结合起来
+        /// <para>
+        /// Combines semi-transparent colored masks with bounding boxes for clear visualization.
+        /// 结合半透明彩色掩膜与边界框以进行清晰可视化。
+        /// </para>
+        /// <para>
+        /// Rendering process:
+        /// 渲染过程:
+        /// 1. Creates a temporary mask layer for each detection
+        ///    为每个检测创建临时掩膜层
+        /// 2. Pixels with mask value &gt; MaskMinimumConfidence are colored
+        ///    掩膜值大于MaskMinimumConfidence的像素被着色
+        /// 3. Mask layer is drawn with MaskAlpha transparency
+        ///    掩膜层以MaskAlpha透明度绘制
+        /// 4. Bounding box and label are drawn on top
+        ///    边界框和标签绘制在顶部
+        /// </para>
         /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// var results = segModel.Predict(image);
+        /// var options = new VisualizeOptions(1.0f)
+        /// {
+        ///     MaskAlpha = 0.4f,  // More transparent
+        ///     MaskMinimumConfidence = 0.5f
+        /// };
+        /// using var visualized = Visualize.DrawSegResult(results, image, options);
+        /// </code>
+        /// </example>
+        /// <seealso cref="DrawSegResult(SegResult[], Image{Rgb24}, VisualizeOptions)"/>
+        /// <seealso cref="SegResult"/>
         public static Image<Rgb24> DrawSegResult(Result[] bresult, Image<Rgb24> image, VisualizeOptions options) 
         {
             return DrawSegResult(bresult as SegResult[], image, options);
         }
+
+        /// <summary>
+        /// Draws segmentation results with masks and bounding boxes
+        /// 绘制带掩膜和边界框的分割结果
+        /// </summary>
+        /// <param name="result">Segmentation results array / 分割结果数组</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered masks / 渲染了掩膜的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when result, image, or options is null
+        /// 当result、image或options为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Internal implementation that creates mask layers for each detection.
+        /// 为每个检测创建掩膜层的内部实现。
+        /// </remarks>
+        /// <seealso cref="DrawSegResult(Result[], Image{Rgb24}, VisualizeOptions)"/>
         public static Image<Rgb24> DrawSegResult(SegResult[] result, Image<Rgb24> image, VisualizeOptions options)
         {
             var output = image.Clone();
@@ -210,38 +372,85 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Draws human pose estimation results
-        /// 绘制人体姿态估计结果
+        /// Draws human pose estimation results with keypoints and skeleton connections
+        /// 绘制带关键点和骨架连接的人体姿态估计结果
         /// </summary>
-        /// <param name="bresult">Pose results array/姿态结果数组</param>
-        /// <param name="img">Source image/源图像</param>
-        /// <param name="options">Visualization options/可视化选项</param>
-        /// <returns>New image with rendered poses/渲染了姿态的新图像</returns>
+        /// <param name="bresult">Pose results array (polymorphic, will be cast to KeyPointResult[]) / 姿态结果数组（多态，将被转换为KeyPointResult[]）</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered poses / 渲染了姿态的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when img or options is null
+        /// 当img或options为null时抛出
+        /// </exception>
         /// <remarks>
         /// <para>
-        /// Draws both keypoints (as circles) and skeleton connections (as lines)
-        /// 绘制关键点(圆形)和骨架连接(线条)
+        /// Draws both keypoints (as filled circles) and skeleton connections (as colored lines).
+        /// 绘制关键点（填充圆）和骨架连接（彩色线）。
         /// </para>
         /// <para>
-        /// Uses multi-color scheme for better visualization
-        /// 使用多色方案以获得更好的可视化效果
+        /// Keypoint indices (COCO format):
+        /// 关键点索引（COCO格式）:
+        /// 0: Nose, 1: Left Eye, 2: Right Eye, 3: Left Ear, 4: Right Ear,
+        /// 5: Left Shoulder, 6: Right Shoulder, 7: Left Elbow, 8: Right Elbow,
+        /// 9: Left Wrist, 10: Right Wrist, 11: Left Hip, 12: Right Hip,
+        /// 13: Left Knee, 14: Right Knee, 15: Left Ankle, 16: Right Ankle
+        /// </para>
+        /// <para>
+        /// Skeleton connections follow standard COCO pose format with 17 connections.
+        /// 骨架连接遵循标准COCO姿态格式，共17个连接。
+        /// </para>
+        /// <para>
+        /// Uses multi-color scheme for better visualization of different body parts.
+        /// 使用多色方案以更好地区分不同身体部位。
         /// </para>
         /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// var results = poseModel.Predict(image);
+        /// var options = new VisualizeOptions(1.0f)
+        /// {
+        ///     PointDrawThreshold = 0.3f  // Lower threshold to show more keypoints
+        /// };
+        /// using var visualized = Visualize.DrawPoses(results, image, options);
+        /// visualized.Save("poses.jpg");
+        /// </code>
+        /// </example>
+        /// <seealso cref="DrawPoses(KeyPointResult[], Image{Rgb24}, VisualizeOptions)"/>
+        /// <seealso cref="KeyPointResult"/>
         public static Image<Rgb24> DrawPoses(Result[] bresult, Image<Rgb24> img, VisualizeOptions options)
         {
             return DrawPoses(bresult as KeyPointResult[], img, options);
         }
+
+        /// <summary>
+        /// Draws human pose estimation results with keypoints and skeleton connections
+        /// 绘制带关键点和骨架连接的人体姿态估计结果
+        /// </summary>
+        /// <param name="pose">Pose results array / 姿态结果数组</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>New image with rendered poses / 渲染了姿态的新图像</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when pose, img, or options is null
+        /// 当pose、img或options为null时抛出
+        /// </exception>
+        /// <remarks>
+        /// Internal implementation with hardcoded COCO skeleton connections and color palette.
+        /// 带有硬编码COCO骨架连接和调色板的内部实现。
+        /// </remarks>
+        /// <seealso cref="DrawPoses(Result[], Image{Rgb24}, VisualizeOptions)"/>
         public static Image<Rgb24> DrawPoses(KeyPointResult[] pose, Image<Rgb24> img, VisualizeOptions options)
         {
             var output = img.Clone();
 
-            // Keypoint connection relationships
-            // 关节点连线关系
+            // Keypoint connection relationships (COCO format)
+            // 关节点连线关系（COCO格式）
             int[,] edges = new int[17, 2] { { 0, 1 }, { 0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {6, 8},
              {7, 9}, {8, 10}, {5, 11}, {6, 12}, {11, 13}, {12, 14},{13, 15 }, {14, 16 }, {11, 12 } };
 
-            // Color palette
-            // 颜色库
+            // Color palette for different body parts
+            // 不同身体部位的颜色库
             Color[] colors = new Color[18] {
             Color.FromRgb(255, 0, 0), Color.FromRgb(255, 85, 0), Color.FromRgb(255, 170, 0),
             Color.FromRgb(255, 255, 0), Color.FromRgb(170, 255, 0), Color.FromRgb(85, 255, 0),
@@ -317,23 +526,52 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Handler class for polymorphic visualization operations
-        /// 多态可视化操作的处理程序类
+        /// Handler class for polymorphic visualization operations using delegate pattern
+        /// 使用委托模式的多态可视化操作处理程序类
         /// </summary>
         /// <remarks>
-        /// Uses delegate pattern to provide flexible visualization method selection
-        /// 使用委托模式提供灵活的可视化方法选择
+        /// <para>
+        /// Provides a flexible way to select and execute visualization methods at runtime.
+        /// This is used by the Pipeline class to automatically select the appropriate
+        /// visualization method based on the model type.
+        /// 提供在运行时选择和执行可视化方法的灵活方式。
+        /// Pipeline类使用它根据模型类型自动选择适当的可视化方法。
+        /// </para>
+        /// <para>
+        /// The delegate pattern allows different visualization methods to be treated uniformly,
+        /// enabling easy extension for new result types.
+        /// 委托模式允许不同的可视化方法被统一处理，便于扩展新的结果类型。
+        /// </para>
         /// </remarks>
+        /// <example>
+        /// <code language="csharp">
+        /// // Create handler for detection visualization
+        /// var detHandler = new VisualizeHandler(Visualize.DrawDetResult);
+        /// 
+        /// // Execute visualization
+        /// var result = detHandler.ExecuteDrawing(detections, image, options);
+        /// 
+        /// // Can be assigned to Pipeline
+        /// var pipeline = new Pipeline(ModelType.YOLOv8Det, "model.onnx");
+        /// // pipeline internally uses VisualizeHandler
+        /// </code>
+        /// </example>
+        /// <seealso cref="VisualizeDelegate"/>
+        /// <seealso cref="Pipeline"/>
         public class VisualizeHandler
         {
             /// <summary>
             /// Delegate type for visualization methods
             /// 可视化方法的委托类型
             /// </summary>
-            /// <param name="results">Detection results/检测结果</param>
-            /// <param name="image">Source image/源图像</param>
-            /// <param name="options">Visualization options/可视化选项</param>
-            /// <returns>Visualized image/可视化后的图像</returns>
+            /// <param name="results">Detection results array / 检测结果数组</param>
+            /// <param name="image">Source image / 源图像</param>
+            /// <param name="options">Visualization options / 可视化选项</param>
+            /// <returns>Visualized image / 可视化后的图像</returns>
+            /// <remarks>
+            /// Matches the signature of DrawDetResult, DrawObbResult, DrawSegResult, and DrawPoses methods.
+            /// 与DrawDetResult、DrawObbResult、DrawSegResult和DrawPoses方法的签名匹配。
+            /// </remarks>
             public delegate Image<Rgb24> VisualizeDelegate(Result[] results, Image<Rgb24> image, VisualizeOptions options);
 
             private readonly VisualizeDelegate _drawingMethod;
@@ -342,7 +580,16 @@ namespace DeploySharp.Data
             /// Initializes handler with specific visualization method
             /// 使用特定的可视化方法初始化处理程序
             /// </summary>
-            /// <param name="drawingMethod">Visualization method to use/要使用的可视化方法</param>
+            /// <param name="drawingMethod">Visualization method delegate to use / 要使用的可视化方法委托</param>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when drawingMethod is null
+            /// 当drawingMethod为null时抛出
+            /// </exception>
+            /// <example>
+            /// <code language="csharp">
+            /// var handler = new VisualizeHandler(Visualize.DrawDetResult);
+            /// </code>
+            /// </example>
             public VisualizeHandler(VisualizeDelegate drawingMethod)
             {
                 _drawingMethod = drawingMethod;
@@ -352,10 +599,20 @@ namespace DeploySharp.Data
             /// Executes the configured visualization method
             /// 执行配置的可视化方法
             /// </summary>
-            /// <param name="results">Detection results/检测结果</param>
-            /// <param name="image">Source image/源图像</param>
-            /// <param name="options">Visualization options/可视化选项</param>
-            /// <returns>Visualized image/可视化后的图像</returns>
+            /// <param name="results">Detection results / 检测结果</param>
+            /// <param name="image">Source image / 源图像</param>
+            /// <param name="options">Visualization options / 可视化选项</param>
+            /// <returns>Visualized image / 可视化后的图像</returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when results, image, or options is null
+            /// 当results、image或options为null时抛出
+            /// </exception>
+            /// <example>
+            /// <code language="csharp">
+            /// var handler = new VisualizeHandler(Visualize.DrawSegResult);
+            /// using var visualized = handler.ExecuteDrawing(segResults, image, options);
+            /// </code>
+            /// </example>
             public Image<Rgb24> ExecuteDrawing(Result[] results, Image<Rgb24> image, VisualizeOptions options)
             {
                 return _drawingMethod(results, image, options);

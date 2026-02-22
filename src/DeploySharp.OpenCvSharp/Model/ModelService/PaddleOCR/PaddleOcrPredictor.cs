@@ -1,295 +1,4 @@
-﻿//using DeploySharp.Common;
-//using DeploySharp.Data;
-//using DeploySharp.Log;
-//using DeploySharp.Model;
-//using OpenCvSharp;
-//using System;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Linq;
-//using System.Text.Json;
-//using System.Threading;
-//using System.Threading.Tasks;
-//namespace DeploySharp.Model
-//{
-//    /// <summary>
-//    /// PaddleOCR 预测器主类
-//    /// 负责 OCR 全流程（检测、分类、识别）的编排与调度
-//    /// </summary>
-//    public class PaddleOcrPredictor : IDisposable
-//    {
-//        private readonly PaddleOCRConfig _config;
-
-//        // 预测器实例
-//        private PPOcrDet _ocrDetPredictor;
-//        private PPOcrCls _ocrClsPredictor;
-//        private PPOcrRec[] _ocrRecPredictor;
-//        /// <summary>
-//        /// 构造函数
-//        /// </summary>
-//        /// <param name="config">OCR 配置对象</param>
-//        public PaddleOcrPredictor(PaddleOCRConfig config)
-//        {
-//            _config = config ?? throw new ArgumentNullException(nameof(config));
-
-//            // 初始化前校验配置
-//            _config.Validate();
-//            // 按需初始化预测器
-//            if (_config.UseDet) _ocrDetPredictor = new PPOcrDet(_config.DetConfig);
-//            if (_config.UseCls) _ocrClsPredictor = new PPOcrCls(_config.ClsConfig);
-//            if (_config.UseRec) 
-//            {
-//                _ocrRecPredictor = new PPOcrRec[4];
-//                for (int i = 0; i < 4; i++)
-//                {
-//                    // 1. 将原配置序列化为字符串
-//                    string configJson = JsonSerializer.Serialize(_config.RecConfig);
-//                    // 2. 反序列化回一个新的对象
-//                    // 这会生成一个全新的、属性值完全相同的 RecConfig 对象
-//                    PPOcrRecConfig independentConfig = JsonSerializer.Deserialize<PPOcrRecConfig>(configJson);
-//                    _ocrRecPredictor[i] = new PPOcrRec(independentConfig);
-//                }
-//            };
-
-//        }
-//        /// <summary>
-//        /// 执行预测（使用配置中的默认设置）
-//        /// </summary>
-//        public OcrResult Predict(Mat img)
-//        {
-//            return Predict(img, _config.GlobalMaxBatchSize, _config.UseDet, _config.UseCls, _config.UseRec);
-//        }
-//        /// <summary>
-//        /// 执行预测（覆盖部分流程开关，但必须符合逻辑依赖）
-//        /// 例如：即使配置了 UseCls=true，也可以强制传 false 关闭
-//        /// </summary>
-//        public OcrResult Predict(Mat img, int? batchSize = null, bool? useDet = null, bool? useCls = null, bool? useRec = null)
-//        {
-//            if (img == null || img.Empty()) throw new ArgumentException("输入图像无效");
-//            // 解析实际使用的开关，参数优先于配置
-//            bool runDet = useDet ?? _config.UseDet;
-//            bool runCls = useCls ?? _config.UseCls;
-//            bool runRec = useRec ?? _config.UseRec;
-//            int inferBatchSize = batchSize ?? _config.GlobalMaxBatchSize;
-//            //// 逻辑一致性检查
-//            //if (!runDet && runCls)
-//            //    throw new InvalidOperationException("无法在未运行检测的情况下运行分类;");
-//            var result = new OcrResult();
-//            var totalSw = Stopwatch.StartNew();
-//            // ---------------------------------------------------------
-//            // 模式 A: 完整流程 (Det -> Cls -> Rec)
-//            // ---------------------------------------------------------
-//            if (runDet)
-//            {
-//                var detSw = Stopwatch.StartNew();
-
-//                // 1. 检测
-//                ObbResult[] detResults = _ocrDetPredictor.Predict(img);
-//                MyLogger.Log.Info($"Detection Finished. Count: {detResults.Length}, Time: {detSw.ElapsedMilliseconds}ms");
-//                if (detResults.Length == 0) return result;
-//                result.TextAreas = detResults;
-//                // 2. 并行裁剪
-//                var cropSw = Stopwatch.StartNew();
-//                var croppedMats = CropImages(img, detResults);
-//                MyLogger.Log.Info($"Crop Finished. Time: {cropSw.ElapsedMilliseconds}ms");
-//                // 3. 批处理分类与识别
-//                // 注意：如果配置了 UseCls 但预测时强制不使用，则跳过
-//                ProcessRecBatch(croppedMats, out TextRecResult[] textRecResults, out Result[] clsResults, runCls && _config.UseCls, inferBatchSize);
-
-//                result.TextContents = textRecResults; // 假设 ObbResult 里有 RecResult 属性，或者你用单独的列表管理
-//                if (runCls && _config.UseCls)
-//                {
-//                    result.TextOrientations = clsResults;
-//                }
-
-//                // 4. 清理裁剪内存
-//                ReleaseMats(croppedMats);
-//            }
-//            // ---------------------------------------------------------
-//            // 模式 B: 仅识别模式 (Rec Only / Rec + Cls)
-//            // 用于用户已经做好了裁剪，或者只需要识别整张图
-//            // ---------------------------------------------------------
-//            else if (runRec)
-//            {
-//                result.TextAreas = new ObbResult[] { new ObbResult() 
-//                {
-//                    Bounds = new Data.RotatedRect(new PointF(img.Cols / 2f, img.Rows / 2f), 
-//                    new SizeF(img.Cols, img.Rows),
-//                    0),
-//                    Confidence = 1.0f,
-//                    Id = 0
-//                } };
-//                // 将整张图作为一个 Batch 处理
-//                var singleImageList = new Mat[1] { img };
-//                // 伪造一个 detResults 结构用于回填，或者修改 ProcessRecBatch 接口
-//                // 这里假设我们只需要文字内容，不关心位置
-//                // 简单处理：直接调用 Rec 预测
-
-//                ProcessRecBatch(singleImageList, out TextRecResult[] textRecResults, out Result[] clsResults, runCls && _config.UseCls, inferBatchSize);
-
-//                result.TextContents = textRecResults; // 假设 ObbResult 里有 RecResult 属性，或者你用单独的列表管理
-//                if (runCls && _config.UseCls)
-//                {
-//                    result.TextOrientations = clsResults;
-//                }
-//            }
-//            MyLogger.Log.Info($"Total Predict Time: {totalSw.ElapsedMilliseconds}ms");
-//            return result;
-//        }
-//        /// <summary>
-//        /// 裁剪图像：使用并行加速，并使用 try-catch 保证单个失败不影响整体
-//        /// </summary>
-//        private Mat[] CropImages(Mat srcImg, ObbResult[] detResults)
-//        {
-//            Mat[] croppedMats = new Mat[detResults.Length];
-
-//            // 使用 ParallelOptions 限制最大并行度，防止内存爆炸
-//            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-//            Parallel.For(0, detResults.Length, parallelOptions, i =>
-//            {
-//                try
-//                {
-//                    // 假设 GetRotateCropImageByRect 是线程安全的（不修改共享状态）
-//                    croppedMats[i] = CvPPOcrDataProcessor.GetRotateCropImageByRect(srcImg, detResults[i].Bounds);
-//                }
-//                catch (Exception ex)
-//                {
-//                    MyLogger.Log.Info($"Crop image at index {i} failed: {ex.Message}");
-//                    // 即使失败也分配一个空 Mat 占位，防止后续空引用
-//                    croppedMats[i] = new Mat();
-//                }
-//            });
-//            return croppedMats;
-//        }
-//        /// <summary>
-//        /// 批量处理识别与分类
-//        /// </summary>
-//        private void ProcessRecBatch(Mat[] imgList, out TextRecResult[] recResults, out Result[] clsResults,bool enableCls, int batchSize)
-//        {
-//            int imgCount = imgList.Length;
-//            TextRecResult[] recResultss = new TextRecResult[imgCount];
-//            Result[] clsResultss = new Result[imgCount];
-
-//            List<float> widthList = new List<float>();
-//            for (int i = 0; i < imgCount; i++)
-//            {
-//                widthList.Add((float)(imgList[i].Cols) / imgList[i].Rows);
-//            }
-//            List<int> indices = argsort(widthList);
-
-//            int bs = (int)Math.Ceiling((float)imgCount / batchSize);
-
-//            Parallel.For(0, bs, b =>
-//            {
-//                int beg = b * batchSize;
-//                int end = Math.Min(imgCount, beg + batchSize);
-//                int currentBatchSize = end - beg;
-
-//                // 准备当前 Batch 的数据
-//                var batchMats = new List<Mat>(currentBatchSize);
-//                for (int i = beg; i < end; i++) batchMats.Add(imgList[indices[i]]);
-//                var clsSw = Stopwatch.StartNew();
-//                // --- 方向分类 ---
-//                if (enableCls && _ocrClsPredictor != null)
-//                {
-//                    // 假设 PredictBatch 返回 List<Result[]>，Result包含 Label/Score
-//                    var clsResult = _ocrClsPredictor.PredictBatch(batchMats);
-//                    for (int i = 0; i < currentBatchSize; i++)
-//                    {
-//                        // 判断是否需要旋转 (假设 Label 1 或 '180' 表示需要旋转)
-//                        var res = clsResult[i][0];
-//                        clsResultss[beg + i] = res;
-//                        if (res.Id == 1 && res.Confidence > _config.ClsConfig.ConfidenceThreshold)
-//                        {
-//                            Cv2.Rotate(batchMats[i], batchMats[i], RotateFlags.Rotate180);
-//                        }
-//                    }
-//                    MyLogger.Log.Info($"Cls Batch ({beg}-{end}) Time: {clsSw.ElapsedMilliseconds}ms");
-//                }
-//                var recSw = Stopwatch.StartNew();
-//                // --- 文字识别 ---
-//                if (_ocrRecPredictor != null)
-//                {
-//                    var recResult = _ocrRecPredictor[b].PredictBatch(batchMats);
-//                    // 回填结果
-//                    for (int i = 0; i < currentBatchSize; i++)
-//                    {
-//                        // 将识别结果关联到对应的检测结果对象上
-//                        // 假设 ObbResult 类有 RecText 和 RecScore 属性
-//                        if (recResult[i] != null && recResult[i].Length > 0)
-//                        {
-//                            recResultss[indices[beg + i]] = recResult[i][0];
-//                            // detResults[beg + i].Text = recResults[i][0].Str; // 根据实际数据结构调整
-//                        }
-//                    }
-//                    MyLogger.Log.Error($"Rec Batch ({beg}-{end}) Time: {recSw.ElapsedMilliseconds}ms");
-//                }
-//            });
-//            recResults = recResultss;
-//            clsResults = clsResultss;
-
-//        }
-//        public static List<int> argsort(List<float> array)
-//        {
-//            int array_len = array.Count;
-
-//            //生成值和索引的列表
-//            List<float[]> new_array = new List<float[]> { };
-//            for (int i = 0; i < array_len; i++)
-//            {
-//                new_array.Add(new float[] { array[i], i });
-//            }
-//            //对列表按照值小到大进行排序
-//            new_array.Sort((a, b) => a[0].CompareTo(b[0]));
-//            //获取排序后的原索引
-//            List<int> array_index = new List<int>();
-//            foreach (float[] item in new_array)
-//            {
-//                array_index.Add((int)item[1]);
-//            }
-//            return array_index;
-//        }
-
-//        public string PrintTimeProfiling()
-//        {
-
-//            string msg = "---- Detection ----\n";
-//            Console.WriteLine("---- Detection ----");
-//            msg += _ocrDetPredictor?.ModelInferenceProfiler.PrintAllRecords();
-//            msg += "---- Classification ----\n";
-//            Console.WriteLine("---- Classification ----");
-//            msg += _ocrClsPredictor?.ModelInferenceProfiler.PrintAllRecords();
-//            msg += "---- Recognition ----\n";
-//            Console.WriteLine("---- Recognition ----");
-//            msg += _ocrRecPredictor[0].ModelInferenceProfiler.PrintAllRecords();
-//            msg += _ocrRecPredictor[1].ModelInferenceProfiler.PrintAllRecords();
-//            msg += _ocrRecPredictor[2].ModelInferenceProfiler.PrintAllRecords();
-//            msg += _ocrRecPredictor[3].ModelInferenceProfiler.PrintAllRecords();
-//            return msg;
-//        }
-
-//        private void ReleaseMats(Mat[] mats)
-//        {
-//            foreach (var mat in mats)
-//            {
-//                try { mat?.Dispose(); } catch { }
-//            }
-//        }
-//        public void Dispose()
-//        {
-//            _ocrDetPredictor?.Dispose();
-//            _ocrClsPredictor?.Dispose();
-//            _ocrRecPredictor[0].Dispose();
-//            _ocrRecPredictor[1].Dispose();
-//            _ocrRecPredictor[2].Dispose();
-//            _ocrRecPredictor[3].Dispose();
-//            MyLogger.Log.Info("PaddleOcrPredictor Disposed.");
-//        }
-//    }
-
-//}
-
-using DeploySharp.Common;
+﻿using DeploySharp.Common;
 using DeploySharp.Data;
 using DeploySharp.Log;
 using DeploySharp.Model;
@@ -305,53 +14,111 @@ using System.Threading.Tasks;
 namespace DeploySharp.Model
 {
     /// <summary>
-    /// PaddleOCR 预测器主类
-    /// 负责 OCR 全流程（检测、分类、识别）的编排与调度
+    /// Main PaddleOCR predictor class responsible for orchestrating the complete OCR pipeline
+    /// (detection, classification, recognition).
+    /// PaddleOCR预测器主类，负责编排完整的OCR流程(检测、分类、识别)。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optimized solution: Uses "task partitioning" strategy, strictly dividing inference tasks
+    /// into N parts, each corresponding to an independent inference thread and device.
+    /// This completely solves device load imbalance issues caused by thread ID hash conflicts.
     /// 优化方案：采用 "任务分区" 策略，将推理任务列表严格切分为 N 份，每份对应一个独立的推理线程和设备。
     /// 从而彻底解决线程 ID 哈希冲突导致的设备负载不均问题。
-    /// </summary>
+    /// </para>
+    /// <para>
+    /// The OCR pipeline consists of three stages:
+    /// OCR流程包含三个阶段：
+    /// 1. Text Detection (DBNet) - Finds text regions in the image
+    ///    文本检测(DBNet) - 在图像中找到文本区域
+    /// 2. Text Direction Classification (Optional) - Corrects rotated text
+    ///    文本方向分类(可选) - 校正旋转的文本
+    /// 3. Text Recognition (CRNN) - Converts text regions to characters
+    ///    文本识别(CRNN) - 将文本区域转换为字符
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Initialize PaddleOCR with all three stages
+    /// // 初始化包含三个阶段的PaddleOCR
+    /// var config = new PaddleOCRConfig
+    /// {
+    ///     UseDet = true,   // Enable detection / 启用检测
+    ///     UseCls = true,   // Enable classification / 启用分类
+    ///     UseRec = true,   // Enable recognition / 启用识别
+    ///     DetConfig = new PPOcrDetConfig("ch_PP-OCRv4_det.onnx"),
+    ///     ClsConfig = new PPOcrClsConfig("ch_ppocr_mobile_v2.0_cls.onnx"),
+    ///     RecConfig = new PPOcrRecConfig("ch_PP-OCRv4_rec.onnx")
+    /// };
+    /// 
+    /// using (var ocr = new PaddleOcrPredictor(config))
+    /// {
+    ///     using (Mat image = Cv2.ImRead("document.jpg"))
+    ///     {
+    ///         // Run full OCR pipeline
+    ///         // 运行完整OCR流程
+    ///         OcrResult result = ocr.Predict(image);
+    ///         
+    ///         foreach (var text in result.TextContents)
+    ///         {
+    ///             Console.WriteLine($"Text: {text.Text}, Score: {text.Confidence}");
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class PaddleOcrPredictor : IDisposable
     {
         private readonly PaddleOCRConfig _config;
-        private readonly int _maxConcurrency; // 最大并发度（对应设备数或推理实例数）
+        private readonly int _maxConcurrency;
 
-        // 预测器实例
+        // Predictor instances
         private PPOcrDet _ocrDetPredictor;
         private PPOcrCls[] _ocrClsPredictors;
         private PPOcrRec[] _ocrRecPredictors;
 
         /// <summary>
-        /// 构造函数
+        /// Creates a new PaddleOCR predictor with specified configuration.
+        /// 使用指定配置创建新的PaddleOCR预测器。
         /// </summary>
-        /// <param name="config">OCR 配置对象</param>
+        /// <param name="config">OCR configuration object / OCR配置对象</param>
+        /// <exception cref="ArgumentNullException">Thrown when config is null / 当config为null时抛出</exception>
+        /// <exception cref="InvalidOperationException">Thrown when configuration validation fails / 当配置验证失败时抛出</exception>
+        /// <remarks>
+        /// <para>
+        /// The constructor initializes predictor instances based on configuration settings.
+        /// 构造函数根据配置设置初始化预测器实例。
+        /// </para>
+        /// <para>
+        /// Each enabled stage (detection, classification, recognition) creates independent
+        /// predictor instances for thread-safe parallel processing.
+        /// 每个启用的阶段(检测、分类、识别)创建独立的预测器实例以实现线程安全的并行处理。
+        /// </para>
+        /// </remarks>
         public PaddleOcrPredictor(PaddleOCRConfig config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _config.Validate();
 
-            // 确定最大并发数，通常建议根据 GPU 数量或 CPU 核心数设置
-            // 这里的 4 应该对应你拥有的物理设备数量（例如 4 张 GPU 或 4 个 CPU 核心组）
-            _maxConcurrency = config.MaxConcurrency; // 建议通过配置传入，例如 Environment.ProcessorCount 或 GPU 数量
+            // Determine max concurrency based on GPU count or CPU core count
+            _maxConcurrency = config.MaxConcurrency;
 
-            // 1. 初始化检测
+            // 1. Initialize detection
             if (_config.UseDet) _ocrDetPredictor = new PPOcrDet(_config.DetConfig);
 
-            // 2. 初始化分类器实例池（每个实例绑定一个线程/设备）
+            // 2. Initialize classifier instance pool (each instance binds to a thread/device)
             if (_config.UseCls)
             {
                 _ocrClsPredictors = new PPOcrCls[_maxConcurrency];
                 for (int i = 0; i < _maxConcurrency; i++)
                 {
-                    // 深度拷贝配置，确保每个实例资源独立（尤其是设备 ID 配置）
                     string configJson = JsonSerializer.Serialize(_config.ClsConfig);
                     PPOcrClsConfig independentConfig = JsonSerializer.Deserialize<PPOcrClsConfig>(configJson);
-                    // 注意：这里假设 independentConfig 中包含了指定 DeviceId 的逻辑，
-                    // 或者每个 PPOcrCls 实例底层会自动绑定不同的资源。
                     _ocrClsPredictors[i] = new PPOcrCls(independentConfig);
                 }
             }
 
-            // 3. 初始化识别器实例池
+            // 3. Initialize recognizer instance pool
             if (_config.UseRec)
             {
                 _ocrRecPredictors = new PPOcrRec[_maxConcurrency];
@@ -365,16 +132,65 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
-        /// 执行预测（使用配置中的默认设置）
+        /// Performs OCR prediction using default configuration settings.
+        /// 使用默认配置设置执行OCR预测。
         /// </summary>
+        /// <param name="img">Input image containing text / 包含文本的输入图像</param>
+        /// <returns>OCR result containing detected text areas and recognized content / 包含检测到的文本区域和识别内容的OCR结果</returns>
+        /// <exception cref="ArgumentNullException">Thrown when img is null / 当img为null时抛出</exception>
+        /// <exception cref="ArgumentException">Thrown when img is empty / 当img为空时抛出</exception>
+        /// <exception cref="ObjectDisposedException">Thrown when predictor is disposed / 当预测器已释放时抛出</exception>
+        /// <remarks>
+        /// This overload uses the configuration settings from constructor.
+        /// 此重载使用构造函数中的配置设置。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var result = ocr.Predict(image);
+        /// foreach (var textArea in result.TextAreas)
+        /// {
+        ///     Console.WriteLine($"Found text at: {textArea.Bounds}");
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="Predict(Mat, int?, bool?, bool?, bool?)"/>
         public OcrResult Predict(Mat img)
         {
             return Predict(img, _config.GlobalMaxBatchSize, _config.UseDet, _config.UseCls, _config.UseRec);
         }
 
         /// <summary>
-        /// 执行预测（覆盖部分流程开关）
+        /// Performs OCR prediction with optional stage overrides.
+        /// 使用可选的阶段覆盖执行OCR预测。
         /// </summary>
+        /// <param name="img">Input image containing text / 包含文本的输入图像</param>
+        /// <param name="batchSize">Override batch size (null uses config default) / 覆盖批处理大小(null使用配置默认值)</param>
+        /// <param name="useDet">Override detection stage (null uses config default) / 覆盖检测阶段(null使用配置默认值)</param>
+        /// <param name="useCls">Override classification stage (null uses config default) / 覆盖分类阶段(null使用配置默认值)</param>
+        /// <param name="useRec">Override recognition stage (null uses config default) / 覆盖识别阶段(null使用配置默认值)</param>
+        /// <returns>OCR result / OCR结果</returns>
+        /// <exception cref="ArgumentException">Thrown when invalid combination of stages is specified / 当指定了无效的阶段组合时抛出</exception>
+        /// <remarks>
+        /// <para>
+        /// You can selectively enable/disable stages per prediction call.
+        /// 您可以为每次预测调用选择性地启用/禁用阶段。
+        /// </para>
+        /// <para>
+        /// Note: Classification requires detection to be enabled (or use rec-only mode).
+        /// 注意：分类需要启用检测(或使用仅识别模式)。
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // Run detection only (fast preview)
+        /// // 仅运行检测(快速预览)
+        /// var preview = ocr.Predict(image, useDet: true, useCls: false, useRec: false);
+        /// 
+        /// // Run recognition only (on pre-cropped text images)
+        /// // 仅运行识别(在预裁剪的文本图像上)
+        /// var textOnly = ocr.Predict(croppedImage, useDet: false, useRec: true);
+        /// </code>
+        /// </example>
         public OcrResult Predict(Mat img, int? batchSize = null, bool? useDet = null, bool? useCls = null, bool? useRec = null)
         {
             if (img == null || img.Empty()) throw new ArgumentException("输入图像无效");
@@ -387,26 +203,24 @@ namespace DeploySharp.Model
             var result = new OcrResult();
             var totalSw = Stopwatch.StartNew();
 
-            // ---------------------------------------------------------
-            // 模式 A: 完整流程 (Det -> Cls -> Rec)
-            // ---------------------------------------------------------
+            // Mode A: Full pipeline (Det -> Cls -> Rec)
             if (runDet)
             {
                 var detSw = Stopwatch.StartNew();
 
-                // 1. 检测
+                // 1. Detection
                 ObbResult[] detResults = _ocrDetPredictor.Predict(img);
                 MyLogger.Log.Info($"Detection Finished. Count: {detResults.Length}, Time: {detSw.ElapsedMilliseconds}ms");
 
                 if (detResults.Length == 0) return result;
                 result.TextAreas = detResults;
 
-                // 2. 并行裁剪
+                // 2. Parallel cropping
                 var cropSw = Stopwatch.StartNew();
                 var croppedMats = CropImages(img, detResults);
                 MyLogger.Log.Info($"Crop Finished. Time: {cropSw.ElapsedMilliseconds}ms");
 
-                // 3. 批处理分类与识别
+                // 3. Batch processing for classification and recognition
                 ProcessRecBatch(croppedMats, out TextRecResult[] textRecResults, out Result[] clsResults, runCls && _config.UseCls, inferBatchSize);
 
                 result.TextContents = textRecResults;
@@ -415,12 +229,10 @@ namespace DeploySharp.Model
                     result.TextOrientations = clsResults;
                 }
 
-                // 4. 清理裁剪内存
+                // 4. Clean up cropped images
                 ReleaseMats(croppedMats);
             }
-            // ---------------------------------------------------------
-            // 模式 B: 仅识别模式 (Rec Only / Rec + Cls)
-            // ---------------------------------------------------------
+            // Mode B: Recognition only mode (Rec Only / Rec + Cls)
             else if (runRec)
             {
                 result.TextAreas = new ObbResult[] { new ObbResult()
@@ -447,12 +259,25 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
-        /// 裁剪图像
+        /// Crops detected text regions from the source image.
+        /// 从源图像中裁剪检测到的文本区域。
         /// </summary>
+        /// <param name="srcImg">Source image / 源图像</param>
+        /// <param name="detResults">Detection results containing text regions / 包含文本区域的检测结果</param>
+        /// <returns>Array of cropped text region images / 裁剪的文本区域图像数组</returns>
+        /// <remarks>
+        /// <para>
+        /// Uses parallel processing for cropping multiple regions.
+        /// 使用并行处理裁剪多个区域。
+        /// </para>
+        /// <para>
+        /// Failed crops return empty Mats instead of throwing exceptions.
+        /// 失败的裁剪返回空Mat而不是抛出异常。
+        /// </para>
+        /// </remarks>
         private Mat[] CropImages(Mat srcImg, ObbResult[] detResults)
         {
             Mat[] croppedMats = new Mat[detResults.Length];
-            // 裁剪阶段是 CPU 密集型，可以使用 Parallel.For
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _maxConcurrency };
 
             Parallel.For(0, detResults.Length, parallelOptions, i =>
@@ -471,18 +296,28 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
-        /// 批量处理识别与分类
-        /// 修复策略：使用任务分区
-        /// 将 imgList 根据索引范围严格切分为 _maxConcurrency 个区间。
-        /// 例如：如果有 4 个实例，索引 0-10 归线程0处理，11-20 归线程1处理，以此类推。
-        /// 这样能确保每个线程只操作属于自己的那个 Predictor 实例，保证 1:1 绑定，杜绝竞争。
+        /// Batch processes recognition and classification with task partitioning.
+        /// 使用任务分区批量处理识别和分类。
         /// </summary>
+        /// <param name="imgList">Array of cropped text images / 裁剪的文本图像数组</param>
+        /// <param name="recResults">Output recognition results / 输出识别结果</param>
+        /// <param name="clsResults">Output classification results / 输出分类结果</param>
+        /// <param name="enableCls">Whether to enable classification / 是否启用分类</param>
+        /// <param name="batchSize">Batch size for processing / 批处理大小</param>
+        /// <remarks>
+        /// <para>
+        /// Key fix: Uses task partitioning with Parallel.For over worker IDs.
+        /// 关键修复：使用基于工作器ID的Parallel.For进行任务分区。
+        /// </para>
+        /// <para>
+        /// This ensures each thread only operates on its assigned predictor instance,
+        /// eliminating race conditions and ensuring 1:1 binding.
+        /// 这确保每个线程只操作其分配的预测器实例，消除竞争条件并确保1:1绑定。
+        /// </para>
+        /// </remarks>
         private void ProcessRecBatch(Mat[] imgList, out TextRecResult[] recResults, out Result[] clsResults, bool enableCls, int batchSize)
         {
             int imgCount = imgList.Length;
-            //recResults = new TextRecResult[imgCount];
-            //clsResults = new Result[imgCount];
-
             TextRecResult[] recResultss = new TextRecResult[imgCount];
             Result[] clsResultss = new Result[imgCount];
 
@@ -490,32 +325,23 @@ namespace DeploySharp.Model
             {
                 recResults = recResultss;
                 clsResults = clsResultss;
-
                 return;
             }
-            
 
-            // 预处理：计算宽高比并排序（这一步是串行的，用于优化后续 Batch 填充率）
+            // Preprocessing: Calculate aspect ratios and sort (serial step for batch optimization)
             List<float> widthList = new List<float>();
             for (int i = 0; i < imgCount; i++)
             {
                 widthList.Add((float)(imgList[i].Cols) / imgList[i].Rows);
             }
-            // 获取排序后的索引映射
             List<int> indices = argsort(widthList);
 
-            // -------------------------------------------------------------
-            // 关键修复：使用 Parallel.For 循环实例索引（0 到 maxConcurrency-1）
-            // -------------------------------------------------------------
-            // 我们不再循环 "Batch"，而是直接循环 "设备/线程槽位"。
-            // 每个槽位负责处理 imgList 中属于自己那部分的数据。
-
+            // Key fix: Use Parallel.For over instance indices
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _maxConcurrency };
 
             Parallel.For(0, _maxConcurrency, parallelOptions, workerId =>
             {
-                // 1. 获取当前线程专属的推理实例
-                // workerId 范围是 [0, 1, 2, 3]，这保证了每个分支拿到不同的对象
+                // 1. Get predictor instance exclusive to this thread
                 var currentRecPredictor = _ocrRecPredictors[workerId];
                 PPOcrCls currentClsPredictor = null;
                 if (enableCls && _ocrClsPredictors != null)
@@ -523,36 +349,30 @@ namespace DeploySharp.Model
                     currentClsPredictor = _ocrClsPredictors[workerId];
                 }
 
-                // 2. 计算当前线程负责处理的数据范围
-                // 简单的分区策略：将总图片数切分为 N 份
-                // 例如：100张图，4个线程 -> 线程0处理 0-24，线程1处理 25-49...
-                // 注意：这里是基于排序后的 indices 进行切片
+                // 2. Calculate data range for this thread
                 int chunkSize = (int)Math.Ceiling((float)imgCount / _maxConcurrency);
                 int startIndex = workerId * chunkSize;
                 int endIndex = Math.Min(imgCount, startIndex + chunkSize);
 
-                // 如果当前线程分配到的范围内没有数据（例如图片数少于线程数），直接返回
                 if (startIndex >= imgCount) return;
 
-                // 3. 在当前分片内进行批次处理
-                // 我们需要把 indices[startIndex] 到 indices[endIndex] 之间的图片取出来处理
+                // 3. Process batches within this slice
                 for (int i = startIndex; i < endIndex; i += batchSize)
                 {
                     int batchEnd = Math.Min(endIndex, i + batchSize);
                     int currentBatchCount = batchEnd - i;
 
-                    // 准备当前批次的数据
                     var batchMats = new List<Mat>(currentBatchCount);
-                    var originalIndices = new List<int>(currentBatchCount); // 记录这些图在原始数组中的真实索引
+                    var originalIndices = new List<int>(currentBatchCount);
 
                     for (int k = i; k < batchEnd; k++)
                     {
-                        int sortedIndex = indices[k]; // 获取排序后的位置
+                        int sortedIndex = indices[k];
                         batchMats.Add(imgList[sortedIndex]);
                         originalIndices.Add(sortedIndex);
                     }
 
-                    // --- 方向分类 ---
+                    // Classification stage
                     if (enableCls && currentClsPredictor != null)
                     {
                         var clsSw = Stopwatch.StartNew();
@@ -564,16 +384,15 @@ namespace DeploySharp.Model
                             int realIndex = originalIndices[k];
                             clsResultss[realIndex] = res;
 
-                            // 如果需要旋转，修改 batchMats 中对应的图（因为后续 Rec 还要用）
+                            // Rotate 180 degrees if needed
                             if (res.Id == 1 && res.Confidence > _config.ClsConfig.ConfidenceThreshold)
                             {
                                 Cv2.Rotate(batchMats[k], batchMats[k], RotateFlags.Rotate180);
                             }
                         }
-                        // MyLogger.Log.Debug($"Worker {workerId} Cls Batch Time: {clsSw.ElapsedMilliseconds}ms");
                     }
 
-                    // --- 文字识别 ---
+                    // Recognition stage
                     if (currentRecPredictor != null)
                     {
                         var recSw = Stopwatch.StartNew();
@@ -587,7 +406,6 @@ namespace DeploySharp.Model
                                 recResultss[realIndex] = recResult[k][0];
                             }
                         }
-                        // MyLogger.Log.Debug($"Worker {workerId} Rec Batch Time: {recSw.ElapsedMilliseconds}ms");
                     }
                 }
             });
@@ -596,8 +414,15 @@ namespace DeploySharp.Model
         }
 
         /// <summary>
-        /// 对列表进行升序排序，返回排序后的索引列表
+        /// Returns sorted indices for a list of float values (ascending order).
+        /// 返回浮点值列表的排序索引(升序)。
         /// </summary>
+        /// <param name="array">List of float values / 浮点值列表</param>
+        /// <returns>List of indices sorted by value / 按值排序的索引列表</returns>
+        /// <remarks>
+        /// Used for sorting images by aspect ratio for efficient batch processing.
+        /// 用于按宽高比排序图像以实现高效的批处理。
+        /// </remarks>
         public static List<int> argsort(List<float> array)
         {
             int array_len = array.Count;
@@ -615,6 +440,15 @@ namespace DeploySharp.Model
             return array_index;
         }
 
+        /// <summary>
+        /// Prints timing profiling information for all stages.
+        /// 打印所有阶段的时间分析信息。
+        /// </summary>
+        /// <returns>Profiling information as string / 分析信息字符串</returns>
+        /// <remarks>
+        /// Useful for performance analysis and optimization.
+        /// 用于性能分析和优化。
+        /// </remarks>
         public string PrintTimeProfiling()
         {
             string msg = "---- Detection ----\n";
@@ -643,6 +477,11 @@ namespace DeploySharp.Model
             return msg;
         }
 
+        /// <summary>
+        /// Releases all Mats in the array.
+        /// 释放数组中的所有Mat。
+        /// </summary>
+        /// <param name="mats">Array of Mats to release / 要释放的Mat数组</param>
         private void ReleaseMats(Mat[] mats)
         {
             foreach (var mat in mats)
@@ -651,6 +490,14 @@ namespace DeploySharp.Model
             }
         }
 
+        /// <summary>
+        /// Releases all resources used by the predictor.
+        /// 释放预测器使用的所有资源。
+        /// </summary>
+        /// <remarks>
+        /// Disposes all predictor instances and clears references.
+        /// 释放所有预测器实例并清除引用。
+        /// </remarks>
         public void Dispose()
         {
             _ocrDetPredictor?.Dispose();

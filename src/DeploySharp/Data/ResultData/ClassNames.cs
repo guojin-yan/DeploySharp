@@ -6,14 +6,56 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Data
 {
-
+    /// <summary>
+    /// Provides predefined class name dictionaries for popular computer vision datasets
+    /// 为流行的计算机视觉数据集提供预定义的类别名称字典
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Contains static dictionaries mapping class indices to human-readable class names
+    /// for commonly used datasets in object detection and image classification tasks.
+    /// </para>
+    /// <para>
+    /// 包含将类别索引映射到人类可读类别名称的静态字典，
+    /// 用于目标检测和图像分类任务中常用的数据集。
+    /// </para>
+    /// <example>
+    /// Basic usage:
+    /// <code>
+    /// // Get COCO class name for detection result
+    /// int classId = 0;
+    /// string className = ClassNames.CocoClassNames[classId]; // "person"
+    /// 
+    /// // Iterate over all COCO classes
+    /// foreach (var kvp in ClassNames.CocoClassNames)
+    /// {
+    ///     Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+    /// }
+    /// </code>
+    /// </example>
+    /// </remarks>
     public class ClassNames
     {
         /// <summary>
+        /// COCO dataset class name mappings (80 classes).
+        /// Key: Class ID (starting from 0)
+        /// Value: Class name
+        /// 
         /// COCO 数据集的 80 个类别名称映射。
         /// Key: 类别ID (从0开始)
         /// Value: 类别名称
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// COCO (Common Objects in Context) is a large-scale object detection dataset
+        /// containing 80 common object categories.
+        /// </para>
+        /// <para>
+        /// COCO（上下文中的常见对象）是一个大规模目标检测数据集，
+        /// 包含80个常见物体类别。
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="https://cocodataset.org/"/>
         public static readonly Dictionary<int, string> CocoClassNames = new Dictionary<int, string>
         {
             { 0, "person" },         { 1, "bicycle" },       { 2, "car" },            { 3, "motorcycle" },      { 4, "airplane" },
@@ -33,11 +75,27 @@ namespace DeploySharp.Data
             { 70, "toaster" },       { 71, "sink" },         { 72, "refrigerator" },  { 73, "book" },           { 74, "clock" },
             { 75, "vase" },          { 76, "scissors" },     { 77, "teddy bear" },    { 78, "hair drier" },     { 79, "toothbrush" }
         };
+
         /// <summary>
+        /// PASCAL VOC dataset class name mappings (20 classes).
+        /// Key: Class ID (starting from 1, 0 is typically background)
+        /// Value: Class name
+        /// 
         /// PASCAL VOC 数据集的 20 个类别名称映射。
         /// Key: 类别ID (从1开始, 0通常为背景)
         /// Value: 类别名称
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// PASCAL VOC (Visual Object Classes) is a benchmark dataset for object detection
+        /// and image segmentation with 20 object categories.
+        /// </para>
+        /// <para>
+        /// PASCAL VOC（视觉对象类别）是一个目标检测和图像分割的基准数据集，
+        /// 包含20个物体类别。
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="http://host.robots.ox.ac.uk/pascal/VOC/"/>
         public static readonly Dictionary<int, string> VocClassNames = new Dictionary<int, string>
         {
             { 1, "aeroplane" }, { 2, "bicycle" }, { 3, "bird" }, { 4, "boat" }, { 5, "bottle" },
@@ -45,11 +103,27 @@ namespace DeploySharp.Data
             { 11, "diningtable" }, { 12, "dog" }, { 13, "horse" }, { 14, "motorbike" }, { 15, "person" },
             { 16, "pottedplant" }, { 17, "sheep" }, { 18, "sofa" }, { 19, "train" }, { 20, "tvmonitor" }
         };
+
         /// <summary>
+        /// CIFAR-10 dataset class name mappings (10 classes).
+        /// Key: Class ID (starting from 0)
+        /// Value: Class name
+        /// 
         /// CIFAR-10 数据集的 10 个类别名称映射。
         /// Key: 类别ID (从0开始)
         /// Value: 类别名称
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// CIFAR-10 is a dataset of 60,000 32x32 color images in 10 classes,
+        /// commonly used for image classification benchmarking.
+        /// </para>
+        /// <para>
+        /// CIFAR-10是一个包含60000张32x32彩色图像的数据集，分为10个类别，
+        /// 常用于图像分类基准测试。
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="https://www.cs.toronto.edu/~kriz/cifar.html"/>
         public static readonly Dictionary<int, string> Cifar10ClassNames = new Dictionary<int, string>
         {
             { 0, "airplane" }, { 1, "automobile" }, { 2, "bird" }, { 3, "cat" }, { 4, "deer" },
@@ -57,10 +131,25 @@ namespace DeploySharp.Data
         };
 
         /// <summary>
+        /// ImageNet (ILSVRC 2012) dataset class name mappings (1000 classes).
+        /// Key: Class ID (starting from 0)
+        /// Value: Class name (or WNID description)
+        /// 
         /// ImageNet (ILSVRC 2012) 数据集的 1000 个类别名称映射。
         /// Key: 类别ID (从0开始)
         /// Value: 类别名称 (或WNID描述)
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// ImageNet is a large visual database designed for visual object recognition research.
+        /// The ILSVRC 2012 subset contains 1000 object categories.
+        /// </para>
+        /// <para>
+        /// ImageNet是一个为视觉对象识别研究设计的大型视觉数据库。
+        /// ILSVRC 2012子集包含1000个物体类别。
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="https://www.image-net.org/"/>
         public static readonly Dictionary<int, string> ImageNetClassNames = new Dictionary<int, string>
         {
             {0, "tench, Tinca tinca"}, {1, "goldfish, Carassius auratus"}, {2, "great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias"}, {3, "tiger shark, Galeocerdo cuvieri"}, {4, "hammerhead, hammerhead shark"}, {5, "electric ray, crampfish, numbfish, torpedo"}, {6, "stingray"}, {7, "cock"}, {8, "hen"}, {9, "ostrich, Struthio camelus"},
@@ -163,11 +252,29 @@ namespace DeploySharp.Data
             {970, "scuba diver"}, {971, "rapeseed"}, {972, "daisy"}, {973, "yellow lady's slipper, yellow lady-slipper, Cypripedium calceolus, Cypripedium parviflorum"}, {974, "corn"}, {975, "acorn"}, {976, "hip, rose hip, rosehip"}, {977, "buckeye, horse chestnut, conker"}, {978, "coral fungus"}, {979, "agaric"},
             {980, "gyromitra"}, {981, "stinkhorn, carrion fungus"}, {982, "earthstar"}, {983, "hen-of-the-woods, hen of the woods, Polyporus frondosus, Grifola frondosa"}, {984, "bolete"}, {985, "ear, spike, capitulum"}, {986, "toilet tissue, toilet paper, bathroom tissue"}
         };
+
         /// <summary>
+        /// CIFAR-100 dataset class name mappings (100 classes).
+        /// Key: Class ID (starting from 0)
+        /// Value: Class name
+        /// 
         /// CIFAR-100 数据集的 100 个类别名称映射。
         /// Key: 类别ID (从0开始)
         /// Value: 类别名称
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// CIFAR-100 is a dataset of 60,000 32x32 color images in 100 classes,
+        /// with 600 images per class. This is a more challenging classification
+        /// task than CIFAR-10 due to the increased number of fine-grained categories.
+        /// </para>
+        /// <para>
+        /// CIFAR-100是一个包含60000张32x32彩色图像的数据集，分为100个类别，
+        /// 每个类别600张图像。由于细粒度类别数量增加，这是一个比CIFAR-10
+        /// 更具挑战性的分类任务。
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="https://www.cs.toronto.edu/~kriz/cifar.html"/>
         public static readonly Dictionary<int, string> Cifar100ClassNames = new Dictionary<int, string>
         {
             { 0, "apple" }, { 1, "aquarium_fish" }, { 2, "baby" }, { 3, "bear" }, { 4, "beaver" },
@@ -191,7 +298,5 @@ namespace DeploySharp.Data
             { 90, "tractor" }, { 91, "train" }, { 92, "trout" }, { 93, "tulip" }, { 94, "turtle" },
             { 95, "wardrobe" }, { 96, "whale" }, { 97, "willow_tree" }, { 98, "wolf" }, { 99, "woman" }
         };
-
-
     }
 }

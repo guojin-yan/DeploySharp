@@ -14,26 +14,87 @@ using static log4net.Appender.ColoredConsoleAppender;
 
 namespace DeploySharp.Data
 {
+    /// <summary>
+    /// Provides visualization methods for computer vision detection results.
+    /// 提供计算机视觉检测结果的可视化方法。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Supports visualization of:
+    /// 支持可视化:
+    /// - Object detection (bounding boxes)
+    ///   目标检测(边界框)
+    /// - Oriented bounding boxes (OBB)
+    ///   有向边界框(OBB)
+    /// - Instance segmentation (masks)
+    ///   实例分割(掩膜)
+    /// - Keypoint detection (poses)
+    ///   关键点检测(姿态)
+    /// - OCR results
+    ///   OCR结果
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Visualize detection results
+    /// // 可视化检测结果
+    /// using OpenCvSharp;
+    /// 
+    /// Mat image = Cv2.ImRead("input.jpg");
+    /// var options = new VisualizeOptions(1.0f);
+    /// 
+    /// // Run detection
+    /// DetResult[] results = model.Predict(image);
+    /// 
+    /// // Draw results
+    /// Mat visualized = Visualize.DrawDetResult(results, image, options);
+    /// Cv2.ImShow("Detections", visualized);
+    /// </code>
+    /// </example>
     public static class Visualize
     {
-
         /// <summary>
-        /// Result drawing
+        /// Draws detection results (bounding boxes) on the image.
+        /// 在图像上绘制检测结果(边界框)。
         /// </summary>
-        /// <param name="bresult">recognition result</param>
-        /// <param name="image">image</param>
-        /// <returns></returns>
+        /// <param name="bresult">Detection results array / 检测结果数组</param>
+        /// <param name="image">Source image to draw on / 要绘制的源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn detection results / 带有绘制检测结果的图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image or options is null / 当图像或选项为null时抛出</exception>
+        /// <remarks>
+        /// Draws bounding boxes, class labels, and confidence scores.
+        /// 绘制边界框、类别标签和置信度分数。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var results = yoloModel.Predict(image);
+        /// var options = new VisualizeOptions(1.0f);
+        /// Mat output = Visualize.DrawDetResult(results, image.Clone(), options);
+        /// Cv2.ImWrite("output.jpg", output);
+        /// </code>
+        /// </example>
+        /// <seealso cref="DrawObbResult"/>
+        /// <seealso cref="DrawSegResult"/>
         public static Mat DrawDetResult(Result[] bresult, Mat image, VisualizeOptions options)
         {
-             return DrawDetResult(bresult as DetResult[], image, options);
+            return DrawDetResult(bresult as DetResult[], image, options);
         }
+
+        /// <summary>
+        /// Draws detection results (bounding boxes) on the image.
+        /// 在图像上绘制检测结果(边界框)。
+        /// </summary>
+        /// <param name="result">Detection results array / 检测结果数组</param>
+        /// <param name="image">Source image to draw on / 要绘制的源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn detection results / 带有绘制检测结果的图像</returns>
         public static Mat DrawDetResult(DetResult[] result, Mat image, VisualizeOptions options)
         {            
             // Draw recognition results on the image
             for (int i = 0; i < result.Length; i++)
             {
                 var box = result[i].Bounds;
-                //Console.WriteLine(result.rects[i]);
                 Cv2.Rectangle(image,
                     CvDataExtensions.ToRect(box),
                     options.Colors.GetBoundingBoxColor(result[i].Id),
@@ -54,16 +115,38 @@ namespace DeploySharp.Data
             }
             return image;
         }
+
         /// <summary>
-        /// Result drawing
+        /// Draws oriented bounding box (OBB) detection results on the image.
+        /// 在图像上绘制有向边界框(OBB)检测结果。
         /// </summary>
-        /// <param name="bresult">recognition result</param>
-        /// <param name="image"></param>
-        /// <returns></returns>
+        /// <param name="bresult">OBB detection results / OBB检测结果</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn OBB results / 带有绘制OBB结果的图像</returns>
+        /// <remarks>
+        /// Used for text detection and oriented object detection.
+        /// 用于文本检测和有向目标检测。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var results = obbModel.Predict(image);
+        /// Mat output = Visualize.DrawObbResult(results, image.Clone(), options);
+        /// </code>
+        /// </example>
         public static Mat DrawObbResult(Result[] bresult, Mat image, VisualizeOptions options) 
         {
             return DrawObbResult(bresult as ObbResult[], image, options);
         }
+
+        /// <summary>
+        /// Draws oriented bounding box (OBB) detection results on the image.
+        /// 在图像上绘制有向边界框(OBB)检测结果。
+        /// </summary>
+        /// <param name="result">OBB detection results array / OBB检测结果数组</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn OBB results / 带有绘制OBB结果的图像</returns>
         public static Mat DrawObbResult(ObbResult[] result, Mat image, VisualizeOptions options)
         {
             // Draw recognition results on the image
@@ -92,17 +175,25 @@ namespace DeploySharp.Data
             return image;
         }
 
-
         /// <summary>
-        /// 将矩形调整到图像范围内
+        /// Clamps rectangle to image boundaries.
+        /// 将矩形调整到图像范围内。
         /// </summary>
+        /// <param name="rect">Rectangle to clamp / 要调整的矩形</param>
+        /// <param name="imgWidth">Image width / 图像宽度</param>
+        /// <param name="imgHeight">Image height / 图像高度</param>
+        /// <returns>Safe rectangle within image bounds / 图像范围内的安全矩形</returns>
+        /// <remarks>
+        /// Internal helper method to prevent drawing outside image boundaries.
+        /// 内部辅助方法，防止在图像边界外绘制。
+        /// </remarks>
         private static OpenCvSharp.Rect GetSafeRectangle(OpenCvSharp.Rect rect, int imgWidth, int imgHeight)
         {
-            // 检查rect参数有效性
+            // Check rect parameter validity
             if (rect.Width <= 0 || rect.Height <= 0)
                 return new OpenCvSharp.Rect(0, 0, 0, 0);
 
-            // 计算安全的矩形边界
+            // Calculate safe rectangle boundaries
             int x = Math.Max(0, Math.Min(rect.X, imgWidth - 1));
             int y = Math.Max(0, Math.Min(rect.Y, imgHeight - 1));
             int width = Math.Min(rect.Width, imgWidth - x);
@@ -112,20 +203,40 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Result drawing
+        /// Draws segmentation results on the image.
+        /// 在图像上绘制分割结果。
         /// </summary>
-        /// <param name="bresult">recognition result</param>
-        /// <param name="image"></param>
-        /// <returns></returns>
+        /// <param name="bresult">Segmentation results / 分割结果</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn segmentation masks / 带有绘制分割掩膜的图像</returns>
+        /// <remarks>
+        /// Overlays semi-transparent masks on detected objects.
+        /// 在检测到的物体上叠加半透明掩膜。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var results = segModel.Predict(image);
+        /// Mat output = Visualize.DrawSegResult(results, image.Clone(), options);
+        /// </code>
+        /// </example>
         public static Mat DrawSegResult(Result[] bresult, Mat img, VisualizeOptions options) 
         {
             return DrawSegResult(bresult, img, options);
         }
+
+        /// <summary>
+        /// Draws segmentation results on the image.
+        /// 在图像上绘制分割结果。
+        /// </summary>
+        /// <param name="result">Segmentation results array / 分割结果数组</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn segmentation masks / 带有绘制分割掩膜的图像</returns>
         public static Mat DrawSegResult(SegResult[] result, Mat img, VisualizeOptions options)
         {
-
             Mat image = img.Clone();
-            // 将原始图像转换为BGRA格式（如果还不是）
+            // Convert original image to BGRA format (if not already)
             if (image.Channels() == 3)
             {
                 Cv2.CvtColor(image, image, ColorConversionCodes.BGR2BGRA);
@@ -144,7 +255,7 @@ namespace DeploySharp.Data
                     box.BottomRight.Y - box.TopLeft.Y), 
                     image.Width, image.Height);
 
-                // 创建掩膜图层
+                // Create mask layer
                 using Mat maskLayer = new Mat(box.Height, box.Width, MatType.CV_8UC4, Scalar.All(0));
 
                 Scalar color = options.Colors.GetMaskColor(result[i].Id);
@@ -161,10 +272,10 @@ namespace DeploySharp.Data
                         }
                     }
                 }
-                // 创建ROI（目标区域）
+                // Create ROI (region of interest)
                 using Mat roi = new Mat(image, rect);
 
-                // 混合掩膜到输出图像
+                // Blend mask into output image
                 Cv2.AddWeighted(
                     roi, 1.0,
                     new Mat(maskLayer, new OpenCvSharp.Rect(0, 0, rect.Width, rect.Height)), options.MaskAlpha,
@@ -178,7 +289,7 @@ namespace DeploySharp.Data
                     HersheyFonts.HersheySimplex, 0.8, new Scalar(0, 0, 0), 2);
             }
 
-            // 转回BGR格式（如果原始是3通道）
+            // Convert back to BGR format (if original was 3-channel)
             if (image.Channels() == 3)
             {
                 Cv2.CvtColor(image, image, ColorConversionCodes.BGRA2BGR);
@@ -188,21 +299,43 @@ namespace DeploySharp.Data
         }
 
         /// <summary>
-        /// Key point result drawing
+        /// Draws keypoint detection (pose) results on the image.
+        /// 在图像上绘制关键点检测(姿态)结果。
         /// </summary>
-        /// <param name="bresult">Key point data</param>
-        /// <param name="img">image</param>
+        /// <param name="bresult">Keypoint detection results / 关键点检测结果</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn keypoints and skeleton / 带有绘制关键点和骨架的图像</returns>
+        /// <remarks>
+        /// Draws 17 COCO keypoints and connecting skeleton lines.
+        /// 绘制17个COCO关键点和连接的骨架线。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var results = poseModel.Predict(image);
+        /// Mat output = Visualize.DrawPoses(results, image.Clone(), options);
+        /// </code>
+        /// </example>
         public static Mat DrawPoses(Result[] bresult, Mat img, VisualizeOptions options) 
         {
             return DrawPoses(bresult as KeyPointResult[], img, options);
         }
+
+        /// <summary>
+        /// Draws keypoint detection (pose) results on the image.
+        /// 在图像上绘制关键点检测(姿态)结果。
+        /// </summary>
+        /// <param name="result">Keypoint detection results array / 关键点检测结果数组</param>
+        /// <param name="img">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn keypoints and skeleton / 带有绘制关键点和骨架的图像</returns>
         public static Mat DrawPoses(KeyPointResult[] result, Mat img, VisualizeOptions options)
         {
             Mat image = img.Clone();
-            // Connection point relationship
+            // Connection point relationships for COCO keypoints
             int[,] edgs = new int[17, 2] { { 0, 1 }, { 0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {6, 8},
                  {7, 9}, {8, 10}, {5, 11}, {6, 12}, {11, 13}, {12, 14},{13, 15 }, {14, 16 }, {11, 12 } };
-            // Color Library
+            // Color library
             Scalar[] colors = new Scalar[18] { new Scalar(255, 0, 0), new Scalar(255, 85, 0), new Scalar(255, 170, 0),
                 new Scalar(255, 255, 0), new Scalar(170, 255, 0), new Scalar(85, 255, 0), new Scalar(0, 255, 0),
                 new Scalar(0, 255, 85), new Scalar(0, 255, 170), new Scalar(0, 255, 255), new Scalar(0, 170, 255),
@@ -214,7 +347,7 @@ namespace DeploySharp.Data
             for (int i = 0; i < result.Length; ++i)
             {
                 var box = result[i].Bounds;
-                // Draw Keys
+                // Draw keys
                 for (int p = 0; p < 17; p++)
                 {
                     if (result[i].KeyPoints[p].Confidence < options.KeyPointMinConfidence)
@@ -223,9 +356,7 @@ namespace DeploySharp.Data
                     }
 
                     Cv2.Circle(image, CvDataExtensions.ToPoint(result[i].KeyPoints[p].Point), 2, colors[p], -1);
-                    //Console.WriteLine(pose.point[p]);
                 }
-                // draw
 
                 Cv2.Rectangle(image, CvDataExtensions.ToRect(box), options.Colors.GetBoundingBoxColor(result[i].Id), 2, LineTypes.Link8);
                 Cv2.Rectangle(image, new OpenCvSharp.Point(box.TopLeft.X, box.TopLeft.Y + options.FontHeight),
@@ -254,13 +385,29 @@ namespace DeploySharp.Data
                     double angle = (Math.Atan2((double)(point_y[0] - point_y[1]), (double)(point_x[0] - point_x[1]))) * 180 / Math.PI;
                     OpenCvSharp.Point[] polygon = Cv2.Ellipse2Poly(center_point, axis, (int)angle, 0, 360, 1);
                     Cv2.FillConvexPoly(image, polygon, colors[p]);
-
                 }
             }
             return image;
-
         }
 
+        /// <summary>
+        /// Draws OCR results on the image.
+        /// 在图像上绘制OCR结果。
+        /// </summary>
+        /// <param name="srcimg">Source image / 源图像</param>
+        /// <param name="ocrResult">OCR recognition result / OCR识别结果</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with drawn text boxes and recognized text / 带有绘制文本框和识别文字的图像</returns>
+        /// <remarks>
+        /// Draws rotated text boxes and overlays recognized text.
+        /// 绘制旋转的文本框并叠加识别的文字。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var ocrResult = ocrModel.Predict(image);
+        /// Mat output = Visualize.DrawOcrResult(image.Clone(), ocrResult, options);
+        /// </code>
+        /// </example>
         public static Mat DrawOcrResult(Mat srcimg, OcrResult ocrResult, VisualizeOptions options)
         {
             // Draw recognition results on the image
@@ -275,8 +422,6 @@ namespace DeploySharp.Data
                         Cv2.Line(srcimg, (OpenCvSharp.Point)points[j], (OpenCvSharp.Point)points[(j + 1) % 4],
                             options.Colors.GetBoundingBoxColor(5), (int)options.BorderThickness);
                     }
-
-
                 }
             }
 
@@ -299,38 +444,78 @@ namespace DeploySharp.Data
                     {
                         y -= (int)(min * 1.5);
                     }
-                    //设置文本位置（左上角）
+                    // Set text position (top-left)
                     System.Drawing.PointF point = new System.Drawing.PointF(points[0].X, y);
                     string text = ocrResult.TextContents[n].Text;
-                    // 将文本绘制到图像上
+                    // Draw text onto image
                     graphics.DrawString(text, font, brush, point);
                 }
 
                 srcimg = BitmapConverter.ToMat((Bitmap)im);
             }
 
-
             return srcimg;
         }
-
     }
 
+    /// <summary>
+    /// Handler class for visualization operations using strategy pattern.
+    /// 使用策略模式的可视化操作处理类。
+    /// </summary>
+    /// <remarks>
+    /// Encapsulates different visualization methods for different result types.
+    /// 为不同结果类型封装不同的可视化方法。
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Create handler for detection visualization
+    /// var handler = new VisualizeHandler(Visualize.DrawDetResult);
+    /// 
+    /// // Execute visualization
+    /// Mat result = handler.ExecuteDrawing(detections, image, options);
+    /// </code>
+    /// </example>
     public class VisualizeHandler
     {
-        // 定义绘图委托类型
+        // Define drawing delegate type
+        /// <summary>
+        /// Delegate type for visualization methods.
+        /// 可视化方法的委托类型。
+        /// </summary>
+        /// <param name="results">Detection results / 检测结果</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Visualized image / 可视化后的图像</returns>
         public delegate Mat VisualizeDelegate(Result[] results, Mat image, VisualizeOptions options);
 
         private readonly VisualizeDelegate _drawingMethod;
 
-        // 构造函数注入具体方法
+        /// <summary>
+        /// Creates a new visualize handler with specified drawing method.
+        /// 使用指定的绘制方法创建新的可视化处理程序。
+        /// </summary>
+        /// <param name="drawingMethod">Drawing method delegate / 绘制方法委托</param>
+        /// <exception cref="ArgumentNullException">Thrown when drawingMethod is null / 当drawingMethod为null时抛出</exception>
         public VisualizeHandler(VisualizeDelegate drawingMethod)
         {
-            _drawingMethod = drawingMethod;
+            _drawingMethod = drawingMethod ?? throw new ArgumentNullException(nameof(drawingMethod));
         }
 
-        // 统一调用入口
+        /// <summary>
+        /// Executes the drawing operation.
+        /// 执行绘制操作。
+        /// </summary>
+        /// <param name="results">Detection results to visualize / 要可视化的检测结果</param>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="options">Visualization options / 可视化选项</param>
+        /// <returns>Image with visualization drawn / 带有可视化的图像</returns>
+        /// <exception cref="ArgumentNullException">Thrown when any parameter is null / 当任何参数为null时抛出</exception>
         public Mat ExecuteDrawing(Result[] results, Mat image, VisualizeOptions options)
         {
+            if (results == null) throw new ArgumentNullException(nameof(results));
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
             return _drawingMethod(results, image, options);
         }
     }

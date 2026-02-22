@@ -67,7 +67,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             // 将下面的模型路径替换为你自己的模型路径
             string modelPath = @"E:\Model\Yolo\yolov8n-seg.onnx";
             // 将下面的图片路径替换为你自己的图片路径
-            string imagePath = @"E:\Data\image\boy.jpg";
+            string imagePath = @"E:\Data\image\bus.jpg";
 
             Yolov8SegConfig config = new Yolov8SegConfig(modelPath);
             config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);

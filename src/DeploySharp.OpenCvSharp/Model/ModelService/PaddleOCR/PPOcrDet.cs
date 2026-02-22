@@ -1,157 +1,4 @@
-﻿//using DeploySharp.Data;
-//using DeploySharp.Log;
-//using iTextSharp.text;
-//using OpenCvSharp;
-//using System;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Linq;
-//using System.Text;
-
-//namespace DeploySharp.Model
-//{
-//    public class PPOcrDet : IPPOcrDet
-//    {
-//        public PPOcrDet(IConfig config) : base(config)
-//        {
-//        }
-//        public ObbResult[] Predict(Mat img)
-//        {
-//            return base.Predict(img) as ObbResult[];
-//        }
-//        public List<ObbResult[]> PredictBatch(List<Mat> imgs)
-//        {
-//            return base.PredictBatch(imgs.Cast<object>().ToList())
-//                .Cast<ObbResult[]>()
-//                .ToList();
-//        }
-//        protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
-//        {
-//            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入尺寸: {(img as Mat)?.Size()}");
-//            PPOcrDetConfig detConfig = (PPOcrDetConfig)config;
-//            try
-//            {
-//                if (config.DynamicByInput)
-//                {
-//                    int maxSide = Math.Max(((Mat)img).Rows, ((Mat)img).Cols);
-//                    // 2. 位运算取整到 32 的倍数
-//                    // n & ~31 等同于将二进制的后 5 位清零，即结果是 32 的倍数
-//                    int targetSize = maxSide & ~31;
-//                    // 3. 限制最大值 (Min 语法糖)
-//                    targetSize = Math.Min(targetSize, detConfig.LimitInputSize);
-//                    // 4. 防止太小 (Min 语法糖)
-//                    targetSize = Math.Max(targetSize, 32);
-
-//                    config.InputSizes.Clear();
-//                    config.InputSizes.Add(new int[] { 1, 3, targetSize, targetSize });
-//                }
-
-
-//                return CvDataProcessor.ImageProcessToDataTensor(
-//                    (Mat)img,
-//                    config,
-//                    out imageAdjustmentParam);
-//            }
-//            catch (Exception ex)
-//            {
-//                MyLogger.Log.Error($"预处理过程中发生异常: {ex.Message}", ex);
-//                throw;
-//            }
-//        }
-
-//        protected override DataTensor PreprocessBatch(List<object> imgs, out ImageAdjustmentParam[] imageAdjustmentParam)
-//        {
-//            MyLogger.Log.Debug($"开始{config.ModelType.ToString()}预处理流程，输入Batch Size: {imgs.Count}");
-//            PPOcrDetConfig detConfig = (PPOcrDetConfig)config;
-//            try
-//            {
-
-//                if (config.DynamicByInput)
-//                {   // 1. 找出所有图片中最大的宽或高 (使用 LINQ Max)
-//                    int maxSideInBatch = imgs.Max(img => Math.Max(((Mat)img).Rows, ((Mat)img).Cols));
-//                    // 2. 计算目标尺寸逻辑
-//                    int targetSize;
-//                    if (maxSideInBatch > detConfig.LimitInputSize)
-//                    {
-//                        // 如果图片中有超过960的，目标设为960 (960是32的倍数)
-//                        targetSize = detConfig.LimitInputSize;
-//                    }
-//                    else
-//                    {
-//                        // 如果都小于960，找出接近的32倍数
-//                        // 向下取整： (800 / 32) * 32 = 768
-//                        targetSize = (maxSideInBatch / 32) * 32;
-
-//                        // 防御性编程：防止图片太小(如31x31)导致目标为0
-//                        if (targetSize < 32) targetSize = 32;
-//                    }
-//                }
-
-//                return CvDataProcessor.ImageListProcessToDataTensor(
-//                    imgs.OfType<OpenCvSharp.Mat>().ToList(),
-//                    config,
-//                    out imageAdjustmentParam);
-//            }
-//            catch (Exception ex)
-//            {
-//                MyLogger.Log.Error($"预处理过程中发生异常: {ex.Message}", ex);
-//                throw;
-//            }
-//        }
-
-//        protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
-//        {
-//            PPOcrDetConfig detConfig = (PPOcrDetConfig)config;
-//            using (Mat pred_map = Mat.FromPixelData(dataTensor[0].Shape[2], dataTensor[0].Shape[3], MatType.CV_32FC1, dataTensor[0].DataBuffer))
-//            {
-//                // 3. 使用 OpenCV 原生操作进行阈值化和类型转换
-//                // 逻辑：将 pred_map (float) 乘以 255，然后转为 8UC1，同时应用阈值。
-//                // 这完全在 C++ 底层运行，极快。
-//                Mat bit_map = new Mat();
-
-//                // 将浮点概率图 (0.0-1.0) 转换为 (0-255)，并应用阈值
-//                // m_det_db_thresh * 255: 将 0.5 的阈值转换为 127.5
-//                Cv2.ConvertScaleAbs(pred_map, bit_map, 255.0, 0);       // float -> uchar (乘以 255)
-//                Cv2.Threshold(bit_map, bit_map, detConfig.ConfidenceThreshold * 255, 255, ThresholdTypes.Binary);
-
-
-
-//                // 4. 将处理好的 bit_map 和原始的 pred_map 传入后处理
-//                // 注意：pred_map 没有做 "乘以255" 的操作，因为它本身就是概率分数 (0.0-1.0)，
-//                // 后处理计算平均分时需要的是 0.0-1.0 的值，而不是 0-255。
-//                // 这样我们就不需要创建那个转换后的 "大浮点数数组" 了。
-//                //Stopwatch sw = Stopwatch.StartNew();
-//                List<(OpenCvSharp.RotatedRect, float)> boxes = CvPPOcrDataProcessor.BoxesFromBitmap(pred_map, bit_map, detConfig.DBBoxThresh, 
-//                    detConfig.DBUnclipRatio, detConfig.DBScoreMode);
-//                //sw.Stop();
-//                //Console.WriteLine($"PPOcrDet Postprocess BoxesFromBitmap time: {sw.ElapsedMilliseconds} ms");
-//                List<ObbResult> ocrResults = new List<ObbResult>();
-
-//                foreach (var r in boxes)
-//                {
-//                    ObbResult ocrResult = new ObbResult
-//                    {
-//                        Type = ResultType.OcrResult,
-//                        Id = 0,
-//                        Confidence = r.Item2,
-//                        Bounds = imageAdjustmentParam.AdjustRotatedRect(CvDataExtensions.ToCvRotatedRect(r.Item1))
-//                    };
-//                    ocrResults.Add(ocrResult);
-
-//                }
-//                //boxes = PostProcessor.filter_tag_det_res(boxes, ratio_w, ratio_h, image);
-//                //Cv2.ImShow("bit", bit_map);
-//                //Cv2.WaitKey(0);
-//                // bit_map 离开 using 块自动释放，无需手动 Dispose
-
-//                return ocrResults.ToArray();
-//            }
-//        }
-//    }
-//}
-
-
-using DeploySharp.Data;
+﻿using DeploySharp.Data;
 using DeploySharp.Log;
 using OpenCvSharp;
 using System;
@@ -161,47 +8,173 @@ using System.Linq;
 
 namespace DeploySharp.Model
 {
+    /// <summary>
+    /// PaddleOCR text detection model (DBNet-based) implementation.
+    /// PaddleOCR文本检测模型(基于DBNet)实现。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class implements the detection stage of PaddleOCR using DBNet (Differentiable Binarization)
+    /// for text region detection in images.
+    /// 此类使用DBNet(可微分二值化)实现PaddleOCR的检测阶段，用于图像中的文本区域检测。
+    /// </para>
+    /// <para>
+    /// Key features:
+    /// 主要特点：
+    /// - Dynamic input size adjustment based on image dimensions
+    ///   基于图像尺寸的动态输入大小调整
+    /// - Supports batch processing for multiple images
+    ///   支持多张图像的批处理
+    /// - Optimized contour-based text region extraction
+    ///   优化的基于轮廓的文本区域提取
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Create text detection model
+    /// // 创建文本检测模型
+    /// var config = new PPOcrDetConfig("ch_PP-OCRv4_det.onnx")
+    /// {
+    ///     ConfidenceThreshold = 0.5f,
+    ///     DBBoxThresh = 0.6f,
+    ///     DBUnclipRatio = 2.0f,
+    ///     LimitInputSize = 960
+    /// };
+    /// 
+    /// using (var detector = new PPOcrDet(config))
+    /// {
+    ///     using (Mat image = Cv2.ImRead("document.jpg"))
+    ///     {
+    ///         // Detect text regions
+    ///         // 检测文本区域
+    ///         ObbResult[] results = detector.Predict(image);
+    ///         
+    ///         foreach (var region in results)
+    ///         {
+    ///             Console.WriteLine($"Text region: {region.Bounds}, Score: {region.Confidence}");
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="PPOcrDetConfig"/>
+    /// <seealso cref="CvPPOcrDataProcessor"/>
     public class PPOcrDet : IPPOcrDet
     {
         private const int DefaultChannels = 3;
         private const int AlignBase = 32;
 
+        /// <summary>
+        /// Creates a new PaddleOCR detection model instance.
+        /// 创建新的PaddleOCR检测模型实例。
+        /// </summary>
+        /// <param name="config">Detection model configuration / 检测模型配置</param>
+        /// <exception cref="ArgumentNullException">Thrown when config is null / 当config为null时抛出</exception>
+        /// <exception cref="InvalidCastException">Thrown when config is not PPOcrDetConfig / 当config不是PPOcrDetConfig时抛出</exception>
+        /// <remarks>
+        /// The configuration must be of type PPOcrDetConfig with proper model path.
+        /// 配置必须是PPOcrDetConfig类型，并具有正确的模型路径。
+        /// </remarks>
         public PPOcrDet(IConfig config) : base(config)
         {
-            // 类型安全检查
+            // Type safety check
             if (!(config is PPOcrDetConfig))
-                throw new InvalidCastException($"PPOcrDet 必须使用 {nameof(PPOcrDetConfig)} 初始化");
+                throw new InvalidCastException($"PPOcrDet must be initialized with {nameof(PPOcrDetConfig)}");
         }
 
+        /// <summary>
+        /// Performs text detection on a single image.
+        /// 对单张图像执行文本检测。
+        /// </summary>
+        /// <param name="img">Input image containing text / 包含文本的输入图像</param>
+        /// <returns>Array of detected text regions (as oriented bounding boxes) / 检测到的文本区域数组(作为有向边界框)</returns>
+        /// <exception cref="ArgumentNullException">Thrown when img is null / 当img为null时抛出</exception>
+        /// <exception cref="ArgumentException">Thrown when img is empty / 当img为空时抛出</exception>
+        /// <remarks>
+        /// Results are returned as ObbResult (oriented bounding box) to handle rotated text.
+        /// 结果以ObbResult(有向边界框)返回，以处理旋转的文本。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var results = detector.Predict(image);
+        /// 
+        /// // Draw detected regions
+        /// // 绘制检测到的区域
+        /// foreach (var result in results)
+        /// {
+        ///     var rect = CvDataExtensions.ToRotatedRect(result.Bounds);
+        ///     Point2f[] points = rect.Points();
+        ///     for (int i = 0; i &lt; 4; i++)
+        ///     {
+        ///         Cv2.Line(image, (Point)points[i], (Point)points[(i+1)%4], Scalar.Green, 2);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="PredictBatch"/>
         public ObbResult[] Predict(Mat img)
         {
-            // 基类调用
+            // Base class call
             return base.Predict(img) as ObbResult[];
         }
 
+        /// <summary>
+        /// Performs batch text detection on multiple images.
+        /// 对多张图像执行批量文本检测。
+        /// </summary>
+        /// <param name="imgs">List of input images / 输入图像列表</param>
+        /// <returns>List of detection results for each image / 每张图像的检测结果列表</returns>
+        /// <exception cref="ArgumentNullException">Thrown when imgs is null / 当imgs为null时抛出</exception>
+        /// <remarks>
+        /// Batch processing can improve throughput for multiple images.
+        /// 批处理可以提高多张图像的吞吐量。
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var images = new List&lt;Mat&gt; { image1, image2, image3 };
+        /// var results = detector.PredictBatch(images);
+        /// </code>
+        /// </example>
         public List<ObbResult[]> PredictBatch(List<Mat> imgs)
         {
             if (imgs == null || imgs.Count == 0)
                 return new List<ObbResult[]>();
 
-            // 优化：直接 Cast 避免类型检查开销，且不产生新内存（如果基类接受 List<object>）
-            // 这里为了匹配基类签名，必须进行转换，但 Cast 比 OfType 快
             return base.PredictBatch(imgs.Cast<object>().ToList())
                 .Cast<ObbResult[]>()
                 .ToList();
         }
 
+        /// <summary>
+        /// Preprocesses a single image for text detection inference.
+        /// 对单张图像进行预处理以进行文本检测推理。
+        /// </summary>
+        /// <param name="img">Input image / 输入图像</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters / 输出调整参数</param>
+        /// <returns>Preprocessed tensor data / 预处理后的张量数据</returns>
+        /// <remarks>
+        /// <para>
+        /// Preprocessing steps:
+        /// 预处理步骤：
+        /// 1. Dynamic size calculation (aligns to 32-pixel multiples)
+        ///    动态尺寸计算(对齐到32像素倍数)
+        /// 2. Resize with padding if needed
+        ///    如需要则使用填充调整尺寸
+        /// 3. Normalize pixel values
+        ///    归一化像素值
+        /// 4. Convert to tensor format
+        ///    转换为张量格式
+        /// </para>
+        /// </remarks>
         protected override DataTensor Preprocess(object img, out ImageAdjustmentParam imageAdjustmentParam)
         {
-            // 虽然可以调用 PreprocessBatch(new List<object>{img}...)，
-            // 但 Det 单图预处理极其常见，为了避免 List 分配开销，保留单图优化路径
-
+            // Single image optimization path is kept to avoid List allocation overhead
             var detConfig = (PPOcrDetConfig)config;
             var mat = (Mat)img;
 
             try
             {
-                // 动态计算尺寸
+                // Dynamic size calculation
                 if (config.DynamicByInput)
                 {
                     int targetSize = CalculateDetTargetSize(mat.Width, mat.Height, detConfig.LimitInputSize);
@@ -212,12 +185,19 @@ namespace DeploySharp.Model
             }
             catch (Exception ex)
             {
-                imageAdjustmentParam = new ImageAdjustmentParam(); // 异常安全
+                imageAdjustmentParam = new ImageAdjustmentParam(); // Exception safety
                 MyLogger.Log.Error($"PPOcrDet Preprocess Exception: {ex.Message}", ex);
                 throw;
             }
         }
 
+        /// <summary>
+        /// Preprocesses a batch of images for text detection inference.
+        /// 对批量图像进行预处理以进行文本检测推理。
+        /// </summary>
+        /// <param name="imgs">List of input images / 输入图像列表</param>
+        /// <param name="imageAdjustmentParam">Output adjustment parameters for each image / 每张图像的输出调整参数</param>
+        /// <returns>Preprocessed batch tensor data / 预处理后的批量张量数据</returns>
         protected override DataTensor PreprocessBatch(List<object> imgs, out ImageAdjustmentParam[] imageAdjustmentParam)
         {
             var detConfig = (PPOcrDetConfig)config;
@@ -227,18 +207,12 @@ namespace DeploySharp.Model
 
                 if (config.DynamicByInput)
                 {
-                    // 优化：LINQ Max 在少量数据时够快，大量数据时可考虑手动循环减少委托开销
-                    // 这里为了代码清晰保留 LINQ，Cast<object> 到 Mat 的转换是引用转换，很快
                     int maxSideInBatch = imgs.Max(img => Math.Max(((Mat)img).Rows, ((Mat)img).Cols));
-
                     int targetSize = CalculateDetTargetSize(maxSideInBatch, maxSideInBatch, detConfig.LimitInputSize);
                     UpdateInputShape(batchSize, targetSize);
                 }
 
-                // 优化：使用 Cast 替代 OfType，因为我们确定类型，避免运行时类型检查
-                // ToList 仍然会生成新的 List，因为基类需要 List<object>，这是不可避免的
                 var matList = imgs.Cast<Mat>().ToList();
-
                 return CvDataProcessor.ImageListProcessToDataTensor(matList, config, out imageAdjustmentParam);
             }
             catch (Exception ex)
@@ -249,29 +223,48 @@ namespace DeploySharp.Model
             }
         }
 
+        /// <summary>
+        /// Postprocesses model output to extract text regions.
+        /// 对模型输出进行后处理以提取文本区域。
+        /// </summary>
+        /// <param name="dataTensor">Model output tensor / 模型输出张量</param>
+        /// <param name="imageAdjustmentParam">Image adjustment parameters for coordinate mapping / 用于坐标映射的图像调整参数</param>
+        /// <returns>Array of detected text regions / 检测到的文本区域数组</returns>
+        /// <remarks>
+        /// <para>
+        /// Postprocessing steps:
+        /// 后处理步骤：
+        /// 1. Convert probability map to binary bitmap
+        ///    将概率图转换为二值位图
+        /// 2. Find contours from bitmap
+        ///    从位图查找轮廓
+        /// 3. Calculate confidence scores
+        ///    计算置信度分数
+        /// 4. Expand boxes using unclip
+        ///    使用unclip膨胀框
+        /// 5. Map coordinates back to original image
+        ///    将坐标映射回原始图像
+        /// </para>
+        /// </remarks>
         protected override Result[] Postprocess(DataTensor dataTensor, ImageAdjustmentParam imageAdjustmentParam)
         {
             var detConfig = (PPOcrDetConfig)config;
 
-            // 获取 Tensor 形状 [Batch, Channel, Height, Width]
+            // Get tensor shape [Batch, Channel, Height, Width]
             int h = dataTensor[0].Shape[2];
             int w = dataTensor[0].Shape[3];
 
-            // 使用 using 确保 Mat 析构，防止底层内存泄漏
             using (Mat predMap = Mat.FromPixelData(h, w, MatType.CV_32FC1, dataTensor[0].DataBuffer))
             using (Mat bitMap = new Mat())
             {
-                // 1. 将概率图 (0.0 - 1.0) 转换为灰度图 (0 - 255)
-                // ConvertScaleAbs 是高性能操作，通常由 OpenCV 底层优化
+                // 1. Convert probability map (0.0 - 1.0) to grayscale (0 - 255)
                 Cv2.ConvertScaleAbs(predMap, bitMap, 255.0, 0);
 
-                // 2. 二值化 (应用阈值)
+                // 2. Binarization (apply threshold)
                 double threshValue = detConfig.ConfidenceThreshold * 255.0;
                 Cv2.Threshold(bitMap, bitMap, threshValue, 255, ThresholdTypes.Binary);
 
-                // 3. 提取框
-                // 注意：predMap 传入的是原始概率 (float)，用于计算框的平均分
-                // bitMap 传入的是二值图 (byte)，用于确定轮廓位置
+                // 3. Extract boxes
                 var boxes = CvPPOcrDataProcessor.BoxesFromBitmap(
                     predMap,
                     bitMap,
@@ -283,7 +276,6 @@ namespace DeploySharp.Model
 
                 foreach (var boxItem in boxes)
                 {
-                    // boxItem.Item1 是 RotatedRect，boxItem.Item2 是 Score
                     ocrResults.Add(new ObbResult
                     {
                         Type = ResultType.OcrResult,
@@ -297,36 +289,47 @@ namespace DeploySharp.Model
             }
         }
 
-        // --- 私有辅助方法 ---
-
         /// <summary>
-        /// 计算检测模型的动态输入尺寸，需对齐到 32 的倍数
+        /// Calculates dynamic input size for detection model, aligned to multiples of 32.
+        /// 计算检测模型的动态输入尺寸，需对齐到32的倍数。
         /// </summary>
+        /// <param name="width">Image width / 图像宽度</param>
+        /// <param name="height">Image height / 图像高度</param>
+        /// <param name="limitSize">Maximum allowed size / 最大允许尺寸</param>
+        /// <returns>Calculated target size / 计算的目标尺寸</returns>
+        /// <remarks>
+        /// DBNet models typically require input sizes that are multiples of 32.
+        /// DBNet模型通常需要32倍数的输入尺寸。
+        /// </remarks>
         private int CalculateDetTargetSize(int width, int height, int limitSize)
         {
             int maxSide = Math.Max(width, height);
 
-            // 限制最大边长
             if (maxSide > limitSize)
             {
-                return limitSize; // limitSize 通常也是 32 的倍数 (如 960)
+                return limitSize;
             }
 
-            // 向下取整到 32 的倍数 (位运算优化: x & ~31)
-            // 等同于: (maxSide / 32) * 32
+            // Round down to multiple of 32 (bitwise optimization: x & ~31)
             int alignedSize = maxSide & ~(AlignBase-1);
 
-            // 防御性检查：防止图片过小导致尺寸为 0
+            // Defensive check: prevent size 0 for very small images
             return Math.Max(alignedSize, AlignBase);
         }
 
         /// <summary>
-        /// 更新配置中的输入形状
+        /// Updates input shape in configuration.
+        /// 更新配置中的输入形状。
         /// </summary>
+        /// <param name="batchSize">Batch size / 批处理大小</param>
+        /// <param name="targetSize">Target input size / 目标输入尺寸</param>
+        /// <remarks>
+        /// NCHW format: [Batch, Channel, Height, Width]
+        /// NCHW格式: [Batch, Channel, Height, Width]
+        /// </remarks>
         private void UpdateInputShape(int batchSize, int targetSize)
         {
             config.InputSizes.Clear();
-            // NCHW 格式: [Batch, Channel, Height, Width]
             config.InputSizes.Add(new int[] { batchSize, DefaultChannels, targetSize, targetSize });
         }
     }
