@@ -1,23 +1,23 @@
 # Articles Table of Contents
 # 文章目录
 
-- name: Getting Started
+- name: Getting Started / 入门指南
   href: getting-started.md
   
-- name: Installation Guide
+- name: Installation Guide / 安装指南
   href: installation.md
   
-- name: Object Detection
+- name: Object Detection / 目标检测
   href: object-detection.md
   
-- name: Image Segmentation
+- name: Image Segmentation / 图像分割
   href: image-segmentation.md
   
-- name: Pose Estimation
+- name: Pose Estimation / 姿态估计
   href: pose-estimation.md
   
-- name: OCR
+- name: OCR / 文字识别
   href: ocr.md
   
-- name: Best Practices
+- name: Best Practices / 最佳实践
   href: best-practices.md

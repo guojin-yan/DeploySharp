@@ -1,12 +1,12 @@
 # Table of Contents for Documentation
 # 文档目录结构
 
-- name: Home
+- name: Home / 首页
   href: index.md
   
-- name: API Documentation
+- name: API Documentation / API 文档
   href: api/
   homepage: api/index.md
   
-- name: Articles
+- name: Articles / 文章
   href: articles/

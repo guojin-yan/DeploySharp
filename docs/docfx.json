@@ -64,8 +64,7 @@
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
-      "default",
-      "modern"
+      "default"
     ],
     "postProcessors": [],
     "markdownEngineName": "markdig",
@@ -74,8 +73,8 @@
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
     "globalMetadata": {
-      "_appTitle": "DeploySharp API Documentation / DeploySharp API 文档",
-      "_appName": "DeploySharp / 部署Sharp",
+      "_appTitle": "DeploySharp API 文档",
+      "_appName": "DeploySharp",
       "_appFooter": "Copyright © 2024 DeploySharp. Licensed under Apache 2.0 / 版权所有 © 2024 DeploySharp. Apache 2.0 许可证",
       "_enableSearch": true,
       "_enableNewTab": true,
