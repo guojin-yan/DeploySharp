@@ -175,6 +175,42 @@ namespace DeploySharp
                         model = new AnomalibSegModel(new AnomalibSegConfig(modelPath: modelPath, inferenceBackend: inferenceBackend, deviceType: deviceType));
                         visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
                         break;
+                    case ModelType.YOLOv26Det:
+                        model = new Yolov26DetModel(new Yolov26DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv26Seg:
+                        model = new Yolov26SegModel(new Yolov26SegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv26Obb:
+                        model = new Yolov26ObbModel(new Yolov26ObbConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawObbResult);
+                        break;
+                    case ModelType.YOLOv26Pose:
+                        model = new Yolov26PoseModel(new Yolov26PoseConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawPoses);
+                        break;
+                    case ModelType.RFDETRDet:
+                        model = new RFDETRDetModel(new RFDETRDetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.RFDETRSeg:
+                        model = new RFDETRSegModel(new RFDETRSegConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.RTDETRDet:
+                        model = new RTDETRDetModel(new RTDETRDetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.DEIMv2Det:
+                        model = new DEIMv2DetModel(new DEIMv2DetConfig(modelPath, inferenceBackend, deviceType));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.PaddleOcrCls:
+                        model= new PPOcrCls (new PPOcrClsConfig(modelPath));
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
                     default:
                         string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
                         MyLogger.Log.Error(errorMsg);
@@ -305,6 +341,38 @@ namespace DeploySharp
                     case ModelType.AnomalibSeg:
                         model = new AnomalibSegModel(config as AnomalibSegConfig);
                         visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv26Det:
+                        model = new Yolov26DetModel(config as Yolov26DetConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.YOLOv26Seg:
+                        model = new Yolov26SegModel(config as Yolov26SegConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.YOLOv26Obb:
+                        model = new Yolov26ObbModel(config as Yolov26ObbConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawObbResult);
+                        break;
+                    case ModelType.YOLOv26Pose:
+                        model = new Yolov26PoseModel(config as Yolov26PoseConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawPoses);
+                        break;
+                    case ModelType.RFDETRDet:
+                        model = new RFDETRDetModel(config as RFDETRDetConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.RFDETRSeg:
+                        model = new RFDETRSegModel(config as RFDETRSegConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                        break;
+                    case ModelType.RTDETRDet:
+                        model = new RTDETRDetModel(config as RTDETRDetConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                        break;
+                    case ModelType.DEIMv2Det:
+                        model = new DEIMv2DetModel(config as DEIMv2DetConfig);
+                        visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                         break;
                     default:
                         string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
