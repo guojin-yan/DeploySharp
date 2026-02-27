@@ -599,9 +599,6 @@ namespace DeploySharp.Data
                     return Normalize(image, true);
 
                 case ImageNormalizationType.Scale_Neg1_1:
-                    // Not implemented
-                    throw new NotImplementedException("Scale_Neg1_1 normalization not yet implemented");
-
                 case ImageNormalizationType.ImageNetStandard:
                 case ImageNormalizationType.CustomStandard:
                     return Normalize(image, parameters.Mean, parameters.Std, true);
