@@ -64,7 +64,7 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\yolov28\yolo26s.onnx";
+            string modelPath = @"E:\Model\yolov26\yolo26n.onnx";
             // 将下面的图片路径替换为你自己的图片路径
             string imagePath = @"E:\Data\image\demo_2.jpg";
 

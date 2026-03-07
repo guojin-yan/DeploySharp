@@ -615,7 +615,7 @@ namespace DeploySharp.Engine
 
                 if (!isDynamic)
                 {
-                    var shape = input.get_shape().Select(x => (int)x).ToArray();
+                    var shape = input.get_shape().get_dims().Select(x => (int)x).ToArray();
                     config.InputSizes.Add(shape);
                     MyLogger.Log.Debug($"Input node: {name}, Type: {input.get_element_type()}, Shape: [{string.Join(",", shape)}]");
                     config.InputShapeType = config.InputShapeType > IOShapeType.StaticShape ? config.InputShapeType : IOShapeType.StaticShape;
@@ -625,12 +625,12 @@ namespace DeploySharp.Engine
                     MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
                     PartialShape shape = input.get_partial_shape();
                     // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
+                    Rank rank = shape.rank;
                     
 
                     if (!rank.is_dynamic())
                     {
-                        Dimension[] dimensions = shape.get_dimensions();
+                        Dimension[] dimensions = shape.dims;
                         for (int i = 0; i < dimensions.Length; ++i)
                         {
                             if (dimensions[i].is_dynamic())
@@ -665,22 +665,22 @@ namespace DeploySharp.Engine
                     string name = input.get_any_name();
                     PartialShape shape = input.get_partial_shape();
                     // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
+                    Rank rank = shape.rank;
                     List<int> newShape = new List<int>();
                     if (config.InputShapeType == IOShapeType.BatchDynamicShape)
                     {
-                        for (int i = 0; i < (int)rank.get_max(); ++i)
+                        for (int i = 0; i < (int)rank.max; ++i)
                         {
                             newShape.Add(config.MaxBatchSize);
                         }
-                        Dimension[] dimensions = shape.get_dimensions();
+                        Dimension[] dimensions = shape.dims;
                         for (int i = 0; i < dimensions.Length; ++i)
                         {
                             if (dimensions[i].is_dynamic())
                             {
                                 continue;
                             }
-                            newShape[i] = (int)dimensions[i].get_max();
+                            newShape[i] = (int)dimensions[i].max;
                         }
                         config.InputSizes.Add(newShape.ToArray());
                     }
@@ -724,7 +724,7 @@ namespace DeploySharp.Engine
 
                 if (!isDynamic)
                 {
-                    var shape = output.get_shape().Select(x => (int)x).ToArray();
+                    var shape = output.get_shape().get_dims().Select(x => (int)x).ToArray();
                     config.OutputSizes.Add(shape);
                     MyLogger.Log.Debug($"Output node: {name}, Type: {output.get_element_type()}, Shape: [{string.Join(",", shape)}]");
                     config.OutputShapeType = config.OutputShapeType > IOShapeType.StaticShape ? config.OutputShapeType : IOShapeType.StaticShape;
@@ -734,11 +734,11 @@ namespace DeploySharp.Engine
                     MyLogger.Log.Debug($"Input node: {name} inferred batch size: {config.InferBatch}");
                     PartialShape shape = output.get_partial_shape();
                     // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
+                    Rank rank = shape.rank;
 
                     if (!rank.is_dynamic())
                     {
-                        Dimension[] dimensions = shape.get_dimensions();
+                        Dimension[] dimensions = shape.dims;
                         for (int i = 0; i < dimensions.Length; ++i)
                         {
                             if (dimensions[i].is_dynamic())
@@ -781,22 +781,22 @@ namespace DeploySharp.Engine
                     string name = output.get_any_name();
                     PartialShape shape = output.get_partial_shape();
                     // Check for dynamic batch dimension
-                    Dimension rank = shape.get_rank();
+                    Rank rank = shape.rank;
                     List<int> newShape = new List<int>();
                     if (config.OutputShapeType == IOShapeType.BatchDynamicShape)
                     {
-                        for (int i = 0; i < (int)rank.get_max(); ++i)
+                        for (int i = 0; i < (int)rank.max; ++i)
                         {
                             newShape.Add(config.MaxBatchSize);
                         }
-                        Dimension[] dimensions = shape.get_dimensions();
+                        Dimension[] dimensions = shape.dims;
                         for (int i = 1; i < dimensions.Length; ++i)
                         {
                             if (dimensions[i].is_dynamic())
                             {
                                 continue;
                             }
-                            newShape[i] = (int)dimensions[i].get_max();
+                            newShape[i] = (int)dimensions[i].max;
                         }
                         config.OutputSizes.Add(newShape.ToArray());
                     }
@@ -825,9 +825,9 @@ namespace DeploySharp.Engine
         {
             if (shape.is_dynamic()) return true;
 
-            foreach (var dim in shape.get_dimensions())
+            foreach (var dim in shape.dims)
             {
-                if (dim.get_min() != dim.get_max())
+                if (dim.min != dim.max)
                     return true;
             }
             return false;
@@ -885,7 +885,7 @@ namespace DeploySharp.Engine
                 NodeData data = inputs[i];
 
                 if (modelConfig.InputShapeType != IOShapeType.StaticShape)
-                    inputTensor.set_shape(new Shape(modelConfig.InputSizes[i]));
+                    inputTensor.shape = Shape.FromIntArray(modelConfig.InputSizes[i]);
 
                 switch (data.DataType)
                 {
@@ -925,7 +925,10 @@ namespace DeploySharp.Engine
         private void ExecuteInference(InferRequest inferRequest)
         {
             MyLogger.Log.Debug("Executing inference");
+            //Stopwatch stopwatch = Stopwatch.StartNew();
             inferRequest.infer();
+            //stopwatch.Stop();
+            //MyLogger.Log.Error($"Inference executed in {stopwatch.ElapsedMilliseconds} ms");
             MyLogger.Log.Debug("Inference execution completed");
         }
         /// <summary>
@@ -942,7 +945,7 @@ namespace DeploySharp.Engine
             for (int i = 0; i < OutputNodeCount; i++)
             {
                 Tensor outputTensor = inferRequest.get_output_tensor((ulong)i);
-                var shape = outputTensor.get_shape().Select(x => (int)x).ToArray();
+                var shape = outputTensor.shape.get_dims().Select(x => (int)x).ToArray();
 
                 if (modelConfig.InputShapeType != IOShapeType.StaticShape)
                     modelConfig.OutputSizes.Add(shape);
@@ -958,43 +961,43 @@ namespace DeploySharp.Engine
         /// </summary>
         private void ProcessOutputTensor(DataTensor result, Tensor outputTensor, int index, int[] shape)
         {
-            switch (outputTensor.get_element_type().get_type())
+            switch (outputTensor.element_type)
             {
                 case ElementType.F16:
                 case ElementType.F32:
-                    float[] floatData = outputTensor.get_data<float>((int)outputTensor.get_size());
+                    float[] floatData = outputTensor.get_data<float>((int)outputTensor.size);
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
                         floatData, shape, typeof(float));
                     MyLogger.Log.Debug($"Processed output {index}: float[{string.Join(",", shape)}]");
                     break;
                 case ElementType.I16:
-                    short[] shortData = outputTensor.get_data<short>((int)outputTensor.get_size());
+                    short[] shortData = outputTensor.get_data<short>((int)outputTensor.size);
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
                         shortData, shape, typeof(short));
                     MyLogger.Log.Debug($"Processed output {index}: short[{string.Join(",", shape)}]");
                     break;
                 case ElementType.I32:
-                    int[] intData = outputTensor.get_data<int>((int)outputTensor.get_size());
+                    int[] intData = outputTensor.get_data<int>((int)outputTensor.size);
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
                         intData, shape, typeof(int));
                     MyLogger.Log.Debug($"Processed output {index}: int[{string.Join(",", shape)}]");
                     break;
 
                 case ElementType.BOOLEAN:
-                    byte[] boolData = outputTensor.get_data<byte>((int)outputTensor.get_size());
+                    byte[] boolData = outputTensor.get_data<byte>((int)outputTensor.size);
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
                         boolData, shape, typeof(byte));
                     MyLogger.Log.Debug($"Processed output {index}: byte[{string.Join(",", shape)}]");
                     break;
                 case ElementType.I64:
-                    long[] longData = outputTensor.get_data<long>((int)outputTensor.get_size());
+                    long[] longData = outputTensor.get_data<long>((int)outputTensor.size);
                     result.AddNode(modelConfig.OutputNames[index], 0, TensorType.Output,
                         longData, shape, typeof(long));
                     MyLogger.Log.Debug($"Processed output {index}: long[{string.Join(",", shape)}]");
                     break;
                 default:
                     throw new NotSupportedException(
-                        $"Unsupported output type: {outputTensor.get_element_type().get_type()}");
+                        $"Unsupported output type: {outputTensor.element_type}");
             }
         }
 

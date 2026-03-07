@@ -227,7 +227,7 @@ namespace DeploySharp.Engine
                     providerOptionsDict["device_id"] = "0";
                     providerOptionsDict["gpu_mem_limit"] = "2147483648";
                     providerOptionsDict["arena_extend_strategy"] = "kSameAsRequested";
-                    providerOptionsDict["cudnn_conv_algo_search"] = "DEFAULT";
+                    //providerOptionsDict["cudnn_conv_algo_search"] = "DEFAULT";
                     providerOptionsDict["do_copy_in_default_stream"] = "1";
                     providerOptionsDict["cudnn_conv_use_max_workspace"] = "1";
                     providerOptionsDict["cudnn_conv1d_pad_to_nc1d"] = "1";

@@ -5,6 +5,8 @@ using DeploySharp.Model;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using System.Diagnostics;
+using System.Reflection;
+using static DeploySharp.Data.VisualizeHandler;
 
 namespace DeploySharp.OpenCvSharp_DemoPlatform
 {
@@ -197,11 +199,51 @@ namespace DeploySharp.OpenCvSharp_DemoPlatform
                     model = new Yolov13DetModel(new Yolov13DetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov13DetConfig);
                     visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                     break;
+
+                case ModelType.YOLOv26Det:
+                    model = new Yolov26DetModel(new Yolov26DetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov26DetConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                    break;
+                case ModelType.YOLOv26Seg:
+                    model = new Yolov26SegModel(new Yolov26SegConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov26SegConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                    break;
+                case ModelType.YOLOv26Obb:
+                    model = new Yolov26ObbModel(new Yolov26ObbConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov26ObbConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawObbResult);
+                    break;
+                case ModelType.YOLOv26Pose:
+                    model = new Yolov26PoseModel(new Yolov26PoseConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as Yolov26PoseConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawPoses);
+                    break;
                 case ModelType.AnomalibSeg:
                     AnomalibSegConfig config = new AnomalibSegConfig(modelPath: modelPath, inferenceBackend: inferenceBackend, deviceType: deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as AnomalibSegConfig;
                     config.InputSizes.Add(new int[4] { 1, 3, 256, 256 });
                     model = new AnomalibSegModel(config);
                     visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                    break;
+
+                case ModelType.DEIMv2Det:
+                    model = new DEIMv2DetModel(new DEIMv2DetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as DEIMv2DetConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                    break;
+                case ModelType.RFDETRDet:
+                    model = new RFDETRDetModel(new RFDETRDetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as RFDETRDetConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                    break;
+
+      
+                case ModelType.RFDETRSeg:
+                    model = new RFDETRSegModel(new RFDETRSegConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as RFDETRSegConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawSegResult);
+                    break;
+                case ModelType.RTDETRDet:
+                    model = new RTDETRDetModel(new RTDETRDetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as RTDETRDetConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
+                    break;
+                case ModelType.PPYOLOETDet:
+                    model = new PPYoloeDetModel(new PPYoloeDetConfig(modelPath, inferenceBackend, deviceType).SetTargetOnnxRuntimeDeviceType(onnxType) as PPYoloeDetConfig);
+                    visualizeHandler = new VisualizeHandler(Visualize.DrawDetResult);
                     break;
                 default:
                     string errorMsg = $"{modelType.ToString()} model is currently not supported, please wait for further development support.";
@@ -211,5 +253,7 @@ namespace DeploySharp.OpenCvSharp_DemoPlatform
 
             MessageBox.Show("Model load success!.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
     }
 }
+

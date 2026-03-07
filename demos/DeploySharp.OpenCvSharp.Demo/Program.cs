@@ -60,7 +60,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             Console.WriteLine("Hello, World!");
             //AnomalibSegDemos.Run();
             //Yolov5DetDemo.Run();
-            Yolov5SegDemo.Run();
+            //Yolov5SegDemo.Run();
             //for(int i = 0; i < 1; i++)
             //{
             //Yolov8DetDemo.Run();
@@ -74,7 +74,7 @@ namespace DeploySharp.OpenCvSharp.Demo
             //RFDETRDetDemo.Run();
             //PPYoloeDetDemo.Run();
             //RTDETRDetDemo.Run();
-            //RFDETRSegDemo.Run();
+            RFDETRSegDemo.Run();
 
             //Yolov26DetDemo.Run();
             //Yolov26ObbDemo.Run();

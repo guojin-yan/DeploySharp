@@ -16,16 +16,17 @@ namespace DeploySharp.OpenCvSharp.Demo
         {
             // 模型和测试图片可以前往QQ群(945057948)下载
             // 将下面的模型路径替换为你自己的模型路径
-            string modelPath = @"E:\Model\rf-detr\rf-detr-seg2.onnx";
+            string modelPath = @"E:\Model\rf-detr\rf-detr-seg-small.onnx";
             // 将下面的图片路径替换为你自己的图片路径
             //string imagePath = @"E:\Model\rf-detr\scratches_125.jpg";
-            string imagePath = @"E:\Data\image\bus.jpg";
+            string imagePath = @"E:\Data\image\boy.jpg";
 
             RFDETRSegConfig config = new RFDETRSegConfig(modelPath);
             //config.InputSizes.Add(new int[] { 1, 3, 640, 640 });
             //config.InputSizes.Add(new int[] { 1, 2 });
             config.SetTargetDeviceType(DeviceType.GPU0);
-            //config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime);
+            config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.DML);
             RFDETRSegModel model = new RFDETRSegModel(config);
             Mat img = Cv2.ImRead(imagePath);
             var result = model.Predict(img);
@@ -33,7 +34,9 @@ namespace DeploySharp.OpenCvSharp.Demo
             result = model.Predict(img);
             result = model.Predict(img);
             model.ModelInferenceProfiler.PrintAllRecords();
-            var resultImg = Visualize.DrawSegResult(result, img, new VisualizeOptions(1.0f));
+
+            var resultImg = new VisualizeHandler(Visualize.DrawSegResult).ExecuteDrawing(result, img as Mat, new VisualizeOptions(1.0f)); ;
+            //var resultImg = Visualize.DrawSegResult(result, img, new VisualizeOptions(1.0f));
 
             Cv2.ImShow("image", resultImg);
             Cv2.WaitKey();

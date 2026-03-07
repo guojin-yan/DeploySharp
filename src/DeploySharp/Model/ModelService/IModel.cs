@@ -5,6 +5,7 @@ using DeploySharp.Log;
 using log4net.Core;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DeploySharp.Model
@@ -62,21 +63,38 @@ namespace DeploySharp.Model
         protected PredictorTimer predictorTimer = new PredictorTimer();
 
         /// <summary>
-        /// Initializes model with specified configuration
-        /// 使用指定配置初始化模型
+        /// Initializes model with specified configuration.
+        /// 使用指定配置初始化模型。
         /// </summary>
         /// <param name="config">
-        /// Model configuration parameters
-        /// 模型配置参数
+        /// Model configuration parameters. Must not be null.
+        /// 模型配置参数。不能为 null。
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when config is null
-        /// 当config为null时抛出
+        /// Thrown when the provided <paramref name="config"/> is null.
+        /// 当提供的 <paramref name="config"/> 为 null 时抛出。
+        /// </exception>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown when the model file specified in <paramref name="config"/> does not exist at the given path.
+        /// 当 <paramref name="config"/> 中指定的模型文件在给定路径不存在时抛出。
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when model loading fails
-        /// 当模型加载失败时抛出
+        /// Thrown when the inference engine creation fails or the model loading process encounters an error.
+        /// 当推理引擎创建失败或模型加载过程遇到错误时抛出。
         /// </exception>
+        /// <remarks>
+        /// This constructor performs the following steps:
+        /// 1. Validates the configuration object.
+        /// 2. Verifies the existence of the model file.
+        /// 3. Instantiates the appropriate inference engine based on the backend setting.
+        /// 4. Loads the model into memory.
+        /// 
+        /// 此构造函数执行以下步骤：
+        /// 1. 验证配置对象。
+        /// 2. 验证模型文件是否存在。
+        /// 3. 根据后端设置实例化相应的推理引擎。
+        /// 4. 将模型加载到内存中。
+        /// </remarks>
         protected IModel(IConfig config)
         {
             MyLogger.Log.Info("[Initialization] Starting model instance creation");
@@ -84,18 +102,35 @@ namespace DeploySharp.Model
 
             try
             {
+                // 1. 检查配置对象是否为空
                 this.config = config ?? throw new ArgumentNullException(nameof(config));
+
+                // 2. 检查模型文件是否存在
+                if (!File.Exists(config.ModelPath))
+                {
+                    string errorMsg = $"Model file not found at path: {config.ModelPath}";
+                    MyLogger.Log.Error(errorMsg);
+                    MyLogger.Log.Error($"[错误] 模型文件未找到，路径: {config.ModelPath}");
+                    throw new FileNotFoundException(errorMsg, config.ModelPath);
+                }
+
+                // 3. 创建推理引擎
                 engine = InferEngineFactory.Create(config.TargetInferenceBackend);
+
+                // 4. 加载模型
+                // 注意：LoadModel 内部可能会抛出其他异常，这里统一由外层 catch 捕获
                 engine.LoadModel(ref this.config);
             }
             catch (Exception ex)
             {
-                MyLogger.Log.Error("[Error] Model initialization failed", ex);
-                MyLogger.Log.Error("[错误] 模型初始化失败", ex);
+                // 捕获并记录所有初始化过程中的异常
+                MyLogger.Log.Error($"[Error] Model initialization failed. Backend: {config?.TargetInferenceBackend}, Path: {config?.ModelPath}", ex);
+                MyLogger.Log.Error($"[错误] 模型初始化失败。后端: {config?.TargetInferenceBackend}, 路径: {config?.ModelPath}", ex);
+
+                // 重新抛出异常，确保上层调用者感知到错误
                 throw;
             }
         }
-
         /// <summary>
         /// Performs prediction on single input
         /// 对单个输入执行预测

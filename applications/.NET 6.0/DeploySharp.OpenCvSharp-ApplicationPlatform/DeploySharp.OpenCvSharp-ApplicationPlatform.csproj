@@ -10,15 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JYPPX.DeploySharp" Version="0.0.4" />
-    <PackageReference Include="JYPPX.DeploySharp.OpenCvSharp" Version="0.0.4" />
+    <PackageReference Include="JYPPX.DeploySharp" Version="0.0.8.1" />
+    <PackageReference Include="JYPPX.DeploySharp.OpenCvSharp" Version="0.0.8" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.3" />
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
-    <PackageReference Include="OpenCvSharp4.Extensions" Version="4.11.0.20250507" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenVINO.runtime.win" Version="2025.3.0" />
+    <PackageReference Include="OpenVINO.runtime.win" Version="2026.0.0" />
   </ItemGroup>
-
 </Project>

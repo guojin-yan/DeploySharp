@@ -150,13 +150,13 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
 
             // 配置推理引擎和设备
             // 1. 设置全局推理后端为 ONNX Runtime
-            paddleOCRConfig.GlobalInferenceBackend = InferenceBackend.OnnxRuntime;
+            //paddleOCRConfig.GlobalInferenceBackend = InferenceBackend.OnnxRuntime;
 
             // 2. 配置硬件加速设备
-            paddleOCRConfig.GlobalDeviceType = DeviceType.GPU0;
+            paddleOCRConfig.GlobalDeviceType = DeviceType.CPU;
             // GlobalOnnxRuntimeDeviceType 指定 ONNX Runtime 具体使用的执行提供者（EP）
             // OnnxRuntimeDeviceType.Cuda 表示启用 CUDA 加速（需确保安装了 CUDA 和 cuDNN）
-            paddleOCRConfig.GlobalOnnxRuntimeDeviceType = OnnxRuntimeDeviceType.TensorRT;
+            //paddleOCRConfig.GlobalOnnxRuntimeDeviceType = OnnxRuntimeDeviceType.Default;
 
             // 3. 设置并发与批处理参数
             // MaxConcurrency: 并发处理的最大线程数，设为 4 可充分利用 CPU 多核能力或 GPU 并行能力

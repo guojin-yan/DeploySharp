@@ -222,7 +222,7 @@ namespace DeploySharp.Data
         /// </example>
         public static Mat DrawSegResult(Result[] bresult, Mat img, VisualizeOptions options) 
         {
-            return DrawSegResult(bresult, img, options);
+            return DrawSegResult(bresult as SegResult[], img, options);
         }
 
         /// <summary>
