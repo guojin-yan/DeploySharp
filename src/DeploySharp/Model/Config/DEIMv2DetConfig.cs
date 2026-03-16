@@ -66,6 +66,7 @@ namespace DeploySharp.Model
             this.ConfidenceThreshold = confidenceThreshold;
             this.InferBatch = inferBatch;
             this.DataProcessor.ResizeMode = resizeMode;
+            this.DataProcessor.NormalizationType = ImageNormalizationType.Scale_0_1;
         }
     }
 }
