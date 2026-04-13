@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp.OpenCvSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.8.1</Version>
+    <Version>0.0.9</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
@@ -27,6 +27,7 @@
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <Copyright>Copyright © 2025 Yan Guojin. All Rights Reserved.</Copyright>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 

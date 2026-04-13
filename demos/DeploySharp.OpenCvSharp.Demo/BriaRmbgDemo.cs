@@ -15,7 +15,7 @@
 //  【功能简介】
 //  1. 支持 OpenVINO、ONNX Runtime、TensorRT 等主流模型格式部署。
 //  2. 支持目标检测、图像分割、关键点检测等多种任务。
-//  3. 支持 Yolov5-v12全系列模型部署，同时支持更多其它模型部署。
+//  3. 支持 YOLOv5-v12全系列模型部署，同时支持更多其它模型部署。
 //  4. 支持 C# .NET Framework 4.8 、.NET 6/7/8/9 桌面端和服务器端部署。
 //  5. 支持 ImageSharp 和 OpenCvSharp 两大图像处理库。
 //  6. 支持单张图片和批量图片多种推理方式。
@@ -49,40 +49,55 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
-using DeploySharp.ImageSharp.Demo;
+using OpenCvSharp;
+using DeploySharp.Model;
+using DeploySharp.Data;
+using DeploySharp.Engine;
+using DeploySharp;
+
 
 namespace DeploySharp.OpenCvSharp.Demo
 {
-    internal class Program
+    public class BriaRmbgDemo
     {
-        static void Main(string[] args)
+        public static void Run()
         {
-            Console.WriteLine("Hello, World!");
-            //AnomalibSegDemos.Run();
-            //Yolov5DetDemo.Run();
-            //Yolov5SegDemo.Run();
-            //for(int i = 0; i < 1; i++)
-            //{
-            //Yolov8DetDemo.Run();
-            //Yolov8DetDemo.RunBatch();
-            //}
+            // 模型和测试图片可以前往QQ群(945057948)下载
+            // 将下面的模型路径替换为你自己的模型路径
+            string modelPath = @"E:\Model\RMBG\RMBG-2.0.onnx";
+            // 将下面的图片路径替换为你自己的图片路径
+            string imagePath = @"E:\Data\image\boy.jpg";
 
-            //Yolov8SegDemo.Run();
-            //Yolov8ObbDemo.Run();
-            //Yolov8PoseDemo.Run();
-            //DEIMv2DetDemo.Run();
-            //RFDETRDetDemo.Run();
-            //PPYoloeDetDemo.Run();
-            //RTDETRDetDemo.Run();
-            //RFDETRSegDemo.Run();
 
-            //Yolov26DetDemo.Run();
-            //Yolov26ObbDemo.Run();
-            //Yolov26SegDemo.Run();
-            //Yolov26PoseDemo.Run()
-            //
-            //YoloClsDemo.Run();
-            BriaRmbgDemo.Run();
+            BriaRmbgConfig config = new BriaRmbgConfig(BriaRmbgConfig.BriaRmbgVersion.V1_4, modelPath);
+            config.SetTargetInferenceBackend(InferenceBackend.OnnxRuntime); // 可选：指定推理后端，默认为OpenVINO
+            //config.SetTargetOnnxRuntimeDeviceType(OnnxRuntimeDeviceType.DML); // 可选：指定ONNX Runtime推理设备，默认为CPU
+            //config.SetTargetDeviceType(DeviceType.GPU0); // 可选：指定推理设备，默认为CPU
+            config.InputSizes.Add(new int[] { 1, 3, 1024, 1024 }); // 可选：指定输入尺寸，默认为模型的默认输入尺寸
+            config.OutputSizes.Add(new int[] { 1, 1, 1024, 1024 }); // 可选：指定输入尺寸，默认为模型的默认输入尺寸
+            BriaRmbgModel model = new BriaRmbgModel(config);
+            Mat img = Cv2.ImRead(imagePath);
+
+            SegResult[] result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            model.ModelInferenceProfiler.PrintAllRecords();
+            //List<Mat> resultsMat = new List<Mat>();
+
+            //var resultImg = Visualize.DrawDetResult(result, img, new VisualizeOptions(1.0f));
+            //resultsMat.Add(resultImg);
+            Mat resultImg = result[0].ByteMask.ToMat();
+
+
+           Mat im = BriaRmbgModel.MergeWithMask(img, result[0]);
+            Cv2.ImShow("image", resultImg);
+
+            Cv2.ImShow("image1", im);
+
+
+            Cv2.WaitKey(0);
         }
+
     }
 }

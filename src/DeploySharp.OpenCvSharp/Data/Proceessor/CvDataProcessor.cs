@@ -96,6 +96,7 @@ namespace DeploySharp.Data
         {
             int inputSize = config.InputSizes[0][2];
             var image = (Mat)img;
+            //Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);
 
             MyLogger.Log.Debug($"配置输入尺寸: {config.InputSizes[0][2]}x{config.InputSizes[0][3]}, " +
                               $"缩放模式: {((IImgConfig)config).DataProcessor.ResizeMode}");
@@ -599,6 +600,7 @@ namespace DeploySharp.Data
                     return Normalize(image, true);
 
                 case ImageNormalizationType.Scale_Neg1_1:
+                case ImageNormalizationType.Scale_Neg05_05:
                 case ImageNormalizationType.ImageNetStandard:
                 case ImageNormalizationType.CustomStandard:
                     return Normalize(image, parameters.Mean, parameters.Std, true);

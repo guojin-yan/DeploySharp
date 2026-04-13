@@ -54,6 +54,9 @@ namespace DeploySharp.Data
         /// </value>
         public ImageDataF Mask { get; set; }
 
+
+        public ImageDataB ByteMask { get; set; }
+
         /// <summary>
         /// Initializes a new segmentation result with proper type configuration
         /// 初始化一个新的分割结果，自动配置正确的结果类型

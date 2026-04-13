@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "yolov5", "yolov5", "{D0784099-C9D3-42E4-B0F9-44DD590C961F}"
 EndProject
@@ -22,6 +22,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov11-seg_opencvsharp", "yolov11\yolov11-seg_opencvsharp\yolov11-seg_opencvsharp.csproj", "{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov11-obb_opencvsharp", "yolov11\yolov11-obb_opencvsharp\yolov11-obb_opencvsharp.csproj", "{952F88C1-6046-4CDF-9D16-884F87345326}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "yolocls", "yolocls", "{3F37E244-DF32-4593-B36F-2BE34C2D60EC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rmbg", "rmbg", "{E609629E-8240-418A-9C45-8FDA95971B16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bria-rmbg-v1.4_opencvsharp", "rmbg\bria-rmbg-v1.4_opencvsharp\bria-rmbg-v1.4_opencvsharp.csproj", "{3211472D-236C-21E3-33C5-0FFC1FCD3985}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bria-rmbg-v2.0_imagesharp", "rmbg\bria-rmbg-v2.0_imagesharp\bria-rmbg-v2.0_imagesharp.csproj", "{2318D9D0-178C-4B7D-B765-561FBAD4D2C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yolov8-cls_opencvsharp", "yolocls\yolov8-cls_opencvsharp\yolov8-cls_opencvsharp.csproj", "{8FCB541E-948B-4A8D-83C7-B295B4572D64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +67,18 @@ Global
 		{952F88C1-6046-4CDF-9D16-884F87345326}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{952F88C1-6046-4CDF-9D16-884F87345326}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{952F88C1-6046-4CDF-9D16-884F87345326}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3211472D-236C-21E3-33C5-0FFC1FCD3985}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3211472D-236C-21E3-33C5-0FFC1FCD3985}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3211472D-236C-21E3-33C5-0FFC1FCD3985}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3211472D-236C-21E3-33C5-0FFC1FCD3985}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2318D9D0-178C-4B7D-B765-561FBAD4D2C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2318D9D0-178C-4B7D-B765-561FBAD4D2C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2318D9D0-178C-4B7D-B765-561FBAD4D2C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2318D9D0-178C-4B7D-B765-561FBAD4D2C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FCB541E-948B-4A8D-83C7-B295B4572D64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FCB541E-948B-4A8D-83C7-B295B4572D64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FCB541E-948B-4A8D-83C7-B295B4572D64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FCB541E-948B-4A8D-83C7-B295B4572D64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,5 +91,11 @@ Global
 		{7F24591A-62C0-487D-A3B8-A37B915B71D9} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
 		{EBF02011-8517-4A5D-8B7E-CFAE06ABE5CF} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
 		{952F88C1-6046-4CDF-9D16-884F87345326} = {2645F605-CDA3-4EC9-A9E2-FC944F3762DA}
+		{3211472D-236C-21E3-33C5-0FFC1FCD3985} = {E609629E-8240-418A-9C45-8FDA95971B16}
+		{2318D9D0-178C-4B7D-B765-561FBAD4D2C5} = {E609629E-8240-418A-9C45-8FDA95971B16}
+		{8FCB541E-948B-4A8D-83C7-B295B4572D64} = {3F37E244-DF32-4593-B36F-2BE34C2D60EC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2F380428-A3ED-41B0-9D26-0F6148C6CB37}
 	EndGlobalSection
 EndGlobal

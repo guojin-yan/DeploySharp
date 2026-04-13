@@ -15,7 +15,7 @@
 //  【功能简介】
 //  1. 支持 OpenVINO、ONNX Runtime、TensorRT 等主流模型格式部署。
 //  2. 支持目标检测、图像分割、关键点检测等多种任务。
-//  3. 支持 Yolov5-v12全系列模型部署，同时支持更多其它模型部署。
+//  3. 支持 YOLOv5-v12全系列模型部署，同时支持更多其它模型部署。
 //  4. 支持 C# .NET Framework 4.8 、.NET 6/7/8/9 桌面端和服务器端部署。
 //  5. 支持 ImageSharp 和 OpenCvSharp 两大图像处理库。
 //  6. 支持单张图片和批量图片多种推理方式。
@@ -49,40 +49,42 @@
 //  🌟 如果本项目对您有帮助，欢迎赞助支持我们：
 //  - 支付宝/微信赞助码：手机号15253793309
 //========================================================================
-using DeploySharp.ImageSharp.Demo;
+using DeploySharp.Data;
+using DeploySharp.Data.ResultData;
+using DeploySharp.Engine;
+using DeploySharp.Model;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using System;
 
-namespace DeploySharp.OpenCvSharp.Demo
+namespace DeploySharp.ImageSharp.Demo
 {
-    internal class Program
+    public class YoloClsDemo
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello, World!");
-            //AnomalibSegDemos.Run();
-            //Yolov5DetDemo.Run();
-            //Yolov5SegDemo.Run();
-            //for(int i = 0; i < 1; i++)
-            //{
-            //Yolov8DetDemo.Run();
-            //Yolov8DetDemo.RunBatch();
-            //}
+        public static void Run()
+        {  // 模型和测试图片可以前往QQ群(945057948)下载
+            // 将下面的模型路径替换为你自己的模型路径
+            string modelPath = @"E:\Model\yolo\yolov8s-cls.onnx";
+            // 将下面的图片路径替换为你自己的图片路径
+            string imagePath = @"E:\Data\image\demo_4.jpg";
 
-            //Yolov8SegDemo.Run();
-            //Yolov8ObbDemo.Run();
-            //Yolov8PoseDemo.Run();
-            //DEIMv2DetDemo.Run();
-            //RFDETRDetDemo.Run();
-            //PPYoloeDetDemo.Run();
-            //RTDETRDetDemo.Run();
-            //RFDETRSegDemo.Run();
 
-            //Yolov26DetDemo.Run();
-            //Yolov26ObbDemo.Run();
-            //Yolov26SegDemo.Run();
-            //Yolov26PoseDemo.Run()
-            //
-            //YoloClsDemo.Run();
-            BriaRmbgDemo.Run();
+            YoloClsConfig config = new YoloClsConfig(modelPath);
+
+            config.SetTargetInferenceBackend(Engine.InferenceBackend.OnnxRuntime);
+            //config.CategoryDict = ClassNames.ImageNetClassNames;
+            YoloClsModel model = new YoloClsModel(config);
+
+            var img = Image.Load<Rgb24>(imagePath);
+
+            ClsResult result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            result = model.Predict(img);
+            model.ModelInferenceProfiler.PrintAllRecords();
+
+            Console.WriteLine(result.ToString());
+           
         }
     }
 }

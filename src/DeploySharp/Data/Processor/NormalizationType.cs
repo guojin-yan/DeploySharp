@@ -35,6 +35,13 @@ namespace DeploySharp.Data
         Scale_Neg1_1,
 
         /// <summary>
+        /// Scaling to [-0.5,0.5] range (divide by 127.5 then subtract 1)
+        /// 缩放到[-0.5,0.5] 范围 
+        /// </summary>
+        Scale_Neg05_05,
+
+
+        /// <summary>
         /// ImageNet standard normalization (mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
         /// ImageNet标准归一化 (mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
         /// </summary>
@@ -133,6 +140,11 @@ namespace DeploySharp.Data
                 {
                     Mean = new[] { 0.5f, 0.5f, 0.5f },
                     Std = new[] { 0.5f, 0.5f, 0.5f }
+                },
+                [ImageNormalizationType.Scale_Neg05_05] = new NormalizationParams
+                {
+                    Mean = new[] { 0.5f, 0.5f, 0.5f },
+                    Std = new[] { 1.0f, 1.0f, 1.0f }
                 }
             };
 

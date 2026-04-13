@@ -6,30 +6,6 @@ using System.Threading.Tasks;
 
 namespace DeploySharp.Model
 {
-    //public enum ModelType
-    //{
-    //    // Yolo系列
-    //    YOLOv5Det,
-    //    YOLOv5Seg,
-    //    YOLOv6Det,
-    //    YOLOv7Det,
-    //    YOLOv8Det,
-    //    YOLOv8Seg,
-    //    YOLOv8Obb,
-    //    YOLOv8Pose,
-    //    YOLOv9Det,
-    //    YOLOv9Seg,
-    //    YOLOv10Det,
-    //    YOLOv11Det,
-    //    YOLOv11Seg,
-    //    YOLOv11Obb,
-    //    YOLOv11Pose,
-    //    YOLOv12Det,
-    //    YOLOv13Det,
-
-    //    // 其他检测模型
-    //    AnomalibSeg,
-    //};
 
     /// <summary>
     /// Represents different types of computer vision models supported by the framework
@@ -48,6 +24,9 @@ namespace DeploySharp.Model
     public enum ModelType
     {
         #region YOLO Series Models
+
+        YOLOCls, // YOLO分类模型
+
         // YOLOv5 Family
         /// <summary>
         /// YOLOv5 Object Detection model
@@ -205,6 +184,8 @@ namespace DeploySharp.Model
         PaddleOcrDet,
         PaddleOcrCls,
         PaddleOcrRec,
+
+        BriaRmbg,
 
         #endregion
     }

@@ -66,6 +66,7 @@ Licensed under **Apache License 2.0**. Future updates will expand TensorRT suppo
 
 |  Model Name  |       Model Type        | OpenVINO | ONNX Runtime | TensorRT |
 | :----------: | :---------------------: | :------: | :----------: | :------: |
+|  **YOLOCls**  |        Classification (YOLO)        |    ✅     |      ✅       |    ✅     |
 |  **YOLOv5**  |        Detection        |    ✅     |      ✅       |    ✅     |
 |  **YOLOv5**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
 |  **YOLOv6**  |        Detection        |    ✅     |      ✅       |    ✅     |
@@ -82,16 +83,16 @@ Licensed under **Apache License 2.0**. Future updates will expand TensorRT suppo
 | **YOLOv11**  |          Pose           |    ✅     |      ✅       |    ✅     |
 | **YOLOv11**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
 | **YOLOv12**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |        Detection        |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  |          Pose           |    ✅     |      ✅       |    ✅     |
+|  **YOLO26**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
 | **Anomalib** |      Segmentation       |    ✅     |      ✅       |    ✅     |
 | **PP-YOLOE** |        Detection        |    ✅     |      ✅       |    ✅     |
 |  **DEIMv2**  |        Detection        |    ✅     |      ✅       |    ✅     |
 |  **RFDETR**  |        Detection        |    ✅     |      ✅       |    ✅     |
 |  **RFDETR**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
 |  **RTDETR**  |        Detection        |    ✅     |      ✅       |    ✅     |
-|  **YOLO26**  |        Detection        |    ✅     |      ✅       |    ✅     |
-|  **YOLO26**  |      Segmentation       |    ✅     |      ✅       |    ✅     |
-|  **YOLO26**  |          Pose           |    ✅     |      ✅       |    ✅     |
-|  **YOLO26**  | Oriented Bounding Boxes |    ✅     |      ✅       |    ✅     |
 |  **PP-OCR v5**  |      Detection       |    ✅     |      ✅       |    ✅     |
 |  **PP-OCR v5**  |     Classification     |    ✅     |      ✅       |    ✅     |
 |  **PP-OCR v5**  | Recognize |    ✅     |      ✅       |    ✅     |
@@ -100,6 +101,7 @@ Licensed under **Apache License 2.0**. Future updates will expand TensorRT suppo
 |  **PP-OCR v4**  |     Classification     |    ✅     |      ✅       |    ✅     |
 |  **PP-OCR v4**  | Recognize |    ✅     |      ✅       |    ✅     |
 |  **PP-OCR v4**  | Det+Cls+Rec |    ✅     |      ✅       |    ✅    |
+| **BRIA** | Bria-RMBG v1.4，v2.0 | ✅ | ✅ | ✅ |
 
 
 # <img title="NuGet" src="https://s2.loli.net/2023/08/08/jE6BHu59L4WXQFg.png" alt="" width="40">NuGet Package

@@ -631,7 +631,7 @@ namespace DeploySharp.Data
                     return Normalize(image, true);
 
                 case ImageNormalizationType.Scale_Neg1_1:
-
+                case ImageNormalizationType.Scale_Neg05_05:
                 case ImageNormalizationType.ImageNetStandard:
                 case ImageNormalizationType.CustomStandard:
                     return Normalize(image, parameters.Mean, parameters.Std, true);
