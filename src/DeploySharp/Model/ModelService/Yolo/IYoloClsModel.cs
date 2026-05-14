@@ -146,7 +146,7 @@ namespace DeploySharp.Model
         {
             float[] result0 = dataTensor[0].DataBuffer as float[];
 
-            var config = (Yolov5DetConfig)this.config;
+            var config = (YoloClsConfig)this.config;
             int oneResultLen = config.OutputSizes[0][1];
             int batchSize = config.InferBatch;
             int resultSizePerBatch = oneResultLen;

@@ -128,16 +128,17 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
 
 
             MyLogger.SetLevel(Log.LogLevel.ERROR);
-            string imagePath = @"E:\Data\ocr\demo_1.jpg";
+            //string imagePath = @"E:\Data\ocr\demo_1.jpg";
+            string imagePath = @"E:\Model\ocr\ceshi1\ceshi.jpg";
             Mat img = Cv2.ImRead(imagePath);
 
             // 创建 PP-OCR v5 配置
-            PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
-                detModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx",
-                clsModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx",
-                recModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx",
-                recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
-            );
+            //PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
+            //    detModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx",
+            //    clsModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx",
+            //    recModelPath: @"E:\Model\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx",
+            //    recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
+            //);
 
 
             //PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
@@ -147,6 +148,12 @@ namespace DeploySharp.OpenCvSharp.PaddleOcr.Demo
             //    recDictPath: @"E:\Model\ppocrv5\ppocrv5_dict.txt"
             //    );
 
+            PaddleOCRConfig paddleOCRConfig = new PaddleOCRConfig(
+                detModelPath: @"E:\Model\ocr\ceshi1\mobile_det_infer.onnx",
+                clsModelPath: @"E:\Model\ocr\ceshi1\textline.onnx",
+                recModelPath: @"E:\Model\ocr\ceshi1\mobile_rec_infer.onnx",
+                recDictPath: @"E:\Model\ocr\ceshi1\ppocrv5.txt"
+            );
 
             // 配置推理引擎和设备
             // 1. 设置全局推理后端为 ONNX Runtime

@@ -8,7 +8,7 @@
     <PackageId>JYPPX.DeploySharp.ImageSharp</PackageId>
     <!--Set NuGet Message-->
     <Title>DeploySharp.ImageSharp</Title>
-    <Version>0.0.9</Version>
+    <Version>0.0.9.2</Version>
     <Authors>Guojin Yan</Authors>
     <Company>Guojin Yan</Company>
     <Product>DeploySharp</Product>
