@@ -298,7 +298,12 @@ namespace DeploySharp.Data
         /// <seealso cref="Normalize(Image{Rgb24}, ImageNormalizationType, NormalizationParams)"/>
         public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
         {
-            return Normalize(Resize((Image<Rgb24>)input, size, processorConfig.ResizeMode), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
+            return Normalize(
+                Resize((Image<Rgb24>)input, size, processorConfig.ResizeMode),
+                processorConfig.NormalizationType,
+                processorConfig.CustomNormalizationParams,
+                processorConfig.SourceColorOrder ?? ImageColorOrder.Rgb,
+                processorConfig.ModelColorOrder);
         }
 
 
@@ -439,6 +444,11 @@ namespace DeploySharp.Data
         /// <seealso cref="Normalize(Image{Rgb24}, ImageNormalizationType, NormalizationParams)"/>
         public static float[] Normalize(Image<Rgb24> image, float[] mean, float[] scale, bool isScale)
         {
+            return Normalize(image, mean, scale, isScale, false);
+        }
+
+        private static float[] Normalize(Image<Rgb24> image, float[] mean, float[] scale, bool isScale, bool swapRedBlue)
+        {
             int width = image.Width;
             int height = image.Height;
             int pixelCount = width * height;
@@ -455,9 +465,9 @@ namespace DeploySharp.Data
                 {
                     int srcIndex = y * width + x;
                     int pixelIndex = y * width + x;
-                    result[pixelIndex] = pixelArray[srcIndex].R * alpha * scale[0] - mean[0] * scale[0];
+                    result[pixelIndex] = (swapRedBlue ? pixelArray[srcIndex].B : pixelArray[srcIndex].R) * alpha * scale[0] - mean[0] * scale[0];
                     result[pixelIndex + pixelCount] = pixelArray[srcIndex].G * alpha * scale[1] - mean[1] * scale[1];
-                    result[pixelIndex + 2 * pixelCount] = pixelArray[srcIndex].B * alpha * scale[2] - mean[2] * scale[2];
+                    result[pixelIndex + 2 * pixelCount] = (swapRedBlue ? pixelArray[srcIndex].R : pixelArray[srcIndex].B) * alpha * scale[2] - mean[2] * scale[2];
                 }
             });
 
@@ -533,6 +543,11 @@ namespace DeploySharp.Data
         /// </example>
         private static float[] ImageToFloatArray(Image<Rgb24> image, bool normalize)
         {
+            return ImageToFloatArray(image, normalize, false);
+        }
+
+        private static float[] ImageToFloatArray(Image<Rgb24> image, bool normalize, bool swapRedBlue)
+        {
             int width = image.Width;
             int height = image.Height;
             int pixelCount = width * height;
@@ -550,9 +565,9 @@ namespace DeploySharp.Data
                 {
                     int srcIndex = y * width + x;
                     int pixelIndex = y * width + x;
-                    result[pixelIndex] = pixelArray[srcIndex].R * scale;
+                    result[pixelIndex] = (swapRedBlue ? pixelArray[srcIndex].B : pixelArray[srcIndex].R) * scale;
                     result[pixelIndex + pixelCount] = pixelArray[srcIndex].G * scale;
-                    result[pixelIndex + 2 * pixelCount] = pixelArray[srcIndex].B * scale;
+                    result[pixelIndex + 2 * pixelCount] = (swapRedBlue ? pixelArray[srcIndex].R : pixelArray[srcIndex].B) * scale;
                 }
             });
 
@@ -621,6 +636,38 @@ namespace DeploySharp.Data
         /// <seealso cref="NormalizationParamsFactory"/>
         public static float[] Normalize(Image<Rgb24> image, ImageNormalizationType type, NormalizationParams customParams = null)
         {
+            return Normalize(
+                image,
+                type,
+                customParams,
+                ImageColorOrder.Rgb,
+                ImageColorOrder.Rgb);
+        }
+
+        /// <summary>
+        /// Normalizes an image and writes channels in the model's expected color order
+        /// 对图像进行归一化, 并按模型期望的颜色顺序写入通道
+        /// </summary>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="type">Normalization type / 归一化类型</param>
+        /// <param name="customParams">Custom parameters when type is CustomStandard / 当类型为 CustomStandard 时使用的自定义参数</param>
+        /// <param name="sourceColorOrder">Semantic color order of the source data / 源数据的语义颜色顺序</param>
+        /// <param name="modelColorOrder">Color order expected by the model tensor / 模型张量期望的颜色顺序</param>
+        /// <returns>Normalized float array in CHW format / CHW 格式的归一化浮点数组</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when a color order is invalid / 当颜色顺序无效时抛出</exception>
+        public static float[] Normalize(
+            Image<Rgb24> image,
+            ImageNormalizationType type,
+            NormalizationParams customParams,
+            ImageColorOrder sourceColorOrder,
+            ImageColorOrder modelColorOrder)
+        {
+            if (!Enum.IsDefined(typeof(ImageColorOrder), sourceColorOrder))
+                throw new ArgumentOutOfRangeException(nameof(sourceColorOrder));
+            if (!Enum.IsDefined(typeof(ImageColorOrder), modelColorOrder))
+                throw new ArgumentOutOfRangeException(nameof(modelColorOrder));
+
+            bool swapRedBlue = sourceColorOrder != modelColorOrder;
             var parameters = type == ImageNormalizationType.CustomStandard
                 ? customParams
                 : NormalizationParamsFactory.GetParams(type);
@@ -628,16 +675,16 @@ namespace DeploySharp.Data
             switch (type)
             {
                 case ImageNormalizationType.Scale_0_1:
-                    return Normalize(image, true);
+                    return ImageToFloatArray(image, true, swapRedBlue);
 
                 case ImageNormalizationType.Scale_Neg1_1:
                 case ImageNormalizationType.Scale_Neg05_05:
                 case ImageNormalizationType.ImageNetStandard:
                 case ImageNormalizationType.CustomStandard:
-                    return Normalize(image, parameters.Mean, parameters.Std, true);
+                    return Normalize(image, parameters.Mean, parameters.Std, true, swapRedBlue);
 
                 default:
-                    return Normalize(image, false);
+                    return ImageToFloatArray(image, false, swapRedBlue);
             }
         }
 

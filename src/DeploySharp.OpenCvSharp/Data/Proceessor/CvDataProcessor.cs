@@ -248,7 +248,12 @@ namespace DeploySharp.Data
         /// <seealso cref="Normalize(Mat, ImageNormalizationType, NormalizationParams)"/>
         public static float[] ProcessToFloat(object input, Size size, DataProcessorConfig processorConfig)
         {
-            return Normalize(Resize((Mat)input, size, processorConfig.ResizeMode, InterpolationFlags.Linear), processorConfig.NormalizationType, processorConfig.CustomNormalizationParams);
+            return Normalize(
+                Resize((Mat)input, size, processorConfig.ResizeMode, InterpolationFlags.Linear),
+                processorConfig.NormalizationType,
+                processorConfig.CustomNormalizationParams,
+                processorConfig.SourceColorOrder ?? ImageColorOrder.Bgr,
+                processorConfig.ModelColorOrder);
         }
 
         /// <summary>
@@ -589,7 +594,42 @@ namespace DeploySharp.Data
         /// <seealso cref="NormalizationParams"/>
         public static float[] Normalize(Mat image, ImageNormalizationType type, NormalizationParams customParams = null)
         {
-            Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);
+            return Normalize(
+                image,
+                type,
+                customParams,
+                ImageColorOrder.Bgr,
+                ImageColorOrder.Rgb);
+        }
+
+        /// <summary>
+        /// Normalizes an image and converts its color order when required
+        /// 对图像进行归一化, 并在需要时转换颜色顺序
+        /// </summary>
+        /// <param name="image">Source image / 源图像</param>
+        /// <param name="type">Normalization type / 归一化类型</param>
+        /// <param name="customParams">Custom parameters when type is CustomStandard / 当类型为 CustomStandard 时使用的自定义参数</param>
+        /// <param name="sourceColorOrder">Color order of the source image / 源图像颜色顺序</param>
+        /// <param name="modelColorOrder">Color order expected by the model tensor / 模型张量期望的颜色顺序</param>
+        /// <returns>Normalized float array in NCHW format / NCHW 格式的归一化浮点数组</returns>
+        /// <exception cref="ArgumentNullException">Thrown when image is null / 当图像为 null 时抛出</exception>
+        /// <exception cref="ArgumentException">Thrown when image format is invalid / 当图像格式无效时抛出</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when a color order is invalid / 当颜色顺序无效时抛出</exception>
+        public static float[] Normalize(
+            Mat image,
+            ImageNormalizationType type,
+            NormalizationParams customParams,
+            ImageColorOrder sourceColorOrder,
+            ImageColorOrder modelColorOrder)
+        {
+            if (!Enum.IsDefined(typeof(ImageColorOrder), sourceColorOrder))
+                throw new ArgumentOutOfRangeException(nameof(sourceColorOrder));
+            if (!Enum.IsDefined(typeof(ImageColorOrder), modelColorOrder))
+                throw new ArgumentOutOfRangeException(nameof(modelColorOrder));
+
+            if (sourceColorOrder != modelColorOrder)
+                Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);
+
             var parameters = type == ImageNormalizationType.CustomStandard
                 ? customParams
                 : NormalizationParamsFactory.GetParams(type);
