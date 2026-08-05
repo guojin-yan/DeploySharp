@@ -16,6 +16,8 @@ namespace DeploySharp.Tests.Data
             config.ResizeMode.Should().Be(ImageResizeMode.Stretch);
             config.NormalizationType.Should().Be(ImageNormalizationType.None);
             config.CustomNormalizationParams.Should().BeNull();
+            config.SourceColorOrder.Should().BeNull();
+            config.ModelColorOrder.Should().Be(ImageColorOrder.Rgb);
         }
 
         [Fact]
@@ -71,6 +73,19 @@ namespace DeploySharp.Tests.Data
             config.ResizeMode = ImageResizeMode.CrnnPad;
 
             config.ResizeMode.Should().Be(ImageResizeMode.CrnnPad);
+        }
+
+        [Fact]
+        public void ColorOrder_SetValues_ShouldUpdate()
+        {
+            var config = new DataProcessorConfig
+            {
+                SourceColorOrder = ImageColorOrder.Rgb,
+                ModelColorOrder = ImageColorOrder.Bgr
+            };
+
+            config.SourceColorOrder.Should().Be(ImageColorOrder.Rgb);
+            config.ModelColorOrder.Should().Be(ImageColorOrder.Bgr);
         }
 
         [Fact]

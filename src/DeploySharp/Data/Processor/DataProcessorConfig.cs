@@ -106,6 +106,26 @@ namespace DeploySharp.Data
         /// </value>
         public ImageResizeMode ResizeMode { get; set; } = ImageResizeMode.Stretch;
 
+        /// <summary>
+        /// Gets or sets the color order of the source image
+        /// 获取或设置源图像的颜色顺序
+        /// </summary>
+        /// <value>
+        /// Default is null, which uses the native color order of the image backend
+        /// 默认为 null, 使用图像后端的原生颜色顺序
+        /// </value>
+        public ImageColorOrder? SourceColorOrder { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color order expected by the model input tensor
+        /// 获取或设置模型输入张量期望的颜色顺序
+        /// </summary>
+        /// <value>
+        /// Default is <see cref="ImageColorOrder.Rgb"/> to preserve existing behavior
+        /// 默认为 <see cref="ImageColorOrder.Rgb"/>, 以保持现有行为
+        /// </value>
+        public ImageColorOrder ModelColorOrder { get; set; } = ImageColorOrder.Rgb;
+
     }
 
 }
