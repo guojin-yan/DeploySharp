@@ -45,12 +45,14 @@ jobs:
         run: dotnet build src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj -c Release -f net10.0 --no-restore
       - name: Build Visual API XML / 构建 Visual API XML 文档
         run: dotnet build src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release -f net8.0 --no-restore
+      - name: Build Visual.OpenCV API XML / 构建 Visual.OpenCV API XML 文档
+        run: dotnet build src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release -f net10.0 --no-restore
       - name: Validate generated model catalog / 校验生成的模型目录
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
       - name: Validate bilingual API docs / 校验双语 API 注释
         shell: pwsh
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net8.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net8.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net8.0/JYPPX.DeploySharp.Visual.xml
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net8.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net8.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net8.0/JYPPX.DeploySharp.Visual.xml,src/DeploySharp.Visual.OpenCV/bin/Release/net10.0/JYPPX.DeploySharp.Visual.OpenCV.xml
       - name: Build DocFX site / 构建 DocFX 站点
         run: dotnet tool run docfx docs/docfx.json --warningsAsErrors
       - name: Disable Jekyll / 禁用 Jekyll

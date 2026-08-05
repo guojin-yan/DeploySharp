@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "JYPPX.DeploySharp.Visual.OpenCV": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "/jYtsBq+XhOWmuaF17uLsiaQ9jOSw0Wy3vy+Q2vxDQ6lRaZ+6mobpPZknmzfk3PEx46Q7ZKONLtAZXKUy6lgMQ==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Visual": "2.0.0-alpha.1",
+          "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1"
+        }
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "8XYr0x9pFtPwO7/sC2eZLWD+vBv9LNq2gK4UN21TuYnFs4NuGxZET2/8a/km64byZFYNXiidS8Rle767fo2FFw=="
+      },
+      "JYPPX.DeploySharp.Visual": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "O2QjBYUsgTOXQW/VaAFYfQI7++ElGPhnEJCmkSRcvE1JEgT7qvQIAEFc7RiGzw6iBCMHU9fQ9mlQ4XomFiCFDw==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1"
+        }
+      },
+      "JYPPX.OpenCV.CSharp.API": {
+        "type": "Transitive",
+        "resolved": "5.0.0-preview.1",
+        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+      }
+    }
+  }
+}

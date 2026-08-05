@@ -1,0 +1,26 @@
+[
+    {
+        "name":  "alpha.png",
+        "size":  78,
+        "sha256":  "0eb142d123ae629d9ec4b333b184c5e42255b902346192052f44f9fb079e2caa",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
+        "name":  "gray.png",
+        "size":  73,
+        "sha256":  "d474a00bc20cbb69d96bb62461b34b781fb147f02ce8af5c2c2272a078cb3b4d",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
+        "name":  "rgb.png",
+        "size":  77,
+        "sha256":  "ecfec9e141ed0da523a03079244ecaee41da7f262d735c0bb11447f95119184d",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    }
+]

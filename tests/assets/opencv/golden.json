@@ -1,0 +1,13 @@
+{
+    "classification":  {
+                           "topIndex":  0,
+                           "label":  "one"
+                       },
+    "detection":  {
+                      "count":  2,
+                      "labels":  [
+                                     "dog",
+                                     "cat"
+                                 ]
+                  }
+}

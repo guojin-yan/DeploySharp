@@ -14,6 +14,10 @@ See [the ONNX Runtime quick start](docs/articles/onnxruntime-getting-started.md)
 
 See [the OpenVINO quick start](docs/articles/openvino-getting-started.md) and [compatibility guide](docs/articles/openvino-compatibility.md). / 请参阅 [OpenVINO 快速开始](docs/articles/openvino-getting-started.md)与[兼容性指南](docs/articles/openvino-compatibility.md)。
 
+For real image input, install `JYPPX.DeploySharp.Visual.OpenCV` and explicitly choose the matching `JYPPX.OpenCV.runtime.win-x64` preview runtime. The adapter keeps OpenCV out of Core and Visual, copies pixels into owned tensors, and currently verifies Windows x64 only. / 如需真实图像输入，请安装 `JYPPX.DeploySharp.Visual.OpenCV` 并显式选择匹配的 `JYPPX.OpenCV.runtime.win-x64` preview runtime。适配器不会把 OpenCV 引入 Core 和 Visual，会将像素复制到自有张量，目前仅核验 Windows x64。
+
+See the [Visual.OpenCV quick start](docs/articles/visual-opencv-getting-started.md) and [compatibility guide](docs/articles/visual-opencv-compatibility.md). / 请参阅 [Visual.OpenCV 快速开始](docs/articles/visual-opencv-getting-started.md) 与 [兼容性指南](docs/articles/visual-opencv-compatibility.md)。
+
 ## Status
 
 Version `2.0.0-alpha.1` is an early architecture baseline. Public APIs may change before the first release candidate.

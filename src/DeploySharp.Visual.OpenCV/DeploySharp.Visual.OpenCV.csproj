@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- OpenCV preview has no netstandard2.0 asset; publish only its 15 real direct TFMs. / OpenCV 预览包没有 netstandard2.0 资产，仅发布上游真实的 15 个 TFM。 -->
+    <TargetFrameworks>net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Visual.OpenCV</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Visual.OpenCV</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Visual.OpenCV</PackageId>
+    <Title>DeploySharp Visual OpenCV</Title>
+    <Description>OpenCV image loading and preprocessing adapter for DeploySharp Visual.</Description>
+    <PackageTags>DeploySharp;Visual;OpenCV;Image;Preprocessing;Tensor</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Visual\DeploySharp.Visual.csproj" />
+    <PackageReference Include="JYPPX.OpenCV.CSharp.API" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
