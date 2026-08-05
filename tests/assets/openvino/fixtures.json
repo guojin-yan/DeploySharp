@@ -1,7 +1,10 @@
 {
   "generator": "eng/test-models/Generate-OpenVinoFixtures.py",
   "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
-  "source": "tests/assets/onnxruntime/classification.onnx",
+  "sources": [
+    "tests/assets/onnxruntime/classification.onnx",
+    "tests/assets/onnxruntime/semantic-segmentation.onnx"
+  ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
   "files": [
@@ -14,6 +17,16 @@
       "file": "classification.bin",
       "size": 16,
       "sha256": "fe6d3d3bb5dd778af1128cc7b2b33668d51b9a52dfc8f2342be37ddc06a0072d"
+    },
+    {
+      "file": "semantic-segmentation.xml",
+      "size": 1478,
+      "sha256": "e6b5f9d30c32b2869d970004ecaf0be499c6599cc278f07eb200d0739202f358"
+    },
+    {
+      "file": "semantic-segmentation.bin",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ]
 }

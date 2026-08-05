@@ -20,6 +20,8 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId ImageClassification { get; } = new VisualTaskId("image-classification");
         /// <summary>Gets the object-detection task. / 获取目标检测任务。</summary>
         public static VisualTaskId ObjectDetection { get; } = new VisualTaskId("object-detection");
+        /// <summary>Gets the semantic-segmentation task. / 获取语义分割任务。</summary>
+        public static VisualTaskId SemanticSegmentation { get; } = new VisualTaskId("semantic-segmentation");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);
@@ -99,7 +101,7 @@ namespace JYPPX.DeploySharp.Visual
         public VisualOutputBinding(string name, TensorElementType elementType, TensorShape shapePattern)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "An output tensor name is required.", tensorName: name);
-            if (elementType != TensorElementType.Float32 && elementType != TensorElementType.Float64) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual decoder outputs must use Float32 or Float64.", tensorName: name);
+            if (elementType == TensorElementType.Unknown || elementType == TensorElementType.String) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual output element type is unsupported.", tensorName: name);
             Name = name;
             ElementType = elementType;
             ShapePattern = shapePattern == null ? throw new ArgumentNullException(nameof(shapePattern)) : new TensorShape(shapePattern.ToArray());

@@ -1,5 +1,9 @@
 {
   "files": {
+    "binary-segmentation.onnx": {
+      "bytes": 295,
+      "sha256": "5f74595675e2c6ee5c1e040d93c7850de4f8d4a129bc20624a9beed0c037a16f"
+    },
     "cancellable-loop.onnx": {
       "bytes": 90380,
       "sha256": "dedeb5d8175fe4a6502d0d36304cf3597e7a43f6276601c65aa642ae3d97c3ab"
@@ -20,6 +24,14 @@
       "bytes": 1095,
       "sha256": "95c5432dd0cb706641643600b285309b06eea33f243346bc8988310d66a2a88e"
     },
+    "semantic-label-map.onnx": {
+      "bytes": 329,
+      "sha256": "975154b5549e07487d57e7734789cf6db5cdce6b9177a3a85d6204644f277ecb"
+    },
+    "semantic-segmentation.onnx": {
+      "bytes": 285,
+      "sha256": "678aff6aac827f1cacf9e9599962db9e7dbb63ad3999821f6116fd705bd7b561"
+    },
     "serialized-loop.onnx": {
       "bytes": 548,
       "sha256": "f977d6b4d6a2b556c7ec2ea441865aa1b01cb8936a8ac9f9c7c1c3bb1ecf353d"
@@ -29,6 +41,8 @@
       "sha256": "38d53ebd59014bbae2e254233b7669f914d772d56578992e3afd41eeae338f36"
     }
   },
-  "generator": "onnx==1.22.0",
-  "opset": 13
+  "generator": "eng/test-models/Generate-OnnxRuntimeFixtures.py with onnx==1.22.0",
+  "license": "Apache-2.0",
+  "opset": 13,
+  "purpose": "DeploySharp adapter contract fixtures; not official algorithm models"
 }

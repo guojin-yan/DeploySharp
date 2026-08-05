@@ -21,6 +21,8 @@ namespace JYPPX.DeploySharp.Visual
         public const string TensorInvalid = "DS-VISUAL-3001";
         /// <summary>Visual result decoding failed. / Visual 结果解码失败。</summary>
         public const string DecodeFailed = "DS-VISUAL-3002";
+        /// <summary>A requested Visual capability is not available. / 请求的 Visual 能力不可用。</summary>
+        public const string CapabilityUnavailable = "DS-VISUAL-3003";
         /// <summary>A Visual inference operation failed. / Visual 推理操作失败。</summary>
         public const string InferenceFailed = "DS-VISUAL-4001";
         /// <summary>A Visual operation was cancelled by the caller. / Visual 操作被调用方取消。</summary>

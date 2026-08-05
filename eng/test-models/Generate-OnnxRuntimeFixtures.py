@@ -59,6 +59,39 @@ def detection() -> onnx.ModelProto:
     return graph_model(graph, "detection")
 
 
+def semantic_segmentation() -> onnx.ModelProto:
+    """Expose a tiny RGB-like tensor as three-class logits without hidden postprocessing."""
+    graph = helper.make_graph(
+        [helper.make_node("Identity", ["images"], ["logits"])],
+        "deploysharp_semantic_segmentation",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 2, 3])],
+        [helper.make_tensor_value_info("logits", TensorProto.FLOAT, [1, 3, 2, 3])],
+    )
+    return graph_model(graph, "semantic-segmentation")
+
+
+def binary_segmentation() -> onnx.ModelProto:
+    """Expose one channel as precomputed probabilities for explicit threshold tests."""
+    graph = helper.make_graph(
+        [helper.make_node("Identity", ["images"], ["probabilities"])],
+        "deploysharp_binary_segmentation",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 1, 2, 3])],
+        [helper.make_tensor_value_info("probabilities", TensorProto.FLOAT, [1, 1, 2, 3])],
+    )
+    return graph_model(graph, "binary-segmentation")
+
+
+def semantic_label_map() -> onnx.ModelProto:
+    """Produce a backend-owned Int64 label map by taking channel-wise argmax."""
+    graph = helper.make_graph(
+        [helper.make_node("ArgMax", ["images"], ["labels"], axis=1, keepdims=0, select_last_index=0)],
+        "deploysharp_semantic_label_map",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 2, 3])],
+        [helper.make_tensor_value_info("labels", TensorProto.INT64, [1, 2, 3])],
+    )
+    return graph_model(graph, "semantic-label-map")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -155,13 +188,22 @@ def main() -> None:
     models = {
         "classification.onnx": classification(),
         "detection.onnx": detection(),
+        "semantic-segmentation.onnx": semantic_segmentation(),
+        "binary-segmentation.onnx": binary_segmentation(),
+        "semantic-label-map.onnx": semantic_label_map(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),
         "cancellable-loop.onnx": cancellable_loop(),
         "serialized-loop.onnx": serialized_loop(),
     }
-    manifest: dict[str, object] = {"generator": "onnx==1.22.0", "opset": OPSET, "files": {}}
+    manifest: dict[str, object] = {
+        "generator": "eng/test-models/Generate-OnnxRuntimeFixtures.py with onnx==1.22.0",
+        "license": "Apache-2.0",
+        "purpose": "DeploySharp adapter contract fixtures; not official algorithm models",
+        "opset": OPSET,
+        "files": {},
+    }
     for file_name, model in models.items():
         data = model.SerializeToString(deterministic=True)
         (OUTPUT / file_name).write_bytes(data)

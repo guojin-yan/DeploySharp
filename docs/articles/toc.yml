@@ -5,10 +5,14 @@
   href: installation.md
 - name: Architecture / 架构
   href: architecture.md
+- name: Performance and Model Fidelity / 性能与模型保真
+  href: performance-and-model-fidelity.md
 - name: Visual Prepared-Tensor Quick Start / Visual 已准备张量快速开始
   href: visual-getting-started.md
 - name: Visual Coordinates and Decoding / Visual 坐标与解码
   href: visual-coordinate-decoding.md
+- name: Visual Semantic Segmentation / Visual 语义分割
+  href: visual-semantic-segmentation.md
 - name: Visual Lifecycle and Compatibility / Visual 生命周期与兼容性
   href: visual-lifecycle-compatibility.md
 - name: Visual.OpenCV Quick Start / Visual.OpenCV 快速开始

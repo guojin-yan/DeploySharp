@@ -57,6 +57,29 @@ namespace DeploySharp.Backend.OpenVINO.Tests
         }
 
         [TestMethod]
+        public void RealOpenVinoOnnxAndIrProduceTheSameGoldenSemanticMask()
+        {
+            ModelArtifact onnxArtifact = OpenVinoTestData.OnnxArtifact("semantic-segmentation.onnx");
+            ModelArtifact irArtifact = OpenVinoTestData.IrArtifact("semantic-segmentation.xml");
+            using var registry = new BackendRegistry();
+            registry.UseOpenVino();
+            using (VisualPipeline pipeline = CreatePipeline(registry, onnxArtifact, SegmentationProfile(onnxArtifact.ModelId, "onnx")))
+            using (PreparedVisualInput input = SegmentationInput())
+            {
+                SemanticSegmentationResult result = pipeline.Run(input).GetValue<SemanticSegmentationResult>();
+                CollectionAssert.AreEqual(new ushort[] { 0, 1, 2, 0, 0, 1 }, result.Mask.ToArray());
+                Assert.AreEqual("2ed4fa5094662ebe63d9265149adf86858fd7b03983a35118880f09517f824de", result.Mask.ComputeSha256());
+            }
+
+            using (VisualPipeline pipeline = CreatePipeline(registry, irArtifact, SegmentationProfile(irArtifact.ModelId, "openvino-ir")))
+            using (PreparedVisualInput input = SegmentationInput())
+            {
+                SemanticSegmentationResult result = pipeline.Run(input).GetValue<SemanticSegmentationResult>();
+                CollectionAssert.AreEqual(new ushort[] { 0, 1, 2, 0, 0, 1 }, result.Mask.ToArray());
+            }
+        }
+
+        [TestMethod]
         public void VerifiedMultiFileIrModelPackAndOfflinePreviewEnterRealVisualSelection()
         {
             string root = Path.Combine(Path.GetTempPath(), "deploysharp-openvino-supply-chain-" + Guid.NewGuid().ToString("N"));
@@ -130,6 +153,29 @@ namespace DeploySharp.Backend.OpenVINO.Tests
                 new[] { new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(1, 3)) },
                 new[] { new VisualLabel(0, "one"), new VisualLabel(1, "two"), new VisualLabel(2, "three") },
                 new ClassificationDecoder("scores", ClassificationScoreMode.Logits, topK: 3));
+        }
+
+        private static VisualModelProfile SegmentationProfile(ModelId modelId, string format)
+        {
+            var schema = new SegmentationOutputSchema("logits", SegmentationOutputKind.Logits, SegmentationTensorLayout.Nchw, 3);
+            return new VisualModelProfile(
+                "tests/openvino-semantic-segmentation.v1", modelId, VisualTaskId.SemanticSegmentation, "1.0", format,
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1, 3, 2, 3), VisualTensorLayout.Nchw),
+                new[] { new VisualOutputBinding("logits", TensorElementType.Float32, new TensorShape(1, 3, 2, 3)) },
+                new[] { new VisualLabel(0, "background"), new VisualLabel(1, "green"), new VisualLabel(2, "blue") },
+                new SemanticSegmentationDecoder(schema));
+        }
+
+        private static PreparedVisualInput SegmentationInput()
+        {
+            var size = new VisualSize(3, 2);
+            float[] values =
+            {
+                9, 0, 0, 1, 5, 0,
+                0, 9, 0, 1, 5, 9,
+                0, 0, 9, 0, 5, 9
+            };
+            return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1, 3, 2, 3), values), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
         }
 
         private static PreparedVisualInput ClassificationInput()

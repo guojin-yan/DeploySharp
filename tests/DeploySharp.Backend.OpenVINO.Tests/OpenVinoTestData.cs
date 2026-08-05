@@ -18,7 +18,7 @@ namespace DeploySharp.Backend.OpenVINO.Tests
         public static string Ir(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", "ir", name);
 
         public static ModelArtifact OnnxArtifact(string name, string? hash = null) => new ModelArtifact(new ModelId("tests/openvino-" + Path.GetFileNameWithoutExtension(name)), "onnx", Onnx(name), hash, BackendId);
-        public static ModelArtifact IrArtifact(string name = "classification.xml", string? hash = null) => new ModelArtifact(new ModelId("tests/openvino-ir-classification"), "openvino-ir", Ir(name), hash, BackendId);
+        public static ModelArtifact IrArtifact(string name = "classification.xml", string? hash = null) => new ModelArtifact(new ModelId("tests/openvino-ir-" + Path.GetFileNameWithoutExtension(name)), "openvino-ir", Ir(name), hash, BackendId);
 
         public static IInferenceSession Open(ModelArtifact artifact, SessionOptions? sessionOptions = null, OpenVinoOptions? backendOptions = null)
         {

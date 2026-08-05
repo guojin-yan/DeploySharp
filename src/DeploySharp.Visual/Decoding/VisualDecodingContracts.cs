@@ -85,7 +85,8 @@ namespace JYPPX.DeploySharp.Visual
             float[] values;
             if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] floats)
             {
-                values = (float[])floats.Clone();
+                // Decoders borrow the managed output only for this synchronous call and never mutate or retain it. / 解码器仅在本次同步调用中借用托管输出，绝不修改或保留它。
+                values = floats;
             }
             else if (tensor.ElementType == TensorElementType.Float64 && tensor.Buffer is double[] doubles)
             {

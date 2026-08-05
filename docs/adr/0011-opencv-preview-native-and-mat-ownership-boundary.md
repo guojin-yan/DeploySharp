@@ -5,7 +5,7 @@
 
 ## Context / 背景
 
-`JYPPX.OpenCV.CSharp.API 5.0.0-preview.1` is an official project package but has no stable NuGet release or GitHub Release. Its managed package publishes exact desktop TFMs and does not carry native files. The verified Windows x64 runtime is a separate package. / `JYPPX.OpenCV.CSharp.API 5.0.0-preview.1` 是项目官方包，但尚无 NuGet 稳定版或 GitHub Release。托管包发布精确桌面 TFM，不携带 native 文件；已核验的 Windows x64 runtime 是独立包。
+`JYPPX.OpenCV.CSharp.API 5.0.0-preview.1` is an official preview package and now has a matching GitHub prerelease published on 2026-08-05, but no stable release. Its managed package publishes exact desktop TFMs and does not carry native files. The verified Windows x64 runtime is a separate package. / `JYPPX.OpenCV.CSharp.API 5.0.0-preview.1` 是项目官方 preview 包，现已有 2026-08-05 发布的匹配 GitHub prerelease，但仍无稳定版。托管包发布精确桌面 TFM，不携带 native 文件；已核验的 Windows x64 runtime 是独立包。
 
 The wrapper exposes owned `Mat` objects and `Data`/`Step` pointers. The current public color conversion enum was verified for `BGR2GRAY`; RGB reorder and alpha composition do not have a verified public enum in this audit. / 包装器暴露拥有资源的 `Mat` 以及 `Data`/`Step` 指针。本次审计核验到的公开颜色转换枚举为 `BGR2GRAY`；RGB 重排和 alpha 合成没有已核验的公开枚举。
 

@@ -3,6 +3,19 @@
                            "topIndex":  0,
                            "label":  "one"
                        },
+    "semanticSegmentation":  {
+                                 "classes":  [
+                                                 0,
+                                                 1,
+                                                 2,
+                                                 0,
+                                                 0,
+                                                 1
+                                             ],
+                                 "width":  3,
+                                 "sha256":  "2ed4fa5094662ebe63d9265149adf86858fd7b03983a35118880f09517f824de",
+                                 "height":  2
+                             },
     "detection":  {
                       "count":  2,
                       "labels":  [

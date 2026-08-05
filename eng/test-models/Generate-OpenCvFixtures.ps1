@@ -74,6 +74,7 @@ $manifest = Get-ChildItem -LiteralPath $OutputDirectory -Filter '*.png' | Sort-O
 [System.IO.File]::WriteAllText((Join-Path $OutputDirectory 'golden.json'), (@{
     classification = @{ topIndex = 0; label = 'one' }
     detection = @{ count = 2; labels = @('dog', 'cat') }
+    semanticSegmentation = @{ width = 3; height = 2; classes = @(0, 1, 2, 0, 0, 1); sha256 = '2ed4fa5094662ebe63d9265149adf86858fd7b03983a35118880f09517f824de' }
 } | ConvertTo-Json -Depth 4), $utf8)
 [System.IO.File]::WriteAllText((Join-Path $OutputDirectory 'README.md'), @'
 # OpenCV adapter fixtures

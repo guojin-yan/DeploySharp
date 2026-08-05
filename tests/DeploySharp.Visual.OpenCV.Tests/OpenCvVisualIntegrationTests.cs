@@ -69,6 +69,31 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.IsTrue(result.Detections[0].Box.Y >= 0 && result.Detections[0].Box.Bottom <= input.SourceSize.Height);
         }
 
+        [TestMethod]
+        public void OpenCvRgbPngFlowsThroughOnnxRuntimeSemanticSegmentation()
+        {
+            using JsonDocument golden = LoadGolden();
+            var artifact = new ModelArtifact(new ModelId("tests/opencv-semantic-segmentation"), "onnx", Onnx("semantic-segmentation.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var schema = new SegmentationOutputSchema("logits", SegmentationOutputKind.Logits, SegmentationTensorLayout.Nchw, 3);
+            var profile = new VisualModelProfile(
+                "tests/opencv-semantic-segmentation.v1", artifact.ModelId, VisualTaskId.SemanticSegmentation, "1.0", "onnx",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1, 3, 2, 3), VisualTensorLayout.Nchw),
+                new[] { new VisualOutputBinding("logits", TensorElementType.Float32, new TensorShape(1, 3, 2, 3)) },
+                new[] { new VisualLabel(0, "red"), new VisualLabel(1, "green"), new VisualLabel(2, "blue") },
+                new SemanticSegmentationDecoder(schema));
+            using VisualPipeline pipeline = CreatePipeline(registry, artifact, profile, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            var options = new OpenCvPreprocessOptions(new VisualSize(3, 2), colorOrder: VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", options);
+            SemanticSegmentationResult result = pipeline.Run(input).GetValue<SemanticSegmentationResult>();
+            JsonElement expected = golden.RootElement.GetProperty("semanticSegmentation");
+            ushort[] expectedClasses = new ushort[expected.GetProperty("classes").GetArrayLength()];
+            for (int index = 0; index < expectedClasses.Length; index++) expectedClasses[index] = expected.GetProperty("classes")[index].GetUInt16();
+            CollectionAssert.AreEqual(expectedClasses, result.Mask.ToArray());
+            Assert.AreEqual(expected.GetProperty("sha256").GetString(), result.Mask.ComputeSha256());
+        }
+
         private static JsonDocument LoadGolden() => JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "golden.json")));
 
         private static VisualPipeline CreatePipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, BackendId backendId, string device)
