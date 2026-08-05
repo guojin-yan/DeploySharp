@@ -80,6 +80,31 @@ namespace DeploySharp.Backend.OpenVINO.Tests
         }
 
         [TestMethod]
+        public void RealOpenVinoOnnxAndIrProduceTheSameGoldenPose()
+        {
+            ModelArtifact onnxArtifact = OpenVinoTestData.OnnxArtifact("direct-pose.onnx");
+            ModelArtifact irArtifact = OpenVinoTestData.IrArtifact("direct-pose.xml");
+            const string expectedHash = "5368c9887690613a6a343fde5014bf814dd59fbfe40a16ec592b7a55f8d5cba5";
+            using var registry = new BackendRegistry();
+            registry.UseOpenVino();
+            using (VisualPipeline pipeline = CreatePipeline(registry, onnxArtifact, DirectPoseProfile(onnxArtifact.ModelId, "onnx")))
+            using (PreparedVisualInput input = PoseInput())
+            {
+                PoseEstimationResult result = pipeline.Run(input).GetValue<PoseEstimationResult>();
+                Assert.AreEqual(2, result.Instances.Count);
+                Assert.AreEqual(expectedHash, result.ComputeSha256());
+            }
+
+            using (VisualPipeline pipeline = CreatePipeline(registry, irArtifact, DirectPoseProfile(irArtifact.ModelId, "openvino-ir")))
+            using (PreparedVisualInput input = PoseInput())
+            {
+                PoseEstimationResult result = pipeline.Run(input).GetValue<PoseEstimationResult>();
+                Assert.AreEqual(2, result.Instances.Count);
+                Assert.AreEqual(expectedHash, result.ComputeSha256());
+            }
+        }
+
+        [TestMethod]
         public void VerifiedMultiFileIrModelPackAndOfflinePreviewEnterRealVisualSelection()
         {
             string root = Path.Combine(Path.GetTempPath(), "deploysharp-openvino-supply-chain-" + Guid.NewGuid().ToString("N"));
@@ -135,6 +160,65 @@ namespace DeploySharp.Backend.OpenVINO.Tests
             finally { Directory.Delete(root, true); }
         }
 
+        [TestMethod]
+        public void VerifiedPoseIrModelPackAndOfflinePreviewEnterRealPoseSelection()
+        {
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-openvino-pose-supply-chain-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            try
+            {
+                string xml = Path.Combine(root, "direct-pose.xml");
+                string bin = Path.Combine(root, "direct-pose.bin");
+                File.Copy(OpenVinoTestData.Ir("direct-pose.xml"), xml);
+                File.Copy(OpenVinoTestData.Ir("direct-pose.bin"), bin);
+                var modelId = new ModelId("tests/openvino-supply-chain-pose");
+                var artifactDocument = new ModelArtifactDocument(
+                    "openvino-ir.cpu", "openvino-ir", ModelArtifactLocationKind.File, "direct-pose.xml", new[] { "openvino" },
+                    new[]
+                    {
+                        new ModelFileDocument("direct-pose.xml", OpenVinoTestData.Sha256(xml), new FileInfo(xml).Length, "application/xml", ModelFileRole.Model),
+                        new ModelFileDocument("direct-pose.bin", OpenVinoTestData.Sha256(bin), new FileInfo(bin).Length, "application/octet-stream", ModelFileRole.Weights)
+                    },
+                    precision: "fp32", portable: true, minimumBackendVersion: "2.0.0-alpha.1", minimumRuntimeVersion: "2026.2.1");
+                var packageDocument = new ModelPackageDocument(
+                    "2.0", modelId.Value, "DeploySharp OpenVINO IR Pose contract fixture", "deploysharp-fixture", "pose-estimation", "1.0",
+                    new ModelExporterDocument("OpenVINO", "2026.2.1", "ov.convert_model + ov.save_model"),
+                    new ModelSourceDocument("https://github.com/guojin-yan/DeploySharp", "https://github.com/guojin-yan/DeploySharp", "generated", "JYPPX", null, "Apache-2.0", null, true),
+                    DateTimeOffset.Parse("2026-08-05T00:00:00Z"), "tests/openvino-pose.v1",
+                    new[] { new ModelTensorSignatureDocument("images", "float32", new long[] { 1, 3, 100, 100 }) },
+                    new[]
+                    {
+                        new ModelTensorSignatureDocument("boxes", "float32", new long[] { 1, 3, 4 }),
+                        new ModelTensorSignatureDocument("scores", "float32", new long[] { 1, 3 }),
+                        new ModelTensorSignatureDocument("keypoints", "float32", new long[] { 1, 3, 3, 4 })
+                    },
+                    new[] { artifactDocument });
+                string manifestPath = Path.Combine(root, "manifest.json");
+                File.WriteAllText(manifestPath, ModelPackageJsonSerializer.Serialize(ModelPackageValidator.Validate(packageDocument)));
+                LocalModelPackage package = ModelPackageLoader.Load(manifestPath);
+                Assert.AreEqual(2, package.Artifacts[0].Files.Count);
+                ModelArtifact artifact = package.ToCoreArtifacts()[0];
+
+                var entry = new ModelCatalogEntry(
+                    modelId.Value, "DeploySharp OpenVINO IR Pose contract fixture", "deploysharp-fixture", "pose-estimation", "1.0", ModelCatalogStatus.Preview,
+                    "Offline adapter contract fixture; not an official Pose algorithm model.", packageDocument.Source,
+                    new ModelCatalogRelease("guojin-yan", "DeploySharp", "models-20260805.1", "0123456789abcdef"),
+                    new[] { new ModelCatalogArtifact("openvino-ir.cpu", "openvino-ir", new[] { "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()) },
+                    Array.Empty<ModelCatalogAsset>(), documentationPath: "models/tests-local-only.md");
+                var validationOptions = new ModelCatalogValidationOptions(admittedFormats: new[] { "openvino-ir" }, admittedBackends: new[] { "openvino" });
+                ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument(
+                    "1.0", "2026-08-05T00:00:00Z", "tests-local-only.1", new Uri("https://github.com/guojin-yan/DeploySharp"), new[] { entry }), validationOptions);
+                Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "pose-estimation", format: "openvino-ir", backend: "openvino", includePreview: true)).Count);
+
+                using var registry = new BackendRegistry();
+                registry.UseOpenVino();
+                using VisualPipeline pipeline = CreatePipeline(registry, artifact, DirectPoseProfile(modelId, "openvino-ir"));
+                using PreparedVisualInput input = PoseInput();
+                Assert.AreEqual("5368c9887690613a6a343fde5014bf814dd59fbfe40a16ec592b7a55f8d5cba5", pipeline.Run(input).GetValue<PoseEstimationResult>().ComputeSha256());
+            }
+            finally { Directory.Delete(root, true); }
+        }
+
         private static VisualPipeline CreatePipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile)
         {
             var profiles = new VisualProfileRegistry();
@@ -164,6 +248,34 @@ namespace DeploySharp.Backend.OpenVINO.Tests
                 new[] { new VisualOutputBinding("logits", TensorElementType.Float32, new TensorShape(1, 3, 2, 3)) },
                 new[] { new VisualLabel(0, "background"), new VisualLabel(1, "green"), new VisualLabel(2, "blue") },
                 new SemanticSegmentationDecoder(schema));
+        }
+
+        private static VisualModelProfile DirectPoseProfile(ModelId modelId, string format)
+        {
+            var topology = new PoseTopology(new[]
+            {
+                new PoseKeypointDefinition(0, "left", 1, oksSigma: .1f),
+                new PoseKeypointDefinition(1, "right", 0, oksSigma: .1f),
+                new PoseKeypointDefinition(2, "center", oksSigma: .1f)
+            }, new[] { new PoseSkeletonEdge(0,2), new PoseSkeletonEdge(1,2) });
+            var schema = new DirectPoseOutputSchema("keypoints", 3, 4, visibilityComponentIndex: 3, boxesOutputName: "boxes", instanceScoresOutputName: "scores");
+            var decoder = new DirectPoseDecoder(schema, topology, new PoseDecoderOptions(instanceScoreThreshold: .1f, maximumCandidates: 3, maximumInstances: 3, oks: new PoseOksOptions(.8f)));
+            return new VisualModelProfile(
+                "tests/openvino-direct-pose.v1", modelId, VisualTaskId.PoseEstimation, "1.0", format,
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1,3,100,100), VisualTensorLayout.Nchw),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(1,3,4)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(1,3)),
+                    new VisualOutputBinding("keypoints", TensorElementType.Float32, new TensorShape(1,3,3,4))
+                },
+                Array.Empty<VisualLabel>(), decoder);
+        }
+
+        private static PreparedVisualInput PoseInput()
+        {
+            var size = new VisualSize(100,100);
+            return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1,3,100,100), new float[30000]), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
         }
 
         private static PreparedVisualInput SegmentationInput()

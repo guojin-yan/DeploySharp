@@ -92,6 +92,64 @@ def semantic_label_map() -> onnx.ModelProto:
     return graph_model(graph, "semantic-label-map")
 
 
+def direct_pose() -> onnx.ModelProto:
+    """Emit boxes, scores, and direct keypoints for strict named multi-output Pose tests."""
+    boxes = numpy_helper.from_array(
+        np.asarray([[[10, 10, 50, 50], [11, 11, 51, 51], [60, 60, 90, 90]]], dtype=np.float32),
+        name="boxes_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.90, 0.80, 0.90]], dtype=np.float32), name="scores_value")
+    # x, y, confidence, explicit visibility. Candidates 0/1 exercise OKS; 0/2 exercise stable score ties.
+    keypoints = numpy_helper.from_array(
+        np.asarray(
+            [[
+                [[20, 20, 0.90, 1], [30, 30, 0.80, 1], [40, 40, 0.70, 1]],
+                [[21, 21, 0.90, 1], [31, 31, 0.80, 1], [41, 41, 0.70, 1]],
+                [[65, 65, 0.80, 1], [75, 75, 0.70, 1], [85, 85, 0.60, 1]],
+            ]],
+            dtype=np.float32,
+        ),
+        name="keypoints_value",
+    )
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["boxes"], value=boxes),
+            helper.make_node("Constant", [], ["scores"], value=scores),
+            helper.make_node("Constant", [], ["keypoints"], value=keypoints),
+        ],
+        "deploysharp_direct_pose",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 100, 100])],
+        [
+            helper.make_tensor_value_info("boxes", TensorProto.FLOAT, [1, 3, 4]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 3]),
+            helper.make_tensor_value_info("keypoints", TensorProto.FLOAT, [1, 3, 3, 4]),
+        ],
+    )
+    return graph_model(graph, "direct-pose")
+
+
+def heatmap_pose() -> onnx.ModelProto:
+    """Emit three deterministic probability heatmaps with a tie and a boundary peak."""
+    heatmaps = numpy_helper.from_array(
+        np.asarray([[[[0.90, 0], [0, 0]], [[0.10, 0.80], [0.80, 0]], [[0, 0], [0, 0.70]]]], dtype=np.float32),
+        name="heatmaps_value",
+    )
+    score = numpy_helper.from_array(np.asarray([0.95], dtype=np.float32), name="pose_score_value")
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["heatmaps"], value=heatmaps),
+            helper.make_node("Constant", [], ["pose_score"], value=score),
+        ],
+        "deploysharp_heatmap_pose",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 8, 8])],
+        [
+            helper.make_tensor_value_info("heatmaps", TensorProto.FLOAT, [1, 3, 2, 2]),
+            helper.make_tensor_value_info("pose_score", TensorProto.FLOAT, [1]),
+        ],
+    )
+    return graph_model(graph, "heatmap-pose")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -183,6 +241,18 @@ def serialized_loop() -> onnx.ModelProto:
     return graph_model(graph, "serialized-loop")
 
 
+def signature(value: onnx.ValueInfoProto) -> dict[str, object]:
+    tensor_type = value.type.tensor_type
+    shape: list[int | str] = []
+    for dimension in tensor_type.shape.dim:
+        shape.append(dimension.dim_param if dimension.dim_param else dimension.dim_value)
+    return {
+        "name": value.name,
+        "elementType": TensorProto.DataType.Name(tensor_type.elem_type).lower(),
+        "shape": shape,
+    }
+
+
 def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
     models = {
@@ -191,6 +261,8 @@ def main() -> None:
         "semantic-segmentation.onnx": semantic_segmentation(),
         "binary-segmentation.onnx": binary_segmentation(),
         "semantic-label-map.onnx": semantic_label_map(),
+        "direct-pose.onnx": direct_pose(),
+        "heatmap-pose.onnx": heatmap_pose(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),
@@ -207,7 +279,12 @@ def main() -> None:
     for file_name, model in models.items():
         data = model.SerializeToString(deterministic=True)
         (OUTPUT / file_name).write_bytes(data)
-        manifest["files"][file_name] = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+        manifest["files"][file_name] = {
+            "bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "inputs": [signature(value) for value in model.graph.input],
+            "outputs": [signature(value) for value in model.graph.output],
+        }
     (OUTPUT / "fixtures.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 

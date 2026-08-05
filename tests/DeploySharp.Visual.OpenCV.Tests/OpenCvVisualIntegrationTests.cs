@@ -94,6 +94,43 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(expected.GetProperty("sha256").GetString(), result.Mask.ComputeSha256());
         }
 
+        [TestMethod]
+        public void OpenCvRgbPngFlowsThroughOnnxRuntimeDirectPoseAndInverseResize()
+        {
+            using JsonDocument golden = LoadGolden();
+            var artifact = new ModelArtifact(new ModelId("tests/opencv-direct-pose"), "onnx", Onnx("direct-pose.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var topology = new PoseTopology(new[]
+            {
+                new PoseKeypointDefinition(0, "left", 1, oksSigma: .1f),
+                new PoseKeypointDefinition(1, "right", 0, oksSigma: .1f),
+                new PoseKeypointDefinition(2, "center", oksSigma: .1f)
+            }, new[] { new PoseSkeletonEdge(0,2), new PoseSkeletonEdge(1,2) });
+            var schema = new DirectPoseOutputSchema("keypoints", 3, 4, visibilityComponentIndex: 3, boxesOutputName: "boxes", instanceScoresOutputName: "scores");
+            var decoder = new DirectPoseDecoder(schema, topology, new PoseDecoderOptions(instanceScoreThreshold: .1f, maximumCandidates: 3, maximumInstances: 3, oks: new PoseOksOptions(.8f)));
+            var profile = new VisualModelProfile(
+                "tests/opencv-direct-pose.v1", artifact.ModelId, VisualTaskId.PoseEstimation, "1.0", "onnx",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1,3,100,100), VisualTensorLayout.Nchw),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(1,3,4)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(1,3)),
+                    new VisualOutputBinding("keypoints", TensorElementType.Float32, new TensorShape(1,3,3,4))
+                },
+                Array.Empty<VisualLabel>(), decoder);
+            using VisualPipeline pipeline = CreatePipeline(registry, artifact, profile, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            var options = new OpenCvPreprocessOptions(new VisualSize(100,100), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", options);
+            PoseEstimationResult result = pipeline.Run(input).GetValue<PoseEstimationResult>();
+            JsonElement expected = golden.RootElement.GetProperty("pose");
+            Assert.AreEqual(new VisualSize(3,2), result.SourceSize);
+            Assert.AreEqual(expected.GetProperty("count").GetInt32(), result.Instances.Count);
+            Assert.AreEqual(expected.GetProperty("firstKeypoint")[0].GetSingle(), result.Instances[0].Keypoints[0].Point.X, .0001f);
+            Assert.AreEqual(expected.GetProperty("firstKeypoint")[1].GetSingle(), result.Instances[0].Keypoints[0].Point.Y, .0001f);
+            Assert.AreEqual(expected.GetProperty("sha256").GetString(), result.ComputeSha256());
+        }
+
         private static JsonDocument LoadGolden() => JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "golden.json")));
 
         private static VisualPipeline CreatePipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, BackendId backendId, string device)

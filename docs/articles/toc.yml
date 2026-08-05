@@ -13,6 +13,8 @@
   href: visual-coordinate-decoding.md
 - name: Visual Semantic Segmentation / Visual 语义分割
   href: visual-semantic-segmentation.md
+- name: Visual Pose Estimation / Visual 姿态估计
+  href: visual-pose-estimation.md
 - name: Visual Lifecycle and Compatibility / Visual 生命周期与兼容性
   href: visual-lifecycle-compatibility.md
 - name: Visual.OpenCV Quick Start / Visual.OpenCV 快速开始

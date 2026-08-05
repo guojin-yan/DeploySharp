@@ -85,6 +85,8 @@ jobs:
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net10.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net10.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.Backend.OpenVINO/bin/Release/net10.0/JYPPX.DeploySharp.Backend.OpenVINO.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net10.0/JYPPX.DeploySharp.Visual.xml,src/DeploySharp.Visual.OpenCV/bin/Release/net10.0/JYPPX.DeploySharp.Visual.OpenCV.xml
+      - run: dotnet tool restore
+      - run: dotnet tool run docfx docs/docfx.json --warningsAsErrors
       - run: dotnet pack src/DeploySharp.Core/DeploySharp.Core.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.LLM/DeploySharp.LLM.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj -c Release --no-restore
@@ -93,6 +95,8 @@ jobs:
       - run: dotnet pack src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release --no-restore
+      - shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath ./artifacts/packages/JYPPX.DeploySharp.Visual.2.0.0-alpha.1.nupkg
       - run: dotnet pack src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release --no-restore
       - run: dotnet restore tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj --configfile tests/clean-consumer/llamasharp/NuGet.Config
       - run: dotnet build tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-restore
@@ -112,6 +116,9 @@ jobs:
       - run: dotnet restore tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-segmentation/NuGet.Config --locked-mode
       - run: dotnet build tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj --configfile tests/clean-consumer/visual-pose/NuGet.Config --locked-mode
+      - run: dotnet build tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config
       - run: dotnet build tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-build

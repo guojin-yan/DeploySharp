@@ -3,7 +3,8 @@
   "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
   "sources": [
     "tests/assets/onnxruntime/classification.onnx",
-    "tests/assets/onnxruntime/semantic-segmentation.onnx"
+    "tests/assets/onnxruntime/semantic-segmentation.onnx",
+    "tests/assets/onnxruntime/direct-pose.onnx"
   ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
@@ -27,6 +28,16 @@
       "file": "semantic-segmentation.bin",
       "size": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "direct-pose.xml",
+      "size": 2608,
+      "sha256": "8972c5e9dad75e55e63f2e394db2b843901ba739392bbbfba9ef268e54a239f6"
+    },
+    {
+      "file": "direct-pose.bin",
+      "size": 204,
+      "sha256": "06c59f2a4aab85de4591f5644db055c9d6189d1fefaadac16f86acc4e4558853"
     }
   ]
 }

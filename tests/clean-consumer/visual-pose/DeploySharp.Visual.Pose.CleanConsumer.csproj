@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JYPPX.DeploySharp.Visual" Version="2.0.0-alpha.1" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0-alpha.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\assets\onnxruntime\direct-pose.onnx" Link="direct-pose.onnx" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
