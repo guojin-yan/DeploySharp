@@ -1,0 +1,119 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - DeploySharpV2.0
+  pull_request:
+    branches:
+      - DeploySharpV2.0
+
+permissions:
+  contents: read
+
+jobs:
+  core-build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - net46
+          - net481
+          - netcoreapp3.1
+          - netstandard2.0
+          - net8.0
+          - net10.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore src/DeploySharp.Core/DeploySharp.Core.csproj --locked-mode
+      - run: dotnet build src/DeploySharp.Core/DeploySharp.Core.csproj -c Release -f ${{ matrix.framework }} --no-restore
+
+  llm-build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - path: src/DeploySharp.LLM/DeploySharp.LLM.csproj
+            frameworks: netstandard2.0;netcoreapp3.1;net10.0
+          - path: src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj
+            frameworks: netstandard2.0;net8.0
+          - path: src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj
+            frameworks: netstandard2.0;net8.0
+          - path: src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj
+            frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj
+            frameworks: netstandard2.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj
+            frameworks: netstandard2.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.Visual/DeploySharp.Visual.csproj
+            frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore ${{ matrix.project.path }} --locked-mode
+      - shell: pwsh
+        run: |
+          $frameworks = '${{ matrix.project.frameworks }}'.Split(';')
+          foreach ($framework in $frameworks) {
+            dotnet build '${{ matrix.project.path }}' -c Release -f $framework --no-restore
+          }
+
+  test-and-pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore DeploySharp.sln --locked-mode
+      - run: dotnet test tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.LLM.Tests/DeploySharp.LLM.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj -c Release --no-restore
+      - shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
+      - shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net10.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net10.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.Backend.OpenVINO/bin/Release/net10.0/JYPPX.DeploySharp.Backend.OpenVINO.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net10.0/JYPPX.DeploySharp.Visual.xml
+      - run: dotnet pack src/DeploySharp.Core/DeploySharp.Core.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.LLM/DeploySharp.LLM.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release --no-restore
+      - run: dotnet restore tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj --configfile tests/clean-consumer/llamasharp/NuGet.Config
+      - run: dotnet build tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj --configfile tests/clean-consumer/modelpack-json/NuGet.Config
+      - run: dotnet build tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj --configfile tests/clean-consumer/modelfactory/NuGet.Config
+      - run: dotnet build tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj --configfile tests/clean-consumer/visual/NuGet.Config
+      - run: dotnet build tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj --configfile tests/clean-consumer/onnxruntime/NuGet.Config
+      - run: dotnet build tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config
+      - run: dotnet build tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj --configfile tests/clean-consumer/openvino/NuGet.Config
+      - run: dotnet build tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj --configfile tests/clean-consumer/openvino-missing-native/NuGet.Config
+      - run: dotnet build tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-build

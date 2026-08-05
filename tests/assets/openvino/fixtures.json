@@ -1,0 +1,19 @@
+{
+  "generator": "eng/test-models/Generate-OpenVinoFixtures.py",
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "source": "tests/assets/onnxruntime/classification.onnx",
+  "license": "Apache-2.0",
+  "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
+  "files": [
+    {
+      "file": "classification.xml",
+      "size": 1802,
+      "sha256": "e92d51110a083ee28b64ead6a176e379b7157ec987bc9ef5b26448625fe7fc48"
+    },
+    {
+      "file": "classification.bin",
+      "size": 16,
+      "sha256": "fe6d3d3bb5dd778af1128cc7b2b33668d51b9a52dfc8f2342be37ddc06a0072d"
+    }
+  ]
+}

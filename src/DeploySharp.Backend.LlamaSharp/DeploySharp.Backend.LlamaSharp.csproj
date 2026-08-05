@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- LLamaSharp 0.27.0 publishes netstandard2.0 and net8.0 assets. / LLamaSharp 0.27.0 仅发布 netstandard2.0 与 net8.0 资产。 -->
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Backend.LlamaSharp</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Backends.LlamaSharp</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Backend.LlamaSharp</PackageId>
+    <Title>DeploySharp LLamaSharp Backend</Title>
+    <Description>LLamaSharp adapter for DeploySharp local GGUF text generation and embeddings.</Description>
+    <PackageTags>DeploySharp;LLamaSharp;llama.cpp;GGUF;LLM;Embedding;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="..\DeploySharp.LLM\DeploySharp.LLM.csproj" />
+    <PackageReference Include="LLamaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

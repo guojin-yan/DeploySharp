@@ -1,0 +1,34 @@
+{
+  "files": {
+    "cancellable-loop.onnx": {
+      "bytes": 90380,
+      "sha256": "dedeb5d8175fe4a6502d0d36304cf3597e7a43f6276601c65aa642ae3d97c3ab"
+    },
+    "classification.onnx": {
+      "bytes": 297,
+      "sha256": "05a885298cca6e04b83732a46ff340f48203cc62e5fa89af74fe3eeab259de2a"
+    },
+    "detection.onnx": {
+      "bytes": 384,
+      "sha256": "5daa42019ef36288e2a46245a656f8f443bd8a3dd7fb2f36d16eb94643c237a5"
+    },
+    "dynamic-identity.onnx": {
+      "bytes": 266,
+      "sha256": "fd70e007332f10332ad08211df5e42f02b4a66152288a8160c414822da11e316"
+    },
+    "numeric-types.onnx": {
+      "bytes": 1095,
+      "sha256": "95c5432dd0cb706641643600b285309b06eea33f243346bc8988310d66a2a88e"
+    },
+    "serialized-loop.onnx": {
+      "bytes": 548,
+      "sha256": "f977d6b4d6a2b556c7ec2ea441865aa1b01cb8936a8ac9f9c7c1c3bb1ecf353d"
+    },
+    "unsupported-types.onnx": {
+      "bytes": 266,
+      "sha256": "38d53ebd59014bbae2e254233b7669f914d772d56578992e3afd41eeae338f36"
+    }
+  },
+  "generator": "onnx==1.22.0",
+  "opset": 13
+}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "JYPPX.DeploySharp.Backend.OpenVINO": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "3HLMFAtgQUs403i+G3Ecn2xLaep2jKC1RytfS3Scgvf5GRV6CnWHBjnwndymch1EhcLs3W8YX1n+k2BMbA7Zxw==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "JYPPX.OpenVINO.CSharp.API": "3.3.0"
+        }
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "8XYr0x9pFtPwO7/sC2eZLWD+vBv9LNq2gK4UN21TuYnFs4NuGxZET2/8a/km64byZFYNXiidS8Rle767fo2FFw=="
+      },
+      "JYPPX.OpenVINO.CSharp.API": {
+        "type": "Transitive",
+        "resolved": "3.3.0",
+        "contentHash": "ElSfJF5iQADST9MEkLCAMhOpseRlxTLKiAobtQ/EDmpQB/+eOW6rJue+TSf6jq9LTNmQGpjB9sa1cUE1f/kLWw=="
+      }
+    }
+  }
+}

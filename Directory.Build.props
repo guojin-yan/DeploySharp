@@ -1,0 +1,43 @@
+<Project>
+  <PropertyGroup>
+    <DeploySharpLibraryTargetFrameworks>net46;net461;net462;net47;net471;net472;net48;net481;netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</DeploySharpLibraryTargetFrameworks>
+    <DeploySharpVersionPrefix>2.0.0</DeploySharpVersionPrefix>
+    <DeploySharpVersionSuffix Condition="'$(DeploySharpVersionSuffix)' == ''">alpha.1</DeploySharpVersionSuffix>
+    <Version>$(DeploySharpVersionPrefix)-$(DeploySharpVersionSuffix)</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <GenerateDocumentationFile Condition="'$(IsTestProject)' != 'true'">true</GenerateDocumentationFile>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages</PackageOutputPath>
+    <PackageIcon>logo.jpg</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/guojin-yan/DeploySharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Authors>Guojin Yan</Authors>
+    <Company>JYPPX</Company>
+    <Product>DeploySharp</Product>
+    <Copyright>Copyright (c) 2026 Guojin Yan</Copyright>
+    <NeutralLanguage>zh-CN</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <DefineConstants>$(DefineConstants);DEPLOYSHARP_LEGACY_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <DefineConstants>$(DefineConstants);DEPLOYSHARP_HAS_SPAN;DEPLOYSHARP_HAS_NATIVE_LIBRARY;DEPLOYSHARP_HAS_ASYNC_STREAMS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net7.0' or '$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net10.0'">
+    <DefineConstants>$(DefineConstants);DEPLOYSHARP_MODERN;DEPLOYSHARP_HAS_HALF</DefineConstants>
+  </PropertyGroup>
+</Project>

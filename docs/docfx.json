@@ -1,0 +1,49 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": ["**/*.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**", "**/*.Tests/**"]
+        }
+      ],
+      "dest": "api",
+      "filter": "filterConfig.yml",
+      "properties": {
+        "TargetFramework": "net8.0",
+        "Configuration": "Release"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      { "files": ["api/**/*.yml", "api/index.md"] },
+      { "files": ["articles/**/*.md", "articles/**/toc.yml", "toc.yml", "index.md"] }
+    ],
+    "resource": [
+      { "files": ["images/**"] }
+    ],
+    "dest": "_site",
+    "template": ["default"],
+    "markdownEngineName": "markdig",
+    "globalMetadata": {
+      "_appTitle": "DeploySharp V2 Documentation / 文档",
+      "_appName": "DeploySharp V2",
+      "_appFooter": "Copyright (c) 2026 Guojin Yan. Apache-2.0 / 版权所有 (c) 2026 Guojin Yan。Apache-2.0 许可证",
+      "_enableSearch": true,
+      "_enableNewTab": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/guojin-yan/DeploySharp",
+        "branch": "DeploySharpV2.0"
+      },
+      "_gitUrlPattern": "github"
+    },
+    "sitemap": {
+      "baseUrl": "https://guojin-yan.github.io/DeploySharp/",
+      "priority": 0.5,
+      "changefreq": "weekly"
+    }
+  }
+}

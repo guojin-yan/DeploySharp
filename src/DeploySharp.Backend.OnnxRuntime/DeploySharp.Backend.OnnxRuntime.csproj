@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- ONNX Runtime Managed 1.28.0 publishes netstandard2.0 and net8.0 desktop assets. / ONNX Runtime Managed 1.28.0 发布 netstandard2.0 与 net8.0 桌面资产。 -->
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Backend.OnnxRuntime</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Backends.OnnxRuntime</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Backend.OnnxRuntime</PackageId>
+    <Title>DeploySharp ONNX Runtime Backend</Title>
+    <Description>Managed ONNX Runtime adapter for named-tensor DeploySharp inference without bundling a native execution provider.</Description>
+    <PackageTags>DeploySharp;ONNX;ONNXRuntime;Inference;Tensor;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

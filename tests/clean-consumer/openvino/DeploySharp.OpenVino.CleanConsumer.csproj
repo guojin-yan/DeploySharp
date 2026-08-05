@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestorePackagesPath>$(MSBuildThisFileDirectory).packages-stage07</RestorePackagesPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JYPPX.DeploySharp.Core" Version="2.0.0-alpha.1" />
+    <PackageReference Include="JYPPX.DeploySharp.Visual" Version="2.0.0-alpha.1" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.OpenVINO" Version="2.0.0-alpha.1" />
+    <PackageReference Include="OpenVINO.runtime.win" Version="2026.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\assets\onnxruntime\classification.onnx" Link="classification.onnx" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

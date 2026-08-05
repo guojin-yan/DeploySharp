@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(DeploySharpLibraryTargetFrameworks)</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Core</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Core</PackageId>
+    <Title>DeploySharp Core</Title>
+    <Description>Dependency-free contracts, tensors, model metadata, canonical results, diagnostics, errors, and backend registration for DeploySharp.</Description>
+    <PackageTags>DeploySharp;Inference;AI;MachineLearning;DeepLearning;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- System.Text.Json 10.0.10 supports netstandard2.0 and .NET 8+. Older consumers use the netstandard asset. / System.Text.Json 10.0.10 支持 netstandard2.0 与 .NET 8+；旧使用者采用 netstandard 资产。 -->
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.ModelFactory</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.ModelFactory</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.ModelFactory</PackageId>
+    <Title>DeploySharp Model Factory</Title>
+    <Description>Validated model catalogs, immutable GitHub Release downloads, integrity-protected caching, and offline reuse for DeploySharp.</Description>
+    <PackageTags>DeploySharp;ModelFactory;GitHub;Release;ModelPack;SHA256;Cache;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="..\DeploySharp.ModelPack.Json\DeploySharp.ModelPack.Json.csproj" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <EmbeddedResource Include="schemas\deploysharp-model-catalog-1.0.schema.json" LogicalName="JYPPX.DeploySharp.ModelFactory.Schemas.deploysharp-model-catalog-1.0.schema.json" />
+    <None Include="schemas\deploysharp-model-catalog-1.0.schema.json" Pack="true" PackagePath="schemas\" />
+    <EmbeddedResource Include="catalog\deploysharp-official-catalog.json" LogicalName="JYPPX.DeploySharp.ModelFactory.Catalog.deploysharp-official-catalog.json" />
+    <None Include="catalog\deploysharp-official-catalog.json" Pack="true" PackagePath="catalog\" />
+  </ItemGroup>
+</Project>

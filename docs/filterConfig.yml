@@ -1,0 +1,7 @@
+apiRules:
+- include:
+    uidRegex: ^JYPPX\.DeploySharp
+    type: Namespace
+- exclude:
+    uidRegex: ^System\.Object
+    type: Type

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- IAsyncEnumerable requires the official BCL compatibility asset; netstandard2.0 serves .NET Framework 4.6.1-4.8.1. / IAsyncEnumerable 需要官方 BCL 兼容资产；netstandard2.0 服务于 .NET Framework 4.6.1-4.8.1。 -->
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.LLM</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.LLM</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.LLM</PackageId>
+    <Title>DeploySharp LLM</Title>
+    <Description>Backend-neutral language-model workflows, generation contracts, chat prompts, and embedding contracts for DeploySharp.</Description>
+    <PackageTags>DeploySharp;LLM;LanguageModel;Generation;Embedding;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

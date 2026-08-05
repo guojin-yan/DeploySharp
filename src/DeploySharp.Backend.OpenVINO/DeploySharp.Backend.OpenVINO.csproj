@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Upstream 3.3.0 publishes an exact managed asset for every declared TFM; it has no netstandard asset. / 上游 3.3.0 为每个声明的 TFM 发布精确托管资产，但不提供 netstandard 资产。 -->
+    <TargetFrameworks>net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Backend.OpenVINO</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Backends.OpenVINO</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Backend.OpenVINO</PackageId>
+    <Title>DeploySharp OpenVINO Backend</Title>
+    <Description>Managed OpenVINO adapter for named-tensor DeploySharp inference without bundling native runtimes or device plug-ins.</Description>
+    <PackageTags>DeploySharp;OpenVINO;ONNX;IR;Inference;Tensor;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="JYPPX.OpenVINO.CSharp.API" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- System.Text.Json 10.0.10 supports netstandard2.0 and .NET 8+. Older applications consume the netstandard2.0 asset. / System.Text.Json 10.0.10 支持 netstandard2.0 与 .NET 8+；旧应用使用 netstandard2.0 资产。 -->
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.ModelPack.Json</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.ModelPack.Json</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.ModelPack.Json</PackageId>
+    <Title>DeploySharp ModelPack JSON</Title>
+    <Description>Strict JSON manifests, integrity verification, and safe local package loading for DeploySharp models.</Description>
+    <PackageTags>DeploySharp;ModelPack;JSON;Schema;SHA256;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <EmbeddedResource Include="schemas\deploysharp-model-package-2.0.schema.json" LogicalName="JYPPX.DeploySharp.ModelPack.Json.Schemas.deploysharp-model-package-2.0.schema.json" />
+    <None Include="schemas\deploysharp-model-package-2.0.schema.json" Pack="true" PackagePath="schemas\" />
+  </ItemGroup>
+</Project>

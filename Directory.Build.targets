@@ -1,0 +1,6 @@
+<Project>
+  <!-- Imported after each project, so IsPackable has its final value. / 在各项目之后导入，因此 IsPackable 已具有最终值。 -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)nuget\logo.jpg" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+</Project>
