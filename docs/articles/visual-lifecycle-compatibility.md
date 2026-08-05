@@ -2,7 +2,7 @@
 
 ## Package and dependency boundary / 包与依赖边界
 
-`JYPPX.DeploySharp.Visual` depends only on `JYPPX.DeploySharp.Core`. It contains no image codec, OpenCV binding, inference engine, or native runtime. The future `JYPPX.DeploySharp.Visual.OpenCV` is the default image adapter, while each application installs only the backend packages it needs. / `JYPPX.DeploySharp.Visual` 仅依赖 `JYPPX.DeploySharp.Core`，不包含图像编解码器、OpenCV 绑定、推理引擎或原生运行时。后续 `JYPPX.DeploySharp.Visual.OpenCV` 是默认图像适配器，应用只安装实际需要的后端包。
+`JYPPX.DeploySharp.Visual` depends only on `JYPPX.DeploySharp.Core`. It contains no image codec, OpenCV binding, inference engine, or native runtime. `JYPPX.DeploySharp.Visual.OpenCV` is the optional default image adapter, while each application installs only the backend packages it needs. / `JYPPX.DeploySharp.Visual` 仅依赖 `JYPPX.DeploySharp.Core`，不包含图像编解码器、OpenCV 绑定、推理引擎或原生运行时。`JYPPX.DeploySharp.Visual.OpenCV` 是可选的默认图像适配器，应用只安装实际需要的后端包。
 
 | Package / 包 | Supported TFMs / 支持 TFM | Notes / 说明 |
 |---|---|---|
@@ -25,4 +25,4 @@ Caller cancellation maps to `DS-VISUAL-5007`, timeout to `DS-VISUAL-5008`, and d
 
 ## Current scope / 当前范围
 
-This alpha implements classification, generic dense detection, transforms, decoding, and NMS. It does not include pixel preprocessing, OpenCV, ONNX Runtime, OpenVINO, TensorRT, segmentation, pose, OCR, VLM, model weights, or test images. Those capabilities require later complete modules and verified ModelFactory entries. / 本 alpha 实现分类、通用稠密检测、变换、解码和 NMS；不包含像素预处理、OpenCV、ONNX Runtime、OpenVINO、TensorRT、分割、姿态、OCR、VLM、模型权重或测试图片。这些能力需要后续完整模块及经过验证的 ModelFactory 条目。
+This alpha implements classification, generic dense detection, semantic segmentation, instance segmentation, Pose estimation, transforms, decoding, NMS, and OKS in Visual. Optional packages currently provide OpenCV image preparation and ONNX Runtime/OpenVINO tensor inference. TensorRT, OCR, VLM, official model weights, and official test images are not included; the embedded ModelFactory catalog remains empty until legally redistributable assets pass admission. / 本 alpha 在 Visual 中实现分类、通用稠密检测、语义分割、实例分割、姿态估计、变换、解码、NMS 与 OKS；可选包现已提供 OpenCV 图像准备及 ONNX Runtime/OpenVINO 张量推理。当前不包含 TensorRT、OCR、VLM、官方模型权重或官方测试图片；在可合法再分发资产通过准入前，内嵌 ModelFactory 目录保持为空。

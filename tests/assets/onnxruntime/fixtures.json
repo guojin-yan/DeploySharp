@@ -105,6 +105,59 @@
       ],
       "sha256": "5daa42019ef36288e2a46245a656f8f443bd8a3dd7fb2f36d16eb94643c237a5"
     },
+    "direct-instance-segmentation.onnx": {
+      "bytes": 884,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            4,
+            4
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "boxes",
+          "shape": [
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "scores",
+          "shape": [
+            1,
+            3
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "classes",
+          "shape": [
+            1,
+            3
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "masks",
+          "shape": [
+            1,
+            3,
+            4,
+            4
+          ]
+        }
+      ],
+      "sha256": "f0ebe35673e59fd6efcdb516a1626763dc06f2ed0092cac7fc1d5ec27b118a25"
+    },
     "direct-pose.onnx": {
       "bytes": 681,
       "inputs": [
@@ -370,6 +423,68 @@
         }
       ],
       "sha256": "95c5432dd0cb706641643600b285309b06eea33f243346bc8988310d66a2a88e"
+    },
+    "prototype-instance-segmentation.onnx": {
+      "bytes": 965,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            4,
+            4
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "boxes",
+          "shape": [
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "scores",
+          "shape": [
+            1,
+            3
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "classes",
+          "shape": [
+            1,
+            3
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "prototypes",
+          "shape": [
+            1,
+            2,
+            4,
+            4
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "coefficients",
+          "shape": [
+            1,
+            3,
+            2
+          ]
+        }
+      ],
+      "sha256": "447d3878ecae690eeb832c5874a12e4d7427cb089fc72c2a8ba26b884f50cc66"
     },
     "semantic-label-map.onnx": {
       "bytes": 329,

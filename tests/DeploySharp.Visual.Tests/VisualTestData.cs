@@ -49,7 +49,14 @@ namespace DeploySharp.Visual.Tests
 
         public static ModelMetadata Metadata(VisualModelProfile profile, TensorShape outputShape)
         {
-            return new ModelMetadata(profile.ModelId, "fake", new[] { new TensorDescriptor(profile.Input.Name, profile.Input.ElementType, profile.Input.ShapePattern) }, new[] { new TensorDescriptor(profile.Outputs[0].Name, profile.Outputs[0].ElementType, outputShape) });
+            var outputs = new List<TensorDescriptor>(profile.Outputs.Count);
+            for (int index = 0; index < profile.Outputs.Count; index++)
+            {
+                VisualOutputBinding output = profile.Outputs[index];
+                outputs.Add(new TensorDescriptor(output.Name, output.ElementType, index == 0 ? outputShape : output.ShapePattern));
+            }
+
+            return new ModelMetadata(profile.ModelId, "fake", new[] { new TensorDescriptor(profile.Input.Name, profile.Input.ElementType, profile.Input.ShapePattern) }, outputs);
         }
 
         public static PipelineFixture Pipeline(VisualModelProfile profile, TensorShape outputShape, Func<InferenceInputs, InferenceOutputs> outputFactory, int maximumConcurrency = 1)

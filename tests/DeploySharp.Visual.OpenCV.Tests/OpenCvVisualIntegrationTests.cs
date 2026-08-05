@@ -131,6 +131,38 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(expected.GetProperty("sha256").GetString(), result.ComputeSha256());
         }
 
+        [TestMethod]
+        public void OpenCvRgbPngFlowsThroughOnnxRuntimeDirectInstanceSegmentation()
+        {
+            var artifact = new ModelArtifact(new ModelId("tests/opencv-direct-instance-segmentation"), "onnx", Onnx("direct-instance-segmentation.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var schema = new DirectInstanceSegmentationOutputSchema(
+                new InstanceSegmentationCandidateSchema("boxes", "scores", "classes"),
+                "masks", InstanceMaskTensorLayout.Nchw, InstanceMaskValueKind.Probabilities);
+            var decoder = new DirectInstanceSegmentationDecoder(schema, new InstanceSegmentationDecoderOptions(scoreThreshold: .1f, overlapMode: InstanceMaskOverlapMode.ScorePriorityOwnership, maximumCandidates: 3, maximumInstances: 3));
+            var profile = new VisualModelProfile(
+                "tests/opencv-direct-instance-segmentation.v1", artifact.ModelId, VisualTaskId.InstanceSegmentation, "1.0", "onnx",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1,3,4,4), VisualTensorLayout.Nchw),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(1,3,4)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(1,3)),
+                    new VisualOutputBinding("classes", TensorElementType.Float32, new TensorShape(1,3)),
+                    new VisualOutputBinding("masks", TensorElementType.Float32, new TensorShape(1,3,4,4))
+                }, new[] { new VisualLabel(0,"alpha"), new VisualLabel(1,"beta") }, decoder);
+            using VisualPipeline pipeline = CreatePipeline(registry, artifact, profile, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            var options = new OpenCvPreprocessOptions(new VisualSize(4,4), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", options);
+            InstanceSegmentationResult result = pipeline.Run(input).GetValue<InstanceSegmentationResult>();
+            Assert.AreEqual(new VisualSize(3,2), result.SourceSize);
+            Assert.AreEqual(2, result.Instances.Count);
+            Assert.AreEqual(2, result.Instances[0].Mask.ForegroundPixelCount);
+            Assert.AreEqual(2, result.Instances[1].Mask.ForegroundPixelCount);
+            Assert.IsNotNull(result.OwnershipMap);
+            Assert.AreEqual(0, result.OwnershipMap.GetOwnerIndex(1,0));
+        }
+
         private static JsonDocument LoadGolden() => JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "golden.json")));
 
         private static VisualPipeline CreatePipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, BackendId backendId, string device)

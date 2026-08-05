@@ -149,7 +149,7 @@ namespace JYPPX.DeploySharp.Visual
             if (candidates < 0 || fields < 4 || Schema.ClassScoreOffset + Schema.ClassCount > fields || (Schema.ObjectnessIndex >= fields)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output field layout is incompatible with its schema.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName);
             if (tensor.Length != (long)candidates * fields) throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output element count is inconsistent with its shape.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName);
             float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
-            var decoded = new List<DetectionCandidate>();
+            var decoded = new List<VisualDetectionCandidate>();
             for (int candidateIndex = 0; candidateIndex < candidates; candidateIndex++)
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
@@ -172,16 +172,18 @@ namespace JYPPX.DeploySharp.Visual
                 }
                 float score = objectness * bestClassScore;
                 if (score < Options.ScoreThreshold) continue;
-                RectangleF modelBox = DecodeBox(values, offset, context.Input.ModelSize);
+                RectangleF modelBox;
+                try { modelBox = DetectionPostprocessing.DecodeModelBox(Schema.BoxFormat, Schema.NormalizedCoordinates, context.Input.ModelSize, values[offset], values[offset + 1], values[offset + 2], values[offset + 3]); }
+                catch (ArgumentOutOfRangeException exception) { throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection box has negative width or height.", exception, context.Profile.ProfileId, Schema.OutputName, modelId: context.Profile.ModelId); }
                 RectangleF sourceBox = context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
                 if (sourceBox.Width <= 0 || sourceBox.Height <= 0) continue;
-                decoded.Add(new DetectionCandidate(candidateIndex, bestClass, score, sourceBox));
+                decoded.Add(new VisualDetectionCandidate(candidateIndex, bestClass, score, modelBox, sourceBox));
             }
 
-            List<DetectionCandidate> ordered = decoded.OrderByDescending(value => value.Score).ThenBy(value => value.ClassIndex).ThenBy(value => value.SourceIndex).Take(Options.MaximumCandidates).ToList();
-            List<DetectionCandidate> kept = Suppress(ordered, context.CancellationToken);
+            List<VisualDetectionCandidate> ordered = decoded.OrderByDescending(value => value.Score).ThenBy(value => value.ClassIndex).ThenBy(value => value.SourceIndex).Take(Options.MaximumCandidates).ToList();
+            List<VisualDetectionCandidate> kept = DetectionPostprocessing.Suppress(ordered, Options.IouThreshold, Options.NmsMode, Options.MaximumDetections, context.CancellationToken);
             var results = new List<Detection>(kept.Count);
-            foreach (DetectionCandidate candidate in kept) results.Add(new Detection(candidate.Box, new LabelScore(candidate.ClassIndex, context.Profile.GetLabel(candidate.ClassIndex), candidate.Score)));
+            foreach (VisualDetectionCandidate candidate in kept) results.Add(new Detection(candidate.SourceBox, new LabelScore(candidate.ClassIndex, context.Profile.GetLabel(candidate.ClassIndex), candidate.Score)));
             return new DetectionResult(results);
         }
 
@@ -199,70 +201,11 @@ namespace JYPPX.DeploySharp.Visual
             return union <= 0 ? 0 : intersection / union;
         }
 
-        private RectangleF DecodeBox(float[] values, int offset, VisualSize modelSize)
-        {
-            float first = values[offset];
-            float second = values[offset + 1];
-            float third = values[offset + 2];
-            float fourth = values[offset + 3];
-            if (Schema.NormalizedCoordinates)
-            {
-                first *= modelSize.Width;
-                third *= modelSize.Width;
-                second *= modelSize.Height;
-                fourth *= modelSize.Height;
-            }
-            float left;
-            float top;
-            float right;
-            float bottom;
-            if (Schema.BoxFormat == DetectionBoxFormat.Xyxy)
-            {
-                left = first; top = second; right = third; bottom = fourth;
-            }
-            else if (Schema.BoxFormat == DetectionBoxFormat.Xywh)
-            {
-                left = first; top = second; right = first + third; bottom = second + fourth;
-            }
-            else
-            {
-                left = first - (third / 2f); top = second - (fourth / 2f); right = first + (third / 2f); bottom = second + (fourth / 2f);
-            }
-            if (right < left || bottom < top) throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection box has negative width or height.", tensorName: Schema.OutputName);
-            return new RectangleF(left, top, right - left, bottom - top);
-        }
-
-        private List<DetectionCandidate> Suppress(List<DetectionCandidate> ordered, System.Threading.CancellationToken cancellationToken)
-        {
-            var kept = new List<DetectionCandidate>();
-            foreach (DetectionCandidate candidate in ordered)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                bool suppressed = false;
-                foreach (DetectionCandidate existing in kept)
-                {
-                    if (Options.NmsMode == DetectionNmsMode.ClassAware && existing.ClassIndex != candidate.ClassIndex) continue;
-                    if (IntersectionOverUnion(existing.Box, candidate.Box) > Options.IouThreshold) { suppressed = true; break; }
-                }
-                if (!suppressed) kept.Add(candidate);
-                if (kept.Count >= Options.MaximumDetections) break;
-            }
-            return kept;
-        }
-
         private float ValidateUnit(float value, VisualDecodeContext context, int candidateIndex, string field)
         {
             if (value < 0 || value > 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection score must be in [0,1].", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, technicalDetails: "candidate=" + candidateIndex + ";field=" + field);
             return value;
         }
 
-        private sealed class DetectionCandidate
-        {
-            public DetectionCandidate(int sourceIndex, int classIndex, float score, RectangleF box) { SourceIndex = sourceIndex; ClassIndex = classIndex; Score = score; Box = box; }
-            public int SourceIndex { get; }
-            public int ClassIndex { get; }
-            public float Score { get; }
-            public RectangleF Box { get; }
-        }
     }
 }

@@ -150,6 +150,70 @@ def heatmap_pose() -> onnx.ModelProto:
     return graph_model(graph, "heatmap-pose")
 
 
+def direct_instance_segmentation() -> onnx.ModelProto:
+    """Emit strict named candidates and direct per-candidate probability masks."""
+    boxes = numpy_helper.from_array(
+        np.asarray([[[0, 0, 3, 3], [0.1, 0.1, 3.1, 3.1], [2, 0, 4, 2]]], dtype=np.float32),
+        name="instance_boxes_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.90, 0.80, 0.90]], dtype=np.float32), name="instance_scores_value")
+    classes = numpy_helper.from_array(np.asarray([[0, 0, 1]], dtype=np.float32), name="instance_classes_value")
+    masks = numpy_helper.from_array(np.ones((1, 3, 4, 4), dtype=np.float32), name="instance_masks_value")
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["boxes"], value=boxes),
+            helper.make_node("Constant", [], ["scores"], value=scores),
+            helper.make_node("Constant", [], ["classes"], value=classes),
+            helper.make_node("Constant", [], ["masks"], value=masks),
+        ],
+        "deploysharp_direct_instance_segmentation",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 4, 4])],
+        [
+            helper.make_tensor_value_info("boxes", TensorProto.FLOAT, [1, 3, 4]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 3]),
+            helper.make_tensor_value_info("classes", TensorProto.FLOAT, [1, 3]),
+            helper.make_tensor_value_info("masks", TensorProto.FLOAT, [1, 3, 4, 4]),
+        ],
+    )
+    return graph_model(graph, "direct-instance-segmentation")
+
+
+def prototype_instance_segmentation() -> onnx.ModelProto:
+    """Emit strict candidates, two NCHW prototypes, and per-candidate coefficients."""
+    boxes = numpy_helper.from_array(
+        np.asarray([[[0, 0, 3, 3], [0.1, 0.1, 3.1, 3.1], [2, 0, 4, 2]]], dtype=np.float32),
+        name="prototype_boxes_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.90, 0.80, 0.90]], dtype=np.float32), name="prototype_scores_value")
+    classes = numpy_helper.from_array(np.asarray([[0, 0, 1]], dtype=np.float32), name="prototype_classes_value")
+    left = np.asarray(
+        [[10, 10, -10, -10], [10, 10, -10, -10], [10, 10, -10, -10], [10, 10, -10, -10]],
+        dtype=np.float32,
+    )
+    right = -left
+    prototypes = numpy_helper.from_array(np.asarray([[left, right]], dtype=np.float32), name="prototypes_value")
+    coefficients = numpy_helper.from_array(np.asarray([[[1, 0], [1, 0], [0, 1]]], dtype=np.float32), name="coefficients_value")
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["boxes"], value=boxes),
+            helper.make_node("Constant", [], ["scores"], value=scores),
+            helper.make_node("Constant", [], ["classes"], value=classes),
+            helper.make_node("Constant", [], ["prototypes"], value=prototypes),
+            helper.make_node("Constant", [], ["coefficients"], value=coefficients),
+        ],
+        "deploysharp_prototype_instance_segmentation",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 4, 4])],
+        [
+            helper.make_tensor_value_info("boxes", TensorProto.FLOAT, [1, 3, 4]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 3]),
+            helper.make_tensor_value_info("classes", TensorProto.FLOAT, [1, 3]),
+            helper.make_tensor_value_info("prototypes", TensorProto.FLOAT, [1, 2, 4, 4]),
+            helper.make_tensor_value_info("coefficients", TensorProto.FLOAT, [1, 3, 2]),
+        ],
+    )
+    return graph_model(graph, "prototype-instance-segmentation")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -263,6 +327,8 @@ def main() -> None:
         "semantic-label-map.onnx": semantic_label_map(),
         "direct-pose.onnx": direct_pose(),
         "heatmap-pose.onnx": heatmap_pose(),
+        "direct-instance-segmentation.onnx": direct_instance_segmentation(),
+        "prototype-instance-segmentation.onnx": prototype_instance_segmentation(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),

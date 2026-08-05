@@ -5,8 +5,8 @@
     <RootNamespace>JYPPX.DeploySharp.Visual</RootNamespace>
     <PackageId>JYPPX.DeploySharp.Visual</PackageId>
     <Title>DeploySharp Visual</Title>
-    <Description>Image-library-neutral prepared-tensor pipelines, profiles, classification, detection, semantic segmentation, Pose estimation, geometry mapping, RLE, NMS, and OKS for DeploySharp.</Description>
-    <PackageTags>DeploySharp;Visual;Classification;Detection;SemanticSegmentation;Pose;Keypoints;OKS;RLE;NMS;Tensor;AI;CSharp</PackageTags>
+    <Description>Image-library-neutral prepared-tensor pipelines, profiles, classification, detection, semantic and instance segmentation, Pose estimation, geometry mapping, RLE, NMS, and OKS for DeploySharp.</Description>
+    <PackageTags>DeploySharp;Visual;Classification;Detection;SemanticSegmentation;InstanceSegmentation;PrototypeMasks;Pose;Keypoints;OKS;RLE;NMS;Tensor;AI;CSharp</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>

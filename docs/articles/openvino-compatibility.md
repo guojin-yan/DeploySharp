@@ -15,6 +15,8 @@ Managed 3.3.0 must be paired with runtime 2026.2.x; session creation performs an
 
 NuGet.org has served multiple byte sets under `JYPPX.OpenVINO.CSharp.API 3.3.0`. On 2026-08-05 the flat-container package was 2,230,243 bytes with SHA512/base64 `aAiKwd7O...PUKHWg==`, while registration/cache metadata could still advertise an older hash and cause `NU1403`. Never bypass this check. The durable upstream fix is a new immutable package version, not another overwrite of `3.3.0`; until registration converges, clean-machine restore is externally constrained. / NuGet.org 已在同一 `JYPPX.OpenVINO.CSharp.API 3.3.0` 标识下提供过多组不同字节。2026-08-05 flat-container 包为 2,230,243 字节，SHA512/base64 为 `aAiKwd7O...PUKHWg==`，但 registration/缓存元数据仍可能公布旧哈希并触发 `NU1403`。不得绕过此检查；持久的上游修复应发布新的不可变版本，而不是再次覆盖 `3.3.0`。registration 收敛前，全新环境还原受此外部状态限制。
 
+The 2026-08-05 stage-11 recheck found `3.3.1` in the official version index and found readable registration and nuspec endpoints, but its flat-container `.nupkg.sha512` endpoint still returned HTTP 404. DeploySharp therefore did not upgrade or rewrite lock files and continued using the previously audited 3.3.0 cache for reproducible local gates. Adoption of 3.3.1 requires all official package/hash metadata to converge first. / 2026-08-05 阶段 11 复核发现官方版本索引已列出 `3.3.1`，registration 与 nuspec 端点可读，但 flat-container 的 `.nupkg.sha512` 端点仍返回 HTTP 404。因此 DeploySharp 未升级或改写 lock file，继续使用此前已审计的 3.3.0 缓存执行可复现本地门禁。采用 3.3.1 前必须等待全部官方包/哈希元数据收敛。
+
 ## Execution and ownership / 执行与所有权
 
 - `Run` uses native synchronous `Infer`; cancellation is observed before and after that native boundary. / `Run` 使用原生同步 `Infer`；取消在原生边界前后观察。

@@ -32,7 +32,7 @@ def main() -> None:
         raise RuntimeError(f"Expected openvino {EXPECTED_VERSION}, found {ov.__version__}")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     files = []
-    sources = ("classification", "semantic-segmentation", "direct-pose")
+    sources = ("classification", "semantic-segmentation", "direct-pose", "direct-instance-segmentation")
     for name in sources:
         model = ov.convert_model(SOURCE / f"{name}.onnx")
         xml_path = OUTPUT / f"{name}.xml"

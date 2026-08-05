@@ -24,6 +24,8 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId SemanticSegmentation { get; } = new VisualTaskId("semantic-segmentation");
         /// <summary>Gets the pose-estimation task. / 获取姿态估计任务。</summary>
         public static VisualTaskId PoseEstimation { get; } = new VisualTaskId("pose-estimation");
+        /// <summary>Gets the instance-segmentation task. / 获取实例分割任务。</summary>
+        public static VisualTaskId InstanceSegmentation { get; } = new VisualTaskId("instance-segmentation");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);
