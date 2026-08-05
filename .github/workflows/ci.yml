@@ -1,12 +1,9 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - DeploySharpV2.0
-  pull_request:
-    branches:
-      - DeploySharpV2.0
+  # CI is intentionally manual during the alpha build-out.
+  # Alpha 开发阶段故意只允许手动触发，避免每次备份推送消耗 Actions 配额。
+  workflow_dispatch:
 
 permissions:
   contents: read

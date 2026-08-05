@@ -2,22 +2,8 @@
 name: docs
 
 on:
-  push:
-    branches: [DeploySharpV2.0]
-    paths:
-      - "src/**"
-      - "docs/**"
-      - "eng/docs/**"
-      - "dotnet-tools.json"
-      - ".github/workflows/docs.yml"
-  pull_request:
-    branches: [DeploySharpV2.0]
-    paths:
-      - "src/**"
-      - "docs/**"
-      - "eng/docs/**"
-      - "dotnet-tools.json"
-      - ".github/workflows/docs.yml"
+  # Documentation deployment is manual until the local DocFX gate is stable.
+  # 文档部署在本地 DocFX 门禁稳定前只允许手动触发。
   workflow_dispatch:
 
 permissions:
