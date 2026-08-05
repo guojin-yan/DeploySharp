@@ -16,6 +16,14 @@
         "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
     },
     {
+        "name":  "ocr.png",
+        "size":  104,
+        "sha256":  "35027bc2ab811f72928ecd8a15d4fcd6c9a25784b7ce6e4f5d055d9719a3ac3a",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
         "name":  "rgb.png",
         "size":  77,
         "sha256":  "ecfec9e141ed0da523a03079244ecaee41da7f262d735c0bb11447f95119184d",

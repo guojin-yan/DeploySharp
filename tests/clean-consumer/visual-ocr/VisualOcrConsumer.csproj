@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestorePackagesPath>$(MSBuildProjectDirectory)\obj\stage13-packages</RestorePackagesPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JYPPX.DeploySharp.Visual" Version="2.0.0-alpha.1" />
+    <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0-alpha.1" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0-alpha.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0-preview.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\assets\onnxruntime\text-detection.onnx" Link="text-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\assets\onnxruntime\text-recognition-ctc.onnx" Link="text-recognition-ctc.onnx" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\assets\opencv\ocr.png" Link="ocr.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

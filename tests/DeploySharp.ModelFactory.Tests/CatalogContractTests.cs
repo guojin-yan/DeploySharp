@@ -102,6 +102,36 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public void OfflinePreviewOcrSuiteSelectsBothStagesForVerifiedPortableBackends()
+        {
+            var source = new ModelSourceDocument("https://github.com/guojin-yan/DeploySharp", "https://github.com/guojin-yan/DeploySharp", "generated", "JYPPX", null, "Apache-2.0", null, true);
+            var release = new ModelCatalogRelease("guojin-yan", "DeploySharp", "models-20260805.1", "0123456789abcdef");
+            var entry = new ModelCatalogEntry(
+                "tests/ocr-suite", "DeploySharp OCR contract suite", "deploysharp-fixture", "optical-character-recognition", "1.0", ModelCatalogStatus.Preview,
+                "Offline two-model adapter fixture; not an algorithm-verified OCR model.", source, release,
+                new[]
+                {
+                    new ModelCatalogArtifact("ocr.detector.onnx", "onnx", new[] { "onnxruntime", "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()),
+                    new ModelCatalogArtifact("ocr.recognizer.onnx", "onnx", new[] { "onnxruntime", "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()),
+                    new ModelCatalogArtifact("ocr.detector.openvino-ir", "openvino-ir", new[] { "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()),
+                    new ModelCatalogArtifact("ocr.recognizer.openvino-ir", "openvino-ir", new[] { "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>())
+                }, Array.Empty<ModelCatalogAsset>(), documentationPath: "models/tests-local-only.md");
+            ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument(
+                "1.0", "2026-08-05T00:00:00Z", "tests-ocr-suite.1", new Uri("https://github.com/guojin-yan/DeploySharp"), new[] { entry }));
+
+            IReadOnlyList<ModelSelection> onnxRuntime = ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", format: "onnx", backend: "onnxruntime", includePreview: true));
+            IReadOnlyList<ModelSelection> openVinoOnnx = ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", format: "onnx", backend: "openvino", includePreview: true));
+            IReadOnlyList<ModelSelection> openVinoIr = ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", format: "openvino-ir", backend: "openvino", includePreview: true));
+            Assert.AreEqual(2, onnxRuntime.Count);
+            Assert.AreEqual(2, openVinoOnnx.Count);
+            Assert.AreEqual(2, openVinoIr.Count);
+            CollectionAssert.AreEqual(new[] { "ocr.detector.onnx", "ocr.recognizer.onnx" }, onnxRuntime.Select(item => item.Artifact.ArtifactId).ToArray());
+            Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", includePreview: false)).Count);
+            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+        }
+
+        [TestMethod]
         public void RejectsUnsafePathsHashesLicensesAndReleaseUrls()
         {
             string[] unsafePaths = { "../model.gguf", "C:\\model.gguf", "//server/share/model.gguf", "a/./model.gguf", "a\\..\\model.gguf", "a\0model.gguf", "CON.gguf" };

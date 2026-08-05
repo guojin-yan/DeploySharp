@@ -31,6 +31,10 @@ namespace DeploySharp.Visual.Tests
         {
             Assert.ThrowsExactly<VisualException>(() => new VisualModelProfile("tests/bad", VisualTestData.ClassificationModelId, VisualTaskId.ImageClassification, "1", "fake", new VisualInputBinding("x", TensorElementType.Float32, new TensorShape(1, 3, 2, 2), VisualTensorLayout.Nchw), new[] { new VisualOutputBinding("out", TensorElementType.Float32, new TensorShape(1, 2)), new VisualOutputBinding("out", TensorElementType.Float32, new TensorShape(1, 2)) }, new[] { new VisualLabel(0, "same"), new VisualLabel(1, "same") }, new ClassificationDecoder("out")));
             Assert.ThrowsExactly<VisualException>(() => new VisualModelProfile("tests/bad-task", VisualTestData.ClassificationModelId, VisualTaskId.ObjectDetection, "1", "fake", new VisualInputBinding("x", TensorElementType.Float32, new TensorShape(1, 3, 2, 2), VisualTensorLayout.Nchw), new[] { new VisualOutputBinding("out", TensorElementType.Float32, new TensorShape(1, 2)) }, Array.Empty<VisualLabel>(), new ClassificationDecoder("out")));
+            Assert.ThrowsExactly<VisualException>(() => new VisualInputBinding("x", TensorElementType.Float32, new TensorShape(2,3,8,16), VisualTensorLayout.Nchw));
+            Assert.ThrowsExactly<VisualException>(() => new VisualInputBinding("x", TensorElementType.Float32, new TensorShape(0,3,8,16), VisualTensorLayout.Nchw));
+            VisualInputBinding dynamicBatch = new VisualInputBinding("x", TensorElementType.Float32, new TensorShape(-1,3,8,16), VisualTensorLayout.Nchw, minimumBatch: 1, maximumBatch: 8);
+            Assert.AreEqual(8, dynamicBatch.MaximumBatch);
         }
 
         [TestMethod]

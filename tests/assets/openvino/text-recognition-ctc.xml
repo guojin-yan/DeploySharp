@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<net name="onnx_Frontend_IR" version="11">
+	<layers>
+		<layer id="0" name="crops" type="Parameter" version="opset1">
+			<data shape="2,3,8,16" element_type="f32" />
+			<output>
+				<port id="0" precision="FP32" names="crops">
+					<dim>2</dim>
+					<dim>3</dim>
+					<dim>8</dim>
+					<dim>16</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="1" name="logit_constants" type="Const" version="opset1">
+			<data element_type="f32" shape="2, 6, 4" offset="0" size="192" />
+			<output>
+				<port id="0" precision="FP32" names="logit_constants">
+					<dim>2</dim>
+					<dim>6</dim>
+					<dim>4</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="2" name="Constant_13547" type="Const" version="opset1">
+			<data element_type="i64" shape="3" offset="192" size="24" />
+			<output>
+				<port id="0" precision="I64">
+					<dim>3</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="3" name="crop_mean" type="ReduceMean" version="opset1">
+			<data keep_dims="false" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>2</dim>
+					<dim>3</dim>
+					<dim>8</dim>
+					<dim>16</dim>
+				</port>
+				<port id="1" precision="I64">
+					<dim>3</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="crop_mean">
+					<dim>2</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="4" name="Constant_15572" type="Const" version="opset1">
+			<data element_type="f32" shape="1" offset="216" size="4" />
+			<output>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="5" name="crop_zero" type="Multiply" version="opset1">
+			<data auto_broadcast="numpy" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>2</dim>
+				</port>
+				<port id="1" precision="FP32">
+					<dim>1</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="crop_zero">
+					<dim>2</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="6" name="ctc_unsqueeze_axes" type="Const" version="opset1">
+			<data element_type="i64" shape="2" offset="220" size="16" />
+			<output>
+				<port id="0" precision="I64" names="ctc_unsqueeze_axes">
+					<dim>2</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="7" name="crop_zero_3d" type="Unsqueeze" version="opset1">
+			<input>
+				<port id="0" precision="FP32">
+					<dim>2</dim>
+				</port>
+				<port id="1" precision="I64">
+					<dim>2</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="crop_zero_3d">
+					<dim>2</dim>
+					<dim>1</dim>
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="8" name="logits" type="Add" version="opset1">
+			<data auto_broadcast="numpy" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>2</dim>
+					<dim>6</dim>
+					<dim>4</dim>
+				</port>
+				<port id="1" precision="FP32">
+					<dim>2</dim>
+					<dim>1</dim>
+					<dim>1</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="logits">
+					<dim>2</dim>
+					<dim>6</dim>
+					<dim>4</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="9" name="logits/sink_port_0" type="Result" version="opset1" output_names="logits">
+			<input>
+				<port id="0" precision="FP32">
+					<dim>2</dim>
+					<dim>6</dim>
+					<dim>4</dim>
+				</port>
+			</input>
+		</layer>
+	</layers>
+	<edges>
+		<edge from-layer="0" from-port="0" to-layer="3" to-port="0" />
+		<edge from-layer="1" from-port="0" to-layer="8" to-port="0" />
+		<edge from-layer="2" from-port="0" to-layer="3" to-port="1" />
+		<edge from-layer="3" from-port="2" to-layer="5" to-port="0" />
+		<edge from-layer="4" from-port="0" to-layer="5" to-port="1" />
+		<edge from-layer="5" from-port="2" to-layer="7" to-port="0" />
+		<edge from-layer="6" from-port="0" to-layer="7" to-port="1" />
+		<edge from-layer="7" from-port="2" to-layer="8" to-port="1" />
+		<edge from-layer="8" from-port="2" to-layer="9" to-port="0" />
+	</edges>
+	<rt_info>
+		<info name="OpenVINO Runtime" value="2026.2.1-21919-ede283a88e3-releases/2026/2" />
+		<Runtime_version value="2026.2.1-21919-ede283a88e3-releases/2026/2" />
+		<conversion_parameters>
+			<is_python_object value="False" />
+		</conversion_parameters>
+	</rt_info>
+</net>

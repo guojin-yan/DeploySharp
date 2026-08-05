@@ -30,29 +30,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat decoded = OpenCvImageLoader.Decode(source))
                 {
                     OpenCvImageLoader.Validate(decoded, source);
-                    var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
-                    Mat? convertedColor = null;
-                    try
-                    {
-                        Mat geometrySource = PrepareColorForGeometry(decoded, options, out convertedColor);
-                        using (Mat geometric = ApplyGeometry(geometrySource, sourceSize, options, out ImageTransform transform))
-                        {
-                            ObserveCancellation(cancellationToken);
-                            byte[] nativeOrder = CopyRows(geometric);
-                            byte[] requestedOrder = ConvertChannels(nativeOrder, geometric.Cols, geometric.Rows, geometric.Channels, options);
-                            ITensor tensor = CreateTensor(requestedOrder, geometric.Cols, geometric.Rows, options, cancellationToken);
-                            var scales = new float[options.ChannelCount];
-                            for (int channel = 0; channel < scales.Length; channel++) scales[channel] = 1f / options.StandardDeviation(channel);
-                            var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, options.Means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal.");
-                            return new PreparedVisualInput(inputName, tensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, transform, descriptor, inputId);
-                        }
-                    }
-                    finally
-                    {
-                        // The temporary conversion Mat is owned only by this call. The decoded Mat has a separate using scope.
-                        // 临时颜色转换 Mat 仅由本次调用拥有；解码 Mat 由外层 using 独立管理。
-                        convertedColor?.Dispose();
-                    }
+                    return CreateFromDecoded(decoded, inputName, options, inputId, cancellationToken);
                 }
             }
             catch (OpenCvVisualException) { throw; }
@@ -68,6 +46,34 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public PreparedVisualInput CreateFromFile(string path, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             return Create(OpenCvImageSource.FromFile(path), inputName, options, inputId, cancellationToken);
+        }
+
+        internal static PreparedVisualInput CreateFromDecoded(Mat decoded, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken)
+        {
+            if (decoded == null) throw new ArgumentNullException(nameof(decoded));
+            var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
+            Mat? convertedColor = null;
+            try
+            {
+                Mat geometrySource = PrepareColorForGeometry(decoded, options, out convertedColor);
+                using (Mat geometric = ApplyGeometry(geometrySource, sourceSize, options, out ImageTransform transform))
+                {
+                    ObserveCancellation(cancellationToken);
+                    byte[] nativeOrder = CopyRows(geometric);
+                    byte[] requestedOrder = ConvertChannels(nativeOrder, geometric.Cols, geometric.Rows, geometric.Channels, options);
+                    ITensor tensor = CreateTensor(requestedOrder, geometric.Cols, geometric.Rows, options, cancellationToken);
+                    var scales = new float[options.ChannelCount];
+                    for (int channel = 0; channel < scales.Length; channel++) scales[channel] = 1f / options.StandardDeviation(channel);
+                    var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, options.Means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal.");
+                    return new PreparedVisualInput(inputName, tensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, transform, descriptor, inputId);
+                }
+            }
+            finally
+            {
+                // The temporary conversion Mat is owned only by this call; the decoded Mat remains caller-owned.
+                // 临时颜色转换 Mat 仅由本次调用拥有；解码 Mat 仍由调用方拥有。
+                convertedColor?.Dispose();
+            }
         }
 
         private static Mat PrepareColorForGeometry(Mat source, OpenCvPreprocessOptions options, out Mat? converted)
@@ -156,7 +162,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return new Scalar(color.Blue, color.Green, color.Red);
         }
 
-        private static byte[] CopyRows(Mat image)
+        internal static byte[] CopyRows(Mat image)
         {
             int rowBytes = checked(image.Cols * image.Channels);
             var result = new byte[checked(rowBytes * image.Rows)];

@@ -24,3 +24,7 @@ Measure Release builds after warmup and report P50/P95 latency, throughput, mana
 Hot paths should use backend/native primitives, contiguous buffers, pooled reusable workspaces, SIMD or bounded parallelism where measured. Avoid reflection, per-element LINQ, repeated shape parsing, and copies that do not establish an ownership boundary. Any zero-copy path must prove pinning and lifetime safety; the default remains owned output. / 热路径应在经过测量后使用后端/native 原语、连续缓冲区、池化可复用工作区、SIMD 或有界并行。避免反射、逐元素 LINQ、重复 shape 解析及不能建立所有权边界的复制。任何零拷贝路径都必须证明固定和生命周期安全；默认仍返回自有输出。
 
 Legacy TFMs use correct compatibility implementations. Modern `net8.0`/`net10.0` paths may use newer runtime features behind compile-time branches, but every branch retains the same model semantics and golden results. / 旧 TFM 使用正确的兼容实现。现代 `net8.0`/`net10.0` 路径可在编译分支中使用新运行时特性，但所有分支必须保持相同模型语义与黄金结果。
+
+## OCR suite verification / OCR 套件验证
+
+OCR is a suite-level verification: detector, recognizer, character set, crop semantics, and test images must be admitted together. The dedicated [OCR AlgorithmVerified template](ocr-algorithm-verification-template.md) adds detector tensor/polygon, crop tensor, logits/token, text, stage latency, throughput, and allocation evidence. A detector or recognizer alone does not establish end-to-end OCR fidelity. / OCR 是套件级验证：检测器、识别器、字符表、裁剪语义和测试图必须共同准入。专用 [OCR AlgorithmVerified 模板](ocr-algorithm-verification-template.md) 增加检测 tensor/polygon、crop tensor、logits/token、文本、阶段延迟、吞吐与分配证据；单独的检测器或识别器不能证明端到端 OCR 保真。

@@ -28,6 +28,12 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId InstanceSegmentation { get; } = new VisualTaskId("instance-segmentation");
         /// <summary>Gets the oriented-object-detection task. / 获取旋转目标检测任务。</summary>
         public static VisualTaskId OrientedObjectDetection { get; } = new VisualTaskId("oriented-object-detection");
+        /// <summary>Gets the text-detection task. / 获取文本检测任务。</summary>
+        public static VisualTaskId TextDetection { get; } = new VisualTaskId("text-detection");
+        /// <summary>Gets the text-recognition task. / 获取文本识别任务。</summary>
+        public static VisualTaskId TextRecognition { get; } = new VisualTaskId("text-recognition");
+        /// <summary>Gets the complete optical-character-recognition task. / 获取完整光学字符识别任务。</summary>
+        public static VisualTaskId OpticalCharacterRecognition { get; } = new VisualTaskId("optical-character-recognition");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);
@@ -78,6 +84,12 @@ namespace JYPPX.DeploySharp.Visual
             if (shapePattern.Rank != expectedRank) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Input shape rank does not match its layout.", tensorName: name);
             if (minimumBatch <= 0 || maximumBatch < minimumBatch) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Input batch bounds are invalid.", tensorName: name);
             if ((layout == VisualTensorLayout.Chw || layout == VisualTensorLayout.Hwc) && (minimumBatch != 1 || maximumBatch != 1)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Unbatched layouts require batch bounds of one.", tensorName: name);
+            if (layout == VisualTensorLayout.Nchw || layout == VisualTensorLayout.Nhwc)
+            {
+                long declaredBatch = shapePattern[0];
+                if (declaredBatch == 0 || declaredBatch < -1) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A batched input requires a positive static batch or -1 for a dynamic batch.", tensorName: name);
+                if (declaredBatch > 0 && (declaredBatch != minimumBatch || declaredBatch != maximumBatch)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A static batch dimension must exactly match its batch bounds.", tensorName: name);
+            }
             Name = name;
             ElementType = elementType;
             ShapePattern = new TensorShape(shapePattern.ToArray());

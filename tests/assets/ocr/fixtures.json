@@ -1,0 +1,8 @@
+[
+  {
+    "name": "charset.txt",
+    "license": "Apache-2.0",
+    "source": "DeploySharp deterministic fixture generator",
+    "purpose": "OCR CTC adapter contract; not an algorithm-verified character set"
+  }
+]

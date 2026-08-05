@@ -19,6 +19,10 @@
   href: visual-instance-segmentation.md
 - name: Visual OBB Detection / Visual 旋转框检测
   href: visual-oriented-detection.md
+- name: Visual OCR / Visual OCR
+  href: visual-ocr.md
+- name: OCR AlgorithmVerified Template / OCR 算法准入模板
+  href: ocr-algorithm-verification-template.md
 - name: Visual Lifecycle and Compatibility / Visual 生命周期与兼容性
   href: visual-lifecycle-compatibility.md
 - name: Visual.OpenCV Quick Start / Visual.OpenCV 快速开始

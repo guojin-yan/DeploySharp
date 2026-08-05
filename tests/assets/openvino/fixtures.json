@@ -6,7 +6,9 @@
     "tests/assets/onnxruntime/semantic-segmentation.onnx",
     "tests/assets/onnxruntime/direct-pose.onnx",
     "tests/assets/onnxruntime/direct-instance-segmentation.onnx",
-    "tests/assets/onnxruntime/direct-obb.onnx"
+    "tests/assets/onnxruntime/direct-obb.onnx",
+    "tests/assets/onnxruntime/text-detection.onnx",
+    "tests/assets/onnxruntime/text-recognition-ctc.onnx"
   ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
@@ -60,6 +62,26 @@
       "file": "direct-obb.bin",
       "size": 112,
       "sha256": "14ba19c1e664f33c3d0b0e9ab5c03a878b0a4addc6cb0b68aa3bbf470a6828ab"
+    },
+    {
+      "file": "text-detection.xml",
+      "size": 4698,
+      "sha256": "bf9a7c2ba433c4f9855d8d9a59330be82e31f7f34f70caefab55082e285708bf"
+    },
+    {
+      "file": "text-detection.bin",
+      "size": 136,
+      "sha256": "8e383fa7702b211c48f2b6473049b93b4deba788eb7cb44d1a125ce317f79c66"
+    },
+    {
+      "file": "text-recognition-ctc.xml",
+      "size": 4315,
+      "sha256": "f0f1a0947afde99f31ac53a09da1d51cb32338080e3aaf375395938e11edc8ac"
+    },
+    {
+      "file": "text-recognition-ctc.bin",
+      "size": 236,
+      "sha256": "d98380b468c2139385904b6b2173ff5b76a1657a9b45f79caace56cb3d16fbc1"
     }
   ]
 }

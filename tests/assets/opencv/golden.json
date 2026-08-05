@@ -3,6 +3,15 @@
                            "topIndex":  0,
                            "label":  "one"
                        },
+    "ocr":  {
+                "characterSet":  "ABC",
+                "blankIndex":  0,
+                "count":  2,
+                "text":  [
+                             "AB",
+                             "CA"
+                         ]
+            },
     "pose":  {
                  "firstKeypoint":  [
                                        0.6,

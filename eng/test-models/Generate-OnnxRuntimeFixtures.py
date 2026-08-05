@@ -275,6 +275,67 @@ def corner_obb() -> onnx.ModelProto:
     return graph_model(graph, "corner-obb")
 
 
+def text_detection() -> onnx.ModelProto:
+    """Consume a 32x16 image and emit explicit TL/TR/BR/BL contract polygons and scores."""
+    polygons = numpy_helper.from_array(
+        np.asarray(
+            [[
+                [[2, 2], [14, 2], [14, 6], [2, 6]],
+                [[3, 2], [15, 2], [15, 6], [3, 6]],
+                [[16, 8], [30, 8], [30, 14], [16, 14]],
+            ]],
+            dtype=np.float32,
+        ),
+        name="text_polygons_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.95, 0.80, 0.90]], dtype=np.float32), name="text_scores_value")
+    zero = numpy_helper.from_array(np.asarray(0.0, dtype=np.float32), name="text_zero")
+    graph = helper.make_graph(
+        [
+            helper.make_node("ReduceMean", ["images"], ["image_mean"], axes=[1, 2, 3], keepdims=0),
+            helper.make_node("Mul", ["image_mean", "text_zero"], ["image_zero"]),
+            helper.make_node("Constant", [], ["polygon_constants"], value=polygons),
+            helper.make_node("Constant", [], ["score_constants"], value=scores),
+            helper.make_node("Add", ["polygon_constants", "image_zero"], ["polygons"]),
+            helper.make_node("Add", ["score_constants", "image_zero"], ["scores"]),
+        ],
+        "deploysharp_text_detection",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 16, 32])],
+        [
+            helper.make_tensor_value_info("polygons", TensorProto.FLOAT, [1, 3, 4, 2]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 3]),
+        ],
+        [zero],
+    )
+    return graph_model(graph, "text-detection")
+
+
+def text_recognition_ctc() -> onnx.ModelProto:
+    """Consume two 3x8x16 crops and emit deterministic blank/repeat CTC logits for AB and CA."""
+    selected = np.asarray([[0, 1, 1, 0, 2, 2], [3, 3, 0, 1, 1, 0]], dtype=np.int64)
+    logits_values = np.zeros((2, 6, 4), dtype=np.float32)
+    for batch in range(2):
+        for timestep in range(6):
+            logits_values[batch, timestep, selected[batch, timestep]] = 5.0
+    logits = numpy_helper.from_array(logits_values, name="ctc_logits_value")
+    zero = numpy_helper.from_array(np.asarray(0.0, dtype=np.float32), name="ctc_zero")
+    axes = numpy_helper.from_array(np.asarray([1, 2], dtype=np.int64), name="ctc_unsqueeze_axes")
+    graph = helper.make_graph(
+        [
+            helper.make_node("ReduceMean", ["crops"], ["crop_mean"], axes=[1, 2, 3], keepdims=0),
+            helper.make_node("Mul", ["crop_mean", "ctc_zero"], ["crop_zero"]),
+            helper.make_node("Unsqueeze", ["crop_zero", "ctc_unsqueeze_axes"], ["crop_zero_3d"]),
+            helper.make_node("Constant", [], ["logit_constants"], value=logits),
+            helper.make_node("Add", ["logit_constants", "crop_zero_3d"], ["logits"]),
+        ],
+        "deploysharp_text_recognition_ctc",
+        [helper.make_tensor_value_info("crops", TensorProto.FLOAT, [2, 3, 8, 16])],
+        [helper.make_tensor_value_info("logits", TensorProto.FLOAT, [2, 6, 4])],
+        [zero, axes],
+    )
+    return graph_model(graph, "text-recognition-ctc")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -392,6 +453,8 @@ def main() -> None:
         "prototype-instance-segmentation.onnx": prototype_instance_segmentation(),
         "direct-obb.onnx": direct_obb(),
         "corner-obb.onnx": corner_obb(),
+        "text-detection.onnx": text_detection(),
+        "text-recognition-ctc.onnx": text_recognition_ctc(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),

@@ -29,6 +29,10 @@ namespace JYPPX.DeploySharp.Visual
         public const string Cancelled = "DS-VISUAL-4002";
         /// <summary>A Visual operation exceeded its configured timeout. / Visual 操作超过配置的超时时间。</summary>
         public const string Timeout = "DS-VISUAL-4003";
+        /// <summary>An OCR pipeline stage failed. / OCR Pipeline 阶段失败。</summary>
+        public const string OcrPipelineFailed = "DS-VISUAL-4101";
+        /// <summary>An OCR input, batch, output, or workspace limit was exceeded. / OCR 输入、批次、输出或工作区超出限制。</summary>
+        public const string OcrLimitExceeded = "DS-VISUAL-4102";
         /// <summary>The Visual object has already been disposed. / Visual 对象已被释放。</summary>
         public const string ObjectDisposed = "DS-VISUAL-5001";
     }

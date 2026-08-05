@@ -650,6 +650,69 @@
       ],
       "sha256": "f977d6b4d6a2b556c7ec2ea441865aa1b01cb8936a8ac9f9c7c1c3bb1ecf353d"
     },
+    "text-detection.onnx": {
+      "bytes": 753,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            16,
+            32
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "polygons",
+          "shape": [
+            1,
+            3,
+            4,
+            2
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "scores",
+          "shape": [
+            1,
+            3
+          ]
+        }
+      ],
+      "sha256": "195d996fdf299d70794f5f364ddd471caa6f1d61d9afc2a48f3804a9a53c5e45"
+    },
+    "text-recognition-ctc.onnx": {
+      "bytes": 790,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "crops",
+          "shape": [
+            2,
+            3,
+            8,
+            16
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "logits",
+          "shape": [
+            2,
+            6,
+            4
+          ]
+        }
+      ],
+      "sha256": "58f79db0ac32ab2d00af1c41515487a4973f380ee47c9ad09cb0dc1b0631ad2c"
+    },
     "unsupported-types.onnx": {
       "bytes": 266,
       "inputs": [
