@@ -4,6 +4,7 @@ using System.Text.Json;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenVINO;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Vision;
@@ -11,6 +12,7 @@ using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.OpenCV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VisualOrientedDetectionResult = JYPPX.DeploySharp.Visual.OrientedDetectionResult;
 
 namespace DeploySharp.Visual.OpenCV.Tests
 {
@@ -161,6 +163,37 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(2, result.Instances[1].Mask.ForegroundPixelCount);
             Assert.IsNotNull(result.OwnershipMap);
             Assert.AreEqual(0, result.OwnershipMap.GetOwnerIndex(1,0));
+        }
+
+        [TestMethod]
+        public void OpenCvRgbPngFlowsThroughOnnxRuntimeDirectOrientedDetection()
+        {
+            var artifact = new ModelArtifact(new ModelId("tests/opencv-direct-obb"), "onnx", Onnx("direct-obb.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var schema = new CenterSizeAngleOutputSchema("boxes", "scores", "classes");
+            var decoder = new DirectOrientedDetectionDecoder(schema, new OrientedDetectionDecoderOptions(scoreThreshold: .1f, iouThreshold: .3f, maximumCandidates: 4, maximumDetections: 4));
+            var profile = new VisualModelProfile(
+                "tests/opencv-direct-obb.v1", artifact.ModelId, VisualTaskId.OrientedObjectDetection, "1.0", "onnx",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1,3,100,100), VisualTensorLayout.Nchw),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(1,4,5)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(1,4)),
+                    new VisualOutputBinding("classes", TensorElementType.Float32, new TensorShape(1,4))
+                }, new[] { new VisualLabel(0,"alpha"), new VisualLabel(1,"beta") }, decoder);
+            using VisualPipeline pipeline = CreatePipeline(registry, artifact, profile, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            var options = new OpenCvPreprocessOptions(new VisualSize(100,100), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", options);
+            VisualOrientedDetectionResult result = pipeline.Run(input).GetValue<VisualOrientedDetectionResult>();
+            Assert.AreEqual(new VisualSize(3,2), result.SourceSize);
+            Assert.AreEqual(2, result.Detections.Count);
+            Assert.IsFalse(result.Detections[0].HasExactRotatedRectangle);
+            foreach (PointF point in result.Detections[0].Quadrilateral.Vertices)
+            {
+                Assert.IsTrue(point.X >= 0 && point.X <= result.SourceSize.Width);
+                Assert.IsTrue(point.Y >= 0 && point.Y <= result.SourceSize.Height);
+            }
         }
 
         private static JsonDocument LoadGolden() => JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "golden.json")));

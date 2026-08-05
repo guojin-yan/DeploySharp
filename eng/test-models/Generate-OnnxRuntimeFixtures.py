@@ -214,6 +214,67 @@ def prototype_instance_segmentation() -> onnx.ModelProto:
     return graph_model(graph, "prototype-instance-segmentation")
 
 
+def direct_obb() -> onnx.ModelProto:
+    """Emit center-x, center-y, width, height, and clockwise radians with strict named vectors."""
+    boxes = numpy_helper.from_array(
+        np.asarray(
+            [[[25, 25, 20, 10, 0.4], [26, 25, 20, 10, 0.4], [25, 25, 20, 10, 0.4], [75, 75, 16, 8, -np.pi / 2]]],
+            dtype=np.float32,
+        ),
+        name="obb_boxes_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.90, 0.80, 0.90, 0.05]], dtype=np.float32), name="obb_scores_value")
+    classes = numpy_helper.from_array(np.asarray([[0, 0, 1, 0]], dtype=np.float32), name="obb_classes_value")
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["boxes"], value=boxes),
+            helper.make_node("Constant", [], ["scores"], value=scores),
+            helper.make_node("Constant", [], ["classes"], value=classes),
+        ],
+        "deploysharp_direct_obb",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 100, 100])],
+        [
+            helper.make_tensor_value_info("boxes", TensorProto.FLOAT, [1, 4, 5]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 4]),
+            helper.make_tensor_value_info("classes", TensorProto.FLOAT, [1, 4]),
+        ],
+    )
+    return graph_model(graph, "direct-obb")
+
+
+def corner_obb() -> onnx.ModelProto:
+    """Emit explicit counter-clockwise model-space quadrilaterals with deterministic overlap."""
+    corners = numpy_helper.from_array(
+        np.asarray(
+            [[
+                [10, 10, 30, 10, 30, 30, 10, 30],
+                [12, 10, 32, 10, 32, 30, 12, 30],
+                [10, 10, 30, 10, 30, 30, 10, 30],
+                [60, 60, 80, 60, 80, 72, 60, 72],
+            ]],
+            dtype=np.float32,
+        ),
+        name="obb_corners_value",
+    )
+    scores = numpy_helper.from_array(np.asarray([[0.90, 0.80, 0.90, 0.90]], dtype=np.float32), name="corner_scores_value")
+    classes = numpy_helper.from_array(np.asarray([[0, 0, 1, 0]], dtype=np.float32), name="corner_classes_value")
+    graph = helper.make_graph(
+        [
+            helper.make_node("Constant", [], ["corners"], value=corners),
+            helper.make_node("Constant", [], ["scores"], value=scores),
+            helper.make_node("Constant", [], ["classes"], value=classes),
+        ],
+        "deploysharp_corner_obb",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 100, 100])],
+        [
+            helper.make_tensor_value_info("corners", TensorProto.FLOAT, [1, 4, 8]),
+            helper.make_tensor_value_info("scores", TensorProto.FLOAT, [1, 4]),
+            helper.make_tensor_value_info("classes", TensorProto.FLOAT, [1, 4]),
+        ],
+    )
+    return graph_model(graph, "corner-obb")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -329,6 +390,8 @@ def main() -> None:
         "heatmap-pose.onnx": heatmap_pose(),
         "direct-instance-segmentation.onnx": direct_instance_segmentation(),
         "prototype-instance-segmentation.onnx": prototype_instance_segmentation(),
+        "direct-obb.onnx": direct_obb(),
+        "corner-obb.onnx": corner_obb(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),

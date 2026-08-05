@@ -78,6 +78,49 @@
       ],
       "sha256": "05a885298cca6e04b83732a46ff340f48203cc62e5fa89af74fe3eeab259de2a"
     },
+    "corner-obb.onnx": {
+      "bytes": 641,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            100,
+            100
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "corners",
+          "shape": [
+            1,
+            4,
+            8
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "scores",
+          "shape": [
+            1,
+            4
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "classes",
+          "shape": [
+            1,
+            4
+          ]
+        }
+      ],
+      "sha256": "766df209349a3ccd0500319be524507c3d49a271348900898054481109e1917b"
+    },
     "detection.onnx": {
       "bytes": 384,
       "inputs": [
@@ -157,6 +200,49 @@
         }
       ],
       "sha256": "f0ebe35673e59fd6efcdb516a1626763dc06f2ed0092cac7fc1d5ec27b118a25"
+    },
+    "direct-obb.onnx": {
+      "bytes": 578,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            100,
+            100
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "boxes",
+          "shape": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "scores",
+          "shape": [
+            1,
+            4
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "classes",
+          "shape": [
+            1,
+            4
+          ]
+        }
+      ],
+      "sha256": "7d0bd51c8f5c8aa48349b64d6e715b7130b2a1df9de25d0da6b377f0bbf3ce51"
     },
     "direct-pose.onnx": {
       "bytes": 681,

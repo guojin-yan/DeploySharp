@@ -5,7 +5,8 @@
     "tests/assets/onnxruntime/classification.onnx",
     "tests/assets/onnxruntime/semantic-segmentation.onnx",
     "tests/assets/onnxruntime/direct-pose.onnx",
-    "tests/assets/onnxruntime/direct-instance-segmentation.onnx"
+    "tests/assets/onnxruntime/direct-instance-segmentation.onnx",
+    "tests/assets/onnxruntime/direct-obb.onnx"
   ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
@@ -49,6 +50,16 @@
       "file": "direct-instance-segmentation.bin",
       "size": 264,
       "sha256": "3da068fcb3020481c9a47f38ddb189bf27ac30ea569f5f5a2dba87f7973728b9"
+    },
+    {
+      "file": "direct-obb.xml",
+      "size": 2515,
+      "sha256": "6fce1acde833691776b6be72588c51e488baab22c1e89ea2351247095a5430cb"
+    },
+    {
+      "file": "direct-obb.bin",
+      "size": 112,
+      "sha256": "14ba19c1e664f33c3d0b0e9ab5c03a878b0a4addc6cb0b68aa3bbf470a6828ab"
     }
   ]
 }

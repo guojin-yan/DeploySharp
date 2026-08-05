@@ -122,6 +122,9 @@ jobs:
       - run: dotnet restore tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-instance-segmentation/NuGet.Config --locked-mode
       - run: dotnet build tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/visual-obb/VisualObbConsumer.csproj --configfile tests/clean-consumer/visual-obb/NuGet.Config --locked-mode
+      - run: dotnet build tests/clean-consumer/visual-obb/VisualObbConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/visual-obb/VisualObbConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config
       - run: dotnet build tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-build

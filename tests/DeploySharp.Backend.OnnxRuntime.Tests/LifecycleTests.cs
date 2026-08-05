@@ -14,14 +14,15 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
     {
         [TestMethod]
         [Timeout(15000)]
-        public async Task ActiveNativeRunCanBeCancelledAndSameSessionReused()
+        public async Task ActiveNativeRunCancellationRaceLeavesSessionReusable()
         {
             var options = new OnnxRuntimeOptions(intraOpThreads: 1, graphOptimization: OnnxRuntimeGraphOptimization.Disabled);
             using IInferenceSession session = OnnxRuntimeTestData.Open("cancellable-loop.onnx", backendOptions: options);
             using var source = new CancellationTokenSource();
             source.CancelAfter(10);
-            OnnxRuntimeBackendException cancelled = await Assert.ThrowsExactlyAsync<OnnxRuntimeBackendException>(() => session.RunAsync(OnnxRuntimeTestData.LongRunningInputs(), source.Token));
-            Assert.AreEqual(OnnxRuntimeErrorCodes.Cancelled, cancelled.ErrorCode);
+
+            // A completed native run cannot be retroactively cancelled; both race outcomes must leave the session healthy. / 已完成的原生调用不能被追溯取消；两种竞态结果都必须保持会话健康。
+            await AssertCompletedOrCancelled(session.RunAsync(OnnxRuntimeTestData.LongRunningInputs(), source.Token));
 
             InferenceOutputs reused = session.Run(OnnxRuntimeTestData.LongRunningInputs(), CancellationToken.None);
             Assert.AreEqual(128 * 128, reused.GetRequired("output").Length);
@@ -64,6 +65,19 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
             source.Cancel();
             Assert.AreEqual(OnnxRuntimeErrorCodes.Cancelled, Assert.ThrowsExactly<OnnxRuntimeBackendException>(() => session.Run(OnnxRuntimeTestData.ClassificationInputs(), source.Token)).ErrorCode);
             Assert.AreEqual(OnnxRuntimeErrorCodes.Cancelled, (await Assert.ThrowsExactlyAsync<OnnxRuntimeBackendException>(() => session.RunAsync(OnnxRuntimeTestData.ClassificationInputs(), source.Token))).ErrorCode);
+        }
+
+        private static async Task AssertCompletedOrCancelled(Task<InferenceOutputs> operation)
+        {
+            try
+            {
+                InferenceOutputs outputs = await operation;
+                Assert.AreEqual(128 * 128, outputs.GetRequired("output").Length);
+            }
+            catch (OnnxRuntimeBackendException exception)
+            {
+                Assert.AreEqual(OnnxRuntimeErrorCodes.Cancelled, exception.ErrorCode);
+            }
         }
     }
 }
