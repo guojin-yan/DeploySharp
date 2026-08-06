@@ -25,6 +25,8 @@
   href: visual-ocr-orientation.md
 - name: Supported Models / 支持模型
   href: supported-models.md
+- name: V1 Model Capability Migration / V1 模型能力迁移
+  href: v1-model-migration.md
 - name: Visual Anomaly Detection / Visual 异常检测
   href: visual-anomaly-detection.md
 - name: Anomaly AlgorithmVerified Template / 异常模型准入模板

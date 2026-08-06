@@ -4,6 +4,8 @@ This page separates DeploySharp's implemented tensor contracts from production m
 
 The upstream snapshot was verified on 2026-08-06 against the [Ultralytics official model index](https://docs.ultralytics.com/models/) and release `v8.4.115`. Ultralytics evolves independently, so every release must regenerate or review this matrix. / 上游快照于 2026-08-06 根据 [Ultralytics 官方模型索引](https://docs.ultralytics.com/models/)和 `v8.4.115` 核验。Ultralytics 独立演进，因此每次发布都必须重新生成或审阅本矩阵。
 
+Ultralytics is an upstream reference for models, exporters, and official preprocessing/postprocessing semantics; it is not a DeploySharp package boundary. YOLOv5, YOLOv8, YOLO11, YOLO26, and other versions/tasks must be implemented in the existing `JYPPX.DeploySharp.Visual` package. DeploySharp does not create a `JYPPX.DeploySharp.Visual.Ultralytics` package. / Ultralytics 是模型、导出器和官方前后处理语义的上游参考来源，不是 DeploySharp 的包边界。YOLOv5、YOLOv8、YOLO11、YOLO26 及其他版本和任务必须统一在现有 `JYPPX.DeploySharp.Visual` 包中实现，不创建 `JYPPX.DeploySharp.Visual.Ultralytics` 包。
+
 | Upstream family / 上游模型族 | Official tasks / 官方任务 | DeploySharp contract surface / DeploySharp 合同面 | Admission status / 准入状态 |
 | --- | --- | --- | --- |
 | YOLO26 | Detect, Segment, Semantic, Depth, Classify, Pose, OBB | Detect, instance/semantic segmentation, classify, Pose and OBB exist; depth needs a dedicated contract. / 已有检测、实例/语义分割、分类、Pose 与 OBB；Depth 需要专用合同。 | Planned; no family Profile is AlgorithmVerified. / 已规划；尚无模型族 Profile 达到 AlgorithmVerified。 |
