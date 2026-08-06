@@ -1,0 +1,80 @@
+{
+    "schemaVersion":  "2.0",
+    "modelId":  "yolo/v12/detect/n",
+    "name":  "YOLO12n Detect",
+    "family":  "yolo12",
+    "task":  "object-detection",
+    "modelVersion":  "n",
+    "exporter":  {
+                     "name":  "audited-upstream-onnx-export",
+                     "version":  "8.3.78",
+                     "sourceRevision":  "01a22c0603e0eaa6d9bd62120a391e744d92cea2"
+                 },
+    "source":  {
+                   "sourceUrl":  "https://github.com/sunsmarterjie/yolov12",
+                   "projectUrl":  "https://github.com/sunsmarterjie/yolov12",
+                   "revision":  "local-artifact-provenance-unverified",
+                   "author":  "Upstream YOLO maintainers",
+                   "licenseExpression":  "AGPL-3.0-only",
+                   "redistributionAllowed":  false
+               },
+    "generatedAt":  "2026-08-06T09:45:00Z",
+    "profileId":  "yolo.detect.v12.raw-attribute-major.onnx.yolo/v12/detect/n",
+    "inputs":  [
+                   {
+                       "name":  "images",
+                       "elementType":  "float32",
+                       "shape":  [
+                                     1,
+                                     3,
+                                     640,
+                                     640
+                                 ]
+                   }
+               ],
+    "outputs":  [
+                    {
+                        "name":  "output0",
+                        "elementType":  "float32",
+                        "shape":  [
+                                      1,
+                                      84,
+                                      -1
+                                  ]
+                    }
+                ],
+    "artifacts":  [
+                      {
+                          "artifactId":  "onnx.fp32",
+                          "format":  "onnx",
+                          "locationKind":  "file",
+                          "entrypoint":  "model.onnx",
+                          "compatibleBackends":  [
+                                                     "onnxruntime",
+                                                     "openvino"
+                                                 ],
+                          "files":  [
+                                        {
+                                            "relativePath":  "model.onnx",
+                                            "sha256":  "9a99a764c60423ffaef870bf22687c66da284c6b2ad7f249605ced9c8a2a3e80",
+                                            "size":  10671234,
+                                            "mediaType":  "application/onnx",
+                                            "role":  "model"
+                                        }
+                                    ],
+                          "precision":  "fp32",
+                          "quantization":  "none",
+                          "opset":  19,
+                          "portable":  true,
+                          "extensions":  {
+                                             "deploysharp.validation-status":  "local-backend-verified",
+                                             "deploysharp.artifact-provenance":  "unverified-local-file",
+                                             "deploysharp.preprocessing-version":  "ultralytics-letterbox-rgb-nchw-v1",
+                                             "deploysharp.postprocessing-version":  "deploysharp-yolo-detection-v1",
+                                             "deploysharp.validation-image-sha256":  "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+                                             "deploysharp.prepared-tensor-sha256":  "48af3a194d046f683585c8c8deffa953d415122ec0f2398bd27d8a67f34978df",
+                                             "deploysharp.release-admission":  "blocked-pending-license-provenance-and-official-golden-review"
+                                         }
+                      }
+                  ]
+}

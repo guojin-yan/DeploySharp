@@ -6,31 +6,31 @@ DeploySharp V2 does not provide source, binary, configuration, type, or behavior
 
 A row is complete only when the exact model family has a versioned Visual profile, official or authoritative preprocessing/export/postprocessing evidence, a reproducible model SHA256, real image inference through at least one production backend, golden accuracy comparisons, tests, documentation, and a ModelPack/ModelFactory admission record. A generic task decoder or a synthetic backend fixture does not complete a model row. / 只有精确模型族具备版本化 Visual Profile、官方或权威的前处理/导出/后处理证据、可复现模型 SHA256、至少一个生产后端的真实图像推理、精度黄金对照、测试、文档以及 ModelPack/ModelFactory 准入记录时，该行才算完成。通用任务 Decoder 或合成后端夹具不能代表具体模型已迁移。
 
-The inventory below was read from `origin/DeploySharpV1.0:src/DeploySharp/Model/ModelType.cs` on 2026-08-06. At the Stage 15 baseline, V2 has generic contracts for most tasks but no row below has completed the strict model-level gate. The baseline is therefore **0/32 model/task combinations migrated**, not zero reusable infrastructure. / 下表于 2026-08-06 从 `origin/DeploySharpV1.0:src/DeploySharp/Model/ModelType.cs` 读取。阶段 15 基线已具备多数任务的通用合同，但下列各行尚未通过严格的模型级门禁，因此基线为 **0/32 个模型/任务组合完成迁移**，并不表示没有可复用基础设施。
+The inventory below was read from `origin/DeploySharpV1.0:src/DeploySharp/Model/ModelType.cs` on 2026-08-06. Stage 16 implements exact Profiles and real ORT/OpenVINO CPU paths for all ten YOLO detection rows. Those rows remain `ContractVerified + LocalBackendVerified`, not complete `AlgorithmVerified`, because independently reproducible official golden comparisons and exact redistribution review are still blocked. The strict completed count therefore remains **0/32**, while local backend coverage is **10/32**. / 下表于 2026-08-06 从 `origin/DeploySharpV1.0:src/DeploySharp/Model/ModelType.cs` 读取。阶段 16 已为十个 YOLO 检测行实现精确 Profile 和真实 ORT/OpenVINO CPU 路径；但独立可复现官方黄金对照与精确再分发审核仍受阻，因此状态是 `ContractVerified + LocalBackendVerified`，不是完整 `AlgorithmVerified`。严格完成数仍为 **0/32**，本机真实后端覆盖为 **10/32**。
 
 ## YOLO inventory / YOLO 清单
 
 | V1 model type / V1 模型类型 | Task / 任务 | V2 reusable contract / V2 可复用合同 | Migration state / 迁移状态 |
 | --- | --- | --- | --- |
 | `YOLOCls` | Classification / 分类 | Classification | Planned: exact version/export profile required / 已规划：需精确版本与导出 Profile |
-| `YOLOv5Det` | Detection / 检测 | Detection | Planned / 已规划 |
+| `YOLOv5Det` | Detection / 检测 | YOLO candidate-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
 | `YOLOv5Seg` | Instance segmentation / 实例分割 | Instance segmentation | Planned / 已规划 |
-| `YOLOv6Det` | Detection / 检测 | Detection | Planned / 已规划 |
-| `YOLOv7Det` | Detection / 检测 | Detection | Planned / 已规划 |
-| `YOLOv8Det` | Detection / 检测 | Detection | Planned / 已规划 |
+| `YOLOv6Det` | Detection / 检测 | YOLO candidate-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
+| `YOLOv7Det` | Detection / 检测 | YOLO batched end-to-end Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
+| `YOLOv8Det` | Detection / 检测 | YOLO attribute-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
 | `YOLOv8Seg` | Instance segmentation / 实例分割 | Instance segmentation | Planned / 已规划 |
 | `YOLOv8Obb` | Oriented detection / 旋转框检测 | Oriented detection | Planned / 已规划 |
 | `YOLOv8Pose` | Pose / 姿态 | Pose | Planned / 已规划 |
-| `YOLOv9Det` | Detection / 检测 | Detection | Planned / 已规划 |
+| `YOLOv9Det` | Detection / 检测 | YOLO attribute-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
 | `YOLOv9Seg` | Instance segmentation / 实例分割 | Instance segmentation | Planned / 已规划 |
-| `YOLOv10Det` | Detection / 检测 | Detection | Planned / 已规划 |
-| `YOLOv11Det` | Detection / 检测 | Detection | Planned / 已规划 |
+| `YOLOv10Det` | Detection / 检测 | YOLO end-to-end Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
+| `YOLOv11Det` | Detection / 检测 | YOLO attribute-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
 | `YOLOv11Seg` | Instance segmentation / 实例分割 | Instance segmentation | Planned / 已规划 |
 | `YOLOv11Obb` | Oriented detection / 旋转框检测 | Oriented detection | Planned / 已规划 |
 | `YOLOv11Pose` | Pose / 姿态 | Pose | Planned / 已规划 |
-| `YOLOv12Det` | Detection / 检测 | Detection | Planned / 已规划 |
-| `YOLOv13Det` | Detection / 检测 | Detection | Planned; authoritative upstream/export contract must be identified / 已规划；需确认权威上游与导出合同 |
-| `YOLOv26Det` | Detection / 检测 | Detection | Planned / 已规划 |
+| `YOLOv12Det` | Detection / 检测 | YOLO attribute-major raw Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
+| `YOLOv13Det` | Detection / 检测 | YOLO attribute-major raw Profile pinned to iMoonLab reference | ContractVerified + LocalBackendVerified; exact artifact provenance/golden/license blocked / 合同与本机后端已验证；精确工件来源/黄金/许可阻断 |
+| `YOLOv26Det` | Detection / 检测 | YOLO end-to-end Profile | ContractVerified + LocalBackendVerified; official golden/license blocked / 合同与本机后端已验证；官方黄金/许可阻断 |
 | `YOLOv26Seg` | Instance segmentation / 实例分割 | Instance segmentation | Planned / 已规划 |
 | `YOLOv26Obb` | Oriented detection / 旋转框检测 | Oriented detection | Planned / 已规划 |
 | `YOLOv26Pose` | Pose / 姿态 | Pose | Planned / 已规划 |

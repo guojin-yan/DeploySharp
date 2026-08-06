@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\eng\models\yolo\manifests\*.modelpack.json" Link="fixtures\yolo\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-detection.onnx" Link="fixtures\onnx\text-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-recognition-ctc.onnx" Link="fixtures\onnx\text-recognition-ctc.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-orientation.onnx" Link="fixtures\onnx\text-orientation.onnx" CopyToOutputDirectory="PreserveNewest" />

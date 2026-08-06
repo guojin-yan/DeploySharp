@@ -8,15 +8,15 @@ Ultralytics is an upstream reference for models, exporters, and official preproc
 
 | Upstream family / 上游模型族 | Official tasks / 官方任务 | DeploySharp contract surface / DeploySharp 合同面 | Admission status / 准入状态 |
 | --- | --- | --- | --- |
-| YOLO26 | Detect, Segment, Semantic, Depth, Classify, Pose, OBB | Detect, instance/semantic segmentation, classify, Pose and OBB exist; depth needs a dedicated contract. / 已有检测、实例/语义分割、分类、Pose 与 OBB；Depth 需要专用合同。 | Planned; no family Profile is AlgorithmVerified. / 已规划；尚无模型族 Profile 达到 AlgorithmVerified。 |
-| YOLO11 | Detect, Segment, Classify, Pose, OBB | All task-level contracts exist. / 全部任务级合同已存在。 | Planned / 已规划 |
-| YOLO12 | Detect, Segment, Classify, Pose, OBB; official pretrained coverage currently differs by task. / 官方预训练权重覆盖因任务而异。 | All task-level contracts exist. / 全部任务级合同已存在。 | Planned / 已规划 |
-| YOLOv10 | Detect | Detection contract exists. / 已有检测合同。 | Planned / 已规划 |
-| YOLOv9 | Detect, Segment | Detection and instance-segmentation contracts exist. / 已有检测与实例分割合同。 | Planned / 已规划 |
-| YOLOv8 | Detect, Segment, Classify, Pose, OBB | All task-level contracts exist. / 全部任务级合同已存在。 | Planned; local ONNX exports are available for read-only validation. / 已规划；本机已有可只读验证的 ONNX 导出。 |
-| YOLOv7 | Predict from compatible ONNX or TensorRT export / 通过兼容 ONNX 或 TensorRT 导出推理 | Detection contract exists. / 已有检测合同。 | Planned; portable ONNX is the catalog candidate. / 已规划；目录候选仅使用可移植 ONNX。 |
-| YOLOv6 | Detect | Detection contract exists. / 已有检测合同。 | Planned / 已规划 |
-| YOLOv5 | Detect | Detection contract exists. / 已有检测合同。 | Planned / 已规划 |
+| YOLO26 | Detect, Segment, Semantic, Depth, Classify, Pose, OBB | Detect has an artifact-bound end-to-end Profile; other tasks retain their task-level contracts. / Detect 已有工件绑定端到端 Profile；其他任务保留任务级合同。 | Detect: ContractVerified + LocalBackendVerified (ORT/OpenVINO); official golden/license review blocked. Other tasks: Planned. / Detect：合同与本机双后端已验证，官方黄金/许可仍阻断；其他任务已规划。 |
+| YOLO11 | Detect, Segment, Classify, Pose, OBB | Detect has an artifact-bound raw attribute-major Profile; all task-level contracts exist. / Detect 已有工件绑定 raw attribute-major Profile；全部任务级合同已存在。 | Detect: ContractVerified + LocalBackendVerified; other tasks Planned. / Detect 合同与本机后端已验证；其他任务已规划。 |
+| YOLO12 | Detect, Segment, Classify, Pose, OBB; official pretrained coverage currently differs by task. / 官方预训练权重覆盖因任务而异。 | Detect has an artifact-bound raw attribute-major Profile. / Detect 已有工件绑定 raw attribute-major Profile。 | Detect: ContractVerified + LocalBackendVerified; other tasks Planned. / Detect 合同与本机后端已验证；其他任务已规划。 |
+| YOLOv10 | Detect | Artifact-bound end-to-end detection Profile. / 工件绑定端到端检测 Profile。 | ContractVerified + LocalBackendVerified; official golden/license review blocked. / 合同与本机后端已验证；官方黄金/许可仍阻断。 |
+| YOLOv9 | Detect, Segment | Detect has an artifact-bound raw attribute-major Profile; instance-segmentation contract exists. / Detect 已有工件绑定 raw attribute-major Profile；实例分割合同已存在。 | Detect: ContractVerified + LocalBackendVerified; Segment Planned. / Detect 合同与本机后端已验证；Segment 已规划。 |
+| YOLOv8 | Detect, Segment, Classify, Pose, OBB | Detect has an artifact-bound raw attribute-major Profile; all task-level contracts exist. / Detect 已有工件绑定 raw attribute-major Profile；全部任务级合同已存在。 | Detect: ContractVerified + LocalBackendVerified; other tasks Planned. / Detect 合同与本机后端已验证；其他任务已规划。 |
+| YOLOv7 | Predict from compatible ONNX or TensorRT export / 通过兼容 ONNX 或 TensorRT 导出推理 | Artifact-bound batched end-to-end detection Profile. / 工件绑定 batched end-to-end 检测 Profile。 | ContractVerified + LocalBackendVerified; portable ONNX remains External catalog evidence. / 合同与本机后端已验证；可移植 ONNX 仍是 External 目录证据。 |
+| YOLOv6 | Detect | Artifact-bound candidate-major raw detection Profile. / 工件绑定 candidate-major raw 检测 Profile。 | ContractVerified + LocalBackendVerified; official golden/license review blocked. / 合同与本机后端已验证；官方黄金/许可仍阻断。 |
+| YOLOv5 | Detect | Artifact-bound candidate-major raw detection Profile. / 工件绑定 candidate-major raw 检测 Profile。 | ContractVerified + LocalBackendVerified; official golden/license review blocked. / 合同与本机后端已验证；官方黄金/许可仍阻断。 |
 | YOLOv4 | No supported upstream mode / 上游无受支持模式 | None / 无 | Not a required Ultralytics compatibility target while upstream reports `None`. / 上游标记为 `None` 时不属于 Ultralytics 兼容目标。 |
 | YOLOv3 | Detect | Detection contract exists. / 已有检测合同。 | Planned / 已规划 |
 | SAM 3, SAM 2, SAM, MobileSAM, FastSAM | Promptable Segment | Existing instance/semantic masks do not yet express prompt encoder/decoder sessions. / 现有实例/语义掩码尚不能完整表达提示编码器/解码器会话。 | Dedicated multimodel module required; local SAM2/SAM3 artifacts are read-only candidates. / 需要专用多模型模块；本机 SAM2/SAM3 工件仅作只读候选。 |

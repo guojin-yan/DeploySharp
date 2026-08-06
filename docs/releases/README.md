@@ -4,7 +4,7 @@ This index is the single entry point for DeploySharp version changes. Every vers
 
 | Version / 版本 | Date / 日期 | Status / 状态 | Main update / 主要更新 | Details / 详情 |
 | --- | --- | --- | --- | --- |
-| `2.0.0-alpha.1` | 2026-08-06 | Alpha development / Alpha 开发中 | Modular V2 baseline; current increment adds anomaly detection/segmentation, OCR orientation/automatic correction and the reviewed model-support roadmap. / V2 模块化基线；当前增量新增异常检测/分割、OCR 方向/自动纠正和已审阅模型支持路线。 | [2.0.0-alpha.1](2.0.0-alpha.1.md) |
+| `2.0.0-alpha.1` | 2026-08-06 | Alpha development / Alpha 开发中 | Modular V2 baseline; current increment adds all ten V1 YOLO detection Profiles and real ORT/OpenVINO CPU evidence while retaining strict model-release gates. / V2 模块化基线；当前增量新增 V1 十个 YOLO 检测 Profile 与真实 ORT/OpenVINO CPU 证据，并保留严格模型发布门禁。 | [2.0.0-alpha.1](2.0.0-alpha.1.md) |
 
 ## Required fields for future entries / 后续条目的必填内容
 

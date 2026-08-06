@@ -60,7 +60,8 @@ namespace JYPPX.DeploySharp.Visual
             float iouThreshold,
             DetectionNmsMode mode,
             int maximumResults,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool useModelCoordinates = false)
         {
             var kept = new List<VisualDetectionCandidate>(Math.Min(ordered.Count, maximumResults));
             for (int candidateIndex = 0; candidateIndex < ordered.Count && kept.Count < maximumResults; candidateIndex++)
@@ -73,7 +74,9 @@ namespace JYPPX.DeploySharp.Visual
                     if ((keptIndex & 255) == 0) cancellationToken.ThrowIfCancellationRequested();
                     VisualDetectionCandidate existing = kept[keptIndex];
                     if (mode == DetectionNmsMode.ClassAware && existing.ClassIndex != candidate.ClassIndex) continue;
-                    if (DetectionDecoder.IntersectionOverUnion(existing.SourceBox, candidate.SourceBox) > iouThreshold)
+                    RectangleF existingBox = useModelCoordinates ? existing.ModelBox : existing.SourceBox;
+                    RectangleF candidateBox = useModelCoordinates ? candidate.ModelBox : candidate.SourceBox;
+                    if (DetectionDecoder.IntersectionOverUnion(existingBox, candidateBox) > iouThreshold)
                     {
                         suppressed = true;
                         break;

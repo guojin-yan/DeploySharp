@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0",
+  "verifiedAt": "2026-08-06T09:45:00Z",
+  "validationImage": {
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "preparedTensorSha256": "48af3a194d046f683585c8c8deffa953d415122ec0f2398bd27d8a67f34978df",
+    "redistributionAllowed": false,
+    "notes": "User-authorized local validation input; provenance and redistribution terms are not yet audited."
+  },
+  "preprocessingVersion": "ultralytics-letterbox-rgb-nchw-v1",
+  "postprocessingVersion": "deploysharp-yolo-detection-v1",
+  "models": [
+    {
+      "family": "yolov5", "modelId": "yolo/v5/detect/n", "name": "YOLOv5n Detect", "modelVersion": "n", "fileName": "yolov5n.onnx",
+      "size": 7903142, "sha256": "1cad0ece41bc351e2e1a3bd9b244dc4219f1b7b4d322928f13b6e7d19a00ef9d", "opset": 12,
+      "outputName": "output0", "outputKind": "raw-candidate-major", "outputShape": [1, -1, 85], "exporterVersion": "local-onnx-export",
+      "repository": "https://github.com/ultralytics/yolov5", "referenceCommit": "20d1d78a08277e365d57bfa3a2cce752772d9e59", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 4, "topLabel": "person", "topScore": 0.823105 }, "openVino": { "count": 4, "topLabel": "person", "topScore": 0.823104 }
+    },
+    {
+      "family": "yolov6", "modelId": "yolo/v6/detect/s", "name": "YOLOv6s Detect", "modelVersion": "s", "fileName": "yolov6s.onnx",
+      "size": 69046664, "sha256": "f6fddae83fb23ff02578d5b5e9f4eb9d68b5d8e7f469bb80edf4041681c757f6", "opset": 12,
+      "outputName": "outputs", "outputKind": "raw-candidate-major", "outputShape": [1, -1, 85], "exporterVersion": "local-onnx-export",
+      "repository": "https://github.com/meituan/YOLOv6", "referenceCommit": "e86a483f3f6bded25d45970b56831345a99744a4", "licenseExpression": "GPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "person", "topScore": 0.948000 }, "openVino": { "count": 5, "topLabel": "person", "topScore": 0.948000 }
+    },
+    {
+      "family": "yolov7", "modelId": "yolo/v7/detect/base", "name": "YOLOv7 Detect", "modelVersion": "base", "fileName": "yolov7.onnx",
+      "size": 147764877, "sha256": "8ee07ed4aa95070ae1c9e7a37c2407c2aa065e989f887cb1193bcb117603c641", "opset": 12,
+      "outputName": "output", "outputKind": "batched-end-to-end", "outputShape": [-1, 7], "exporterVersion": "local-onnx-export",
+      "repository": "https://github.com/WongKinYiu/yolov7", "referenceCommit": "a207844b1ce82d204ab36d87d496728d3d2348e7", "licenseExpression": "GPL-3.0-only",
+      "onnxRuntime": { "count": 7, "topLabel": "person", "topScore": 0.943969 }, "openVino": { "count": 7, "topLabel": "person", "topScore": 0.943969 }
+    },
+    {
+      "family": "yolov8", "modelId": "yolo/v8/detect/n", "name": "YOLOv8n Detect", "modelVersion": "n", "fileName": "yolov8n.onnx",
+      "size": 12836453, "sha256": "50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4", "opset": 19,
+      "outputName": "output0", "outputKind": "raw-attribute-major", "outputShape": [1, 84, -1], "exporterVersion": "8.3.78",
+      "repository": "https://github.com/ultralytics/ultralytics", "referenceCommit": "1367566337fb8056223a1aeb469360747f1b1bcd", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "person", "topScore": 0.900904 }, "openVino": { "count": 5, "topLabel": "person", "topScore": 0.900904 },
+      "openVinoIr": { "converterVersion": "2025.4.0", "xmlSize": 224246, "xmlSha256": "065b06a5d8c60ab18bf0ccd0baa285e21f31c9e517042b79cd5d78971b1551a1", "binSize": 12708660, "binSha256": "b4497767a70f3a165b8204e0be05d5f3d59325a1ec9d6d51f2b802f93316b6ce", "count": 5, "topLabel": "person", "topScore": 0.900904 }
+    },
+    {
+      "family": "yolov9", "modelId": "yolo/v9/detect/s", "name": "YOLOv9s Detect", "modelVersion": "s", "fileName": "yolov9s.onnx",
+      "size": 29153318, "sha256": "e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7", "opset": 19,
+      "outputName": "output0", "outputKind": "raw-attribute-major", "outputShape": [1, 84, -1], "exporterVersion": "8.3.78",
+      "repository": "https://github.com/WongKinYiu/yolov9", "referenceCommit": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff", "licenseExpression": "GPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "bus", "topScore": 0.969499 }, "openVino": { "count": 5, "topLabel": "bus", "topScore": 0.969499 }
+    },
+    {
+      "family": "yolov10", "modelId": "yolo/v10/detect/n", "name": "YOLOv10n Detect", "modelVersion": "n", "fileName": "yolov10n.onnx",
+      "size": 9454100, "sha256": "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81", "opset": 19,
+      "outputName": "output0", "outputKind": "end-to-end", "outputShape": [1, -1, 6], "exporterVersion": "8.3.78",
+      "repository": "https://github.com/THU-MIG/yolov10", "referenceCommit": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "bus", "topScore": 0.939992 }, "openVino": { "count": 5, "topLabel": "bus", "topScore": 0.939992 }
+    },
+    {
+      "family": "yolo11", "modelId": "yolo/v11/detect/n", "name": "YOLO11n Detect", "modelVersion": "n", "fileName": "yolo11n.onnx",
+      "size": 10720330, "sha256": "7060132736a0e5856a8b91d68fd7558ac6daf8c5fb7cec46dbc9cb034f8409c3", "opset": 19,
+      "outputName": "output0", "outputKind": "raw-attribute-major", "outputShape": [1, 84, -1], "exporterVersion": "8.3.78",
+      "repository": "https://github.com/ultralytics/ultralytics", "referenceCommit": "1367566337fb8056223a1aeb469360747f1b1bcd", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "bus", "topScore": 0.938091 }, "openVino": { "count": 5, "topLabel": "bus", "topScore": 0.938091 }
+    },
+    {
+      "family": "yolo12", "modelId": "yolo/v12/detect/n", "name": "YOLO12n Detect", "modelVersion": "n", "fileName": "yolo12n.onnx",
+      "size": 10671234, "sha256": "9a99a764c60423ffaef870bf22687c66da284c6b2ad7f249605ced9c8a2a3e80", "opset": 19,
+      "outputName": "output0", "outputKind": "raw-attribute-major", "outputShape": [1, 84, -1], "exporterVersion": "8.3.78",
+      "repository": "https://github.com/sunsmarterjie/yolov12", "referenceCommit": "01a22c0603e0eaa6d9bd62120a391e744d92cea2", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "bus", "topScore": 0.903900 }, "openVino": { "count": 5, "topLabel": "bus", "topScore": 0.903900 }
+    },
+    {
+      "family": "yolov13", "modelId": "yolo/v13/detect/n", "name": "YOLOv13n Detect", "modelVersion": "n", "fileName": "yolov13n.onnx",
+      "size": 10310579, "sha256": "a589a4e351e9f9be6712ba4d6831cfbcc16b7ac58d6498c02a8386eca828cf80", "opset": 17,
+      "outputName": "output0", "outputKind": "raw-attribute-major", "outputShape": [1, 84, -1], "exporterVersion": "8.3.63",
+      "repository": "https://github.com/iMoonLab/YOLOv13", "referenceCommit": "73289949533efac82bb5f72ec19b746618656bd2", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "bus", "topScore": 0.936024 }, "openVino": { "count": 5, "topLabel": "bus", "topScore": 0.936024 }
+    },
+    {
+      "family": "yolo26", "modelId": "yolo/v26/detect/n", "name": "YOLO26n Detect", "modelVersion": "n", "fileName": "yolo26n.onnx",
+      "size": 9941955, "sha256": "bd169d41c0c04abe18bc1ea6220ff295cf77a38c165071b1acc76ee6ef0c10c4", "opset": 19,
+      "outputName": "output0", "outputKind": "end-to-end", "outputShape": [1, -1, 6], "exporterVersion": "8.4.0",
+      "repository": "https://github.com/ultralytics/ultralytics", "referenceCommit": "1367566337fb8056223a1aeb469360747f1b1bcd", "licenseExpression": "AGPL-3.0-only",
+      "onnxRuntime": { "count": 5, "topLabel": "person", "topScore": 0.924566 }, "openVino": { "count": 5, "topLabel": "person", "topScore": 0.924566 }
+    }
+  ]
+}

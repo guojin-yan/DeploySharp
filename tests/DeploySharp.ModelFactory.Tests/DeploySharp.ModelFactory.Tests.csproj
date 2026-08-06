@@ -15,4 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DeploySharp.ModelFactory\DeploySharp.ModelFactory.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\eng\models\yolo\yolo-detection-support.json" Link="fixtures\yolo-detection-support.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

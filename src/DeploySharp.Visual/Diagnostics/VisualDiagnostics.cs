@@ -47,6 +47,10 @@ namespace JYPPX.DeploySharp.Visual
         public const string OcrOrientationLimitExceeded = "DS-VISUAL-4302";
         /// <summary>OCR orientation correction is unavailable. / OCR 方向纠正能力不可用。</summary>
         public const string OcrOrientationCapabilityUnavailable = "DS-VISUAL-4303";
+        /// <summary>A YOLO model, export, tensor, or decoding contract is invalid. / YOLO 模型、导出、张量或解码合同无效。</summary>
+        public const string YoloContractInvalid = "DS-VISUAL-4401";
+        /// <summary>A YOLO candidate, result, or workspace limit was exceeded. / YOLO 候选、结果或工作区限制超出。</summary>
+        public const string YoloLimitExceeded = "DS-VISUAL-4402";
     }
 
     /// <summary>Represents a diagnosable Visual-domain failure while preserving the original exception. / 表示可诊断的 Visual 领域故障，同时保留原始异常。</summary>

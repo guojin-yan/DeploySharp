@@ -2,8 +2,10 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.Yolo;
 using JYPPX.DeploySharp.Visual.OpenCV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -119,6 +121,64 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(ImageTransformKind.Crop, crop.Transform.Kind);
                 Assert.AreEqual(new TensorShape(1, 3, 2, 2), crop.Tensor.Shape);
             }
+        }
+
+        [TestMethod]
+        public void YoloProfileProducesOfficialLetterboxAndNormalizationContract()
+        {
+            YoloDetectionProfile profile = YoloDetectionProfiles.Create(
+                YoloDetectionFamily.YoloV8,
+                new ModelId("tests/yolov8n-detect"),
+                new string('a', 64),
+                YoloLabelSets.Coco80,
+                "1367566337fb8056223a1aeb469360747f1b1bcd",
+                "8.3.78",
+                new YoloDetectionProfileOptions(19, new VisualSize(6, 6)));
+
+            OpenCvPreprocessOptions options = OpenCvYoloPreprocessing.CreateOptions(profile);
+            Assert.AreEqual(OpenCvResizeMode.Letterbox, options.ResizeMode);
+            Assert.AreEqual(VisualColorOrder.Rgb, options.ColorOrder);
+            Assert.AreEqual(VisualTensorLayout.Nchw, options.Layout);
+            Assert.AreEqual(OpenCvOutputType.Float32, options.OutputType);
+            Assert.AreEqual(new OpenCvRgbColor(114, 114, 114), options.PaddingColor);
+            Assert.AreEqual(255f, options.StandardDeviations.Single());
+
+            using (PreparedVisualInput input = new OpenCvVisualInputFactory().Create(
+                OpenCvImageSource.FromFile(Fixture("rgb.png")),
+                profile.VisualProfile.Input.Name,
+                options))
+            {
+                Assert.AreEqual(new TensorShape(1, 3, 6, 6), input.Tensor.Shape);
+                Assert.AreEqual(ImageTransformKind.Letterbox, input.Transform.Kind);
+                Assert.AreEqual(1f, input.Transform.OffsetY);
+                Assert.AreEqual(3, input.Preprocessing.Scales.Count);
+                foreach (float scale in input.Preprocessing.Scales)
+                {
+                    Assert.AreEqual(1f / 255f, scale, 0.000001f);
+                }
+
+                float[] values = ((Tensor<float>)input.Tensor).ToArray();
+                const float expectedPadding = 114f / 255f;
+                Assert.AreEqual(expectedPadding, values[0], 0.000001f);
+                Assert.AreEqual(expectedPadding, values[36], 0.000001f);
+                Assert.AreEqual(expectedPadding, values[72], 0.000001f);
+            }
+        }
+
+        [TestMethod]
+        public void YoloScaleUpFalseIsRejectedUntilGeometryIsRepresentable()
+        {
+            YoloDetectionProfile profile = YoloDetectionProfiles.Create(
+                YoloDetectionFamily.YoloV5,
+                new ModelId("tests/yolov5n-no-scale-up"),
+                new string('b', 64),
+                YoloLabelSets.Coco80,
+                "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+                "7.0",
+                new YoloDetectionProfileOptions(12, new VisualSize(640, 640), scaleUp: false));
+
+            OpenCvVisualException exception = Assert.ThrowsExactly<OpenCvVisualException>(() => OpenCvYoloPreprocessing.CreateOptions(profile));
+            Assert.AreEqual(OpenCvErrorCodes.PreprocessInvalid, exception.ErrorCode);
         }
 
         [TestMethod]
