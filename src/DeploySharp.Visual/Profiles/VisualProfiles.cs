@@ -34,6 +34,8 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId TextRecognition { get; } = new VisualTaskId("text-recognition");
         /// <summary>Gets the complete optical-character-recognition task. / 获取完整光学字符识别任务。</summary>
         public static VisualTaskId OpticalCharacterRecognition { get; } = new VisualTaskId("optical-character-recognition");
+        /// <summary>Gets the anomaly-detection and anomaly-segmentation task. / 获取异常检测与异常分割任务。</summary>
+        public static VisualTaskId AnomalyDetection { get; } = new VisualTaskId("anomaly-detection");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);

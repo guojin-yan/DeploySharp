@@ -21,6 +21,10 @@
   href: visual-oriented-detection.md
 - name: Visual OCR / Visual OCR
   href: visual-ocr.md
+- name: Visual Anomaly Detection / Visual 异常检测
+  href: visual-anomaly-detection.md
+- name: Anomaly AlgorithmVerified Template / 异常模型准入模板
+  href: anomaly-algorithm-verification-template.md
 - name: OCR AlgorithmVerified Template / OCR 算法准入模板
   href: ocr-algorithm-verification-template.md
 - name: Visual Lifecycle and Compatibility / Visual 生命周期与兼容性

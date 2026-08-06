@@ -33,6 +33,12 @@ namespace JYPPX.DeploySharp.Visual
         public const string OcrPipelineFailed = "DS-VISUAL-4101";
         /// <summary>An OCR input, batch, output, or workspace limit was exceeded. / OCR 输入、批次、输出或工作区超出限制。</summary>
         public const string OcrLimitExceeded = "DS-VISUAL-4102";
+        /// <summary>An anomaly tensor or result contract is invalid. / 异常张量或结果契约无效。</summary>
+        public const string AnomalyContractInvalid = "DS-VISUAL-4201";
+        /// <summary>An anomaly map, workspace, or output limit was exceeded. / 异常图、工作区或输出超出限制。</summary>
+        public const string AnomalyLimitExceeded = "DS-VISUAL-4202";
+        /// <summary>A requested anomaly postprocessing capability is unavailable. / 请求的异常后处理能力不可用。</summary>
+        public const string AnomalyCapabilityUnavailable = "DS-VISUAL-4203";
         /// <summary>The Visual object has already been disposed. / Visual 对象已被释放。</summary>
         public const string ObjectDisposed = "DS-VISUAL-5001";
     }

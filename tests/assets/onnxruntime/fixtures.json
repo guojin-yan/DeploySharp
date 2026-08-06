@@ -1,5 +1,40 @@
 {
   "files": {
+    "anomaly-detection.onnx": {
+      "bytes": 896,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            3,
+            5
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "image_score",
+          "shape": [
+            1
+          ]
+        },
+        {
+          "elementType": "float",
+          "name": "anomaly_map",
+          "shape": [
+            1,
+            2,
+            3,
+            5
+          ]
+        }
+      ],
+      "sha256": "1892fa25b754f9e5e7b16686649a95a5ae035eef17f3f3cbc460d8a771c70833"
+    },
     "binary-segmentation.onnx": {
       "bytes": 295,
       "inputs": [

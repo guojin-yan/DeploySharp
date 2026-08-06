@@ -94,10 +94,10 @@ namespace JYPPX.DeploySharp.Visual
         private async Task<VisualInferenceResult> ExecuteAsync(PreparedVisualInput input, VisualExecutionOptions options, bool asynchronous, CancellationToken callerToken)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            EnsureUsable();
+            CancellationToken disposeToken = CaptureDisposeToken();
             bool entered = false;
             using (var timeoutSource = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, _disposeSource.Token))
+            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, disposeToken))
             {
                 try
                 {
@@ -152,6 +152,16 @@ namespace JYPPX.DeploySharp.Visual
             lock (_lifetimeGate)
             {
                 if (_disposed) throw new VisualException(VisualErrorCodes.ObjectDisposed, "The visual pipeline has been disposed.", profileId: Selection.Profile.ProfileId, backendId: Selection.Backend.Id, modelId: Selection.Profile.ModelId);
+            }
+        }
+
+        private CancellationToken CaptureDisposeToken()
+        {
+            lock (_lifetimeGate)
+            {
+                if (_disposed) throw new VisualException(VisualErrorCodes.ObjectDisposed, "The visual pipeline has been disposed.", profileId: Selection.Profile.ProfileId, backendId: Selection.Backend.Id, modelId: Selection.Profile.ModelId);
+                // Capture the token while the lifetime source is protected so Dispose cannot release it between the usability check and linked-token creation. / 在生命周期源受保护时捕获令牌，防止 Dispose 在可用性检查与创建链接令牌之间释放该源。
+                return _disposeSource.Token;
             }
         }
 

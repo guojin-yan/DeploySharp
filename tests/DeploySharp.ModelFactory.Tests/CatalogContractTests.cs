@@ -132,6 +132,30 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public void OfflinePreviewAnomalyCatalogSelectsPortableOnnxAndOpenVinoIrBackends()
+        {
+            var source = new ModelSourceDocument("https://github.com/guojin-yan/DeploySharp", "https://github.com/guojin-yan/DeploySharp", "generated", "JYPPX", null, "Apache-2.0", null, true);
+            var release = new ModelCatalogRelease("guojin-yan", "DeploySharp", "models-20260806.1", "0123456789abcdef");
+            var entry = new ModelCatalogEntry(
+                "tests/anomaly-detection", "DeploySharp anomaly contract fixture", "deploysharp-fixture", "anomaly-detection", "1.0", ModelCatalogStatus.Preview,
+                "Offline adapter fixture; not an algorithm-verified anomaly model.", source, release,
+                new[]
+                {
+                    new ModelCatalogArtifact("anomaly.onnx", "onnx", new[] { "onnxruntime", "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()),
+                    new ModelCatalogArtifact("anomaly.openvino-ir", "openvino-ir", new[] { "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>())
+                }, Array.Empty<ModelCatalogAsset>(), documentationPath: "models/tests-local-only.md");
+            ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument(
+                "1.0", "2026-08-06T00:00:00Z", "tests-anomaly.1", new Uri("https://github.com/guojin-yan/DeploySharp"), new[] { entry }));
+
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "onnx", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "onnx", backend: "openvino", includePreview: true)).Count);
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "openvino-ir", backend: "openvino", includePreview: true)).Count);
+            Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", includePreview: false)).Count);
+            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+        }
+
+        [TestMethod]
         public void RejectsUnsafePathsHashesLicensesAndReleaseUrls()
         {
             string[] unsafePaths = { "../model.gguf", "C:\\model.gguf", "//server/share/model.gguf", "a/./model.gguf", "a\\..\\model.gguf", "a\0model.gguf", "CON.gguf" };

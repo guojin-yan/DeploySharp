@@ -6,8 +6,8 @@
     <RootNamespace>JYPPX.DeploySharp.Visual.OpenCV</RootNamespace>
     <PackageId>JYPPX.DeploySharp.Visual.OpenCV</PackageId>
     <Title>DeploySharp Visual OpenCV</Title>
-    <Description>OpenCV image loading, preprocessing, OCR perspective crop, orientation, and batch adapter for DeploySharp Visual.</Description>
-    <PackageTags>DeploySharp;Visual;OpenCV;Image;Preprocessing;OCR;Perspective;Warp;Tensor</PackageTags>
+    <Description>OpenCV image loading and high-throughput preprocessing for DeploySharp Visual classification, detection, anomaly, segmentation, pose, OBB, and OCR pipelines.</Description>
+    <PackageTags>DeploySharp;Visual;OpenCV;Image;Preprocessing;AnomalyDetection;AnomalySegmentation;OCR;Perspective;Warp;Tensor</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>

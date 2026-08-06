@@ -28,3 +28,7 @@ Legacy TFMs use correct compatibility implementations. Modern `net8.0`/`net10.0`
 ## OCR suite verification / OCR 套件验证
 
 OCR is a suite-level verification: detector, recognizer, character set, crop semantics, and test images must be admitted together. The dedicated [OCR AlgorithmVerified template](ocr-algorithm-verification-template.md) adds detector tensor/polygon, crop tensor, logits/token, text, stage latency, throughput, and allocation evidence. A detector or recognizer alone does not establish end-to-end OCR fidelity. / OCR 是套件级验证：检测器、识别器、字符表、裁剪语义和测试图必须共同准入。专用 [OCR AlgorithmVerified 模板](ocr-algorithm-verification-template.md) 增加检测 tensor/polygon、crop tensor、logits/token、文本、阶段延迟、吞吐与分配证据；单独的检测器或识别器不能证明端到端 OCR 保真。
+
+## Anomaly verification / 异常模型验证
+
+Anomaly verification must bind the image-level score and pixel map to the same official preprocessing, score reduction, map activation/value range, channel aggregation, normalization, interpolation, calibration set and threshold. Report both image-level and pixel-level official metrics and compare raw maps as well as final source-space masks. The dedicated [anomaly AlgorithmVerified template](anomaly-algorithm-verification-template.md) records these facts; a tensor-shape-compatible decoder alone proves only `ContractVerified`. / 异常模型验证必须把图像级分数与像素级异常图绑定到同一套官方前处理、分数归约、异常图激活/范围、通道聚合、归一化、插值、校准集及阈值。必须报告图像级和像素级官方指标，并同时比较原始异常图与最终源图掩码。专用[异常模型 AlgorithmVerified 模板](anomaly-algorithm-verification-template.md)记录这些事实；仅与张量 shape 兼容的解码器只能证明 `ContractVerified`。

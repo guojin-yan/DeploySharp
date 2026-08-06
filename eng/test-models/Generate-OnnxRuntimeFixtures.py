@@ -336,6 +336,42 @@ def text_recognition_ctc() -> onnx.ModelProto:
     return graph_model(graph, "text-recognition-ctc")
 
 
+def anomaly_detection() -> onnx.ModelProto:
+    """Consume an odd-sized RGB tensor and emit a scalar score plus two-channel probability map."""
+    map_values = numpy_helper.from_array(
+        np.asarray(
+            [[
+                [[0.00, 0.10, 0.20, 0.30, 0.40], [0.50, 0.60, 0.70, 0.80, 0.90], [1.00, 0.00, 0.25, 0.75, 1.00]],
+                [[0.05, 0.15, 0.25, 0.35, 0.45], [0.55, 0.65, 0.75, 0.85, 0.95], [0.90, 0.10, 0.50, 0.50, 0.00]],
+            ]],
+            dtype=np.float32,
+        ),
+        name="anomaly_map_value",
+    )
+    score = numpy_helper.from_array(np.asarray([0.875], dtype=np.float32), name="anomaly_score_value")
+    zero = numpy_helper.from_array(np.asarray(0.0, dtype=np.float32), name="anomaly_zero")
+    axes = numpy_helper.from_array(np.asarray([1, 2, 3], dtype=np.int64), name="anomaly_unsqueeze_axes")
+    graph = helper.make_graph(
+        [
+            helper.make_node("ReduceMean", ["images"], ["image_mean"], axes=[1, 2, 3], keepdims=0),
+            helper.make_node("Mul", ["image_mean", "anomaly_zero"], ["image_zero"]),
+            helper.make_node("Unsqueeze", ["image_zero", "anomaly_unsqueeze_axes"], ["map_zero"]),
+            helper.make_node("Constant", [], ["map_constants"], value=map_values),
+            helper.make_node("Constant", [], ["score_constants"], value=score),
+            helper.make_node("Add", ["map_constants", "map_zero"], ["anomaly_map"]),
+            helper.make_node("Add", ["score_constants", "image_zero"], ["image_score"]),
+        ],
+        "deploysharp_anomaly_detection",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 3, 5])],
+        [
+            helper.make_tensor_value_info("image_score", TensorProto.FLOAT, [1]),
+            helper.make_tensor_value_info("anomaly_map", TensorProto.FLOAT, [1, 2, 3, 5]),
+        ],
+        [zero, axes],
+    )
+    return graph_model(graph, "anomaly-detection")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -455,6 +491,7 @@ def main() -> None:
         "corner-obb.onnx": corner_obb(),
         "text-detection.onnx": text_detection(),
         "text-recognition-ctc.onnx": text_recognition_ctc(),
+        "anomaly-detection.onnx": anomaly_detection(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),

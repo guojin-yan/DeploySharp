@@ -3,6 +3,8 @@
   href: index.md
 - name: Guides / 指南
   href: articles/
+- name: Releases / 版本记录
+  href: releases/
 - name: API Reference / API 参考
   href: api/
   homepage: api/index.md

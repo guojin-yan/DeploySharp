@@ -128,6 +128,9 @@ jobs:
       - run: dotnet restore tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj --configfile tests/clean-consumer/visual-ocr/NuGet.Config --locked-mode
       - run: dotnet build tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj --configfile tests/clean-consumer/visual-anomaly/NuGet.Config --locked-mode
+      - run: dotnet build tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config
       - run: dotnet build tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-build

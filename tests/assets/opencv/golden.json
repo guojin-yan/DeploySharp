@@ -1,8 +1,4 @@
 {
-    "classification":  {
-                           "topIndex":  0,
-                           "label":  "one"
-                       },
     "ocr":  {
                 "characterSet":  "ABC",
                 "blankIndex":  0,
@@ -12,14 +8,14 @@
                              "CA"
                          ]
             },
-    "pose":  {
-                 "firstKeypoint":  [
-                                       0.6,
-                                       0.4
-                                   ],
-                 "sha256":  "c075d9722f8bd716686a781022a5234b3b53cd977cccd8e989e7b4637b8ac4a0",
-                 "count":  2
-             },
+    "anomaly":  {
+                    "threshold":  0.6,
+                    "width":  5,
+                    "channels":  2,
+                    "imageScore":  0.875,
+                    "aggregation":  "maximum",
+                    "height":  3
+                },
     "semanticSegmentation":  {
                                  "classes":  [
                                                  0,
@@ -39,5 +35,17 @@
                                      "dog",
                                      "cat"
                                  ]
-                  }
+                  },
+    "classification":  {
+                           "topIndex":  0,
+                           "label":  "one"
+                       },
+    "pose":  {
+                 "firstKeypoint":  [
+                                       0.6,
+                                       0.4
+                                   ],
+                 "sha256":  "c075d9722f8bd716686a781022a5234b3b53cd977cccd8e989e7b4637b8ac4a0",
+                 "count":  2
+             }
 }

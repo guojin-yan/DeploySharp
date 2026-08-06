@@ -24,5 +24,8 @@
     <Content Include="..\assets\openvino\text-recognition-ctc.xml" Link="fixtures\ir\text-recognition-ctc.xml" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\text-recognition-ctc.bin" Link="fixtures\ir\text-recognition-ctc.bin" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\ocr\charset.txt" Link="fixtures\ocr\charset.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\onnxruntime\anomaly-detection.onnx" Link="fixtures\onnx\anomaly-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\openvino\anomaly-detection.xml" Link="fixtures\ir\anomaly-detection.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\openvino\anomaly-detection.bin" Link="fixtures\ir\anomaly-detection.bin" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

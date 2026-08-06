@@ -8,7 +8,8 @@
     "tests/assets/onnxruntime/direct-instance-segmentation.onnx",
     "tests/assets/onnxruntime/direct-obb.onnx",
     "tests/assets/onnxruntime/text-detection.onnx",
-    "tests/assets/onnxruntime/text-recognition-ctc.onnx"
+    "tests/assets/onnxruntime/text-recognition-ctc.onnx",
+    "tests/assets/onnxruntime/anomaly-detection.onnx"
   ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
@@ -82,6 +83,16 @@
       "file": "text-recognition-ctc.bin",
       "size": 236,
       "sha256": "d98380b468c2139385904b6b2173ff5b76a1657a9b45f79caace56cb3d16fbc1"
+    },
+    {
+      "file": "anomaly-detection.xml",
+      "size": 5524,
+      "sha256": "c8cd5634ab6ced3c4d175e193a575c4fdf53b634d692cb3805444605aff4b628"
+    },
+    {
+      "file": "anomaly-detection.bin",
+      "size": 152,
+      "sha256": "55a9f61e669f263046975877c8701ce1ec2f2aee3c1960e8190e2d1dd156683d"
     }
   ]
 }
