@@ -535,7 +535,7 @@ namespace JYPPX.DeploySharp.Visual
         private readonly IReadOnlyList<OcrRegionResult> _regions;
 
         /// <summary>Initializes an OCR result in explicit reading order. / 按显式阅读顺序初始化 OCR 结果。</summary>
-        public OcrResult(IEnumerable<OcrRegionResult> regions, VisualSize sourceSize, string detectionProfileId, ModelId detectionModelId, string recognitionProfileId, ModelId recognitionModelId, OcrStageTiming timing)
+        public OcrResult(IEnumerable<OcrRegionResult> regions, VisualSize sourceSize, string detectionProfileId, ModelId detectionModelId, string recognitionProfileId, ModelId recognitionModelId, OcrStageTiming timing, OcrOrientationResult? orientation = null)
         {
             if (regions == null) throw new ArgumentNullException(nameof(regions));
             var copy = new List<OcrRegionResult>();
@@ -548,12 +548,17 @@ namespace JYPPX.DeploySharp.Visual
             DetectionModelId = detectionModelId;
             RecognitionModelId = recognitionModelId;
             Timing = timing ?? throw new ArgumentNullException(nameof(timing));
+            Orientation = orientation;
         }
 
         /// <summary>Gets region/text pairs in reading order. / 获取按阅读顺序排列的区域/文本对。</summary>
         public IReadOnlyList<OcrRegionResult> Regions => _regions;
         /// <summary>Gets source size. / 获取源图尺寸。</summary>
         public VisualSize SourceSize { get; }
+        /// <summary>Gets the original pre-correction source size when orientation provenance is present. / 存在方向来源时获取纠正前原始源图尺寸。</summary>
+        public VisualSize OriginalSourceSize => Orientation == null ? SourceSize : Orientation.InputSize;
+        /// <summary>Gets the corrected source size used by detector and recognizer. / 获取检测器和识别器使用的纠正后源图尺寸。</summary>
+        public VisualSize CorrectedSourceSize => Orientation == null ? SourceSize : Orientation.CorrectedImageSize;
         /// <summary>Gets detector profile ID. / 获取检测器 Profile ID。</summary>
         public string DetectionProfileId { get; }
         /// <summary>Gets detector model ID. / 获取检测器模型 ID。</summary>
@@ -564,6 +569,8 @@ namespace JYPPX.DeploySharp.Visual
         public ModelId RecognitionModelId { get; }
         /// <summary>Gets measured stage timing. / 获取测得的阶段时长。</summary>
         public OcrStageTiming Timing { get; }
+        /// <summary>Gets optional orientation provenance used before OCR. / 获取 OCR 前使用的可选方向来源信息。</summary>
+        public OcrOrientationResult? Orientation { get; }
 
         /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256。</summary>
         public string ComputeSha256()
@@ -577,6 +584,7 @@ namespace JYPPX.DeploySharp.Visual
                 writer.Write(DetectionModelId.Value);
                 writer.Write(RecognitionProfileId);
                 writer.Write(RecognitionModelId.Value);
+                writer.Write(Orientation == null ? string.Empty : Orientation.CanonicalSha256);
                 writer.Write(_regions.Count);
                 foreach (OcrRegionResult item in _regions)
                 {

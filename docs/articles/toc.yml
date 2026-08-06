@@ -21,6 +21,10 @@
   href: visual-oriented-detection.md
 - name: Visual OCR / Visual OCR
   href: visual-ocr.md
+- name: Visual OCR Orientation / Visual OCR 方向
+  href: visual-ocr-orientation.md
+- name: Supported Models / 支持模型
+  href: supported-models.md
 - name: Visual Anomaly Detection / Visual 异常检测
   href: visual-anomaly-detection.md
 - name: Anomaly AlgorithmVerified Template / 异常模型准入模板

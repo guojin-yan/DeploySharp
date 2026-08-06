@@ -41,6 +41,12 @@ namespace JYPPX.DeploySharp.Visual
         public const string AnomalyCapabilityUnavailable = "DS-VISUAL-4203";
         /// <summary>The Visual object has already been disposed. / Visual 对象已被释放。</summary>
         public const string ObjectDisposed = "DS-VISUAL-5001";
+        /// <summary>An OCR orientation contract is invalid. / OCR 方向契约无效。</summary>
+        public const string OcrOrientationContractInvalid = "DS-VISUAL-4301";
+        /// <summary>An OCR orientation limit was exceeded. / OCR 方向限制超出。</summary>
+        public const string OcrOrientationLimitExceeded = "DS-VISUAL-4302";
+        /// <summary>OCR orientation correction is unavailable. / OCR 方向纠正能力不可用。</summary>
+        public const string OcrOrientationCapabilityUnavailable = "DS-VISUAL-4303";
     }
 
     /// <summary>Represents a diagnosable Visual-domain failure while preserving the original exception. / 表示可诊断的 Visual 领域故障，同时保留原始异常。</summary>

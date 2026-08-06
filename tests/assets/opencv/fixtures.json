@@ -32,6 +32,38 @@
         "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
     },
     {
+        "name":  "ocr-orientation-0.png",
+        "size":  79,
+        "sha256":  "2c9c1cab8402068da83abfa3a039c00a94d155487097a58d13d501543296a154",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
+        "name":  "ocr-orientation-180.png",
+        "size":  79,
+        "sha256":  "5c5008d46a7fd21081ef194406c5f17e75321a01b5b8894e54f05923243548d5",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
+        "name":  "ocr-orientation-270.png",
+        "size":  79,
+        "sha256":  "c93577f32222276dd2cdde5d4716d28fb613a6a8f539b6aea1bc3b72350689c1",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
+        "name":  "ocr-orientation-90.png",
+        "size":  79,
+        "sha256":  "e2e7f2b19f0de8bbae0a2b31447e103d8e35d83add1eb059ad6287eb1dec4a1a",
+        "license":  "Apache-2.0",
+        "source":  "DeploySharp deterministic fixture generator",
+        "purpose":  "Visual.OpenCV adapter contract; not an official model or image asset"
+    },
+    {
         "name":  "rgb.png",
         "size":  77,
         "sha256":  "ecfec9e141ed0da523a03079244ecaee41da7f262d735c0bb11447f95119184d",

@@ -152,13 +152,29 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Runs synchronous end-to-end OCR without thread-pool wrapping. / 在不包装线程池任务的情况下运行同步端到端 OCR。</summary>
         public OcrResult Run(IOcrImageInput input, OcrExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return ExecuteAsync(input, options ?? OcrExecutionOptions.Default, cancellationToken).GetAwaiter().GetResult();
+            return ExecuteAsync(input, null, options ?? OcrExecutionOptions.Default, cancellationToken).GetAwaiter().GetResult();
+        }
+
+        /// <summary>Runs synchronous OCR and binds the accepted orientation provenance to the owned result. / 同步运行 OCR，并将已接受的方向来源绑定到自有结果。</summary>
+        public OcrResult RunWithOrientation(IOcrImageInput input, OcrOrientationResult orientation, OcrExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (orientation == null) throw new ArgumentNullException(nameof(orientation));
+            if (orientation.Rejected) throw new OcrPipelineException(VisualErrorCodes.OcrOrientationCapabilityUnavailable, "A rejected orientation result cannot drive OCR correction.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+            return ExecuteAsync(input, orientation, options ?? OcrExecutionOptions.Default, cancellationToken).GetAwaiter().GetResult();
         }
 
         /// <summary>Runs end-to-end OCR using backend asynchronous paths where available. / 在后端可用时使用异步路径运行端到端 OCR。</summary>
         public Task<OcrResult> RunAsync(IOcrImageInput input, OcrExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return ExecuteAsync(input, options ?? OcrExecutionOptions.Default, cancellationToken);
+            return ExecuteAsync(input, null, options ?? OcrExecutionOptions.Default, cancellationToken);
+        }
+
+        /// <summary>Runs asynchronous OCR and binds accepted orientation provenance. / 异步运行 OCR，并绑定已接受的方向来源。</summary>
+        public Task<OcrResult> RunWithOrientationAsync(IOcrImageInput input, OcrOrientationResult orientation, OcrExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (orientation == null) throw new ArgumentNullException(nameof(orientation));
+            if (orientation.Rejected) throw new OcrPipelineException(VisualErrorCodes.OcrOrientationCapabilityUnavailable, "A rejected orientation result cannot drive OCR correction.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+            return ExecuteAsync(input, orientation, options ?? OcrExecutionOptions.Default, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -186,7 +202,7 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        private async Task<OcrResult> ExecuteAsync(IOcrImageInput input, OcrExecutionOptions execution, CancellationToken callerToken)
+        private async Task<OcrResult> ExecuteAsync(IOcrImageInput input, OcrOrientationResult? orientation, OcrExecutionOptions execution, CancellationToken callerToken)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken disposeToken = CaptureDisposeToken();
@@ -274,7 +290,7 @@ namespace JYPPX.DeploySharp.Visual
                         if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: detection.Regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
                     }
                     mergeWatch.Stop();
-                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed));
+                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed), orientation);
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken, stage, regionIndex); }
                 catch (OcrPipelineException) { throw; }

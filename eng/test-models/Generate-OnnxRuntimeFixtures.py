@@ -372,6 +372,17 @@ def anomaly_detection() -> onnx.ModelProto:
     return graph_model(graph, "anomaly-detection")
 
 
+def text_orientation() -> onnx.ModelProto:
+    """Flatten a 2x2 luminance marker into explicit four-class orientation logits."""
+    graph = helper.make_graph(
+        [helper.make_node("Flatten", ["images"], ["orientation_scores"], axis=1)],
+        "deploysharp_text_orientation",
+        [helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 1, 2, 2])],
+        [helper.make_tensor_value_info("orientation_scores", TensorProto.FLOAT, [1, 4])],
+    )
+    return graph_model(graph, "text-orientation")
+
+
 def dynamic_identity() -> onnx.ModelProto:
     graph = helper.make_graph(
         [helper.make_node("Identity", ["input"], ["output"])],
@@ -492,6 +503,7 @@ def main() -> None:
         "text-detection.onnx": text_detection(),
         "text-recognition-ctc.onnx": text_recognition_ctc(),
         "anomaly-detection.onnx": anomaly_detection(),
+        "text-orientation.onnx": text_orientation(),
         "dynamic-identity.onnx": dynamic_identity(),
         "numeric-types.onnx": numeric_types(),
         "unsupported-types.onnx": unsupported_types(),

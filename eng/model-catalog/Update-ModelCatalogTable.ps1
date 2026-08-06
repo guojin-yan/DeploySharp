@@ -40,7 +40,7 @@ if ($rows -eq 0) {
 }
 
 $lines.Add('')
-$lines.Add('The catalog is empty because this stage did not receive authorization to create a real Release or upload model/test assets. / 目录为空，因为本阶段未获得创建真实 Release 或上传模型/测试资产的授权。')
+$lines.Add('The catalog remains empty until exact model/test assets pass provenance, redistribution-license, official-fidelity and Release review and are actually published. / 在精确模型/测试资产通过来源、再分发许可证、官方保真与 Release 复核并实际发布前，目录保持为空。')
 $content = ($lines -join "`n") + "`n"
 
 if ($Check) {

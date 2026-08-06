@@ -21,7 +21,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detectionOptions == null) throw new ArgumentNullException(nameof(detectionOptions));
             if (string.IsNullOrWhiteSpace(detectionInputName)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A detector input name is required.");
-            ObserveCancellation(cancellationToken);
+            if (cancellationToken.IsCancellationRequested) throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "OpenCV OCR input creation was cancelled.", new OperationCanceledException(cancellationToken));
             OpenCvRuntimePreflight.Check();
             Mat? decoded = null;
             PreparedVisualInput? detectionInput = null;
@@ -30,7 +30,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 decoded = OpenCvImageLoader.Decode(source);
                 OpenCvImageLoader.Validate(decoded, source);
                 detectionInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, detectionInputName, detectionOptions, inputId, cancellationToken);
-                var result = new OpenCvOcrImageInput(decoded, detectionInput);
+                var result = new OpenCvOcrImageInput(decoded, detectionInput, detectionInputName, detectionOptions, inputId);
                 decoded = null;
                 detectionInput = null;
                 return result;
@@ -55,6 +55,37 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return Create(OpenCvImageSource.FromFile(path), detectionInputName, detectionOptions, inputId, cancellationToken);
         }
 
+        /// <summary>Creates a single-decode input for orientation classification and later OCR correction. / 创建单次解码的方向分类与后续 OCR 纠正输入。</summary>
+        public OpenCvOcrImageInput CreateOrientationInput(OpenCvImageSource source, string orientationInputName, OpenCvPreprocessOptions orientationOptions, string detectionInputName, OpenCvPreprocessOptions detectionOptions, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (orientationOptions == null) throw new ArgumentNullException(nameof(orientationOptions));
+            if (detectionOptions == null) throw new ArgumentNullException(nameof(detectionOptions));
+            if (string.IsNullOrWhiteSpace(orientationInputName) || string.IsNullOrWhiteSpace(detectionInputName)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Orientation and detector input names are required.");
+            if (cancellationToken.IsCancellationRequested) throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "OpenCV orientation input creation was cancelled.", new OperationCanceledException(cancellationToken));
+            OpenCvRuntimePreflight.Check();
+            Mat? decoded = null;
+            PreparedVisualInput? orientationInput = null;
+            try
+            {
+                decoded = OpenCvImageLoader.Decode(source);
+                OpenCvImageLoader.Validate(decoded, source);
+                orientationInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, orientationInputName, orientationOptions, inputId, cancellationToken);
+                var result = new OpenCvOcrImageInput(decoded, orientationInput, detectionInputName, detectionOptions, inputId);
+                decoded = null;
+                orientationInput = null;
+                return result;
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "OpenCV orientation input creation was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while creating the orientation input.", exception, "sourceKind=" + source.Kind); }
+            catch (DllNotFoundException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime is unavailable.", exception); }
+            catch (BadImageFormatException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime architecture is incompatible.", exception); }
+            catch (EntryPointNotFoundException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime ABI is incompatible.", exception); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The OpenCV orientation input could not be created.", exception); }
+            finally { orientationInput?.Dispose(); decoded?.Dispose(); }
+        }
+
         private static void ObserveCancellation(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException(cancellationToken);
@@ -62,16 +93,22 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     }
 
     /// <summary>Owns a decoded OpenCV Mat and its prepared detector tensor for one OCR source image. / 为一张 OCR 源图拥有解码 OpenCV Mat 及其已准备检测张量。</summary>
-    public sealed class OpenCvOcrImageInput : IOcrImageInput
+    public sealed class OpenCvOcrImageInput : IOcrOrientationImageInput
     {
         private readonly object _gate = new object();
-        private readonly Mat _source;
+        private Mat? _source;
+        private readonly string _correctedInputName;
+        private readonly OpenCvPreprocessOptions _correctedInputOptions;
+        private readonly string? _inputId;
         private bool _disposed;
 
-        internal OpenCvOcrImageInput(Mat source, PreparedVisualInput detectionInput)
+        internal OpenCvOcrImageInput(Mat source, PreparedVisualInput detectionInput, string correctedInputName, OpenCvPreprocessOptions correctedInputOptions, string? inputId)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             DetectionInput = detectionInput ?? throw new ArgumentNullException(nameof(detectionInput));
+            _correctedInputName = string.IsNullOrWhiteSpace(correctedInputName) ? throw new ArgumentException("A corrected input name is required.", nameof(correctedInputName)) : correctedInputName;
+            _correctedInputOptions = correctedInputOptions ?? throw new ArgumentNullException(nameof(correctedInputOptions));
+            _inputId = inputId;
             SourceSize = new VisualSize(source.Cols, source.Rows);
         }
 
@@ -79,6 +116,48 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public VisualSize SourceSize { get; }
         /// <summary>Gets prepared detector input. / 获取已准备检测器输入。</summary>
         public PreparedVisualInput DetectionInput { get; }
+
+        /// <summary>Creates a new owned OCR input after one native right-angle rotation; zero degrees transfers the decoded Mat without a pixel copy. / 一次 native 直角旋转后创建新的自有 OCR 输入；零度直接转移已解码 Mat，不复制像素。</summary>
+        public IOcrImageInput CreateOriented(OcrOrientationResult orientation, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (orientation == null) throw new ArgumentNullException(nameof(orientation));
+            lock (_gate)
+            {
+                EnsureUsable();
+                ObserveCancellation(cancellationToken);
+                if (orientation.Rejected) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A rejected orientation result cannot be silently treated as zero degrees.");
+                if (orientation.InputSize != SourceSize) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The orientation result belongs to a different source image size.", technicalDetails: "orientation=" + orientation.InputSize + ";source=" + SourceSize);
+                Mat source = _source ?? throw new OpenCvVisualException(OpenCvErrorCodes.ObjectDisposed, "The decoded source Mat has already been transferred.");
+                Mat? corrected = null;
+                bool transferred = false;
+                PreparedVisualInput? detection = null;
+                try
+                {
+                    if (orientation.Orientation == TextOrientation.Degrees0)
+                    {
+                        corrected = source;
+                        _source = null;
+                        transferred = true;
+                    }
+                    else corrected = CoreOperations.Rotate(source, ToRotation(orientation.Orientation));
+                    detection = OpenCvVisualInputFactory.CreateFromDecoded(corrected, _correctedInputName, _correctedInputOptions, _inputId, cancellationToken);
+                    var result = new OpenCvOcrImageInput(corrected, detection, _correctedInputName, _correctedInputOptions, _inputId);
+                    corrected = null;
+                    detection = null;
+                    return result;
+                }
+                catch (OpenCvVisualException) { throw; }
+                catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while rotating the OCR source.", exception, "orientation=" + orientation.Orientation); }
+                catch (DllNotFoundException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime is unavailable.", exception); }
+                catch (BadImageFormatException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime architecture is incompatible.", exception); }
+                catch (EntryPointNotFoundException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.NativeUnavailable, "The OpenCV native runtime ABI is incompatible.", exception); }
+                finally
+                {
+                    detection?.Dispose();
+                    if (corrected != null) { if (transferred) _source = corrected; else corrected.Dispose(); }
+                }
+            }
+        }
 
         /// <summary>Creates an owned managed Float32 recognition tensor from explicit perspective crops. / 根据显式透视裁剪创建自有托管 Float32 识别张量。</summary>
         public PreparedVisualInput PrepareRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken)
@@ -130,7 +209,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 if (_disposed) return;
                 _disposed = true;
                 DetectionInput.Dispose();
-                _source.Dispose();
+                _source?.Dispose();
+                _source = null;
             }
         }
 
@@ -152,7 +232,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             using (var warped = new Mat())
             {
                 ObserveCancellation(cancellationToken);
-                ImageProcessing.WarpPerspective(_source, warped, transform, new Size(naturalWidth, naturalHeight), ToInterpolation(request.Profile.Interpolation), BorderTypes.Constant, PaddingScalar(request.Profile.PaddingColor, _source.Channels));
+                Mat source = _source ?? throw new OpenCvVisualException(OpenCvErrorCodes.ObjectDisposed, "The decoded source Mat is no longer available.");
+                ImageProcessing.WarpPerspective(source, warped, transform, new Size(naturalWidth, naturalHeight), ToInterpolation(request.Profile.Interpolation), BorderTypes.Constant, PaddingScalar(request.Profile.PaddingColor, source.Channels));
                 Mat? rotated = null;
                 try
                 {

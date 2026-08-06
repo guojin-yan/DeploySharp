@@ -156,6 +156,28 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public void OfflinePreviewOrientationCatalogSelectsAllVerifiedCpuCombinations()
+        {
+            var source = new ModelSourceDocument("https://github.com/guojin-yan/DeploySharp", "https://github.com/guojin-yan/DeploySharp", "generated", "JYPPX", null, "Apache-2.0", null, true);
+            var release = new ModelCatalogRelease("guojin-yan", "DeploySharp", "models-20260806.1", "0123456789abcdef");
+            var entry = new ModelCatalogEntry(
+                "tests/text-orientation", "DeploySharp OCR orientation contract fixture", "deploysharp-fixture", "optical-character-orientation", "1.0", ModelCatalogStatus.Preview,
+                "Offline four-class orientation fixture; not an algorithm-verified model and not an official catalog entry.", source, release,
+                new[]
+                {
+                    new ModelCatalogArtifact("orientation.onnx", "onnx", new[] { "onnxruntime", "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>()),
+                    new ModelCatalogArtifact("orientation.openvino-ir", "openvino-ir", new[] { "openvino" }, "fp32", null, true, null, Array.Empty<ModelCatalogAsset>())
+                }, Array.Empty<ModelCatalogAsset>(), documentationPath: "models/tests-local-only.md");
+            ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument("1.0", "2026-08-06T00:00:00Z", "tests-text-orientation.1", new Uri("https://github.com/guojin-yan/DeploySharp"), new[] { entry }));
+
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "onnx", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "onnx", backend: "openvino", includePreview: true)).Count);
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "openvino-ir", backend: "openvino", includePreview: true)).Count);
+            Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+        }
+
+        [TestMethod]
         public void RejectsUnsafePathsHashesLicensesAndReleaseUrls()
         {
             string[] unsafePaths = { "../model.gguf", "C:\\model.gguf", "//server/share/model.gguf", "a/./model.gguf", "a\\..\\model.gguf", "a\0model.gguf", "CON.gguf" };

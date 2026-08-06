@@ -2,6 +2,8 @@
 
 `JYPPX.DeploySharp.Visual` provides a backend-neutral, two-model OCR pipeline over owned tensors. `JYPPX.DeploySharp.Visual.OpenCV` is optional and supplies encoded-image decoding plus perspective crops. Backends only execute named tensors; neither Visual nor Core contains an OpenCV or inference-runtime dependency. / `JYPPX.DeploySharp.Visual` 基于自有张量提供后端无关的双模型 OCR Pipeline。可选的 `JYPPX.DeploySharp.Visual.OpenCV` 提供编码图像解码与透视裁剪。后端只执行命名张量；Visual 与 Core 均不依赖 OpenCV 或具体推理运行时。
 
+For four-class text orientation, confidence rejection, one-decode correction and original-coordinate restoration, see [OCR orientation and automatic correction](visual-ocr-orientation.md). / 四分类文本方向、置信度拒绝、单次解码纠正和原图坐标恢复请参阅 [OCR 方向与自动纠正](visual-ocr-orientation.md)。
+
 ## Pipeline / Pipeline 流程
 
 1. An `IOcrImageInput` supplies one detector `PreparedVisualInput`. / `IOcrImageInput` 提供一个检测器 `PreparedVisualInput`。

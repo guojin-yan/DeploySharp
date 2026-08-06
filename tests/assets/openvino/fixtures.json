@@ -9,7 +9,8 @@
     "tests/assets/onnxruntime/direct-obb.onnx",
     "tests/assets/onnxruntime/text-detection.onnx",
     "tests/assets/onnxruntime/text-recognition-ctc.onnx",
-    "tests/assets/onnxruntime/anomaly-detection.onnx"
+    "tests/assets/onnxruntime/anomaly-detection.onnx",
+    "tests/assets/onnxruntime/text-orientation.onnx"
   ],
   "license": "Apache-2.0",
   "purpose": "DeploySharp adapter contract fixture; not an official algorithm model",
@@ -93,6 +94,16 @@
       "file": "anomaly-detection.bin",
       "size": 152,
       "sha256": "55a9f61e669f263046975877c8701ce1ec2f2aee3c1960e8190e2d1dd156683d"
+    },
+    {
+      "file": "text-orientation.xml",
+      "size": 1853,
+      "sha256": "90666bb4d583b111240ab91a53edcd3db982abfc932fab27652cbf3de8de0b7c"
+    },
+    {
+      "file": "text-orientation.bin",
+      "size": 16,
+      "sha256": "787979ee6a78d79a5c6cf1f3ede7cb1d40a6ae9e410062d0b57f848ca083edd6"
     }
   ]
 }

@@ -32,6 +32,8 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId TextDetection { get; } = new VisualTaskId("text-detection");
         /// <summary>Gets the text-recognition task. / 获取文本识别任务。</summary>
         public static VisualTaskId TextRecognition { get; } = new VisualTaskId("text-recognition");
+        /// <summary>Gets the four-class OCR text-orientation classification task. / 获取四分类 OCR 文本方向分类任务。</summary>
+        public static VisualTaskId TextOrientationClassification { get; } = new VisualTaskId("text-orientation-classification");
         /// <summary>Gets the complete optical-character-recognition task. / 获取完整光学字符识别任务。</summary>
         public static VisualTaskId OpticalCharacterRecognition { get; } = new VisualTaskId("optical-character-recognition");
         /// <summary>Gets the anomaly-detection and anomaly-segmentation task. / 获取异常检测与异常分割任务。</summary>

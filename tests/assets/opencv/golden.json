@@ -29,6 +29,20 @@
                                  "sha256":  "2ed4fa5094662ebe63d9265149adf86858fd7b03983a35118880f09517f824de",
                                  "height":  2
                              },
+    "ocrOrientation":  {
+                           "sourceValues":  [
+                                                240,
+                                                30,
+                                                60,
+                                                90
+                                            ],
+                           "classToClockwiseCorrection":  [
+                                                              0,
+                                                              270,
+                                                              90,
+                                                              180
+                                                          ]
+                       },
     "detection":  {
                       "count":  2,
                       "labels":  [

@@ -721,6 +721,32 @@
       ],
       "sha256": "195d996fdf299d70794f5f364ddd471caa6f1d61d9afc2a48f3804a9a53c5e45"
     },
+    "text-orientation.onnx": {
+      "bytes": 303,
+      "inputs": [
+        {
+          "elementType": "float",
+          "name": "images",
+          "shape": [
+            1,
+            1,
+            2,
+            2
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "elementType": "float",
+          "name": "orientation_scores",
+          "shape": [
+            1,
+            4
+          ]
+        }
+      ],
+      "sha256": "68ca7bf51a884e0453382a6d3a9d540f345f89e397e1e1a2928548002f2a122e"
+    },
     "text-recognition-ctc.onnx": {
       "bytes": 790,
       "inputs": [

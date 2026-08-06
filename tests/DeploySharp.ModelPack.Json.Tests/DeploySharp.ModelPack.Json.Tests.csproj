@@ -19,10 +19,13 @@
   <ItemGroup>
     <Content Include="..\assets\onnxruntime\text-detection.onnx" Link="fixtures\onnx\text-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-recognition-ctc.onnx" Link="fixtures\onnx\text-recognition-ctc.onnx" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\onnxruntime\text-orientation.onnx" Link="fixtures\onnx\text-orientation.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\text-detection.xml" Link="fixtures\ir\text-detection.xml" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\text-detection.bin" Link="fixtures\ir\text-detection.bin" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\text-recognition-ctc.xml" Link="fixtures\ir\text-recognition-ctc.xml" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\text-recognition-ctc.bin" Link="fixtures\ir\text-recognition-ctc.bin" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\openvino\text-orientation.xml" Link="fixtures\ir\text-orientation.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\openvino\text-orientation.bin" Link="fixtures\ir\text-orientation.bin" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\ocr\charset.txt" Link="fixtures\ocr\charset.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\anomaly-detection.onnx" Link="fixtures\onnx\anomaly-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\openvino\anomaly-detection.xml" Link="fixtures\ir\anomaly-detection.xml" CopyToOutputDirectory="PreserveNewest" />
