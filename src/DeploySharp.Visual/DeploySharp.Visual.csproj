@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net9.0' Or '$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>

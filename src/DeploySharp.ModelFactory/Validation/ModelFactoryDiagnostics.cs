@@ -18,6 +18,8 @@ namespace JYPPX.DeploySharp.ModelFactory
         public const string AdmissionRejected = "model-factory.admission-rejected";
         /// <summary>No query candidate matched. / 没有匹配查询的候选项。</summary>
         public const string NoMatch = "model-factory.no-match";
+        /// <summary>A multi-artifact bundle is incomplete or internally inconsistent. / 多工件 bundle 不完整或内部不一致。</summary>
+        public const string BundleInvalid = "model-factory.bundle-invalid";
         /// <summary>The HTTP response or status is invalid. / HTTP 响应或状态无效。</summary>
         public const string HttpFailure = "model-factory.http-failure";
         /// <summary>The request timed out. / 请求超时。</summary>

@@ -38,6 +38,12 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId OpticalCharacterRecognition { get; } = new VisualTaskId("optical-character-recognition");
         /// <summary>Gets the anomaly-detection and anomaly-segmentation task. / 获取异常检测与异常分割任务。</summary>
         public static VisualTaskId AnomalyDetection { get; } = new VisualTaskId("anomaly-detection");
+        /// <summary>Gets foreground matting and semantic-alpha extraction. / 获取前景抠图与语义 Alpha 提取任务。</summary>
+        public static VisualTaskId ForegroundMatting { get; } = new VisualTaskId("foreground-matting");
+        /// <summary>Gets image promptable segmentation. / 获取图像可提示分割任务。</summary>
+        public static VisualTaskId PromptableSegmentation { get; } = new VisualTaskId("promptable-segmentation");
+        /// <summary>Gets stateful video prompt propagation. / 获取有状态视频提示传播任务。</summary>
+        public static VisualTaskId PromptableVideoSegmentation { get; } = new VisualTaskId("promptable-video-segmentation");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);
@@ -116,6 +122,27 @@ namespace JYPPX.DeploySharp.Visual
         public int MaximumBatch { get; }
     }
 
+    /// <summary>Defines a non-image named input supplied by an image adapter. / 定义由图像适配器提供的非图像命名输入。</summary>
+    public sealed class VisualAuxiliaryInputBinding
+    {
+        /// <summary>Initializes an auxiliary input binding. / 初始化辅助输入绑定。</summary>
+        public VisualAuxiliaryInputBinding(string name, TensorElementType elementType, TensorShape shapePattern)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "An auxiliary input tensor name is required.", tensorName: name);
+            if (elementType == TensorElementType.Unknown || elementType == TensorElementType.String) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Auxiliary input element type is unsupported.", tensorName: name);
+            Name = name;
+            ElementType = elementType;
+            ShapePattern = shapePattern == null ? throw new ArgumentNullException(nameof(shapePattern)) : new TensorShape(shapePattern.ToArray());
+        }
+
+        /// <summary>Gets the exact auxiliary input name. / 获取精确辅助输入名称。</summary>
+        public string Name { get; }
+        /// <summary>Gets the required element type. / 获取所需元素类型。</summary>
+        public TensorElementType ElementType { get; }
+        /// <summary>Gets the static or dynamic shape pattern. / 获取静态或动态形状模式。</summary>
+        public TensorShape ShapePattern { get; }
+    }
+
     /// <summary>Defines one required backend output tensor. / 定义一个必需的后端输出张量。</summary>
     public sealed class VisualOutputBinding
     {
@@ -141,6 +168,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class VisualModelProfile
     {
         private readonly IReadOnlyList<VisualOutputBinding> _outputs;
+        private readonly IReadOnlyList<VisualAuxiliaryInputBinding> _auxiliaryInputs;
         private readonly IReadOnlyList<VisualLabel> _labels;
         private readonly IReadOnlyDictionary<int, string> _labelsByIndex;
 
@@ -156,7 +184,8 @@ namespace JYPPX.DeploySharp.Visual
             IEnumerable<VisualLabel> labels,
             IVisualDecoder decoder,
             BackendCapabilities requiredCapabilities = BackendCapabilities.TensorInference,
-            string? minimumBackendVersion = null)
+            string? minimumBackendVersion = null,
+            IEnumerable<VisualAuxiliaryInputBinding>? auxiliaryInputs = null)
         {
             ProfileId = VisualGuard.Identifier(profileId, nameof(profileId));
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model identifier is required.", profileId: ProfileId);
@@ -172,6 +201,18 @@ namespace JYPPX.DeploySharp.Visual
             if ((requiredCapabilities & BackendCapabilities.TensorInference) == 0) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual profiles require tensor inference capability.", profileId: ProfileId);
             RequiredCapabilities = requiredCapabilities;
             MinimumBackendVersion = string.IsNullOrWhiteSpace(minimumBackendVersion) ? null : minimumBackendVersion;
+
+            var auxiliaryList = new List<VisualAuxiliaryInputBinding>();
+            var auxiliaryNames = new HashSet<string>(StringComparer.Ordinal) { Input.Name };
+            if (auxiliaryInputs != null)
+            {
+                foreach (VisualAuxiliaryInputBinding auxiliary in auxiliaryInputs)
+                {
+                    if (auxiliary == null || !auxiliaryNames.Add(auxiliary.Name)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Auxiliary input names must be unique and cannot equal the image input.", profileId: ProfileId, tensorName: auxiliary == null ? null : auxiliary.Name);
+                    auxiliaryList.Add(auxiliary);
+                }
+            }
+            _auxiliaryInputs = auxiliaryList.AsReadOnly();
 
             var outputList = new List<VisualOutputBinding>();
             var outputNames = new HashSet<string>(StringComparer.Ordinal);
@@ -213,6 +254,8 @@ namespace JYPPX.DeploySharp.Visual
         public string ModelFormat { get; }
         /// <summary>Gets the input binding. / 获取输入绑定。</summary>
         public VisualInputBinding Input { get; }
+        /// <summary>Gets non-image inputs that the adapter must provide by exact name. / 获取适配器必须按精确名称提供的非图像输入。</summary>
+        public IReadOnlyList<VisualAuxiliaryInputBinding> AuxiliaryInputs => _auxiliaryInputs;
         /// <summary>Gets required output bindings. / 获取所需输出绑定。</summary>
         public IReadOnlyList<VisualOutputBinding> Outputs => _outputs;
         /// <summary>Gets class labels. / 获取类别标签。</summary>

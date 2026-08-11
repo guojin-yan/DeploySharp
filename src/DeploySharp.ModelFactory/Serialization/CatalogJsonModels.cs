@@ -65,6 +65,39 @@ namespace JYPPX.DeploySharp.ModelFactory.Serialization
         [JsonPropertyName("manifestAssetId")] public string? ManifestAssetId { get; set; }
         [JsonPropertyName("assets")] public List<AssetDto?>? Assets { get; set; }
         [JsonPropertyName("conversion")] public ConversionDto? Conversion { get; set; }
+        [JsonPropertyName("bundleRole")] public string? BundleRole { get; set; }
+        [JsonPropertyName("bundleVersion")] public string? BundleVersion { get; set; }
+        [JsonPropertyName("capabilities")] public List<string>? Capabilities { get; set; }
+        [JsonPropertyName("requiredAssetIds")] public List<string>? RequiredAssetIds { get; set; }
+        [JsonPropertyName("tokenizerId")] public string? TokenizerId { get; set; }
+        [JsonPropertyName("vocabularyMode")] public string? VocabularyMode { get; set; }
+        [JsonPropertyName("embeddingDimension")] public int? EmbeddingDimension { get; set; }
+        [JsonPropertyName("imagePreprocessingId")] public string? ImagePreprocessingId { get; set; }
+        [JsonPropertyName("projectionId")] public string? ProjectionId { get; set; }
+        [JsonPropertyName("normalizationId")] public string? NormalizationId { get; set; }
+        [JsonPropertyName("scoreSemantics")] public string? ScoreSemantics { get; set; }
+        [JsonPropertyName("language")] public string? Language { get; set; }
+        [JsonPropertyName("resolution")] public string? Resolution { get; set; }
+        [JsonPropertyName("visionBackbone")] public string? VisionBackbone { get; set; }
+        [JsonPropertyName("qFormerId")] public string? QFormerId { get; set; }
+        [JsonPropertyName("languageModelId")] public string? LanguageModelId { get; set; }
+        [JsonPropertyName("promptTemplateId")] public string? PromptTemplateId { get; set; }
+        [JsonPropertyName("generationConfigId")] public string? GenerationConfigId { get; set; }
+        [JsonPropertyName("generationMode")] public string? GenerationMode { get; set; }
+        [JsonPropertyName("kvCacheSchemaId")] public string? KvCacheSchemaId { get; set; }
+        [JsonPropertyName("imageCount")] public int? ImageCount { get; set; }
+        [JsonPropertyName("contextLength")] public int? ContextLength { get; set; }
+        [JsonPropertyName("pageCount")] public int? PageCount { get; set; }
+        [JsonPropertyName("schemaId")] public string? SchemaId { get; set; }
+        [JsonPropertyName("ocrOwnership")] public string? OcrOwnership { get; set; }
+        [JsonPropertyName("processorId")] public string? ProcessorId { get; set; }
+        [JsonPropertyName("sampleRate")] public int? SampleRate { get; set; }
+        [JsonPropertyName("channelCount")] public int? ChannelCount { get; set; }
+        [JsonPropertyName("timestampMode")] public string? TimestampMode { get; set; }
+        [JsonPropertyName("speakerMode")] public string? SpeakerMode { get; set; }
+        [JsonPropertyName("audioFeatureId")] public string? AudioFeatureId { get; set; }
+        [JsonPropertyName("vadId")] public string? VadId { get; set; }
+        [JsonPropertyName("speakerId")] public string? SpeakerId { get; set; }
         [JsonExtensionData] public Dictionary<string, JsonElement>? Unknown { get; set; }
     }
 

@@ -293,5 +293,13 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
 
         /// <summary>Gets an immutable COCO 80-class label sequence. / 获取不可变 COCO 80 类标签序列。</summary>
         public static IReadOnlyList<string> Coco80 => Coco;
+
+        private static readonly IReadOnlyList<string> Dota = Array.AsReadOnly(new[]
+        {
+            "plane", "ship", "storage tank", "baseball diamond", "tennis court", "basketball court", "ground track field", "harbor", "bridge", "large vehicle", "small vehicle", "helicopter", "roundabout", "soccer ball field", "swimming pool"
+        });
+
+        /// <summary>Gets the immutable DOTA-v1 15-class label order used by YOLO OBB exports. / 获取 YOLO OBB 导出使用的不可变 DOTA-v1 15 类标签顺序。</summary>
+        public static IReadOnlyList<string> Dota15 => Dota;
     }
 }

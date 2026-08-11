@@ -18,5 +18,11 @@
 
   <ItemGroup>
     <Content Include="..\..\eng\models\yolo\yolo-detection-support.json" Link="fixtures\yolo-detection-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\detr\portable-detector-support.json" Link="fixtures\portable-detector-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\stage19-support.json" Link="fixtures\stage19-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\stage20-support.json" Link="fixtures\stage20-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\sam\sam-family-support.json" Link="fixtures\sam-family-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\open-vocabulary\open-vocabulary-family-support.json" Link="fixtures\open-vocabulary-family-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\vision-language\vision-language-family-support.json" Link="fixtures\vision-language-family-support.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

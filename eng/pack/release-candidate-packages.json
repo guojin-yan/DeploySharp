@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "1.0",
+  "packageVersion": "2.0.0-alpha.1",
+  "licenseExpression": "Apache-2.0",
+  "readme": "README.md",
+  "icon": "logo.jpg",
+  "authors": "Guojin Yan",
+  "repositoryType": "git",
+  "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
+  "symbolPolicy": "not-produced",
+  "nativeRuntimePolicy": "consumer-owned",
+  "centralPackages": {
+    "Microsoft.NETFramework.ReferenceAssemblies": "1.0.3",
+    "Microsoft.NET.Test.Sdk": "18.8.1",
+    "MSTest.TestAdapter": "4.3.3",
+    "MSTest.TestFramework": "4.3.3",
+    "LLamaSharp": "0.27.0",
+    "LLamaSharp.Backend.Cpu": "0.27.0",
+    "Microsoft.Bcl.AsyncInterfaces": "10.0.10",
+    "Microsoft.ML.OnnxRuntime": "1.28.0",
+    "Microsoft.ML.OnnxRuntime.Managed": "1.28.0",
+    "Microsoft.ML.Tokenizers": "2.0.0",
+    "JYPPX.OpenVINO.CSharp.API": "3.3.0",
+    "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1",
+    "JYPPX.OpenCV.runtime.win-x64": "5.0.0-preview.1",
+    "OpenVINO.runtime.win": "2026.2.1",
+    "System.Text.Json": "10.0.10"
+  },
+  "packages": [
+    {
+      "projectPath": "src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj",
+      "packageId": "JYPPX.DeploySharp.Backend.LlamaSharp",
+      "assemblyName": "JYPPX.DeploySharp.Backend.LlamaSharp",
+      "targetFrameworks": ["netstandard2.0", "net8.0"],
+      "assemblyReferenceSha256": "e0e2659ad48eae6a0c90f342ea4d0e3e07cb04923e4ddab66bbeb0f345b2cccc"
+    },
+    {
+      "projectPath": "src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj",
+      "packageId": "JYPPX.DeploySharp.Backend.OnnxRuntime",
+      "assemblyName": "JYPPX.DeploySharp.Backend.OnnxRuntime",
+      "targetFrameworks": ["netstandard2.0", "net8.0"],
+      "assemblyReferenceSha256": "9c53d0fb9c51c4da259cd4de7f2ad0df01a948816dfafa181990f4afd66490fc"
+    },
+    {
+      "projectPath": "src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj",
+      "packageId": "JYPPX.DeploySharp.Backend.OpenVINO",
+      "assemblyName": "JYPPX.DeploySharp.Backend.OpenVINO",
+      "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "bcdddeb6264b3db7622ca632833dabb54678e96129e7ed243f5b7a5e14e1a1be"
+    },
+    {
+      "projectPath": "src/DeploySharp.Core/DeploySharp.Core.csproj",
+      "packageId": "JYPPX.DeploySharp.Core",
+      "assemblyName": "JYPPX.DeploySharp.Core",
+      "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netstandard2.0", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "715ad1fe90ea092e14e3218b1d61909ff9333e7e6b6b5a6c5cdf8fb2061a3784"
+    },
+    {
+      "projectPath": "src/DeploySharp.LLM/DeploySharp.LLM.csproj",
+      "packageId": "JYPPX.DeploySharp.LLM",
+      "assemblyName": "JYPPX.DeploySharp.LLM",
+      "targetFrameworks": ["netstandard2.0", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "adcefdea40a6ffae07c358c6f69d1f9e4e44babb94dc83f46bc156453008ab97"
+    },
+    {
+      "projectPath": "src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj",
+      "packageId": "JYPPX.DeploySharp.ModelFactory",
+      "assemblyName": "JYPPX.DeploySharp.ModelFactory",
+      "targetFrameworks": ["netstandard2.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "ac06dce3aaf5d2d792ab708581e32d7d5744f3906673bd510b31be777dea8ac9"
+    },
+    {
+      "projectPath": "src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj",
+      "packageId": "JYPPX.DeploySharp.ModelPack.Json",
+      "assemblyName": "JYPPX.DeploySharp.ModelPack.Json",
+      "targetFrameworks": ["netstandard2.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "df73bb56a610b09b074b4ea21e84ff42d94337fd621e3f4e3e73592110c23fde"
+    },
+    {
+      "projectPath": "src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj",
+      "packageId": "JYPPX.DeploySharp.Visual.OpenCV",
+      "assemblyName": "JYPPX.DeploySharp.Visual.OpenCV",
+      "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "4d88224e4f1490eea11b6efd6c121c0067780b85bb1fcd74beb473644b450ee8"
+    },
+    {
+      "projectPath": "src/DeploySharp.Visual/DeploySharp.Visual.csproj",
+      "packageId": "JYPPX.DeploySharp.Visual",
+      "assemblyName": "JYPPX.DeploySharp.Visual",
+      "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netstandard2.0", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "fb906bee565e7f8ed1f34af7b874bdf40ddd1be5cf7e7d67f76a2388ccf7f4b3"
+    }
+  ]
+}

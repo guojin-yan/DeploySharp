@@ -134,6 +134,8 @@ namespace JYPPX.DeploySharp.ModelFactory
     {
         private readonly IReadOnlyList<string> _compatibleBackends;
         private readonly IReadOnlyList<ModelCatalogAsset> _assets;
+        private readonly IReadOnlyList<string> _capabilities;
+        private readonly IReadOnlyList<string> _requiredAssetIds;
 
         /// <summary>Initializes an artifact document. / 初始化工件文档。</summary>
         public ModelCatalogArtifact(
@@ -145,7 +147,40 @@ namespace JYPPX.DeploySharp.ModelFactory
             bool portable,
             string? manifestAssetId,
             IEnumerable<ModelCatalogAsset>? assets,
-            ModelCatalogConversion? conversion = null)
+            ModelCatalogConversion? conversion = null,
+            string? bundleRole = null,
+            string? bundleVersion = null,
+            IEnumerable<string>? capabilities = null,
+            IEnumerable<string>? requiredAssetIds = null,
+            string? tokenizerId = null,
+            string? vocabularyMode = null,
+            int? embeddingDimension = null,
+            string? imagePreprocessingId = null,
+            string? projectionId = null,
+            string? normalizationId = null,
+            string? scoreSemantics = null,
+            string? language = null,
+            string? resolution = null,
+            string? visionBackbone = null,
+            string? qFormerId = null,
+            string? languageModelId = null,
+            string? promptTemplateId = null,
+            string? generationConfigId = null,
+            string? generationMode = null,
+            string? kvCacheSchemaId = null,
+            int? imageCount = null,
+            int? contextLength = null,
+            int? pageCount = null,
+            string? schemaId = null,
+            string? ocrOwnership = null,
+            string? processorId = null,
+            int? sampleRate = null,
+            int? channelCount = null,
+            string? timestampMode = null,
+            string? speakerMode = null,
+            string? audioFeatureId = null,
+            string? vadId = null,
+            string? speakerId = null)
         {
             ArtifactId = artifactId;
             Format = format;
@@ -156,6 +191,41 @@ namespace JYPPX.DeploySharp.ModelFactory
             ManifestAssetId = manifestAssetId;
             _assets = CopyObjects(assets);
             Conversion = conversion;
+            BundleRole = bundleRole;
+            BundleVersion = bundleVersion;
+            _capabilities = CopyValues(capabilities);
+            _requiredAssetIds = CopyValues(requiredAssetIds);
+            var normalizedTokenizerId = tokenizerId?.Trim();
+            var normalizedVocabularyMode = vocabularyMode?.Trim();
+            TokenizerId = string.IsNullOrEmpty(normalizedTokenizerId) ? null : normalizedTokenizerId;
+            VocabularyMode = string.IsNullOrEmpty(normalizedVocabularyMode) ? null : normalizedVocabularyMode;
+            EmbeddingDimension = embeddingDimension;
+            ImagePreprocessingId = NormalizeOptional(imagePreprocessingId);
+            ProjectionId = NormalizeOptional(projectionId);
+            NormalizationId = NormalizeOptional(normalizationId);
+            ScoreSemantics = NormalizeOptional(scoreSemantics);
+            Language = NormalizeOptional(language);
+            Resolution = NormalizeOptional(resolution);
+            VisionBackbone = NormalizeOptional(visionBackbone);
+            QFormerId = NormalizeOptional(qFormerId);
+            LanguageModelId = NormalizeOptional(languageModelId);
+            PromptTemplateId = NormalizeOptional(promptTemplateId);
+            GenerationConfigId = NormalizeOptional(generationConfigId);
+            GenerationMode = NormalizeOptional(generationMode);
+            KvCacheSchemaId = NormalizeOptional(kvCacheSchemaId);
+            ImageCount = imageCount;
+            ContextLength = contextLength;
+            PageCount = pageCount;
+            SchemaId = NormalizeOptional(schemaId);
+            OcrOwnership = NormalizeOptional(ocrOwnership);
+            ProcessorId = NormalizeOptional(processorId);
+            SampleRate = sampleRate;
+            ChannelCount = channelCount;
+            TimestampMode = NormalizeOptional(timestampMode);
+            SpeakerMode = NormalizeOptional(speakerMode);
+            AudioFeatureId = NormalizeOptional(audioFeatureId);
+            VadId = NormalizeOptional(vadId);
+            SpeakerId = NormalizeOptional(speakerId);
         }
 
         /// <summary>Gets the stable artifact identifier. / 获取稳定工件标识。</summary>
@@ -176,6 +246,78 @@ namespace JYPPX.DeploySharp.ModelFactory
         public IReadOnlyList<ModelCatalogAsset> Assets => _assets;
         /// <summary>Gets the optional reproducible conversion record. / 获取可选的可复现转换记录。</summary>
         public ModelCatalogConversion? Conversion { get; }
+        /// <summary>Gets the role of this artifact inside a multi-artifact bundle. / 获取此工件在多工件 bundle 中的角色。</summary>
+        public string? BundleRole { get; }
+        /// <summary>Gets the exact bundle version shared by all cooperating artifacts. / 获取协作工件共享的精确 bundle 版本。</summary>
+        public string? BundleVersion { get; }
+        /// <summary>Gets prompt or task capabilities supplied by the artifact. / 获取此工件提供的提示或任务能力。</summary>
+        public IReadOnlyList<string> Capabilities => _capabilities;
+        /// <summary>Gets asset identifiers that must accompany this artifact. / 获取必须随此工件提供的资产标识。</summary>
+        public IReadOnlyList<string> RequiredAssetIds => _requiredAssetIds;
+        /// <summary>Gets the exact tokenizer identity used by the prompt contract. / 获取提示合同使用的精确 Tokenizer Identity。</summary>
+        public string? TokenizerId { get; }
+        /// <summary>Gets the serialized vocabulary mode, such as fixed or runtime-text. / 获取序列化词汇模式，例如 fixed 或 runtime-text。</summary>
+        public string? VocabularyMode { get; }
+        /// <summary>Gets the optional projected embedding dimension. / 获取可选投影 Embedding 维度。</summary>
+        public int? EmbeddingDimension { get; }
+        /// <summary>Gets the exact profile-wide image preprocessing identity. / 获取精确的 Profile 级图像预处理 Identity。</summary>
+        public string? ImagePreprocessingId { get; }
+        /// <summary>Gets the exact projection-head identity. / 获取精确 Projection Head Identity。</summary>
+        public string? ProjectionId { get; }
+        /// <summary>Gets the exact embedding normalization identity. / 获取精确 Embedding 归一化 Identity。</summary>
+        public string? NormalizationId { get; }
+        /// <summary>Gets candidate-set score semantics. / 获取候选集评分语义。</summary>
+        public string? ScoreSemantics { get; }
+        /// <summary>Gets the tokenizer/model language capability identity. / 获取 Tokenizer/模型语言能力 Identity。</summary>
+        public string? Language { get; }
+        /// <summary>Gets the fixed or dynamic image-resolution identity. / 获取固定或动态图像分辨率 Identity。</summary>
+        public string? Resolution { get; }
+        /// <summary>Gets the exact vision-backbone identity. / 获取精确 Vision Backbone Identity。</summary>
+        public string? VisionBackbone { get; }
+        /// <summary>Gets the exact Q-Former/query-token identity. / 获取精确 Q-Former/Query Token Identity。</summary>
+        public string? QFormerId { get; }
+        /// <summary>Gets the exact language-model identity. / 获取精确 Language Model Identity。</summary>
+        public string? LanguageModelId { get; }
+        /// <summary>Gets the exact prompt-template identity. / 获取精确 Prompt Template Identity。</summary>
+        public string? PromptTemplateId { get; }
+        /// <summary>Gets the exact generation-config identity. / 获取精确 Generation Config Identity。</summary>
+        public string? GenerationConfigId { get; }
+        /// <summary>Gets generation-policy mode. / 获取生成策略模式。</summary>
+        public string? GenerationMode { get; }
+        /// <summary>Gets the exact KV-cache schema identity, including explicit no-cache schemas. / 获取精确 KV-cache Schema Identity，包括显式无缓存 Schema。</summary>
+        public string? KvCacheSchemaId { get; }
+        /// <summary>Gets the maximum image count accepted by this artifact-bound contract. / 获取此工件绑定合同允许的最大图像数量。</summary>
+        public int? ImageCount { get; }
+        /// <summary>Gets the maximum expanded text/image context length in tokens. / 获取展开后的图文上下文最大 Token 数。</summary>
+        public int? ContextLength { get; }
+        /// <summary>Gets the maximum document page count accepted by this artifact-bound contract. / 获取此工件绑定合同允许的最大文档页数。</summary>
+        public int? PageCount { get; }
+        /// <summary>Gets the exact structured-output schema identity. / 获取精确的结构化输出 Schema Identity。</summary>
+        public string? SchemaId { get; }
+        /// <summary>Gets the OCR ownership boundary: caller, processor, or ocr-free. / 获取 OCR 所有权边界：caller、processor 或 ocr-free。</summary>
+        public string? OcrOwnership { get; }
+        /// <summary>Gets the exact document processor identity shared by all cooperating artifacts. / 获取全部协作工件共享的精确文档 Processor Identity。</summary>
+        public string? ProcessorId { get; }
+        /// <summary>Gets the exact required audio sample rate. / 获取精确要求的音频采样率。</summary>
+        public int? SampleRate { get; }
+        /// <summary>Gets the exact accepted source channel count for this artifact record. / 获取此工件记录接受的精确源声道数。</summary>
+        public int? ChannelCount { get; }
+        /// <summary>Gets timestamp ownership/mode identity. / 获取时间戳所有权或模式 Identity。</summary>
+        public string? TimestampMode { get; }
+        /// <summary>Gets speaker/VAD/embedding/clustering ownership mode. / 获取说话人、VAD、Embedding、聚类所有权模式。</summary>
+        public string? SpeakerMode { get; }
+        /// <summary>Gets waveform, log-Mel, or representation feature identity. / 获取波形、log-Mel 或表征 Feature Identity。</summary>
+        public string? AudioFeatureId { get; }
+        /// <summary>Gets the exact VAD model or caller-segment identity. / 获取精确 VAD 模型或调用方分段 Identity。</summary>
+        public string? VadId { get; }
+        /// <summary>Gets the exact speaker embedding/label identity. / 获取精确说话人 Embedding/标签 Identity。</summary>
+        public string? SpeakerId { get; }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            string? normalized = value?.Trim();
+            return string.IsNullOrEmpty(normalized) ? null : normalized;
+        }
 
         private static IReadOnlyList<T> CopyValues<T>(IEnumerable<T>? values)
         {

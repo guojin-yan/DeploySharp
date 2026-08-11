@@ -41,6 +41,11 @@
           "MSTest.Analyzers": "4.3.3"
         }
       },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
+      },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
         "resolved": "2.23.0",
@@ -141,7 +146,8 @@
       "JYPPX.DeploySharp.Visual": {
         "type": "Project",
         "dependencies": {
-          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )"
         }
       },
       "Microsoft.ML.OnnxRuntime.Managed": {
@@ -151,6 +157,15 @@
         "contentHash": "4ecKjwASHhAZXczK/xm5KU6MdvoIGfMd23UAwDbM9vfcfgqZgNqvFWPZPT0Elc1wu5vXWs2Kij1ZBmHCcv1UlA==",
         "dependencies": {
           "System.Numerics.Tensors": "9.0.0"
+        }
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
         }
       }
     }

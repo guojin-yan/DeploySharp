@@ -1,0 +1,5 @@
+# DeploySharp open-vocabulary clean consumer
+
+This package-only consumer installs Core, Visual, Visual.OpenCV, one backend adapter, and application-selected Windows x64 native runtimes. It contains no project reference, model, checkpoint, tokenizer, image, Python, OpenVINO IR, native runtime hidden by a DeploySharp package, or TensorRT asset. / 此仅包消费者只安装 Core、Visual、Visual.OpenCV、一个 Backend Adapter 与应用显式选择的 Windows x64 native runtime；不含项目引用、模型、Checkpoint、Tokenizer、图片、Python、OpenVINO IR、由 DeploySharp 包隐式携带的 native runtime 或 TensorRT 资产。
+
+Set `DEPLOYSHARP_OPEN_VOCAB_YOLOWORLD_ONNX` and `DEPLOYSHARP_OPEN_VOCAB_IMAGE`. Missing files print `DEPLOYSHARP_VISUAL_OPEN_VOCAB_CONSUMER_SKIP`; a real ORT CPU fixed-vocabulary run prints `DEPLOYSHARP_VISUAL_OPEN_VOCAB_CONSUMER_OK`. Optionally set `DEPLOYSHARP_SAM_ENCODER_ONNX` and `DEPLOYSHARP_SAM_DECODER_ONNX`; successful detector-box to SAM composition also prints `DEPLOYSHARP_VISUAL_GROUNDED_SAM_CONSUMER_OK`. / 设置检测模型与图像环境变量；缺文件输出稳定 skip，真实 ORT CPU 固定词汇执行输出成功标记。可选设置两条 SAM 工件路径，检测框到 SAM 组合成功后另输出 Grounded-SAM 成功标记。

@@ -14,7 +14,27 @@ using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual
 {
-    /// <summary>Defines the numerical meaning of the four orientation output values. / 定义四个方向输出值的数值语义。</summary>
+    /// <summary>Identifies the explicit orientation stage used by an OCR workflow. / 标识 OCR 工作流使用的显式方向阶段。</summary>
+    public enum OcrOrientationStrategy
+    {
+        /// <summary>No orientation model is used. / 不使用方向模型。</summary>
+        None = 0,
+        /// <summary>One orientation result corrects the whole image before detection. / 检测前使用一个方向结果纠正整图。</summary>
+        WholeImage = 1,
+        /// <summary>Each detected text region is classified before recognition. / 每个检测文本区域在识别前分别分类。</summary>
+        PerTextRegion = 2
+    }
+
+    /// <summary>Controls how a per-region orientation rejection affects OCR. / 控制逐区域方向拒绝如何影响 OCR。</summary>
+    public enum OcrOrientationRejectionPolicy
+    {
+        /// <summary>Fail the OCR call instead of silently selecting an angle. / 使 OCR 调用失败，不静默选择角度。</summary>
+        Fail = 0,
+        /// <summary>Use the explicit zero-degree fallback recorded by the rejected result. / 使用拒绝结果记录的显式 0 度回退。</summary>
+        UseZeroDegrees = 1
+    }
+
+    /// <summary>Defines the numerical meaning of orientation output values. / 定义方向输出值的数值语义。</summary>
     public enum OcrOrientationValueSemantics
     {
         /// <summary>Values are probabilities and must be in [0,1]. / 值是必须位于 [0,1] 的概率。</summary>
@@ -23,19 +43,17 @@ namespace JYPPX.DeploySharp.Visual
         Logits = 1
     }
 
-    /// <summary>Stores a strict four-class OCR orientation model contract. / 存储严格的四分类 OCR 方向模型契约。</summary>
+    /// <summary>Stores a strict two- or four-class OCR orientation model contract. / 存储严格的二分类或四分类 OCR 方向模型契约。</summary>
     public sealed class OcrOrientationSchema
     {
         private readonly IReadOnlyList<TextOrientation> _classToOrientation;
 
-        /// <summary>Initializes an orientation schema with an explicit class-to-angle mapping. / 使用显式类别到角度映射初始化方向 Schema。</summary>
+        /// <summary>Initializes an orientation schema with an explicit two- or four-class mapping. / 使用显式二分类或四分类映射初始化方向 Schema。</summary>
         public OcrOrientationSchema(string outputName, TensorShape outputShape, TensorElementType elementType, IEnumerable<TextOrientation> classToOrientation, OcrOrientationValueSemantics semantics = OcrOrientationValueSemantics.Logits, bool applySoftmax = true, bool allowDynamicBatch = false)
         {
             if (string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("An orientation output name is required.", nameof(outputName));
             if (outputShape == null) throw new ArgumentNullException(nameof(outputShape));
             if (outputShape.Rank != 1 && outputShape.Rank != 2) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "Orientation output rank must be one or two.", tensorName: outputName);
-            if (outputShape.Rank == 1 && outputShape[0] != 4) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "A rank-one orientation output must contain four values.", tensorName: outputName);
-            if (outputShape.Rank == 2 && outputShape[1] != 4) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "The orientation class dimension must contain four values.", tensorName: outputName);
             if (outputShape.Rank == 2 && outputShape[0] != 1 && !(allowDynamicBatch && outputShape[0] == -1)) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "Orientation output batch must be one or an explicitly allowed dynamic dimension.", tensorName: outputName);
             if (elementType != TensorElementType.Float32 && elementType != TensorElementType.Float64) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "Orientation output must use Float32 or Float64.", tensorName: outputName);
             if (!Enum.IsDefined(typeof(OcrOrientationValueSemantics), semantics)) throw new ArgumentOutOfRangeException(nameof(semantics));
@@ -49,7 +67,10 @@ namespace JYPPX.DeploySharp.Visual
                 if (mapping.Contains(orientation)) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "Orientation angles must be unique.", tensorName: outputName);
                 mapping.Add(orientation);
             }
-            if (mapping.Count != 4) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "The orientation mapping must explicitly contain all four angles.", tensorName: outputName);
+            if (mapping.Count != 2 && mapping.Count != 4) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "The orientation mapping must contain two or four classes.", tensorName: outputName);
+            if (mapping.Count == 2 && (!mapping.Contains(TextOrientation.Degrees0) || !mapping.Contains(TextOrientation.Degrees180))) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "A two-class orientation mapping must explicitly contain 0 and 180 degrees.", tensorName: outputName);
+            long declaredClasses = outputShape[outputShape.Rank - 1];
+            if (declaredClasses != mapping.Count) throw new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, "The output class dimension must match the explicit orientation mapping.", tensorName: outputName);
             OutputName = outputName;
             OutputShape = new TensorShape(outputShape.ToArray());
             ElementType = elementType;
@@ -67,6 +88,8 @@ namespace JYPPX.DeploySharp.Visual
         public TensorElementType ElementType { get; }
         /// <summary>Gets the explicit class-to-angle mapping. / 获取显式类别到角度映射。</summary>
         public IReadOnlyList<TextOrientation> ClassToOrientation => _classToOrientation;
+        /// <summary>Gets the declared orientation class count. / 获取声明的方向类别数。</summary>
+        public int ClassCount => _classToOrientation.Count;
         /// <summary>Gets the output value semantics. / 获取输出值语义。</summary>
         public OcrOrientationValueSemantics Semantics { get; }
         /// <summary>Gets whether logits require softmax normalization. / 获取 logits 是否需要 softmax 归一化。</summary>
@@ -107,12 +130,12 @@ namespace JYPPX.DeploySharp.Visual
         public OcrOrientationResult(TextOrientation orientation, int classIndex, float confidence, IEnumerable<float> scores, bool rejected, string profileId, ModelId modelId, BackendId backendId, VisualSize inputSize, VisualSize outputSize, TimeSpan timing, IEnumerable<string>? warnings = null)
         {
             if (!Enum.IsDefined(typeof(TextOrientation), orientation)) throw new ArgumentOutOfRangeException(nameof(orientation));
-            if (classIndex < 0 || classIndex > 3) throw new ArgumentOutOfRangeException(nameof(classIndex));
             if (float.IsNaN(confidence) || float.IsInfinity(confidence) || confidence < 0 || confidence > 1) throw new ArgumentOutOfRangeException(nameof(confidence));
             var scoreCopy = new List<float>();
             if (scores == null) throw new ArgumentNullException(nameof(scores));
             foreach (float score in scores) { if (float.IsNaN(score) || float.IsInfinity(score) || score < 0 || score > 1) throw new ArgumentOutOfRangeException(nameof(scores)); scoreCopy.Add(score); }
-            if (scoreCopy.Count != 4) throw new ArgumentException("Exactly four scores are required.", nameof(scores));
+            if (scoreCopy.Count != 2 && scoreCopy.Count != 4) throw new ArgumentException("Exactly two or four scores are required.", nameof(scores));
+            if (classIndex < 0 || classIndex >= scoreCopy.Count) throw new ArgumentOutOfRangeException(nameof(classIndex));
             if (rejected && orientation != TextOrientation.Degrees0) throw new ArgumentException("Rejected results use the explicit no-rotation fallback.", nameof(orientation));
             if (string.IsNullOrWhiteSpace(profileId) || modelId.IsEmpty || backendId.IsEmpty) throw new ArgumentException("Provenance is required.");
             Orientation = orientation; ClassIndex = classIndex; Confidence = confidence; Rejected = rejected;
@@ -128,7 +151,7 @@ namespace JYPPX.DeploySharp.Visual
         public int ClassIndex { get; }
         /// <summary>Gets selected confidence. / 获取选中置信度。</summary>
         public float Confidence { get; }
-        /// <summary>Gets all four normalized scores. / 获取四个归一化分数。</summary>
+        /// <summary>Gets all normalized scores in declared class order. / 获取按声明类别顺序排列的全部归一化分数。</summary>
         public IReadOnlyList<float> Scores => _scores;
         /// <summary>Gets whether confidence rejection occurred. / 获取是否因置信度被拒绝。</summary>
         public bool Rejected { get; }
@@ -185,7 +208,7 @@ namespace JYPPX.DeploySharp.Visual
         }
     }
 
-    /// <summary>Decodes a named four-class orientation tensor without guessing class order. / 解码命名四分类方向张量，不猜测类别顺序。</summary>
+    /// <summary>Decodes a named two- or four-class orientation tensor without guessing class order. / 解码命名二分类或四分类方向张量，不猜测类别顺序。</summary>
     public sealed class OcrOrientationDecoder : IVisualDecoder
     {
         /// <summary>Initializes a reusable orientation decoder. / 初始化可复用方向解码器。</summary>
@@ -196,7 +219,7 @@ namespace JYPPX.DeploySharp.Visual
         public OcrOrientationDecoderOptions Options { get; }
         /// <summary>Gets the OCR text-orientation classification task identifier. / 获取 OCR 文本方向分类任务标识。</summary>
         public VisualTaskId Task => VisualTaskId.TextOrientationClassification;
-        /// <summary>Decodes one strict named four-class tensor into an owned orientation result. / 将一个严格命名的四分类张量解码为自有方向结果。</summary>
+        /// <summary>Decodes one strict named orientation tensor into an owned orientation result. / 将一个严格命名的方向张量解码为自有方向结果。</summary>
         public object Decode(VisualDecodeContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
@@ -207,26 +230,27 @@ namespace JYPPX.DeploySharp.Visual
             catch (Exception exception) { throw Failure(context, "The required orientation output is missing.", exception); }
             if (tensor.ElementType != Schema.ElementType || !ShapeMatches(tensor.Shape)) throw Failure(context, "The orientation output type or shape does not match its schema.", tensorName: Schema.OutputName);
             float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
-            if (values.Length < 4) throw Failure(context, "The orientation output contains fewer than four values.", tensorName: Schema.OutputName);
-            var scores = new float[4];
+            int classCount = Schema.ClassCount;
+            if (values.Length < classCount) throw Failure(context, "The orientation output contains fewer values than its declared class count.", tensorName: Schema.OutputName);
+            var scores = new float[classCount];
             double sum = 0;
             if (Schema.Semantics == OcrOrientationValueSemantics.Probability)
             {
-                for (int index = 0; index < 4; index++) { if (Options.ValidateProbabilities && (values[index] < 0 || values[index] > 1)) throw Failure(context, "Orientation probabilities must be in [0,1].", tensorName: Schema.OutputName, details: "index=" + index); scores[index] = values[index]; sum += scores[index]; }
+                for (int index = 0; index < classCount; index++) { if (Options.ValidateProbabilities && (values[index] < 0 || values[index] > 1)) throw Failure(context, "Orientation probabilities must be in [0,1].", tensorName: Schema.OutputName, details: "index=" + index); scores[index] = values[index]; sum += scores[index]; }
                 if (Options.ValidateProbabilities && Math.Abs(sum - 1.0) > 0.001) throw Failure(context, "Orientation probabilities must sum to one.", tensorName: Schema.OutputName);
             }
             else
             {
-                if (Schema.ApplySoftmax) { double max = values.Take(4).Max(); double denominator = 0; for (int index = 0; index < 4; index++) denominator += Math.Exp(values[index] - max); for (int index = 0; index < 4; index++) scores[index] = (float)(Math.Exp(values[index] - max) / denominator); }
-                else for (int index = 0; index < 4; index++) scores[index] = values[index];
+                if (Schema.ApplySoftmax) { double max = values.Take(classCount).Max(); double denominator = 0; for (int index = 0; index < classCount; index++) denominator += Math.Exp(values[index] - max); for (int index = 0; index < classCount; index++) scores[index] = (float)(Math.Exp(values[index] - max) / denominator); }
+                else for (int index = 0; index < classCount; index++) scores[index] = values[index];
             }
             int selected = 0;
-            for (int index = 1; index < 4; index++) { context.CancellationToken.ThrowIfCancellationRequested(); if (scores[index] > scores[selected] + Options.TieEpsilon) selected = index; }
+            for (int index = 1; index < classCount; index++) { context.CancellationToken.ThrowIfCancellationRequested(); if (scores[index] > scores[selected] + Options.TieEpsilon) selected = index; }
             if (Options.MaximumResultBytes < checked(scores.Length * sizeof(float))) throw new VisualException(VisualErrorCodes.OcrOrientationLimitExceeded, "The OCR orientation result exceeds its configured byte limit.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, modelId: context.Profile.ModelId, technicalDetails: "requiredBytes=" + checked(scores.Length * sizeof(float)).ToString(CultureInfo.InvariantCulture));
             bool rejected = scores[selected] < Options.RejectionThreshold;
             return new OcrOrientationResult(rejected ? TextOrientation.Degrees0 : Schema.ClassToOrientation[selected], selected, scores[selected], scores, rejected, context.Profile.ProfileId, context.Profile.ModelId, context.Profile.ModelId.IsEmpty ? default(BackendId) : new BackendId("unknown"), context.Input.SourceSize, context.Input.ModelSize, TimeSpan.Zero, rejected ? new[] { "ocr.orientation.rejected" } : Array.Empty<string>());
         }
-        private bool ShapeMatches(TensorShape shape) => shape.Rank == Schema.OutputShape.Rank && (shape.Rank == 1 ? shape[0] == 4 : shape[1] == 4 && (Schema.AllowDynamicBatch || shape[0] == 1));
+        private bool ShapeMatches(TensorShape shape) => shape.Rank == Schema.OutputShape.Rank && (shape.Rank == 1 ? shape[0] == Schema.ClassCount : shape[0] == 1 && shape[1] == Schema.ClassCount);
         private static VisualException Failure(VisualDecodeContext context, string message, Exception? inner = null, string? tensorName = null, string? details = null) => new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, message, inner, context.Profile.ProfileId, tensorName, modelId: context.Profile.ModelId, technicalDetails: details);
     }
 
@@ -275,6 +299,9 @@ namespace JYPPX.DeploySharp.Visual
             _orientation = orientationPipeline ?? throw new ArgumentNullException(nameof(orientationPipeline));
             _ocr = ocrPipeline ?? throw new ArgumentNullException(nameof(ocrPipeline));
         }
+
+        /// <summary>Gets the explicit whole-image orientation strategy. / 获取显式整图方向策略。</summary>
+        public OcrOrientationStrategy Strategy => OcrOrientationStrategy.WholeImage;
 
         /// <summary>Runs synchronous orientation, correction, detection, and recognition. / 同步运行方向分类、纠正、检测和识别。</summary>
         public OcrResult Run(IOcrOrientationImageInput input, VisualExecutionOptions? orientationOptions = null, OcrExecutionOptions? ocrOptions = null, CancellationToken cancellationToken = default(CancellationToken))

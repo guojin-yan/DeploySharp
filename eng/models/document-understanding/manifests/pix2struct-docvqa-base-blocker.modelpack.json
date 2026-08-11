@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "document-understanding/pix2struct-docvqa-base/external-blocker",
+  "name": "Google Pix2Struct DocVQA base official processor and tokenizer contract",
+  "family": "pix2struct",
+  "task": "document-question-answering",
+  "modelVersion": "pix2struct-docvqa-base-63f6b3de-blocked",
+  "exporter": {
+    "name": "none-complete-audited-dynamic-patch-bundle",
+    "version": "blocked",
+    "sourceRevision": "63f6b3de436e39f75c7a486881a9c2c14a7f4e89"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/google/pix2struct-docvqa-base",
+    "projectUrl": "https://github.com/google-research/pix2struct",
+    "revision": "63f6b3de436e39f75c7a486881a9c2c14a7f4e89",
+    "author": "Google Research",
+    "licenseExpression": "Apache-2.0",
+    "redistributionAllowed": false
+  },
+  "generatedAt": "2026-08-09T00:00:00Z",
+  "profileId": "document.pix2struct.docvqa-base.contract",
+  "inputs": [
+    { "name": "flattened_patches", "elementType": "float32", "shape": [-1, -1, 770] },
+    { "name": "attention_mask", "elementType": "float32", "shape": [-1, -1] },
+    { "name": "decoder_input_ids", "elementType": "int64", "shape": [-1, -1] }
+  ],
+  "outputs": [
+    { "name": "logits", "elementType": "float32", "shape": [-1, -1, 50244] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "official-source-contract.blocked",
+      "format": "json",
+      "locationKind": "directory",
+      "entrypoint": "checkpoint",
+      "compatibleBackends": ["unverified"],
+      "files": [
+        { "relativePath": "checkpoint/config.json", "sha256": "8d39973772a4218b555e30daecabdd5ea11aa1345dd711ff7f88fa90750b464f", "size": 4892, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "checkpoint/preprocessor_config.json", "sha256": "c84e4eebc84171d6069533d9f0147ec7b4afd02ab78697cb5c30f9419ef7dc45", "size": 249, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "checkpoint/README.md", "sha256": "794175546e80948e4efef30e95ebe859fdd26d07bcda26f738a1c97feb1e912a", "size": 4476, "mediaType": "text/markdown", "role": "other" },
+        { "relativePath": "checkpoint/special_tokens_map.json", "sha256": "5c87151ef0f72a99d1f766a4c418bd2a1f90aaa30a8e22fe5eca9641daebb64f", "size": 2201, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "checkpoint/spiece.model", "sha256": "7fd650335add59bed55a432186ca0437a09e185c2d241faab468a538fe6bcf94", "size": 851388, "mediaType": "application/octet-stream", "role": "vocabulary" },
+        { "relativePath": "checkpoint/tokenizer_config.json", "sha256": "5fdb6767a49aca48fdfa43d0279321918185fc4997bdb3ea72bf3a6301a1b43d", "size": 2583, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "checkpoint/tokenizer.json", "sha256": "0af109b23840545ef2c286073f4373959badba1faa73c8557881d5126f6287c9", "size": 3265159, "mediaType": "application/json", "role": "tokenizer" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "official-source-contract",
+        "deploysharp.bundle-version": "pix2struct-docvqa-base-63f6b3de-blocked",
+        "deploysharp.capabilities": "document-question-answering,dynamic-flattened-patches",
+        "deploysharp.processor-id": "google.pix2struct-docvqa-base.processor",
+        "deploysharp.tokenizer-id": "google.pix2struct-docvqa-base.t5",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "pix2struct.docvqa.text.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "4096",
+        "deploysharp.patch-contract": "max2048-patches-16x16-row-column-prefix",
+        "deploysharp.kv-cache-schema-id": "pix2struct.t5.no-cache-official-config",
+        "deploysharp.validation-status": "official-source-contract-only",
+        "deploysharp.blocker": "The official config sets text_config.use_cache=false. No complete official or traceable dynamic flattened-patch Encoder, Prefill, Decode and OpenVINO IR bundle was available; weights were not downloaded merely to invent a KV contract.",
+        "deploysharp.release-admission": "blocked-no-executable-bundle"
+      }
+    },
+    {
+      "artifactId": "source-audit.evidence",
+      "format": "json",
+      "locationKind": "file",
+      "entrypoint": "evidence/source-audit.json",
+      "compatibleBackends": ["unverified"],
+      "files": [
+        { "relativePath": "evidence/source-audit.json", "sha256": "09814cf31b5a7a272208a97abebfad116a6faedf01a323fba66797c7ed09ca92", "size": 1499, "mediaType": "application/json", "role": "other" }
+      ],
+      "precision": "none",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "source-audit",
+        "deploysharp.validation-status": "official-metadata-audited",
+        "deploysharp.release-admission": "blocked"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.algorithm-verified": "false",
+    "deploysharp.publication-state": "metadata-only-no-upload-authorization",
+    "deploysharp.uploaded": "false",
+    "deploysharp.downloadable": "false"
+  }
+}

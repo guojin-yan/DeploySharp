@@ -36,7 +36,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             _maximumConcurrency = maximumConcurrency;
             _device = device;
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
-            Metadata = OpenVinoTensorBridge.CreateMetadata(artifact, compiledModel, allowDynamicShapes);
+            Metadata = OpenVinoTensorBridge.CreateMetadata(artifact, model, compiledModel, allowDynamicShapes);
             _inputs = Metadata.Inputs.ToDictionary(value => value.Name, StringComparer.Ordinal);
             _outputs = Metadata.Outputs;
         }

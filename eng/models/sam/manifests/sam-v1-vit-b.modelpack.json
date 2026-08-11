@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2.0", "modelId": "sam/v1/vit-b-image-prompt/external", "name": "Meta SAM ViT-B promptable image segmentation external bundle", "family": "sam", "task": "promptable-image-segmentation", "modelVersion": "vit-b-dca509f",
+  "exporter": { "name": "official-SamOnnxModel-plus-traceable-image-encoder-wrapper", "version": "torch-2.9.1+cpu-legacy-onnx-exporter", "sourceRevision": "dca509fe793f601edb92606367a655c15ac00fdf" },
+  "source": { "sourceUrl": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth", "projectUrl": "https://github.com/facebookresearch/segment-anything", "revision": "dca509fe793f601edb92606367a655c15ac00fdf", "author": "Meta AI", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
+  "generatedAt": "2026-08-08T00:00:00Z", "profileId": "promptable.sam.v1.vit-b-dca509f",
+  "inputs": [
+    { "name": "images", "elementType": "float32", "shape": [1,3,1024,1024] },
+    { "name": "image_embeddings", "elementType": "float32", "shape": [1,256,64,64] },
+    { "name": "point_coords", "elementType": "float32", "shape": [1,-1,2] },
+    { "name": "point_labels", "elementType": "float32", "shape": [1,-1] },
+    { "name": "mask_input", "elementType": "float32", "shape": [1,1,256,256] },
+    { "name": "has_mask_input", "elementType": "float32", "shape": [1] },
+    { "name": "orig_im_size", "elementType": "float32", "shape": [2] }
+  ],
+  "outputs": [
+    { "name": "image_embeddings", "elementType": "float32", "shape": [1,256,64,64] },
+    { "name": "masks", "elementType": "float32", "shape": [1,4,-1,-1] },
+    { "name": "iou_predictions", "elementType": "float32", "shape": [1,4] },
+    { "name": "low_res_masks", "elementType": "float32", "shape": [1,4,256,256] }
+  ],
+  "artifacts": [
+    { "artifactId": "image-encoder.onnx.fp32", "format": "onnx", "locationKind": "file", "entrypoint": "sam_vit_b_image_encoder_opset17.onnx", "compatibleBackends": ["onnxruntime","openvino"], "files": [ { "relativePath": "sam_vit_b_image_encoder_opset17.onnx", "sha256": "95ea8873d6dbbf1226bf124f56930c1652c09c19f84c032b3721979699a21c3a", "size": 359210513, "mediaType": "application/onnx", "role": "model" } ], "precision": "fp32", "quantization": "none", "opset": 17, "portable": true, "extensions": { "deploysharp.bundle-role": "image-encoder", "deploysharp.bundle-version": "vit-b-dca509f", "deploysharp.capabilities": "point,box,mask-feedback,multimask", "deploysharp.validation-status": "local-ort-openvino-real-image-verified", "deploysharp.conversion-chain": "export_sam_vit_b_encoder.py wraps exact official sam.image_encoder; torch.onnx.export dynamo=false opset17", "deploysharp.release-admission": "blocked-external-only-no-redistribution-approval" } },
+    { "artifactId": "prompt-mask-decoder.onnx.fp32", "format": "onnx", "locationKind": "file", "entrypoint": "sam_vit_b_prompt_mask_decoder_opset17_legacy.onnx", "compatibleBackends": ["onnxruntime","openvino"], "files": [ { "relativePath": "sam_vit_b_prompt_mask_decoder_opset17_legacy.onnx", "sha256": "b520bc95e049862bde768b959c124d6c2a53436df81bf9c5e8689f6e406ba21a", "size": 16496903, "mediaType": "application/onnx", "role": "model" } ], "precision": "fp32", "quantization": "none", "opset": 17, "portable": true, "extensions": { "deploysharp.bundle-role": "prompt-mask-decoder", "deploysharp.bundle-version": "vit-b-dca509f", "deploysharp.capabilities": "point,box,mask-feedback,multimask", "deploysharp.validation-status": "local-ort-openvino-official-predictor-pixel-compared", "deploysharp.preprocessing-version": "sam-v1-longest-side-bottom-right-rgb-mean-std-v1", "deploysharp.postprocessing-version": "sam-v1-token-quality-threshold-restore-v1", "deploysharp.golden-summary": "boy.jpg official predictor IoU 0.976115/0.967546/0.963047/0.989333", "deploysharp.release-admission": "blocked-external-only-no-redistribution-approval" } }
+  ]
+}

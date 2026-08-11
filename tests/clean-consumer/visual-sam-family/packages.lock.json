@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "JYPPX.DeploySharp.Backend.OnnxRuntime": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "7pemttidBxrp6VBvHAsE7XKOc1SzclFbM3uImUIAuoGUkBiWmdRxsL5skTPgchQxCQWmrRVs/YRTwuYwoBB4nA==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "Microsoft.ML.OnnxRuntime.Managed": "1.28.0"
+        }
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "tlVvgBdnrPtKfQv/XTxdx1t7zhP9u1R2bhE43NECnxCgzIML7DYWkoD+VZruVcvxQgetF2X9A2ZQ/5nApopssA=="
+      },
+      "JYPPX.DeploySharp.Visual": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "0SarotNhWbvH3T/N07GCR0y3iWm26r98LCSr4SmNfFY0D5iKYdP2K1UE/vGmgGKKznJlAEp0Rf/iPV8/X0H9MA==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1"
+        }
+      },
+      "JYPPX.DeploySharp.Visual.OpenCV": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "a8jxFTOh34E1Dh2F+AicP6UY8vS9i4FgFHCVxRkDy6YMVoyvem2kJbbpwdcmaivdvPuOq9HB9YXbaew4oN6RyQ==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Visual": "2.0.0-alpha.1",
+          "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1"
+        }
+      },
+      "JYPPX.OpenCV.runtime.win-x64": {
+        "type": "Direct",
+        "requested": "[5.0.0-preview.1, )",
+        "resolved": "5.0.0-preview.1",
+        "contentHash": "D9mgLHo8OQQKM2ZbRF8+6AUzT+iX9N/PwVwvLnaKq2mGvPHqfjerTZcM94qNYWIwTazK9qbvq+Y/Uf47HV0qQg=="
+      },
+      "Microsoft.ML.OnnxRuntime": {
+        "type": "Direct",
+        "requested": "[1.28.0, )",
+        "resolved": "1.28.0",
+        "contentHash": "J2D5+bIJ6QixcIfnjDG2GcXv80PoIKL0EKABjHEKKCPZmF2oBKkOF53DolGq/dTrE2kyLv12Yhc37NvQuqBhqA==",
+        "dependencies": {
+          "Microsoft.ML.OnnxRuntime.Managed": "1.28.0"
+        }
+      },
+      "JYPPX.OpenCV.CSharp.API": {
+        "type": "Transitive",
+        "resolved": "5.0.0-preview.1",
+        "contentHash": "I4xPPJAgCUPcdRxNwyt0aM1mNJ6q+W/k0oC4O8cyZKYk4zRJ5nU2Ni2qwk74l/G4adQ2WvqtlA6YeU31G8vR7g=="
+      },
+      "Microsoft.ML.OnnxRuntime.Managed": {
+        "type": "Transitive",
+        "resolved": "1.28.0",
+        "contentHash": "AlMFEWcFBVc8x6Gl/NBewK2MFTSY/pOT0SxBMIEbPhtxRcPNicRonSLepnWrkEjvOA+iYL7Mn64DUxxEMVSVdw==",
+        "dependencies": {
+          "System.Numerics.Tensors": "9.0.0"
+        }
+      },
+      "System.Numerics.Tensors": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "iGExaDuWc1j+ogTZeKpPz2Q1hyB05KJm1fKCk4hUwCb+J/uvtdaS2OSNLjYVcpxC1wA+eG0QrSRda7hDjwwenQ=="
+      }
+    }
+  }
+}

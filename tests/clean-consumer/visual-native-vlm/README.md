@@ -1,0 +1,5 @@
+# DeploySharp native multimodal clean consumer
+
+This package-only consumer installs Core, Visual, Visual.OpenCV, one ONNX Runtime backend adapter, and application-selected Windows x64 native runtimes. It has no project reference, model/checkpoint/tokenizer/config/golden/image/Python/OpenVINO/TensorRT asset, or hidden native runtime in a DeploySharp package. / 此仅包消费者安装 Core、Visual、Visual.OpenCV、一个 ORT Backend Adapter 与应用显式选择的 Windows x64 Native Runtime；DeploySharp 包中不包含项目引用、模型、Checkpoint、Tokenizer、配置、Golden、图片、Python、OpenVINO、TensorRT 或隐藏 Native Runtime。
+
+Set `DEPLOYSHARP_NATIVE_VLM_MODEL_ROOT` to the external `llava-onevision-qwen2-0.5b-ov-hf` warehouse directory and `DEPLOYSHARP_NATIVE_VLM_IMAGE` to an authorized image. Missing files print `DEPLOYSHARP_VISUAL_NATIVE_VLM_CONSUMER_SKIP`. A real set-image, VQA, Caption, KV, and clear lifecycle prints `DEPLOYSHARP_VISUAL_NATIVE_VLM_CONSUMER_OK`. Multi-image, video, region grounding, sampling, Beam, tools, JSON mode, Qwen2.5-VL, and Phi Vision are not silently claimed. / 将环境变量指向外部统一模型目录和获授权图片；缺文件稳定 Skip；真实图像、问答、描述、KV 与清除生命周期成功后输出成功标记。未验证能力不会被静默宣称支持。

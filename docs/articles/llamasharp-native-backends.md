@@ -12,9 +12,11 @@ Managed and native LLamaSharp versions must be tested as one set. The adapter wa
 
 DeploySharp maps common loader failures to `DS-NATIVE-6001` while preserving the original exception in `InnerException` and `TechnicalDetails`. A malformed GGUF is reported as `DS-MODEL-2001`; a context overflow is `DS-LLM-4003`. / DeploySharp 将常见加载失败映射为 `DS-NATIVE-6001`，并在 `InnerException` 与 `TechnicalDetails` 中保留原始异常。损坏的 GGUF 报告为 `DS-MODEL-2001`，上下文溢出报告为 `DS-LLM-4003`。
 
-The environment variable `DEPLOYSHARP_LLAMA_MODEL` activates the real integration test. A missing model or native runtime is reported as an explicit skipped/inconclusive test, never as a pass. / 环境变量 `DEPLOYSHARP_LLAMA_MODEL` 用于启用真实集成测试。缺少模型或原生运行时时，测试会明确显示为跳过/不确定，绝不会伪装成通过。
+The environment variable `DEPLOYSHARP_LLAMA_MODEL` selects the exact model for the real integration test. Before loading it, `DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST` must identify an admitted ModelPack and `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` must pass. A missing model, incomplete evidence, or missing native runtime is reported as blocked/skipped/inconclusive, never as a pass. / 环境变量 `DEPLOYSHARP_LLAMA_MODEL` 为真实集成测试选择精确模型。加载前，`DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST` 必须指向已准入的 ModelPack，且 `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` 必须通过。缺少模型、证据不完整或缺少原生运行时时，只能报告 blocked/skip/inconclusive，绝不能伪装成通过。
 
 ```powershell
-$env:DEPLOYSHARP_LLAMA_MODEL = 'D:\models\model.gguf'
+$env:DEPLOYSHARP_LLAMA_MODEL = 'E:\DeploySharp-Models\approved-model\model.gguf'
+$env:DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST = 'E:\GitSpace\DeploySharp-V2.0\DeploySharp\eng\models\llm\manifests\approved-model.modelpack.json'
+powershell -NoProfile -ExecutionPolicy Bypass -File eng\models\llm\Test-GgufAdmission.ps1 -RequireAdmitted
 dotnet test tests\DeploySharp.Backend.LlamaSharp.Tests\DeploySharp.Backend.LlamaSharp.Tests.csproj -c Release
 ```

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "2.0", "modelId": "vision-language/siglip2-base-patch16-224/external-blocker", "name": "Google SigLIP 2 base patch16-224 official source blocker", "family": "siglip2", "task": "vision-language-embedding", "modelVersion": "hf-75de2d55-external-blocker",
+  "exporter": { "name": "none-audited-native-dual-encoder", "version": "blocked", "sourceRevision": "75de2d55ec2d0b4efc50b3e9ad70dba96a7b2fa2" },
+  "source": { "sourceUrl": "https://huggingface.co/google/siglip2-base-patch16-224/tree/75de2d55ec2d0b4efc50b3e9ad70dba96a7b2fa2", "projectUrl": "https://github.com/google-research/big_vision", "revision": "0127fb6b337ee2a27bf4e54dea79cff176527356", "author": "Google", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
+  "generatedAt": "2026-08-09T00:00:00Z", "profileId": "vision-language.siglip2-base-patch16-224.external", "inputs": [], "outputs": [],
+  "artifacts": [{ "artifactId": "safetensors.source.blocked", "format": "safetensors", "locationKind": "file", "entrypoint": "model.safetensors", "compatibleBackends": ["unverified"], "files": [
+    { "relativePath": "model.safetensors", "sha256": "612923381c76ec5a9bed335d1c48827e3f2e506ac31b044b63b2031fadee6a0b", "size": 1500800904, "mediaType": "application/octet-stream", "role": "weights" },
+    { "relativePath": "tokenizer.model", "sha256": "61a7b147390c64585d6c3543dd6fc636906c9af3865a5548f27f31aee1d4c8e2", "size": 4241003, "mediaType": "application/octet-stream", "role": "other" }
+  ], "precision": "fp32", "quantization": "none", "portable": false, "extensions": { "deploysharp.bundle-role": "dual-encoder-source", "deploysharp.bundle-version": "siglip2-base-75de2d55", "deploysharp.capabilities": "embedding,zero-shot-classification,cross-modal-retrieval", "deploysharp.tokenizer-id": "google-siglip2-gemma-tokenizer", "deploysharp.validation-status": "official-source-contract-only", "deploysharp.blocker": "no local audited official ONNX/OpenVINO image+text export; processor and conversion fidelity are unverified; no resident Python fallback", "deploysharp.release-admission": "blocked" } }]
+}

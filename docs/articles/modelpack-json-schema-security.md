@@ -2,7 +2,7 @@
 
 ## Schema and versioning / Schema 与版本
 
-The canonical Draft 2020-12 schema is bundled as `schemas/deploysharp-model-package-2.0.schema.json` and is also available from `ModelPackageSchema.GetJson()`. The managed validator supports schema major `2`; newer minor versions are accepted by default only when no unknown critical property is present. A different major version is always rejected. / 规范 Draft 2020-12 Schema 随包提供于 `schemas/deploysharp-model-package-2.0.schema.json`，也可通过 `ModelPackageSchema.GetJson()` 获取。托管验证器支持 Schema 主版本 `2`；默认只有在没有未知关键属性时才接受更高次版本。不同主版本始终拒绝。
+The canonical Draft 2020-12 schema is embedded in the managed assembly and is available from `ModelPackageSchema.GetJson()`. The managed validator supports schema major `2`; newer minor versions are accepted by default only when no unknown critical property is present. A different major version is always rejected. / 规范 Draft 2020-12 Schema 以内嵌资源保存在托管程序集内，并可通过 `ModelPackageSchema.GetJson()` 获取。托管验证器支持 Schema 主版本 `2`；默认只有在没有未知关键属性时才接受更高次版本。不同主版本始终拒绝。
 
 The JSON reader is strict: UTF-8 input is bounded, object property names are case-sensitive and unique, comments and trailing commas are disallowed, and unknown properties are diagnosed. Deterministic serialization uses the documented property order and ordinal sorting for extension dictionaries, so the same validated document produces the same text. / JSON 读取器是严格的：UTF-8 输入有大小上限，对象属性名区分大小写且必须唯一，禁止注释和尾逗号，并诊断未知属性。确定性序列化使用文档规定的属性顺序和序号排序扩展字典，因此同一个已验证文档产生相同文本。
 

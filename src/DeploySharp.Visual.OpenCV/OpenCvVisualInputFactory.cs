@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JYPPX.DeploySharp.Geometry;
@@ -16,7 +17,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     public sealed class OpenCvVisualInputFactory
     {
         /// <summary>Creates a prepared tensor and releases every native Mat before returning. / 创建已准备张量，并在返回前释放所有 native Mat。</summary>
-        public PreparedVisualInput Create(OpenCvImageSource source, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken))
+        public PreparedVisualInput Create(OpenCvImageSource source, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -30,7 +31,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat decoded = OpenCvImageLoader.Decode(source))
                 {
                     OpenCvImageLoader.Validate(decoded, source);
-                    return CreateFromDecoded(decoded, inputName, options, inputId, cancellationToken);
+                    return CreateFromDecoded(decoded, inputName, options, inputId, cancellationToken, auxiliaryInputs);
                 }
             }
             catch (OpenCvVisualException) { throw; }
@@ -43,12 +44,12 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         }
 
         /// <summary>Creates a prepared tensor from an absolute local image path. / 从绝对本地图像路径创建已准备张量。</summary>
-        public PreparedVisualInput CreateFromFile(string path, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken))
+        public PreparedVisualInput CreateFromFile(string path, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
-            return Create(OpenCvImageSource.FromFile(path), inputName, options, inputId, cancellationToken);
+            return Create(OpenCvImageSource.FromFile(path), inputName, options, inputId, cancellationToken, auxiliaryInputs);
         }
 
-        internal static PreparedVisualInput CreateFromDecoded(Mat decoded, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken)
+        internal static PreparedVisualInput CreateFromDecoded(Mat decoded, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
             if (decoded == null) throw new ArgumentNullException(nameof(decoded));
             var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
@@ -56,16 +57,36 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             try
             {
                 Mat geometrySource = PrepareColorForGeometry(decoded, options, out convertedColor);
+                if (options.Interpolation == OpenCvInterpolation.PillowBicubic)
+                {
+                    byte[] resized = PillowBicubicResize(CopyRows(geometrySource), geometrySource.Cols, geometrySource.Rows, geometrySource.Channels, options.ModelSize.Width, options.ModelSize.Height, cancellationToken);
+                    byte[] requested = ConvertChannels(resized, options.ModelSize.Width, options.ModelSize.Height, geometrySource.Channels, options);
+                    ITensor resizedTensor = CreateTensor(requested, options.ModelSize.Width, options.ModelSize.Height, options, cancellationToken);
+                    var pillowMeans = new float[options.ChannelCount];
+                    var pillowScales = new float[options.ChannelCount];
+                    for (int channel = 0; channel < pillowScales.Length; channel++)
+                    {
+                        pillowMeans[channel] = options.Mean(channel);
+                        pillowScales[channel] = 1f / options.StandardDeviation(channel);
+                    }
+                    var pillowDescriptor = new VisualPreprocessingDescriptor(options.ColorOrder, pillowMeans, pillowScales, "OpenCV 5 preview decode plus managed Pillow-compatible antialiased bicubic resize; pixels copied before Mat disposal.");
+                    return new PreparedVisualInput(inputName, resizedTensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, ImageTransform.Resize(sourceSize, options.ModelSize), pillowDescriptor, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
+                }
                 using (Mat geometric = ApplyGeometry(geometrySource, sourceSize, options, out ImageTransform transform))
                 {
                     ObserveCancellation(cancellationToken);
                     byte[] nativeOrder = CopyRows(geometric);
                     byte[] requestedOrder = ConvertChannels(nativeOrder, geometric.Cols, geometric.Rows, geometric.Channels, options);
                     ITensor tensor = CreateTensor(requestedOrder, geometric.Cols, geometric.Rows, options, cancellationToken);
+                    var means = new float[options.ChannelCount];
                     var scales = new float[options.ChannelCount];
-                    for (int channel = 0; channel < scales.Length; channel++) scales[channel] = 1f / options.StandardDeviation(channel);
-                    var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, options.Means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal.");
-                    return new PreparedVisualInput(inputName, tensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, transform, descriptor, inputId);
+                    for (int channel = 0; channel < scales.Length; channel++)
+                    {
+                        means[channel] = options.Mean(channel);
+                        scales[channel] = 1f / options.StandardDeviation(channel);
+                    }
+                    var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal.");
+                    return new PreparedVisualInput(inputName, tensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, transform, descriptor, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
                 }
             }
             finally
@@ -107,7 +128,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (options.ResizeMode == OpenCvResizeMode.Resize)
             {
                 var result = new Mat();
-                ImageProcessing.Resize(source, result, new Size(options.ModelSize.Width, options.ModelSize.Height));
+                ImageProcessing.Resize(source, result, new Size(options.ModelSize.Width, options.ModelSize.Height), interpolation: ToInterpolation(options.Interpolation));
                 transform = ImageTransform.Resize(sourceSize, options.ModelSize);
                 return result;
             }
@@ -125,26 +146,51 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat crop = source.SubMat(new Rect(cropX, cropY, cropWidth, cropHeight)))
                 {
                     var result = new Mat();
-                    ImageProcessing.Resize(crop, result, new Size(options.ModelSize.Width, options.ModelSize.Height));
+                    ImageProcessing.Resize(crop, result, new Size(options.ModelSize.Width, options.ModelSize.Height), interpolation: ToInterpolation(options.Interpolation));
                     transform = ImageTransform.Crop(sourceSize, options.ModelSize, new RectangleF(cropX, cropY, cropWidth, cropHeight));
                     return result;
                 }
             }
 
+            if (options.ResizeMode == OpenCvResizeMode.ShortestEdgeCenterCrop)
+            {
+                double cropScale = Math.Max((double)options.ModelSize.Width / sourceSize.Width, (double)options.ModelSize.Height / sourceSize.Height);
+                int cropResizedWidth = Math.Max(options.ModelSize.Width, checked((int)Math.Floor(sourceSize.Width * cropScale)));
+                int cropResizedHeight = Math.Max(options.ModelSize.Height, checked((int)Math.Floor(sourceSize.Height * cropScale)));
+                int cropX = Math.Max(0, (cropResizedWidth - options.ModelSize.Width) / 2);
+                int cropY = Math.Max(0, (cropResizedHeight - options.ModelSize.Height) / 2);
+                using (var resized = new Mat())
+                {
+                    ImageProcessing.Resize(source, resized, new Size(cropResizedWidth, cropResizedHeight), interpolation: ToInterpolation(options.Interpolation));
+                    using (Mat crop = resized.SubMat(new Rect(cropX, cropY, options.ModelSize.Width, options.ModelSize.Height)))
+                    {
+                        var result = new Mat();
+                        crop.CopyTo(result);
+                        float sourceCropX = (float)(cropX * sourceSize.Width / (double)cropResizedWidth);
+                        float sourceCropY = (float)(cropY * sourceSize.Height / (double)cropResizedHeight);
+                        float sourceCropWidth = (float)(options.ModelSize.Width * sourceSize.Width / (double)cropResizedWidth);
+                        float sourceCropHeight = (float)(options.ModelSize.Height * sourceSize.Height / (double)cropResizedHeight);
+                        transform = ImageTransform.Crop(sourceSize, options.ModelSize, new RectangleF(sourceCropX, sourceCropY, sourceCropWidth, sourceCropHeight));
+                        return result;
+                    }
+                }
+            }
+
             double scale = Math.Min((double)options.ModelSize.Width / sourceSize.Width, (double)options.ModelSize.Height / sourceSize.Height);
-            int resizedWidth = Math.Max(1, Math.Min(options.ModelSize.Width, (int)Math.Round(sourceSize.Width * scale)));
-            int resizedHeight = Math.Max(1, Math.Min(options.ModelSize.Height, (int)Math.Round(sourceSize.Height * scale)));
-            int left = (options.ModelSize.Width - resizedWidth) / 2;
-            int top = (options.ModelSize.Height - resizedHeight) / 2;
+            int resizedWidth = Math.Max(1, Math.Min(options.ModelSize.Width, RoundLetterboxDimension(sourceSize.Width * scale, options.LetterboxRounding)));
+            int resizedHeight = Math.Max(1, Math.Min(options.ModelSize.Height, RoundLetterboxDimension(sourceSize.Height * scale, options.LetterboxRounding)));
+            bool bottomRight = options.ResizeMode == OpenCvResizeMode.LongestSidePadBottomRight;
+            int left = bottomRight ? 0 : (options.ModelSize.Width - resizedWidth) / 2;
+            int top = bottomRight ? 0 : (options.ModelSize.Height - resizedHeight) / 2;
             using (var resized = new Mat())
             {
-                ImageProcessing.Resize(source, resized, new Size(resizedWidth, resizedHeight));
+                ImageProcessing.Resize(source, resized, new Size(resizedWidth, resizedHeight), interpolation: ToInterpolation(options.Interpolation));
                 Scalar padding = PaddingScalar(options.PaddingColor, source.Channels);
                 var result = new Mat(options.ModelSize.Height, options.ModelSize.Width, source.Type, padding);
                 try
                 {
                     using (Mat destination = result.SubMat(new Rect(left, top, resizedWidth, resizedHeight))) resized.CopyTo(destination);
-                    transform = new ImageTransform(ImageTransformKind.Letterbox, sourceSize, options.ModelSize, (float)scale, (float)scale, left, top);
+                    transform = new ImageTransform(ImageTransformKind.Letterbox, sourceSize, options.ModelSize, (float)resizedWidth / sourceSize.Width, (float)resizedHeight / sourceSize.Height, left, top);
                     return result;
                 }
                 catch
@@ -153,6 +199,163 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     throw;
                 }
             }
+        }
+
+        private static int RoundLetterboxDimension(double value, OpenCvLetterboxRounding rounding)
+        {
+            if (rounding == OpenCvLetterboxRounding.Floor) return checked((int)Math.Floor(value));
+            if (rounding == OpenCvLetterboxRounding.HalfUp) return checked((int)Math.Floor(value + 0.5));
+            return checked((int)Math.Round(value));
+        }
+
+        private static InterpolationFlags ToInterpolation(OpenCvInterpolation interpolation)
+        {
+            if (interpolation == OpenCvInterpolation.Cubic) return InterpolationFlags.Cubic;
+            if (interpolation == OpenCvInterpolation.Nearest) return InterpolationFlags.Nearest;
+            return InterpolationFlags.Linear;
+        }
+
+        internal static byte[] PillowBicubicResize(byte[] source, int sourceWidth, int sourceHeight, int channels, int targetWidth, int targetHeight, CancellationToken cancellationToken)
+        {
+            ResampleCoefficient[] horizontal = CreatePillowBicubicCoefficients(sourceWidth, targetWidth);
+            ResampleCoefficient[] vertical = CreatePillowBicubicCoefficients(sourceHeight, targetHeight);
+            var intermediate = new byte[checked(sourceHeight * targetWidth * channels)];
+            var destination = new byte[checked(targetHeight * targetWidth * channels)];
+
+            for (int y = 0; y < sourceHeight; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    ResampleCoefficient coefficient = horizontal[x];
+                    for (int channel = 0; channel < channels; channel++)
+                    {
+                        double sum = 0;
+                        for (int index = 0; index < coefficient.Weights.Length; index++) sum += source[((y * sourceWidth + coefficient.Start + index) * channels) + channel] * coefficient.Weights[index];
+                        intermediate[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
+                    }
+                }
+            }
+
+            for (int y = 0; y < targetHeight; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                ResampleCoefficient coefficient = vertical[y];
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    for (int channel = 0; channel < channels; channel++)
+                    {
+                        double sum = 0;
+                        for (int index = 0; index < coefficient.Weights.Length; index++) sum += intermediate[(((coefficient.Start + index) * targetWidth + x) * channels) + channel] * coefficient.Weights[index];
+                        destination[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
+                    }
+                }
+            }
+
+            return destination;
+        }
+
+        internal static byte[] PillowBilinearResize(byte[] source, int sourceWidth, int sourceHeight, int channels, int targetWidth, int targetHeight, CancellationToken cancellationToken)
+        {
+            ResampleCoefficient[] horizontal = CreatePillowBilinearCoefficients(sourceWidth, targetWidth);
+            ResampleCoefficient[] vertical = CreatePillowBilinearCoefficients(sourceHeight, targetHeight);
+            var intermediate = new byte[checked(sourceHeight * targetWidth * channels)];
+            var destination = new byte[checked(targetHeight * targetWidth * channels)];
+            for (int y = 0; y < sourceHeight; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    ResampleCoefficient coefficient = horizontal[x];
+                    for (int channel = 0; channel < channels; channel++)
+                    {
+                        double sum = 0;
+                        for (int index = 0; index < coefficient.Weights.Length; index++) sum += source[((y * sourceWidth + coefficient.Start + index) * channels) + channel] * coefficient.Weights[index];
+                        intermediate[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
+                    }
+                }
+            }
+            for (int y = 0; y < targetHeight; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                ResampleCoefficient coefficient = vertical[y];
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    for (int channel = 0; channel < channels; channel++)
+                    {
+                        double sum = 0;
+                        for (int index = 0; index < coefficient.Weights.Length; index++) sum += intermediate[(((coefficient.Start + index) * targetWidth + x) * channels) + channel] * coefficient.Weights[index];
+                        destination[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
+                    }
+                }
+            }
+            return destination;
+        }
+
+        private static ResampleCoefficient[] CreatePillowBilinearCoefficients(int sourceSize, int targetSize)
+        {
+            double scale = sourceSize / (double)targetSize;
+            double filterScale = Math.Max(scale, 1.0);
+            double support = filterScale;
+            var result = new ResampleCoefficient[targetSize];
+            for (int output = 0; output < targetSize; output++)
+            {
+                double center = (output + .5) * scale;
+                int start = Math.Max(0, (int)(center - support + .5));
+                int end = Math.Min(sourceSize, (int)(center + support + .5));
+                var weights = new double[end - start];
+                double total = 0;
+                for (int index = 0; index < weights.Length; index++)
+                {
+                    double distance = Math.Abs((start + index - center + .5) / filterScale);
+                    double weight = distance < 1.0 ? 1.0 - distance : 0.0;
+                    weights[index] = weight; total += weight;
+                }
+                for (int index = 0; index < weights.Length; index++) weights[index] /= total;
+                result[output] = new ResampleCoefficient(start, weights);
+            }
+            return result;
+        }
+
+        private static ResampleCoefficient[] CreatePillowBicubicCoefficients(int sourceSize, int targetSize)
+        {
+            double scale = sourceSize / (double)targetSize;
+            double filterScale = Math.Max(scale, 1.0);
+            double support = 2.0 * filterScale;
+            var result = new ResampleCoefficient[targetSize];
+            for (int output = 0; output < targetSize; output++)
+            {
+                double center = (output + .5) * scale;
+                int start = Math.Max(0, (int)(center - support + .5));
+                int end = Math.Min(sourceSize, (int)(center + support + .5));
+                var weights = new double[end - start];
+                double total = 0;
+                for (int index = 0; index < weights.Length; index++)
+                {
+                    double distance = Math.Abs((start + index - center + .5) / filterScale);
+                    double weight = distance < 1.0
+                        ? ((1.5 * distance - 2.5) * distance * distance) + 1.0
+                        : distance < 2.0 ? (((-.5 * distance + 2.5) * distance - 4.0) * distance) + 2.0 : 0.0;
+                    weights[index] = weight;
+                    total += weight;
+                }
+                for (int index = 0; index < weights.Length; index++) weights[index] /= total;
+                result[output] = new ResampleCoefficient(start, weights);
+            }
+            return result;
+        }
+
+        private static byte ClipByte(double value)
+        {
+            int rounded = checked((int)Math.Floor(value + .5));
+            return (byte)Math.Max(0, Math.Min(255, rounded));
+        }
+
+        private readonly struct ResampleCoefficient
+        {
+            internal ResampleCoefficient(int start, double[] weights) { Start = start; Weights = weights; }
+            internal int Start { get; }
+            internal double[] Weights { get; }
         }
 
         private static Scalar PaddingScalar(OpenCvRgbColor color, int channels)
@@ -175,7 +378,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return result;
         }
 
-        private static byte[] ConvertChannels(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options)
+        internal static byte[] ConvertChannels(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options)
         {
             int targetChannels = options.ChannelCount;
             var result = new byte[checked(width * height * targetChannels)];
@@ -300,7 +503,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return (((batch * height + y) * width + x) * channels) + channel;
         }
 
-        private static void ObserveCancellation(CancellationToken cancellationToken)
+        internal static void ObserveCancellation(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested) throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The OpenCV image operation was cancelled at a synchronous boundary.", new OperationCanceledException(cancellationToken));
         }

@@ -10,9 +10,11 @@
     <PackageVersion Include="MSTest.TestAdapter" Version="4.3.3" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.3.3" />
     <PackageVersion Include="LLamaSharp" Version="0.27.0" />
+    <PackageVersion Include="LLamaSharp.Backend.Cpu" Version="0.27.0" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.10" />
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
     <PackageVersion Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.28.0" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="JYPPX.OpenVINO.CSharp.API" Version="3.3.0" />
     <PackageVersion Include="JYPPX.OpenCV.CSharp.API" Version="5.0.0-preview.1" />
     <PackageVersion Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0-preview.1" />

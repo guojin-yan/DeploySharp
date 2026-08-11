@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "native-multimodal/qwen2.5-vl-3b-instruct/external-blocker",
+  "name": "Qwen2.5-VL 3B Instruct official source-contract blocker",
+  "family": "qwen2.5-vl",
+  "task": "multimodal-dialogue",
+  "modelVersion": "qwen2.5-vl-3b-66285546-blocked",
+  "exporter": {
+    "name": "none-complete-audited-onnx-bundle",
+    "version": "blocked",
+    "sourceRevision": "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct",
+    "projectUrl": "https://github.com/QwenLM/Qwen2.5-VL",
+    "revision": "66285546d2b821cf421d4f5eb2576359d3770cd3",
+    "author": "Alibaba Cloud Qwen Team",
+    "licenseExpression": "LicenseRef-Qwen-Research",
+    "redistributionAllowed": false
+  },
+  "generatedAt": "2026-08-09T00:00:00Z",
+  "profileId": "native-multimodal.qwen2.5-vl-3b-instruct.external-blocker",
+  "inputs": [],
+  "outputs": [],
+  "artifacts": [
+    {
+      "artifactId": "official-source-contract.blocked",
+      "format": "json",
+      "locationKind": "file",
+      "entrypoint": "config.json",
+      "compatibleBackends": [
+        "unverified"
+      ],
+      "files": [
+        {
+          "relativePath": "config.json",
+          "sha256": "7ed3eed5be6924cc800e8a5e53fc405c1aab1aaf36bad65c33403b36c56827f5",
+          "size": 1373,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "preprocessor_config.json",
+          "sha256": "f2058c716eef96ccaed1cc1e2d0c08306b62586d535b28d9d08e691b2fab7ca0",
+          "size": 350,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "tokenizer_config.json",
+          "sha256": "4abd3520120e266da84c0864fee064d1fb10806f02225911a47253dd38dc5f56",
+          "size": 5702,
+          "mediaType": "application/json",
+          "role": "tokenizer"
+        },
+        {
+          "relativePath": "LICENSE",
+          "sha256": "b5c0e5cf74cf51af1ecbc4af597cfcd13fd9925611838884a681070838a14a50",
+          "size": 7387,
+          "mediaType": "text/plain",
+          "role": "license"
+        },
+        {
+          "relativePath": "README.md",
+          "sha256": "0b6da5a154b923da4dc66e416140c9b7f235f9b08fbbcc27fd9df7b586e3150d",
+          "size": 18276,
+          "mediaType": "text/markdown",
+          "role": "other"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "official-source-contract",
+        "deploysharp.bundle-version": "qwen2.5-vl-3b-66285546-blocked",
+        "deploysharp.validation-status": "official-source-contract-only",
+        "deploysharp.blocker": "3.75GB checkpoint not acquired; no complete audited official Vision-RoPE/dynamic-image/projector/embedding/Prefill/KV ONNX and OpenVINO bundle; model license is Qwen Research License, not the code repository Apache-2.0.",
+        "deploysharp.release-admission": "blocked",
+        "deploysharp.algorithm-verified": "false"
+      }
+    }
+  ]
+}

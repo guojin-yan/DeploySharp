@@ -32,6 +32,12 @@ namespace JYPPX.DeploySharp.Errors
         /// <summary>The model context window cannot satisfy the request. / 模型上下文窗口无法满足请求。</summary>
         public const string ContextLimitExceeded = "DS-LLM-4003";
 
+        /// <summary>A single-writer language-model session already has an active operation. / 单写入语言模型会话已有活动操作。</summary>
+        public const string LanguageModelSessionBusy = "DS-LLM-4004";
+
+        /// <summary>Language-model artifacts do not share one immutable identity. / 语言模型工件不共享同一不可变身份。</summary>
+        public const string LanguageModelBundleMismatch = "DS-LLM-4005";
+
         /// <summary>A required native runtime is unavailable. / 所需原生运行时不可用。</summary>
         public const string NativeRuntimeUnavailable = "DS-NATIVE-6001";
     }

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "audio/pyannote-speaker-diarization-3.1/external-blocker",
+  "name": "pyannote speaker diarization 3.1 gated source-contract blocker",
+  "family": "pyannote-speaker-diarization",
+  "task": "speaker-diarization",
+  "modelVersion": "pyannote-speaker-diarization-3.1-84fd259-blocked",
+  "exporter": { "name": "none-gated-submodels", "version": "blocked", "sourceRevision": "84fd25912480287da0247647c3d2b4853cb3ee5d" },
+  "source": { "sourceUrl": "https://huggingface.co/pyannote/speaker-diarization-3.1", "projectUrl": "https://github.com/pyannote/pyannote-audio", "revision": "84fd25912480287da0247647c3d2b4853cb3ee5d", "author": "pyannote.audio", "licenseExpression": "MIT", "redistributionAllowed": false },
+  "generatedAt": "2026-08-10T00:00:00Z", "profileId": "audio.pyannote.speaker-diarization-3.1.gated-contract", "inputs": [], "outputs": [],
+  "artifacts": [
+    {
+      "artifactId": "official-model-card.blocked", "format": "model-card", "locationKind": "directory", "entrypoint": "checkpoint", "compatibleBackends": ["unverified"],
+      "files": [{ "relativePath": "checkpoint/README.md", "sha256": "8af30a33044bf34a51bbef3d87695c204894d172e9aae6f018417ce0066f0cb5", "size": 10985, "mediaType": "text/markdown", "role": "other" }],
+      "precision": "none", "quantization": "none", "portable": false,
+      "extensions": { "deploysharp.bundle-role": "official-source-contract", "deploysharp.bundle-version": "pyannote-speaker-diarization-3.1-84fd259-blocked", "deploysharp.processor-id": "pyannote-speaker-diarization-3.1-model-card", "deploysharp.sample-rate": "16000", "deploysharp.timestamp-mode": "pipeline-segments-unavailable", "deploysharp.speaker-mode": "model-vad-embedding-clustering-labels", "deploysharp.vad-id": "pyannote-segmentation-3.0-gated", "deploysharp.speaker-id": "pyannote-embedding-gated", "deploysharp.validation-status": "official-source-contract-only", "deploysharp.blocker": "The pipeline and segmentation submodel require user-condition acceptance and authentication; no VAD, embedding, clustering, overlap or speaker-label execution is claimed." }
+    },
+    {
+      "artifactId": "access-denied.evidence", "format": "evidence", "locationKind": "directory", "entrypoint": "evidence/access-denied", "compatibleBackends": ["unverified"],
+      "files": [
+        { "relativePath": "evidence/access-denied/config.yaml.txt", "sha256": "3e51420173485e21b4d75a2f8c0af7c2823fde5912c00910e9f9e82a91fa10ef", "size": 140, "mediaType": "text/plain", "role": "other" },
+        { "relativePath": "evidence/access-denied/requirements.txt.txt", "sha256": "3e51420173485e21b4d75a2f8c0af7c2823fde5912c00910e9f9e82a91fa10ef", "size": 140, "mediaType": "text/plain", "role": "other" }
+      ],
+      "precision": "none", "quantization": "none", "portable": false,
+      "extensions": { "deploysharp.bundle-role": "access-denied-evidence", "deploysharp.bundle-version": "pyannote-speaker-diarization-3.1-84fd259-blocked", "deploysharp.validation-status": "gated-access-denied", "deploysharp.release-admission": "blocked" }
+    }
+  ],
+  "extensions": { "deploysharp.algorithm-verified": "false", "deploysharp.uploaded": "false", "deploysharp.downloadable": "false", "deploysharp.redistribution-allowed": "false" }
+}

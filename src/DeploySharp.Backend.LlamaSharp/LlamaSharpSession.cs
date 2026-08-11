@@ -24,8 +24,9 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
         private readonly ModelParams _embeddingParams;
         private readonly StatelessExecutor _executor;
         private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
+        private readonly object _disposeSync = new object();
         private LLamaEmbedder? _embedder;
-        private bool _disposed;
+        private volatile bool _disposed;
 
         public LlamaSharpSession(
             ModelArtifact artifact,
@@ -65,7 +66,12 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
                 generationParams.ContextSize.HasValue ? checked((int)generationParams.ContextSize.Value) : weights.ContextSize,
                 embeddingDimensions,
                 device,
-                new[] { "local", "gguf", "llama.cpp" });
+                new[] { "local", "gguf", "llama.cpp" },
+                LanguageModelProfile.CreateUnverified(
+                    artifact,
+                    descriptor.Id,
+                    generationParams.ContextSize.HasValue ? checked((int)generationParams.ContextSize.Value) : weights.ContextSize,
+                    (capabilities & LanguageModelCapabilities.Embeddings) != 0));
         }
 
         public LanguageModelMetadata Metadata { get; }
@@ -73,6 +79,26 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
         public IPromptFormatter PromptFormatter { get; }
 
         internal Exception? EmbeddingInitializationError { get; }
+
+        internal IReadOnlyDictionary<string, string> ModelMetadata => _weights.Metadata;
+
+        internal int ModelContextSize => _weights.ContextSize;
+
+        internal ulong ModelSizeInBytes => _weights.SizeInBytes;
+
+        internal ulong ModelParameterCount => _weights.ParameterCount;
+
+        internal int ModelEmbeddingSize => _weights.EmbeddingSize;
+
+        internal int ModelVocabularySize => _weights.Vocab.Count;
+
+        internal int? ModelBosTokenId => _weights.Vocab.BOS.HasValue ? (int)_weights.Vocab.BOS.Value : (int?)null;
+
+        internal int? ModelEosTokenId => _weights.Vocab.EOS.HasValue ? (int)_weights.Vocab.EOS.Value : (int?)null;
+
+        internal int? ModelPadTokenId => _weights.Vocab.Pad.HasValue ? (int)_weights.Vocab.Pad.Value : (int?)null;
+
+        internal string ModelDescription => _weights.NativeHandle.Description;
 
         public GenerationResult Generate(TextGenerationRequest request, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -114,12 +140,28 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
             using (CancellationTokenSource? timeoutSource = CreateTimeoutSource(request.Options.Timeout, cancellationToken))
             {
                 CancellationToken operationToken = timeoutSource?.Token ?? cancellationToken;
-                await _gate.WaitAsync(operationToken).ConfigureAwait(false);
+                if (operationToken.IsCancellationRequested)
+                {
+                    yield return new GenerationChunk(0, string.Empty, finishReason: GenerationFinishReason.Cancelled);
+                    yield break;
+                }
+
+                if (!await _gate.WaitAsync(0).ConfigureAwait(false))
+                {
+                    throw new DeploySharpException(
+                        DeploySharpErrorCodes.LanguageModelSessionBusy,
+                        "The language-model session is single-writer and already has an active operation.",
+                        backendId: Metadata.Backend.Id,
+                        modelId: _artifact.ModelId);
+                }
+
+                bool entered = true;
+                GenerationFinishReason? terminalReason = null;
+                int sequenceIndex = 0;
                 try
                 {
                     ThrowIfDisposed();
                     var generatedText = new StringBuilder();
-                    int sequenceIndex = 0;
                     var inferenceParams = CreateInferenceParams(request.Options);
                     IAsyncEnumerator<string> enumerator = _executor.InferAsync(request.Prompt, inferenceParams, operationToken).GetAsyncEnumerator(operationToken);
                     try
@@ -130,6 +172,16 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
                             try
                             {
                                 moved = await enumerator.MoveNextAsync().ConfigureAwait(false);
+                            }
+                            catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
+                            {
+                                terminalReason = GenerationFinishReason.Cancelled;
+                                break;
+                            }
+                            catch (Exception exception) when (operationToken.IsCancellationRequested && ContainsCancellation(exception))
+                            {
+                                terminalReason = GenerationFinishReason.Cancelled;
+                                break;
                             }
                             catch (Exception exception)
                             {
@@ -144,25 +196,46 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
                     }
                     finally
                     {
-                        await enumerator.DisposeAsync().ConfigureAwait(false);
+                        try
+                        {
+                            await enumerator.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
+                        {
+                            terminalReason = GenerationFinishReason.Cancelled;
+                        }
+                        catch (Exception exception) when (operationToken.IsCancellationRequested && ContainsCancellation(exception))
+                        {
+                            terminalReason = GenerationFinishReason.Cancelled;
+                        }
                     }
 
-                    GenerationFinishReason reason;
-                    try
+                    if (!terminalReason.HasValue)
                     {
-                        reason = DetermineFinishReason(generatedText.ToString(), request.Options, operationToken);
+                        try
+                        {
+                            terminalReason = DetermineFinishReason(generatedText.ToString(), request.Options, operationToken);
+                        }
+                        catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
+                        {
+                            terminalReason = GenerationFinishReason.Cancelled;
+                        }
+                        catch (Exception exception) when (operationToken.IsCancellationRequested && ContainsCancellation(exception))
+                        {
+                            terminalReason = GenerationFinishReason.Cancelled;
+                        }
+                        catch (Exception exception)
+                        {
+                            throw LlamaSharpExceptionMapper.Map(exception, _artifact, "finish reason");
+                        }
                     }
-                    catch (Exception exception)
-                    {
-                        throw LlamaSharpExceptionMapper.Map(exception, _artifact, "finish reason");
-                    }
-
-                    yield return new GenerationChunk(sequenceIndex, string.Empty, finishReason: reason);
                 }
                 finally
                 {
-                    _gate.Release();
+                    if (entered) _gate.Release();
                 }
+
+                yield return new GenerationChunk(sequenceIndex, string.Empty, finishReason: terminalReason ?? GenerationFinishReason.Error);
             }
         }
 
@@ -178,7 +251,17 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
             using (CancellationTokenSource? timeoutSource = CreateTimeoutSource(request.Timeout, cancellationToken))
             {
                 CancellationToken operationToken = timeoutSource?.Token ?? cancellationToken;
-                await _gate.WaitAsync(operationToken).ConfigureAwait(false);
+                operationToken.ThrowIfCancellationRequested();
+                if (!await _gate.WaitAsync(0).ConfigureAwait(false))
+                {
+                    throw new DeploySharpException(
+                        DeploySharpErrorCodes.LanguageModelSessionBusy,
+                        "The language-model session is single-writer and already has an active operation.",
+                        backendId: Metadata.Backend.Id,
+                        modelId: _artifact.ModelId);
+                }
+
+                bool entered = true;
                 try
                 {
                     ThrowIfDisposed();
@@ -202,28 +285,42 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
                 }
                 finally
                 {
-                    _gate.Release();
+                    if (entered) _gate.Release();
                 }
             }
         }
 
         public void Dispose()
         {
-            if (_disposed) return;
-            // Disposal waits for the active operation because every native context belongs to this session. / 释放会等待活动操作，因为所有原生上下文都属于当前会话。
-            _gate.Wait();
-            try
+            lock (_disposeSync)
             {
                 if (_disposed) return;
-                _disposed = true;
-                _embedder?.Dispose();
-                _executor.Context.Dispose();
-                _weights.Dispose();
-            }
-            finally
-            {
-                _gate.Release();
-                _gate.Dispose();
+                // Disposal waits for the active operation because every native context belongs to this session. / 释放会等待活动操作，因为所有原生上下文都属于当前会话。
+                _gate.Wait();
+                try
+                {
+                    _disposed = true;
+                    try
+                    {
+                        _embedder?.Dispose();
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            _executor.Context.Dispose();
+                        }
+                        finally
+                        {
+                            _weights.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    _gate.Release();
+                    _gate.Dispose();
+                }
             }
         }
 
@@ -278,6 +375,18 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
             double sum = 0;
             for (int index = 0; index < values.Length; index++) sum += values[index] * values[index];
             return Math.Abs(Math.Sqrt(sum) - 1d) <= 0.0001d;
+        }
+
+        private static bool ContainsCancellation(Exception exception)
+        {
+            Exception? current = exception;
+            while (current != null)
+            {
+                if (current is OperationCanceledException) return true;
+                current = current.InnerException;
+            }
+
+            return false;
         }
 
         private void ThrowIfDisposed()

@@ -27,6 +27,72 @@
   href: supported-models.md
 - name: Visual YOLO Detection / Visual YOLO 检测
   href: visual-yolo-detection.md
+- name: Visual YOLO Multi-task / Visual YOLO 多任务
+  href: visual-yolo-multitask.md
+- name: Visual Portable Detectors / Visual 便携检测器
+  href: visual-portable-detectors.md
+- name: Segment Anything Family / Segment Anything 模型族
+  href: visual-sam-family.md
+- name: Open-vocabulary and Grounded-SAM / 开放词汇与 Grounded-SAM
+  href: visual-open-vocabulary.md
+- name: CLIP, SigLIP, and SigLIP 2 / CLIP、SigLIP 与 SigLIP 2
+  href: visual-vision-language.md
+- name: BLIP, BLIP-2, and InstructBLIP / BLIP、BLIP-2 与 InstructBLIP
+  href: visual-generative-vision-language.md
+- name: Native Multimodal Dialogue / 原生多模态对话
+  href: visual-native-multimodal.md
+- name: Document Intelligence and Layout Understanding / 文档智能与版面理解
+  href: visual-document-understanding.md
+- name: Audio Speech Understanding / 音频语音理解
+  href: visual-audio-speech.md
+- name: Development Model Inventory / 开发模型总清单
+  href: development-model-inventory.md
+- name: Acquire YOLO Models / 获取 YOLO 模型
+  href: model-acquisition-yolo.md
+- name: Acquire DETR and RT-DETR / 获取 DETR 与 RT-DETR
+  href: model-acquisition-detr-rtdetr.md
+- name: Acquire OCR, Anomaly, and RMBG / 获取 OCR、异常与 RMBG
+  href: model-acquisition-ocr-anomaly-rmbg.md
+- name: Acquire SAM and Grounded-SAM / 获取 SAM 与 Grounded-SAM
+  href: model-acquisition-sam-grounded-sam.md
+- name: Acquire CLIP and SigLIP / 获取 CLIP 与 SigLIP
+  href: model-acquisition-clip-siglip.md
+- name: Acquire BLIP Family / 获取 BLIP 模型族
+  href: model-acquisition-blip-family.md
+- name: Acquire Native Multimodal Models / 获取原生多模态模型
+  href: model-acquisition-native-multimodal.md
+- name: Acquire Document-Understanding Models / 获取文档理解模型
+  href: model-acquisition-document-understanding.md
+- name: Acquire Audio Speech Models / 获取音频语音模型
+  href: model-acquisition-audio-speech.md
+- name: PaddleOCR, Anomalib, and BRIA RMBG / PaddleOCR、Anomalib 与 BRIA RMBG
+  href: visual-ocr-anomaly-rmbg.md
+- name: PaddleOCR Three-model Pipeline / PaddleOCR 三模型流水线
+  href: visual-paddle-ocr3.md
+- name: Stage 17 API changes / 阶段 17 API 变更
+  href: api-changes-stage17.md
+- name: Stage 18 API changes / 阶段 18 API 变更
+  href: api-changes-stage18.md
+- name: Stage 19 API changes / 阶段 19 API 变更
+  href: api-changes-stage19.md
+- name: Stage 20 API changes / 阶段 20 API 变更
+  href: api-changes-stage20.md
+- name: Stage 21 API changes / 阶段 21 API 变更
+  href: api-changes-stage21.md
+- name: Stage 22 API changes / 阶段 22 API 变更
+  href: api-changes-stage22.md
+- name: Stage 23 API changes / 阶段 23 API 变更
+  href: api-changes-stage23.md
+- name: Stage 24 API changes / 阶段 24 API 变更
+  href: api-changes-stage24.md
+- name: Stage 25 API changes / 阶段 25 API 变更
+  href: api-changes-stage25.md
+- name: Stage 26 API changes / 阶段 26 API 变更
+  href: api-changes-stage26.md
+- name: Stage 27 API changes / 阶段 27 API 变更
+  href: api-changes-stage27.md
+- name: Stage 28 API changes / 阶段 28 API 变更
+  href: api-changes-stage28.md
 - name: V1 Model Capability Migration / V1 模型能力迁移
   href: v1-model-migration.md
 - name: Visual Anomaly Detection / Visual 异常检测
@@ -55,6 +121,28 @@
   href: llamasharp-native-backends.md
 - name: LLM Compatibility and Lifecycle / LLM 兼容性与生命周期
   href: llamasharp-compatibility.md
+- name: LLM and GGUF Stage 29 / LLM 与 GGUF 阶段 29
+  href: llm-gguf-stage29.md
+- name: Exact GGUF Admission Audit / 精确 GGUF 准入审计
+  href: llm-gguf-stage30.md
+- name: Authorized Qwen GGUF CPU Evidence / 授权 Qwen GGUF CPU 实证
+  href: llm-gguf-stage31.md
+- name: GGUF Admission Immutability / GGUF 准入不可变性
+  href: llm-gguf-stage32.md
+- name: LLamaSharp Package Maintenance Gate / LLamaSharp 包维护门
+  href: llm-gguf-stage33.md
+- name: LLamaSharp Support Baseline / LLamaSharp 支持基线
+  href: llm-gguf-stage34.md
+- name: All-package Release-candidate Governance / 全包发布候选治理
+  href: release-candidate-governance-stage35.md
+- name: Package Provenance, Licenses, Symbols, and SBOM / 包来源、许可证、符号与 SBOM
+  href: release-evidence-governance-stage36.md
+- name: LLM/GGUF acquisition / LLM/GGUF 获取
+  href: model-acquisition-llm-gguf.md
+- name: Stage 29 API changes / 阶段 29 API 变更
+  href: api-changes-stage29.md
+- name: Stage 30 API changes / 阶段 30 API 变更
+  href: api-changes-stage30.md
 - name: ModelPack JSON Quick Start / ModelPack JSON 快速开始
   href: modelpack-json-getting-started.md
 - name: ModelPack JSON Schema and Security / ModelPack JSON Schema 与安全

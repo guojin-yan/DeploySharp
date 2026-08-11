@@ -410,7 +410,8 @@ namespace JYPPX.DeploySharp.Visual
             InstanceMaskCropSpace cropSpace,
             InstanceMaskCropOrder cropOrder,
             float threshold,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool thresholdIsStrict = false)
         {
             int sourceWidth = input.SourceSize.Width;
             int sourceHeight = input.SourceSize.Height;
@@ -427,7 +428,8 @@ namespace JYPPX.DeploySharp.Visual
                     if (modelX < 0 || modelX >= input.ModelSize.Width || modelY < 0 || modelY >= input.ModelSize.Height) continue;
                     if (cropSpace == InstanceMaskCropSpace.ModelInput && cropOrder == InstanceMaskCropOrder.AfterResize && !Contains(modelBox, modelX, modelY)) continue;
                     float sampled = Sample(grid, gridOffset, gridWidth, gridHeight, input.ModelSize, modelBox, modelX, modelY, valueKind, activation, interpolation, thresholdOrder, cropSpace, cropOrder, threshold);
-                    if (sampled >= (thresholdOrder == InstanceMaskThresholdOrder.BeforeResize ? 0.5f : threshold))
+                    float comparisonThreshold = thresholdOrder == InstanceMaskThresholdOrder.BeforeResize ? 0.5f : threshold;
+                    if (thresholdIsStrict ? sampled > comparisonThreshold : sampled >= comparisonThreshold)
                     {
                         result[destination] = 1;
                         foreground++;

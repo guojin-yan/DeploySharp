@@ -1,0 +1,48 @@
+{
+  "snapshotDate": "2026-08-09",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "redistributionAllowed": false,
+  "warehouseRoot": "E:\\DeploySharp-Models",
+  "upstream": {
+    "llavaNextCommit": "bce12e479bc4dfee2b9c50c88137b01ff51bd483",
+    "llavaLicense": "Apache-2.0",
+    "llavaModelRevision": "74dd0bf867a4cda7950c17663794267c60cf4b40",
+    "qwenRepositoryCommit": "96588727e44c78b25ba03ea03b8e12f7e64fd0da",
+    "qwenCodeLicense": "Apache-2.0",
+    "qwenModelRevision": "66285546d2b821cf421d4f5eb2576359d3770cd3",
+    "qwenModelLicense": "Qwen Research License Agreement",
+    "phiCookBookCommit": "314476fbe6f3a6e92a3c43f1584609e6d41754a3",
+    "phiModelRevision": "12b77fb40b63a2c73c68243d3f767aab688a1b2a",
+    "phiLicense": "MIT"
+  },
+  "families": [
+    {
+      "family": "llava-onevision",
+      "variant": "qwen2-0.5b-ov-hf",
+      "status": "External-executable-single-image",
+      "artifacts": [
+        "vision-projector-fp32",
+        "token-embedding-int8",
+        "prefill-kv-decoder-int8"
+      ],
+      "imageContract": "single image; anyres grids 1..6; max9 packed spatial budget; 384 crop",
+      "generation": "greedy max16; 24 layers; 2 KV heads; head dimension64; empty-past Prefill plus named past/present Decode",
+      "unsupported": "multi-image, video, region grounding, Beam, sampling, tool calling, JSON mode"
+    },
+    {
+      "family": "qwen2.5-vl",
+      "variant": "3b-instruct",
+      "status": "External-blocker",
+      "blocker": "No complete audited official ONNX/OpenVINO Vision RoPE, projector, embedding, Prefill/KV bundle; research model license and checkpoint absent."
+    },
+    {
+      "family": "phi-vision",
+      "variant": "phi-3.5-vision-instruct",
+      "status": "External-blocker",
+      "blocker": "No complete audited official HD processor/projector/embedding/Prefill/KV ONNX/OpenVINO bundle; checkpoint absent."
+    }
+  ],
+  "ownership": "NativeMultimodalSession owns three exact named backend sessions and one Profile/artifact/source-bound packed image state. Tokenizer, Registry, external files, and prepared input remain caller-owned. Each Generate owns transient KV tensors; only an immutable final KV summary is published.",
+  "publication": "External metadata only. No binary is uploaded or downloadable until license, notice/source obligations, immutable release URI, and explicit upload authorization are independently approved."
+}

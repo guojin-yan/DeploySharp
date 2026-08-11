@@ -38,6 +38,7 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp.Internal
             while (current != null)
             {
                 if (current is DllNotFoundException || current is EntryPointNotFoundException || current is BadImageFormatException) return true;
+                if (current is RuntimeError && current.Message.IndexOf("native library", StringComparison.OrdinalIgnoreCase) >= 0) return true;
                 current = current.InnerException;
             }
 

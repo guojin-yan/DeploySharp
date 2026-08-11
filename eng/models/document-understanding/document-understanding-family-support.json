@@ -1,0 +1,63 @@
+{
+  "snapshotDate": "2026-08-09",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "redistributionAllowed": false,
+  "warehouseRoot": "E:\\DeploySharp-Models",
+  "upstream": {
+    "layoutLmV3CodeCommit": "833df7e7832e5064a281131ee64a481afa8e5b95",
+    "layoutLmV3ModelRevision": "cfbbbff0762e6aab37086fdd4739ad14fe7d5db4",
+    "layoutLmV3License": "CC-BY-NC-SA-4.0",
+    "donutCodeCommit": "4cfcf972560e1a0f26eb3e294c8fc88a0d336626",
+    "donutModelRevision": "8003d433113256b4ce3a0f5bf604b29ff78a7451",
+    "donutLicense": "MIT",
+    "cordV2DatasetRevision": "7f0115a4b758a71d6473b8d085751692da2fef98",
+    "cordV2DatasetLicense": "CC-BY-4.0",
+    "pix2StructCodeCommit": "6fe25c1dc8151823ee3b479519d8d5948812fee4",
+    "pix2StructModelRevision": "63f6b3de436e39f75c7a486881a9c2c14a7f4e89",
+    "pix2StructLicense": "Apache-2.0",
+    "transformersCommit": "e8ea728a3eeeb903e77c7d1bd29267c80a1be71f",
+    "onnxRuntimeCommit": "2e76898a35eb76b7dedc0354ee58095317b64d9f",
+    "openVinoCommit": "0f453eb8dca021e7176cdcc8570242c9f2fec7c5"
+  },
+  "families": [
+    {
+      "family": "donut",
+      "variant": "donut-base-finetuned-cord-v2",
+      "status": "External-executable-single-page",
+      "task": "structured-document-extraction",
+      "ocrOwnership": "ocr-free",
+      "processor": "Pillow bilinear thumbnail, bicubic resize, centered byte-zero pad, RGB normalize to [-1,1], 960x1280",
+      "tokenizer": "XLM-R SentencePiece unigram plus audited added CORD tags; fairseq model-id offset preserved",
+      "schema": "cord-v2.donut-tags.v1; bounded balanced tag parser; no repair",
+      "artifacts": ["document-encoder", "decoder-prefill", "decoder-with-past"],
+      "kv": "4 layers, 16 heads, dimension 64; self past grows to 53; cross past fixed at 1200",
+      "backends": "ONNX Runtime CPU ONNX and OpenVINO CPU FP32 IR",
+      "unsupported": "multi-page execution, caller OCR injection, sampling, Beam, arbitrary schemas, tool calling, TensorRT"
+    },
+    {
+      "family": "layoutlmv3",
+      "variant": "layoutlmv3-base",
+      "status": "External-source-contract-blocker",
+      "task": "layout-classification-and-entity-extraction-contract",
+      "ocrOwnership": "caller",
+      "processor": "224x224 RGB image plus caller words and integer boxes normalized to 0..1000",
+      "tokenizer": "RoBERTa BPE with token-word alignment, special-token boxes, maximum 512",
+      "schema": "layoutlmv3.base.no-task-head",
+      "blocker": "The official base checkpoint has no downstream task head; the previously named Microsoft FUNSD checkpoint was unavailable from the official namespace. The selected license is noncommercial CC-BY-NC-SA-4.0."
+    },
+    {
+      "family": "pix2struct",
+      "variant": "pix2struct-docvqa-base",
+      "status": "External-source-contract-blocker",
+      "task": "document-question-answering-contract",
+      "ocrOwnership": "ocr-free",
+      "processor": "official 16x16 flattened patches with row/column coordinate prefix, maximum 2048 patches",
+      "tokenizer": "T5 SentencePiece, question template, maximum 4096",
+      "schema": "pix2struct.docvqa.text.v1",
+      "blocker": "No complete official or traceable dynamic-patch Encoder/Prefill/Decode ONNX plus OpenVINO bundle was available; official text_config.use_cache is false, so no KV contract is invented."
+    }
+  ],
+  "ownership": "DocumentUnderstandingSession owns exact named backend sessions and one Profile/artifact/processor/OCR/schema/source-page-bound encoded document state. Registry, tokenizer, external files, and prepared documents remain caller-owned. Mutable KV is request-local; results and the final KV summary own their data.",
+  "publication": "External metadata only. uploaded=false, downloadable=false, redistributionAllowed=false. Local execution never upgrades AlgorithmVerified or authorizes a Release asset."
+}

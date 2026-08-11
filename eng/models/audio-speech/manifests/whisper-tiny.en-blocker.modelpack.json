@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "audio/whisper-tiny.en/external-blocker",
+  "name": "OpenAI Whisper tiny.en official source-contract blocker",
+  "family": "whisper",
+  "task": "automatic-speech-recognition",
+  "modelVersion": "whisper-tiny.en-87c7102-blocked",
+  "exporter": { "name": "none-complete-audited-three-graph-bundle", "version": "blocked", "sourceRevision": "87c7102498dcde7456f24cfd30239ca606ed9063" },
+  "source": { "sourceUrl": "https://huggingface.co/openai/whisper-tiny.en", "projectUrl": "https://github.com/openai/whisper", "revision": "87c7102498dcde7456f24cfd30239ca606ed9063", "author": "OpenAI", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
+  "generatedAt": "2026-08-10T00:00:00Z",
+  "profileId": "audio.whisper.tiny.en.source-contract",
+  "inputs": [{ "name": "input_features", "elementType": "float32", "shape": [1, 80, 3000] }, { "name": "input_ids", "elementType": "int64", "shape": [1, -1] }],
+  "outputs": [{ "name": "last_hidden_state", "elementType": "float32", "shape": [1, 1500, 384] }, { "name": "logits", "elementType": "float32", "shape": [1, -1, 51864] }],
+  "artifacts": [{
+    "artifactId": "official-source-contract.blocked",
+    "format": "safetensors-source",
+    "locationKind": "directory",
+    "entrypoint": "checkpoint",
+    "compatibleBackends": ["unverified"],
+    "files": [
+      { "relativePath": "checkpoint/added_tokens.json", "sha256": "560be47bea388757f8d4cc185c5d82067426cbb6361e38016dd90ddc01ab203a", "size": 34604, "mediaType": "application/json", "role": "tokenizer" },
+      { "relativePath": "checkpoint/config.json", "sha256": "b5366317df280f79e6cc366f259f379674f81a8721d458acf2e00680ccb10b1d", "size": 1937, "mediaType": "application/json", "role": "configuration" },
+      { "relativePath": "checkpoint/generation_config.json", "sha256": "38744c19d5cede6ff4dab5079c6d6ddc02ca726960bbef208fb602ad5a030eab", "size": 1621, "mediaType": "application/json", "role": "configuration" },
+      { "relativePath": "checkpoint/merges.txt", "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5", "size": 456318, "mediaType": "text/plain", "role": "vocabulary" },
+      { "relativePath": "checkpoint/model.safetensors", "sha256": "db59695928ded6043adaef491a53ef4e12da9611184d77c53baa691a60b958ad", "size": 151060136, "mediaType": "application/octet-stream", "role": "weights" },
+      { "relativePath": "checkpoint/normalizer.json", "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd", "size": 52666, "mediaType": "application/json", "role": "tokenizer" },
+      { "relativePath": "checkpoint/preprocessor_config.json", "sha256": "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666", "size": 184990, "mediaType": "application/json", "role": "configuration" },
+      { "relativePath": "checkpoint/README.md", "sha256": "13627ce3d7dce389223eab7b6ed06738f0f1c786e5245e650b029e4e314c8ff1", "size": 14861, "mediaType": "text/markdown", "role": "other" },
+      { "relativePath": "checkpoint/special_tokens_map.json", "sha256": "014f8f802366ed818919550be0ad9e35907327cb9e142e8aaa102420f460bda8", "size": 1830, "mediaType": "application/json", "role": "tokenizer" },
+      { "relativePath": "checkpoint/tokenizer_config.json", "sha256": "14f84bdf4b9ecdbd4738ddc81c17a1baedfc02bb93c6e049c951e15a1b40b70d", "size": 805, "mediaType": "application/json", "role": "tokenizer" },
+      { "relativePath": "checkpoint/tokenizer.json", "sha256": "5eb60cec1e77aeeb6869a2bb5a8e01a84c3fe5d072d75369343021fe6f5310d0", "size": 2405679, "mediaType": "application/json", "role": "tokenizer" },
+      { "relativePath": "checkpoint/vocab.json", "sha256": "3ba3c3109ff33976c4bd966589c11ee14fcaa1f4c9e5e154c2ed7f99d80709e7", "size": 798156, "mediaType": "application/json", "role": "vocabulary" }
+    ],
+    "precision": "fp32", "quantization": "none", "portable": false,
+    "extensions": {
+      "deploysharp.bundle-role": "official-source-contract", "deploysharp.bundle-version": "whisper-tiny.en-87c7102-blocked", "deploysharp.processor-id": "openai-whisper-feature-extractor-tiny.en-87c7102", "deploysharp.tokenizer-id": "openai-whisper-tiny.en-tokenizer-87c7102", "deploysharp.language": "en", "deploysharp.sample-rate": "16000", "deploysharp.timestamp-mode": "whisper-timestamp-token-0.02s", "deploysharp.speaker-mode": "none", "deploysharp.audio-feature-id": "whisper-log-mel-80-nfft400-hop160-frames3000-v1", "deploysharp.kv-cache-schema-id": "whisper-optimum-named-past-present-4x6x64-v1", "deploysharp.validation-status": "official-source-contract-only", "deploysharp.blocker": "No audited Whisper Encoder, Decoder Prefill and named Past/Present KV Decode export with per-token parity exists in this stage; no Whisper execution, Beam, sampling, translation, word timestamps or streaming is claimed."
+    }
+  }],
+  "extensions": { "deploysharp.algorithm-verified": "false", "deploysharp.uploaded": "false", "deploysharp.downloadable": "false", "deploysharp.redistribution-allowed": "false" }
+}

@@ -1,0 +1,69 @@
+{
+  "snapshotDate": "2026-08-08",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "redistributionAllowed": false,
+  "families": [
+    {
+      "family": "yolo-world",
+      "implementation": "ultralytics-yolov8s-worldv2-fixed-vocabulary",
+      "status": "External",
+      "promptMode": "fixed-vocabulary",
+      "runtimeInputs": [{ "name": "images", "type": "float32", "shape": [1,3,640,640] }],
+      "runtimeOutputs": [{ "name": "output0", "type": "float32", "shape": [1,6,-1] }],
+      "vocabulary": ["person", "bus"],
+      "vocabularySha256": "0098f12ec1e1f60a7ae05480ffcf7f4a5f195feb612dafa45ec95ef8e84f78db",
+      "tokenizer": { "id": "clip-bpe-77", "file": "bpe_simple_vocab_16e6.txt.gz", "size": 1356917, "sha256": "924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a", "tokens": [[49406,2533,49407],[49406,2840,49407]] },
+      "textEncoder": { "id": "clip-vit-b-32", "size": 353976522, "sha256": "40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af" },
+      "promptEmbedding": { "shape": [1,2,512], "sha256": "e047a003ac4cf14a051aadef984378198c1237c6677a4dff0069cd6da6d74753", "minimum": -0.2170925885438919, "maximum": 0.5984594821929932, "mean": 0.0022939923219382763 },
+      "detector": { "file": "yolov8s-worldv2-person-bus.onnx", "size": 51252911, "sha256": "42f9d408c0ba8f941fa5efd503c8d4faa175fff1705686174684ae5e6de29bdd", "opset": 17, "exporter": "Ultralytics 8.2.2 set_classes then ONNX export", "dynamicAxes": ["output0 candidate axis"] },
+      "sourceCheckpoint": { "uri": "https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8s-worldv2.pt", "size": 25920600, "sha256": "7c951d3baac2de906e3deda859b2ff965350fbfa14f51b81ea52f0e3d98519c8" },
+      "upstream": { "repository": "https://github.com/ultralytics/ultralytics", "auditedCommit": "76595b8030abf57c6d1580b1cbc62640c58880a7", "exportReleaseCommit": "1110258d379bed8d623068ff7ceda8c9290f0774", "license": "AGPL-3.0" },
+      "preprocessing": "RGB NCHW centered 640x640 letterbox, pad 114, divide by 255",
+      "postprocessing": "strict score > 0.25, best class, DeploySharp class-aware NMS IoU 0.7, maximum 300; model exports raw cxcywh probabilities",
+      "backendEvidence": { "onnxruntime": "real bus.jpg official ONNX predictor field parity", "openvino": "same ONNX real bus.jpg field parity", "imageSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c", "count": 5, "singleTimingMs": { "ortTotal": 170.430, "ortInference": 153.741, "openvinoTotal": 91.707, "openvinoInference": 89.875 } },
+      "blocker": "Vocabulary is fixed at export; changing text requires a new official set_classes/reparameterization export and a new artifact-bound profile. Redistribution is not approved."
+    },
+    {
+      "family": "grounding-dino",
+      "implementation": "swint-ogc",
+      "status": "External-blocker",
+      "promptMode": "runtime-text",
+      "upstream": { "repository": "https://github.com/IDEA-Research/GroundingDINO", "commit": "856dde20aee659246248e20734ef9ba5214f5e44", "license": "Apache-2.0" },
+      "checkpoint": { "uri": "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth", "size": 693997677, "sha256": "3b3ca2563c77c69f651d7bd133e97139c186df06231157a64c507099c52bc799" },
+      "officialContract": { "tokenizer": "bert-base-uncased", "caption": "lowercase, trim, append period", "image": "random-resize 800 max-size 1333, ImageNet normalize", "outputs": ["pred_logits sigmoid", "pred_boxes normalized cxcywh"], "thresholds": ["box_threshold", "text_threshold"], "nmsOwner": "official predictor does not apply detector NMS" },
+      "blocker": "No local official ONNX/IR artifact is configured and the official repository has no complete native export covering BERT tokenization, cross-modal fusion, phrase decoding, and boxes."
+    },
+    {
+      "family": "yolo-world",
+      "implementation": "mmyolo-yolo-world-v2-s",
+      "status": "External-blocker",
+      "promptMode": "fixed-vocabulary-after-reparameterization",
+      "upstream": { "repository": "https://github.com/AILab-CVC/YOLO-World", "commit": "4f70adbaacf5685bd9ec5bea85f1f91057f6fc0b", "license": "GPL-3.0" },
+      "checkpoint": { "size": 305052941, "sha256": "55b943ea2643f716f012243a66e49f7f0b12c216a01230ccc9c99e4e128da1a6" },
+      "localOnnx": { "file": "yolo_world_v2_s.onnx", "size": 52257847, "sha256": "ef71d0a679e02e0bb723523d713599220f97be05fe83bf5684a93377de44ba11", "opset": 12, "inputs": ["images"], "outputs": ["num_dets","boxes","scores","labels"] },
+      "officialExport": "PYTHONPATH=./ python deploy/export_onnx.py <config> <weights> --custom-text <customtexts> --opset 11; graph is image-only after reparameterize(texts)",
+      "blocker": "The local graph has no serialized vocabulary order, tokenizer, or text-embedding identity; labels cannot be admitted precisely."
+    },
+    {
+      "family": "yoloe",
+      "implementation": "yoloe-v8s-seg",
+      "status": "External-blocker",
+      "promptModes": ["runtime-text-source", "visual-prompt-source", "prompt-free-source", "reparameterized-fixed-export"],
+      "upstream": { "repository": "https://github.com/THU-MIG/yoloe", "commit": "40cd606cabdbe2b566d6f14a6b162c89206e9a1b", "license": "AGPL-3.0" },
+      "checkpoints": [
+        { "name": "yoloe-v8s-seg.pt", "size": 31135890, "sha256": "ac2b90ed23011495a3e86d89caeb3432a15129cac8d849ba121293c8fc1e0536" },
+        { "name": "yoloe-v8s-seg-pf.pt", "size": 27570549, "sha256": "6535c03eeeb1da417637c9f8ed732e7d9e5d2521446b4ef1423a00578bddbc20" }
+      ],
+      "blocker": "No local official text, visual, or prompt-free YOLOE ONNX/IR artifact and matching prompt identity is available."
+    }
+  ],
+  "groundedSam": {
+    "detector": "yolov8s-worldv2-person-bus.onnx",
+    "segmenter": "SAM v1 ViT-B stage 22 external encoder+decoder bundle",
+    "ownership": "one decoded image creates two prepared tensors; detector result and SAM embedding are cached against the same encoded SHA; source boxes are passed directly as SAM box prompts; masks/RLE remain canonical SAM-owned results",
+    "officialGolden": { "file": "external-only official_grounded_sam_bus_5_u8.bin", "size": 4374000, "sha256": "2f4ebf145d27b48ff4f5175d886ac22bddbfc95e801c3d749b4e4e3f5efcab4e", "maskIoU": [0.989146,0.992322,0.996768,0.996456,0.973675] },
+    "singleTimingMs": { "officialSamEncoder": 6151.304, "officialSamPrompt5": 305.829, "ortDetector": 182.238, "ortSamEncoder": 6243.519, "ortCompose5": 607.475, "openvinoDetector": 100.368, "openvinoSamEncoder": 3580.620, "openvinoCompose5": 405.440 },
+    "reset": { "verified": true, "maskSha256": "9f5699cfbe032de52ca5aa938fdc90eb2c40d29e68fd46135f85c86277e3b008" }
+  }
+}

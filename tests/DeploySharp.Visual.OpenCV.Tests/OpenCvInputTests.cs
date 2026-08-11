@@ -5,6 +5,7 @@ using System.Threading;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.Detr;
 using JYPPX.DeploySharp.Visual.Models.Yolo;
 using JYPPX.DeploySharp.Visual.OpenCV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -163,6 +164,81 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(expectedPadding, values[36], 0.000001f);
                 Assert.AreEqual(expectedPadding, values[72], 0.000001f);
             }
+        }
+
+        [TestMethod]
+        public void DeimProfileUsesBlackFloorLetterboxAndFullCanvasTargetSizes()
+        {
+            PortableDetectorProfile profile = PortableDetectorProfiles.CreateDEIMv2(
+                new ModelId("tests/deimv2"),
+                new PortableDetectorProfileOptions(
+                    16,
+                    new VisualSize(6, 6),
+                    new[] { "object" },
+                    artifactSha256: new string('c', 64),
+                    upstreamRepository: "https://example.invalid/deim",
+                    upstreamCommit: "commit",
+                    exporterVersion: "exporter",
+                    license: "Apache-2.0"));
+
+            OpenCvPreprocessOptions options = OpenCvPortableDetectorPreprocessing.CreateOptions(profile);
+            Assert.AreEqual(OpenCvResizeMode.Letterbox, options.ResizeMode);
+            Assert.AreEqual(OpenCvLetterboxRounding.Floor, options.LetterboxRounding);
+            Assert.AreEqual(OpenCvRgbColor.Black, options.PaddingColor);
+            CollectionAssert.AreEqual(new[] { .485f, .456f, .406f }, options.Means.ToArray());
+            CollectionAssert.AreEqual(new[] { .229f, .224f, .225f }, options.StandardDeviations.ToArray());
+
+            using PreparedVisualInput input = OpenCvPortableDetectorPreprocessing.CreateFromFile(new OpenCvVisualInputFactory(), Fixture("rgb.png"), profile);
+            Assert.AreEqual(new TensorShape(1, 3, 6, 6), input.Tensor.Shape);
+            Assert.AreEqual(1, input.AuxiliaryInputs.Count);
+            Assert.AreEqual("orig_target_sizes", input.AuxiliaryInputs[0].Name);
+            CollectionAssert.AreEqual(new long[] { 6, 6 }, ((Tensor<long>)input.AuxiliaryInputs[0].Tensor).ToArray());
+        }
+
+        [TestMethod]
+        public void RtDetrProfilesUseSingleSourceAuxiliaryRulesForFilesAndBytes()
+        {
+            var v2Options = new PortableDetectorProfileOptions(
+                16,
+                new VisualSize(6, 6),
+                new[] { "object" },
+                inputName: "images",
+                artifactSha256: new string('d', 64),
+                upstreamRepository: "https://github.com/lyuwenyu/RT-DETR",
+                upstreamCommit: "commit",
+                exporterVersion: "torch",
+                license: "Apache-2.0",
+                rfDetrQueryCount: 300,
+                hasDynamicBatchAxis: true);
+            PortableDetectorProfile v2 = PortableDetectorProfiles.CreateRTDETRv2(new ModelId("tests/rtdetrv2"), v2Options);
+            var factory = new OpenCvVisualInputFactory();
+            using PreparedVisualInput file = OpenCvPortableDetectorPreprocessing.CreateFromFile(factory, Fixture("rgb.png"), v2);
+            using PreparedVisualInput bytes = OpenCvPortableDetectorPreprocessing.CreateFromBytes(factory, File.ReadAllBytes(Fixture("rgb.png")), v2);
+            CollectionAssert.AreEqual(new long[] { 3, 2 }, ((Tensor<long>)file.AuxiliaryInputs.Single().Tensor).ToArray());
+            CollectionAssert.AreEqual(((Tensor<float>)file.Tensor).ToArray(), ((Tensor<float>)bytes.Tensor).ToArray());
+            CollectionAssert.AreEqual(((Tensor<long>)file.AuxiliaryInputs.Single().Tensor).ToArray(), ((Tensor<long>)bytes.AuxiliaryInputs.Single().Tensor).ToArray());
+
+            foreach (string fixture in new[] { "gray.png", "alpha.png" })
+            {
+                using PreparedVisualInput converted = OpenCvPortableDetectorPreprocessing.CreateFromFile(factory, Fixture(fixture), v2);
+                Assert.AreEqual(new TensorShape(1, 3, 6, 6), converted.Tensor.Shape);
+                Assert.AreEqual(VisualColorOrder.Rgb, converted.Preprocessing.ColorOrder);
+            }
+
+            var paddleOptions = new PortableDetectorProfileOptions(
+                16,
+                new VisualSize(6, 6),
+                new[] { "object" },
+                inputName: "image",
+                artifactSha256: new string('e', 64),
+                boxesOutputName: "bbox",
+                countOutputName: "bbox_num",
+                hasDynamicBatchAxis: true,
+                paddleCountShape: PortableDetectorCountShape.BatchVector);
+            PortableDetectorProfile paddle = PortableDetectorProfiles.CreateRTDETR(new ModelId("tests/rtdetr-paddle"), paddleOptions);
+            using PreparedVisualInput prepared = OpenCvPortableDetectorPreprocessing.CreateFromFile(factory, Fixture("rgb.png"), paddle);
+            CollectionAssert.AreEqual(new[] { 6f, 6f }, ((Tensor<float>)prepared.AuxiliaryInputs[0].Tensor).ToArray());
+            CollectionAssert.AreEqual(new[] { 3f, 2f }, ((Tensor<float>)prepared.AuxiliaryInputs[1].Tensor).ToArray());
         }
 
         [TestMethod]

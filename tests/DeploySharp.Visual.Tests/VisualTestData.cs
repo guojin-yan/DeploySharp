@@ -56,7 +56,9 @@ namespace DeploySharp.Visual.Tests
                 outputs.Add(new TensorDescriptor(output.Name, output.ElementType, index == 0 ? outputShape : output.ShapePattern));
             }
 
-            return new ModelMetadata(profile.ModelId, "fake", new[] { new TensorDescriptor(profile.Input.Name, profile.Input.ElementType, profile.Input.ShapePattern) }, outputs);
+            var inputs = new List<TensorDescriptor> { new TensorDescriptor(profile.Input.Name, profile.Input.ElementType, profile.Input.ShapePattern) };
+            foreach (VisualAuxiliaryInputBinding auxiliary in profile.AuxiliaryInputs) inputs.Add(new TensorDescriptor(auxiliary.Name, auxiliary.ElementType, auxiliary.ShapePattern));
+            return new ModelMetadata(profile.ModelId, "fake", inputs, outputs);
         }
 
         public static PipelineFixture Pipeline(VisualModelProfile profile, TensorShape outputShape, Func<InferenceInputs, InferenceOutputs> outputFactory, int maximumConcurrency = 1)

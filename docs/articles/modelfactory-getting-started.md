@@ -30,9 +30,11 @@ var coreArtifacts = model.Package.ToCoreArtifacts();
 
 The bundled official catalog is intentionally empty until a model, test input, and reproducible expected result pass redistribution review and a real immutable Release is explicitly approved. Applications can load their own catalog with `ModelCatalogJsonSerializer` or download a strict snapshot with `ModelCatalogClient.LoadAsync`. / 在模型、测试输入和可复现预期结果通过再分发审核且真实不可变 Release 获得明确批准前，内置官方目录有意保持为空。应用可以使用 `ModelCatalogJsonSerializer` 加载自己的目录，或使用 `ModelCatalogClient.LoadAsync` 下载严格快照。
 
+The development-time inventory at `eng/models/inventory/development-model-inventory.json` records every Stage 1-29 model and its metadata/upload/download state. It is not a downloadable catalog: all current structured manifests declare `redistributionAllowed:false`. Before planning any upload, also read the external round-closeout plan at `E:\GitSpace\DeploySharp-V2.0\plan\开发计划-轮次收口清单.md`. / 开发清单记录阶段 1-29 的模型及元数据/上传/下载状态，但它不是可下载目录；当前全部结构化 Manifest 均禁止再分发。规划上传前还必须阅读仓库外的 `E:\GitSpace\DeploySharp-V2.0\plan\开发计划-轮次收口清单.md`。
+
 ## Query and Preview entries / 查询与 Preview 条目
 
-Selection is deterministic and filters by ModelId, task, family, format, backend, precision, quantization, and portability. `Supported` is the default. Set `includePreview: true` only when the application explicitly accepts a non-stable artifact. External records are never materialized as supported models. / 选择过程是确定性的，可按 ModelId、任务、模型族、格式、后端、精度、量化和可移植性筛选。默认只选择 `Supported`。只有应用明确接受非稳定工件时才设置 `includePreview: true`。External 记录不会作为受支持模型物化。
+Selection is deterministic and filters by ModelId, task, family, format, backend, precision, quantization, portability, tokenizer/processor identities, resolution, image count, context length, generation mode, and KV schema. Complete bundle selection rejects mixed versions, missing sidecars, and mixed identities. `Supported` is the default. Set `includePreview: true` only when the application explicitly accepts a non-stable artifact. External records are never materialized as supported models. / 选择过程可按模型、格式、后端、精度、Tokenizer/Processor、分辨率、图像数、Context、生成模式与 KV Schema 筛选；完整 Bundle 会拒绝混版本、缺 Sidecar 与混 Identity。默认仅选择 Supported。
 
 ## Offline reuse / 离线复用
 

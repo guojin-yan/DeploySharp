@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "llm/gguf/external-blocker",
+  "name": "GGUF text generation and embedding source-contract blocker",
+  "family": "llama.cpp-compatible-gguf",
+  "task": "language-generation-and-embedding",
+  "modelVersion": "external-source-contract-blocked-20260810",
+  "exporter": { "name": "none-no-checkpoint-acquired", "version": "blocked", "sourceRevision": "0.27.0" },
+  "source": { "sourceUrl": "https://github.com/SciSharp/LLamaSharp", "projectUrl": "https://github.com/SciSharp/LLamaSharp", "revision": "0.27.0", "author": "SciSharp / LLamaSharp", "licenseExpression": "model-specific", "redistributionAllowed": false },
+  "generatedAt": "2026-08-10T00:00:00Z",
+  "profileId": "llm.gguf.external-source-contract",
+  "inputs": [{ "name": "prompt", "elementType": "utf8-text", "shape": [] }],
+  "outputs": [{ "name": "generated_text", "elementType": "utf8-text", "shape": [] }],
+  "artifacts": [{
+    "artifactId": "gguf-source-contract.blocked",
+    "format": "gguf",
+    "locationKind": "directory",
+    "entrypoint": "evidence",
+    "compatibleBackends": ["llamasharp"],
+    "files": [
+      { "relativePath": "evidence/llama-gguf-source-contract.blocked.txt", "sha256": "c1f81abfe1c7efa70991c6cd5ea3edaed08e8f623f0d270ccd6d7de163ab75e3", "size": 511, "mediaType": "text/plain", "role": "other" },
+      { "relativePath": "evidence/llama-gguf-admission-stage30.blocked.txt", "sha256": "075d62fb93f80a6f52dbd7c404229002dd8d76b300b5c3fe2fb59f571153fcd1", "size": 658, "mediaType": "text/plain", "role": "other" }
+    ],
+    "precision": "unknown",
+    "quantization": "unknown",
+    "portable": false,
+    "minimumBackendVersion": "0.27.0",
+    "extensions": {
+      "deploysharp.bundle-role": "external-source-contract",
+      "deploysharp.validation-status": "official-source-contract-only",
+      "deploysharp.blocker": "No exact authorized GGUF checkpoint, file size, SHA256, quantization, context length, tokenizer/chat-template identity, generation configuration, embedding evidence, or redistribution grant was supplied.",
+      "deploysharp.model-path": "DEPLOYSHARP_LLAMA_MODEL",
+      "deploysharp.model-file-size": "unknown",
+      "deploysharp.model-sha256": "unknown",
+      "deploysharp.context-length": "unknown",
+      "deploysharp.bos-eos-pad": "unknown",
+      "deploysharp.tokenizer-identity": "unknown",
+      "deploysharp.chat-template-identity": "unknown",
+      "deploysharp.generation-identity": "unknown",
+      "deploysharp.embedding-capability": "unknown",
+      "deploysharp.license-status": "model-specific-unverified",
+      "deploysharp.llamasharp-version": "0.27.0",
+      "deploysharp.native-runtime-package": "unknown",
+      "deploysharp.native-runtime-version": "unknown",
+      "deploysharp.runtime-evidence-path": "unknown",
+      "deploysharp.runtime-evidence-sha256": "unknown",
+      "deploysharp.runtime-evidence-operations": "unknown",
+      "deploysharp.admission-audit": "evidence/llama-gguf-admission-stage30.blocked.txt",
+      "deploysharp.executable": "false"
+    }
+  }],
+  "extensions": {
+    "deploysharp.algorithm-verified": "false",
+    "deploysharp.uploaded": "false",
+    "deploysharp.downloadable": "false",
+    "deploysharp.redistribution-allowed": "false",
+    "deploysharp.execution-status": "external-blocker",
+    "deploysharp.stage30-admission-status": "blocked-missing-exact-gguf",
+    "deploysharp.native-runtime": "LLamaSharp 0.27.0 plus caller-selected matching native backend"
+  }
+}

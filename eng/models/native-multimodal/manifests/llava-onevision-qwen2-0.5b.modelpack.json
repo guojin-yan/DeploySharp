@@ -1,0 +1,1328 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "native-multimodal/llava-onevision-qwen2-0.5b/external",
+  "name": "LLaVA OneVision Qwen2 0.5B official Transformers.js mixed-precision bundle",
+  "family": "llava-onevision",
+  "task": "multimodal-dialogue",
+  "modelVersion": "llava-onevision-qwen2-0.5b-74dd0bf8-onnx-js",
+  "exporter": {
+    "name": "official-llava-hf-transformers.js-onnx",
+    "version": "repository-published-opset13-14-int8",
+    "sourceRevision": "74dd0bf867a4cda7950c17663794267c60cf4b40"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
+    "projectUrl": "https://github.com/LLaVA-VL/LLaVA-NeXT",
+    "revision": "74dd0bf867a4cda7950c17663794267c60cf4b40",
+    "author": "LLaVA-HF and LLaVA-VL",
+    "licenseExpression": "Apache-2.0",
+    "redistributionAllowed": false
+  },
+  "generatedAt": "2026-08-09T00:00:00Z",
+  "profileId": "native-vlm.llava-onevision-qwen2-0.5b.official-onnx-js",
+  "inputs": [
+    {
+      "name": "pixel_values",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        3,
+        384,
+        384
+      ]
+    },
+    {
+      "name": "input_ids",
+      "elementType": "int64",
+      "shape": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "name": "attention_mask",
+      "elementType": "int64",
+      "shape": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "name": "position_ids",
+      "elementType": "int64",
+      "shape": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "name": "past_key_values.0.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.0.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.1.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.1.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.2.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.2.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.3.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.3.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.4.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.4.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.5.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.5.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.6.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.6.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.7.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.7.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.8.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.8.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.9.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.9.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.10.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.10.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.11.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.11.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.12.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.12.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.13.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.13.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.14.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.14.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.15.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.15.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.16.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.16.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.17.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.17.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.18.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.18.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.19.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.19.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.20.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.20.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.21.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.21.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.22.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.22.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.23.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "past_key_values.23.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "inputs_embeds",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        -1,
+        896
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "image_features",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        729,
+        896
+      ]
+    },
+    {
+      "name": "inputs_embeds",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        -1,
+        896
+      ]
+    },
+    {
+      "name": "logits",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        -1,
+        152000
+      ]
+    },
+    {
+      "name": "present.0.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.0.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.1.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.1.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.2.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.2.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.3.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.3.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.4.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.4.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.5.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.5.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.6.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.6.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.7.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.7.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.8.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.8.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.9.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.9.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.10.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.10.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.11.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.11.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.12.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.12.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.13.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.13.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.14.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.14.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.15.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.15.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.16.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.16.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.17.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.17.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.18.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.18.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.19.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.19.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.20.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.20.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.21.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.21.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.22.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.22.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.23.key",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    },
+    {
+      "name": "present.23.value",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        2,
+        -1,
+        64
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "vision-projector.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "official-onnx-int8/vision_encoder.onnx",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "official-onnx-int8/vision_encoder.onnx",
+          "sha256": "06cf8f4eefdea6cb8f095724e37da8fa0358820a3506e1c85915d5d2bdadab43",
+          "size": 1598932026,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "model.safetensors",
+          "sha256": "07b3362c3412de79baf2379e44e5b0b2a8f4b965ebebd11d7b5b3eb4450fe96e",
+          "size": 1787445680,
+          "mediaType": "application/octet-stream",
+          "role": "weights"
+        },
+        {
+          "relativePath": "config.json",
+          "sha256": "839a4fba0bd6949f0db22d4f840935cb0318f6ac28b29c9ce1a5b15735a4a740",
+          "size": 2591,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "preprocessor_config.json",
+          "sha256": "3644c108b9f0fa53e62ff422a9be6639642f0e64dab4a71f961c7911d4386384",
+          "size": 1732,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/pixel_values.f32",
+          "sha256": "19951e6b195b84ffc14d893facfe9d57c84b7505e35aadf18132bbde4d9d942d",
+          "size": 3538944,
+          "mediaType": "application/octet-stream",
+          "role": "testInput"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/projected_image_features.f32",
+          "sha256": "c7f6b9714790e341e5b53a4f2e1743ee39aa9cae587ef459ffda5c608e8014d5",
+          "size": 5225472,
+          "mediaType": "application/octet-stream",
+          "role": "other"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 14,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-version": "llava-onevision-qwen2-0.5b-74dd0bf8-onnx-js",
+        "deploysharp.capabilities": "image-captioning,visual-question-answering,single-image,anyres-max9",
+        "deploysharp.tokenizer-id": "qwen2-bytelevel-bpe-llava-onevision",
+        "deploysharp.processor-id": "llava-onevision-slow-pillow-bicubic-anyres-max9-v1",
+        "deploysharp.prompt-template-id": "llava-onevision-single-image-chat-v1",
+        "deploysharp.generation-config-id": "llava-onevision-greedy-kv-max16-v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "qwen2-24l-2kvh-d64-past-present-v1",
+        "deploysharp.image-count": "1",
+        "deploysharp.context-length": "6144",
+        "deploysharp.resolution": "384-anyres-grid-1to6-max9-pack",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified",
+        "deploysharp.release-admission": "blocked-external-only",
+        "deploysharp.bundle-role": "vision-projector",
+        "deploysharp.backend-evidence": "ORT-1.28.0 and OpenVINO-2026.2.1 CPU; exact named pixel_values to image_features; runtime-specific numeric SHA recorded"
+      }
+    },
+    {
+      "artifactId": "token-embedding.onnx.int8",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "official-onnx-int8/embed_tokens_int8.onnx",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "official-onnx-int8/embed_tokens_int8.onnx",
+          "sha256": "4b4dec69949d75a775d871c5e1dc3db6bd4fd6e8ceffb3deafe64e8f16a8323d",
+          "size": 136192544,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "tokenizer.json",
+          "sha256": "3c0ce3213b50ff38d8aa1e91136a2d2cb142a3f569246170872e439cb2a29d15",
+          "size": 7028579,
+          "mediaType": "application/json",
+          "role": "tokenizer"
+        },
+        {
+          "relativePath": "vocab.json",
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+          "size": 2776833,
+          "mediaType": "application/json",
+          "role": "vocabulary"
+        },
+        {
+          "relativePath": "merges.txt",
+          "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+          "size": 1671853,
+          "mediaType": "text/plain",
+          "role": "vocabulary"
+        },
+        {
+          "relativePath": "chat_template.json",
+          "sha256": "2466d1704df30f0067f28d8e30e0190a1bf74e5b430942697af974d162a056bd",
+          "size": 826,
+          "mediaType": "application/json",
+          "role": "chatTemplate"
+        }
+      ],
+      "precision": "int8",
+      "quantization": "dynamic",
+      "opset": 13,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-version": "llava-onevision-qwen2-0.5b-74dd0bf8-onnx-js",
+        "deploysharp.capabilities": "image-captioning,visual-question-answering,single-image,anyres-max9",
+        "deploysharp.tokenizer-id": "qwen2-bytelevel-bpe-llava-onevision",
+        "deploysharp.processor-id": "llava-onevision-slow-pillow-bicubic-anyres-max9-v1",
+        "deploysharp.prompt-template-id": "llava-onevision-single-image-chat-v1",
+        "deploysharp.generation-config-id": "llava-onevision-greedy-kv-max16-v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "qwen2-24l-2kvh-d64-past-present-v1",
+        "deploysharp.image-count": "1",
+        "deploysharp.context-length": "6144",
+        "deploysharp.resolution": "384-anyres-grid-1to6-max9-pack",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified",
+        "deploysharp.release-admission": "blocked-external-only",
+        "deploysharp.bundle-role": "token-embedding",
+        "deploysharp.backend-evidence": "ORT-1.28.0 and OpenVINO-2026.2.1 CPU; exact int64 input_ids to float32 inputs_embeds"
+      }
+    },
+    {
+      "artifactId": "prefill-kv-decoder.onnx.int8",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "official-onnx-int8/decoder_model_merged_int8.onnx",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "official-onnx-int8/decoder_model_merged_int8.onnx",
+          "sha256": "cc674946412447fa76df18686c32541b1388c0fa62cbf53c36dccd1a90649c3f",
+          "size": 512154211,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "generation_config.json",
+          "sha256": "89dc53229f50b59570b6852056dafeac8116c458f1a748bff491b6d4d24d3b51",
+          "size": 126,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/image_newline.f32",
+          "sha256": "2902ee144440d5a54e9c773e8cc7700297105d9687691386dbfade15cce5e160",
+          "size": 3584,
+          "mediaType": "application/octet-stream",
+          "role": "other"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/vqa_input_ids.i64",
+          "sha256": "64022ca7a8eede070f0d4252704523cf87b13bb242f7669daba90ee8dc67af4c",
+          "size": 12016,
+          "mediaType": "application/octet-stream",
+          "role": "testInput"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/vqa_completion_ids.i64",
+          "sha256": "a51420ce5926b21aeb12892820ea5c8a37cd19b826e499ab58abe588c7af835f",
+          "size": 64,
+          "mediaType": "application/octet-stream",
+          "role": "other"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/official-pytorch-evidence.json",
+          "sha256": "1a48ca6d54afa574dea0255037ea6d1bbf3dcfb307a1bdc51c71f3e6e8b97dbd",
+          "size": 6337,
+          "mediaType": "application/json",
+          "role": "other"
+        },
+        {
+          "relativePath": "evidence/ocr-demo2/official-onnxruntime-evidence.json",
+          "sha256": "aa42656d27aac4c6d25bb1a8c76cada3a972525cb88c77d1df62d9710154ab76",
+          "size": 2999,
+          "mediaType": "application/json",
+          "role": "other"
+        }
+      ],
+      "precision": "int8",
+      "quantization": "dynamic",
+      "opset": 14,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-version": "llava-onevision-qwen2-0.5b-74dd0bf8-onnx-js",
+        "deploysharp.capabilities": "image-captioning,visual-question-answering,single-image,anyres-max9",
+        "deploysharp.tokenizer-id": "qwen2-bytelevel-bpe-llava-onevision",
+        "deploysharp.processor-id": "llava-onevision-slow-pillow-bicubic-anyres-max9-v1",
+        "deploysharp.prompt-template-id": "llava-onevision-single-image-chat-v1",
+        "deploysharp.generation-config-id": "llava-onevision-greedy-kv-max16-v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "qwen2-24l-2kvh-d64-past-present-v1",
+        "deploysharp.image-count": "1",
+        "deploysharp.context-length": "6144",
+        "deploysharp.resolution": "384-anyres-grid-1to6-max9-pack",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified",
+        "deploysharp.release-admission": "blocked-external-only",
+        "deploysharp.bundle-role": "prefill-kv-decoder",
+        "deploysharp.backend-evidence": "empty-past Prefill and non-empty named 24-layer KV Decode executed on ORT/OpenVINO; official predictor divergence retained"
+      }
+    },
+    {
+      "artifactId": "vision-projector.onnx.int8.blocker",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "official-onnx-int8/vision_encoder_int8.onnx",
+      "compatibleBackends": [
+        "onnxruntime"
+      ],
+      "files": [
+        {
+          "relativePath": "official-onnx-int8/vision_encoder_int8.onnx",
+          "sha256": "d284a45f927b2dbf8a61622444b1c622275c323d95cbd1d07bd3a38c72caf1bb",
+          "size": 404097518,
+          "mediaType": "application/onnx",
+          "role": "model"
+        }
+      ],
+      "precision": "int8",
+      "quantization": "dynamic",
+      "opset": 14,
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-version": "llava-onevision-qwen2-0.5b-74dd0bf8-onnx-js",
+        "deploysharp.capabilities": "image-captioning,visual-question-answering,single-image,anyres-max9",
+        "deploysharp.tokenizer-id": "qwen2-bytelevel-bpe-llava-onevision",
+        "deploysharp.processor-id": "llava-onevision-slow-pillow-bicubic-anyres-max9-v1",
+        "deploysharp.prompt-template-id": "llava-onevision-single-image-chat-v1",
+        "deploysharp.generation-config-id": "llava-onevision-greedy-kv-max16-v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "qwen2-24l-2kvh-d64-past-present-v1",
+        "deploysharp.image-count": "1",
+        "deploysharp.context-length": "6144",
+        "deploysharp.resolution": "384-anyres-grid-1to6-max9-pack",
+        "deploysharp.validation-status": "external-runtime-blocker",
+        "deploysharp.release-admission": "blocked-external-only",
+        "deploysharp.bundle-role": "vision-projector-int8-blocker",
+        "deploysharp.blocker": "ORT CPU 1.28.0 rejects ConvInteger(10) at /vision_tower/vision_model/embeddings/patch_embedding/Conv_quant; not used by executable bundle"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.algorithm-verified": "false",
+    "deploysharp.publication-state": "metadata-only-no-upload-authorization",
+    "deploysharp.official-comparison": "PyTorch and ORT-1.23.2 official evidence retained; ORT-1.28.0/OpenVINO/OpenCV runtime-specific token divergence recorded"
+  }
+}

@@ -12,17 +12,20 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
 {
     internal static class OpenVinoTensorBridge
     {
-        public static CoreModelMetadata CreateMetadata(ModelArtifact artifact, CompiledModel compiledModel, bool allowDynamicShapes)
+        public static CoreModelMetadata CreateMetadata(ModelArtifact artifact, Model model, CompiledModel compiledModel, bool allowDynamicShapes)
         {
+            if (model.InputCount != compiledModel.InputCount || model.OutputCount != compiledModel.OutputCount) throw new OpenVinoBackendException(OpenVinoErrorCodes.TensorInvalid, "OpenVINO changed the public model port count during compilation.", modelId: artifact.ModelId, operation: "metadata", technicalDetails: "modelInputs=" + model.InputCount + ";compiledInputs=" + compiledModel.InputCount + ";modelOutputs=" + model.OutputCount + ";compiledOutputs=" + compiledModel.OutputCount);
             var inputs = new List<TensorDescriptor>();
             for (ulong index = 0; index < compiledModel.InputCount; index++)
             {
-                using (Input port = compiledModel.GetInput(index)) inputs.Add(ToDescriptor(artifact, port.GetAnyName(), port.get_element_type().get_type(), port.get_partial_shape(), allowDynamicShapes));
+                using (Input sourcePort = model.GetInput(index))
+                using (Input compiledPort = compiledModel.GetInput(index)) inputs.Add(ToDescriptor(artifact, sourcePort.GetAnyName(), compiledPort.get_element_type().get_type(), compiledPort.get_partial_shape(), allowDynamicShapes));
             }
             var outputs = new List<TensorDescriptor>();
             for (ulong index = 0; index < compiledModel.OutputCount; index++)
             {
-                using (Output port = compiledModel.GetOutput(index)) outputs.Add(ToDescriptor(artifact, port.GetAnyName(), port.get_element_type().get_type(), port.get_partial_shape(), allowDynamicShapes));
+                using (Output sourcePort = model.GetOutput(index))
+                using (Output compiledPort = compiledModel.GetOutput(index)) outputs.Add(ToDescriptor(artifact, sourcePort.GetAnyName(), compiledPort.get_element_type().get_type(), compiledPort.get_partial_shape(), allowDynamicShapes));
             }
             return new CoreModelMetadata(artifact.ModelId, artifact.Format, inputs, outputs);
         }

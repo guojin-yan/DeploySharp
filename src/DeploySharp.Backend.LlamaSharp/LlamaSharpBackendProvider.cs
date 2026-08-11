@@ -72,10 +72,10 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
             }
 
             GgufModelArtifactValidator.Validate(artifact);
-            var modelParams = CreateModelParams(artifact.Location, embeddings: false);
             LLamaWeights? weights = null;
             try
             {
+                var modelParams = CreateModelParams(artifact.Location, embeddings: false);
                 // Native loading is intentionally delayed until session creation. / 原生加载被有意延迟到创建会话时。
                 weights = LLamaWeights.LoadFromFile(modelParams);
                 var session = new LlamaSharpSession(artifact, Descriptor, weights, modelParams, CreateModelParams(artifact.Location, embeddings: true), _promptFormatter, device);

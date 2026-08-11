@@ -18,6 +18,20 @@
 
   <ItemGroup>
     <Content Include="..\..\eng\models\yolo\manifests\*.modelpack.json" Link="fixtures\yolo\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\detr\manifests\*.modelpack.json" Link="fixtures\detr\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\*.modelpack.json" Link="fixtures\stage19\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-mobile-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-mobile-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-legacy-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-legacy-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-server-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-server-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\sam\manifests\*.modelpack.json" Link="fixtures\sam\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\open-vocabulary\manifests\*.modelpack.json" Link="fixtures\open-vocabulary\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\vision-language\manifests\*.modelpack.json" Link="fixtures\vision-language\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\generative-vision-language\manifests\*.modelpack.json" Link="fixtures\generative-vision-language\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\native-multimodal\manifests\*.modelpack.json" Link="fixtures\native-multimodal\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\document-understanding\manifests\*.modelpack.json" Link="fixtures\document-understanding\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\audio-speech\manifests\*.modelpack.json" Link="fixtures\audio-speech\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\llm\manifests\*.modelpack.json" Link="fixtures\llm\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\llm\evidence\*.txt" Link="fixtures\llm\evidence\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-detection.onnx" Link="fixtures\onnx\text-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-recognition-ctc.onnx" Link="fixtures\onnx\text-recognition-ctc.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-orientation.onnx" Link="fixtures\onnx\text-orientation.onnx" CopyToOutputDirectory="PreserveNewest" />

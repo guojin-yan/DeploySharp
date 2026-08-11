@@ -1,0 +1,5 @@
+# Stage 26: Native multimodal dialogue / 阶段 26：原生多模态对话
+
+Stage 26 adds an artifact-bound single-image LLaVA OneVision Vision/projector + token embedding + Prefill/KV Decode pipeline, managed Qwen2 tokenizer, anyres OpenCV preprocessing, state/ownership/error contracts, ModelFactory image/context query identity, three External manifests, package-only consumer, acquisition guide, and a regenerated Stages 1-26 model inventory. / 阶段 26 新增单图 LLaVA OneVision 三图生成流水线、Managed Qwen2 Tokenizer、Anyres OpenCV、状态/所有权/错误合同、ModelFactory 图像/Context Identity、三份 External Manifest、仅包 Consumer、获取指南与阶段 1-26 总清单。
+
+Official PyTorch, ORT 1.23.2, current ORT 1.28.0, OpenVINO 2026.2.1, and OpenCV paths ran on one authorized image. Runtime-specific token/text drift is retained and the model remains non-AlgorithmVerified. Qwen2.5-VL and Phi-3.5 Vision remain explicit source-contract blockers. Packages remain managed-only; official catalog, model upload/download, Release assets, Actions, and TensorRT remain untouched. / 同图官方与双后端/OpenCV 已真实运行；Runtime 差异如实保留且不提升为 AlgorithmVerified。Qwen/Phi 保持 blocker；包、Catalog、上传/下载、Release、Actions 与 TensorRT 状态不变。

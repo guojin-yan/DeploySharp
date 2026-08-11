@@ -3,6 +3,8 @@
 .vscode/
 **/bin/
 **/obj/
+**/bin-*/
+**/obj-*/
 artifacts/*
 !artifacts/.gitkeep
 docs/_site/

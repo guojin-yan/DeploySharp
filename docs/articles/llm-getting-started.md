@@ -2,6 +2,8 @@
 
 DeploySharp separates the stable LLM workflow from the LLamaSharp implementation and its native runtime. An application installs `JYPPX.DeploySharp.LLM`, `JYPPX.DeploySharp.Backend.LlamaSharp`, and exactly one native backend selected for its deployment. / DeploySharp 将稳定的 LLM 工作流、LLamaSharp 实现和原生运行时分离。应用程序需要安装 `JYPPX.DeploySharp.LLM`、`JYPPX.DeploySharp.Backend.LlamaSharp`，以及一个与部署环境匹配的原生后端。
 
+For repository integration evidence, an exact GGUF must first pass `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` with `DEPLOYSHARP_LLAMA_MODEL` and `DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST`. A local filename or valid GGUF header alone is not admission evidence. / 对仓库集成证据而言，精确 GGUF 必须先通过上述准入脚本；仅有本地文件名或有效 GGUF 文件头不能构成准入证据。
+
 ```powershell
 dotnet add package JYPPX.DeploySharp.LLM --version 2.0.0-alpha.1
 dotnet add package JYPPX.DeploySharp.Backend.LlamaSharp --version 2.0.0-alpha.1

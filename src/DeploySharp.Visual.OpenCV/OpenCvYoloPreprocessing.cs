@@ -24,5 +24,23 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 outputType: OpenCvOutputType.Float32,
                 paddingColor: new OpenCvRgbColor(padding, padding, padding));
         }
+
+        /// <summary>Creates OpenCV options for any artifact-bound YOLO classification, segmentation, Pose, or OBB profile. / 为绑定工件的 YOLO 分类、分割、Pose 或 OBB Profile 创建 OpenCV 选项。</summary>
+        public static OpenCvPreprocessOptions CreateOptions(YoloMultiTaskProfile profile)
+        {
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            YoloImagePreprocessingContract contract = profile.Preprocessing;
+            OpenCvResizeMode resizeMode = contract.ResizeMode == YoloImageResizeMode.CenterCrop ? OpenCvResizeMode.CenterCrop : OpenCvResizeMode.Letterbox;
+            return new OpenCvPreprocessOptions(
+                contract.ModelSize,
+                resizeMode,
+                VisualColorOrder.Rgb,
+                OpenCvAlphaMode.Drop,
+                standardDeviations: new[] { contract.PixelDivisor },
+                layout: VisualTensorLayout.Nchw,
+                batchSize: 1,
+                outputType: OpenCvOutputType.Float32,
+                paddingColor: new OpenCvRgbColor(contract.PaddingValue, contract.PaddingValue, contract.PaddingValue));
+        }
     }
 }

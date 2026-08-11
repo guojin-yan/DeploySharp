@@ -57,6 +57,46 @@ namespace JYPPX.DeploySharp.ModelFactory
                     if (entry.Status == ModelCatalogStatus.Supported && !artifact.CompatibleBackends.Any(backend => limits.AdmittedBackends.Contains(backend, StringComparer.OrdinalIgnoreCase))) Add(diagnostics, ModelFactoryDiagnosticCodes.AdmissionRejected, "Supported artifact backend has no current DeploySharp deployment evidence.", artifactPath + ".compatibleBackends", modelId: modelId, artifactId: artifactId);
                     OptionalIdentifier(artifact.Precision, artifactPath + ".precision", limits, diagnostics);
                     OptionalIdentifier(artifact.Quantization, artifactPath + ".quantization", limits, diagnostics);
+                    OptionalIdentifier(artifact.BundleRole, artifactPath + ".bundleRole", limits, diagnostics);
+                    OptionalString(artifact.BundleVersion, artifactPath + ".bundleVersion", limits, diagnostics);
+                    string? normalizedTokenizerId = artifact.TokenizerId == null ? null : RequiredIdentifier(artifact.TokenizerId, artifactPath + ".tokenizerId", limits, diagnostics, modelId);
+                    string? normalizedVocabularyMode = artifact.VocabularyMode == null ? null : RequiredIdentifier(artifact.VocabularyMode, artifactPath + ".vocabularyMode", limits, diagnostics, modelId);
+                    if (artifact.EmbeddingDimension.HasValue && artifact.EmbeddingDimension.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "embeddingDimension must be positive.", artifactPath + ".embeddingDimension", modelId, artifactId);
+                    string? normalizedImagePreprocessingId = artifact.ImagePreprocessingId == null ? null : RequiredIdentifier(artifact.ImagePreprocessingId, artifactPath + ".imagePreprocessingId", limits, diagnostics, modelId);
+                    string? normalizedProjectionId = artifact.ProjectionId == null ? null : RequiredIdentifier(artifact.ProjectionId, artifactPath + ".projectionId", limits, diagnostics, modelId);
+                    string? normalizedNormalizationId = artifact.NormalizationId == null ? null : RequiredIdentifier(artifact.NormalizationId, artifactPath + ".normalizationId", limits, diagnostics, modelId);
+                    string? normalizedScoreSemantics = artifact.ScoreSemantics == null ? null : RequiredIdentifier(artifact.ScoreSemantics, artifactPath + ".scoreSemantics", limits, diagnostics, modelId);
+                    string? normalizedLanguage = artifact.Language == null ? null : RequiredIdentifier(artifact.Language, artifactPath + ".language", limits, diagnostics, modelId);
+                    string? normalizedResolution = artifact.Resolution == null ? null : RequiredIdentifier(artifact.Resolution, artifactPath + ".resolution", limits, diagnostics, modelId);
+                    string? normalizedVisionBackbone = artifact.VisionBackbone == null ? null : RequiredIdentifier(artifact.VisionBackbone, artifactPath + ".visionBackbone", limits, diagnostics, modelId);
+                    string? normalizedQFormerId = artifact.QFormerId == null ? null : RequiredIdentifier(artifact.QFormerId, artifactPath + ".qFormerId", limits, diagnostics, modelId);
+                    string? normalizedLanguageModelId = artifact.LanguageModelId == null ? null : RequiredIdentifier(artifact.LanguageModelId, artifactPath + ".languageModelId", limits, diagnostics, modelId);
+                    string? normalizedPromptTemplateId = artifact.PromptTemplateId == null ? null : RequiredIdentifier(artifact.PromptTemplateId, artifactPath + ".promptTemplateId", limits, diagnostics, modelId);
+                    string? normalizedGenerationConfigId = artifact.GenerationConfigId == null ? null : RequiredIdentifier(artifact.GenerationConfigId, artifactPath + ".generationConfigId", limits, diagnostics, modelId);
+                    string? normalizedGenerationMode = artifact.GenerationMode == null ? null : RequiredIdentifier(artifact.GenerationMode, artifactPath + ".generationMode", limits, diagnostics, modelId);
+                    string? normalizedKvCacheSchemaId = artifact.KvCacheSchemaId == null ? null : RequiredIdentifier(artifact.KvCacheSchemaId, artifactPath + ".kvCacheSchemaId", limits, diagnostics, modelId);
+                    if (artifact.ImageCount.HasValue && artifact.ImageCount.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "imageCount must be positive.", artifactPath + ".imageCount", modelId, artifactId);
+                    if (artifact.ContextLength.HasValue && artifact.ContextLength.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "contextLength must be positive.", artifactPath + ".contextLength", modelId, artifactId);
+                    if (artifact.PageCount.HasValue && artifact.PageCount.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "pageCount must be positive.", artifactPath + ".pageCount", modelId, artifactId);
+                    string? normalizedSchemaId = artifact.SchemaId == null ? null : RequiredIdentifier(artifact.SchemaId, artifactPath + ".schemaId", limits, diagnostics, modelId);
+                    string? normalizedOcrOwnership = artifact.OcrOwnership == null ? null : RequiredIdentifier(artifact.OcrOwnership, artifactPath + ".ocrOwnership", limits, diagnostics, modelId);
+                    if (normalizedOcrOwnership != null && normalizedOcrOwnership != "caller" && normalizedOcrOwnership != "processor" && normalizedOcrOwnership != "ocr-free") Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "ocrOwnership must be caller, processor, or ocr-free.", artifactPath + ".ocrOwnership", modelId, artifactId);
+                    string? normalizedProcessorId = artifact.ProcessorId == null ? null : RequiredIdentifier(artifact.ProcessorId, artifactPath + ".processorId", limits, diagnostics, modelId);
+                    if (artifact.SampleRate.HasValue && artifact.SampleRate.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "sampleRate must be positive.", artifactPath + ".sampleRate", modelId, artifactId);
+                    if (artifact.ChannelCount.HasValue && artifact.ChannelCount.Value <= 0) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "channelCount must be positive.", artifactPath + ".channelCount", modelId, artifactId);
+                    string? normalizedTimestampMode = artifact.TimestampMode == null ? null : RequiredIdentifier(artifact.TimestampMode, artifactPath + ".timestampMode", limits, diagnostics, modelId);
+                    string? normalizedSpeakerMode = artifact.SpeakerMode == null ? null : RequiredIdentifier(artifact.SpeakerMode, artifactPath + ".speakerMode", limits, diagnostics, modelId);
+                    string? normalizedAudioFeatureId = artifact.AudioFeatureId == null ? null : RequiredIdentifier(artifact.AudioFeatureId, artifactPath + ".audioFeatureId", limits, diagnostics, modelId);
+                    string? normalizedVadId = artifact.VadId == null ? null : RequiredIdentifier(artifact.VadId, artifactPath + ".vadId", limits, diagnostics, modelId);
+                    string? normalizedSpeakerId = artifact.SpeakerId == null ? null : RequiredIdentifier(artifact.SpeakerId, artifactPath + ".speakerId", limits, diagnostics, modelId);
+                    var normalizedCapabilities = new List<string>();
+                    var capabilitySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (string capability in artifact.Capabilities)
+                    {
+                        string? normalizedCapability = RequiredIdentifier(capability, artifactPath + ".capabilities", limits, diagnostics, modelId);
+                        if (normalizedCapability != null && !capabilitySet.Add(normalizedCapability)) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "Artifact capabilities must be unique.", artifactPath + ".capabilities", modelId, artifactId);
+                        else if (normalizedCapability != null) normalizedCapabilities.Add(normalizedCapability);
+                    }
                     if (entry.Status == ModelCatalogStatus.Supported && !artifact.Portable) Add(diagnostics, ModelFactoryDiagnosticCodes.AdmissionRejected, "Supported artifacts must be portable.", artifactPath + ".portable", modelId: modelId, artifactId: artifactId);
                     if (IsTensorRtEngine(artifact) && (artifact.Portable || entry.Status != ModelCatalogStatus.External)) Add(diagnostics, ModelFactoryDiagnosticCodes.AdmissionRejected, "TensorRT engine/plan assets are allowed only as non-portable External records.", artifactPath, modelId: modelId, artifactId: artifactId);
                     if (artifact.Assets.Count > limits.MaximumAssetsPerArtifact) Add(diagnostics, ModelFactoryDiagnosticCodes.LimitExceeded, "Asset count exceeds the configured limit.", artifactPath + ".assets", modelId: modelId, artifactId: artifactId);
@@ -82,6 +122,18 @@ namespace JYPPX.DeploySharp.ModelFactory
                     }
 
                     if (artifact.ManifestAssetId != null && normalizedAssets.All(asset => !string.Equals(asset.AssetId, artifact.ManifestAssetId, StringComparison.OrdinalIgnoreCase))) Add(diagnostics, ModelFactoryDiagnosticCodes.AssetInvalid, "manifestAssetId must reference an asset in the same artifact.", artifactPath + ".manifestAssetId", modelId: modelId, artifactId: artifactId);
+                    var normalizedRequiredAssetIds = new List<string>();
+                    var requiredAssetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (string requiredAssetIdValue in artifact.RequiredAssetIds)
+                    {
+                        string? requiredAssetId = RequiredIdentifier(requiredAssetIdValue, artifactPath + ".requiredAssetIds", limits, diagnostics, modelId);
+                        if (requiredAssetId != null && !requiredAssetSet.Add(requiredAssetId)) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "Required asset identifiers must be unique.", artifactPath + ".requiredAssetIds", modelId, artifactId);
+                        else if (requiredAssetId != null)
+                        {
+                            normalizedRequiredAssetIds.Add(requiredAssetId);
+                            if (normalizedAssets.All(asset => !string.Equals(asset.AssetId, requiredAssetId, StringComparison.OrdinalIgnoreCase))) Add(diagnostics, ModelFactoryDiagnosticCodes.AssetInvalid, "A required bundle sidecar is missing from this artifact.", artifactPath + ".requiredAssetIds", modelId, artifactId, requiredAssetId);
+                        }
+                    }
                     if (entry.Status == ModelCatalogStatus.Supported)
                     {
                         if (string.IsNullOrWhiteSpace(artifact.ManifestAssetId)) Add(diagnostics, ModelFactoryDiagnosticCodes.AdmissionRejected, "Supported artifacts require manifestAssetId.", artifactPath + ".manifestAssetId", modelId: modelId, artifactId: artifactId);
@@ -90,7 +142,7 @@ namespace JYPPX.DeploySharp.ModelFactory
                         if (artifact.Conversion == null || string.IsNullOrWhiteSpace(artifact.Conversion.Exporter) || string.IsNullOrWhiteSpace(artifact.Conversion.ExporterVersion) || string.IsNullOrWhiteSpace(artifact.Conversion.SourceRevision)) Add(diagnostics, ModelFactoryDiagnosticCodes.AdmissionRejected, "Supported artifacts require reproducible conversion provenance.", artifactPath + ".conversion", modelId: modelId, artifactId: artifactId);
                     }
 
-                    normalizedArtifacts.Add(new ModelCatalogArtifact(artifactId, format, artifact.CompatibleBackends, artifact.Precision, artifact.Quantization, artifact.Portable, artifact.ManifestAssetId, normalizedAssets, artifact.Conversion));
+                normalizedArtifacts.Add(new ModelCatalogArtifact(artifactId, format, artifact.CompatibleBackends, artifact.Precision, artifact.Quantization, artifact.Portable, artifact.ManifestAssetId, normalizedAssets, artifact.Conversion, artifact.BundleRole, artifact.BundleVersion, normalizedCapabilities, normalizedRequiredAssetIds, normalizedTokenizerId, normalizedVocabularyMode, artifact.EmbeddingDimension, normalizedImagePreprocessingId, normalizedProjectionId, normalizedNormalizationId, normalizedScoreSemantics, normalizedLanguage, normalizedResolution, normalizedVisionBackbone, normalizedQFormerId, normalizedLanguageModelId, normalizedPromptTemplateId, normalizedGenerationConfigId, normalizedGenerationMode, normalizedKvCacheSchemaId, artifact.ImageCount, artifact.ContextLength, artifact.PageCount, normalizedSchemaId, normalizedOcrOwnership, normalizedProcessorId, artifact.SampleRate, artifact.ChannelCount, normalizedTimestampMode, normalizedSpeakerMode, normalizedAudioFeatureId, normalizedVadId, normalizedSpeakerId));
                 }
 
                 var normalizedTests = new List<ModelCatalogAsset>();

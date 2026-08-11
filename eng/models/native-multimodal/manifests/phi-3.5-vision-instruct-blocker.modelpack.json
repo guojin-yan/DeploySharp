@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "native-multimodal/phi-3.5-vision-instruct/external-blocker",
+  "name": "Phi-3.5 Vision Instruct official source-contract blocker",
+  "family": "phi-vision",
+  "task": "multimodal-dialogue",
+  "modelVersion": "phi-3.5-vision-12b77fb4-blocked",
+  "exporter": {
+    "name": "none-complete-audited-onnx-bundle",
+    "version": "blocked",
+    "sourceRevision": "12b77fb40b63a2c73c68243d3f767aab688a1b2a"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/microsoft/Phi-3.5-vision-instruct",
+    "projectUrl": "https://github.com/microsoft/PhiCookBook",
+    "revision": "12b77fb40b63a2c73c68243d3f767aab688a1b2a",
+    "author": "Microsoft",
+    "licenseExpression": "MIT",
+    "redistributionAllowed": false
+  },
+  "generatedAt": "2026-08-09T00:00:00Z",
+  "profileId": "native-multimodal.phi-3.5-vision-instruct.external-blocker",
+  "inputs": [],
+  "outputs": [],
+  "artifacts": [
+    {
+      "artifactId": "official-source-contract.blocked",
+      "format": "json",
+      "locationKind": "file",
+      "entrypoint": "config.json",
+      "compatibleBackends": [
+        "unverified"
+      ],
+      "files": [
+        {
+          "relativePath": "config.json",
+          "sha256": "567e28c638a3e41aba1a304ae58b283845ad07e1c60e970643b0ad8fc229b382",
+          "size": 3778,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "preprocessor_config.json",
+          "sha256": "0f3d920fcec587bb425312d30b0660e1fabaf46a75961f2b75ddbb1ff92de01c",
+          "size": 442,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "processor_config.json",
+          "sha256": "286a9e7fb58a489eae6825b79be69f62068c2028435c29ee52c3a485d071707b",
+          "size": 119,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "tokenizer_config.json",
+          "sha256": "581d4654c018fbcef2504b57a805dcad37126038137b5d25d22b5a02abc1ef29",
+          "size": 9519,
+          "mediaType": "application/json",
+          "role": "tokenizer"
+        },
+        {
+          "relativePath": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+          "size": 1141,
+          "mediaType": "text/plain",
+          "role": "license"
+        },
+        {
+          "relativePath": "README.md",
+          "sha256": "7df8e9b5ef76dbef1474b5c7ff81d5dcd420c287b71cb6c592d18f6e483fff29",
+          "size": 18872,
+          "mediaType": "text/markdown",
+          "role": "other"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "official-source-contract",
+        "deploysharp.bundle-version": "phi-3.5-vision-12b77fb4-blocked",
+        "deploysharp.validation-status": "official-source-contract-only",
+        "deploysharp.blocker": "4.15GB checkpoint not acquired; official model uses trust_remote_code and no complete audited HD image processor/projector/embedding/Prefill/KV ONNX and OpenVINO bundle was available locally.",
+        "deploysharp.release-admission": "blocked",
+        "deploysharp.algorithm-verified": "false"
+      }
+    }
+  ]
+}

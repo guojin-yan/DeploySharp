@@ -78,11 +78,20 @@ $entries = @{}
     if ($metadata.SelectSingleNode("*[local-name()='icon']").InnerText -ne 'logo.jpg') { throw 'NuGet icon metadata is invalid.' }
     if ($metadata.SelectSingleNode("*[local-name()='readme']").InnerText -ne 'README.md') { throw 'NuGet README metadata is invalid.' }
     $dependencies = @($nuspec.SelectNodes("//*[local-name()='dependency']"))
-    if ($dependencies.Count -ne $frameworks.Count) { throw "Expected one Core dependency for each of $($frameworks.Count) TFM groups; found $($dependencies.Count)." }
-    foreach ($dependency in $dependencies) {
-        if ($dependency.id -ne 'JYPPX.DeploySharp.Core' -or $dependency.version -ne '2.0.0-alpha.1') {
-            throw "Unexpected NuGet dependency: $($dependency.id) $($dependency.version)"
-        }
+    $coreDependencies = @($dependencies | Where-Object { $_.id -eq 'JYPPX.DeploySharp.Core' })
+    $tokenizerDependencies = @($dependencies | Where-Object { $_.id -eq 'Microsoft.ML.Tokenizers' })
+    if ($coreDependencies.Count -ne $frameworks.Count) { throw "Expected one Core dependency for each of $($frameworks.Count) TFM groups; found $($coreDependencies.Count)." }
+    if ($tokenizerDependencies.Count -ne 3) { throw "Expected Microsoft.ML.Tokenizers only for net8.0, net9.0, and net10.0; found $($tokenizerDependencies.Count) dependencies." }
+    foreach ($dependency in $coreDependencies) {
+        if ($dependency.version -ne '2.0.0-alpha.1') { throw "Unexpected Core dependency version: $($dependency.version)" }
+    }
+    foreach ($dependency in $tokenizerDependencies) {
+        if ($dependency.version -ne '2.0.0') { throw "Unexpected tokenizer dependency version: $($dependency.version)" }
+        $group = $dependency.ParentNode
+        if (@('net8.0', 'net9.0', 'net10.0') -notcontains $group.targetFramework) { throw "Tokenizer dependency is present on unsupported TFM: $($group.targetFramework)" }
+    }
+    if ($dependencies.Count -ne ($coreDependencies.Count + $tokenizerDependencies.Count)) {
+        throw 'Visual package contains an unexpected dependency.'
     }
 
 Write-Host "DEPLOYSHARP_VISUAL_PACKAGE_AUDIT_OK tfms=$($frameworks.Count) entries=$($entries.Count)"

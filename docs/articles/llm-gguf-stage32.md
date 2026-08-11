@@ -1,0 +1,15 @@
+# GGUF admission immutability / GGUF 准入不可变性
+
+Stage 32 hardens the existing exact-GGUF gate without downloading, converting, or publishing another model. `Test-GgufAdmission.ps1` now reads the four-byte `GGUF` magic, binds the artifact entrypoint to the selected absolute path, verifies every Manifest file below the authorized model directory, and checks each recorded size/SHA256. The source URL and project URL must contain the immutable revision, and the retained license file must bind to the Manifest license record. / 阶段 32 在不下载、转换或发布新模型的前提下加固精确 GGUF 门禁。准入脚本现在读取真实 magic，将 entrypoint 绑定到精确绝对路径，并校验授权模型目录下每个 Manifest 文件的大小与 SHA256；来源 URL、固定 revision 与许可证文件也必须相互绑定。
+
+## Runtime evidence boundary / 运行证据边界
+
+An admitted evidence file must live below the selected model's own `evidence` directory. Its hash, model path/size/SHA256/magic, context facts, managed LLamaSharp identity, caller-owned native package/version, zero GPU layers, operation list, non-empty generation, cancellation terminal, deterministic repeat, `DS-LLM-4004` contention, disposal result, and embedding result are checked structurally. Missing evidence can produce `READY`; a supplied but inconsistent record now produces `BLOCKED reason=runtime-evidence-invalid`. No generated text value is fixed or treated as an official golden. / 已准入 evidence 必须位于所选模型自己的 `evidence` 子目录，并结构化核对模型、托管/原生运行时与操作结果。一份已提供但身份不一致的证据会返回 `BLOCKED`，不会继续作为 `READY`。门禁不固定模型输出，也不把输出当作官方 golden。
+
+The real integration test writes evidence with atomic create-new semantics and refuses to overwrite an existing path. Stage 32 reran the full CPU operation matrix without an evidence output variable and verified that `deploysharp-stage31-runtime.json` remained 7,364 bytes with SHA256 `68f2b1e144c3d4537cb2f7c91473554296bda97a52bc5e5b5e9517dfb0dfc973`. Concurrent session disposal is serialized and eight simultaneous `Dispose` calls completed successfully. / 真实集成测试使用 create-new 语义写证据，已有路径不可覆盖。阶段 32 未设置证据输出变量，重跑完整 CPU 矩阵后确认阶段 31 证据大小与哈希完全不变；八路并发 Dispose 也已通过。
+
+## Caller-owned native runtime / 调用方持有原生运行时
+
+The package-only consumer repeats the exact model SHA256 check. Its default graph explicitly owns `LLamaSharp.Backend.Cpu 0.27.0`; a separately restored graph with `IncludeLlamaNativeBackend=false` contained no LLama/ggml native DLL and returned `DEPLOYSHARP_LLAMA_NO_NATIVE_OK error=DS-NATIVE-6001` while loading the exact model. The DeploySharp backend package itself still depends only on managed `LLamaSharp 0.27.0`. / 纯包 consumer 会再次校验精确模型 SHA256。默认资产图由调用方显式持有 CPU backend；移除该包的独立资产图不包含任何 LLama/ggml 原生 DLL，并在加载精确模型时返回稳定的 `DS-NATIVE-6001`。DeploySharp backend 包本身仍只依赖托管 LLamaSharp。
+
+The exact Qwen Manifest remains External, `portable:false`, `redistributionAllowed:false`, `AlgorithmVerified=false`, `uploaded:false`, and `downloadable:false`; the official catalog remains empty. Stage 32 produced no new model, Tokenizer, sidecar, conversion, or runtime evidence. / 精确 Qwen Manifest 继续保持 External、不可移植、禁止再分发、非 AlgorithmVerified、未上传且不可下载；official catalog 为空。本阶段没有生成新模型、Tokenizer、sidecar、转换或运行证据。

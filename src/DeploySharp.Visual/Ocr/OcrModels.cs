@@ -181,50 +181,81 @@ namespace JYPPX.DeploySharp.Visual
         private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new ArgumentException("A value is required.", name) : value;
     }
 
-    /// <summary>Represents one immutable Unicode-scalar OCR character set. / 表示一个不可变 Unicode 标量 OCR 字符表。</summary>
+    /// <summary>Represents one immutable OCR token set; tokens may contain one or more Unicode scalars. / 表示一个不可变 OCR token 字符表；token 可包含一个或多个 Unicode scalar。</summary>
     public sealed class OcrCharacterSet
     {
         private readonly IReadOnlyList<string> _characters;
 
         /// <summary>Initializes a character set from a Unicode scalar sequence. / 从 Unicode 标量序列初始化字符表。</summary>
         public OcrCharacterSet(string id, string version, string characters)
+            : this(id, version, CreateScalarTokens(characters), nameof(characters))
         {
+        }
+
+        /// <summary>Initializes a character set from ordered dictionary tokens. / 从有序字典 token 初始化字符表。</summary>
+        public OcrCharacterSet(string id, string version, IEnumerable<string> tokens)
+            : this(id, version, tokens, nameof(tokens))
+        {
+        }
+
+        private OcrCharacterSet(string id, string version, IEnumerable<string> tokens, string parameterName)
+        {
+            if (tokens == null) throw new ArgumentNullException(parameterName);
             Id = VisualGuard.Identifier(id, nameof(id));
             if (string.IsNullOrWhiteSpace(version)) throw new ArgumentException("A character-set version is required.", nameof(version));
-            if (string.IsNullOrEmpty(characters)) throw new ArgumentException("A character set cannot be empty.", nameof(characters));
             Version = version;
             var values = new List<string>();
             var unique = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string token in tokens)
+            {
+                if (string.IsNullOrEmpty(token)) throw new ArgumentException("Character-set tokens cannot be empty.", parameterName);
+                for (int index = 0; index < token.Length; index++)
+                {
+                    if (char.IsHighSurrogate(token[index]))
+                    {
+                        if (index + 1 >= token.Length || !char.IsLowSurrogate(token[index + 1])) throw new ArgumentException("A character-set token contains an invalid surrogate pair.", parameterName);
+                        index++;
+                    }
+                    else if (char.IsLowSurrogate(token[index])) throw new ArgumentException("A character-set token contains an unpaired low surrogate.", parameterName);
+                }
+                if (!unique.Add(token)) throw new ArgumentException("Character-set tokens must be unique.", parameterName);
+                if (values.Count >= 65535) throw new ArgumentOutOfRangeException(parameterName);
+                values.Add(token);
+            }
+            if (values.Count == 0) throw new ArgumentException("A character set cannot be empty.", parameterName);
+            _characters = values.AsReadOnly();
+            Sha256 = Hash(Id + "\n" + Version + "\n" + string.Join("", values));
+        }
+
+        private static IEnumerable<string> CreateScalarTokens(string characters)
+        {
+            if (characters == null) throw new ArgumentNullException(nameof(characters));
+            var values = new List<string>();
             for (int index = 0; index < characters.Length; index++)
             {
                 char first = characters[index];
-                string scalar;
                 if (char.IsHighSurrogate(first))
                 {
                     if (index + 1 >= characters.Length || !char.IsLowSurrogate(characters[index + 1])) throw new ArgumentException("The character set contains an invalid surrogate pair.", nameof(characters));
-                    scalar = characters.Substring(index, 2);
+                    values.Add(characters.Substring(index, 2));
                     index++;
                 }
                 else
                 {
                     if (char.IsLowSurrogate(first)) throw new ArgumentException("The character set contains an unpaired low surrogate.", nameof(characters));
-                    scalar = first.ToString();
+                    values.Add(first.ToString());
                 }
-                if (!unique.Add(scalar)) throw new ArgumentException("Character-set scalars must be unique.", nameof(characters));
-                if (values.Count >= 65535) throw new ArgumentOutOfRangeException(nameof(characters));
-                values.Add(scalar);
             }
-            _characters = values.AsReadOnly();
-            Sha256 = Hash(Id + "\n" + Version + "\n" + string.Join("", values));
+            return values;
         }
 
         /// <summary>Gets stable character-set ID. / 获取稳定字符表 ID。</summary>
         public string Id { get; }
         /// <summary>Gets character-set version. / 获取字符表版本。</summary>
         public string Version { get; }
-        /// <summary>Gets Unicode scalar strings. / 获取 Unicode 标量字符串。</summary>
+        /// <summary>Gets ordered token strings. / 获取有序 token 字符串。</summary>
         public IReadOnlyList<string> Characters => _characters;
-        /// <summary>Gets scalar count. / 获取标量数量。</summary>
+        /// <summary>Gets token count. / 获取 token 数量。</summary>
         public int Count => _characters.Count;
         /// <summary>Gets canonical lowercase SHA256. / 获取规范小写 SHA256。</summary>
         public string Sha256 { get; }
@@ -509,13 +540,14 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class OcrStageTiming
     {
         /// <summary>Initializes OCR timing. / 初始化 OCR 时长。</summary>
-        public OcrStageTiming(TimeSpan detection, TimeSpan cropAndBatch, TimeSpan recognition, TimeSpan orchestration)
+        public OcrStageTiming(TimeSpan detection, TimeSpan cropAndBatch, TimeSpan recognition, TimeSpan orchestration, TimeSpan? orientationClassification = null)
         {
-            if (detection < TimeSpan.Zero || cropAndBatch < TimeSpan.Zero || recognition < TimeSpan.Zero || orchestration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(detection));
+            if (detection < TimeSpan.Zero || cropAndBatch < TimeSpan.Zero || recognition < TimeSpan.Zero || orchestration < TimeSpan.Zero || orientationClassification.GetValueOrDefault() < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(detection));
             Detection = detection;
             CropAndBatch = cropAndBatch;
             Recognition = recognition;
             Orchestration = orchestration;
+            OrientationClassification = orientationClassification.GetValueOrDefault();
         }
         /// <summary>Gets detector pipeline time. / 获取检测器 Pipeline 时长。</summary>
         public TimeSpan Detection { get; }
@@ -523,10 +555,12 @@ namespace JYPPX.DeploySharp.Visual
         public TimeSpan CropAndBatch { get; }
         /// <summary>Gets recognizer pipeline time. / 获取识别器 Pipeline 时长。</summary>
         public TimeSpan Recognition { get; }
+        /// <summary>Gets per-text-region orientation classification time. / 获取逐文本区域方向分类时长。</summary>
+        public TimeSpan OrientationClassification { get; }
         /// <summary>Gets ordering and merge overhead. / 获取排序与合并开销。</summary>
         public TimeSpan Orchestration { get; }
         /// <summary>Gets measured total. / 获取测量总时长。</summary>
-        public TimeSpan Total => Detection + CropAndBatch + Recognition + Orchestration;
+        public TimeSpan Total => Detection + CropAndBatch + OrientationClassification + Recognition + Orchestration;
     }
 
     /// <summary>Represents an owned, canonical OCR result independent from backend and image lifetimes. / 表示独立于后端和图像生命周期的自有规范 OCR 结果。</summary>

@@ -1,0 +1,109 @@
+{
+  "snapshotDate": "2026-08-08",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "bundles": [
+    {
+      "family": "sam",
+      "version": "vit-b-dca509f",
+      "modelId": "sam/v1/vit-b-image-prompt/external",
+      "task": "promptable-image-segmentation",
+      "format": "onnx",
+      "precision": "fp32",
+      "capabilities": ["point", "box", "mask-feedback", "multimask"],
+      "requiredRoles": ["image-encoder", "prompt-mask-decoder"],
+      "status": "External",
+      "redistributionAllowed": false,
+      "verifiedBackends": ["onnxruntime", "openvino"],
+      "sourceRevision": "dca509fe793f601edb92606367a655c15ac00fdf",
+      "license": "Apache-2.0",
+      "checkpoint": { "uri": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth", "size": 375042383, "sha256": "ec2df62732614e57411cdcf32a23ffdf28910380d03139ee0f4fcbe91eb8c912" },
+      "artifacts": [
+        { "role": "image-encoder", "opset": 17, "size": 359210513, "sha256": "95ea8873d6dbbf1226bf124f56930c1652c09c19f84c032b3721979699a21c3a", "externalData": false },
+        { "role": "prompt-mask-decoder", "opset": 17, "size": 16496903, "sha256": "b520bc95e049862bde768b959c124d6c2a53436df81bf9c5e8689f6e406ba21a", "externalData": false }
+      ],
+      "golden": "boy.jpg point+box three multimask candidates plus best-low-res feedback; ORT/OpenVINO mask/RLE/bounds parity and official predictor IoU 0.976115/0.967546/0.963047/0.989333",
+      "blocker": "External only: the image encoder wrapper is traceable but is not an official Meta ONNX export, the decoder required PyTorch 2.9 legacy exporter mode, and redistribution was not approved."
+    },
+    {
+      "family": "sam2",
+      "version": "2.1-hiera-tiny-local-external",
+      "modelId": "sam2/2.1/hiera-tiny-image-prompt/external",
+      "task": "promptable-image-segmentation",
+      "format": "onnx",
+      "precision": "fp32",
+      "capabilities": ["point", "box", "multimask"],
+      "requiredRoles": ["image-encoder", "prompt-mask-decoder"],
+      "status": "External",
+      "redistributionAllowed": false,
+      "verifiedBackends": ["onnxruntime", "openvino"],
+      "sourceRevision": "2b90b9f5ceec907a1c18123530e92e794ad901a4",
+      "license": "Apache-2.0 upstream; local artifact chain unverified",
+      "checkpoint": { "uri": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt", "size": 156008466, "sha256": "7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69" },
+      "artifacts": [
+        { "role": "image-encoder", "opset": 18, "size": 354238, "sha256": "4f30aacd3aaefbca81a0b7fe4c1fc96345570ea0a6f80ced599493d1b3be2e8c", "externalData": true, "sidecarSize": 134084864, "sidecarSha256": "e83df9866a5afe68ea7f0f721f18f65137fc3acbf0da1c74e946d363e09c69cc" },
+        { "role": "prompt-mask-decoder", "opset": 18, "size": 213114, "sha256": "874414704c5d686db7d206a35f6e15d26563d50c8c4468fccc6739bd7e491dcf", "externalData": true, "sidecarSize": 20958208, "sidecarSha256": "e9874d900dd4134ed60eab1e97910327c2419e0b2954485d8fd6e7f1a1470f47" }
+      ],
+      "golden": "Local ORT CPU contract observation on boy.jpg and OpenVINO CPU exact named-port zero-image contract observation; neither is an official predictor golden.",
+      "blocker": "Meta SAM 2 publishes PyTorch image/video predictors but no official ONNX/OpenVINO exporter. Local Transformers-style graphs omit mask-feedback and all video memory components, so DeploySharp does not expose them as a complete official SAM 2 pipeline."
+    },
+    {
+      "family": "sam3",
+      "version": "local-four-graph-external",
+      "modelId": "sam3/image-prompt-four-graph/external",
+      "task": "promptable-image-segmentation",
+      "format": "onnx",
+      "precision": "fp32",
+      "capabilities": ["box", "text"],
+      "requiredRoles": ["image-encoder", "text-encoder", "geometry-encoder", "decoder"],
+      "status": "External",
+      "redistributionAllowed": false,
+      "verifiedBackends": ["onnxruntime-partial"],
+      "sourceRevision": "96914d2425f90a64f45ca977c2b5165418099543",
+      "license": "LicenseRef-Meta-SAM-3",
+      "checkpoint": { "uri": "https://huggingface.co/facebook/sam3", "size": null, "sha256": null, "blocker": "Access-gated official checkpoint was not downloaded." },
+      "artifacts": [
+        { "role": "image-encoder", "opset": 21, "size": 1876428543, "sha256": "c5cbeb5bc3d0394c913a606c68810885fbc8b7a083eb713898e5b7d6077b8efa" },
+        { "role": "text-encoder", "opset": 21, "size": 1413256371, "sha256": "5a24a0e767e0baf7bf50efde44c49b73aa0c5e11dea23aa980e1148e642e1db7" },
+        { "role": "geometry-encoder", "opset": 21, "size": 32425365, "sha256": "73a24a213808afb3264041674220d9d4cbdf0c387ed45192d69977a7d1acdb2d" },
+        { "role": "decoder", "opset": 21, "size": 96600952, "sha256": "63a3a220ba086f823cea2903ff1f1a311beeb92c48663ea05dc4a3c5f51c06a3" }
+      ],
+      "golden": "Local ORT CPU geometry+decoder zero-feature contract observation only; no official image predictor comparison.",
+      "blocker": "Meta SAM 3 has no official ONNX/OpenVINO exporter, the checkpoint is gated, and the local four-graph conversion chain/checkpoint identity is not reproducible. Point/mask-feedback and video tracker/memory components are absent; the custom SAM License also blocks catalog admission."
+    },
+    {
+      "family": "sam2",
+      "version": "official-video-blocked",
+      "modelId": "sam2/video-propagation/external-blocker",
+      "task": "promptable-video-segmentation",
+      "format": "pytorch",
+      "precision": "fp32",
+      "capabilities": ["video-memory", "point", "box"],
+      "requiredRoles": ["image-encoder", "prompt-encoder", "mask-decoder", "memory-encoder", "memory-bank", "memory-attention"],
+      "status": "External",
+      "redistributionAllowed": false,
+      "verifiedBackends": [],
+      "sourceRevision": "2b90b9f5ceec907a1c18123530e92e794ad901a4",
+      "license": "Apache-2.0",
+      "artifacts": [],
+      "blocker": "The official stateful video predictor is PyTorch-only in the audited repository; no complete official native ONNX/OpenVINO memory export exists locally."
+    },
+    {
+      "family": "sam3",
+      "version": "official-video-blocked",
+      "modelId": "sam3/video-propagation/external-blocker",
+      "task": "promptable-video-segmentation",
+      "format": "pytorch",
+      "precision": "fp32",
+      "capabilities": ["video-memory", "text", "box"],
+      "requiredRoles": ["vision-encoder", "detector", "tracker", "memory-bank"],
+      "status": "External",
+      "redistributionAllowed": false,
+      "verifiedBackends": [],
+      "sourceRevision": "96914d2425f90a64f45ca977c2b5165418099543",
+      "license": "LicenseRef-Meta-SAM-3",
+      "artifacts": [],
+      "blocker": "The official video predictor/tracker is not exported as a complete ONNX/OpenVINO state machine; no auditable local official bundle exists."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "paddleocr/ppocrv5/server-cls/external",
+  "name": "PP-OCRv5 server text-line orientation external candidate",
+  "family": "paddle-ocr-cls",
+  "task": "text-orientation-classification",
+  "modelVersion": "PP-OCRv5-server-cls-local-export",
+  "exporter": { "name": "Paddle-to-ONNX", "version": "local-exporter-unverified", "sourceRevision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854" },
+  "source": { "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR", "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR", "revision": "local-artifact-provenance-unverified", "author": "PaddlePaddle", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
+  "generatedAt": "2026-08-08T00:00:00Z",
+  "profileId": "paddle-ocr-cls.paddleocr/ppocrv5/server-cls/external.opset11",
+  "inputs": [ { "name": "x", "elementType": "float32", "shape": [1,3,80,160] } ],
+  "outputs": [ { "name": "fetch_name_0", "elementType": "float32", "shape": [1,2] } ],
+  "artifacts": [ { "artifactId": "onnx.fp32", "format": "onnx", "locationKind": "file", "entrypoint": "model.onnx", "compatibleBackends": ["onnxruntime","openvino"], "files": [ { "relativePath": "model.onnx", "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "size": 6777308, "mediaType": "application/onnx", "role": "model" } ], "precision": "fp32", "quantization": "none", "opset": 11, "portable": true, "extensions": { "deploysharp.validation-status": "local-ort-contract-verified", "deploysharp.preprocessing-version": "pp-lcnet-textline-rgb-imagenet-v1", "deploysharp.prepared-tensor-sha256": "47b84a19c734aed5ee428d58702a8457573d310749095fe35650c9d7b24c1dda", "deploysharp.label-order": "0_degree,180_degree", "deploysharp.reject-threshold": "0.9", "deploysharp.required-sidecars": "none-observed", "deploysharp.openvino-ir-sidecars": "absent; representative output contract covered by mobile ONNX on OpenVINO; audited conversion blocked", "deploysharp.checkpoint": "unverified", "deploysharp.export-command": "unverified", "deploysharp.release-admission": "blocked-local-export-provenance-and-official-image-golden" } } ]
+}

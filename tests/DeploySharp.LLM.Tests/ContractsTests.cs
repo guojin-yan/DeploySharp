@@ -117,6 +117,32 @@ namespace DeploySharp.LLM.Tests
             Assert.ThrowsExactly<ObjectDisposedException>(() => session.Embed(new TextEmbeddingRequest("value")));
         }
 
+        [TestMethod]
+        public void LanguageModelProfileAndBundleRejectMixedIdentity()
+        {
+            var artifact = new ModelArtifact(new ModelId("fixture/gguf"), "gguf", "fixture.gguf", new string('a', 64));
+            var backend = new BackendId("fake");
+            var first = new LanguageModelProfile(artifact, "revision-1", "q4_k_m", "tokenizer-1", "chat-1", "generation-1", 4096, true, backend, "audited-external-blocker");
+            var secondArtifact = new ModelArtifact(new ModelId("fixture/gguf"), "gguf", "fixture-2.gguf", new string('b', 64));
+            var second = new LanguageModelProfile(secondArtifact, "revision-1", "q4_k_m", "tokenizer-1", "chat-1", "generation-1", 4096, true, backend, "audited-external-blocker");
+
+            DeploySharpException exception = Assert.ThrowsExactly<DeploySharpException>(() => new LanguageModelBundle(new[] { first, second }));
+            Assert.AreEqual(DeploySharpErrorCodes.LanguageModelBundleMismatch, exception.ErrorCode);
+            LanguageModelBundle bundle = new LanguageModelBundle(new[] { first });
+            Assert.AreSame(first, bundle.Identity);
+            Assert.ThrowsExactly<NotSupportedException>(() => ((IList<LanguageModelProfile>)bundle.Profiles).Add(first));
+        }
+
+        [TestMethod]
+        public void UnverifiedProfileIsExplicitAndImmutable()
+        {
+            var artifact = new ModelArtifact(new ModelId("fixture/gguf"), "gguf", "fixture.gguf");
+            LanguageModelProfile profile = LanguageModelProfile.CreateUnverified(artifact, new BackendId("fake"), 2048, false);
+            Assert.AreEqual("caller-supplied-unverified", profile.ModelVersion);
+            Assert.AreEqual("caller-owned-unverified", profile.LicenseStatus);
+            Assert.IsFalse(profile.EmbeddingsSupported);
+        }
+
         private sealed class FakeProvider : ILanguageModelProvider
         {
             public FakeProvider()

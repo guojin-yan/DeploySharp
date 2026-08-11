@@ -121,7 +121,7 @@ namespace JYPPX.DeploySharp.ModelFactory
                             if (!artifact.Portable.HasValue) diagnostics.Add(new ModelFactoryDiagnostic(ModelFactoryDiagnosticCodes.CatalogInvalid, "portable property is required.", artifactPath + ".portable", entry.ModelId, artifact.ArtifactId));
                             ModelCatalogConversion? conversion = FromConversion(artifact.Conversion, artifactPath + ".conversion", diagnostics);
                             List<ModelCatalogAsset> assets = FromAssets(artifact.Assets, artifactPath + ".assets", diagnostics, entry.ModelId, artifact.ArtifactId);
-                            artifacts.Add(new ModelCatalogArtifact(artifact.ArtifactId, artifact.Format, artifact.CompatibleBackends, artifact.Precision, artifact.Quantization, artifact.Portable.GetValueOrDefault(), artifact.ManifestAssetId, assets, conversion));
+                            artifacts.Add(new ModelCatalogArtifact(artifact.ArtifactId, artifact.Format, artifact.CompatibleBackends, artifact.Precision, artifact.Quantization, artifact.Portable.GetValueOrDefault(), artifact.ManifestAssetId, assets, conversion, artifact.BundleRole, artifact.BundleVersion, artifact.Capabilities, artifact.RequiredAssetIds, artifact.TokenizerId, artifact.VocabularyMode, artifact.EmbeddingDimension, artifact.ImagePreprocessingId, artifact.ProjectionId, artifact.NormalizationId, artifact.ScoreSemantics, artifact.Language, artifact.Resolution, artifact.VisionBackbone, artifact.QFormerId, artifact.LanguageModelId, artifact.PromptTemplateId, artifact.GenerationConfigId, artifact.GenerationMode, artifact.KvCacheSchemaId, artifact.ImageCount, artifact.ContextLength, artifact.PageCount, artifact.SchemaId, artifact.OcrOwnership, artifact.ProcessorId, artifact.SampleRate, artifact.ChannelCount, artifact.TimestampMode, artifact.SpeakerMode, artifact.AudioFeatureId, artifact.VadId, artifact.SpeakerId));
                         }
                     }
 
@@ -260,7 +260,40 @@ namespace JYPPX.DeploySharp.ModelFactory
                         Portable = artifact.Portable,
                         ManifestAssetId = artifact.ManifestAssetId,
                         Assets = new List<AssetDto?>(),
-                        Conversion = artifact.Conversion == null ? null : new ConversionDto { Exporter = artifact.Conversion.Exporter, ExporterVersion = artifact.Conversion.ExporterVersion, SourceRevision = artifact.Conversion.SourceRevision, Notes = artifact.Conversion.Notes }
+                        Conversion = artifact.Conversion == null ? null : new ConversionDto { Exporter = artifact.Conversion.Exporter, ExporterVersion = artifact.Conversion.ExporterVersion, SourceRevision = artifact.Conversion.SourceRevision, Notes = artifact.Conversion.Notes },
+                        BundleRole = artifact.BundleRole,
+                        BundleVersion = artifact.BundleVersion,
+                        Capabilities = artifact.Capabilities.Count == 0 ? null : new List<string>(artifact.Capabilities),
+                        RequiredAssetIds = artifact.RequiredAssetIds.Count == 0 ? null : new List<string>(artifact.RequiredAssetIds),
+                        TokenizerId = artifact.TokenizerId,
+                        VocabularyMode = artifact.VocabularyMode,
+                        EmbeddingDimension = artifact.EmbeddingDimension,
+                        ImagePreprocessingId = artifact.ImagePreprocessingId,
+                        ProjectionId = artifact.ProjectionId,
+                        NormalizationId = artifact.NormalizationId,
+                        ScoreSemantics = artifact.ScoreSemantics,
+                        Language = artifact.Language,
+                        Resolution = artifact.Resolution,
+                        VisionBackbone = artifact.VisionBackbone,
+                        QFormerId = artifact.QFormerId,
+                        LanguageModelId = artifact.LanguageModelId,
+                        PromptTemplateId = artifact.PromptTemplateId,
+                        GenerationConfigId = artifact.GenerationConfigId,
+                        GenerationMode = artifact.GenerationMode,
+                        KvCacheSchemaId = artifact.KvCacheSchemaId,
+                        ImageCount = artifact.ImageCount,
+                        ContextLength = artifact.ContextLength,
+                        PageCount = artifact.PageCount,
+                        SchemaId = artifact.SchemaId,
+                        OcrOwnership = artifact.OcrOwnership,
+                        ProcessorId = artifact.ProcessorId,
+                        SampleRate = artifact.SampleRate,
+                        ChannelCount = artifact.ChannelCount,
+                        TimestampMode = artifact.TimestampMode,
+                        SpeakerMode = artifact.SpeakerMode,
+                        AudioFeatureId = artifact.AudioFeatureId,
+                        VadId = artifact.VadId,
+                        SpeakerId = artifact.SpeakerId
                     };
                     foreach (ModelCatalogAsset asset in artifact.Assets) artifactDto.Assets.Add(ToDto(asset));
                     entryDto.Artifacts.Add(artifactDto);

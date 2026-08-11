@@ -1,0 +1,382 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "document-understanding/donut-base-finetuned-cord-v2/external",
+  "name": "NAVER CLOVA Donut CORD-v2 OCR-free structured extraction bundle",
+  "family": "donut",
+  "task": "structured-document-extraction",
+  "modelVersion": "donut-cord-v2-8003d433-opset17",
+  "exporter": {
+    "name": "optimum-onnx-and-openvino-ir",
+    "version": "optimum-onnx-0.1.0-transformers-4.57.3-opset17-openvino-2026.2.1",
+    "sourceRevision": "8003d433113256b4ce3a0f5bf604b29ff78a7451"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/naver-clova-ix/donut-base-finetuned-cord-v2",
+    "projectUrl": "https://github.com/clovaai/donut",
+    "revision": "8003d433113256b4ce3a0f5bf604b29ff78a7451",
+    "author": "NAVER CLOVA",
+    "licenseExpression": "MIT",
+    "redistributionAllowed": false
+  },
+  "generatedAt": "2026-08-09T00:00:00Z",
+  "profileId": "document.donut.cord-v2.external",
+  "inputs": [
+    { "name": "pixel_values", "elementType": "float32", "shape": [-1, 3, 1280, 960] },
+    { "name": "input_ids", "elementType": "int64", "shape": [-1, -1] },
+    { "name": "encoder_hidden_states", "elementType": "float32", "shape": [-1, 1200, 1024] },
+    { "name": "past_key_values.0.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.0.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.0.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.0.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.1.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.1.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.1.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.1.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.2.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.2.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.2.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.2.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.3.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.3.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "past_key_values.3.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "past_key_values.3.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] }
+  ],
+  "outputs": [
+    { "name": "last_hidden_state", "elementType": "float32", "shape": [-1, 1200, 1024] },
+    { "name": "logits", "elementType": "float32", "shape": [-1, -1, 57580] },
+    { "name": "present.0.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.0.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.0.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.0.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.1.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.1.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.1.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.1.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.2.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.2.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.2.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.2.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.3.decoder.key", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.3.decoder.value", "elementType": "float32", "shape": [-1, 16, -1, 64] },
+    { "name": "present.3.encoder.key", "elementType": "float32", "shape": [-1, 16, 1200, 64] },
+    { "name": "present.3.encoder.value", "elementType": "float32", "shape": [-1, 16, 1200, 64] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "document-encoder.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "onnx/encoder_model.onnx",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "onnx/encoder_model.onnx", "sha256": "cb165bb59193c73c9097b1a306eb55f2e139e9ba0306755b405777c43cd51cbc", "size": 311234390, "mediaType": "application/onnx", "role": "model" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-role": "document-encoder",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "pixel_values=>last_hidden_state",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified",
+        "deploysharp.backend-evidence": "ORT 1.23.2 and OpenVINO 2026.2.1 CPU exact named-port execution on CORD-v2 test row 0"
+      }
+    },
+    {
+      "artifactId": "decoder-prefill.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "onnx/decoder_model.onnx",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "onnx/decoder_model.onnx", "sha256": "082b4c414f70be269a5c191c12373e3a19f1e5be10f8d01d6b64dd8c0a8259a3", "size": 743754196, "mediaType": "application/onnx", "role": "model" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-role": "decoder-prefill",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "input_ids,encoder_hidden_states=>logits,present.0..3.decoder-and-encoder.key-value",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified"
+      }
+    },
+    {
+      "artifactId": "decoder-with-past.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "onnx/decoder_with_past_model.onnx",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "onnx/decoder_with_past_model.onnx", "sha256": "e5629e9e13b19e494652d3f1f57136a093593e03e2fca58329e61e06b8fa323e", "size": 710151560, "mediaType": "application/onnx", "role": "model" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-role": "decoder-with-past",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "input_ids,past_key_values.0..3.decoder-and-encoder.key-value=>logits,present.0..3.decoder.key-value",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified"
+      }
+    },
+    {
+      "artifactId": "document-encoder.openvino-ir.fp32",
+      "format": "openvino-ir",
+      "locationKind": "file",
+      "entrypoint": "openvino/encoder_model.xml",
+      "compatibleBackends": ["openvino"],
+      "files": [
+        { "relativePath": "openvino/encoder_model.xml", "sha256": "bbb77bdec521335c08ae3f06b95db18e4ac5e823ca406885ba300a57078f03dd", "size": 8659621, "mediaType": "application/xml", "role": "model" },
+        { "relativePath": "openvino/encoder_model.bin", "sha256": "3758443b8ed7b354d44f2eefb1d213cc676ecec1ba51beecf811207799fa43c4", "size": 308752852, "mediaType": "application/octet-stream", "role": "weights" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": true,
+      "minimumRuntimeVersion": "2026.2.1",
+      "extensions": {
+        "deploysharp.bundle-role": "document-encoder",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "pixel_values=>last_hidden_state",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified"
+      }
+    },
+    {
+      "artifactId": "decoder-prefill.openvino-ir.fp32",
+      "format": "openvino-ir",
+      "locationKind": "file",
+      "entrypoint": "openvino/decoder_model.xml",
+      "compatibleBackends": ["openvino"],
+      "files": [
+        { "relativePath": "openvino/decoder_model.xml", "sha256": "bb2e2923d8809a526bfe824d9116de5829dbf1d8ca6c9a9d771030004a5d1f94", "size": 516304, "mediaType": "application/xml", "role": "model" },
+        { "relativePath": "openvino/decoder_model.bin", "sha256": "a5ceca96d677e61a89bb12d505095f899fec61d1ed66791b1dc026817c2cb989", "size": 743612652, "mediaType": "application/octet-stream", "role": "weights" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": true,
+      "minimumRuntimeVersion": "2026.2.1",
+      "extensions": {
+        "deploysharp.bundle-role": "decoder-prefill",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "input_ids,encoder_hidden_states=>logits,present.0..3.decoder-and-encoder.key-value",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified"
+      }
+    },
+    {
+      "artifactId": "decoder-with-past.openvino-ir.fp32",
+      "format": "openvino-ir",
+      "locationKind": "file",
+      "entrypoint": "openvino/decoder_with_past_model.xml",
+      "compatibleBackends": ["openvino"],
+      "files": [
+        { "relativePath": "openvino/decoder_with_past_model.xml", "sha256": "07381dad8ba02fea94c24ec2aeb1cdc41a5cfbef24b8cf7b76c1f938ab7c55dc", "size": 462661, "mediaType": "application/xml", "role": "model" },
+        { "relativePath": "openvino/decoder_with_past_model.bin", "sha256": "b49461b78ab755de2827c4a853f5b25c05153688eb9bf96b3b3ed473e57fae45", "size": 710025444, "mediaType": "application/octet-stream", "role": "weights" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": true,
+      "minimumRuntimeVersion": "2026.2.1",
+      "extensions": {
+        "deploysharp.bundle-role": "decoder-with-past",
+        "deploysharp.bundle-version": "donut-cord-v2-8003d433-opset17",
+        "deploysharp.capabilities": "structured-extraction,ocr-free",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.ocr-ownership": "ocr-free",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.page-count": "1",
+        "deploysharp.context-length": "768",
+        "deploysharp.prompt-template-id": "donut.cord-v2.task-prompt.v1",
+        "deploysharp.generation-mode": "greedy-prefill-past-present",
+        "deploysharp.kv-cache-schema-id": "donut.mbart.4x16x64.cross1200.v1",
+        "deploysharp.named-ports": "input_ids,past_key_values.0..3.decoder-and-encoder.key-value=>logits,present.0..3.decoder.key-value",
+        "deploysharp.validation-status": "external-runtime-compared-not-algorithm-verified"
+      }
+    },
+    {
+      "artifactId": "official-checkpoint.source",
+      "format": "pytorch",
+      "locationKind": "directory",
+      "entrypoint": "checkpoint",
+      "compatibleBackends": ["unverified"],
+      "files": [
+        { "relativePath": "checkpoint/added_tokens.json", "sha256": "f51dd68d1565c8fb24de0a93f0a98aaed273ff368908069219b74b091bebcbc5", "size": 1516, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "checkpoint/config.json", "sha256": "0f8a1ade73f7b695b6c192ff6c6c40d4a7787432d8a3e7221c45ff6f8a9465bf", "size": 4740, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "checkpoint/preprocessor_config.json", "sha256": "46a79191272663118d1d5d6f2eaf4c497bce40cc336bd55724daac33a34b250b", "size": 362, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "checkpoint/pytorch_model.bin", "sha256": "31b78e3d3891072de8e2bf3553b71782242a1f3b589b914ec2b03feff7b14c54", "size": 806248251, "mediaType": "application/octet-stream", "role": "weights" },
+        { "relativePath": "checkpoint/README.md", "sha256": "8a60b58e959917f39aa6ede258345858b98d0596612b0b7e48496acc67a1f2af", "size": 2006, "mediaType": "text/markdown", "role": "other" },
+        { "relativePath": "checkpoint/sentencepiece.bpe.model", "sha256": "cb9e3dce4c326195d08fc3dd0f7e2eee1da8595c847bf4c1a9c78b7a82d47e2d", "size": 1296245, "mediaType": "application/octet-stream", "role": "vocabulary" },
+        { "relativePath": "checkpoint/special_tokens_map.json", "sha256": "2475cc6ecad23f2c4d54911b95ca9432c9046c2bcc5954b0148e369fbe1dd4f8", "size": 335, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "checkpoint/tokenizer_config.json", "sha256": "7304d2b31c70635ca38c01b54960f6baff74d516ce856484b63c5a7a5dc93761", "size": 536, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "checkpoint/tokenizer.json", "sha256": "756fd46f7c829153e68d75ebac3e59fda91244f11c85d3498fe91b20dc5cdf59", "size": 4021441, "mediaType": "application/json", "role": "tokenizer" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "official-checkpoint",
+        "deploysharp.validation-status": "official-predictor-executed",
+        "deploysharp.release-admission": "blocked-no-upload-authorization"
+      }
+    },
+    {
+      "artifactId": "onnx-sidecars.contract",
+      "format": "json",
+      "locationKind": "directory",
+      "entrypoint": "onnx",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "onnx/added_tokens.json", "sha256": "11e543c5997493cdbe55bc2e1694a226a8ecd44c773ac897a3ad03244a7ff2c3", "size": 1576, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "onnx/config.json", "sha256": "7e99d2df04b128752f80029bca07f9c00e23cc68436cb7d6796db024d7012415", "size": 1756, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "onnx/generation_config.json", "sha256": "94ee63d6ddfa3ea69e783298ef92b906c2a7826b64584075f46938c8a0d4238c", "size": 168, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "onnx/preprocessor_config.json", "sha256": "1ba94b2678342022320ba3151a67588fc0455d0105815e6e54acad3b4ce2fa71", "size": 466, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "onnx/sentencepiece.bpe.model", "sha256": "cb9e3dce4c326195d08fc3dd0f7e2eee1da8595c847bf4c1a9c78b7a82d47e2d", "size": 1296245, "mediaType": "application/octet-stream", "role": "vocabulary" },
+        { "relativePath": "onnx/special_tokens_map.json", "sha256": "46b2e4304327ba30708572e6cd1ae5e65a00c4efc46812c0807069103f19a8ed", "size": 1073, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "onnx/tokenizer_config.json", "sha256": "5403d8b8fb269290e4222985dd48adc0d107efcb6c5dab5e3ef3202248f3f2fe", "size": 12235, "mediaType": "application/json", "role": "tokenizer" },
+        { "relativePath": "onnx/tokenizer.json", "sha256": "70062735e37744041178dd3d6ae83e7cbb55f3408f3294d7fb1742b437290c30", "size": 4021612, "mediaType": "application/json", "role": "tokenizer" }
+      ],
+      "precision": "none",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "processor-tokenizer-sidecars",
+        "deploysharp.processor-id": "naver.donut.cord-v2.processor",
+        "deploysharp.tokenizer-id": "naver.donut.cord-v2.xlm-roberta",
+        "deploysharp.validation-status": "external-sidecars-verified",
+        "deploysharp.release-admission": "blocked-no-upload-authorization"
+      }
+    },
+    {
+      "artifactId": "cord-v2-schema.contract",
+      "format": "json",
+      "locationKind": "file",
+      "entrypoint": "schema/cord-v2-donut-tags.schema.json",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "schema/cord-v2-donut-tags.schema.json", "sha256": "11eef36f495e1c3911961469a23d71b6f6edbe377e420990227514b5c8777733", "size": 539, "mediaType": "application/schema+json", "role": "configuration" }
+      ],
+      "precision": "none",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "structured-output-schema",
+        "deploysharp.schema-id": "cord-v2.donut-tags.v1",
+        "deploysharp.parse-policy": "bounded-balanced-tags-no-repair",
+        "deploysharp.validation-status": "schema-parser-compared"
+      }
+    },
+    {
+      "artifactId": "cord-v2-test-dataset.source",
+      "format": "parquet",
+      "locationKind": "directory",
+      "entrypoint": "dataset",
+      "compatibleBackends": ["unverified"],
+      "files": [
+        { "relativePath": "dataset/test-00000-of-00001-9c204eb3f4e11791.parquet", "sha256": "51c65f1788faff392abe2a0b55b023eb23e9be551c509138eaa3a832514224e7", "size": 234202795, "mediaType": "application/vnd.apache.parquet", "role": "testInput" }
+      ],
+      "precision": "none",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "authorized-test-source",
+        "deploysharp.dataset-id": "naver-clova-ix/cord-v2@7f0115a4b758a71d6473b8d085751692da2fef98",
+        "deploysharp.dataset-license": "CC-BY-4.0",
+        "deploysharp.release-admission": "blocked-test-data-not-for-package"
+      }
+    },
+    {
+      "artifactId": "cord-v2-row0.evidence",
+      "format": "binary-and-json",
+      "locationKind": "directory",
+      "entrypoint": "evidence",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "evidence/acquisition-environment.json", "sha256": "a03fa455a5639dbd6c7b8ea1af3c0848110491b66ac7f0abccb616c2752f1d16", "size": 190, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/openvino-conversion.json", "sha256": "45411def782a12d26056bf05cbc300cf6cb1fff6a486c6d88a24c895df2f0f46", "size": 3645, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/source-audit.json", "sha256": "bbd448d079b34bc42bfedfcd51a4830a02216bfeab7327c4ff3c44bddd675cf0", "size": 1851, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/document.png", "sha256": "8612d04b70f430f3aef07fbbd5200e382dcc4152b344cc2eff9f735f05a257c8", "size": 338392, "mediaType": "image/png", "role": "testInput" },
+        { "relativePath": "evidence/cord-test-0/deploysharp-dotnet.json", "sha256": "5da746b6ea980bb6a19c96d626326d83ada96b0f6ec38f46700de9cfef870ba7", "size": 6963, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/encoder-hidden-state.f32", "sha256": "456c51d7cd58b824002e5982e7a4581483b5b8c62dc4c71a92306ab17deb7894", "size": 4915200, "mediaType": "application/octet-stream", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/ground-truth.json", "sha256": "db764f549ff2b1050332edde7c2947c3faac5c3cc075494972e5490537011723", "size": 5413, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/official-predictor.json", "sha256": "e3e045dd53bd112f536bb763158b7af57b5be017d9153a7efbe41735e8c14286", "size": 12079, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/pixel-values.f32", "sha256": "5198085c58f052606b22beb623e70305efa065b833999a569efa3e8635f9f75a", "size": 14745600, "mediaType": "application/octet-stream", "role": "testInput" },
+        { "relativePath": "evidence/cord-test-0/prefill-logits.f32", "sha256": "34d63331def16be9c430b8694a9c69d063379dd61de7c8ce0e97f4bf7110e2d9", "size": 230320, "mediaType": "application/octet-stream", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/python-openvino-ir.json", "sha256": "ebc7a6f90005c5f56801c3aa1bc8e389526022003a2961132e7c3656f9814092", "size": 16185, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/python-openvino.json", "sha256": "d811b1235e9c06106a881fd1358febaec7053cb9ae2351814f9029f7520846d7", "size": 16185, "mediaType": "application/json", "role": "other" },
+        { "relativePath": "evidence/cord-test-0/python-ort.json", "sha256": "9babbcea8ff6b976d5a8c6d520deae4c25253d3ee86604e577bfcfdfe0164784", "size": 21145, "mediaType": "application/json", "role": "other" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "portable": false,
+      "extensions": {
+        "deploysharp.bundle-role": "backend-and-official-evidence",
+        "deploysharp.test-page": "cord-v2-test-row-0",
+        "deploysharp.pixel-golden": "official-f32-plus-opencv-max-abs-0.0156862735748291-mean-abs-0.000010231566524857448",
+        "deploysharp.official-comparison": "official Predictor, Python ORT, Python OpenVINO ONNX import, and Python OpenVINO IR produced the exact same 53 completion tokens and parsed CORD fields",
+        "deploysharp.algorithm-verified": "false"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.algorithm-verified": "false",
+    "deploysharp.publication-state": "external-local-evidence-no-upload-authorization",
+    "deploysharp.uploaded": "false",
+    "deploysharp.downloadable": "false",
+    "deploysharp.redistribution-allowed": "false",
+    "deploysharp.external-data": "none-all-onnx-weights-inline",
+    "deploysharp.official-comparison": "CORD-v2 row 0 exact completion token sequence and structured JSON across official Predictor, ORT CPU, OpenVINO ONNX import CPU, and OpenVINO IR CPU"
+  }
+}

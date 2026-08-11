@@ -24,7 +24,9 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Reading-order merge and result construction. / 阅读顺序合并与结果构造。</summary>
         Merge = 4,
         /// <summary>Object disposal. / 对象释放。</summary>
-        Disposal = 5
+        Disposal = 5,
+        /// <summary>Per-text-region orientation classification. / 逐文本区域方向分类。</summary>
+        OrientationClassification = 6
     }
 
     /// <summary>Represents a stable OCR pipeline diagnostic with stage and region context. / 表示带阶段和区域上下文的稳定 OCR Pipeline 诊断。</summary>
@@ -106,6 +108,9 @@ namespace JYPPX.DeploySharp.Visual
         private readonly object _lifetimeGate = new object();
         private readonly VisualPipeline _detector;
         private readonly VisualPipeline _recognizer;
+        private OcrOrientationPipeline? _regionOrientation;
+        private TextCropProfile? _orientationCropProfile;
+        private OcrOrientationRejectionPolicy _orientationRejectionPolicy;
         private readonly TextCropProfile _cropProfile;
         private readonly OcrPipelineOptions _options;
         private readonly SemaphoreSlim _operationGate;
@@ -140,6 +145,23 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
+        /// <summary>Creates and owns detector, per-text-region orientation classifier, and recognizer sessions. / 创建并拥有检测器、逐文本区域方向分类器与识别器会话。</summary>
+        public OcrPipeline(BackendRegistry backendRegistry, VisualProfileSelection detectionSelection, BackendRequest detectionRequest, VisualProfileSelection orientationSelection, BackendRequest orientationRequest, TextCropProfile orientationCropProfile, VisualProfileSelection recognitionSelection, BackendRequest recognitionRequest, TextCropProfile recognitionCropProfile, OcrPipelineOptions? options = null, SessionOptions? detectionSessionOptions = null, SessionOptions? orientationSessionOptions = null, SessionOptions? recognitionSessionOptions = null, OcrOrientationRejectionPolicy orientationRejectionPolicy = OcrOrientationRejectionPolicy.Fail)
+            : this(backendRegistry, detectionSelection, detectionRequest, recognitionSelection, recognitionRequest, recognitionCropProfile, options, detectionSessionOptions, recognitionSessionOptions)
+        {
+            if (orientationSelection == null) throw new ArgumentNullException(nameof(orientationSelection));
+            if (orientationRequest == null) throw new ArgumentNullException(nameof(orientationRequest));
+            _orientationCropProfile = orientationCropProfile ?? throw new ArgumentNullException(nameof(orientationCropProfile));
+            if (!Enum.IsDefined(typeof(OcrOrientationRejectionPolicy), orientationRejectionPolicy)) throw new ArgumentOutOfRangeException(nameof(orientationRejectionPolicy));
+            _orientationRejectionPolicy = orientationRejectionPolicy;
+            try
+            {
+                ValidateOrientationProfile(orientationSelection.Profile, _orientationCropProfile);
+                _regionOrientation = new OcrOrientationPipeline(backendRegistry, orientationSelection, orientationRequest, orientationSessionOptions);
+            }
+            catch { Dispose(); throw; }
+        }
+
         /// <summary>Gets detector selection. / 获取检测器选择。</summary>
         public VisualProfileSelection DetectionSelection { get; }
         /// <summary>Gets recognizer selection. / 获取识别器选择。</summary>
@@ -148,6 +170,10 @@ namespace JYPPX.DeploySharp.Visual
         public TextCropProfile CropProfile => _cropProfile;
         /// <summary>Gets pipeline bounds. / 获取 Pipeline 边界。</summary>
         public OcrPipelineOptions Options => _options;
+        /// <summary>Gets the explicit orientation strategy configured for this pipeline. / 获取此 Pipeline 配置的显式方向策略。</summary>
+        public OcrOrientationStrategy OrientationStrategy => _regionOrientation == null ? OcrOrientationStrategy.None : OcrOrientationStrategy.PerTextRegion;
+        /// <summary>Gets the configured handling for rejected per-region orientation results. / 获取逐区域方向拒绝结果的配置处理方式。</summary>
+        public OcrOrientationRejectionPolicy OrientationRejectionPolicy => _orientationRejectionPolicy;
 
         /// <summary>Runs synchronous end-to-end OCR without thread-pool wrapping. / 在不包装线程池任务的情况下运行同步端到端 OCR。</summary>
         public OcrResult Run(IOcrImageInput input, OcrExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -191,6 +217,7 @@ namespace JYPPX.DeploySharp.Visual
             try
             {
                 for (; acquired < _options.MaximumConcurrency; acquired++) _operationGate.Wait();
+                _regionOrientation?.Dispose();
                 _recognizer.Dispose();
                 _detector.Dispose();
             }
@@ -228,16 +255,41 @@ namespace JYPPX.DeploySharp.Visual
                     detectionWatch.Stop();
                     if (detection.Regions.Count > _options.MaximumRegions) throw Limit("OCR detector returned more regions than the pipeline limit.", stage, DetectionSelection.Profile.ProfileId, technicalDetails: "regions=" + detection.Regions.Count);
 
+                    var orientationDuration = TimeSpan.Zero;
+                    IReadOnlyList<TextRegion> regions = detection.Regions;
+                    if (_regionOrientation != null)
+                    {
+                        stage = OcrPipelineStage.OrientationClassification;
+                        var oriented = new List<TextRegion>(detection.Regions.Count);
+                        for (int index = 0; index < detection.Regions.Count; index++)
+                        {
+                            linked.Token.ThrowIfCancellationRequested();
+                            TextRegion region = detection.Regions[index];
+                            regionIndex = region.SourceIndex;
+                            var request = new TextCropRequest(region, _orientationCropProfile ?? throw Failure("The per-region orientation crop profile is missing.", stage, regionIndex: regionIndex));
+                            var watch = Stopwatch.StartNew();
+                            using (PreparedVisualInput orientationInput = input.PrepareRecognitionBatch(_regionOrientation.Selection.Profile.Input.Name, new[] { request }, linked.Token))
+                            {
+                                OcrOrientationResult orientationResult = await _regionOrientation.RunAsync(orientationInput, new VisualExecutionOptions(correlationId: execution.CorrelationId), linked.Token).ConfigureAwait(false);
+                                watch.Stop();
+                                orientationDuration += watch.Elapsed;
+                                if (orientationResult.Rejected && _orientationRejectionPolicy == OcrOrientationRejectionPolicy.Fail) throw new OcrPipelineException(VisualErrorCodes.OcrOrientationCapabilityUnavailable, "A text-region orientation result was rejected by its confidence threshold.", stage, profileId: orientationResult.ProfileId, regionIndex: region.SourceIndex, backendId: orientationResult.BackendId, modelId: orientationResult.ModelId, technicalDetails: "confidence=" + orientationResult.Confidence.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                                oriented.Add(WithOrientation(region, orientationResult));
+                            }
+                        }
+                        regions = oriented.AsReadOnly();
+                    }
+
                     stage = OcrPipelineStage.CropAndBatch;
-                    var requests = new List<IndexedRequest>(detection.Regions.Count);
-                    for (int index = 0; index < detection.Regions.Count; index++)
+                    var requests = new List<IndexedRequest>(regions.Count);
+                    for (int index = 0; index < regions.Count; index++)
                     {
                         linked.Token.ThrowIfCancellationRequested();
-                        regionIndex = detection.Regions[index].SourceIndex;
-                        requests.Add(new IndexedRequest(index, new TextCropRequest(detection.Regions[index], _cropProfile)));
+                        regionIndex = regions[index].SourceIndex;
+                        requests.Add(new IndexedRequest(index, new TextCropRequest(regions[index], _cropProfile)));
                     }
                     regionIndex = null;
-                    var recognized = new RecognizedText[detection.Regions.Count];
+                    var recognized = new RecognizedText[regions.Count];
                     var cropDuration = TimeSpan.Zero;
                     var recognitionDuration = TimeSpan.Zero;
                     SortedDictionary<int, List<IndexedRequest>> groups = GroupByWidth(requests);
@@ -279,18 +331,18 @@ namespace JYPPX.DeploySharp.Visual
                     stage = OcrPipelineStage.Merge;
                     regionIndex = null;
                     var mergeWatch = Stopwatch.StartNew();
-                    var results = new List<OcrRegionResult>(detection.Regions.Count);
+                    var results = new List<OcrRegionResult>(regions.Count);
                     long resultBytes = 0;
-                    for (int index = 0; index < detection.Regions.Count; index++)
+                    for (int index = 0; index < regions.Count; index++)
                     {
                         linked.Token.ThrowIfCancellationRequested();
-                        RecognizedText text = recognized[index] ?? throw Failure("OCR recognition did not produce every detected region.", stage, regionIndex: detection.Regions[index].SourceIndex);
-                        results.Add(new OcrRegionResult(detection.Regions[index], text));
-                        resultBytes = checked(resultBytes + EncodingBytes(text.Text) + checked((long)text.Tokens.Count * 40) + checked((long)detection.Regions[index].Polygon.Vertices.Count * 8));
-                        if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: detection.Regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
+                        RecognizedText text = recognized[index] ?? throw Failure("OCR recognition did not produce every detected region.", stage, regionIndex: regions[index].SourceIndex);
+                        results.Add(new OcrRegionResult(regions[index], text));
+                        resultBytes = checked(resultBytes + EncodingBytes(text.Text) + checked((long)text.Tokens.Count * 40) + checked((long)regions[index].Polygon.Vertices.Count * 8));
+                        if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
                     }
                     mergeWatch.Stop();
-                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed), orientation);
+                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed, orientationDuration), orientation);
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken, stage, regionIndex); }
                 catch (OcrPipelineException) { throw; }
@@ -361,6 +413,31 @@ namespace JYPPX.DeploySharp.Visual
             if (profileHeight >= 0 && profileHeight != crop.TargetHeight) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition profile height does not match crop profile.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
             if (crop.WidthMode == OcrRecognitionWidthMode.Fixed && profileWidth >= 0 && profileWidth != crop.FixedWidth) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition profile width does not match fixed crop width.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
             if (recognition.Input.MinimumBatch > options.MaximumRecognitionBatch) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition minimum batch exceeds OCR batch limit.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
+        }
+
+        private static void ValidateOrientationProfile(VisualModelProfile orientation, TextCropProfile crop)
+        {
+            if (orientation.Task != VisualTaskId.TextOrientationClassification) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The orientation profile must use the text-orientation-classification task.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+            if (orientation.Input.MinimumBatch > 1 || orientation.Input.MaximumBatch < 1) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Per-region orientation requires a profile that accepts batch one.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+            int heightIndex = orientation.Input.Layout == VisualTensorLayout.Nchw ? 2 : orientation.Input.Layout == VisualTensorLayout.Nhwc ? 1 : -1;
+            int widthIndex = orientation.Input.Layout == VisualTensorLayout.Nchw ? 3 : orientation.Input.Layout == VisualTensorLayout.Nhwc ? 2 : -1;
+            if (heightIndex < 0 || (orientation.Input.ShapePattern[heightIndex] >= 0 && orientation.Input.ShapePattern[heightIndex] != crop.TargetHeight) || (orientation.Input.ShapePattern[widthIndex] >= 0 && orientation.Input.ShapePattern[widthIndex] != crop.FixedWidth)) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Orientation input dimensions do not match its fixed crop profile.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+            if (crop.WidthMode != OcrRecognitionWidthMode.Fixed) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Per-region orientation requires a fixed-width crop profile.", OcrPipelineStage.Input, profileId: orientation.ProfileId, modelId: orientation.ModelId);
+        }
+
+        private static TextRegion WithOrientation(TextRegion region, OcrOrientationResult orientation)
+        {
+            var metadata = new List<KeyValuePair<string, string>>(region.Metadata.Count + 7);
+            foreach (KeyValuePair<string, string> pair in region.Metadata) metadata.Add(pair);
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.strategy", "per-text-region"));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.profileId", orientation.ProfileId));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.modelId", orientation.ModelId.Value));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.backendId", orientation.BackendId.Value));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.classIndex", orientation.ClassIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.confidence", orientation.Confidence.ToString("R", System.Globalization.CultureInfo.InvariantCulture)));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.rejected", orientation.Rejected ? "true" : "false"));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.canonicalSha256", orientation.CanonicalSha256));
+            return new TextRegion(region.SourceIndex, region.Score, region.Polygon, region.CropQuadrilateral, orientation.Orientation, region.AngleRadians, region.Language, region.Script, region.ExternalId, metadata);
         }
 
         private static long EncodingBytes(string value) => Encoding.UTF8.GetByteCount(value);

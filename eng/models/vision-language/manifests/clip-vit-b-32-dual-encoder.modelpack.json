@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2.0", "modelId": "vision-language/clip-vit-b-32/external", "name": "OpenAI CLIP ViT-B/32 external dual encoder", "family": "clip", "task": "vision-language-embedding", "modelVersion": "hf-3d74acf9-opset17",
+  "exporter": { "name": "transformers-official-features-plus-torch-onnx", "version": "transformers-4.57.3-torch-2.9.1-opset17", "sourceRevision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268" },
+  "source": { "sourceUrl": "https://huggingface.co/openai/clip-vit-base-patch32/tree/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268", "projectUrl": "https://github.com/openai/CLIP", "revision": "d05afc436d78f1c48dc0dbf8e5980a9d471f35f6", "author": "OpenAI", "licenseExpression": "MIT", "redistributionAllowed": false },
+  "generatedAt": "2026-08-09T00:00:00Z", "profileId": "vision-language.clip-vit-b-32.opset17",
+  "inputs": [{ "name": "pixel_values", "elementType": "float32", "shape": [-1,3,224,224] }, { "name": "input_ids", "elementType": "int64", "shape": [-1,77] }, { "name": "attention_mask", "elementType": "int64", "shape": [-1,77] }],
+  "outputs": [{ "name": "image_embedding", "elementType": "float32", "shape": [-1,512] }, { "name": "text_embedding", "elementType": "float32", "shape": [-1,512] }],
+  "artifacts": [
+    { "artifactId": "image-encoder.onnx.fp32", "format": "onnx", "locationKind": "file", "entrypoint": "clip-image-encoder-opset17.onnx", "compatibleBackends": ["onnxruntime","openvino"], "files": [
+      { "relativePath": "clip-image-encoder-opset17.onnx", "sha256": "51e6e8f7c1d0f43c9434751d55238bba6cd6fde02865a4839683f82928e30963", "size": 351593168, "mediaType": "application/onnx", "role": "model" },
+      { "relativePath": "pytorch_model.bin", "sha256": "a63082132ba4f97a80bea76823f544493bffa8082296d62d71581a4feff1576f", "size": 605247071, "mediaType": "application/octet-stream", "role": "weights" },
+      { "relativePath": "preprocessor_config.json", "sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd", "size": 316, "mediaType": "application/json", "role": "other" }
+    ], "precision": "fp32", "quantization": "none", "opset": 17, "portable": true, "extensions": { "deploysharp.bundle-role": "image-encoder", "deploysharp.bundle-version": "clip-vit-b-32-hf-3d74acf9-opset17", "deploysharp.capabilities": "embedding,zero-shot-classification,cross-modal-retrieval", "deploysharp.tokenizer-id": "openai-clip-bpe-77", "deploysharp.preprocessing-version": "official-rgb-pillow-bicubic-shortest-edge-center-crop-224", "deploysharp.score-semantics": "scaled-cosine-softmax-across-requested-text-candidates", "deploysharp.validation-status": "external-ort-openvino-official-golden-verified", "deploysharp.golden-summary": "bus.jpg official image embedding max abs ORT 2.682209e-7 OpenVINO 2.682209e-7", "deploysharp.release-admission": "blocked-external-only" } },
+    { "artifactId": "text-encoder.onnx.fp32", "format": "onnx", "locationKind": "file", "entrypoint": "clip-text-encoder-opset17.onnx", "compatibleBackends": ["onnxruntime","openvino"], "files": [
+      { "relativePath": "clip-text-encoder-opset17.onnx", "sha256": "e167dd8f5510fb1bf6cdf6458f0582e69f27abacd123fe660b93ca90db4be3a8", "size": 253943687, "mediaType": "application/onnx", "role": "model" },
+      { "relativePath": "tokenizer.json", "sha256": "b556ac8c99757ffb677208af34bc8c6721572114111a6e0aaf5fa69ff0b8d842", "size": 2224041, "mediaType": "application/json", "role": "other" },
+      { "relativePath": "vocab.json", "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363", "size": 862328, "mediaType": "application/json", "role": "other" },
+      { "relativePath": "merges.txt", "sha256": "f526393189112391ce6f9795d4695f704121ce452c3aad1f5335cc41337eba85", "size": 524657, "mediaType": "text/plain", "role": "other" }
+    ], "precision": "fp32", "quantization": "none", "opset": 17, "portable": true, "extensions": { "deploysharp.bundle-role": "text-encoder", "deploysharp.bundle-version": "clip-vit-b-32-hf-3d74acf9-opset17", "deploysharp.capabilities": "embedding,zero-shot-classification,cross-modal-retrieval", "deploysharp.tokenizer-id": "openai-clip-bpe-77", "deploysharp.pooling": "official-end-of-text", "deploysharp.score-scale": "100.00000762939453", "deploysharp.validation-status": "external-ort-openvino-official-golden-verified" } }
+  ]
+}

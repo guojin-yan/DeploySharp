@@ -1,0 +1,63 @@
+{
+  "snapshotDate": "2026-08-10",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "redistributionAllowed": false,
+  "warehouseRoot": "E:\\DeploySharp-Models",
+  "upstream": {
+    "wav2vec2Revision": "22aad52d435eb6dbaf354bdad9b0da84ce7d6156",
+    "wav2vec2License": "Apache-2.0",
+    "whisperRevision": "87c7102498dcde7456f24cfd30239ca606ed9063",
+    "whisperLicense": "Apache-2.0",
+    "hubertRevision": "dba3bb02fda4248b6e082697eee756de8fe8aa8a",
+    "hubertLicense": "Apache-2.0",
+    "pyannoteRevision": "84fd25912480287da0247647c3d2b4853cb3ee5d",
+    "pyannoteLicense": "MIT-code-and-model-specific-terms"
+  },
+  "families": [
+    {
+      "family": "wav2vec2",
+      "variant": "base-960h",
+      "status": "External-executable",
+      "task": "automatic-speech-recognition",
+      "localPath": "E:\\DeploySharp-Models\\wav2vec2-base-960h",
+      "processor": "16 kHz mono waveform; one caller-owned normalization; float32 input_values",
+      "tokenizer": "fixed audited CTC vocabulary; blank/repeated-token collapse",
+      "ports": { "inputs": ["input_values"], "outputs": ["logits"] },
+      "timestamp": "CTC frame stride 320 samples",
+      "backends": "DeploySharp ONNX Runtime CPU and OpenVINO CPU FP32 IR",
+      "evidence": "Official predictor, Python ORT/OpenVINO, DeploySharp ORT/OpenVINO, OpenCV input factory, and NuGet-only consumer agree on CTC transcript.",
+      "artifacts": {
+        "onnx": { "size": 377814575, "sha256": "7cdbfb05e27e5f7cf6149bd13ff657655347afee5dc41df40174af7ad13483fd" },
+        "openvinoXml": { "size": 735783, "sha256": "1d2b1cdefff94b21020e639ebfe3322fa64cbabe31a918acb5655d5c74668098" },
+        "openvinoBin": { "size": 377585984, "sha256": "b5f086a228f79416658ff7d4ac2ab897183e3719ba994453506b8aef408ec803" }
+      }
+    },
+    {
+      "family": "whisper",
+      "variant": "tiny.en",
+      "status": "External-source-contract-blocker",
+      "task": "automatic-speech-recognition",
+      "localPath": "E:\\DeploySharp-Models\\whisper-tiny.en",
+      "blocker": "The source checkpoint and processor are audited, but no complete Encoder, Decoder Prefill, and named Past/Present KV Decode ONNX/OpenVINO bundle with per-token parity was acquired."
+    },
+    {
+      "family": "hubert",
+      "variant": "base-ls960",
+      "status": "External-source-contract-blocker",
+      "task": "audio-representation-and-classification",
+      "localPath": "E:\\DeploySharp-Models\\hubert-base-ls960",
+      "blocker": "The source checkpoint is audited, but no downstream task head or complete portable graph contract was acquired."
+    },
+    {
+      "family": "pyannote",
+      "variant": "speaker-diarization-3.1",
+      "status": "External-source-contract-blocker",
+      "task": "speaker-diarization",
+      "localPath": "E:\\DeploySharp-Models\\pyannote-speaker-diarization-3.1",
+      "blocker": "The gated pipeline requires authenticated access and contains multiple component models; no authorized complete portable bundle or redistribution grant was available."
+    }
+  ],
+  "ownership": "AudioUnderstandingSession owns backend sessions, one immutable profile, and request-local state. The caller owns the registry, tokenizer, processor, prepared audio, VAD segmentation, and speaker metadata. Results own transcript, CTC frame spans, diagnostics, and timing.",
+  "publication": "External metadata only. uploaded=false, downloadable=false, redistributionAllowed=false. Local execution does not upgrade AlgorithmVerified or authorize a Release asset."
+}

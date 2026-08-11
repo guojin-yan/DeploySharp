@@ -19,7 +19,8 @@ namespace JYPPX.DeploySharp.LLM
             int? contextLength = null,
             int? embeddingDimensions = null,
             string? device = null,
-            IEnumerable<string>? tags = null)
+            IEnumerable<string>? tags = null,
+            LanguageModelProfile? profile = null)
         {
             Artifact = artifact ?? throw new ArgumentNullException(nameof(artifact));
             Backend = backend ?? throw new ArgumentNullException(nameof(backend));
@@ -34,6 +35,29 @@ namespace JYPPX.DeploySharp.LLM
             ContextLength = contextLength;
             EmbeddingDimensions = embeddingDimensions;
             Device = string.IsNullOrWhiteSpace(device) ? null : device;
+            if (profile != null)
+            {
+                if (profile.Artifact.ModelId != artifact.ModelId
+                    || !string.Equals(profile.Artifact.Format, artifact.Format, StringComparison.Ordinal)
+                    || !string.Equals(profile.Artifact.Location, artifact.Location, StringComparison.Ordinal)
+                    || !string.Equals(profile.Artifact.Sha256, artifact.Sha256, StringComparison.OrdinalIgnoreCase)
+                    || profile.BackendId != backend.Id)
+                {
+                    throw new ArgumentException("The language-model profile must bind the metadata artifact and backend.", nameof(profile));
+                }
+
+                bool hasEmbeddings = (capabilities & LanguageModelCapabilities.Embeddings) != 0;
+                if (profile.EmbeddingsSupported != hasEmbeddings)
+                {
+                    throw new ArgumentException("The language-model profile embedding capability must match metadata capabilities.", nameof(profile));
+                }
+
+                if (contextLength.HasValue && profile.ContextLength.HasValue && contextLength.Value != profile.ContextLength.Value)
+                {
+                    throw new ArgumentException("The language-model profile context length must match metadata.", nameof(profile));
+                }
+            }
+            Profile = profile;
             var copiedTags = new List<string>();
             if (tags != null)
             {
@@ -58,6 +82,8 @@ namespace JYPPX.DeploySharp.LLM
         public int? EmbeddingDimensions { get; }
         /// <summary>Gets the selected device label. / 获取选定的设备标签。</summary>
         public string? Device { get; }
+        /// <summary>Gets the immutable artifact-bound profile when supplied by the backend. / 获取后端提供的不可变工件绑定 Profile。</summary>
+        public LanguageModelProfile? Profile { get; }
         /// <summary>Gets model and backend tags. / 获取模型和后端标签。</summary>
         public IReadOnlyList<string> Tags => _tags;
     }

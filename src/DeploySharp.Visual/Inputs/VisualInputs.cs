@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual
@@ -103,7 +104,8 @@ namespace JYPPX.DeploySharp.Visual
             VisualPreprocessingDescriptor? preprocessing = null,
             string? inputId = null,
             PreparedInputOwnership ownership = PreparedInputOwnership.Borrowed,
-            IDisposable? ownedResource = null)
+            IDisposable? ownedResource = null,
+            IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
             if (string.IsNullOrWhiteSpace(inputName)) throw new VisualException(VisualErrorCodes.InputInvalid, "An input tensor name is required.", tensorName: inputName);
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
@@ -125,10 +127,24 @@ namespace JYPPX.DeploySharp.Visual
             InputId = string.IsNullOrWhiteSpace(inputId) ? null : inputId;
             Ownership = ownership;
             _ownedResource = ownedResource;
+            var auxiliary = new List<NamedTensor>();
+            if (auxiliaryInputs != null)
+            {
+                foreach (NamedTensor item in auxiliaryInputs)
+                {
+                    if (item == null) throw new VisualException(VisualErrorCodes.InputInvalid, "Auxiliary input tensors cannot contain null items.", tensorName: inputName);
+                    if (string.Equals(item.Name, inputName, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.InputInvalid, "An auxiliary input cannot reuse the image input name.", tensorName: item.Name);
+                    foreach (NamedTensor existing in auxiliary) if (string.Equals(existing.Name, item.Name, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.InputInvalid, "Auxiliary input names must be unique.", tensorName: item.Name);
+                    auxiliary.Add(item);
+                }
+            }
+            AuxiliaryInputs = new ReadOnlyCollection<NamedTensor>(auxiliary);
         }
 
         /// <summary>Gets the backend tensor input name. / 获取后端张量输入名称。</summary>
         public string InputName { get; }
+        /// <summary>Gets immutable non-image tensors prepared for the same inference call. / 获取为同一次推理调用准备的不可变非图像张量。</summary>
+        public IReadOnlyList<NamedTensor> AuxiliaryInputs { get; }
         /// <summary>Gets the already prepared Core tensor. / 获取已经准备好的 Core 张量。</summary>
         public ITensor Tensor { get; }
         /// <summary>Gets the original source image size. / 获取原始源图尺寸。</summary>

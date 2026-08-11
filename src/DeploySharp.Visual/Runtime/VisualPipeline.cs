@@ -106,7 +106,9 @@ namespace JYPPX.DeploySharp.Visual
                     await _operationGate.WaitAsync(linked.Token).ConfigureAwait(false);
                     entered = true;
                     EnsureUsable();
-                    var inputs = InferenceInputs.Create(Selection.Profile.Input.Name, input.Tensor);
+                    var namedInputs = new List<NamedTensor>(input.AuxiliaryInputs.Count + 1) { new NamedTensor(Selection.Profile.Input.Name, input.Tensor) };
+                    namedInputs.AddRange(input.AuxiliaryInputs);
+                    var inputs = new InferenceInputs(namedInputs);
                     var inferenceWatch = Stopwatch.StartNew();
                     InferenceOutputs outputs = asynchronous
                         ? await _session.RunAsync(inputs, linked.Token).ConfigureAwait(false)
@@ -174,6 +176,13 @@ namespace JYPPX.DeploySharp.Visual
             if (input.BatchSize < binding.MinimumBatch || input.BatchSize > binding.MaximumBatch) throw new VisualException(VisualErrorCodes.TensorInvalid, "Prepared input batch is outside profile bounds.", profileId: profile.ProfileId, tensorName: input.InputName, modelId: profile.ModelId);
             if (!TensorShapePattern.Matches(binding.ShapePattern, input.Tensor.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Prepared input shape does not match the profile pattern.", profileId: profile.ProfileId, tensorName: input.InputName, modelId: profile.ModelId, technicalDetails: input.Tensor.Shape.ToString());
             ValidateSpatialShape(input);
+            if (input.AuxiliaryInputs.Count != profile.AuxiliaryInputs.Count) throw new VisualException(VisualErrorCodes.TensorInvalid, "Prepared auxiliary input count does not match the profile.", profileId: profile.ProfileId, modelId: profile.ModelId);
+            foreach (VisualAuxiliaryInputBinding auxiliaryBinding in profile.AuxiliaryInputs)
+            {
+                NamedTensor? supplied = input.AuxiliaryInputs.FirstOrDefault(value => string.Equals(value.Name, auxiliaryBinding.Name, StringComparison.Ordinal));
+                if (supplied == null) throw new VisualException(VisualErrorCodes.TensorInvalid, "A required auxiliary input tensor is missing.", profileId: profile.ProfileId, tensorName: auxiliaryBinding.Name, modelId: profile.ModelId);
+                if (supplied.Tensor.ElementType != auxiliaryBinding.ElementType || !TensorShapePattern.Matches(auxiliaryBinding.ShapePattern, supplied.Tensor.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "An auxiliary input tensor is incompatible with the profile.", profileId: profile.ProfileId, tensorName: auxiliaryBinding.Name, modelId: profile.ModelId, technicalDetails: supplied.Tensor.Shape.ToString());
+            }
         }
 
         private static void ValidateSpatialShape(PreparedVisualInput input)
@@ -209,6 +218,11 @@ namespace JYPPX.DeploySharp.Visual
             if (metadata.ModelId != profile.ModelId) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Backend metadata model ID does not match the profile.", profileId: profile.ProfileId, modelId: profile.ModelId);
             TensorDescriptor? input = metadata.Inputs.FirstOrDefault(value => string.Equals(value.Name, profile.Input.Name, StringComparison.Ordinal));
             if (input == null || input.ElementType != profile.Input.ElementType || !PatternsCompatible(profile.Input.ShapePattern, input.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Backend input metadata is incompatible with the visual profile.", profileId: profile.ProfileId, tensorName: profile.Input.Name, modelId: profile.ModelId);
+            foreach (VisualAuxiliaryInputBinding binding in profile.AuxiliaryInputs)
+            {
+                TensorDescriptor? auxiliary = metadata.Inputs.FirstOrDefault(value => string.Equals(value.Name, binding.Name, StringComparison.Ordinal));
+                if (auxiliary == null || auxiliary.ElementType != binding.ElementType || !PatternsCompatible(binding.ShapePattern, auxiliary.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Backend auxiliary input metadata is incompatible with the visual profile.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId);
+            }
             foreach (VisualOutputBinding binding in profile.Outputs)
             {
                 TensorDescriptor? output = metadata.Outputs.FirstOrDefault(value => string.Equals(value.Name, binding.Name, StringComparison.Ordinal));

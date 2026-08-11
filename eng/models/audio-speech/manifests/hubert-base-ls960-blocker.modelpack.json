@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "audio/hubert-base-ls960/external-blocker",
+  "name": "Facebook HuBERT base LS-960 official source-contract blocker",
+  "family": "hubert",
+  "task": "speech-representation",
+  "modelVersion": "hubert-base-ls960-dba3bb0-blocked",
+  "exporter": { "name": "none-audited-dynamic-representation-export", "version": "blocked", "sourceRevision": "dba3bb02fda4248b6e082697eee756de8fe8aa8a" },
+  "source": { "sourceUrl": "https://huggingface.co/facebook/hubert-base-ls960", "projectUrl": "https://github.com/huggingface/transformers", "revision": "dba3bb02fda4248b6e082697eee756de8fe8aa8a", "author": "Meta AI / Facebook", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
+  "generatedAt": "2026-08-10T00:00:00Z",
+  "profileId": "audio.hubert.base-ls960.source-contract",
+  "inputs": [{ "name": "input_values", "elementType": "float32", "shape": [1, -1] }],
+  "outputs": [{ "name": "last_hidden_state", "elementType": "float32", "shape": [1, -1, 768] }],
+  "artifacts": [{
+    "artifactId": "official-source-contract.blocked", "format": "pytorch-source", "locationKind": "directory", "entrypoint": "checkpoint", "compatibleBackends": ["unverified"],
+    "files": [
+      { "relativePath": "checkpoint/config.json", "sha256": "56be398848bbd9cbc720172b0d45b2f01cac7652f2968f0f31f5faf9f2986acc", "size": 1385, "mediaType": "application/json", "role": "configuration" },
+      { "relativePath": "checkpoint/preprocessor_config.json", "sha256": "4a93853b74278b7c769d07f5a861e5d12ceb5db2bced5620d335f87238cb9e86", "size": 213, "mediaType": "application/json", "role": "configuration" },
+      { "relativePath": "checkpoint/pytorch_model.bin", "sha256": "062249fffb353eab67547a2fbc129f7c31a2f459faf641b19e8fb007cc5c48ad", "size": 377569754, "mediaType": "application/octet-stream", "role": "weights" },
+      { "relativePath": "checkpoint/README.md", "sha256": "c59fb00d253ab5ae5d288f130c64dddf3b7af3d5ce35c96395ac7a3db5db88f5", "size": 2596, "mediaType": "text/markdown", "role": "other" }
+    ],
+    "precision": "fp32", "quantization": "none", "portable": false,
+    "extensions": { "deploysharp.bundle-role": "official-source-contract", "deploysharp.bundle-version": "hubert-base-ls960-dba3bb0-blocked", "deploysharp.processor-id": "facebook-hubert-feature-extractor-dba3bb0", "deploysharp.sample-rate": "16000", "deploysharp.timestamp-mode": "none", "deploysharp.speaker-mode": "none", "deploysharp.audio-feature-id": "hubert-convolutional-waveform-representation-v1", "deploysharp.validation-status": "official-source-contract-only", "deploysharp.blocker": "The official base checkpoint has no CTC vocabulary or ASR head, and no audited dynamic-frame representation ONNX/OpenVINO export was admitted; it is not labeled as speech recognition." }
+  }],
+  "extensions": { "deploysharp.algorithm-verified": "false", "deploysharp.uploaded": "false", "deploysharp.downloadable": "false", "deploysharp.redistribution-allowed": "false" }
+}

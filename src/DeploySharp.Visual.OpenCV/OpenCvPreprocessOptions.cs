@@ -11,7 +11,35 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         /// <summary>Preserve aspect ratio and pad around the image. / 保持宽高比并在图像周围填充。</summary>
         Letterbox = 1,
         /// <summary>Crop from the center to the target aspect ratio and resize. / 从中心裁剪到目标宽高比后缩放。</summary>
-        CenterCrop = 2
+        CenterCrop = 2,
+        /// <summary>Resize the longest side and pad only the bottom and right edges. / 缩放最长边并仅在底边与右边补齐。</summary>
+        LongestSidePadBottomRight = 3,
+        /// <summary>Resize the shortest edge, then crop the requested canvas from the center. / 缩放最短边，再从中心裁剪所需画布。</summary>
+        ShortestEdgeCenterCrop = 4
+    }
+
+    /// <summary>Identifies the audited OpenCV resize interpolation. / 标识已审计的 OpenCV 缩放插值。</summary>
+    public enum OpenCvInterpolation
+    {
+        /// <summary>Use bilinear interpolation. / 使用双线性插值。</summary>
+        Linear = 0,
+        /// <summary>Use bicubic interpolation. / 使用双三次插值。</summary>
+        Cubic = 1,
+        /// <summary>Use nearest-neighbor interpolation. / 使用最近邻插值。</summary>
+        Nearest = 2,
+        /// <summary>Use Pillow-compatible antialiased bicubic resize for an exact fixed-resize model contract. / 为精确固定缩放模型合同使用兼容 Pillow 的抗锯齿双三次缩放。</summary>
+        PillowBicubic = 3
+    }
+
+    /// <summary>Identifies how letterbox content dimensions are converted to integral pixels. / 标识如何将 letterbox 内容尺寸转换为整数像素。</summary>
+    public enum OpenCvLetterboxRounding
+    {
+        /// <summary>Round each scaled dimension to the nearest integer. / 将每个缩放尺寸舍入到最近整数。</summary>
+        Nearest = 0,
+        /// <summary>Take the floor of each scaled dimension. / 对每个缩放尺寸向下取整。</summary>
+        Floor = 1,
+        /// <summary>Round by taking floor(value + 0.5), matching Segment Anything's longest-side transform. / 使用 floor(value + 0.5) 舍入，与 Segment Anything 最长边变换一致。</summary>
+        HalfUp = 2
     }
 
     /// <summary>Identifies how a decoded alpha channel is handled. / 标识解码后的 alpha 通道处理方式。</summary>
@@ -85,13 +113,18 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             int batchSize = 1,
             OpenCvOutputType outputType = OpenCvOutputType.Float32,
             OpenCvRgbColor? paddingColor = null,
-            OpenCvRgbColor? alphaBackground = null)
+            OpenCvRgbColor? alphaBackground = null,
+            OpenCvLetterboxRounding letterboxRounding = OpenCvLetterboxRounding.Nearest,
+            OpenCvInterpolation interpolation = OpenCvInterpolation.Linear)
         {
             if (!Enum.IsDefined(typeof(OpenCvResizeMode), resizeMode)) throw Invalid("The resize mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualColorOrder), colorOrder) || colorOrder == VisualColorOrder.Unspecified) throw Invalid("A concrete output color order is required.");
             if (!Enum.IsDefined(typeof(OpenCvAlphaMode), alphaMode)) throw Invalid("The alpha mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualTensorLayout), layout)) throw Invalid("The tensor layout is invalid.");
             if (!Enum.IsDefined(typeof(OpenCvOutputType), outputType)) throw Invalid("The output type is invalid.");
+            if (!Enum.IsDefined(typeof(OpenCvLetterboxRounding), letterboxRounding)) throw Invalid("The letterbox rounding mode is invalid.");
+            if (!Enum.IsDefined(typeof(OpenCvInterpolation), interpolation)) throw Invalid("The interpolation mode is invalid.");
+            if (interpolation == OpenCvInterpolation.PillowBicubic && resizeMode != OpenCvResizeMode.Resize) throw Invalid("Pillow-compatible bicubic interpolation currently supports fixed resize only.");
             if (batchSize <= 0) throw Invalid("The batch size must be positive.");
             int channels = GetChannelCount(colorOrder);
             bool outputHasAlpha = colorOrder == VisualColorOrder.Rgba || colorOrder == VisualColorOrder.Bgra;
@@ -111,6 +144,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OutputType = outputType;
             PaddingColor = paddingColor ?? OpenCvRgbColor.Black;
             AlphaBackground = alphaBackground ?? OpenCvRgbColor.Black;
+            LetterboxRounding = letterboxRounding;
+            Interpolation = interpolation;
         }
 
         /// <summary>Gets the model input size. / 获取模型输入尺寸。</summary>
@@ -135,6 +170,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public OpenCvRgbColor PaddingColor { get; }
         /// <summary>Gets the alpha compositing background. / 获取 alpha 合成背景色。</summary>
         public OpenCvRgbColor AlphaBackground { get; }
+        /// <summary>Gets how letterbox content dimensions are rounded. / 获取 letterbox 内容尺寸的舍入方式。</summary>
+        public OpenCvLetterboxRounding LetterboxRounding { get; }
+        /// <summary>Gets the resize interpolation. / 获取缩放插值。</summary>
+        public OpenCvInterpolation Interpolation { get; }
 
         internal int ChannelCount => GetChannelCount(ColorOrder);
         internal float Mean(int channel) => _means.Count == 0 ? 0f : _means[_means.Count == 1 ? 0 : channel];

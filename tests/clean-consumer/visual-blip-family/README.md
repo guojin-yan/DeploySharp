@@ -1,0 +1,5 @@
+# DeploySharp BLIP family clean consumer
+
+This package-only consumer installs Core, Visual, Visual.OpenCV, one ONNX Runtime backend adapter, and application-selected Windows x64 native runtimes. It has no project references, model/checkpoint/vocabulary/config asset, image, Python, OpenVINO IR, TensorRT, or hidden native runtime in a DeploySharp package. / 此仅包消费者安装 Core、Visual、Visual.OpenCV、一个 ONNX Runtime Backend Adapter 与应用显式选择的 Windows x64 Native Runtime；DeploySharp 包中不包含项目引用、模型/Checkpoint/词表/配置、图片、Python、OpenVINO IR、TensorRT 或隐藏 Native Runtime。
+
+Set `DEPLOYSHARP_BLIP_MODEL_ROOT` to the external `blip-caption-base` warehouse folder and `DEPLOYSHARP_BLIP_IMAGE` to an authorized image. Missing files print `DEPLOYSHARP_VISUAL_BLIP_FAMILY_CONSUMER_SKIP`. A real set-image, repeated Caption, clear/rebuild lifecycle prints `DEPLOYSHARP_VISUAL_BLIP_FAMILY_CONSUMER_OK`. BLIP VQA, BLIP-2, and InstructBLIP remain explicit external blockers and are not silently routed through this caption graph. / 将两个环境变量分别指向外部模型目录和获授权图片。缺文件输出稳定 Skip；真实图像状态、多次 Caption、清除/重建生命周期成功后输出成功标记。BLIP VQA、BLIP-2 与 InstructBLIP 仍是显式 External Blocker，不会静默借用本 Caption Graph。

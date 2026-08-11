@@ -1,0 +1,11 @@
+DeploySharp Stage 30 exact GGUF admission audit
+
+AuditedAt: 2026-08-10 (Asia/Shanghai)
+WarehouseRoot: E:\DeploySharp-Models
+WarehouseGgufCandidates: 0
+DEPLOYSHARP_LLAMA_MODEL: unset
+DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST: unset
+Result: blocked / missing-exact-gguf
+
+No exact authorized GGUF exists for audit. Consequently no source revision, model license, tokenizer or chat template, generation configuration, context length, BOS/EOS/PAD behavior, file size, model SHA256, embedding capability, or LLamaSharp native CPU execution evidence can be asserted.
+No model, tokenizer, sidecar, native runtime, or conversion was downloaded or created during Stage 30.

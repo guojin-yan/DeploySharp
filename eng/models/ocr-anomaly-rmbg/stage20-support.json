@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-08T00:00:00Z",
+  "catalogAdmission": "External",
+  "officialCatalogModelCount": 0,
+  "rows": [
+    { "v1Row": "PaddleOcrCls", "task": "text-orientation-classification", "profiles": 2, "runtimeContract": "legacy x -> softmax_0.tmp_0 [-1,2]; PP-LCNet x -> fetch_name_0 [1,2]; ordered 0/180 probabilities", "status": "ContractVerified", "algorithmVerified": false, "blocker": "local ONNX checkpoint/export command and redistribution provenance plus official inference image golden require independent approval" }
+  ]
+}

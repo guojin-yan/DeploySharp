@@ -7,12 +7,13 @@
     <AssemblyName>DeploySharp.LlamaSharp.CleanConsumer</AssemblyName>
     <RootNamespace>DeploySharp.LlamaSharp.CleanConsumer</RootNamespace>
     <IsPackable>false</IsPackable>
+    <IncludeLlamaNativeBackend Condition="'$(IncludeLlamaNativeBackend)' == ''">true</IncludeLlamaNativeBackend>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="JYPPX.DeploySharp.LLM" Version="2.0.0-alpha.1" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.LlamaSharp" Version="2.0.0-alpha.1" />
     <!-- The consumer, not DeploySharp, selects and owns the native package. / 原生包由使用者选择和持有，而不是 DeploySharp。 -->
-    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.27.0" />
+    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.27.0" Condition="'$(IncludeLlamaNativeBackend)' == 'true'" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,5 @@
+DeploySharp Stage 29 GGUF source-contract blocker
+
+No exact GGUF checkpoint was present under E:\DeploySharp-Models and DEPLOYSHARP_LLAMA_MODEL was unset on 2026-08-10 (Asia/Shanghai).
+No model file size, SHA256, quantization, context length, tokenizer identity, chat template, BOS/EOS/PAD, generation configuration, embedding capability, or model license grant can therefore be asserted.
+LLamaSharp 0.27.0 is a managed adapter/runtime dependency only; this evidence is not a model asset and is not executable.

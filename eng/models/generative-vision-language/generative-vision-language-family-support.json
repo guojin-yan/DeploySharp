@@ -1,0 +1,54 @@
+{
+  "snapshotDate": "2026-08-09",
+  "algorithmVerified": false,
+  "officialCatalogAdmission": "empty",
+  "redistributionAllowed": false,
+  "warehouseRoot": "E:\\DeploySharp-Models",
+  "upstream": {
+    "blipCommit": "056a169437371659074aa2732649d5de3bffb4a8",
+    "lavisCommit": "0ef3a2c3603596f88ec5d72bbeabcee4badf0cc7",
+    "blipCodeLicense": "BSD-3-Clause",
+    "lavisCodeLicense": "BSD-3-Clause",
+    "instructBlipRestriction": "research-only model notice; third-party language-model terms also apply"
+  },
+  "families": [
+    {
+      "family": "blip",
+      "variant": "model-base-caption-capfilt-large",
+      "task": "image-captioning",
+      "status": "External-executable",
+      "checkpoint": { "size": 896081425, "sha256": "96ac8749bd0a568c274ebe302b3a3748ab9be614c737f3d8c529697139174086" },
+      "processor": "fixed RGB Pillow-compatible bicubic 384; BLIP mean/std",
+      "tokenizer": "BertTokenizer uncased plus [DEC]/[ENC]; vocab 30524; BOS 30522; EOS 102; PAD 0",
+      "ports": {
+        "vision": { "inputs": ["pixel_values"], "outputs": ["encoder_hidden_states"] },
+        "decoder": { "inputs": ["input_ids", "attention_mask", "encoder_hidden_states", "encoder_attention_mask"], "outputs": ["logits"] }
+      },
+      "generation": "greedy; no KV; complete prefix each step; total length 5..20",
+      "backendEvidence": "Official predictor, DeploySharp ORT CPU, DeploySharp OpenVINO CPU, and OpenCV source-image path produced identical tokens/EOS/text."
+    },
+    {
+      "family": "blip",
+      "variant": "model-base-vqa-capfilt-large",
+      "task": "visual-question-answering",
+      "status": "External-blocker",
+      "blocker": "Checkpoint SHA256 and complete question-encoder/generated-answer/answer-ranking ONNX and OpenVINO bundle were not acquired."
+    },
+    {
+      "family": "blip2",
+      "variant": "caption-coco-opt2.7b",
+      "task": "image-captioning",
+      "status": "External-blocker",
+      "blocker": "No audited complete official EVA-CLIP-G, Q-Former/query-token, projection, OPT tokenizer/decoder and KV-cache ONNX/OpenVINO bundle."
+    },
+    {
+      "family": "instructblip",
+      "variant": "flant5xl",
+      "task": "conditional-text-generation",
+      "status": "External-blocker",
+      "blocker": "No audited complete official vision, instruction-aware Q-Former/query-token, projection, Flan-T5 tokenizer/encoder/decoder and KV-cache ONNX/OpenVINO bundle."
+    }
+  ],
+  "ownership": "GenerativeVisionLanguageSession owns encoder/decoder sessions and one profile/artifact/processor/source bound image state. The tokenizer and registry remain caller-owned. The executable BLIP graph has no reusable KV state; each step submits an owned full prefix and results are defensive managed copies.",
+  "publication": "External metadata is upload-ready only after an independent redistribution grant and immutable release URI review; no model binary is currently uploaded or downloadable."
+}

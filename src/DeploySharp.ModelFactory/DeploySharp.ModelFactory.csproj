@@ -23,8 +23,6 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <EmbeddedResource Include="schemas\deploysharp-model-catalog-1.0.schema.json" LogicalName="JYPPX.DeploySharp.ModelFactory.Schemas.deploysharp-model-catalog-1.0.schema.json" />
-    <None Include="schemas\deploysharp-model-catalog-1.0.schema.json" Pack="true" PackagePath="schemas\" />
     <EmbeddedResource Include="catalog\deploysharp-official-catalog.json" LogicalName="JYPPX.DeploySharp.ModelFactory.Catalog.deploysharp-official-catalog.json" />
-    <None Include="catalog\deploysharp-official-catalog.json" Pack="true" PackagePath="catalog\" />
   </ItemGroup>
 </Project>

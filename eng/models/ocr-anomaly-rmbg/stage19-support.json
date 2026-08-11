@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-07T08:00:00Z",
+  "catalogAdmission": "External",
+  "officialCatalogModelCount": 0,
+  "rows": [
+    { "v1Row": "PaddleOcrDet", "task": "text-detection", "profiles": 2, "runtimeContract": "x -> fetch_name_0 probability map", "status": "ContractVerified", "algorithmVerified": false, "blocker": "managed rectangle-connected-component DB path is not the official contour plus pyclipper implementation; export provenance and image golden are unverified" },
+    { "v1Row": "PaddleOcrRec", "task": "text-recognition", "profiles": 2, "runtimeContract": "x -> fetch_name_0 CTC probabilities with 18385 classes", "status": "ContractVerified", "algorithmVerified": false, "blocker": "local export and dictionary redistribution provenance require independent approval" },
+    { "v1Row": "AnomalibSeg", "task": "anomaly-detection", "profiles": 2, "runtimeContract": "pred_score, pred_label, anomaly_map, pred_mask", "status": "ContractVerified", "algorithmVerified": false, "blocker": "checkpoint, training dataset, thresholds, tile policy and golden provenance are unknown" },
+    { "v1Row": "BriaRmbg", "task": "foreground-matting", "profiles": 2, "runtimeContract": "owned probability alpha restored to source coordinates", "status": "ContractVerified", "algorithmVerified": false, "blocker": "BRIA license/export provenance is not approved; RMBG 2.0 upstream processor files are gated" }
+  ]
+}
