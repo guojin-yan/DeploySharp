@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "profiles": [
+    {
+      "id": "oss-noncommercial-alpha-preview",
+      "packageVersion": "2.0.0-alpha.1",
+      "distributionScope": "open-source-non-commercial-preview",
+      "commercialRelease": false,
+      "advisoryFindingPrefixes": [
+        "consumer-native-license-review:",
+        "dependency-license-review:",
+        "dependency-repository-incomplete:"
+      ],
+      "expectedFindingCounts": {
+        "managedDependencyLicenseReview": 20,
+        "consumerNativeLicenseReview": 2,
+        "dependencyRepositoryIncomplete": 18
+      }
+    }
+  ],
+  "commercialRelease": {
+    "knownFindingsRemainBlocking": true
+  }
+}

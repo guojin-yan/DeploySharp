@@ -6,6 +6,7 @@ param(
     [string]$EvidenceDirectory,
     [string]$PackageCacheDirectory,
     [string]$Configuration = 'Release',
+    [string]$ReleasePolicyPath = (Join-Path $PSScriptRoot 'release-evidence-policy.json'),
     [switch]$WriteBaseline,
     [switch]$RequireReleaseEligible
 )
@@ -55,6 +56,11 @@ function Get-Sha256Bytes {
 function Get-Sha256Text {
     param([string]$Text)
     return Get-Sha256Bytes ([Text.Encoding]::UTF8.GetBytes($Text))
+}
+
+function Get-FileSha256 {
+    param([string]$Path)
+    return ([string](Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash).ToLowerInvariant()
 }
 
 function Get-StreamSha256 {
@@ -796,15 +802,41 @@ $dirty = @(& git -C $repository status --porcelain --untracked-files=all).Count 
 $licenseBlockers = @($managedDependencies | Where-Object { $_.license.manualReview } | ForEach-Object { "dependency-license-review:$($_.id)/$($_.version):$($_.license.status)" })
 $nativeLicenseBlockers = @($consumerOwnedNativeRuntimes | Where-Object { $_.license.manualReview } | ForEach-Object { "consumer-native-license-review:$($_.id)/$($_.version):$($_.license.status)" })
 $repositoryBlockers = @($managedDependencies | Where-Object { $_.repository.status -ne 'complete' } | ForEach-Object { "dependency-repository-incomplete:$($_.id)/$($_.version)" })
+$resolvedPolicyPath = (Resolve-Path -LiteralPath $ReleasePolicyPath).Path
+$releasePolicy = Get-Content -LiteralPath $resolvedPolicyPath -Raw | ConvertFrom-Json -AsHashtable
+if ([string]$releasePolicy.schemaVersion -ne '1.0' -or [bool]$releasePolicy.commercialRelease.knownFindingsRemainBlocking -ne $true) {
+    throw 'Release evidence policy schema/commercial boundary is invalid.'
+}
+$previewPolicies = @($releasePolicy.profiles | Where-Object { $_.id -eq 'oss-noncommercial-alpha-preview' })
+if ($previewPolicies.Count -ne 1) { throw 'Release evidence policy must define exactly one alpha preview profile.' }
+$previewPolicy = $previewPolicies[0]
+if ($releaseBaseline.packageVersion -ne '2.0.0-alpha.1' -or [string]$previewPolicy.packageVersion -ne '2.0.0-alpha.1') {
+    throw 'Alpha preview policy is constrained to package version 2.0.0-alpha.1.'
+}
+if ([string]$previewPolicy.distributionScope -ne 'open-source-non-commercial-preview' -or [bool]$previewPolicy.commercialRelease) {
+    throw 'Alpha preview policy distribution scope is invalid.'
+}
+$expectedAdvisoryPrefixes = @('consumer-native-license-review:', 'dependency-license-review:', 'dependency-repository-incomplete:')
+Assert-SameKeySet @($previewPolicy.advisoryFindingPrefixes) $expectedAdvisoryPrefixes 'Alpha preview policy advisory prefixes'
+$expectedFindingCounts = $previewPolicy.expectedFindingCounts
+if ([int]$expectedFindingCounts.managedDependencyLicenseReview -ne 20 -or [int]$expectedFindingCounts.consumerNativeLicenseReview -ne 2 -or [int]$expectedFindingCounts.dependencyRepositoryIncomplete -ne 18) {
+    throw 'Alpha preview policy must retain the exact 20/2/18 finding counts.'
+}
+$knownAdvisoryFindings = @($licenseBlockers + $nativeLicenseBlockers + $repositoryBlockers | Sort-Object -Unique)
+foreach ($finding in $knownAdvisoryFindings) {
+    if (@($expectedAdvisoryPrefixes | Where-Object { $finding.StartsWith($_, [StringComparison]::Ordinal) }).Count -ne 1) {
+        throw "Alpha preview policy cannot classify finding: $finding"
+    }
+}
+if ($licenseBlockers.Count -ne $expectedFindingCounts.managedDependencyLicenseReview -or $nativeLicenseBlockers.Count -ne $expectedFindingCounts.consumerNativeLicenseReview -or $repositoryBlockers.Count -ne $expectedFindingCounts.dependencyRepositoryIncomplete) {
+    throw "Alpha preview advisory finding count drift. Expected 20 managed licenses, 2 consumer-native licenses, and 18 repository records; found $($licenseBlockers.Count), $($nativeLicenseBlockers.Count), $($repositoryBlockers.Count)."
+}
 $releaseBlockers = [Collections.Generic.List[string]]::new()
 if ($dirty) { $releaseBlockers.Add('dirty-worktree') }
 if ($signedCount -ne $definitions.Count) { $releaseBlockers.Add('unsigned-packages') }
 $releaseBlockers.Add('symbol-package-policy-not-authorized')
 $releaseBlockers.Add('raw-nupkg-container-bit-reproducibility-not-established')
 $releaseBlockers.Add('publication-authority-not-granted')
-foreach ($blocker in $licenseBlockers) { $releaseBlockers.Add($blocker) }
-foreach ($blocker in $nativeLicenseBlockers) { $releaseBlockers.Add($blocker) }
-foreach ($blocker in $repositoryBlockers) { $releaseBlockers.Add($blocker) }
 
 $symbolBlockers = [Collections.Generic.List[string]]::new()
 if ($releaseBaseline.symbolPolicy -eq 'not-produced') { $symbolBlockers.Add('symbol-package-policy-not-authorized') }
@@ -812,6 +844,24 @@ if ($sourceLinkValidCount -ne $symbolAssemblies.Count) { $symbolBlockers.Add('so
 if ($absolutePdbPathCount -ne 0) { $symbolBlockers.Add('portable-pdb-contains-absolute-source-paths') }
 if ($packageBuildDriftCount -ne 0) { $symbolBlockers.Add("package-build-assembly-drift:$packageBuildDriftCount") }
 foreach ($blocker in $symbolBlockers) { $releaseBlockers.Add($blocker) }
+
+$commercialReleaseBlockers = [Collections.Generic.List[string]]::new()
+foreach ($blocker in $releaseBlockers) { $commercialReleaseBlockers.Add($blocker) }
+foreach ($finding in $knownAdvisoryFindings) { $commercialReleaseBlockers.Add($finding) }
+$alphaPreviewPolicyEvidence = [ordered]@{
+    id = [string]$previewPolicy.id
+    packageVersion = [string]$previewPolicy.packageVersion
+    distributionScope = [string]$previewPolicy.distributionScope
+    commercialRelease = [bool]$previewPolicy.commercialRelease
+    commercialKnownFindingsRemainBlocking = [bool]$releasePolicy.commercialRelease.knownFindingsRemainBlocking
+    policySha256 = Get-FileSha256 $resolvedPolicyPath
+    advisoryFindingPrefixes = @($expectedAdvisoryPrefixes | Sort-Object)
+    expectedFindingCounts = [ordered]@{
+        managedDependencyLicenseReview = [int]$expectedFindingCounts.managedDependencyLicenseReview
+        consumerNativeLicenseReview = [int]$expectedFindingCounts.consumerNativeLicenseReview
+        dependencyRepositoryIncomplete = [int]$expectedFindingCounts.dependencyRepositoryIncomplete
+    }
+}
 
 $provenance = [ordered]@{
     schemaVersion = '1.0'
@@ -841,7 +891,10 @@ $provenance = [ordered]@{
     consumerOwnedNativeRuntimes = @($consumerOwnedNativeRuntimes)
     modelLicenses = $modelLicenses
     officialCatalogEntries = $officialEntries.Count
+    alphaPreviewPolicy = $alphaPreviewPolicyEvidence
+    knownAdvisoryFindings = $knownAdvisoryFindings
     releaseBlockers = @($releaseBlockers | Sort-Object -Unique)
+    commercialReleaseBlockers = @($commercialReleaseBlockers | Sort-Object -Unique)
     summary = [ordered]@{
         releasePackages = $releasePackages.Count
         targetFrameworkGroups = @($releasePackages | ForEach-Object { $_.frameworks }).Count
@@ -851,7 +904,11 @@ $provenance = [ordered]@{
         verifiedSpdxManagedDependencies = @($managedDependencies | Where-Object { -not $_.license.manualReview }).Count
         managedDependencyLicenseBlockers = $licenseBlockers.Count
         consumerNativeLicenseBlockers = $nativeLicenseBlockers.Count
+        dependencyRepositoryIncompleteFindings = $repositoryBlockers.Count
+        alphaPreviewKnownAdvisoryFindings = $knownAdvisoryFindings.Count
         signedPackages = $signedCount
+        alphaPreviewCandidateEligible = $releaseBlockers.Count -eq 0
+        commercialReleaseEligible = $commercialReleaseBlockers.Count -eq 0
         releaseEligible = $releaseBlockers.Count -eq 0
     }
 }
@@ -953,6 +1010,8 @@ else {
     Assert-SameKeySet @($expectedProvenance.releasePackages | ForEach-Object { $_.id }) @($provenance.releasePackages | ForEach-Object { $_.id }) 'SBOM release package set'
     Assert-SameKeySet @($expectedProvenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM managed dependency set'
     Assert-SameKeySet @($expectedProvenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM native ownership set'
+    Assert-SameKeySet @($expectedProvenance.knownAdvisoryFindings) @($provenance.knownAdvisoryFindings) 'SBOM alpha preview advisory findings'
+    if ((Get-CanonicalJson $expectedProvenance.alphaPreviewPolicy) -ne (Get-CanonicalJson $provenance.alphaPreviewPolicy)) { throw 'Alpha preview release policy drift.' }
 
     $expectedNative = Get-ObjectMap $expectedProvenance.consumerOwnedNativeRuntimes 'id'
     $actualNative = Get-ObjectMap $provenance.consumerOwnedNativeRuntimes 'id'

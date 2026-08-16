@@ -7,6 +7,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$WorkingDirectory,
     [string]$GatePath = (Join-Path $PSScriptRoot 'Test-ReleaseEvidence.ps1'),
+    [string]$ReleasePolicyPath = (Join-Path $PSScriptRoot 'release-evidence-policy.json'),
     [string]$PackageCacheDirectory
 )
 
@@ -15,6 +16,7 @@ $ErrorActionPreference = 'Stop'
 $packages = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $evidence = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $gate = (Resolve-Path -LiteralPath $GatePath).Path
+$policy = (Resolve-Path -LiteralPath $ReleasePolicyPath).Path
 $packageCache = if ($PackageCacheDirectory) { (Resolve-Path -LiteralPath $PackageCacheDirectory).Path } else { $null }
 $work = [IO.Path]::GetFullPath($WorkingDirectory)
 if (Test-Path -LiteralPath $work) { throw "Negative-test working directory already exists: $work" }
@@ -36,6 +38,13 @@ function New-EvidenceScenario {
     $path = Join-Path $work $Name
     New-Item -ItemType Directory -Path $path | Out-Null
     Copy-Item -Path (Join-Path $evidence '*.json') -Destination $path
+    return $path
+}
+
+function New-PolicyScenario {
+    param([string]$Name)
+    $path = Join-Path $work ("$Name-policy.json")
+    Copy-Item -LiteralPath $policy -Destination $path
     return $path
 }
 
@@ -71,11 +80,12 @@ function Assert-GateRejects {
         [string]$Name,
         [string]$ScenarioPackageDirectory,
         [string]$ScenarioEvidenceDirectory,
+        [string]$ScenarioPolicyPath = $policy,
         [string]$ExpectedPattern
     )
     $message = $null
     try {
-        $gateArguments = @{ PackageDirectory = $ScenarioPackageDirectory; EvidenceDirectory = $ScenarioEvidenceDirectory }
+        $gateArguments = @{ PackageDirectory = $ScenarioPackageDirectory; EvidenceDirectory = $ScenarioEvidenceDirectory; ReleasePolicyPath = $ScenarioPolicyPath }
         if ($packageCache) { $gateArguments.PackageCacheDirectory = $packageCache }
         $output = & $gate @gateArguments 2>&1 | Out-String
         throw "Gate accepted negative scenario '$Name'. Output: $output"
@@ -147,4 +157,18 @@ Update-EvidenceJson (Join-Path $nativeEvidence 'package-provenance-sbom.json') {
 }
 Assert-GateRejects 'native-ownership' $packages $nativeEvidence 'Native ownership drift'
 
-Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=8'
+$advisoryEvidence = New-EvidenceScenario 'known-advisory-finding'
+Update-EvidenceJson (Join-Path $advisoryEvidence 'package-provenance-sbom.json') {
+    param($document)
+    $document.knownAdvisoryFindings = @($document.knownAdvisoryFindings | Select-Object -Skip 1)
+}
+Assert-GateRejects 'known-advisory-finding' $packages $advisoryEvidence 'SBOM alpha preview advisory findings'
+
+$policyScope = New-PolicyScenario 'policy-commercial-scope'
+Update-EvidenceJson $policyScope {
+    param($document)
+    $document.profiles[0].distributionScope = 'commercial-release'
+}
+Assert-GateRejects 'policy-commercial-scope' $packages $evidence $policyScope 'Alpha preview policy distribution scope is invalid'
+
+Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=10'
