@@ -28,7 +28,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(family: "paddle-ocr-cls", includePreview: false)).Count);
             Assert.AreEqual(ModelCatalogStatus.External, catalog.Document.Entries[0].Status);
             Assert.IsFalse(catalog.Document.Entries[0].Source!.RedistributionAllowed);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
     }
 }

@@ -778,7 +778,16 @@ if ($qwenModelFile.Count -ne 1) { throw 'The exact Qwen GGUF manifest must conta
 $officialCatalogPath = Join-Path $repository 'src\DeploySharp.ModelFactory\catalog\deploysharp-official-catalog.json'
 $officialCatalog = Get-Content -LiteralPath $officialCatalogPath -Raw | ConvertFrom-Json -AsHashtable
 $officialEntries = @($officialCatalog.entries)
-if ($officialEntries.Count -ne 0) { throw 'The official model catalog is not empty.' }
+if ($officialEntries.Count -ne 1) { throw "The official model catalog must contain exactly one published alpha-preview entry; found $($officialEntries.Count)." }
+$officialQwen = @($officialEntries | Where-Object { $_.modelId -eq 'llm/qwen2.5-0.5b-instruct-q4-k-m' })
+if ($officialQwen.Count -ne 1) { throw 'The published Qwen alpha-preview catalog entry is missing.' }
+if ([string]$officialCatalog.catalogRevision -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].status -ne 'preview' -or -not [bool]$officialQwen[0].source.redistributionAllowed -or [string]$officialQwen[0].source.licenseExpression -ne 'Apache-2.0' -or [string]$officialQwen[0].release.tag -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].release.commit -ne 'd8c4ffaed3684d120f80dec832c74a1a83e562a5') {
+    throw 'The published Qwen alpha-preview catalog provenance drifted.'
+}
+$officialQwenAssets = @($officialQwen[0].artifacts[0].assets)
+if ($officialQwen[0].artifacts.Count -ne 1 -or $officialQwenAssets.Count -ne 7 -or @($officialQwenAssets | Where-Object { $_.assetId -eq 'qwen-model' -and $_.size -eq 491400032 -and $_.sha256 -eq '74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db' }).Count -ne 1) {
+    throw 'The published Qwen alpha-preview catalog assets drifted.'
+}
 $modelLicenses = @([ordered]@{
     modelId = $qwenManifest.modelId
     ownership = 'external-model'

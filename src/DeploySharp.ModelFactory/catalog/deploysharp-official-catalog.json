@@ -1,7 +1,142 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-08-04T00:00:00.0000000Z",
-  "catalogRevision": "bootstrap.1",
+  "generatedAt": "2026-08-17T00:00:00.0000000Z",
+  "catalogRevision": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
   "sourceRepository": "https://github.com/guojin-yan/DeploySharp",
-  "entries": []
+  "entries": [
+    {
+      "modelId": "llm/qwen2.5-0.5b-instruct-q4-k-m",
+      "name": "Qwen2.5 0.5B Instruct Q4_K_M",
+      "family": "qwen2.5",
+      "task": "language-generation-and-embedding",
+      "modelVersion": "hf-9217f5db-q4-k-m",
+      "status": "preview",
+      "description": "Public alpha-preview GGUF bundle with source, SHA-256, and local LLamaSharp CPU runtime evidence.",
+      "source": {
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "projectUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67",
+        "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+        "author": "Qwen Team / Alibaba Cloud",
+        "copyright": "Copyright holders identified by the upstream Apache-2.0 distribution",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "source/LICENSE",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+        "commit": "d8c4ffaed3684d120f80dec832c74a1a83e562a5"
+      },
+      "artifacts": [
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "compatibleBackends": ["llamasharp"],
+          "precision": "mixed-integer",
+          "quantization": "q4-k-m",
+          "portable": true,
+          "manifestAssetId": "qwen-modelpack",
+          "bundleRole": "language-model",
+          "bundleVersion": "hf-9217f5db-q4-k-m",
+          "capabilities": ["language-generation", "embedding"],
+          "tokenizerId": "qwen2-gpt2-151936",
+          "vocabularyMode": "qwen2-bpe",
+          "embeddingDimension": 896,
+          "language": "multilingual",
+          "promptTemplateId": "qwen-chatml",
+          "generationConfigId": "qwen2.5-default",
+          "generationMode": "sampling",
+          "contextLength": 32768,
+          "assets": [
+            {
+              "assetId": "qwen-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
+              "relativePath": "qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
+              "size": 4345,
+              "sha256": "9de42e490ca9d9a1c99248bbd03c096a5503552a121f80509fc9fb022f924c3f",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-model",
+              "kind": "model",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+              "relativePath": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+              "size": 491400032,
+              "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+              "mediaType": "application/octet-stream",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-config",
+              "kind": "other",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.config.json",
+              "relativePath": "source/config.json",
+              "size": 659,
+              "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-generation-config",
+              "kind": "other",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.generation-config.json",
+              "relativePath": "source/generation_config.json",
+              "size": 242,
+              "sha256": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-tokenizer-config",
+              "kind": "other",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.tokenizer-config.json",
+              "relativePath": "source/tokenizer_config.json",
+              "size": 7305,
+              "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.LICENSE",
+              "relativePath": "source/LICENSE",
+              "size": 11343,
+              "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "qwen-source-readme",
+              "kind": "other",
+              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.README.gguf.md",
+              "relativePath": "source/README.gguf.md",
+              "size": 4856,
+              "sha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999",
+              "mediaType": "text/markdown",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "Qwen official GGUF publication",
+            "exporterVersion": "llama.cpp-compatible",
+            "sourceRevision": "9217f5db79a29953eb74d5343926648285ec7e67",
+            "notes": "Direct upstream Q4_K_M GGUF bundle; no DeploySharp conversion."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/models-qwen2.5-0.5b-instruct-q4-k-m.md"
+    }
+  ]
 }

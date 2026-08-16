@@ -21,8 +21,8 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual("1.0", ModelCatalogSchema.Version);
             using (JsonDocument schema = JsonDocument.Parse(ModelCatalogSchema.GetJson())) Assert.IsFalse(schema.RootElement.GetProperty("additionalProperties").GetBoolean());
             ValidatedModelCatalog official = OfficialModelCatalog.Load();
-            Assert.AreEqual("bootstrap.1", official.CatalogRevision);
-            Assert.AreEqual(0, official.Document.Entries.Count);
+            Assert.AreEqual("models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1", official.CatalogRevision);
+            Assert.AreEqual(1, official.Document.Entries.Count);
         }
 
         [TestMethod]
@@ -128,7 +128,7 @@ namespace DeploySharp.ModelFactory.Tests
             CollectionAssert.AreEqual(new[] { "ocr.detector.onnx", "ocr.recognizer.onnx" }, onnxRuntime.Select(item => item.Artifact.ArtifactId).ToArray());
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-recognition", includePreview: false)).Count);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]
@@ -152,7 +152,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "openvino-ir", backend: "openvino", includePreview: true)).Count);
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", includePreview: false)).Count);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]
@@ -174,7 +174,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "onnx", backend: "openvino", includePreview: true)).Count);
             Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "openvino-ir", backend: "openvino", includePreview: true)).Count);
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "optical-character-orientation", format: "openvino-ir", backend: "onnxruntime", includePreview: true)).Count);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

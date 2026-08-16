@@ -40,7 +40,7 @@ if ($rows -eq 0) {
 }
 
 $lines.Add('')
-$lines.Add('The catalog remains empty until exact model/test assets pass provenance, redistribution-license, official-fidelity and Release review and are actually published. / 在精确模型/测试资产通过来源、再分发许可证、官方保真与 Release 复核并实际发布前，目录保持为空。')
+$lines.Add('The catalog lists only models actually published in an immutable GitHub Release with source, license, exact size, and SHA-256 metadata. Preview entries require an explicit `includePreview: true` query. / 目录仅列出已在不可变 GitHub Release 中实际发布，且带有来源、许可证、精确大小与 SHA-256 元数据的模型。预览条目须在查询中显式设置 `includePreview: true`。')
 $content = ($lines -join "`n") + "`n"
 
 if ($Check) {

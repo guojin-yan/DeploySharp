@@ -17,9 +17,10 @@ var options = new ModelFactoryOptions(
 
 using var factory = new ModelFactoryClient(catalog, options);
 ModelSelection selection = factory.Select(new ModelQuery(
-    modelId: "organization/model",
+    modelId: "llm/qwen2.5-0.5b-instruct-q4-k-m",
     backend: "llama-sharp",
-    format: "gguf"));
+    format: "gguf",
+    includePreview: true));
 
 var progress = new Progress<ModelDownloadProgress>(value =>
     Console.WriteLine($"{value.AssetId}: {value.Stage} {value.ReceivedBytes}/{value.TotalBytes}"));
@@ -28,9 +29,9 @@ MaterializedModel model = await factory.GetModelAsync(selection, progress);
 var coreArtifacts = model.Package.ToCoreArtifacts();
 ```
 
-The bundled official catalog is intentionally empty until a model, test input, and reproducible expected result pass redistribution review and a real immutable Release is explicitly approved. Applications can load their own catalog with `ModelCatalogJsonSerializer` or download a strict snapshot with `ModelCatalogClient.LoadAsync`. / 在模型、测试输入和可复现预期结果通过再分发审核且真实不可变 Release 获得明确批准前，内置官方目录有意保持为空。应用可以使用 `ModelCatalogJsonSerializer` 加载自己的目录，或使用 `ModelCatalogClient.LoadAsync` 下载严格快照。
+The bundled official catalog currently contains one Qwen2.5 0.5B Instruct Q4_K_M alpha-preview entry. Its immutable GitHub Release assets include the ModelPack manifest, GGUF, sidecars, upstream license, exact sizes, and SHA-256 values. `includePreview: true` opts into this alpha entry. Applications can also load their own catalog with `ModelCatalogJsonSerializer` or download a strict snapshot with `ModelCatalogClient.LoadAsync`. / 内置官方目录当前包含一个 Qwen2.5 0.5B Instruct Q4_K_M alpha 预览条目；其不可变 GitHub Release 资产包含 ModelPack 清单、GGUF、Sidecar、上游许可证、精确大小与 SHA-256。设置 `includePreview: true` 即显式选择该 alpha 条目；应用也可通过 `ModelCatalogJsonSerializer` 加载自有目录，或以 `ModelCatalogClient.LoadAsync` 下载严格快照。
 
-The development-time inventory at `eng/models/inventory/development-model-inventory.json` records every Stage 1-29 model and its metadata/upload/download state. It is not a downloadable catalog: all current structured manifests declare `redistributionAllowed:false`. Before planning any upload, also read the external round-closeout plan at `E:\GitSpace\DeploySharp-V2.0\plan\开发计划-轮次收口清单.md`. / 开发清单记录阶段 1-29 的模型及元数据/上传/下载状态，但它不是可下载目录；当前全部结构化 Manifest 均禁止再分发。规划上传前还必须阅读仓库外的 `E:\GitSpace\DeploySharp-V2.0\plan\开发计划-轮次收口清单.md`。
+The development-time inventory at `eng/models/inventory/development-model-inventory.json` remains a record of local/external candidates, not a replacement for the official catalog. The published Qwen preview uses the separate release ModelPack at `eng/models/llm/releases/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json`. / 开发清单仍是本地/外部候选的记录，不能替代官方目录；已发布的 Qwen 预览使用独立的 Release ModelPack：`eng/models/llm/releases/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json`。
 
 ## Query and Preview entries / 查询与 Preview 条目
 

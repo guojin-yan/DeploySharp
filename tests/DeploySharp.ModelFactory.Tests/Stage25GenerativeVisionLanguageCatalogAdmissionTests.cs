@@ -36,7 +36,7 @@ namespace DeploySharp.ModelFactory.Tests
 
             ValidatedModelCatalog roundTrip = ModelCatalogJsonSerializer.Deserialize(ModelCatalogJsonSerializer.Serialize(catalog));
             Assert.IsTrue(roundTrip.Document.Entries.Single().Artifacts.All(value => value.VisionBackbone == "vit-base-patch16-384" && value.KvCacheSchemaId == "none-full-prefix-v1"));
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

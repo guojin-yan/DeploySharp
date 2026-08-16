@@ -38,7 +38,7 @@ namespace DeploySharp.ModelFactory.Tests
                 Assert.IsFalse(entry.Source!.RedistributionAllowed);
                 Assert.IsNull(entry.Release);
             }
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         private static string ToFamily(string rowName)

@@ -39,7 +39,7 @@ namespace DeploySharp.ModelFactory.Tests
             CollectionAssert.AreEqual(new[] { "vision-projector", "token-embedding", "prefill-kv-decoder" }, selected.Artifacts.Select(value => value.BundleRole).ToArray());
             ValidatedModelCatalog roundTrip = ModelCatalogJsonSerializer.Deserialize(ModelCatalogJsonSerializer.Serialize(catalog));
             Assert.IsTrue(roundTrip.Document.Entries.Single().Artifacts.All(value => value.ImageCount == 1 && value.ContextLength == 6144));
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

@@ -20,7 +20,7 @@ namespace DeploySharp.ModelFactory.Tests
             ModelCatalogArtifact roundTrip = ModelCatalogJsonSerializer.Deserialize(ModelCatalogJsonSerializer.Serialize(catalog)).Document.Entries.Single().Artifacts.Single();
             Assert.AreEqual(identity.Vad, roundTrip.VadId);
             Assert.AreEqual(identity.Speaker, roundTrip.SpeakerId);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

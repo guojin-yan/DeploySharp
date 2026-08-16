@@ -24,5 +24,7 @@
     <Content Include="..\..\eng\models\sam\sam-family-support.json" Link="fixtures\sam-family-support.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\open-vocabulary\open-vocabulary-family-support.json" Link="fixtures\open-vocabulary-family-support.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\vision-language\vision-language-family-support.json" Link="fixtures\vision-language-family-support.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\llm\manifests\qwen2.5-0.5b-instruct-q4-k-m.modelpack.json" Link="fixtures\qwen2.5-0.5b-instruct-q4-k-m.external.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\llm\releases\qwen2.5-0.5b-instruct-q4-k-m.modelpack.json" Link="fixtures\qwen2.5-0.5b-instruct-q4-k-m.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

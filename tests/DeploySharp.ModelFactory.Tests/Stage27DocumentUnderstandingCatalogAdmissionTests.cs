@@ -39,7 +39,7 @@ namespace DeploySharp.ModelFactory.Tests
             ValidatedModelCatalog roundTrip = ModelCatalogJsonSerializer.Deserialize(ModelCatalogJsonSerializer.Serialize(catalog));
             Assert.IsTrue(roundTrip.Document.Entries.Single().Artifacts.All(value => value.PageCount == 1 && value.ContextLength == 768));
             Assert.IsTrue(roundTrip.Document.Entries.Single().Artifacts.All(value => value.SchemaId == "cord-v2.donut-tags.v1" && value.OcrOwnership == "ocr-free" && value.ProcessorId == "naver.donut.cord-v2.processor"));
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

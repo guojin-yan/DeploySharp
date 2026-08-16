@@ -32,7 +32,7 @@ namespace DeploySharp.ModelFactory.Tests
             string json = ModelCatalogJsonSerializer.Serialize(catalog);
             ValidatedModelCatalog roundTrip = ModelCatalogJsonSerializer.Deserialize(json);
             Assert.AreEqual("clip-bpe-77", roundTrip.Document.Entries.Single().Artifacts.Single(value => value.BundleRole == "detector").TokenizerId);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

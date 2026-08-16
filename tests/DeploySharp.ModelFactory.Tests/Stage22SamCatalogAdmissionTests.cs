@@ -26,7 +26,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(2, bundle.Artifacts.Count);
             CollectionAssert.AreEquivalent(new[] { "image-encoder", "prompt-mask-decoder" }, bundle.Artifacts.Select(artifact => artifact.BundleRole).ToArray());
             Assert.AreEqual(2, ModelCatalogQuery.Select(catalog, new ModelQuery(family: "sam", includePreview: true, modelVersion: "vit-b-dca509f", capability: "point")).Count);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]

@@ -20,7 +20,7 @@ namespace DeploySharp.ModelFactory.Tests
             ValidatedModelCatalog roundTrip = ModelCatalogJsonSerializer.Deserialize(ModelCatalogJsonSerializer.Serialize(catalog));
             Assert.IsTrue(roundTrip.Document.Entries.Single().Artifacts.All(value => value.ImagePreprocessingId == "official-rgb-bicubic-224" && value.ScoreSemantics == "clip-candidate-softmax" && value.Language == "en" && value.Resolution == "224x224"));
             Assert.AreEqual(0, ModelCatalogQuery.SelectBundles(catalog, new ModelBundleQuery(family: "clip", includePreview: true, language: "multilingual")).Count);
-            Assert.AreEqual(0, OfficialModelCatalog.Load().Document.Entries.Count);
+            OfficialCatalogAssertions.Excludes(catalog);
         }
 
         [TestMethod]
