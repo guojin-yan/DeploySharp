@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -139,6 +140,43 @@ namespace DeploySharp.ModelFactory.Tests
                 return response;
             }
             finally { Interlocked.Decrement(ref _active); }
+        }
+    }
+
+    internal sealed class GitHubReleaseAssetRedirectHandler : HttpMessageHandler
+    {
+        private readonly Dictionary<string, byte[]> _responses;
+        private readonly string _redirectHost;
+        private int _requestCount;
+
+        public GitHubReleaseAssetRedirectHandler(Dictionary<string, byte[]> responses, string redirectHost = "release-assets.githubusercontent.com")
+        {
+            _responses = responses;
+            _redirectHost = redirectHost;
+        }
+
+        public int RequestCount => Volatile.Read(ref _requestCount);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _requestCount);
+            Uri requestUri = request.RequestUri!;
+            if (string.Equals(requestUri.Host, "github.com", StringComparison.OrdinalIgnoreCase))
+            {
+                var redirect = new Uri("https://" + _redirectHost + "/deploysharp-tests" + requestUri.AbsolutePath);
+                var response = new HttpResponseMessage(HttpStatusCode.Found) { RequestMessage = request, Content = new ByteArrayContent(Array.Empty<byte>()) };
+                response.Headers.Location = redirect;
+                return Task.FromResult(response);
+            }
+
+            if (string.Equals(requestUri.Host, _redirectHost, StringComparison.OrdinalIgnoreCase))
+            {
+                string fileName = requestUri.Segments[requestUri.Segments.Length - 1];
+                KeyValuePair<string, byte[]> source = _responses.Single(pair => pair.Key.EndsWith("/" + fileName, StringComparison.Ordinal));
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new ByteArrayContent(source.Value) });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound) { RequestMessage = request, Content = new ByteArrayContent(Array.Empty<byte>()) });
         }
     }
 

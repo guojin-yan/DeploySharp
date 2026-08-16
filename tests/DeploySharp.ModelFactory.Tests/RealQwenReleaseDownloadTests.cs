@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.ModelFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,8 +27,7 @@ namespace DeploySharp.ModelFactory.Tests
                 includePreview: true)).Single();
 
             using var directory = new TestDirectory();
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(15) };
-            using var factory = new ModelFactoryClient(catalog, new ModelFactoryOptions(directory.Path, requestTimeout: TimeSpan.FromMinutes(15)), httpClient);
+            using var factory = new ModelFactoryClient(catalog, new ModelFactoryOptions(directory.Path, requestTimeout: TimeSpan.FromMinutes(15)));
             MaterializedModel materialized = await factory.GetModelAsync(selection);
 
             string modelPath = Path.Combine(materialized.PackageRoot, "qwen2.5-0.5b-instruct-q4_k_m.gguf");

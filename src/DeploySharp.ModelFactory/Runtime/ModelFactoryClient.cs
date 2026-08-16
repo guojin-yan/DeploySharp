@@ -32,7 +32,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         private readonly string _managedRoot;
         private bool _disposed;
 
-        /// <summary>Initializes a ModelFactory client. A supplied HttpClient remains application-owned. / 初始化 ModelFactory 客户端；传入的 HttpClient 仍由应用所有。</summary>
+        /// <summary>Initializes a ModelFactory client. A supplied HttpClient remains application-owned and must disable automatic redirects for immutable Release assets. / 初始化 ModelFactory 客户端；传入的 HttpClient 仍由应用所有，且对不可变 Release 资产必须禁用自动重定向。</summary>
         public ModelFactoryClient(ValidatedModelCatalog catalog, ModelFactoryOptions options, HttpClient? httpClient = null)
         {
             Catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
@@ -351,55 +351,49 @@ namespace JYPPX.DeploySharp.ModelFactory
             {
                 using (var timeoutSource = new CancellationTokenSource(_options.RequestTimeout))
                 using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
-                using (var request = new HttpRequestMessage(HttpMethod.Get, asset.DownloadUri))
+                using (HttpResponseMessage response = await SendAssetRequestAsync(asset, modelId, artifactId, linked.Token).ConfigureAwait(false))
                 {
-                    request.Headers.TryAddWithoutValidation("User-Agent", _options.UserAgent);
-                    using (HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token).ConfigureAwait(false))
+                    if (!response.IsSuccessStatusCode)
                     {
-                        Uri? finalUri = response.RequestMessage?.RequestUri;
-                        if (finalUri == null || finalUri != asset.DownloadUri || IsRedirect(response.StatusCode)) ThrowHttp("HTTP redirects are not allowed for immutable assets.", asset, modelId, artifactId, response.StatusCode);
-                        if (!response.IsSuccessStatusCode)
+                        if (IsTransient(response.StatusCode) && attempt <= _options.MaximumRetries)
                         {
-                            if (IsTransient(response.StatusCode) && attempt <= _options.MaximumRetries)
-                            {
-                                throw new TransientHttpException(response.StatusCode, GetRetryDelay(response, attempt));
-                            }
-
-                            ThrowHttp("Asset HTTP request failed.", asset, modelId, artifactId, response.StatusCode);
+                            throw new TransientHttpException(response.StatusCode, GetRetryDelay(response, attempt));
                         }
 
-                        long? contentLength = response.Content.Headers.ContentLength;
-                        if (contentLength.HasValue && contentLength.Value != asset.Size) ThrowIntegrity("HTTP Content-Length does not match the catalog.", asset, modelId, artifactId, finalPath);
-                        Stream input = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                        using (var output = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1024 * 1024, true))
-                        using (SHA256 sha = SHA256.Create())
-                        {
-                            var buffer = new byte[1024 * 1024];
-                            long received = 0;
-                            var stopwatch = Stopwatch.StartNew();
-                            while (true)
-                            {
-                                int read = await input.ReadAsync(buffer, 0, buffer.Length, linked.Token).ConfigureAwait(false);
-                                if (read == 0) break;
-                                received = checked(received + read);
-                                if (received > asset.Size || received > _options.MaximumAssetBytes) ThrowIntegrity("Downloaded bytes exceed the catalog or configured limit.", asset, modelId, artifactId, temporaryPath);
-                                sha.TransformBlock(buffer, 0, read, buffer, 0);
-                                await output.WriteAsync(buffer, 0, read, linked.Token).ConfigureAwait(false);
-                                double speed = stopwatch.Elapsed.TotalSeconds <= 0 ? 0 : received / stopwatch.Elapsed.TotalSeconds;
-                                progress?.Report(new ModelDownloadProgress(asset.AssetId!, ModelDownloadStage.Downloading, received, asset.Size, attempt, speed));
-                            }
+                        ThrowHttp("Asset HTTP request failed.", asset, modelId, artifactId, response.StatusCode);
+                    }
 
-                            sha.TransformFinalBlock(new byte[0], 0, 0);
-                            progress?.Report(new ModelDownloadProgress(asset.AssetId!, ModelDownloadStage.Verifying, received, asset.Size, attempt, 0));
-                            if (received != asset.Size) ThrowIntegrity("Downloaded byte size does not match the catalog.", asset, modelId, artifactId, temporaryPath);
-                            string actual = ToHex(sha.Hash!);
-                            if (!string.Equals(actual, asset.Sha256, StringComparison.OrdinalIgnoreCase)) ThrowIntegrity("Downloaded SHA256 does not match the catalog.", asset, modelId, artifactId, temporaryPath);
+                    long? contentLength = response.Content.Headers.ContentLength;
+                    if (contentLength.HasValue && contentLength.Value != asset.Size) ThrowIntegrity("HTTP Content-Length does not match the catalog.", asset, modelId, artifactId, finalPath);
+                    Stream input = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    using (var output = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1024 * 1024, true))
+                    using (SHA256 sha = SHA256.Create())
+                    {
+                        var buffer = new byte[1024 * 1024];
+                        long received = 0;
+                        var stopwatch = Stopwatch.StartNew();
+                        while (true)
+                        {
+                            int read = await input.ReadAsync(buffer, 0, buffer.Length, linked.Token).ConfigureAwait(false);
+                            if (read == 0) break;
+                            received = checked(received + read);
+                            if (received > asset.Size || received > _options.MaximumAssetBytes) ThrowIntegrity("Downloaded bytes exceed the catalog or configured limit.", asset, modelId, artifactId, temporaryPath);
+                            sha.TransformBlock(buffer, 0, read, buffer, 0);
+                            await output.WriteAsync(buffer, 0, read, linked.Token).ConfigureAwait(false);
+                            double speed = stopwatch.Elapsed.TotalSeconds <= 0 ? 0 : received / stopwatch.Elapsed.TotalSeconds;
+                            progress?.Report(new ModelDownloadProgress(asset.AssetId!, ModelDownloadStage.Downloading, received, asset.Size, attempt, speed));
+                        }
+
+                        sha.TransformFinalBlock(new byte[0], 0, 0);
+                        progress?.Report(new ModelDownloadProgress(asset.AssetId!, ModelDownloadStage.Verifying, received, asset.Size, attempt, 0));
+                        if (received != asset.Size) ThrowIntegrity("Downloaded byte size does not match the catalog.", asset, modelId, artifactId, temporaryPath);
+                        string actual = ToHex(sha.Hash!);
+                        if (!string.Equals(actual, asset.Sha256, StringComparison.OrdinalIgnoreCase)) ThrowIntegrity("Downloaded SHA256 does not match the catalog.", asset, modelId, artifactId, temporaryPath);
 #if NET8_0_OR_GREATER
-                            output.Flush(true);
+                        output.Flush(true);
 #else
-                            output.Flush();
+                        output.Flush();
 #endif
-                        }
                     }
                 }
 
@@ -416,6 +410,39 @@ namespace JYPPX.DeploySharp.ModelFactory
             finally
             {
                 if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            }
+        }
+
+        private async Task<HttpResponseMessage> SendAssetRequestAsync(ModelCatalogAsset asset, string? modelId, string? artifactId, CancellationToken cancellationToken)
+        {
+            Uri origin = asset.DownloadUri!;
+            Uri requestUri = origin;
+            bool followedTrustedRedirect = false;
+            while (true)
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+                {
+                    request.Headers.TryAddWithoutValidation("User-Agent", _options.UserAgent);
+                    HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    Uri? finalUri = response.RequestMessage?.RequestUri;
+                    if (IsRedirect(response.StatusCode))
+                    {
+                        Uri? redirectUri = ResolveRedirectUri(requestUri, response.Headers.Location);
+                        response.Dispose();
+                        if (followedTrustedRedirect || redirectUri == null || !IsTrustedGitHubReleaseRedirect(origin, redirectUri)) ThrowHttp("Only one HTTPS redirect from a GitHub Release asset to release-assets.githubusercontent.com is allowed.", asset, modelId, artifactId, response.StatusCode);
+                        requestUri = redirectUri!;
+                        followedTrustedRedirect = true;
+                        continue;
+                    }
+
+                    if (finalUri == null || finalUri != requestUri)
+                    {
+                        response.Dispose();
+                        ThrowHttp("Asset HTTP request was automatically redirected; configure the supplied HttpClient with AllowAutoRedirect=false.", asset, modelId, artifactId, response.StatusCode);
+                    }
+
+                    return response;
+                }
             }
         }
 
@@ -615,6 +642,25 @@ namespace JYPPX.DeploySharp.ModelFactory
         {
             int code = (int)status;
             return code >= 300 && code <= 399;
+        }
+
+        private static Uri? ResolveRedirectUri(Uri requestUri, Uri? location)
+        {
+            if (location == null) return null;
+            return location.IsAbsoluteUri ? location : new Uri(requestUri, location);
+        }
+
+        private static bool IsTrustedGitHubReleaseRedirect(Uri origin, Uri redirectUri)
+        {
+            if (!string.Equals(origin.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(origin.Host, "github.com", StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(redirectUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(redirectUri.Host, "release-assets.githubusercontent.com", StringComparison.OrdinalIgnoreCase)) return false;
+
+            string[] segments = origin.AbsolutePath.Trim('/').Split('/');
+            return segments.Length >= 5
+                && string.Equals(segments[2], "releases", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(segments[3], "download", StringComparison.OrdinalIgnoreCase);
         }
 
         private static Uri? Sanitize(Uri? value)

@@ -47,6 +47,30 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public async Task GitHubReleaseAssetsFollowOneTrustedRedirectAndRejectOtherHosts()
+        {
+            var fixture = new CatalogFixture();
+            using (var directory = new TestDirectory())
+            {
+                var handler = new GitHubReleaseAssetRedirectHandler(fixture.Responses());
+                using var factory = new ModelFactoryClient(fixture.Catalog, Options(directory.Path), new HttpClient(handler));
+                MaterializedModel model = await factory.GetModelAsync(fixture.Selection);
+                Assert.AreEqual(CatalogFixture.ModelId, model.Package.Manifest.ModelId.Value);
+                Assert.IsTrue(await factory.VerifyModelCacheAsync(fixture.Selection));
+                Assert.AreEqual(4, handler.RequestCount);
+            }
+
+            using (var directory = new TestDirectory())
+            {
+                var handler = new GitHubReleaseAssetRedirectHandler(fixture.Responses(), "example.invalid");
+                using var factory = new ModelFactoryClient(fixture.Catalog, Options(directory.Path), new HttpClient(handler));
+                ModelFactoryException exception = await Assert.ThrowsExactlyAsync<ModelFactoryException>(() => factory.GetModelAsync(fixture.Selection));
+                Assert.AreEqual(ModelFactoryDiagnosticCodes.HttpFailure, exception.Diagnostics[0].Code);
+                Assert.AreEqual(1, handler.RequestCount);
+            }
+        }
+
+        [TestMethod]
         public async Task CorruptCacheIsRedownloadedOnlineAndRejectedOffline()
         {
             var fixture = new CatalogFixture();
