@@ -12,8 +12,8 @@
     "name": "DeploySharp",
     "version": "2.0.0-alpha.1",
     "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-    "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-    "repositoryDirty": true
+    "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+    "repositoryDirty": false
   },
   "ownershipScopes": [
     {
@@ -41,16 +41,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 122627,
-      "rawPackageSha256": "9b08a4a9b2993f26d3e776419fc3b849f94904d4d8afa208719b507556b47c73",
-      "semanticPayloadSha256": "f6f6e1a56b919955160e0c4e3f1a483488d4a2b5f670ecee2ef0df783b1f43b8",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 122655,
+      "rawPackageSha256": "910d5c5612f5785b6d76edc1e63c66c8f3b16a3d5863c8afa5f7bd5bc41eeebf",
+      "semanticPayloadSha256": "18fdeab3d1f9d033a8cc6982ea197169651cb0d681f5e89f4c3ce4938f59ae10",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "98344297122e5091205c867262c6b561673a491e32e3df28ec4cd7278c6d91de",
+          "assemblySha256": "1ead380517bc2224558697b753caaf29d93b7befad47b72967a93a6067b9d199",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -116,7 +116,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "6e2905538ddbda39a6518d8605060f752ce6ee0d0792f59d52a2093c010c383a",
+          "assemblySha256": "9535cdd125b308305ad255447198723408f95efa9f5c5eb8cba500741ec1c3a5",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -181,16 +181,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 125613,
-      "rawPackageSha256": "f4f34df24c5e77c63d10b66aee5e8f9e403d90b0953e3d6e7ee13ba9ea2868da",
-      "semanticPayloadSha256": "7e25bb5caa0612faee9b54be5c7cd8ee4658f079e3b2cb9d6e44ba47cccf2fbd",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 125629,
+      "rawPackageSha256": "70f55539f6a740af38ddc10fa40b296c48f7a7284498a52836d590abd8756cbc",
+      "semanticPayloadSha256": "076f5b055984c2d3667581280b1c04f100cf03b49baed77a33988f292e2989f6",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "91320d5c5739f33e49905b3f8ed6177d3ad7d0ace2894dcee254d6fbb03b74cd",
+          "assemblySha256": "5b49acc49880e19d40f2c43b706a51a7a18834855af303782e684840ca52b9a3",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -221,7 +221,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "5eb9ea9a6469623cc8c5f371c911933084c56d9ae2d0c8e85eaecb4525658886",
+          "assemblySha256": "93bdded9c78d50f5658eb0274129b1bef28edbcab7bf45436cbb2087b27415d2",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -259,16 +259,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 371024,
-      "rawPackageSha256": "74cbb1ca98bd7cf4328bdc6a81b3127ba99ab649826392836e93a203d0ad9338",
-      "semanticPayloadSha256": "21a6b397b521fc85f930e770a63064a04f5c9607f97fa92f2effa4f39c9ddb9e",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 370927,
+      "rawPackageSha256": "78acc0857cb604ec6f6dfbb9aba3ec3d808432b43d66e34b75264cb8f83c91c1",
+      "semanticPayloadSha256": "52954bd850e665502002825253cc7e4bc51cffce9cf21f9fe94d983913c69a76",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "99bcbb8c6948b6bcc57c76ea2b6aff966ba6f60ae3ba7eb296f2c8e6c968eaad",
+          "assemblySha256": "ff9d00327cf54624ed3f7e25edf1eec441f04f4c08c7f9eab7fd1b3963b537d1",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -297,7 +297,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "22c5d0ebc2f977f09c6b68a06e49c49ce341db02f9d1ffddc119f8793ab96727",
+          "assemblySha256": "f1bb6ef59a8f624c15337f57f6862b926598ab1c5faaed5735374a51ccdd2488",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -326,7 +326,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "a5527087682c9e325a42e9d5f365593d48779118f5c5357a8c6861704378bf63",
+          "assemblySha256": "91f680e1e2c40d153193395923c37ec9e6c138b36e3e7e13b3de2fe5e9459780",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -355,7 +355,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "ad0666ad50a77ece59249630d9b3a712778f54f119a1e738c67e5e7ee315430a",
+          "assemblySha256": "8456e7fd45d829827df002e9e04b1b14209ce59c833976d9e4865de4792e5452",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -384,7 +384,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "45824c34523662e3c26e99071ffed9f34d83e4be1054bf789ca590753c08157d",
+          "assemblySha256": "d90a42b7dd29204bcd9b577b13041fc60396e5d9ef857bf9123cc5843bd489ab",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -413,7 +413,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "d5d65c13e3e2f2ad81100dd2753e4a4d29f31f6be4952128c2cb25a242886e3b",
+          "assemblySha256": "1b475ec43989e831ded6cfe23c938708a3ffb10e8be3532349ea474153a0e9fa",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -445,7 +445,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "2f58fb393c0a5d0e1a9b7107f2ae8de3a667ed77cd8fa9b7f323616379f491ad",
+          "assemblySha256": "cfea058ea442c486445eb456e332a902ea8a9dbd007c56c3b62d2255e742db21",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -477,7 +477,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "58ac2d24eec0908c65bfa22828bdd8f54e752e813402adae49c049d78d33366d",
+          "assemblySha256": "5294c0911b58083c8b2de7ddf137f0be6498465ab142f462b81ec1c1ac6d0e27",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -509,7 +509,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "eebbc6e62fb3f0d8d5ae40385e24e4785bf2368471df22334aaf8ed9e2390759",
+          "assemblySha256": "aad8025c5a5469bb64d5017695e197e5e07f72296aa300a9f15b40e325c37716",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -545,7 +545,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "8d69882ad642cccd4067a013b58d43976259f6123b89eeebfbed8c89d26a6dd2",
+          "assemblySha256": "238d6ab1d6821b175ae3277fb658a9eda2f7d03a8e0c4935b11c513ead75bb8e",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -577,7 +577,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "02f6e4a3148fd25f1dd3fe4c3ebe197de3b79892bd1391ee07204c799c6401b1",
+          "assemblySha256": "21bb34563a4306033c17232355a77eae5b175ab246c498b6ae90093315185f0c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -608,7 +608,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "20c7369b0981dc93e6a1c599f8b898bdb1477d4f1c09f51968fff166a89bf66e",
+          "assemblySha256": "b7b9739ddf7330d5c038ec88c949d997d66b71699cc5c581ceedb0a489c46918",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -637,7 +637,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "ba22e5d84e9933a1df921bb60254aee78e5fae16e6740468ff063593ae6e1f26",
+          "assemblySha256": "21653e9872ac9c15671a3b0b7a8a69776140c8814a8ab359b96f795cd9f42f2a",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -666,7 +666,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "467577c212344bb428563439ed31f48cf172be3122c442aa6437c1a6645d2b6e",
+          "assemblySha256": "6a3a9e06764afd1eec0969d859b7a992c3ace5facd3c4f2ad4dd1d0d3046252f",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -695,7 +695,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "3fe3b1d58a3f52ec0de8538bfa6ca586083705e0dc0fd8f0241d2e7c6db0555e",
+          "assemblySha256": "2e3f82fafc2635a48a5e726c4e10a22e51e903f29737b0d0f9162d4b6b216903",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -731,16 +731,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 153136,
-      "rawPackageSha256": "1de0b97b89bca6f1066947adf0da0baeb2f858f73998eccb0b972a29a64331d9",
-      "semanticPayloadSha256": "57222823991b52d44b7ce82fa82520baf6a659ebc56b877d9cbb5a915eee082d",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 153172,
+      "rawPackageSha256": "d75411e311e6bd11fde9267767b10faf89c809eeb748285577fb02aabd8f0886",
+      "semanticPayloadSha256": "0f7cdcc52ed34e58fe2b254262b92ed326411b8c1e2ac54085eccdc1a831daf0",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net8.0",
-          "assemblySha256": "4f95387d59ace8d436c30d2c19680f91bd76d13435baca108ff87804d835eb61",
+          "assemblySha256": "c077239ac47ffb65dd26177672c2e797d62384ae906c44c031f768a27027c7ae",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -780,16 +780,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 619766,
-      "rawPackageSha256": "3bdf21180717635f2d2554f2107b1f64d2967f0d237dd4c7a3f01e9069318e7d",
-      "semanticPayloadSha256": "c42a40861fc96d530cc4443f142ef10d88d6a2ac53a4b6b4cb8e6cbb1fddd814",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 619611,
+      "rawPackageSha256": "e661d2a65a0f4317669b21f7b656b5d89281612e0bafc186d2155f0e4ed65088",
+      "semanticPayloadSha256": "bcd984f5e9bb3bb78ca2fb463d0b2c1c1583b31d20b3f56e880d275629e73a91",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "86dbd99bc7f3d0a807ef69b76b7da5bf9fa2e93ac6359767fcbcf12aeabe551e",
+          "assemblySha256": "d6b8f555c901f12f2d54ffc1b1f4d071294924d3020d1bffe035914e80e35ff5",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net46/1.0.3",
@@ -801,7 +801,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "0242c0528219c71fb6805e16a7d87d0e52db98d738e346c7cf276fc6073e827e",
+          "assemblySha256": "e90103851dde1c06357fb3575ca06b5253913a799613ed7bc8039ad4ebb57dfd",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net461/1.0.3",
@@ -813,7 +813,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "7b38f56bf0583c8714b1b8e0ea1085eeea5e1f0effa0bc81ccc781aa4bb7ab98",
+          "assemblySha256": "faf2fc30916f368a97b63ec93e9d57b46e5074fa3a5d05574ddc399a217d8d5c",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net462/1.0.3",
@@ -825,7 +825,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "3158eecdd82931cbc8f258873554360b50e583da58d5f6979434c0f056d75dbe",
+          "assemblySha256": "69362fbed23d65b92c4246e9527541b6120dcc556478fd884185423979b8f7c0",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net47/1.0.3",
@@ -837,7 +837,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "20a86314f92840e08287bf8dbc8a79c665433a68f2a1907825109ca03d10c194",
+          "assemblySha256": "1967924fe5a9db3d9e8a5b84287debf2801664ffa3cf30651a108d164bf7b2f4",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net471/1.0.3",
@@ -849,7 +849,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "e8e4ca56063ab6b9f0b10611989bbada640bf6ce1d21b4c661d02c7b42ef59cf",
+          "assemblySha256": "b1fd77f798e6c420bf41ddc8f01c57376d66d5d90af95ad020533fd01b7c6818",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net472/1.0.3",
@@ -861,7 +861,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "aed7b9d61d85aaf16640401fbf1b5c2502635af476c519b278313ed6ebc46547",
+          "assemblySha256": "babd5ef396e30bd912b588429fd94bbfc83d08fd112d5278ed7518c9618f4946",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net48/1.0.3",
@@ -873,7 +873,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "f0e08fce1aafabca83886faeb3b5ba4350688b8ff2a95d0742d1e5b34b2ef8ea",
+          "assemblySha256": "2af085375df3d8a906457f54735afe36c5dea3029a8de93c1d5923900b84e540",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net481/1.0.3",
@@ -885,7 +885,7 @@
         },
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "9446f2f755a96c5b852b33f863a9d75bf6407b162b7d8d795c2b15b04182917f",
+          "assemblySha256": "b2b44fb76b24fcbede003c1ad10dcd74283a703bf2492bf2ea77dfce7d77890e",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETCore.Platforms/1.1.0",
@@ -897,7 +897,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "a9f4f2a15817e7e51a4a1cd1b6ac85f12e728f25b4b13a08a3ab41e677073270",
+          "assemblySha256": "8045117641d6d4582a95483f2c192f32525d53cf1b8d27dac74254f782091d3f",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -911,7 +911,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "6af0f5d05ce0c3dad40006714440ce997581c0d61a059368c9b3a5a58693aeef",
+          "assemblySha256": "11ce035c780ca2a31079447304bc3a7a7706749802384a02c6617c55a56f625c",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -923,7 +923,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "bb3e8c2bc760be448e46f21dbcdfde028cc325de56218a73758dc70d2d697220",
+          "assemblySha256": "802934e063bd444c07465a9bb7d5b064d5cb21bab00967ea1ee31d8632fe0f81",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -935,7 +935,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "11668c75331e1858ebc87cb17e10cabd99f11c0e56a6aedb62e2e6a39db67631",
+          "assemblySha256": "d720aa813a4c0a53dd449489a6e7cdc73dce358a5e52f2fd3b232058ac3f88af",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -946,7 +946,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "ddb17001a58f7be250ae344c333ca56ddc8e8142ffc7cad3e7acdce4a897e76b",
+          "assemblySha256": "a8d3850911d969a83f56ce5f85c14a496b420314401e96f7b8f003fe0cc41ff8",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -957,7 +957,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "dad8ddee520130bc4e27d40a558a4e924f94e422df4ae3646866e08b1ea25a80",
+          "assemblySha256": "cc662bfac784f564b0d45c994d83b69860ec8ea1de2d6379a9c50f0e366ee624",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -968,7 +968,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "da75282b0080cb601d912b59175b18ed68fcd050eb83e7ffb7a3010c02a1dc40",
+          "assemblySha256": "7a4a15db799ece59fac70fccf0f22b66c22cc26aa90fe8a0fff8850c3ce6b14b",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -986,16 +986,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 221167,
-      "rawPackageSha256": "d979bb7ab313e0df005bfbd9008e8ff8cf958b03bc6cccac0d63b4327823014f",
-      "semanticPayloadSha256": "489fe15d7987726dcb20b408b12bbd9fb8d7c8c2e74cfc1a5bc93abe133421af",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 221099,
+      "rawPackageSha256": "04a603b3ebf9bd687771f62894f1d1c50a77019c208f9ad512f649ca867ad092",
+      "semanticPayloadSha256": "5b61d69f9dba6970961dfa96f3b27646b84919b30ffda0cdc4c18a40f8410e92",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "ec5def473b5e66176cbf4723d7bae90c1df12555a6768f677c849cb32338560b",
+          "assemblySha256": "4e6bbc03f9e5c7cb38d6df527d1688dbc24eb57215fb43d2e7d2d104280c5d29",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1024,7 +1024,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "7bded948c2656f31b0dd70162b4523415150fae1f8ad13d6b2ddf503c4f066b9",
+          "assemblySha256": "51bcc8267ff5ec4c16170a20940861799b3a4a4f57ad9cf45379745ef0ee7c81",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1054,7 +1054,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "733bd5b8a094013ca5d05aa40b2ab4d85768dd6e14c788905a171ca5892ff128",
+          "assemblySha256": "d6d6c19283a6d6d8be4940307d28792dae5448646fd4bbe3bbae51f2dce4417a",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1080,7 +1080,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "cbebe9089f5af364fad137771c7177a5a679cb0d09c50831354fc26efacd01ae",
+          "assemblySha256": "7ca05777f64b123357af70c6d3ac8006a3faba951cf059430349663529b6d227",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1106,7 +1106,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "ccdb6e00212bbb96204d21da80a2d33985d20d9ff0b93a36a88c565b7d9c9f96",
+          "assemblySha256": "2a7fd8d1329ba9aabba334aefbbb5abb21c37055a08b66f59691c9f592e74f02",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1132,7 +1132,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "2fc7cdc16df066c0abe687faa39f6873302daecd5d410c267ac32e18547d1014",
+          "assemblySha256": "6a9d2bc81daa583f32a29b5b7bb9fcc8c00b1daf2ed630ea634bf9acfd403bf4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1158,7 +1158,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "0b50090220852a8d4f404364d7b157e52b3cd4dd943410dc3a1839a343792342",
+          "assemblySha256": "550c9b300e913c91f1b32a11bad5abdcf1b736c37262a5d4ed666e9f9ba3bfab",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1184,7 +1184,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "cef3cbc469c51cc6b53b0fa844650adf84d8adea234d98f118653164de77f9ad",
+          "assemblySha256": "028e7588da2e25bda2fe38d272b4f8661c5eaa3850e330d3d15a24a7223b9269",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1217,16 +1217,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 373917,
-      "rawPackageSha256": "f6b444cf6a39f160b2dd40966d1add377ea389062515c20562e938d91604055b",
-      "semanticPayloadSha256": "c5beff57a80a2a806fd13aa8818efc34a8f70866a2903020f54ccc6c2d6f9d5e",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 373906,
+      "rawPackageSha256": "5c29e15796ac621c7966e7e7443857f8d1747971fe1a32acdffe09eb62b8489f",
+      "semanticPayloadSha256": "687716fd2cbc42b427b4dd4363f3bf8361331d8485e59f489e957625c4c98459",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "c02b0b93668cdaf090061f165974dcd04f87e879de8e84bb7831110371690f14",
+          "assemblySha256": "49e9a20dd912b174b5ca5cc16b820d920845aadd22a20e93f946873216832dc4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1272,7 +1272,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "f924ad2af5b89846beceb88616814b7483d6998a8750bd10a3d320c59fdb5432",
+          "assemblySha256": "54adedc8996a2ccf276baac716e36a7892a5e6abbe7272a5085cbf5884fbb886",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1312,7 +1312,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "19cf7a0af4a345931dfaf1245020d3e50a37eae5dbe7ee5e511059017333c1fb",
+          "assemblySha256": "95b7c7394437589051c5fa10a5b59f5ca309d46a8a92dc1828d3479fad750cc9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1352,7 +1352,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "38b1d2d88f389cb5959fc0da27fe56e579565bef1c5e0e76177edc06076bf6c7",
+          "assemblySha256": "d556d7eff5b8b6ad8fc4e28531d2759a15b8c4161f8682f3b463ee9175b21698",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1392,16 +1392,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 234737,
-      "rawPackageSha256": "07786082c96da42f2a13ccb598626e002e1f0ceb435b1057e279c12b9e4aa33b",
-      "semanticPayloadSha256": "3f0bd0aff8d28c7d5e23c46ab1e09c1caa486f00821320ea22aae48e02ef2d0e",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 234734,
+      "rawPackageSha256": "ae5d875df23c9b9135bb308c762c2568dfa510f0c60ce48efa7cbe5268b7296c",
+      "semanticPayloadSha256": "f55ea6c617722032403db3b138b6efb62f1253069c23f55be13972f7fc19b0a4",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "3859ee451322c54c75a3d306cf159ebf12d84c8530e3fa63124a0f61e9ba1d20",
+          "assemblySha256": "21a44843a7defe4a4a4ffa6f9d82aad4321418c76bcda8c34ab8ade58f7ee429",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1441,7 +1441,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "4246fb98e406618fd37972e38320c2e6d527a1eb99fcbd4b4ce76e2e7b240afb",
+          "assemblySha256": "04eb3dbb34f09522fd9009798526eaf2933f87f653a41c249154a082b16764e8",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1469,7 +1469,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "9810968089bde89734b2015ed691992d71af55f04da9a7466f6c82698916c478",
+          "assemblySha256": "86a4d6fd0882f78595150fd15669713d129ef45b78fcf576f3ed720ad67bc726",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1497,7 +1497,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "4ea2f5b88adba662c788757f8b737eca572cfb54cca2c99e63678e078c719964",
+          "assemblySha256": "3f03b05712a1d75628b6aab37ae17a6c02448561fe27f2ddbff08dfeefa1ddfb",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1525,16 +1525,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 660401,
-      "rawPackageSha256": "498efa5fafd83c7f0444b5fe2d6c2984dafd48709cb2871e64e1edd253466ea9",
-      "semanticPayloadSha256": "c2a2604e62710b918eaca0b45ee8f23d09d4b295a63c558567f6a5aaea17f1b0",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 660294,
+      "rawPackageSha256": "f6b1c014aba6e738334663baf3e6c208eec8eb98c578d15bd1dc35068325fa8e",
+      "semanticPayloadSha256": "987286b5eff0913732526cfe0e88a8b2b1a030f1a75031cb07d939e70ceb4b36",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "45bd2bb413b1b361d823c0d6b103b618b9ef6572e2f953099ae00acd085b9661",
+          "assemblySha256": "00f77c39f813b608bb349ffb5b425b6248fc234025f0d0d3b92d0ea8ddbb6171",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1563,7 +1563,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "97cf81606111f354f88e8898e0dde3fff7f2cf3873effa0c61b40f5870463e7a",
+          "assemblySha256": "800ddfcb8cccf23a624ff9246e43d2d49dafe00695a6b444c9f2f0bf7b4f6a4c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1592,7 +1592,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "41d5f88bb2393f570903250f8a34829dbc910449a9f6aaa71922592add9c125d",
+          "assemblySha256": "da55a7bc934158ae0217d7ce91cda6f979d3973e03c60cea3d73179cd751ecca",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1621,7 +1621,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "a6e49eb728e39f7dad6506f86b7761aa8e4d0053120fb665a59adb214e6ffbf5",
+          "assemblySha256": "d15ae5e633b438463c44b79a3a0e7f6d9f8d8bd077b3ed0f49b685bc6fe882df",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1650,7 +1650,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "ba3ae5b38149040eed91bec385a5a39870f3078a95f58704d55f2e959502788c",
+          "assemblySha256": "8f02dee24d8caeef9017780831e88e5ca2351f665d591c08169d613d708e9023",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1679,7 +1679,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "43050c621f9f62d741a63747658912b7d28232cfa3a390dc872a60b6b7bf2aa2",
+          "assemblySha256": "55270af15dbfaee9f364b98a87f2ac40a40d913dcfe9c064b8da460362325d1a",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1708,7 +1708,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "ea40ee7ad44038a9fc83bdb55334b95accd976d76508c83848c2128fc1d97229",
+          "assemblySha256": "f7d6c45f709ff1ffc8ed664b540ad338987f468eab371bdc553644465b63a87e",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1737,7 +1737,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "295a0e9aeb5488d347af962cf4ad6d826f1ade9b4414979a5da8d81ad86f3e58",
+          "assemblySha256": "a5a86b2c9c3015690bf9ec306ced7a7ae68efa95bebefa8274965041a14e8b7c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1766,7 +1766,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "5535006de053d6b907ffec0e43f413b3d2507845bd8e0b1381c3976b530a233a",
+          "assemblySha256": "10bd150feb15e00263de5ff4f10e874227e0032f90ba26065f3006b3fc7d7c63",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1801,7 +1801,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "35e37f26d7cec53a4849c77aface740d6925673c3478944c5cdfaa85e4077c57",
+          "assemblySha256": "6d89f0b48feca341723664debb8856894d5003e968e8b0596891f0b4d08d5219",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1833,7 +1833,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "b710262a957de1c146013b0527d4d8536c7b4507749323adebd7c5c5c1366c45",
+          "assemblySha256": "b0be46f604a4921a806308c0618c3800c66439b4ceebacbadc2120f832e2cba2",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1864,7 +1864,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "8a6cf5b56bea74a5a981706a17b2451f80fd93bea4df365b1190a93938fc71df",
+          "assemblySha256": "35c7aec2cd219017260362a44b84e59433a444fb189208b5ed30f88051654156",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1894,7 +1894,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "c3d78bf60d7f94db19371ed1a5ecbf4c2bd2efdb20137e290442ab2f421fef20",
+          "assemblySha256": "131c66ee981f64ff2aa94727c148b965667412876870c7fc3f672e4879778687",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1931,7 +1931,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "343d1b5cab72c2a484f6d882bd72f02d2863f5941b1c6534b75ee31819466c40",
+          "assemblySha256": "fca38fa561c1780c0a3034975e61e9af55d826ad09a9c3742947152caf166d5f",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1968,7 +1968,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "9ce136ea7cc5b9df638ee635ae60478db0b78d1d0233b02957feca6ad60d3357",
+          "assemblySha256": "4872a7bfbce4229655705055e0da63028f46fc77694112cf4f1d2f308d11588f",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -2012,16 +2012,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "47085611d039d0b155b4916006e152ad5bc7b2b0",
-      "rawPackageBytes": 6514669,
-      "rawPackageSha256": "df4768ebb2972c09a53b462c506d1235cf0c4d5a9413091cd6e7768fed215256",
-      "semanticPayloadSha256": "faefa8f0e067efa28568a7b64088518896484877cb8f6b9f09ce412ac67634cc",
+      "repositoryCommit": "5f58c528b5b9f34c99937fbd7cb406c4bf00773f",
+      "rawPackageBytes": 6514493,
+      "rawPackageSha256": "38b565b309130981433147be716c5d9eb99f16bad40afab001c3e610a2f8d848",
+      "semanticPayloadSha256": "9ac5f6c8697a4e5c765c5c826283d5d8143b7bbdbe4d52833ad8e8e7a8502197",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "00082df482bb2daedb769ca57fc3b9b3f17b0ec52e1547fcc5d8a5d53cf66103",
+          "assemblySha256": "f8cab7a7934df8a1f95b8a6f7f947c215ee5929641273517c092fbf2575d838a",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2042,7 +2042,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "b079180e4ef8f5ea1507b249f4aab424da4010d1e89f50b0ff564623127016bd",
+          "assemblySha256": "299550574a7d4b26f1bf6267b884e16414ba5675cd44a38d6e0293610f8a9c6d",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2063,7 +2063,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "bb1af30879a629fa257cd18b557af8cbe507be6aa7ef3437ceeade5f3393136e",
+          "assemblySha256": "336f9a860504e375365ac9d7bfa1efd022b598eda1f1bf053b490c4f207dd7a3",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2084,7 +2084,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "d6890de95477fcf3efc27bc585e93b602fb99e700243761d4b4bda6ed828b42d",
+          "assemblySha256": "b57ba88280e8350b3b1d376783cd1258420b2942fe6db75438f55c96a6eba70c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2105,7 +2105,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "b89aff0af058ca266bfe24b892cc05537f2df2dd2aeb2a70274f2f6d3194128c",
+          "assemblySha256": "a9f02b6783f183b3b219972aa2a58f866f625a99a77c54c83e09e3271984346e",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2126,7 +2126,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "59f0f19e6692eaf3044731eaf3b79ff9bfedd3d0d138460dd3934b3971826e94",
+          "assemblySha256": "61e45f779ff875c9af617e24bbc3905538fc2b2c31a295d440b85c8ff17ffc01",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2147,7 +2147,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "0848191bbd78c3fb24e25d419172ce035973b39f6715a3fe6b322698a82db7f5",
+          "assemblySha256": "f63b09dfb8219876dfdf71de7993ab0a3c31300163081a9966bb206b476a583d",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2168,7 +2168,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "62ac67d15ba69c2960adf631c47eb6cd706dd7c20db55f3a87f000ac790b6388",
+          "assemblySha256": "a18642f9127b17aac58c32c3fdb92d7aa7a3175129c2dacb3695f1cd56747a47",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2189,7 +2189,7 @@
         },
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "7eedfd1e1ccdf219754f3423dc92080019e452d555eac8acd841d1ec8625a9a8",
+          "assemblySha256": "cf3e04cf6b16407eebbe148cc436a83456cbe3fcb6651cb4f1a808ffd8f13b74",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2208,7 +2208,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "ef5aacc4267076f23c4dd5d0cf7e33e156df9571609e9ec4c089e0adb8d7c495",
+          "assemblySha256": "1d3f9964ad25f09ae474cd89eb20596f5dad480ad49481bb0d4de8480177dfb4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2235,7 +2235,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "5e274f9d603fa78f4afb7b0c02275fded13e29701ac78ba935e630e11acd069b",
+          "assemblySha256": "7e9d1c45cf2db25bb26684f538565a2b215a25c724e5f31997ca50b5f3ebd1ff",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2258,7 +2258,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "11a6246a559d090d4d8126a194f3f20f39b25ccbdf0e6a5d96b2ed288c9f9e6c",
+          "assemblySha256": "1ba44bdadb14673134ee99852bfbed275890d4dc57d70868d1e975a610277afa",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2280,7 +2280,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "2d7c696d997409b53da2313584f95a08c5e2c21f80d608f606d52787da958953",
+          "assemblySha256": "8de55dd5763af177d0de17f6c020181d39d92d127ceb000137401cd29f411dde",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2300,7 +2300,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "9f10af181e08d34e75f23fefd73d88e768d108b09e95d447ae4d4e6f7d5281ae",
+          "assemblySha256": "7f8bc7afc356326081a804185e9a814cc64358fa2e7bbf19594a31834f75d9ce",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2331,7 +2331,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "720154cbb0fbcb33d72260a62f8e6f0d83071f728466edc677c4cd0b29a95016",
+          "assemblySha256": "0fa149e49d4817a33178ea7a680501695ee8e140e49199e704c54d46f0f9fb1b",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2362,7 +2362,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "32719a81f8be569ca7cff8e9e2c62bad57ec117b51e701c74dd72748c6cf7995",
+          "assemblySha256": "b8e5c9e0d1e000b73102a3e649648387df4005092a5d79b409a6758d4db22279",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -4202,8 +4202,6 @@
     "dependency-repository-incomplete:System.Runtime.CompilerServices.Unsafe/4.5.3",
     "dependency-repository-incomplete:System.Runtime.InteropServices.RuntimeInformation/4.3.0",
     "dependency-repository-incomplete:System.ValueTuple/4.5.0",
-    "dirty-worktree",
-    "portable-pdb-contains-absolute-source-paths",
     "publication-authority-not-granted",
     "raw-nupkg-container-bit-reproducibility-not-established",
     "symbol-package-policy-not-authorized",
