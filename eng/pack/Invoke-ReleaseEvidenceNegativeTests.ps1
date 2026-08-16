@@ -6,7 +6,8 @@ param(
     [string]$EvidenceDirectory,
     [Parameter(Mandatory = $true)]
     [string]$WorkingDirectory,
-    [string]$GatePath = (Join-Path $PSScriptRoot 'Test-ReleaseEvidence.ps1')
+    [string]$GatePath = (Join-Path $PSScriptRoot 'Test-ReleaseEvidence.ps1'),
+    [string]$PackageCacheDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,6 +15,7 @@ $ErrorActionPreference = 'Stop'
 $packages = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $evidence = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $gate = (Resolve-Path -LiteralPath $GatePath).Path
+$packageCache = if ($PackageCacheDirectory) { (Resolve-Path -LiteralPath $PackageCacheDirectory).Path } else { $null }
 $work = [IO.Path]::GetFullPath($WorkingDirectory)
 if (Test-Path -LiteralPath $work) { throw "Negative-test working directory already exists: $work" }
 New-Item -ItemType Directory -Path $work | Out-Null
@@ -73,7 +75,9 @@ function Assert-GateRejects {
     )
     $message = $null
     try {
-        $output = & $gate -PackageDirectory $ScenarioPackageDirectory -EvidenceDirectory $ScenarioEvidenceDirectory 2>&1 | Out-String
+        $gateArguments = @{ PackageDirectory = $ScenarioPackageDirectory; EvidenceDirectory = $ScenarioEvidenceDirectory }
+        if ($packageCache) { $gateArguments.PackageCacheDirectory = $packageCache }
+        $output = & $gate @gateArguments 2>&1 | Out-String
         throw "Gate accepted negative scenario '$Name'. Output: $output"
     }
     catch {
@@ -129,6 +133,13 @@ Update-EvidenceJson (Join-Path $omissionEvidence 'package-provenance-sbom.json')
 }
 Assert-GateRejects 'sbom-omission' $packages $omissionEvidence 'SBOM managed dependency set.*drift'
 
+$releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
+Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
+    param($document)
+    $document.releaseBlockers = @($document.releaseBlockers | Where-Object { $_ -ne 'unsigned-packages' })
+}
+Assert-GateRejects 'release-blocker' $packages $releaseBlockerEvidence 'SBOM release blockers excluding worktree state'
+
 $nativeEvidence = New-EvidenceScenario 'native-ownership'
 Update-EvidenceJson (Join-Path $nativeEvidence 'package-provenance-sbom.json') {
     param($document)
@@ -136,4 +147,4 @@ Update-EvidenceJson (Join-Path $nativeEvidence 'package-provenance-sbom.json') {
 }
 Assert-GateRejects 'native-ownership' $packages $nativeEvidence 'Native ownership drift'
 
-Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=7'
+Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=8'

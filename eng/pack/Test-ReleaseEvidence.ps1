@@ -982,6 +982,12 @@ else {
     $normalizedExpected = Get-CanonicalValue $expectedProvenance
     $normalizedActual = Get-CanonicalValue $provenance
     $normalizedActual.subject.repositoryCommit = $normalizedExpected.subject.repositoryCommit
+    # A retained baseline's dirty flag is historical; every other blocker must still match exactly.
+    $expectedNonWorktreeBlockers = @($normalizedExpected.releaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
+    $actualNonWorktreeBlockers = @($normalizedActual.releaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
+    Assert-SameKeySet $expectedNonWorktreeBlockers $actualNonWorktreeBlockers 'SBOM release blockers excluding worktree state'
+    $normalizedActual.subject.repositoryDirty = $normalizedExpected.subject.repositoryDirty
+    $normalizedActual.releaseBlockers = $normalizedExpected.releaseBlockers
     $normalizedExpectedRelease = Get-ObjectMap $normalizedExpected.releasePackages 'id'
     $normalizedActualRelease = Get-ObjectMap $normalizedActual.releasePackages 'id'
     foreach ($id in $normalizedExpectedRelease.Keys) {

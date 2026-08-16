@@ -25,7 +25,7 @@ DeploySharp 是一套正在重构中的模块化 .NET 深度学习模型部署�
 
 阶段 35 建立并由阶段 48 扩展的候选门禁现覆盖十个可打包项目、83 个 TFM 组、五类负向突变与全部 30 项纯包 consumer。当前候选的元数据、依赖闭包、DLL/XML payload 和程序集引用全部通过；原阶段 35 双包复现结论仍保留为语义 `9/9`、原始 ZIP `0/9`。未签名包、脏工作树、符号/源码策略和明确发布授权继续作为 blocker。详见[阶段 35 审计](docs/articles/release-candidate-governance-stage35.md)与[阶段 35 说明](docs/releases/stage-35.md)。
 
-阶段 36 evidence 经阶段 48 扩展后覆盖十个包、83 个 TFM，保留机器可读的来源/许可证/SBOM、PDB/SourceLink 与公共 API 证据。七类独立突变均被拒绝，既有许可证人工复核、绝对源码路径、符号/签名策略、脏工作树和发布授权 blocker 如实保留。详见[阶段 36 审计](docs/articles/release-evidence-governance-stage36.md)与[阶段 36 说明](docs/releases/stage-36.md)。
+阶段 36 evidence 经阶段 48 扩展后覆盖十个包、83 个 TFM，保留机器可读的来源/许可证/SBOM、PDB/SourceLink 与公共 API 证据。八类独立突变均被拒绝，既有许可证人工复核、绝对源码路径、符号/签名策略、脏工作树和发布授权 blocker 如实保留。详见[阶段 36 审计](docs/articles/release-evidence-governance-stage36.md)与[阶段 36 说明](docs/releases/stage-36.md)。
 
 阶段 37 审计本地缓存的 `JYPPX.TensorRT.CSharp.API 4.0.0`，确认 15 个 TFM、45 个托管 DLL、关键 API、repository/content hash 与无 native payload。由于包许可证元数据缺失、上游 Owner 许可证决策未完成且不可变 `v4.0.0` tag 无法核验，本阶段未创建 TensorRT 后端、engine、native probe、GPU 结论、包或公共 API。详见[阶段 37 审计](docs/articles/tensorrt-admission-stage37.md)与[阶段 37 说明](docs/releases/stage-37.md)。
 
