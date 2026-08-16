@@ -18,7 +18,7 @@ var options = new ModelFactoryOptions(
 using var factory = new ModelFactoryClient(catalog, options);
 ModelSelection selection = factory.Select(new ModelQuery(
     modelId: "llm/qwen2.5-0.5b-instruct-q4-k-m",
-    backend: "llama-sharp",
+    backend: "llamasharp",
     format: "gguf",
     includePreview: true));
 
