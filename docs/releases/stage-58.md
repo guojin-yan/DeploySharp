@@ -1,0 +1,9 @@
+# Stage 58: TensorRT formal proof and retained-evidence incremental admission / 阶段 58：TensorRT 正式证明与保留证据增量准入
+
+TensorRT execution is not newly blocked: inference, ONNX builder, CUDA/RTC, and the exact signed-package consumer remain admitted through unchanged Stage 55 evidence. Only formal publication proof remains blocked. / TensorRT 执行路径没有重新被阻塞：inference、ONNX builder、CUDA/RTC 与精确 signed-package consumer 继续由未变化的 Stage 55 evidence 证明；只有正式发布证明仍受阻。
+
+Release `368273346`, tag commit `673e120...`, 20 assets, the 15,595,749-byte GitHub managed asset, and the 15,608,836-byte NuGet.org repository-signed package remain unchanged. The Release is mutable with no proof asset, exact lock/assets files remain absent from the tag tree, and both digest attestation lookups return HTTP 404. Delta is retained 2/new 0/disappeared 0; no package was downloaded, full admission was not rerun, and retained JSON was not rewritten. / 上游 identity 未变化，按增量规则保留两项正式发布 blocker。
+
+Current execution passes focused tests `17/0/0`, inventory `-Check` with 69 entries, exact Qwen admission and protected hashes, and read-only Git/upstream freshness. The net8 contract remains 215 members; ownership and the complete I/O-free cache/launch identities remain unchanged. Stage 55 pure-package/GPU passes and synchronization expected-failure remain retained evidence with zero unexpected failures. / 本轮 focused、inventory、Qwen 与 freshness 通过；纯包/GPU 为 retained pass，同步 fault 为 retained expected-failure。
+
+Formal publication still requires the immutable cross-channel manifest and same-build immutable provenance/attestation. No source, API, dependency, model, retained evidence, or cache payload changed; no Git/GitHub publication write occurred. Full details are in the [Stage 58 audit](../articles/tensorrt-formal-proof-retained-evidence-stage58.md). / 正式发布仍只缺两项 immutable proof，本轮无功能回退或发布写入。

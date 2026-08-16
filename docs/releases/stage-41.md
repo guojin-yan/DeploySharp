@@ -1,0 +1,9 @@
+# Stage 41: TensorRT formal-release asset review / 阶段 41：TensorRT 正式 Release 资产复核
+
+Stage 41 remains **blocked** before implementation. A real public `v4.0.0` Release now exists at lightweight tag commit `673e120...`; its managed asset is 15,595,749 bytes with SHA256 `58add436...`. However, the Release reports `immutable=false`, exposes no SHA512/contentHash or package-bound lock/assets, and the new nupkg was not supplied locally for nuspec/API/payload/signature verification. / 阶段 41 在实现前继续阻断。真实公开 `v4.0.0` Release 已存在，managed asset 的大小和 SHA256 可核验；但 Release 为非 immutable，缺少 SHA512/contentHash 与包绑定构建来源，且新包未作为本地输入交付。
+
+The local set remains the same 21 paths and 19 hashes; all local packages lack license metadata/signatures and none declares the release-tag commit. The retained cache package remains 15,230,357 bytes, SHA256 `140d7cc4...`, commit `be2e507...`, matching SHA512, 15 TFMs, 45 managed DLLs, valid PE/XML API closure, zero native/model/engine payload, and expected unsigned `NU3004`. All four blockers are retained; new/disappeared counts are zero and retained JSON is unchanged. / 本地候选与 retained 包身份不变；四项 blocker 全部 retained，新增/消失均为 0，retained JSON 未改写。
+
+TensorRT 8/8 negatives, Stage 35 9/82 plus 5/5 negatives, Stage 36 82/82 SourceLink/PDB/API plus 7/7 negatives, and the 378/50/0 solution regression pass. Inventory remains 69/56, exact Qwen and all bound hashes remain valid, official catalog/upload/download counts remain zero, and NuGet vulnerability/deprecated reports remain empty. / TensorRT、Stage 35/36、全解决方案、inventory、Qwen 与 NuGet 报告均通过既定边界。
+
+No TensorRT adapter/package/reference/API/TFM, native probe, engine/plan/cache, GPU evidence, model change, dependency upgrade, commit, push, tag, signature, Release mutation, upload, or Actions run was created. Detailed evidence is in [the Stage 41 review](../articles/tensorrt-formal-release-asset-review-stage41.md). / 未创建 TensorRT 实现、native/GPU/engine 证据或发布写入；详见 Stage 41 复核文章。

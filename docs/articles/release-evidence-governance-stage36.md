@@ -12,7 +12,9 @@ The three retained documents are deliberately declared as a validated custom JSO
 | `eng/pack/release-evidence/release-symbols.json` | 82 Release assembly/PDB records with MVID, deterministic marker, portable PDB ID, documents/sequence-point digests, compiler/SDK options, SourceLink commit/status, source path mode, and symbol blockers |
 | `eng/pack/release-evidence/public-api.json` | public/protected XML member IDs plus visible metadata, generic constraints, nullable/custom attributes, defaults, and assembly-reference hashes for all supported TFMs |
 
-The package provenance document records both the lock/assets resolved content hash and the local cache `.nupkg.sha512`. They are separate identities: the cached SHA512 is checked against the actual cached nupkg, while the lock/assets hash is checked for cross-project consistency. A raw nupkg SHA256 is retained independently from semantic payload evidence because NuGet container metadata can vary between equivalent packs.
+The package provenance document records both the lock/assets resolved content hash and the local cache `.nupkg.sha512`. They are separate identities: the cached SHA512 is checked against the actual cached nupkg, while `.nupkg.metadata` must bind that cache entry to the lock/assets content hash. `-PackageCacheDirectory` selects the exact restored cache explicitly; otherwise `NUGET_PACKAGES` or the standard per-user cache is used. A raw nupkg SHA256 is retained independently from semantic payload evidence because NuGet container metadata can vary between equivalent packs. / 包来源证据同时校验缓存 nupkg 的原始 SHA512 与 `.nupkg.metadata` 中绑定 lock/assets 的 content hash；可通过 `-PackageCacheDirectory` 显式选择精确恢复缓存，默认依次使用 `NUGET_PACKAGES` 和标准用户缓存。
+
+Repository commits and SourceLink are validated live against the current `HEAD`. Commit injection also changes deterministic PE/PDB identities and the assembly informational-version attribute even when the public contract and source sequence points are unchanged. The retained comparison therefore normalizes only those enumerated commit-bound fields after the live `HEAD` checks; dependency/license identities, API surface, nullable/generic metadata, sequence points, compiler options, ownership, and all other stable fields remain exact baseline comparisons. This avoids an impossible self-referential evidence-commit hash while preserving repository-commit and SourceLink negative gates. / Repository commit 与 SourceLink 先实时强制匹配当前 `HEAD`；随后 retained 比对只归一化明确列举的 commit-bound PE/PDB/attribute 字段，其余稳定字段继续精确比较，从而避免 evidence commit 自引用而不削弱 repository/SourceLink 负向门。
 
 DeploySharp package licenses, managed dependency licenses, consumer-owned native runtime licenses, and external model licenses are separate ownership scopes. The four native runtime packages (`LLamaSharp.Backend.Cpu`, `Microsoft.ML.OnnxRuntime`, `OpenVINO.runtime.win`, and `JYPPX.OpenCV.runtime.win-x64`) are recorded as consumer-owned and are rejected if they appear in a DeploySharp nuspec or package payload. License expressions outside the verified SPDX allow-list, license files, license URLs, missing repository metadata, and other manual-review cases remain explicit blockers.
 
@@ -31,6 +33,7 @@ The gate is normally run after the Stage 35 package gate:
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File eng/pack/Test-ReleaseEvidence.ps1 `
   -PackageDirectory artifacts/stage36-pack-current `
+  -PackageCacheDirectory artifacts/stage36-package-cache `
   -EvidenceDirectory eng/pack/release-evidence
 ```
 

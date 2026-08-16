@@ -1,0 +1,11 @@
+# Stage 60: TensorRT retained evidence and accepted supply-chain gaps / 阶段 60：TensorRT 保留证据与已接受供应链缺口
+
+TensorRT inference, ONNX builder, CUDA/RTC, the exact signed-package consumer, and DeploySharp package publication remain admitted. The two missing upstream immutable proofs remain disclosed accepted gaps; publication blocker count is zero under the 2026-08-13 Owner risk acceptance. Missing proof is not reported as passed, and GitHub/NuGet same-build equivalence is not claimed. / TensorRT inference、ONNX builder、CUDA/RTC、精确 signed-package consumer 与 DeploySharp 包发布均继续准入。两项缺失上游 immutable proof 继续作为 accepted gap 披露；按 Owner 风险接受，publication blocker 为 0。不把缺失写成通过，也不声明 GitHub/NuGet 同次构建等价。
+
+Release `368273346`, body/tag/tree, 20 assets, GitHub managed asset, NuGet catalog/package hash, retained signed nupkg, local source/API/package graph, Stage 55 evidence, native inputs, and GPU identity are unchanged. The retained JSON preserves its historical finding delta and pre-risk-acceptance fields without rewrite. Regional CDN headers remain transport metadata. / 上游、本地、证据、native/GPU identity 均未变化；retained JSON 保留历史字段且不改写，区域 CDN header 只属于 transport metadata。
+
+Current execution passes focused tests `17/0/0`, inventory `-Check` with 69 entries, exact Qwen admission and all protected hashes, and read-only Git/upstream freshness. Pure-package/GPU passes and synchronization expected-failure remain retained evidence with zero unexpected failures. Wider pack, Stage 35/36, full solution, NuGet audits, eight-class admission, pure-package execution, and GPU execution were skipped by the identity rule. / 本轮 focused、inventory、Qwen 与 freshness 通过；纯包/GPU 为 retained pass，同步 fault 为 retained expected-failure。其余宽门禁按 identity 规则跳过。
+
+No source, API, dependency, model, retained evidence, cache payload, or Git/GitHub publication state changed. Full details are in the [Stage 60 audit](../articles/tensorrt-retained-evidence-accepted-risk-stage60.md). / 本轮无执行路径回退或外部发布写入，详见 Stage 60 审计。
+
+This is the final Stage in the repeated retained-evidence maintenance sequence. Later proof checks run only as release gates or after real identity changes; Stage 61 resumes complete-module development with the caller-owned TensorRT External cache store. / 本阶段结束重复证据维护循环；后续 proof 只在发布门禁或真实 identity 变化时检查。Stage 61 转入调用方拥有的 TensorRT External cache store 完整模块开发。
