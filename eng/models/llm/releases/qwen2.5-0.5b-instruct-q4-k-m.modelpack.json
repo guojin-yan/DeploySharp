@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "llm/qwen2.5-0.5b-instruct-q4-k-m",
+  "name": "Qwen2.5 0.5B Instruct Q4_K_M",
+  "family": "qwen2.5",
+  "task": "language-generation-and-embedding",
+  "modelVersion": "hf-9217f5db-q4-k-m",
+  "exporter": {
+    "name": "Qwen official GGUF publication",
+    "version": "llama.cpp-compatible",
+    "sourceRevision": "9217f5db79a29953eb74d5343926648285ec7e67"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "projectUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67",
+    "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+    "author": "Qwen Team / Alibaba Cloud",
+    "copyright": "Copyright holders identified by the upstream Apache-2.0 distribution",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "source/LICENSE",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "llm.qwen2.5-0.5b-instruct.q4-k-m.preview",
+  "inputs": [
+    { "name": "prompt", "elementType": "utf8-text", "shape": [] }
+  ],
+  "outputs": [
+    { "name": "generated_text", "elementType": "utf8-text", "shape": [] },
+    { "name": "embedding", "elementType": "float32", "shape": [-1] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+      "format": "gguf",
+      "locationKind": "file",
+      "entrypoint": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "compatibleBackends": ["llamasharp"],
+      "files": [
+        {
+          "relativePath": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+          "size": 491400032,
+          "mediaType": "application/octet-stream",
+          "role": "model"
+        },
+        {
+          "relativePath": "source/config.json",
+          "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
+          "size": 659,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "source/generation_config.json",
+          "sha256": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6",
+          "size": 242,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "source/tokenizer_config.json",
+          "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+          "size": 7305,
+          "mediaType": "application/json",
+          "role": "tokenizer"
+        },
+        {
+          "relativePath": "source/LICENSE",
+          "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+          "size": 11343,
+          "mediaType": "text/plain",
+          "role": "license"
+        },
+        {
+          "relativePath": "source/README.gguf.md",
+          "sha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999",
+          "size": 4856,
+          "mediaType": "text/markdown",
+          "role": "other"
+        }
+      ],
+      "precision": "mixed-integer",
+      "quantization": "q4-k-m",
+      "portable": true,
+      "minimumBackendVersion": "0.27.0",
+      "minimumRuntimeVersion": "llama.cpp-3f7c29d318e317b63f54c558bc69803963d7d88c",
+      "extensions": {
+        "deploysharp.bundle-role": "public-qwen-gguf-preview",
+        "deploysharp.validation-status": "source-integrity-and-runtime-evidence-verified",
+        "deploysharp.context-length": "32768",
+        "deploysharp.embedding-capability": "supported; LLamaSharp mean-pooled embedding dimension 896",
+        "deploysharp.llamasharp-version": "0.27.0",
+        "deploysharp.native-runtime-package": "LLamaSharp.Backend.Cpu",
+        "deploysharp.native-runtime-version": "0.27.0",
+        "deploysharp.runtime-evidence-operations": "cpu-generate,stream,cancel,repeat,contention,dispose,embedding",
+        "deploysharp.executable": "true"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.algorithm-verified": "false",
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true",
+    "deploysharp.native-runtime": "LLamaSharp 0.27.0 with caller-installed LLamaSharp.Backend.Cpu 0.27.0"
+  }
+}
