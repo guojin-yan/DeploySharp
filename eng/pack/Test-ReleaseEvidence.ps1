@@ -589,8 +589,9 @@ function Get-SymbolEvidence {
         }
 
         $documentPaths = @($documentNames.Values | Sort-Object -Unique)
-        $absolutePaths = @($documentPaths | Where-Object { [IO.Path]::IsPathRooted($_) }).Count
-        $pathMode = if ($documentPaths.Count -gt 0 -and $absolutePaths -eq $documentPaths.Count) { 'absolute' } elseif ($absolutePaths -eq 0) { 'mapped-or-relative' } else { 'mixed' }
+        # /_/ is the compiler's deterministic virtual source root, not a local filesystem path.
+        $physicalAbsolutePaths = @($documentPaths | Where-Object { [IO.Path]::IsPathRooted($_) -and -not $_.StartsWith('/_/', [StringComparison]::Ordinal) }).Count
+        $pathMode = if ($documentPaths.Count -gt 0 -and $physicalAbsolutePaths -eq $documentPaths.Count) { 'absolute' } elseif ($physicalAbsolutePaths -eq 0) { 'mapped-or-relative' } else { 'mixed' }
         $documentLines = @($documents | Sort-Object)
         $sequencePointLines = @($sequenceLines | Sort-Object)
         return [ordered]@{

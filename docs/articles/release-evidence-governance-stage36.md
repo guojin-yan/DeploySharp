@@ -22,7 +22,7 @@ DeploySharp package licenses, managed dependency licenses, consumer-owned native
 
 API evidence compares the same XML contract across every supported TFM and supplements it with metadata-level signatures and attributes. Internal assembly references are checked against the nuspec dependency transitive closure. This stage fixes no API difference and does not expand ModelFactory or model capabilities.
 
-Release outputs must contain portable PDBs and the deterministic PE marker. SourceLink is parsed and its commit must equal the current repository head. The retained symbol document also records the `global.json` SDK version, actual SDK version, and MSBuild identity. Absolute document paths are retained as an audit finding, not silently rewritten. The current policy is `not-produced` for symbol packages, so symbol-package authorization and absolute source paths remain release blockers even when assembly/PDB semantics are stable.
+Release outputs must contain portable PDBs and the deterministic PE marker. SourceLink is parsed and its commit must equal the current repository head. The retained symbol document also records the `global.json` SDK version, actual SDK version, and MSBuild identity. `DeterministicSourcePaths` maps document paths to the compiler's stable `/_/` virtual root; physical local filesystem paths remain a release blocker. The current policy is `not-produced` for symbol packages, so symbol-package authorization remains a release blocker even when assembly/PDB semantics are stable.
 
 ## Negative suite / 负向套件
 
