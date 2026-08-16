@@ -4,6 +4,7 @@ param(
     [string]$PackageDirectory,
     [string]$RepositoryRoot,
     [string]$EvidenceDirectory,
+    [string]$PackageCacheDirectory,
     [string]$Configuration = 'Release',
     [switch]$WriteBaseline,
     [switch]$RequireReleaseEligible
@@ -15,6 +16,15 @@ if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) { $RepositoryRoot = Join-Path
 if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) { $EvidenceDirectory = Join-Path $PSScriptRoot 'release-evidence' }
 $repository = (Resolve-Path -LiteralPath $RepositoryRoot).Path.TrimEnd('\', '/')
 $packageRoot = (Resolve-Path -LiteralPath $PackageDirectory).Path
+$packageCacheInput = if (-not [string]::IsNullOrWhiteSpace($PackageCacheDirectory)) {
+    $PackageCacheDirectory
+} elseif (-not [string]::IsNullOrWhiteSpace($env:NUGET_PACKAGES)) {
+    $env:NUGET_PACKAGES
+} else {
+    Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) '.nuget\packages'
+}
+$packageCacheRoot = [IO.Path]::GetFullPath($packageCacheInput)
+if (-not (Test-Path -LiteralPath $packageCacheRoot -PathType Container)) { throw "NuGet package cache is missing: $packageCacheRoot" }
 $baselinePath = Join-Path $PSScriptRoot 'release-candidate-packages.json'
 $releaseBaseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
 $head = (& git -C $repository rev-parse HEAD).Trim()
@@ -147,16 +157,22 @@ function Get-PackageCacheRecord {
         [string]$Ownership
     )
 
-    $packageDirectory = Join-Path (Join-Path $env:USERPROFILE '.nuget\packages') (Join-Path $Id.ToLowerInvariant() $Version.ToLowerInvariant())
+    $packageDirectory = Join-Path $packageCacheRoot (Join-Path $Id.ToLowerInvariant() $Version.ToLowerInvariant())
     if (-not (Test-Path -LiteralPath $packageDirectory -PathType Container)) { throw "Restored package cache is missing: $Id/$Version." }
     $nuspecFile = @(Get-ChildItem -LiteralPath $packageDirectory -File -Filter '*.nuspec')
     $nupkgFile = @(Get-ChildItem -LiteralPath $packageDirectory -File -Filter '*.nupkg')
     $sha512File = @(Get-ChildItem -LiteralPath $packageDirectory -File -Filter '*.nupkg.sha512')
-    if ($nuspecFile.Count -ne 1 -or $nupkgFile.Count -ne 1 -or $sha512File.Count -ne 1) { throw "Incomplete restored package metadata for $Id/$Version." }
+    $metadataFile = @(Get-ChildItem -LiteralPath $packageDirectory -File -Filter '.nupkg.metadata')
+    if ($nuspecFile.Count -ne 1 -or $nupkgFile.Count -ne 1 -or $sha512File.Count -ne 1 -or $metadataFile.Count -ne 1) { throw "Incomplete restored package metadata for $Id/$Version." }
 
     $cacheContentHash = (Get-Content -LiteralPath $sha512File[0].FullName -Raw).Trim()
     $actualNupkgSha512 = [Convert]::ToBase64String([Security.Cryptography.SHA512]::HashData([IO.File]::ReadAllBytes($nupkgFile[0].FullName)))
     if ($actualNupkgSha512 -ne $cacheContentHash) { throw "Cached nupkg SHA512 drift for $Id/$Version." }
+    $metadata = Get-Content -LiteralPath $metadataFile[0].FullName -Raw | ConvertFrom-Json
+    if ([int]$metadata.version -ne 2 -or [string]::IsNullOrWhiteSpace([string]$metadata.contentHash)) { throw "Invalid NuGet package metadata for $Id/$Version." }
+    if (-not [string]::IsNullOrWhiteSpace($ContentHash) -and [string]$metadata.contentHash -ne $ContentHash) {
+        throw "NuGet package cache content hash does not match lock/assets for $Id/$Version."
+    }
 
     [xml]$nuspec = Get-Content -LiteralPath $nuspecFile[0].FullName -Raw
     $metadata = $nuspec.SelectSingleNode("/*[local-name()='package']/*[local-name()='metadata']")
@@ -918,6 +934,21 @@ else {
         if ($document.schemaVersion -ne '1.0' -or $document.format.standard -ne 'custom') { throw 'Release evidence schema/format is invalid.' }
     }
 
+    $baselineCommit = [string]$expectedProvenance.subject.repositoryCommit
+    if ($baselineCommit -notmatch '^[0-9a-f]{40}$' -or [string]$expectedSymbols.repositoryCommit -ne $baselineCommit -or [string]$expectedApi.repositoryCommit -ne $baselineCommit) {
+        throw 'Release evidence baseline commit identity is inconsistent.'
+    }
+    & git -C $repository merge-base --is-ancestor $baselineCommit $head 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "Release evidence baseline commit is not an ancestor of HEAD: $baselineCommit." }
+    if ([string]$provenance.subject.repositoryCommit -ne $head -or [string]$symbols.repositoryCommit -ne $head -or [string]$api.repositoryCommit -ne $head) {
+        throw 'Live release evidence is not bound to the current repository HEAD.'
+    }
+    foreach ($assembly in @($symbols.assemblies)) {
+        if ([string]$assembly.evidence.sourceLinkStatus -ne 'present-valid-head' -or [string]$assembly.evidence.sourceLinkCommit -ne $head) {
+            throw "SourceLink is not bound to HEAD: $($assembly.packageId)/$($assembly.tfm)."
+        }
+    }
+
     Assert-SameKeySet @($expectedProvenance.releasePackages | ForEach-Object { $_.id }) @($provenance.releasePackages | ForEach-Object { $_.id }) 'SBOM release package set'
     Assert-SameKeySet @($expectedProvenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM managed dependency set'
     Assert-SameKeySet @($expectedProvenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM native ownership set'
@@ -943,21 +974,51 @@ else {
     $actualRelease = Get-ObjectMap $provenance.releasePackages 'id'
     $rawMatches = 0
     foreach ($id in $expectedRelease.Keys) {
-        if ($expectedRelease[$id].repositoryCommit -ne $actualRelease[$id].repositoryCommit) { throw "Repository commit drift: $id." }
+        if ([string]$expectedRelease[$id].repositoryCommit -ne $baselineCommit) { throw "Retained repository commit drift: $id." }
+        if ([string]$actualRelease[$id].repositoryCommit -ne $head) { throw "Repository commit drift: $id." }
         if ($expectedRelease[$id].rawPackageSha256 -eq $actualRelease[$id].rawPackageSha256) { $rawMatches++ }
     }
 
     $normalizedExpected = Get-CanonicalValue $expectedProvenance
     $normalizedActual = Get-CanonicalValue $provenance
+    $normalizedActual.subject.repositoryCommit = $normalizedExpected.subject.repositoryCommit
     $normalizedExpectedRelease = Get-ObjectMap $normalizedExpected.releasePackages 'id'
     $normalizedActualRelease = Get-ObjectMap $normalizedActual.releasePackages 'id'
     foreach ($id in $normalizedExpectedRelease.Keys) {
-        $normalizedActualRelease[$id].rawPackageSha256 = $normalizedExpectedRelease[$id].rawPackageSha256
-        $normalizedActualRelease[$id].rawPackageBytes = $normalizedExpectedRelease[$id].rawPackageBytes
+        foreach ($field in @('repositoryCommit', 'rawPackageSha256', 'rawPackageBytes', 'semanticPayloadSha256')) {
+            $normalizedActualRelease[$id][$field] = $normalizedExpectedRelease[$id][$field]
+        }
+        $expectedFrameworks = Get-ObjectMap $normalizedExpectedRelease[$id].frameworks 'tfm'
+        $actualFrameworks = Get-ObjectMap $normalizedActualRelease[$id].frameworks 'tfm'
+        foreach ($tfm in $expectedFrameworks.Keys) { $actualFrameworks[$tfm].assemblySha256 = $expectedFrameworks[$tfm].assemblySha256 }
     }
     if ((Get-CanonicalJson $normalizedExpected) -ne (Get-CanonicalJson $normalizedActual)) { throw 'Provenance/SBOM baseline drift.' }
-    if ((Get-CanonicalJson $expectedSymbols) -ne (Get-CanonicalJson $symbols)) { throw 'PDB/SourceLink baseline drift.' }
-    if ((Get-CanonicalJson $expectedApi) -ne (Get-CanonicalJson $api)) { throw 'Public API baseline drift.' }
+
+    $normalizedExpectedSymbols = Get-CanonicalValue $expectedSymbols
+    $normalizedActualSymbols = Get-CanonicalValue $symbols
+    $normalizedActualSymbols.repositoryCommit = $normalizedExpectedSymbols.repositoryCommit
+    $expectedSymbolMap = @{}
+    foreach ($assembly in @($normalizedExpectedSymbols.assemblies)) { $expectedSymbolMap["$($assembly.packageId)|$($assembly.tfm)"] = $assembly }
+    $actualSymbolMap = @{}
+    foreach ($assembly in @($normalizedActualSymbols.assemblies)) { $actualSymbolMap["$($assembly.packageId)|$($assembly.tfm)"] = $assembly }
+    Assert-SameKeySet @($expectedSymbolMap.Keys) @($actualSymbolMap.Keys) 'PDB/SourceLink assembly set'
+    $commitBoundSymbolFields = @('assemblySha256', 'packageAssemblySha256', 'mvid', 'codeViewGuid', 'pdbBytes', 'pdbSha256', 'portablePdbId', 'documentSha256', 'sourceLinkCommit', 'sourceLinkSha256')
+    foreach ($key in $expectedSymbolMap.Keys) {
+        foreach ($field in $commitBoundSymbolFields) { $actualSymbolMap[$key].evidence[$field] = $expectedSymbolMap[$key].evidence[$field] }
+    }
+    if ((Get-CanonicalJson $normalizedExpectedSymbols) -ne (Get-CanonicalJson $normalizedActualSymbols)) { throw 'PDB/SourceLink baseline drift.' }
+
+    $normalizedExpectedApi = Get-CanonicalValue $expectedApi
+    $normalizedActualApi = Get-CanonicalValue $api
+    $normalizedActualApi.repositoryCommit = $normalizedExpectedApi.repositoryCommit
+    $expectedApiPackages = Get-ObjectMap $normalizedExpectedApi.packages 'packageId'
+    $actualApiPackages = Get-ObjectMap $normalizedActualApi.packages 'packageId'
+    foreach ($packageId in $expectedApiPackages.Keys) {
+        $expectedFrameworks = Get-ObjectMap $expectedApiPackages[$packageId].frameworks 'tfm'
+        $actualFrameworks = Get-ObjectMap $actualApiPackages[$packageId].frameworks 'tfm'
+        foreach ($tfm in $expectedFrameworks.Keys) { $actualFrameworks[$tfm].attributeMetadataSha256 = $expectedFrameworks[$tfm].attributeMetadataSha256 }
+    }
+    if ((Get-CanonicalJson $normalizedExpectedApi) -ne (Get-CanonicalJson $normalizedActualApi)) { throw 'Public API baseline drift.' }
 
     Write-Output "DEPLOYSHARP_RELEASE_EVIDENCE_GATE_OK packages=$($releasePackages.Count) tfms=$($symbolAssemblies.Count) dependencies=$($managedDependencies.Count) native=$($consumerOwnedNativeRuntimes.Count) licenses-spdx=$($provenance.summary.verifiedSpdxManagedDependencies) license-blockers=$($provenance.summary.managedDependencyLicenseBlockers) sourcelink=$sourceLinkValidCount/$($symbolAssemblies.Count) portable-pdb=$portablePdbCount/$($symbolAssemblies.Count) api=$apiContractCount raw-nupkg-identical=$rawMatches/$($releasePackages.Count) release-eligible=$($provenance.summary.releaseEligible.ToString().ToLowerInvariant())"
 }

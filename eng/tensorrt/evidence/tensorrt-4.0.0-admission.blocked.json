@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "1.0",
+  "format": "DeploySharpTensorRtPackageAdmission",
+  "mediaType": "application/vnd.deploysharp.tensorrt-admission+json",
+  "auditedAt": "2026-08-11T20:40:00+08:00",
+  "package": {
+    "id": "JYPPX.TensorRT.CSharp.API",
+    "version": "4.0.0",
+    "cacheSourceKind": "nuget.org-v3-official-feed",
+    "cacheSource": "https://api.nuget.org/v3/index.json",
+    "pathHint": "restore from nuget.org into an isolated NUGET_PACKAGES directory and pass its jyppx.tensorrt.csharp.api\\4.0.0 path via -PackageRoot",
+    "bytes": 15608836,
+    "sha256": "92bc106465dd87651118adbdaa8dbcb921cd117d685005ae1ae13f09cb80e038",
+    "sha512Base64": "9VPO6fsj4uUWqURYoh5vxh4L8S6/y/RU+zXaKYJmFNpUhwev4DhExI67sG9eaAocIVYf9NqPvppNk2S7YtVgZw==",
+    "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow==",
+    "signature": "repository-signed / dotnet nuget verify --all passed",
+    "signatureDetails": {
+      "type": "Repository",
+      "subject": "CN=NuGet.org Repository by Microsoft, O=NuGet.org Repository by Microsoft, L=Redmond, S=Washington, C=US",
+      "certificateSha256": "1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D",
+      "validFrom": "2024-02-23T00:00:00Z",
+      "validTo": "2027-05-18T23:59:59Z"
+    },
+    "nugetCatalog": {
+      "registrationUrl": "https://api.nuget.org/v3/registration5-semver1/jyppx.tensorrt.csharp.api/4.0.0.json",
+      "catalogUrl": "https://api.nuget.org/v3/catalog0/data/2026.08.10.17.36.39/jyppx.tensorrt.csharp.api.4.0.0.json",
+      "published": "2026-08-10T17:32:28.427Z",
+      "listed": true,
+      "packageHashAlgorithm": "SHA512"
+    },
+    "tfms": ["net10.0", "net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "netcoreapp3.1"],
+    "managedAssemblies": [
+      { "name": "JYPPX.Shared", "sha256": "c1d7ce9a9493a50eac7306b757a73d10e66ed6bcee7a3d2835626bdeabf5385d", "net8Bytes": 1782272, "assemblyVersion": "4.0.0.0" },
+      { "name": "JYPPX.CudaSharp", "sha256": "821004f1f3c4ab93c7744ac3c08f6b1869c5b57d02eaa041af07cd5f844b6874", "net8Bytes": 327680, "assemblyVersion": "4.0.0.0" },
+      { "name": "JYPPX.TensorRtSharp", "sha256": "a1206d83b3eaf4374d28b99a9ffd009ee2d42c946dbfb0a93fef237a489475bb", "net8Bytes": 1595392, "assemblyVersion": "4.0.0.0" }
+    ],
+    "payload": { "managedDlls": 45, "nativeEntries": 0, "engineEntries": 0, "modelEntries": 0, "licenseEntries": 0, "signatureEntries": 1, "logoEntries": 1 },
+    "nuspec": {
+      "licenseType": "expression",
+      "licenseValue": "Apache-2.0",
+      "repositoryType": "git",
+      "repositoryUrl": "https://github.com/guojin-yan/TensorRT-CSharp-API",
+      "repositoryCommit": "673e120807d789d90a13a9f28a043282e95bb5e6",
+      "dependencyGroups": ["net8.0"]
+    },
+    "dependencyClosure": {
+      "nugetDependencies": 0,
+      "bundledManagedAssemblies": ["JYPPX.Shared", "JYPPX.CudaSharp", "JYPPX.TensorRtSharp"],
+      "unexpectedManagedAssemblyReferences": 0
+    }
+  },
+  "source": {
+    "repositoryUrl": "https://github.com/guojin-yan/TensorRT-CSharp-API",
+    "commit": "673e120807d789d90a13a9f28a043282e95bb5e6",
+    "commitSubject": "fix: target public OpenCV package namespace",
+    "releaseTagAtCommit": "v4.0.0 (remote ref verified at the same commit)",
+    "publicationLicensePolicy": { "ownerDecisionState": "approved", "selectedPackageLicense": "Apache-2.0", "selectedSourceArchiveLicenseFileName": "LICENSE" }
+  },
+  "releaseBinding": {
+    "repositoryUrl": "https://github.com/guojin-yan/TensorRT-CSharp-API",
+    "tag": "v4.0.0",
+    "tagCommit": "673e120807d789d90a13a9f28a043282e95bb5e6",
+    "releaseUrl": "https://github.com/guojin-yan/TensorRT-CSharp-API/releases/tag/v4.0.0",
+    "releaseId": 368273346,
+    "immutable": false,
+    "githubManagedAsset": {
+      "assetId": 509456931,
+      "name": "JYPPX.TensorRT.CSharp.API.4.0.0.nupkg",
+      "bytes": 15595749,
+      "sha256": "58add436d8f8e132349f84272fb985c83f38bb6897920f1bc163f1ceb38571d7",
+      "sha512Base64": null,
+      "contentHash": null
+    },
+    "boundPackage": {
+      "sha256": null,
+      "sha512Base64": null,
+      "contentHash": null
+    },
+    "status": "blocked: release is mutable and has no manifest binding the unsigned GitHub asset to the repository-signed NuGet.org SHA256/SHA512/contentHash identity"
+  },
+  "buildProvenance": {
+    "status": "unavailable",
+    "sourceCommit": "673e120807d789d90a13a9f28a043282e95bb5e6",
+    "packageSha256": "92bc106465dd87651118adbdaa8dbcb921cd117d685005ae1ae13f09cb80e038",
+    "immutableSource": { "kind": null, "sha256": null },
+    "packagesLock": null,
+    "projectAssets": null,
+    "note": "The Stage 42 temporary consumer lock/assets prove feed resolution only and are not upstream build provenance."
+  },
+  "identityComparison": {
+    "stage40Retained": {
+      "bytes": 15230357,
+      "sha256": "140d7cc4f3c2842b5bf601650b955f2ebe9951f910858fc823da2ef6d38f54d8",
+      "sha512Base64": "Us/MWKqj2+4c8nFc0cJrQ4uvHXT3T6wEwg7Sfj+1pbOqjvIEBavxuzwGnKNBA0FG3j5nYbbLvHPONSfijtUddQ==",
+      "repositoryCommit": "be2e507ae2d34836982eadc4d18a71d9d6655ab0",
+      "license": "missing",
+      "signature": "unsigned / NU3004",
+      "exportedTypes": 299,
+      "publicDeclaredMethods": 4246
+    },
+    "stage42NugetOrg": {
+      "bytes": 15608836,
+      "sha256": "92bc106465dd87651118adbdaa8dbcb921cd117d685005ae1ae13f09cb80e038",
+      "sha512Base64": "9VPO6fsj4uUWqURYoh5vxh4L8S6/y/RU+zXaKYJmFNpUhwev4DhExI67sG9eaAocIVYf9NqPvppNk2S7YtVgZw==",
+      "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow==",
+      "repositoryCommit": "673e120807d789d90a13a9f28a043282e95bb5e6",
+      "license": "Apache-2.0",
+      "signature": "NuGet.org repository-signed",
+      "exportedTypes": 311,
+      "publicDeclaredMethods": 4374
+    },
+    "delta": { "bytes": 378479, "exportedTypes": 12, "publicDeclaredMethods": 128 }
+  },
+  "managedApiEvidence": {
+    "net8TargetFramework": "net8.0",
+    "assemblyInformationalVersion": "4.0.0+673e120807d789d90a13a9f28a043282e95bb5e6",
+    "exportedTypes": 311,
+    "publicDeclaredMethods": 4374,
+    "requiredMembers": [
+      "TensorRtBuilder.BuildSerializedNetwork",
+      "TensorRtRuntime.Deserialize(Byte[])",
+      "TensorRtEngine.CreateExecutionContext",
+      "TensorRtExecutionContext.EnqueueAsync(CudaStream)",
+      "TensorRtExecutionContext.SetInputShape(String, TensorRtDims)",
+      "TensorRtOptimizationProfile.SetShape(String, Selector, TensorRtDims)"
+    ],
+    "apiUseStatus": "observed-only-no-adapter-created"
+  },
+  "ownershipBoundaries": [
+    { "scope": "DeploySharp TensorRT managed adapter", "ownership": "not-created", "license": "DeploySharp Apache-2.0 applies only to this repository" },
+    { "scope": "TensorRT-CSharp-API wrapper", "ownership": "managed-dependency", "license": "Apache-2.0 declared by exact NuGet.org package" },
+    { "scope": "TensorRT/CUDA/cuDNN/NVIDIA driver and bridge", "ownership": "consumer-machine", "license": "not asserted", "payloadInManagedPackage": false },
+    { "scope": "TensorRT engine/plan and model", "ownership": "external/local", "portable": false, "created": false, "officialCatalog": false }
+  ],
+  "runtimeObservation": {
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "computeCapability": "8.6",
+    "driver": "576.02",
+    "cudaPath": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9",
+    "tensorRtPath": "D:\\Program Files\\TensorRT-10.11.0.33-cu12",
+    "resolvedNvinfer10": "D:\\Program Files\\TensorRT-10.13.0.35-cu11\\lib\\nvinfer_10.dll",
+    "runtimeStatus": "blocked-before-native-probe; CUDA/TensorRT identity is not a single verified matrix"
+  },
+  "fourItemBlockerStatus": [
+    { "item": "package license metadata", "status": "disappeared", "evidence": "nuspec and NuGet catalog declare Apache-2.0" },
+    { "item": "source license owner decision", "status": "disappeared", "evidence": "673e120 pack/publication-license-policy.json is approved and selects Apache-2.0/LICENSE" },
+    { "item": "immutable v4.0.0 release and exact package identity binding", "status": "retained", "evidence": "tag commit matches, but release immutable=false and no SHA256/SHA512/contentHash cross-channel manifest binds the signed NuGet package" },
+    { "item": "same-build immutable lock/assets or equivalent provenance", "status": "retained", "evidence": "none is attached to the release or committed at 673e120" }
+  ],
+  "blockerDelta": {
+    "retained": ["immutable-v4.0.0-release-and-exact-package-binding", "same-build-immutable-provenance"],
+    "new": [],
+    "disappeared": ["package-license-metadata-missing", "source-license-owner-decision-required"]
+  },
+  "blockers": [
+    { "code": "formal-v4.0.0-release-package-binding-incomplete", "evidence": "v4.0.0 points to 673e120, but the GitHub release is mutable and does not bind its unsigned asset to NuGet.org signed SHA256/SHA512/contentHash", "remediation": "Make the release immutable and attach an immutable manifest recording both GitHub unsigned-asset identity and NuGet.org signed package SHA256/SHA512/contentHash." },
+    { "code": "package-build-lock-assets-unavailable", "evidence": "No packages.lock.json, project.assets.json, attestation, or equivalent immutable build-source record is tied to commit 673e120 and this exact package", "remediation": "Publish a same-build provenance record that binds the approved commit, build inputs/lock or assets, and exact package identities." }
+  ],
+  "validation": {
+    "baselineMarker": "DEPLOYSHARP_TENSORRT_ADMISSION_BLOCKED",
+    "negativeScenarioCount": 8,
+    "negativeScenarios": ["require-admitted", "sha512-drift", "blocker-baseline-drift", "source-repository-unavailable", "license-metadata-mutation", "repository-metadata-mutation", "native-payload-injection", "managed-api-removal"]
+  },
+  "conclusion": {
+    "status": "blocked",
+    "backendProjectCreated": false,
+    "packageReferenceAdded": false,
+    "engineOrPlanCreated": false,
+    "nativeProbeAttempted": false,
+    "gpuAlgorithmOrPerformanceClaim": false,
+    "modelInventoryChanged": false,
+    "officialCatalogEntries": 0
+  }
+}

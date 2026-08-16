@@ -21,6 +21,7 @@
     "Microsoft.ML.OnnxRuntime.Managed": "1.28.0",
     "Microsoft.ML.Tokenizers": "2.0.0",
     "JYPPX.OpenVINO.CSharp.API": "3.3.0",
+    "JYPPX.TensorRT.CSharp.API": "4.0.0",
     "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1",
     "JYPPX.OpenCV.runtime.win-x64": "5.0.0-preview.1",
     "OpenVINO.runtime.win": "2026.2.1",
@@ -47,6 +48,13 @@
       "assemblyName": "JYPPX.DeploySharp.Backend.OpenVINO",
       "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
       "assemblyReferenceSha256": "bcdddeb6264b3db7622ca632833dabb54678e96129e7ed243f5b7a5e14e1a1be"
+    },
+    {
+      "projectPath": "src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj",
+      "packageId": "JYPPX.DeploySharp.Backend.TensorRT",
+      "assemblyName": "JYPPX.DeploySharp.Backend.TensorRT",
+      "targetFrameworks": ["net8.0"],
+      "assemblyReferenceSha256": "64f5d4cc13e4a275bb1fbf24757946c64c8d6bf4c366d22d47890af17de95707"
     },
     {
       "projectPath": "src/DeploySharp.Core/DeploySharp.Core.csproj",

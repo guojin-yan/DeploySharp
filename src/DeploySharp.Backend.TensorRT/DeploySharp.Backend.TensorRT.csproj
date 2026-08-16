@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Backend.TensorRT</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Backends.TensorRT</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Backend.TensorRT</PackageId>
+    <Title>DeploySharp TensorRT Backend</Title>
+    <Description>Managed TensorRT inference, ONNX-to-engine, CUDA/RTC execution, and caller-configurable local engine/PTX/CUBIN cache for DeploySharp. Native CUDA, TensorRT, driver and bridge runtimes remain consumer-owned.</Description>
+    <PackageTags>DeploySharp;TensorRT;CUDA;NVRTC;Inference;ONNX;Engine;PTX;CUBIN;LocalCache;Tensor;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -42,6 +42,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Visual.OpenCV", "src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj", "{8F0E2C64-7782-41A7-AAEF-58B24C10FE11}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Visual.OpenCV.Tests", "tests\DeploySharp.Visual.OpenCV.Tests\DeploySharp.Visual.OpenCV.Tests.csproj", "{BBB621FD-5C9A-4A78-BFFF-7821B7A03796}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.TensorRT", "src\DeploySharp.Backend.TensorRT\DeploySharp.Backend.TensorRT.csproj", "{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.TensorRT.Tests", "tests\DeploySharp.Backend.TensorRT.Tests\DeploySharp.Backend.TensorRT.Tests.csproj", "{F161AC82-E69F-47DF-A448-069FE7E730D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -269,6 +273,30 @@ Global
 		{BBB621FD-5C9A-4A78-BFFF-7821B7A03796}.Release|x64.Build.0 = Release|Any CPU
 		{BBB621FD-5C9A-4A78-BFFF-7821B7A03796}.Release|x86.ActiveCfg = Release|Any CPU
 		{BBB621FD-5C9A-4A78-BFFF-7821B7A03796}.Release|x86.Build.0 = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|x64.Build.0 = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Debug|x86.Build.0 = Debug|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|x64.ActiveCfg = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|x64.Build.0 = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|x86.ActiveCfg = Release|Any CPU
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07}.Release|x86.Build.0 = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Debug|x86.Build.0 = Debug|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x64.Build.0 = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x86.ActiveCfg = Release|Any CPU
+		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -292,5 +320,7 @@ Global
 		{59BB3911-AC16-4383-B46E-A834AD5A417D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{8F0E2C64-7782-41A7-AAEF-58B24C10FE11} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{BBB621FD-5C9A-4A78-BFFF-7821B7A03796} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{F161AC82-E69F-47DF-A448-069FE7E730D6} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

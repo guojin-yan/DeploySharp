@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "JYPPX.DeploySharp.Backend.TensorRT": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "hfcY73nWIi8MoQsIWpI9UaEzNWfdMLy9u0Y9ujaZQR6z3AHm8mC0G9cU/b+uGqcDX0zvKBSC+PQqwPbihyPTnw==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "JYPPX.TensorRT.CSharp.API": "4.0.0"
+        }
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "y5rrC9Hfe59KoPhjIGPQViXfTam+j9OZ7XwGSmAeEWebTcoSwyfdGoMhs7x6tEoah5xlyu/GlDlxJLn3fHcEKw=="
+      },
+      "JYPPX.TensorRT.CSharp.API": {
+        "type": "Transitive",
+        "resolved": "4.0.0",
+        "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow=="
+      }
+    }
+  }
+}

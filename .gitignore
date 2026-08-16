@@ -5,6 +5,8 @@
 **/obj/
 **/bin-*/
 **/obj-*/
+*.engine
+*.plan
 artifacts/*
 !artifacts/.gitkeep
 docs/_site/

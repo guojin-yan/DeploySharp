@@ -6,6 +6,7 @@ param(
     [string]$WorkingDirectory,
     [Parameter(Mandatory = $true)]
     [string]$CacheDirectory,
+    [string]$SeedPackageCache,
     [string]$EvidenceDirectory,
     [string]$RepositoryRoot
 )
@@ -16,22 +17,76 @@ $repository = (Resolve-Path -LiteralPath $RepositoryRoot).Path
 $packages = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $work = [IO.Path]::GetFullPath($WorkingDirectory)
 $cache = [IO.Path]::GetFullPath($CacheDirectory)
+$seedCache = if ([string]::IsNullOrWhiteSpace($SeedPackageCache)) { $null } else { (Resolve-Path -LiteralPath $SeedPackageCache).Path }
 $releaseEvidence = $null
 $releasePackageEvidence = @{}
+$releasePackageAssemblyHashes = @{}
 $managedDependencyEvidence = @{}
 $nativeRuntimeEvidence = @{}
 if (-not [string]::IsNullOrWhiteSpace($EvidenceDirectory)) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
     $evidenceRoot = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
     $evidencePath = Join-Path $evidenceRoot 'package-provenance-sbom.json'
     $releaseEvidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json -AsHashtable
     if ($releaseEvidence.schemaVersion -ne '1.0' -or $releaseEvidence.format.standard -ne 'custom') { throw 'Release evidence schema/format is invalid.' }
-    foreach ($component in @($releaseEvidence.releasePackages)) { $releasePackageEvidence[[string]$component.id] = $component }
+    foreach ($component in @($releaseEvidence.releasePackages)) {
+        $packageId = [string]$component.id
+        $releasePackageEvidence[$packageId] = $component
+        $packagePath = Join-Path $packages "$packageId.$($component.version).nupkg"
+        if (-not (Test-Path -LiteralPath $packagePath -PathType Leaf)) { throw "Release-evidence package is missing from the consumer source: $packageId." }
+        $hashes = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        $archive = [IO.Compression.ZipFile]::OpenRead($packagePath)
+        try {
+            foreach ($entry in @($archive.Entries | Where-Object { $_.FullName -match "^lib/[^/]+/$([regex]::Escape($packageId))\.dll$" })) {
+                $stream = $entry.Open()
+                $algorithm = [Security.Cryptography.SHA256]::Create()
+                try { [void]$hashes.Add(([BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()) }
+                finally { $algorithm.Dispose(); $stream.Dispose() }
+            }
+        }
+        finally { $archive.Dispose() }
+        if ($hashes.Count -eq 0) { throw "Release-evidence package has no managed assembly payload: $packageId." }
+        $releasePackageAssemblyHashes[$packageId] = $hashes
+    }
     foreach ($component in @($releaseEvidence.managedDependencies)) { $managedDependencyEvidence["$($component.id)/$($component.version)"] = $component }
     foreach ($component in @($releaseEvidence.consumerOwnedNativeRuntimes)) { $nativeRuntimeEvidence["$($component.id)/$($component.version)"] = $component }
 }
 if (Test-Path -LiteralPath $work) { throw "Consumer working directory already exists: $work" }
 if (Test-Path -LiteralPath $cache) { throw "Consumer package cache already exists: $cache" }
 New-Item -ItemType Directory -Path $work, $cache | Out-Null
+$offlineSource = $null
+if ($null -ne $seedCache) {
+    $offlineSource = Join-Path $work 'offline-packages'
+    New-Item -ItemType Directory -Path $offlineSource | Out-Null
+    $seededIdentities = @{}
+    foreach ($lockFile in Get-ChildItem -LiteralPath (Join-Path $repository 'tests\clean-consumer') -Recurse -Filter 'packages.lock.json') {
+        $lock = Get-Content -LiteralPath $lockFile.FullName -Raw | ConvertFrom-Json -AsHashtable
+        foreach ($framework in $lock.dependencies.Values) {
+            foreach ($dependency in $framework.GetEnumerator()) {
+                $id = [string]$dependency.Key
+                $version = [string]$dependency.Value.resolved
+                if ($id -like 'JYPPX.DeploySharp.*' -or [string]::IsNullOrWhiteSpace($version)) { continue }
+                $seededIdentities["$($id.ToLowerInvariant())/$($version.ToLowerInvariant())"] = @($id.ToLowerInvariant(), $version.ToLowerInvariant())
+            }
+        }
+    }
+    foreach ($seedPackage in Get-ChildItem -LiteralPath $seedCache -Recurse -Filter '*.nupkg' -File) {
+        $version = $seedPackage.Directory.Name.ToLowerInvariant()
+        $id = $seedPackage.Directory.Parent.Name.ToLowerInvariant()
+        if ($id -like 'jyppx.deploysharp.*') { continue }
+        $seededIdentities["$id/$version"] = @($id, $version)
+    }
+    foreach ($identity in $seededIdentities.Values) {
+        $sourceVersionRoot = Join-Path (Join-Path $seedCache $identity[0]) $identity[1]
+        if (-not (Test-Path -LiteralPath $sourceVersionRoot -PathType Container)) { throw "Locked package is missing from the offline seed cache: $($identity[0])/$($identity[1])" }
+        $destinationIdRoot = Join-Path $cache $identity[0]
+        New-Item -ItemType Directory -Path $destinationIdRoot -Force | Out-Null
+        Copy-Item -LiteralPath $sourceVersionRoot -Destination $destinationIdRoot -Recurse
+        $sourcePackages = @(Get-ChildItem -LiteralPath $sourceVersionRoot -Filter '*.nupkg' -File)
+        if ($sourcePackages.Count -ne 1) { throw "Offline seed package must contain exactly one nupkg: $($identity[0])/$($identity[1])" }
+        Copy-Item -LiteralPath $sourcePackages[0].FullName -Destination $offlineSource
+    }
+}
 $stagedConsumerRoot = Join-Path $work 'tests\clean-consumer'
 $stagedAssets = Join-Path $work 'tests\assets'
 New-Item -ItemType Directory -Path $stagedConsumerRoot | Out-Null
@@ -48,7 +103,11 @@ try {
     $writer.WriteStartElement('packageSources')
     $writer.WriteStartElement('clear'); $writer.WriteEndElement()
     $writer.WriteStartElement('add'); $writer.WriteAttributeString('key', 'stage35-local'); $writer.WriteAttributeString('value', $packages); $writer.WriteEndElement()
-    $writer.WriteStartElement('add'); $writer.WriteAttributeString('key', 'nuget.org'); $writer.WriteAttributeString('value', 'https://api.nuget.org/v3/index.json'); $writer.WriteAttributeString('protocolVersion', '3'); $writer.WriteEndElement()
+    if ($null -ne $offlineSource) {
+        $writer.WriteStartElement('add'); $writer.WriteAttributeString('key', 'offline-seed'); $writer.WriteAttributeString('value', $offlineSource); $writer.WriteEndElement()
+    } else {
+        $writer.WriteStartElement('add'); $writer.WriteAttributeString('key', 'nuget.org'); $writer.WriteAttributeString('value', 'https://api.nuget.org/v3/index.json'); $writer.WriteAttributeString('protocolVersion', '3'); $writer.WriteEndElement()
+    }
     $writer.WriteEndElement()
     $writer.WriteEndElement()
     $writer.WriteEndDocument()
@@ -138,8 +197,8 @@ try {
                 $outputAssembly = Join-Path $outputRoot "$packageId.dll"
                 if (-not (Test-Path -LiteralPath $outputAssembly -PathType Leaf)) { throw "Consumer $name output is missing release-evidence assembly: $packageId.dll." }
                 $outputSha256 = (Get-FileHash -LiteralPath $outputAssembly -Algorithm SHA256).Hash.ToLowerInvariant()
-                if (@($releasePackageEvidence[$packageId].frameworks | Where-Object { $_.assemblySha256 -eq $outputSha256 }).Count -eq 0) {
-                    throw "Consumer $name output assembly differs from every packaged TFM in release evidence: $packageId.dll."
+                if (-not $releasePackageAssemblyHashes[$packageId].Contains($outputSha256)) {
+                    throw "Consumer $name output assembly differs from every managed DLL in the validated package: $packageId.dll."
                 }
             }
         }
@@ -173,4 +232,5 @@ finally {
 }
 
 $evidenceStatus = if ($null -eq $releaseEvidence) { 'not-requested' } else { 'validated' }
-Write-Output "DEPLOYSHARP_CLEAN_CONSUMER_MATRIX_OK projects=$($projects.Count) passed=$passed skipped-external=$skipped blocked-external=$blocked package-source=stage35-local evidence=$evidenceStatus"
+$dependencySource = if ($null -eq $seedCache) { 'nuget.org' } else { 'offline-seeded-cache' }
+Write-Output "DEPLOYSHARP_CLEAN_CONSUMER_MATRIX_OK projects=$($projects.Count) passed=$passed skipped-external=$skipped blocked-external=$blocked package-source=stage35-local dependency-source=$dependencySource evidence=$evidenceStatus"

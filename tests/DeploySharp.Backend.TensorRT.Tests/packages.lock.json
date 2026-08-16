@@ -2,21 +2,6 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
-      "JYPPX.OpenCV.runtime.win-x64": {
-        "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "2I4TcBgId4eo1bZbaMZwJ0KYsiQOJVnBwFoTnN5xanqpUi8DO1aVXGW2Koe0uH1B/l7g1FHARsabaVQum4IH4g=="
-      },
-      "Microsoft.ML.OnnxRuntime": {
-        "type": "Direct",
-        "requested": "[1.28.0, )",
-        "resolved": "1.28.0",
-        "contentHash": "xpguSCrXBe5E1l1088S7UqnI36EHaTL6CJMHEhwfGBoSwyPH5Q/IkbkBBk/GwXWzsVyEXpQm42ZimSAQs0/zKA==",
-        "dependencies": {
-          "Microsoft.ML.OnnxRuntime.Managed": "1.28.0"
-        }
-      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.8.1, )",
@@ -46,17 +31,6 @@
         "dependencies": {
           "MSTest.Analyzers": "4.3.3"
         }
-      },
-      "OpenVINO.runtime.win": {
-        "type": "Direct",
-        "requested": "[2026.2.1, )",
-        "resolved": "2026.2.1",
-        "contentHash": "PcijWITG5Ph/pCfS15vgRriDX6x3lpQ1xliRCkuvcDRQ+o2yX7qXGH+CdYtC+wgkCvAaJZSuqIfw2CMSz/w8vw=="
-      },
-      "Google.Protobuf": {
-        "type": "Transitive",
-        "resolved": "3.30.2",
-        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
@@ -127,71 +101,21 @@
         "resolved": "4.3.3",
         "contentHash": "cTcdSPIZ8WvchbC5DFmfHxrvVNZCtops+2W94le+Q+mx110Y9L9mqNVVc9flF35lFeL5GsY+rxGBylsjDk4+zg=="
       },
-      "System.Numerics.Tensors": {
-        "type": "Transitive",
-        "resolved": "9.0.0",
-        "contentHash": "hyJB4UlpAi19Xr9AXzu2NuagKC4lPfHObNMEAA0HmqFz2rX7wKgzeYzO/jM/eBHDhnUGFFEjk5cOoJaxqg5J4A=="
-      },
-      "JYPPX.DeploySharp.Backend.OnnxRuntime": {
+      "JYPPX.DeploySharp.Backend.TensorRT": {
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "Microsoft.ML.OnnxRuntime.Managed": "[1.28.0, )"
-        }
-      },
-      "JYPPX.DeploySharp.Backend.OpenVINO": {
-        "type": "Project",
-        "dependencies": {
-          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenVINO.CSharp.API": "[3.3.0, )"
+          "JYPPX.TensorRT.CSharp.API": "[4.0.0, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
       },
-      "JYPPX.DeploySharp.Visual": {
-        "type": "Project",
-        "dependencies": {
-          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "Microsoft.ML.Tokenizers": "[2.0.0, )"
-        }
-      },
-      "JYPPX.DeploySharp.Visual.OpenCV": {
-        "type": "Project",
-        "dependencies": {
-          "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
-        }
-      },
-      "JYPPX.OpenCV.CSharp.API": {
+      "JYPPX.TensorRT.CSharp.API": {
         "type": "CentralTransitive",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
-      },
-      "JYPPX.OpenVINO.CSharp.API": {
-        "type": "CentralTransitive",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "ElSfJF5iQADST9MEkLCAMhOpseRlxTLKiAobtQ/EDmpQB/+eOW6rJue+TSf6jq9LTNmQGpjB9sa1cUE1f/kLWw=="
-      },
-      "Microsoft.ML.OnnxRuntime.Managed": {
-        "type": "CentralTransitive",
-        "requested": "[1.28.0, )",
-        "resolved": "1.28.0",
-        "contentHash": "4ecKjwASHhAZXczK/xm5KU6MdvoIGfMd23UAwDbM9vfcfgqZgNqvFWPZPT0Elc1wu5vXWs2Kij1ZBmHCcv1UlA==",
-        "dependencies": {
-          "System.Numerics.Tensors": "9.0.0"
-        }
-      },
-      "Microsoft.ML.Tokenizers": {
-        "type": "CentralTransitive",
-        "requested": "[2.0.0, )",
-        "resolved": "2.0.0",
-        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
-        "dependencies": {
-          "Google.Protobuf": "3.30.2"
-        }
+        "requested": "[4.0.0, )",
+        "resolved": "4.0.0",
+        "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow=="
       }
     }
   }
