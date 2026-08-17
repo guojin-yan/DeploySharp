@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "yolo/v26/obb/s",
+  "name": "YOLO26s Oriented Detection",
+  "family": "yolo26",
+  "task": "oriented-object-detection",
+  "modelVersion": "s-8.4.0",
+  "exporter": {
+    "name": "Upstream YOLO ONNX export",
+    "version": "8.4.0-end2end",
+    "sourceRevision": "6f6158be448c73471c000cf41db5cd9169300ed9"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+    "projectUrl": "https://github.com/ultralytics/ultralytics",
+    "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+    "author": "Upstream YOLO maintainers",
+    "licenseExpression": "AGPL-3.0-only",
+    "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "yolo.yolo.v26.obb.s",
+  "inputs": [
+    {
+      "name": "images",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        1024,
+        1024
+      ]
+    }
+  ],
+  "outputs": [],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "bbc7c924dcac9e94888ef706f7aa5648cbc38f5fbd4c8a360401ebee7be955df",
+          "size": 39438174,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+          "size": 34523,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 19,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-real-image-matrix-verified",
+        "deploysharp.preprocessing-version": "ultralytics-letterbox-or-task-specific-v1",
+        "deploysharp.postprocessing-contract": "end-to-end oriented boxes with angle",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

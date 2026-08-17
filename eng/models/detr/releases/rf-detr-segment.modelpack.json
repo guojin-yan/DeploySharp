@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "rf-detr/segment",
+  "name": "RF-DETR Segment",
+  "family": "rf-detr",
+  "task": "instance-segmentation",
+  "modelVersion": "external",
+  "exporter": {
+    "name": "official-rf-detr-onnx-export",
+    "version": "opset17",
+    "sourceRevision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+    "projectUrl": "https://github.com/roboflow/rf-detr",
+    "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+    "author": "Roboflow",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/apache-rf-detr.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "portable.rfdetrseg.rf-detr/segment",
+  "inputs": [
+    {
+      "name": "input",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        432,
+        432
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dets",
+      "elementType": "float32",
+      "shape": [
+        1,
+        200,
+        4
+      ]
+    },
+    {
+      "name": "labels",
+      "elementType": "float32",
+      "shape": [
+        1,
+        200,
+        91
+      ]
+    },
+    {
+      "name": "4245",
+      "elementType": "float32",
+      "shape": [
+        1,
+        200,
+        108,
+        108
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35",
+          "size": 131311092,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+          "size": 11345,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-verified",
+        "deploysharp.preprocessing-version": "rfdetr-direct-resize-imagenet-v1",
+        "deploysharp.postprocessing-version": "rfdetr-mask-logit-bilinear-v1",
+        "deploysharp.rf-detr-query-count": "200",
+        "deploysharp.rf-detr-class-columns": "foreground-plus-no-object",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

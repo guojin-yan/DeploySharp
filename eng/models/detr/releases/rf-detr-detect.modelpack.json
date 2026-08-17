@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "rf-detr/detect",
+  "name": "RF-DETR Detect",
+  "family": "rf-detr",
+  "task": "object-detection",
+  "modelVersion": "external",
+  "exporter": {
+    "name": "official-rf-detr-onnx-export",
+    "version": "opset17",
+    "sourceRevision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+    "projectUrl": "https://github.com/roboflow/rf-detr",
+    "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+    "author": "Roboflow",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/apache-rf-detr.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "portable.rfdetrdet.rf-detr/detect",
+  "inputs": [
+    {
+      "name": "input",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        512,
+        512
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dets",
+      "elementType": "float32",
+      "shape": [
+        1,
+        300,
+        4
+      ]
+    },
+    {
+      "name": "labels",
+      "elementType": "float32",
+      "shape": [
+        1,
+        300,
+        6
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769",
+          "size": 121321053,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+          "size": 11345,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-verified",
+        "deploysharp.preprocessing-version": "rfdetr-direct-resize-imagenet-v1",
+        "deploysharp.postprocessing-version": "rfdetr-global-sigmoid-topk-v1",
+        "deploysharp.rf-detr-query-count": "300",
+        "deploysharp.rf-detr-class-columns": "foreground-plus-no-object",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "deim/v2/detect",
+  "name": "DEIMv2 Detect",
+  "family": "deimv2",
+  "task": "object-detection",
+  "modelVersion": "v2-external",
+  "exporter": {
+    "name": "official-DEIMv2-export_onnx",
+    "version": "local-opset16",
+    "sourceRevision": "0fff8d4dcdc272e6cf2d84be31399db471357941"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2/tree/0fff8d4dcdc272e6cf2d84be31399db471357941",
+    "projectUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2",
+    "revision": "0fff8d4dcdc272e6cf2d84be31399db471357941",
+    "author": "DEIMv2 maintainers",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/apache-deimv2.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "portable.deimv2det.deim/v2/detect",
+  "inputs": [
+    {
+      "name": "images",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        640,
+        640
+      ]
+    },
+    {
+      "name": "orig_target_sizes",
+      "elementType": "int64",
+      "shape": [
+        1,
+        2
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "labels",
+      "elementType": "int64",
+      "shape": [
+        1,
+        -1
+      ]
+    },
+    {
+      "name": "boxes",
+      "elementType": "float32",
+      "shape": [
+        1,
+        -1,
+        4
+      ]
+    },
+    {
+      "name": "scores",
+      "elementType": "float32",
+      "shape": [
+        1,
+        -1
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc",
+          "size": 40030960,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/apache-deimv2.txt",
+          "sha256": "f25a3c7b894c50f203813bc72183a22124c89c27b15d420b92e4621ca4b0f9cf",
+          "size": 11564,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 16,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-verified",
+        "deploysharp.preprocessing-version": "deim-centered-square-imagenet-v1",
+        "deploysharp.postprocessing-version": "deim-decoded-strict-threshold-v1",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

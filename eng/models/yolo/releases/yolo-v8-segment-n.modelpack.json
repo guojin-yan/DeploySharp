@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "yolo/v8/segment/n",
+  "name": "YOLOv8n Segmentation",
+  "family": "yolov8",
+  "task": "instance-segmentation",
+  "modelVersion": "n-8.0.119",
+  "exporter": {
+    "name": "Upstream YOLO ONNX export",
+    "version": "8.0.119",
+    "sourceRevision": "ef141af4b837e0a1c34ff187ac40ef36af56c135"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+    "projectUrl": "https://github.com/ultralytics/ultralytics",
+    "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+    "author": "Upstream YOLO maintainers",
+    "licenseExpression": "AGPL-3.0-only",
+    "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "yolo.yolo.v8.segment.n",
+  "inputs": [
+    {
+      "name": "images",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        640,
+        640
+      ]
+    }
+  ],
+  "outputs": [],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "986ba70310322ad2d5aec429c4a07d27d3a1c1f5a4eb8f9127ae7c2d358be5c2",
+          "size": 13821992,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+          "size": 34523,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 12,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-real-image-matrix-verified",
+        "deploysharp.preprocessing-version": "ultralytics-letterbox-or-task-specific-v1",
+        "deploysharp.postprocessing-contract": "attribute-major detection and prototype mask outputs",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "yolo/v10/detect/n",
+  "name": "YOLOv10n Detect",
+  "family": "yolov10",
+  "task": "object-detection",
+  "modelVersion": "n",
+  "exporter": {
+    "name": "audited-upstream-onnx-export",
+    "version": "8.3.78",
+    "sourceRevision": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/THU-MIG/yolov10/tree/453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+    "projectUrl": "https://github.com/THU-MIG/yolov10",
+    "revision": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+    "author": "Upstream YOLO maintainers",
+    "licenseExpression": "AGPL-3.0-only",
+    "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "yolo.detect.v10.end-to-end.onnx.yolo/v10/detect/n",
+  "inputs": [
+    {
+      "name": "images",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        640,
+        640
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "output0",
+      "elementType": "float32",
+      "shape": [
+        1,
+        -1,
+        6
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81",
+          "size": 9454100,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+          "size": 34523,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 19,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-backend-verified",
+        "deploysharp.artifact-provenance": "unverified-local-file",
+        "deploysharp.preprocessing-version": "ultralytics-letterbox-rgb-nchw-v1",
+        "deploysharp.postprocessing-version": "deploysharp-yolo-detection-v1",
+        "deploysharp.validation-image-sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+        "deploysharp.prepared-tensor-sha256": "48af3a194d046f683585c8c8deffa953d415122ec0f2398bd27d8a67f34978df",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}
