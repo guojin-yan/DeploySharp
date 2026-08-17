@@ -70,7 +70,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 license: "External",
                 scoreThreshold: .4f,
                 boxesOutputName: "save_infer_model/scale_0.tmp_0",
-                countOutputName: openVino ? "cast_5.tmp_0" : "save_infer_model/scale_1.tmp_0",
+                countOutputName: "save_infer_model/scale_1.tmp_0",
                 hasDynamicBatchAxis: openVino ? false : true,
                 paddleCountShape: PortableDetectorCountShape.BatchVector);
             return Run(PortableDetectorProfiles.CreateRTDETR(new ModelId("external/stage21-rtdetr-decoded-" + (openVino ? "openvino" : "ort")), options), path, openVino, image);

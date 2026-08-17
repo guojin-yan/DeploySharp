@@ -267,6 +267,10 @@ foreach ($candidate in Get-ChildItem -LiteralPath $detrCandidates -Filter '*.mod
     $project = [string]$old.source.projectUrl
     $revision = [string]$old.exporter.sourceRevision
     $source = New-SourceRecord $project $revision ([string]$old.source.author) $license
+    if ($id -eq 'rt-detr/r50vd-decoded-vector-ir') {
+        $old.outputs[1].name = 'save_infer_model/scale_1.tmp_0'
+        $artifact.extensions.'deploysharp.conversion-chain' = 'The published OpenVINO Runtime 2026.2.1 metadata exposes save_infer_model/scale_1.tmp_0 for the vector-count output.'
+    }
     $manifest = [ordered]@{
         schemaVersion='2.0'; modelId=$id; name=([string]$old.name -replace ' external candidate',''); family=$old.family; task=$old.task; modelVersion=$old.modelVersion
         exporter=[ordered]@{name=$old.exporter.name;version=$old.exporter.version;sourceRevision=$revision}; source=$source; generatedAt=$generatedAt; profileId=([string]$old.profileId -replace '/external',''); inputs=@($old.inputs); outputs=@($old.outputs); artifacts=@($artifact); extensions=[ordered]@{'deploysharp.publication-status'='alpha-preview';'deploysharp.downloadable'='true'}
@@ -274,7 +278,7 @@ foreach ($candidate in Get-ChildItem -LiteralPath $detrCandidates -Filter '*.mod
     $fileName = $id.Replace('/','-') + '.modelpack.json'
     $json = ($manifest | ConvertTo-Json -Depth 30) + [Environment]::NewLine
     $expected[(Join-Path $detrReleases $fileName)] = $json
-    $planEntries.Add([ordered]@{ collection='detr'; tag='models-20260817.detr.1'; modelId=$id; manifestFile='detr/releases/' + $fileName; localPath=$map.Path; licenseSlug=$map.License; licenseExpression=$license.Expression })
+    $planEntries.Add([ordered]@{ collection='detr'; tag='models-20260817.detr.2'; modelId=$id; manifestFile='detr/releases/' + $fileName; localPath=$map.Path; licenseSlug=$map.License; licenseExpression=$license.Expression })
 }
 
 if ($Check) {
@@ -285,5 +289,5 @@ if ($Check) {
     [IO.Directory]::CreateDirectory($yoloReleases) | Out-Null
     [IO.Directory]::CreateDirectory($detrReleases) | Out-Null
     foreach ($item in $expected.GetEnumerator()) { [IO.File]::WriteAllText($item.Key, $item.Value, [Text.UTF8Encoding]::new($false)) }
-    [IO.File]::WriteAllText($planPath, (([ordered]@{ schemaVersion='1.0'; generatedAt=$generatedAt; collections=@([ordered]@{id='yolo';tag='models-20260817.yolo.1';assetRoot='yolo'},[ordered]@{id='detr';tag='models-20260817.detr.1';assetRoot='detr'}); models=$planEntries } | ConvertTo-Json -Depth 20) + [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText($planPath, (([ordered]@{ schemaVersion='1.0'; generatedAt=$generatedAt; collections=@([ordered]@{id='yolo';tag='models-20260817.yolo.1';assetRoot='yolo'},[ordered]@{id='detr';tag='models-20260817.detr.2';assetRoot='detr'}); models=$planEntries } | ConvertTo-Json -Depth 20) + [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
 }

@@ -59,7 +59,7 @@
       ]
     },
     {
-      "name": "cast_5.tmp_0",
+      "name": "save_infer_model/scale_1.tmp_0",
       "elementType": "int32",
       "shape": [
         1
@@ -109,7 +109,7 @@
         "deploysharp.input-sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
         "deploysharp.canonical-result-sha256": "0aa552a2931ff5431849a62d6461e7b828fbb6f3e456c48d96814840497bf7c9",
         "deploysharp.golden-summary": "bus.jpg strict-score-0.4 result-count-5; ORT/OpenVINO field parity within declared tolerance",
-        "deploysharp.conversion-chain": "paired local ONNX-to-IR relationship and converter command remain unverified; XML output alias cast_5.tmp_0 was read from real backend metadata",
+        "deploysharp.conversion-chain": "The published OpenVINO Runtime 2026.2.1 metadata exposes save_infer_model/scale_1.tmp_0 for the vector-count output.",
         "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
       }
     }

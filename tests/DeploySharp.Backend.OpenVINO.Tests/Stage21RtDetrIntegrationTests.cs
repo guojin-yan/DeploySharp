@@ -38,7 +38,7 @@ namespace DeploySharp.Backend.OpenVINO.Tests
                 license: "External",
                 scoreThreshold: .01f,
                 boxesOutputName: "save_infer_model/scale_0.tmp_0",
-                countOutputName: "cast_5.tmp_0",
+                countOutputName: "save_infer_model/scale_1.tmp_0",
                 hasDynamicBatchAxis: true,
                 paddleCountShape: PortableDetectorCountShape.BatchVector);
             PortableDetectorProfile profile = PortableDetectorProfiles.CreateRTDETR(new ModelId("external/openvino-rtdetr-decoded"), options);

@@ -111,7 +111,7 @@ foreach ($planEntry in $plan.models) {
 $document = [ordered]@{
     schemaVersion = [string]$catalog.schemaVersion
     generatedAt = [string]$catalog.generatedAt
-    catalogRevision = 'models-20260817.detectors.1'
+    catalogRevision = 'models-20260817.detectors.2'
     sourceRepository = [string]$catalog.sourceRepository
     entries = @($retained) + @($generated)
 }

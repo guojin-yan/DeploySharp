@@ -2,10 +2,10 @@
 param(
     [string]$Repository = 'guojin-yan/DeploySharp',
     [string]$StageRoot = 'artifacts',
-    [Parameter(Mandatory = $true)]
     [long]$YoloReleaseId,
-    [Parameter(Mandatory = $true)]
     [long]$DetrReleaseId,
+    [ValidateSet('yolo', 'detr')]
+    [string[]]$Collections = @('yolo', 'detr'),
     [int]$MaximumAttempts = 5
 )
 
@@ -43,10 +43,11 @@ function Wait-ForUploadedAsset {
     throw "GitHub did not finalize the expected asset: $($Expected.name)"
 }
 
-foreach ($collection in @('yolo', 'detr')) {
+foreach ($collection in $Collections) {
     $stageDirectory = Join-Path $repositoryRoot (Join-Path $StageRoot ('model-release-' + $collection + '-20260817'))
     $assetPlan = Get-Content -Raw -LiteralPath (Join-Path $stageDirectory 'release-assets.json') | ConvertFrom-Json
     $releaseId = if ($collection -eq 'yolo') { $YoloReleaseId } else { $DetrReleaseId }
+    if ($releaseId -le 0) { throw "A release ID is required for collection '$collection'." }
     $release = Invoke-RestMethod -NoProxy -Headers $headers -Uri ($apiBase + '/releases/' + $releaseId)
     if ($release.tag_name -ne $assetPlan.tag) { throw "Draft release tag does not match staged collection: $($assetPlan.tag)" }
     if (-not $release.draft -or -not $release.prerelease) { throw "Release must remain a draft prerelease until all uploads verify: $($assetPlan.tag)" }
