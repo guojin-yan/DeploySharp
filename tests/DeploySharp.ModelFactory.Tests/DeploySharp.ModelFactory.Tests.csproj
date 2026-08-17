@@ -29,5 +29,7 @@
     <Content Include="..\..\eng\models\vision\releases\clip-vit-b-32.modelpack.json" Link="fixtures\clip-vit-b-32.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\vision\releases\sam-v1-vit-b.modelpack.json" Link="fixtures\sam-v1-vit-b.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\vision\releases\blip-caption-base.modelpack.json" Link="fixtures\blip-caption-base.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\yolo\releases\*.modelpack.json" Link="fixtures\yolo-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\detr\releases\*.modelpack.json" Link="fixtures\detr-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

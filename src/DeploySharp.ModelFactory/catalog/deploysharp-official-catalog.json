@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-08-17T00:00:00.0000000Z",
-  "catalogRevision": "models-20260817.vision.1",
+  "generatedAt": "08/17/2026 00:00:00",
+  "catalogRevision": "models-20260817.detectors.1",
   "sourceRepository": "https://github.com/guojin-yan/DeploySharp",
   "entries": [
     {
@@ -32,14 +32,19 @@
         {
           "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
           "format": "gguf",
-          "compatibleBackends": ["llamasharp"],
+          "compatibleBackends": [
+            "llamasharp"
+          ],
           "precision": "mixed-integer",
           "quantization": "q4-k-m",
           "portable": true,
           "manifestAssetId": "qwen-modelpack",
           "bundleRole": "language-model",
           "bundleVersion": "hf-9217f5db-q4-k-m",
-          "capabilities": ["language-generation", "embedding"],
+          "capabilities": [
+            "language-generation",
+            "embedding"
+          ],
           "tokenizerId": "qwen2-gpt2-151936",
           "vocabularyMode": "qwen2-bpe",
           "embeddingDimension": 896,
@@ -523,6 +528,2507 @@
       ],
       "testInputs": [],
       "documentationPath": "articles/models-vision-collection.md"
+    },
+    {
+      "modelId": "yolo/v11/detect/n",
+      "name": "YOLO11n Detect",
+      "family": "yolo11",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v11-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v11-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-detect-n.modelpack.json",
+              "relativePath": "yolo-v11-detect-n.modelpack.json",
+              "size": 2923,
+              "sha256": "384c21f1e785bd77b5b25cdcbe54cca62195b37346e96f33a849fd3671f0fbb6",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 10720330,
+              "sha256": "7060132736a0e5856a8b91d68fd7558ac6daf8c5fb7cec46dbc9cb034f8409c3",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.78",
+            "sourceRevision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v12/detect/n",
+      "name": "YOLO12n Detect",
+      "family": "yolo12",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/sunsmarterjie/yolov12/tree/01a22c0603e0eaa6d9bd62120a391e744d92cea2",
+        "projectUrl": "https://github.com/sunsmarterjie/yolov12",
+        "revision": "01a22c0603e0eaa6d9bd62120a391e744d92cea2",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v12-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v12-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v12-detect-n.modelpack.json",
+              "relativePath": "yolo-v12-detect-n.modelpack.json",
+              "size": 2919,
+              "sha256": "706d5b67ab240ede4db53866af0c8d8f24b16a4bf925b9c7f5e5f2e1ed29012d",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v12-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v12-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 10671234,
+              "sha256": "9a99a764c60423ffaef870bf22687c66da284c6b2ad7f249605ced9c8a2a3e80",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v12-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.78",
+            "sourceRevision": "01a22c0603e0eaa6d9bd62120a391e744d92cea2",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v26/detect/n",
+      "name": "YOLO26n Detect",
+      "family": "yolo26",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v26-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v26-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-detect-n.modelpack.json",
+              "relativePath": "yolo-v26-detect-n.modelpack.json",
+              "size": 2911,
+              "sha256": "fc32549e457c19257ba65b6ae9977ccf57afeaf3beec15d67b868d2801b698e7",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 9941955,
+              "sha256": "bd169d41c0c04abe18bc1ea6220ff295cf77a38c165071b1acc76ee6ef0c10c4",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.4.0",
+            "sourceRevision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v10/detect/n",
+      "name": "YOLOv10n Detect",
+      "family": "yolov10",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/THU-MIG/yolov10/tree/453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+        "projectUrl": "https://github.com/THU-MIG/yolov10",
+        "revision": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v10-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v10-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v10-detect-n.modelpack.json",
+              "relativePath": "yolo-v10-detect-n.modelpack.json",
+              "size": 2898,
+              "sha256": "376ca22a04c8427030b58697e8331f09e29c50a3c69509faebf599e5ca8905fb",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v10-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v10-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 9454100,
+              "sha256": "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v10-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.78",
+            "sourceRevision": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v13/detect/n",
+      "name": "YOLOv13n Detect",
+      "family": "yolov13",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/iMoonLab/YOLOv13/tree/73289949533efac82bb5f72ec19b746618656bd2",
+        "projectUrl": "https://github.com/iMoonLab/YOLOv13",
+        "revision": "73289949533efac82bb5f72ec19b746618656bd2",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-yolov12-13.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v13-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v13-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v13-detect-n.modelpack.json",
+              "relativePath": "yolo-v13-detect-n.modelpack.json",
+              "size": 2909,
+              "sha256": "81a75dd3dc8c5ac7d8d5c3ef5cc3c2720480380e0cadddaa0101cca61470b21e",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v13-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v13-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 10310579,
+              "sha256": "a589a4e351e9f9be6712ba4d6831cfbcc16b7ac58d6498c02a8386eca828cf80",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v13-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-yolov12-13.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-yolov12-13.txt",
+              "size": 34523,
+              "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.63",
+            "sourceRevision": "73289949533efac82bb5f72ec19b746618656bd2",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v5/detect/n",
+      "name": "YOLOv5n Detect",
+      "family": "yolov5",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/yolov5/tree/20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "projectUrl": "https://github.com/ultralytics/yolov5",
+        "revision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v5-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v5-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v5-detect-n.modelpack.json",
+              "relativePath": "yolo-v5-detect-n.modelpack.json",
+              "size": 2920,
+              "sha256": "691ab048fad2ccc5d82b418f2efc03d560dba141a20d92f2c28030c46bd1c820",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v5-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v5-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 7903142,
+              "sha256": "1cad0ece41bc351e2e1a3bd9b244dc4219f1b7b4d322928f13b6e7d19a00ef9d",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v5-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "local-onnx-export",
+            "sourceRevision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v6/detect/s",
+      "name": "YOLOv6s Detect",
+      "family": "yolov6",
+      "task": "object-detection",
+      "modelVersion": "s",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/meituan/YOLOv6/tree/e86a483f3f6bded25d45970b56831345a99744a4",
+        "projectUrl": "https://github.com/meituan/YOLOv6",
+        "revision": "e86a483f3f6bded25d45970b56831345a99744a4",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "GPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/gpl-yolo-family.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v6-detect-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v6-detect-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v6-detect-s.modelpack.json",
+              "relativePath": "yolo-v6-detect-s.modelpack.json",
+              "size": 2910,
+              "sha256": "ffd5cf0388152cb86bafdfe81b9f2f9efce3cc7233db4bfc185349458bf2a396",
+              "mediaType": "application/json",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v6-detect-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v6-detect-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 69046664,
+              "sha256": "f6fddae83fb23ff02578d5b5e9f4eb9d68b5d8e7f469bb80edf4041681c757f6",
+              "mediaType": "application/onnx",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v6-detect-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+              "size": 35149,
+              "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+              "mediaType": "text/plain",
+              "licenseExpression": "GPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "local-onnx-export",
+            "sourceRevision": "e86a483f3f6bded25d45970b56831345a99744a4",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v7/detect/base",
+      "name": "YOLOv7 Detect",
+      "family": "yolov7",
+      "task": "object-detection",
+      "modelVersion": "base",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov7/tree/a207844b1ce82d204ab36d87d496728d3d2348e7",
+        "projectUrl": "https://github.com/WongKinYiu/yolov7",
+        "revision": "a207844b1ce82d204ab36d87d496728d3d2348e7",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "GPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/gpl-yolo-family.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v7-detect-base-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "base",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v7-detect-base-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v7-detect-base.modelpack.json",
+              "relativePath": "yolo-v7-detect-base.modelpack.json",
+              "size": 2910,
+              "sha256": "5c0496cbaca9267855502e99bec731e88718debf752c390c8ca4bce82b381eee",
+              "mediaType": "application/json",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v7-detect-base-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v7-detect-base.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 147764877,
+              "sha256": "8ee07ed4aa95070ae1c9e7a37c2407c2aa065e989f887cb1193bcb117603c641",
+              "mediaType": "application/onnx",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v7-detect-base-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+              "size": 35149,
+              "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+              "mediaType": "text/plain",
+              "licenseExpression": "GPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "local-onnx-export",
+            "sourceRevision": "a207844b1ce82d204ab36d87d496728d3d2348e7",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v8/detect/n",
+      "name": "YOLOv8n Detect",
+      "family": "yolov8",
+      "task": "object-detection",
+      "modelVersion": "n",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v8-detect-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v8-detect-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-detect-n.modelpack.json",
+              "relativePath": "yolo-v8-detect-n.modelpack.json",
+              "size": 2920,
+              "sha256": "4b6cb5a3eb5888edfd612af1706640a8ef3b25364489a79856a1d24ba2d217d1",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-detect-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-detect-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 12836453,
+              "sha256": "50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-detect-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.78",
+            "sourceRevision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v9/detect/s",
+      "name": "YOLOv9s Detect",
+      "family": "yolov9",
+      "task": "object-detection",
+      "modelVersion": "s",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov9/tree/5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "projectUrl": "https://github.com/WongKinYiu/yolov9",
+        "revision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "GPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/gpl-yolo-family.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v9-detect-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v9-detect-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-detect-s.modelpack.json",
+              "relativePath": "yolo-v9-detect-s.modelpack.json",
+              "size": 2905,
+              "sha256": "56cc4c3345840f6cef088ff97ea7a65b80b871a1848c82ef4efcebf5f5472c3d",
+              "mediaType": "application/json",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v9-detect-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-detect-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 29153318,
+              "sha256": "e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7",
+              "mediaType": "application/onnx",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v9-detect-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+              "size": 35149,
+              "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+              "mediaType": "text/plain",
+              "licenseExpression": "GPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "audited-upstream-onnx-export",
+            "exporterVersion": "8.3.78",
+            "sourceRevision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v8/classify/s",
+      "name": "YOLOv8s Classification",
+      "family": "yolov8",
+      "task": "image-classification",
+      "modelVersion": "s-8.1.6",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v8-classify-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.1.6",
+          "capabilities": [
+            "image-classification"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v8-classify-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-classify-s.modelpack.json",
+              "relativePath": "yolo-v8-classify-s.modelpack.json",
+              "size": 2513,
+              "sha256": "87c33cd8d2391712b2a51135b2f94cd343d8a740a961df6080e057b2b460c2c5",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-classify-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-classify-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 25460947,
+              "sha256": "6d7265a72c1a9006e4faaf8ada744fbf72c32d53e6def3be05c125407adfdcee",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-classify-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.1.6",
+            "sourceRevision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v5/segment/s",
+      "name": "YOLOv5s Segmentation",
+      "family": "yolov5",
+      "task": "instance-segmentation",
+      "modelVersion": "s",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/yolov5/tree/20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "projectUrl": "https://github.com/ultralytics/yolov5",
+        "revision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "GPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/gpl-yolo-family.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v5-segment-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v5-segment-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v5-segment-s.modelpack.json",
+              "relativePath": "yolo-v5-segment-s.modelpack.json",
+              "size": 2534,
+              "sha256": "e469304eb84802b9327fd613c07d38728fbc7fbe301c61246ac9c1aa5697297a",
+              "mediaType": "application/json",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v5-segment-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v5-segment-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 30897895,
+              "sha256": "ab44adf19119521f4764966a48f76fbac9125d22f5db776589bf049b49267576",
+              "mediaType": "application/onnx",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v5-segment-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+              "size": 35149,
+              "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+              "mediaType": "text/plain",
+              "licenseExpression": "GPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "local-pytorch2.1.2-export",
+            "sourceRevision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v8/segment/n",
+      "name": "YOLOv8n Segmentation",
+      "family": "yolov8",
+      "task": "instance-segmentation",
+      "modelVersion": "n-8.0.119",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v8-segment-n-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "n-8.0.119",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v8-segment-n-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-segment-n.modelpack.json",
+              "relativePath": "yolo-v8-segment-n.modelpack.json",
+              "size": 2518,
+              "sha256": "87b59579fe7de87632c90dfd19e27dc90d5fb51fcea4af588fc3a49c52835a42",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-segment-n-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-segment-n.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 13821992,
+              "sha256": "986ba70310322ad2d5aec429c4a07d27d3a1c1f5a4eb8f9127ae7c2d358be5c2",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-segment-n-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.0.119",
+            "sourceRevision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v9/segment/c",
+      "name": "YOLOv9c Segmentation",
+      "family": "yolov9",
+      "task": "instance-segmentation",
+      "modelVersion": "c",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov9/tree/5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "projectUrl": "https://github.com/WongKinYiu/yolov9",
+        "revision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "GPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/gpl-yolo-family.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v9-segment-c-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "c",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v9-segment-c-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-segment-c.modelpack.json",
+              "relativePath": "yolo-v9-segment-c.modelpack.json",
+              "size": 2514,
+              "sha256": "621b23e7f1a9e31c48abbce4609d01d9762e2fcd2d968e14788df94c4d2e4482",
+              "mediaType": "application/json",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v9-segment-c-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-segment-c.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 110001237,
+              "sha256": "2cc4ea632009115d72f30841d7295d5ca064cc9697a2fb4efbea3ce41ac0a2a0",
+              "mediaType": "application/onnx",
+              "licenseExpression": "GPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v9-segment-c-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+              "size": 35149,
+              "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+              "mediaType": "text/plain",
+              "licenseExpression": "GPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "local-pytorch2.2.1-export",
+            "sourceRevision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v11/segment/s",
+      "name": "YOLO11s Segmentation",
+      "family": "yolo11",
+      "task": "instance-segmentation",
+      "modelVersion": "s-8.3.24",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v11-segment-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.3.24",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v11-segment-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-segment-s.modelpack.json",
+              "relativePath": "yolo-v11-segment-s.modelpack.json",
+              "size": 2518,
+              "sha256": "eae86634745e7dd6af5f818ede8a640497c8cb81069727c7f3139a7ce655e2d4",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-segment-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-segment-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 40657020,
+              "sha256": "0707f946915fcdfdbc5438d1f45ca446e70d388805e422ac849996240880fe48",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-segment-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.3.24",
+            "sourceRevision": "636685ace98527cd0113656fd024a82291fa3122",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v26/segment/s",
+      "name": "YOLO26s Segmentation",
+      "family": "yolo26",
+      "task": "instance-segmentation",
+      "modelVersion": "s-8.4.0",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v26-segment-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.4.0",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v26-segment-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-segment-s.modelpack.json",
+              "relativePath": "yolo-v26-segment-s.modelpack.json",
+              "size": 2521,
+              "sha256": "1fda518d8c3b65b1912a8863519e00db826eb5ab675c28f1d66f42d6613ba7c9",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-segment-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-segment-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 41912261,
+              "sha256": "79682f271d30833adfe97c97572cd85d348eb1636be8d5b13009ae48e51dbd6f",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-segment-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.4.0-end2end",
+            "sourceRevision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v8/pose/s",
+      "name": "YOLOv8s Pose",
+      "family": "yolov8",
+      "task": "pose-estimation",
+      "modelVersion": "s-8.1.6",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v8-pose-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.1.6",
+          "capabilities": [
+            "pose-estimation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v8-pose-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-pose-s.modelpack.json",
+              "relativePath": "yolo-v8-pose-s.modelpack.json",
+              "size": 2492,
+              "sha256": "3a6ca12d5eb4f627c35225b291f5abdb5eaab771e0be887c8d39031c6d007ffa",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-pose-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-pose-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 46787174,
+              "sha256": "253504de521c91115afba4dcee4c77d23a7a0a87b8f8101b170d6cae4f9c302b",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-pose-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.1.6",
+            "sourceRevision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v11/pose/s",
+      "name": "YOLO11s Pose",
+      "family": "yolo11",
+      "task": "pose-estimation",
+      "modelVersion": "s-8.3.24",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v11-pose-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.3.24",
+          "capabilities": [
+            "pose-estimation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v11-pose-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-pose-s.modelpack.json",
+              "relativePath": "yolo-v11-pose-s.modelpack.json",
+              "size": 2496,
+              "sha256": "b41b95f71a47099ca66356ee5f4eba9d0e7a5e8b83293f4f5eced7e88669a0d1",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-pose-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-pose-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 39942660,
+              "sha256": "5b8d5bce3dff5ac176ea922faf14705fa46fa3b0d3a4b7974b765c355806bae5",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-pose-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.3.24",
+            "sourceRevision": "636685ace98527cd0113656fd024a82291fa3122",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v26/pose/s",
+      "name": "YOLO26s Pose",
+      "family": "yolo26",
+      "task": "pose-estimation",
+      "modelVersion": "s-8.4.0",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v26-pose-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.4.0",
+          "capabilities": [
+            "pose-estimation"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v26-pose-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-pose-s.modelpack.json",
+              "relativePath": "yolo-v26-pose-s.modelpack.json",
+              "size": 2497,
+              "sha256": "02af0f89d05d85c21bbf28228a4e980144097079413f7dea5292b197d9e2be4f",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-pose-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-pose-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 41859220,
+              "sha256": "55c609d18dc635b54a91c8f038d29138a421a4f8e700f645c78779fe6080ddcc",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-pose-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.4.0-end2end",
+            "sourceRevision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v8/obb/s",
+      "name": "YOLOv8s Oriented Detection",
+      "family": "yolov8",
+      "task": "oriented-object-detection",
+      "modelVersion": "s-8.1.6",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v8-obb-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.1.6",
+          "capabilities": [
+            "oriented-object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v8-obb-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-obb-s.modelpack.json",
+              "relativePath": "yolo-v8-obb-s.modelpack.json",
+              "size": 2519,
+              "sha256": "34d9f8ed43c97bc5333ab7bd69d6e5103c23f038e9baa1aa765ddb84be35ee5d",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-obb-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v8-obb-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 45980835,
+              "sha256": "2bbf67f4cbab45e18779f9a0b602a71cd9f266cb8d34f8df5bd3e8ab4bdcb981",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v8-obb-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.1.6",
+            "sourceRevision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v11/obb/s",
+      "name": "YOLO11s Oriented Detection",
+      "family": "yolo11",
+      "task": "oriented-object-detection",
+      "modelVersion": "s-8.3.24",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v11-obb-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.3.24",
+          "capabilities": [
+            "oriented-object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v11-obb-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-obb-s.modelpack.json",
+              "relativePath": "yolo-v11-obb-s.modelpack.json",
+              "size": 2523,
+              "sha256": "04872268b036546e413012acce8ee402f7f21ecad800f80de3b6ad848e99daa1",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-obb-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v11-obb-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 39172187,
+              "sha256": "50ae0e11b742007fcd297408382be94a25c884093d63dce00ead62f37ea2cad0",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v11-obb-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.3.24",
+            "sourceRevision": "636685ace98527cd0113656fd024a82291fa3122",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "yolo/v26/obb/s",
+      "name": "YOLO26s Oriented Detection",
+      "family": "yolo26",
+      "task": "oriented-object-detection",
+      "modelVersion": "s-8.4.0",
+      "status": "preview",
+      "description": "Public alpha-preview YOLO bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "author": "Upstream YOLO maintainers",
+        "licenseExpression": "AGPL-3.0-only",
+        "licenseFile": "bundle/source/licenses/agpl-ultralytics.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.yolo.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "yolo-v26-obb-s-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "s-8.4.0",
+          "capabilities": [
+            "oriented-object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "yolo-v26-obb-s-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-obb-s.modelpack.json",
+              "relativePath": "yolo-v26-obb-s.modelpack.json",
+              "size": 2512,
+              "sha256": "94c07b9fbfa59e88f53724dd96ff22987321d91596fc72648156f68a2b592f72",
+              "mediaType": "application/json",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-obb-s-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v26-obb-s.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 39438174,
+              "sha256": "bbc7c924dcac9e94888ef706f7aa5648cbc38f5fbd4c8a360401ebee7be955df",
+              "mediaType": "application/onnx",
+              "licenseExpression": "AGPL-3.0-only"
+            },
+            {
+              "assetId": "yolo-v26-obb-s-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.yolo.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+              "size": 34523,
+              "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+              "mediaType": "text/plain",
+              "licenseExpression": "AGPL-3.0-only"
+            }
+          ],
+          "conversion": {
+            "exporter": "Upstream YOLO ONNX export",
+            "exporterVersion": "8.4.0-end2end",
+            "sourceRevision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-yolo-detection.md"
+    },
+    {
+      "modelId": "deim/v2/detect",
+      "name": "DEIMv2 Detect",
+      "family": "deimv2",
+      "task": "object-detection",
+      "modelVersion": "v2-external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2/tree/0fff8d4dcdc272e6cf2d84be31399db471357941",
+        "projectUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2",
+        "revision": "0fff8d4dcdc272e6cf2d84be31399db471357941",
+        "author": "DEIMv2 maintainers",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-deimv2.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "deim-v2-detect-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "v2-external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "deim-v2-detect-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/deim-v2-detect.modelpack.json",
+              "relativePath": "deim-v2-detect.modelpack.json",
+              "size": 2952,
+              "sha256": "4884f4dfce415f3ec97e36f55163b49ef56b9f8cfbf8fc19b1388d70e35dd146",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "deim-v2-detect-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/deim-v2-detect.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 40030960,
+              "sha256": "08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "deim-v2-detect-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-deimv2.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-deimv2.txt",
+              "size": 11564,
+              "sha256": "f25a3c7b894c50f203813bc72183a22124c89c27b15d420b92e4621ca4b0f9cf",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "official-DEIMv2-export_onnx",
+            "exporterVersion": "local-opset16",
+            "sourceRevision": "0fff8d4dcdc272e6cf2d84be31399db471357941",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "pp-yoloe/plus-crn-l",
+      "name": "PP-YOLOE Plus CRN-L",
+      "family": "pp-yoloe",
+      "task": "object-detection",
+      "modelVersion": "plus-crn-l-80e-coco-external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-paddledetection.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "pp-yoloe-plus-crn-l-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "plus-crn-l-80e-coco-external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "pp-yoloe-plus-crn-l-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/pp-yoloe-plus-crn-l.modelpack.json",
+              "relativePath": "pp-yoloe-plus-crn-l.modelpack.json",
+              "size": 2908,
+              "sha256": "f183037ac9b182588d43f2717250ac59aef0516be7a20a382a667572e203cd0b",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "pp-yoloe-plus-crn-l-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/pp-yoloe-plus-crn-l.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 209181410,
+              "sha256": "68866d9841e41f6637d4a1c13db6c70a42c9f0367c79870b0a8a9e9df32b8504",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "pp-yoloe-plus-crn-l-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+              "size": 11357,
+              "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "PaddleDetection-export_model",
+            "exporterVersion": "release-2.9-local",
+            "sourceRevision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "rf-detr/detect",
+      "name": "RF-DETR Detect",
+      "family": "rf-detr",
+      "task": "object-detection",
+      "modelVersion": "external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "projectUrl": "https://github.com/roboflow/rf-detr",
+        "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "author": "Roboflow",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-rf-detr.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "rf-detr-detect-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "rf-detr-detect-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-detect.modelpack.json",
+              "relativePath": "rf-detr-detect.modelpack.json",
+              "size": 2830,
+              "sha256": "84ab000d492faf8825a3d3e142246790d415e5eddd93235fdc0b916bc2fd2641",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rf-detr-detect-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-detect.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 121321053,
+              "sha256": "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rf-detr-detect-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-rf-detr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+              "size": 11345,
+              "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "official-rf-detr-onnx-export",
+            "exporterVersion": "opset17",
+            "sourceRevision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "rf-detr/segment",
+      "name": "RF-DETR Segment",
+      "family": "rf-detr",
+      "task": "instance-segmentation",
+      "modelVersion": "external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "projectUrl": "https://github.com/roboflow/rf-detr",
+        "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "author": "Roboflow",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-rf-detr.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "rf-detr-segment-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "external",
+          "capabilities": [
+            "instance-segmentation"
+          ],
+          "assets": [
+            {
+              "assetId": "rf-detr-segment-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-segment.modelpack.json",
+              "relativePath": "rf-detr-segment.modelpack.json",
+              "size": 2990,
+              "sha256": "2a92fbbf85a3d8a9ab4cc6a108fae07b85535ef7962bd333c91c2540f65652f1",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rf-detr-segment-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-segment.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 131311092,
+              "sha256": "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rf-detr-segment-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-rf-detr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+              "size": 11345,
+              "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "official-rf-detr-onnx-export",
+            "exporterVersion": "opset17",
+            "sourceRevision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "rt-detr/r50vd-decoded-vector-ir",
+      "name": "Paddle RT-DETR R50vd decoded vector-count OpenVINO IR",
+      "family": "rt-detr",
+      "task": "object-detection",
+      "modelVersion": "r50vd-6x-coco-local-ir-external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-paddledetection.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "openvino-ir.fp32",
+          "format": "openvino-ir",
+          "compatibleBackends": [
+            "openvino"
+          ],
+          "precision": "mixed",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "rt-detr-r50vd-decoded-vector-ir-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "r50vd-6x-coco-local-ir-external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-ir-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
+              "relativePath": "rt-detr-r50vd-decoded-vector-ir.modelpack.json",
+              "size": 3942,
+              "sha256": "dfe1d9dc775afe8301addaaf3e0d480e24fc9a549c52f3d36e4273d9d68ab595",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-ir-model-xml",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.model.xml",
+              "relativePath": "bundle/model.xml",
+              "size": 1556096,
+              "sha256": "9d49703964c07567de7f00bda85bae1760da322e2b0655bfae110f2c222c778d",
+              "mediaType": "application/xml",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-ir-model-bin",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.model.bin",
+              "relativePath": "bundle/model.bin",
+              "size": 85633634,
+              "sha256": "c4f2ea6021314c23d691e5d6911da0804191202d049f3927cfa242f181600455",
+              "mediaType": "application/octet-stream",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-ir-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+              "size": 11357,
+              "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "OpenVINO-model-conversion",
+            "exporterVersion": "local-converter-unverified",
+            "sourceRevision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "rt-detr/r50vd-decoded-vector-onnx",
+      "name": "Paddle RT-DETR R50vd decoded vector-count ONNX",
+      "family": "rt-detr",
+      "task": "object-detection",
+      "modelVersion": "r50vd-6x-coco-local-external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-paddledetection.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "rt-detr-r50vd-decoded-vector-onnx-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "r50vd-6x-coco-local-external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-onnx-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
+              "relativePath": "rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
+              "size": 3652,
+              "sha256": "cb4b08335b7dbde2ab4057d7021f673e201579b1c0e7b697e42d5b7aeb1fe128",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-onnx-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-onnx.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 169228279,
+              "sha256": "a0477cb6cb33f431eae72438cd9a38fa80c46bca9b8d397a4ece49a9ee4353db",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-decoded-vector-onnx-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+              "size": 11357,
+              "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "PaddleDetection-export_model+paddle2onnx",
+            "exporterVersion": "local-exporter-unverified",
+            "sourceRevision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "rt-detr/r50vd-raw-query",
+      "name": "RT-DETR R50vd raw-query ONNX",
+      "family": "rt-detr",
+      "task": "object-detection",
+      "modelVersion": "r50vd-6x-coco-raw-local-external",
+      "status": "preview",
+      "description": "Public alpha-preview DETR bundle with source, license, SHA-256, and immutable GitHub Release assets.",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/apache-paddledetection.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.detr.1",
+        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "rt-detr-r50vd-raw-query-modelpack",
+          "bundleRole": "detector",
+          "bundleVersion": "r50vd-6x-coco-raw-local-external",
+          "capabilities": [
+            "object-detection"
+          ],
+          "assets": [
+            {
+              "assetId": "rt-detr-r50vd-raw-query-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-raw-query.modelpack.json",
+              "relativePath": "rt-detr-r50vd-raw-query.modelpack.json",
+              "size": 3674,
+              "sha256": "de79485c4bc141c0ffb73d12aeaf88805e3c1bca417c6ae1e1fcd89c729921db",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-raw-query-model-onnx",
+              "kind": "model",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-raw-query.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 169218784,
+              "sha256": "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "rt-detr-r50vd-raw-query-license",
+              "kind": "license",
+              "releaseTag": "models-20260817.detr.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+              "size": 11357,
+              "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "Paddle2ONNX-raw-query-export",
+            "exporterVersion": "local-exporter-unverified",
+            "sourceRevision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+            "notes": "Source and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-portable-detectors.md"
     }
   ]
 }

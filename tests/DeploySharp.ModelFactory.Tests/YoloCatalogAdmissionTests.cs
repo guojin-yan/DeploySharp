@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using JYPPX.DeploySharp.ModelFactory;
 using JYPPX.DeploySharp.ModelPack.Json;
@@ -12,7 +13,7 @@ namespace DeploySharp.ModelFactory.Tests
     public sealed class YoloCatalogAdmissionTests
     {
         [TestMethod]
-        public void LocalBackendEvidenceRemainsExternalUntilReleaseAndLicenseReview()
+        public void LocalBackendEvidenceRemainsExternalAfterTheAuditedReleaseUsesSeparatePublicManifests()
         {
             using JsonDocument support = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "yolo-detection-support.json")));
             var entries = new List<ModelCatalogEntry>();
@@ -81,7 +82,8 @@ namespace DeploySharp.ModelFactory.Tests
                 Assert.IsFalse(entry.Source!.RedistributionAllowed);
                 Assert.IsNull(entry.Release);
             }
-            OfficialCatalogAssertions.Excludes(catalog);
+            ValidatedModelCatalog official = OfficialModelCatalog.Load();
+            Assert.AreEqual(10, official.Document.Entries.Count(entry => entries.Any(external => external.ModelId == entry.ModelId)));
         }
     }
 }

@@ -21,8 +21,8 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual("1.0", ModelCatalogSchema.Version);
             using (JsonDocument schema = JsonDocument.Parse(ModelCatalogSchema.GetJson())) Assert.IsFalse(schema.RootElement.GetProperty("additionalProperties").GetBoolean());
             ValidatedModelCatalog official = OfficialModelCatalog.Load();
-            Assert.AreEqual("models-20260817.vision.1", official.CatalogRevision);
-            Assert.AreEqual(4, official.Document.Entries.Count);
+            Assert.AreEqual("models-20260817.detectors.1", official.CatalogRevision);
+            Assert.AreEqual(33, official.Document.Entries.Count);
         }
 
         [TestMethod]
