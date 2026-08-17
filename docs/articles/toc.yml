@@ -25,6 +25,8 @@
   href: visual-ocr-orientation.md
 - name: Supported Models / 支持模型
   href: supported-models.md
+- name: Published Vision Model Collection / 已发布视觉模型集合
+  href: models-vision-collection.md
 - name: Visual YOLO Detection / Visual YOLO 检测
   href: visual-yolo-detection.md
 - name: Visual YOLO Multi-task / Visual YOLO 多任务

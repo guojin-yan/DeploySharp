@@ -13,11 +13,11 @@ namespace DeploySharp.ModelFactory.Tests
         [TestMethod]
         public void BundledCatalogSelectsThePublishedQwenPreview()
         {
-            ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
-            Assert.AreEqual("models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1", catalog.CatalogRevision);
-            Assert.AreEqual(1, catalog.Document.Entries.Count);
+            ValidatedModelCatalog catalog = LoadOfficialCatalog();
+            Assert.AreEqual("models-20260817.vision.1", catalog.CatalogRevision);
+            Assert.AreEqual(4, catalog.Document.Entries.Count);
 
-            ModelCatalogEntry entry = catalog.Document.Entries.Single();
+            ModelCatalogEntry entry = catalog.Document.Entries.Single(value => value.ModelId == "llm/qwen2.5-0.5b-instruct-q4-k-m");
             Assert.AreEqual("llm/qwen2.5-0.5b-instruct-q4-k-m", entry.ModelId);
             Assert.AreEqual(ModelCatalogStatus.Preview, entry.Status);
             Assert.IsTrue(entry.Source!.RedistributionAllowed);
@@ -40,6 +40,19 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.IsTrue(manifest.Document.Source!.RedistributionAllowed);
             Assert.AreEqual("Apache-2.0", manifest.Document.Source.LicenseExpression);
             Assert.AreEqual("74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db", manifest.Document.Artifacts.Single().Files.Single(file => file.Role == ModelFileRole.Model).Sha256);
+        }
+
+        private static ValidatedModelCatalog LoadOfficialCatalog()
+        {
+            try
+            {
+                return OfficialModelCatalog.Load();
+            }
+            catch (ModelFactoryException exception)
+            {
+                Assert.Fail(string.Join(Environment.NewLine, exception.Diagnostics.Select(diagnostic => diagnostic.Code + " " + diagnostic.JsonPath + " " + diagnostic.Message)));
+                throw;
+            }
         }
     }
 }

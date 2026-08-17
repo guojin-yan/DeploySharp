@@ -26,5 +26,8 @@
     <Content Include="..\..\eng\models\vision-language\vision-language-family-support.json" Link="fixtures\vision-language-family-support.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\llm\manifests\qwen2.5-0.5b-instruct-q4-k-m.modelpack.json" Link="fixtures\qwen2.5-0.5b-instruct-q4-k-m.external.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\llm\releases\qwen2.5-0.5b-instruct-q4-k-m.modelpack.json" Link="fixtures\qwen2.5-0.5b-instruct-q4-k-m.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\vision\releases\clip-vit-b-32.modelpack.json" Link="fixtures\clip-vit-b-32.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\vision\releases\sam-v1-vit-b.modelpack.json" Link="fixtures\sam-v1-vit-b.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\vision\releases\blip-caption-base.modelpack.json" Link="fixtures\blip-caption-base.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
