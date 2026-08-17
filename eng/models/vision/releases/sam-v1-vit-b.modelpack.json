@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "segmentation/sam-v1-vit-b",
+  "name": "Meta SAM ViT-B ONNX prompt segmentation bundle",
+  "family": "sam",
+  "task": "promptable-image-segmentation",
+  "modelVersion": "vit-b-dca509f-opset17",
+  "exporter": {
+    "name": "official-SamOnnxModel-plus-traceable-image-encoder-wrapper",
+    "version": "torch-2.9.1-cpu-legacy-onnx-opset17",
+    "sourceRevision": "dca509fe793f601edb92606367a655c15ac00fdf"
+  },
+  "source": {
+    "sourceUrl": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+    "projectUrl": "https://github.com/facebookresearch/segment-anything/tree/dca509fe793f601edb92606367a655c15ac00fdf",
+    "revision": "dca509fe793f601edb92606367a655c15ac00fdf",
+    "author": "Meta AI",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "sam-v1-vit-b/LICENSE",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "promptable.sam.v1.vit-b-dca509f.preview",
+  "inputs": [
+    { "name": "images", "elementType": "float32", "shape": [1, 3, 1024, 1024] },
+    { "name": "image_embeddings", "elementType": "float32", "shape": [1, 256, 64, 64] },
+    { "name": "point_coords", "elementType": "float32", "shape": [1, -1, 2] },
+    { "name": "point_labels", "elementType": "float32", "shape": [1, -1] },
+    { "name": "mask_input", "elementType": "float32", "shape": [1, 1, 256, 256] },
+    { "name": "has_mask_input", "elementType": "float32", "shape": [1] },
+    { "name": "orig_im_size", "elementType": "float32", "shape": [2] }
+  ],
+  "outputs": [
+    { "name": "masks", "elementType": "float32", "shape": [1, 4, -1, -1] },
+    { "name": "iou_predictions", "elementType": "float32", "shape": [1, 4] },
+    { "name": "low_res_masks", "elementType": "float32", "shape": [1, 4, 256, 256] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "sam-v1-vit-b.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "sam-v1-vit-b",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "sam-v1-vit-b/image-encoder.onnx", "sha256": "95ea8873d6dbbf1226bf124f56930c1652c09c19f84c032b3721979699a21c3a", "size": 359210513, "mediaType": "application/onnx", "role": "model" },
+        { "relativePath": "sam-v1-vit-b/prompt-mask-decoder.onnx", "sha256": "b520bc95e049862bde768b959c124d6c2a53436df81bf9c5e8689f6e406ba21a", "size": 16496903, "mediaType": "application/onnx", "role": "model" },
+        { "relativePath": "sam-v1-vit-b/LICENSE", "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4", "size": 11357, "mediaType": "text/plain", "role": "license" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-role": "image-encoder-and-prompt-mask-decoder",
+        "deploysharp.bundle-version": "sam-v1-vit-b-dca509f-opset17",
+        "deploysharp.capabilities": "point,box,mask-feedback,multimask",
+        "deploysharp.preprocessing-version": "sam-v1-longest-side-bottom-right-rgb-mean-std-v1",
+        "deploysharp.postprocessing-version": "sam-v1-token-quality-threshold-restore-v1",
+        "deploysharp.validation-status": "ort-openvino-official-predictor-pixel-compared"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}

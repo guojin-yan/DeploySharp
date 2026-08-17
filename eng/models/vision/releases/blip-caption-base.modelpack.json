@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "generative-vision-language/blip-caption-base",
+  "name": "Salesforce BLIP Caption Base ONNX bundle",
+  "family": "blip",
+  "task": "image-captioning",
+  "modelVersion": "blip-056a1694-capfilt-large-opset17",
+  "exporter": {
+    "name": "salesforce-blip-plus-torch-onnx",
+    "version": "torch-2.9.1-opset17-dynamo-false",
+    "sourceRevision": "056a169437371659074aa2732649d5de3bffb4a8"
+  },
+  "source": {
+    "sourceUrl": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth",
+    "projectUrl": "https://github.com/salesforce/BLIP/tree/056a169437371659074aa2732649d5de3bffb4a8",
+    "revision": "056a169437371659074aa2732649d5de3bffb4a8",
+    "author": "Salesforce Research",
+    "licenseExpression": "BSD-3-Clause",
+    "licenseFile": "blip-caption-base/LICENSE.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-17T00:00:00Z",
+  "profileId": "generative-vlm.blip.caption-base.opset17.preview",
+  "inputs": [
+    { "name": "pixel_values", "elementType": "float32", "shape": [-1, 3, 384, 384] },
+    { "name": "input_ids", "elementType": "int64", "shape": [-1, -1] },
+    { "name": "attention_mask", "elementType": "int64", "shape": [-1, -1] },
+    { "name": "encoder_hidden_states", "elementType": "float32", "shape": [-1, 577, 768] },
+    { "name": "encoder_attention_mask", "elementType": "int64", "shape": [-1, 577] }
+  ],
+  "outputs": [
+    { "name": "encoder_hidden_states", "elementType": "float32", "shape": [-1, 577, 768] },
+    { "name": "logits", "elementType": "float32", "shape": [-1, -1, 30524] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "blip-caption-base.onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "blip-caption-base",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "blip-caption-base/vision-encoder.onnx", "sha256": "304b912cc437706e2fd34a54cfde1d156134a08a437bc7f46a29d2ea7fa759ef", "size": 344502972, "mediaType": "application/onnx", "role": "model" },
+        { "relativePath": "blip-caption-base/language-decoder.onnx", "sha256": "56fcfa494c561f630b36bdf8ef62adc0597b559588995a73b56bdbab5604e686", "size": 645794706, "mediaType": "application/onnx", "role": "model" },
+        { "relativePath": "blip-caption-base/vocab.txt", "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3", "size": 231508, "mediaType": "text/plain", "role": "vocabulary" },
+        { "relativePath": "blip-caption-base/generation-config.json", "sha256": "640f3443087a7ba7cf4e6819ca9c69379669b8556acc5c178cd0e121b2d74519", "size": 258, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "blip-caption-base/processor-contract.json", "sha256": "76aa309c203810ad36f1ce32132dde5dc3b9c89675a19c2933df36d7085c751c", "size": 356, "mediaType": "application/json", "role": "configuration" },
+        { "relativePath": "blip-caption-base/LICENSE.txt", "sha256": "7d5df2d28b2bf297ecec0b51eb23f6d8d0c39338dae8d92f6d61d9441f77b856", "size": 1482, "mediaType": "text/plain", "role": "license" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.bundle-role": "vision-encoder-and-language-decoder",
+        "deploysharp.bundle-version": "blip-caption-base-056a1694-opset17",
+        "deploysharp.capabilities": "image-captioning",
+        "deploysharp.vision-backbone": "vit-base-patch16-384",
+        "deploysharp.language-model-id": "bert-lm-head-30524",
+        "deploysharp.tokenizer-id": "bert-base-uncased-blip-dec",
+        "deploysharp.prompt-template-id": "blip-caption-a-picture-of-v1",
+        "deploysharp.generation-config-id": "blip-caption-greedy-5-20-v1",
+        "deploysharp.validation-status": "ort-openvino-official-golden-verified"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true"
+  }
+}
