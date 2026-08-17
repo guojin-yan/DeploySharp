@@ -38,5 +38,16 @@ namespace DeploySharp.ModelFactory.Tests
                 Assert.IsTrue(artifact.Files.All(modelFile => modelFile.Sha256?.Length == 64));
             }
         }
+
+        [TestMethod]
+        public void PublicRtDetrIrModelPackUsesTheRuntimeVerifiedVectorCountOutput()
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "fixtures", "detr-releases", "rt-detr-r50vd-decoded-vector-ir.modelpack.json");
+            ValidatedModelPackage package = ModelPackageJsonSerializer.Deserialize(File.ReadAllText(path));
+
+            CollectionAssert.AreEqual(
+                new[] { "save_infer_model/scale_0.tmp_0", "save_infer_model/scale_1.tmp_0" },
+                package.Document.Outputs.Select(output => output.Name).ToArray());
+        }
     }
 }

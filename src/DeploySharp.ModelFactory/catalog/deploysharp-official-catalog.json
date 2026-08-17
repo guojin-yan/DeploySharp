@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "generatedAt": "08/17/2026 00:00:00",
-  "catalogRevision": "models-20260817.detectors.1",
+  "catalogRevision": "models-20260817.detectors.2",
   "sourceRepository": "https://github.com/guojin-yan/DeploySharp",
   "entries": [
     {
@@ -2441,8 +2441,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2464,8 +2464,8 @@
             {
               "assetId": "deim-v2-detect-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/deim-v2-detect.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/deim-v2-detect.modelpack.json",
               "relativePath": "deim-v2-detect.modelpack.json",
               "size": 2952,
               "sha256": "4884f4dfce415f3ec97e36f55163b49ef56b9f8cfbf8fc19b1388d70e35dd146",
@@ -2475,8 +2475,8 @@
             {
               "assetId": "deim-v2-detect-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/deim-v2-detect.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/deim-v2-detect.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 40030960,
               "sha256": "08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc",
@@ -2486,8 +2486,8 @@
             {
               "assetId": "deim-v2-detect-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-deimv2.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-deimv2.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-deimv2.txt",
               "size": 11564,
               "sha256": "f25a3c7b894c50f203813bc72183a22124c89c27b15d420b92e4621ca4b0f9cf",
@@ -2526,8 +2526,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2549,8 +2549,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/pp-yoloe-plus-crn-l.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/pp-yoloe-plus-crn-l.modelpack.json",
               "relativePath": "pp-yoloe-plus-crn-l.modelpack.json",
               "size": 2908,
               "sha256": "f183037ac9b182588d43f2717250ac59aef0516be7a20a382a667572e203cd0b",
@@ -2560,8 +2560,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/pp-yoloe-plus-crn-l.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/pp-yoloe-plus-crn-l.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 209181410,
               "sha256": "68866d9841e41f6637d4a1c13db6c70a42c9f0367c79870b0a8a9e9df32b8504",
@@ -2571,8 +2571,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -2611,8 +2611,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2635,8 +2635,8 @@
             {
               "assetId": "rf-detr-detect-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-detect.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rf-detr-detect.modelpack.json",
               "relativePath": "rf-detr-detect.modelpack.json",
               "size": 2830,
               "sha256": "84ab000d492faf8825a3d3e142246790d415e5eddd93235fdc0b916bc2fd2641",
@@ -2646,8 +2646,8 @@
             {
               "assetId": "rf-detr-detect-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-detect.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rf-detr-detect.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 121321053,
               "sha256": "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769",
@@ -2657,8 +2657,8 @@
             {
               "assetId": "rf-detr-detect-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-rf-detr.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-rf-detr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
               "size": 11345,
               "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
@@ -2697,8 +2697,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2721,8 +2721,8 @@
             {
               "assetId": "rf-detr-segment-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-segment.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rf-detr-segment.modelpack.json",
               "relativePath": "rf-detr-segment.modelpack.json",
               "size": 2990,
               "sha256": "2a92fbbf85a3d8a9ab4cc6a108fae07b85535ef7962bd333c91c2540f65652f1",
@@ -2732,8 +2732,8 @@
             {
               "assetId": "rf-detr-segment-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rf-detr-segment.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rf-detr-segment.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 131311092,
               "sha256": "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35",
@@ -2743,8 +2743,8 @@
             {
               "assetId": "rf-detr-segment-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-rf-detr.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-rf-detr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
               "size": 11345,
               "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
@@ -2783,8 +2783,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2806,19 +2806,19 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
               "relativePath": "rt-detr-r50vd-decoded-vector-ir.modelpack.json",
-              "size": 3942,
-              "sha256": "dfe1d9dc775afe8301addaaf3e0d480e24fc9a549c52f3d36e4273d9d68ab595",
+              "size": 3933,
+              "sha256": "e8c8e83ccb7ed319513631c0dba15ef747b1fd2f3b3e28b408ad1ef07542a339",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-model-xml",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.model.xml",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-decoded-vector-ir.model.xml",
               "relativePath": "bundle/model.xml",
               "size": 1556096,
               "sha256": "9d49703964c07567de7f00bda85bae1760da322e2b0655bfae110f2c222c778d",
@@ -2828,8 +2828,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-model-bin",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-ir.model.bin",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-decoded-vector-ir.model.bin",
               "relativePath": "bundle/model.bin",
               "size": 85633634,
               "sha256": "c4f2ea6021314c23d691e5d6911da0804191202d049f3927cfa242f181600455",
@@ -2839,8 +2839,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -2879,8 +2879,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2902,8 +2902,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
               "relativePath": "rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
               "size": 3652,
               "sha256": "cb4b08335b7dbde2ab4057d7021f673e201579b1c0e7b697e42d5b7aeb1fe128",
@@ -2913,8 +2913,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-decoded-vector-onnx.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-decoded-vector-onnx.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 169228279,
               "sha256": "a0477cb6cb33f431eae72438cd9a38fa80c46bca9b8d397a4ece49a9ee4353db",
@@ -2924,8 +2924,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -2964,8 +2964,8 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.detr.1",
-        "commit": "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1"
+        "tag": "models-20260817.detr.2",
+        "commit": "99ba3b49b6e74e70a352e67807f866d3abbbaf1c"
       },
       "artifacts": [
         {
@@ -2988,8 +2988,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-raw-query.modelpack.json",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-raw-query.modelpack.json",
               "relativePath": "rt-detr-r50vd-raw-query.modelpack.json",
               "size": 3674,
               "sha256": "de79485c4bc141c0ffb73d12aeaf88805e3c1bca417c6ae1e1fcd89c729921db",
@@ -2999,8 +2999,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/rt-detr-r50vd-raw-query.model.onnx",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/rt-detr-r50vd-raw-query.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 169218784,
               "sha256": "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad",
@@ -3010,8 +3010,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-license",
               "kind": "license",
-              "releaseTag": "models-20260817.detr.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-20260817.detr.2",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",

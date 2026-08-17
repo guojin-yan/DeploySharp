@@ -4,6 +4,12 @@ on:
   # CI is intentionally manual during the alpha build-out.
   # Alpha 开发阶段故意只允许手动触发，避免每次备份推送消耗 Actions 配额。
   workflow_dispatch:
+    inputs:
+      verify_detector_releases:
+        description: Audit public YOLO/DETR assets and run the representative download/inference smoke test.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -100,6 +106,18 @@ jobs:
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath ./artifacts/packages/JYPPX.DeploySharp.Visual.2.0.0-alpha.1.nupkg
       - run: dotnet pack src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release --no-restore
+      - run: dotnet restore tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj --configfile tests/clean-consumer/model-release-smoke/NuGet.Config
+      - run: dotnet build tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj -c Release --no-restore
+      - name: Audit published YOLO and DETR release assets
+        if: ${{ inputs.verify_detector_releases }}
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/models/detector-releases/Test-PublishedDetectorReleases.ps1
+      - name: Download and infer representative YOLO and RT-DETR release models
+        if: ${{ inputs.verify_detector_releases }}
+        env:
+          DEPLOYSHARP_DETECTOR_RELEASE_SMOKE: '1'
+          DEPLOYSHARP_MODEL_CACHE: ${{ runner.temp }}\\deploysharp-detector-release-smoke
+        run: dotnet run --project tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj --configfile tests/clean-consumer/llamasharp/NuGet.Config
       - run: dotnet build tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-build

@@ -30,7 +30,8 @@ $uploadBase = 'https://uploads.github.com/repos/' + $Repository
 
 function Get-ReleaseAssets {
     param([long]$ReleaseId)
-    return @(Invoke-RestMethod -NoProxy -Headers $headers -Uri ($apiBase + '/releases/' + $ReleaseId + '/assets?per_page=100'))
+    $response = Invoke-RestMethod -NoProxy -Headers $headers -Uri ($apiBase + '/releases/' + $ReleaseId + '/assets?per_page=100')
+    foreach ($asset in $response) { Write-Output $asset }
 }
 
 function Wait-ForUploadedAsset {
@@ -41,6 +42,19 @@ function Wait-ForUploadedAsset {
         Start-Sleep -Seconds 3
     }
     throw "GitHub did not finalize the expected asset: $($Expected.name)"
+}
+
+function Remove-StarterAsset {
+    param([long]$ReleaseId, [object]$Asset)
+    if ($Asset.state -ne 'starter') { throw "Only a non-final starter asset may be removed: $($Asset.name)" }
+    $response = Invoke-WebRequest -NoProxy -Method Delete -Headers $headers -Uri ($apiBase + '/releases/assets/' + $Asset.id)
+    if ($response.StatusCode -ne 204) { throw "GitHub did not accept deletion of stale starter asset: $($Asset.name)" }
+    for ($attempt = 1; $attempt -le 20; $attempt++) {
+        $remaining = Get-ReleaseAssets $ReleaseId | Where-Object { $_.name -eq $Asset.name } | Select-Object -First 1
+        if ($null -eq $remaining) { return }
+        Start-Sleep -Seconds 2
+    }
+    throw "GitHub did not remove stale starter asset: $($Asset.name)"
 }
 
 foreach ($collection in $Collections) {
@@ -59,7 +73,12 @@ foreach ($collection in $Collections) {
                 Write-Host "[$($assetPlan.tag)] verified existing $($expected.name)"
                 continue
             }
-            throw "Existing remote asset conflicts with expected content: $($expected.name)"
+            if ($existing.state -eq 'starter') {
+                Write-Warning "Removing stale GitHub starter asset before retry: $($expected.name)"
+                Remove-StarterAsset -ReleaseId $release.id -Asset $existing
+            } else {
+                throw "Existing remote asset conflicts with expected content: $($expected.name)"
+            }
         }
 
         $sourcePath = Join-Path $stageDirectory $expected.name
@@ -85,6 +104,10 @@ foreach ($collection in $Collections) {
                     Write-Warning "Remote upload completed despite a client transport error: $($expected.name)"
                     $completed = $true
                     break
+                }
+                if ($null -ne $remoteAfterFailure -and $remoteAfterFailure.state -eq 'starter') {
+                    Write-Warning "Removing stale GitHub starter asset after a transport error: $($expected.name)"
+                    Remove-StarterAsset -ReleaseId $release.id -Asset $remoteAfterFailure
                 }
                 if ($attempt -eq $MaximumAttempts) { throw }
                 Write-Warning "Upload retry $attempt/$MaximumAttempts for $($expected.name): $($_.Exception.Message)"

@@ -2,7 +2,10 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{40}$')]
-    [string]$ReleaseCommit,
+    [string]$YoloReleaseCommit,
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[0-9a-f]{40}$')]
+    [string]$DetrReleaseCommit,
     [string]$CatalogPath = 'src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json',
     [switch]$Check
 )
@@ -83,7 +86,7 @@ foreach ($planEntry in $plan.models) {
         status = 'preview'
         description = 'Public alpha-preview ' + $planEntry.collection.ToUpperInvariant() + ' bundle with source, license, SHA-256, and immutable GitHub Release assets.'
         source = $manifest.source
-        release = [ordered]@{ owner = 'guojin-yan'; repository = 'DeploySharp'; tag = $tag; commit = $ReleaseCommit }
+        release = [ordered]@{ owner = 'guojin-yan'; repository = 'DeploySharp'; tag = $tag; commit = if ($planEntry.collection -eq 'yolo') { $YoloReleaseCommit } else { $DetrReleaseCommit } }
         artifacts = @([ordered]@{
             artifactId = [string]$artifact.artifactId
             format = [string]$artifact.format

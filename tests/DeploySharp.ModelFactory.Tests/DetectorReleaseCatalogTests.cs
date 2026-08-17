@@ -9,11 +9,10 @@ namespace DeploySharp.ModelFactory.Tests
     public sealed class DetectorReleaseCatalogTests
     {
         [TestMethod]
-        [DataRow("models-20260817.yolo.1", 22, 66)]
-        [DataRow("models-20260817.detr.1", 7, 22)]
-        public void OfficialDetectorEntriesUseSharedImmutableReleaseAssets(string tag, int expectedEntries, int expectedAssets)
+        [DataRow("models-20260817.yolo.1", "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1", 22, 66)]
+        [DataRow("models-20260817.detr.2", "99ba3b49b6e74e70a352e67807f866d3abbbaf1c", 7, 22)]
+        public void OfficialDetectorEntriesUseSharedImmutableReleaseAssets(string tag, string releaseCommit, int expectedEntries, int expectedAssets)
         {
-            const string releaseCommit = "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1";
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
                 .Where(entry => entry.Release?.Tag == tag)
