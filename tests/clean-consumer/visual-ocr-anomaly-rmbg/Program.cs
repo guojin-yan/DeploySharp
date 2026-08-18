@@ -139,10 +139,10 @@ internal static class Program
                 11,
                 "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
                 "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
-                "local-exporter-unverified",
+                "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical",
                 "Apache-2.0;external-artifact-redistribution-unverified",
-                "ppocr-det-resize32-imagenet-bgr-v1",
-                "ppocr-db-managed-rectangle-v1"));
+                "ppocr-det-resize-long960-stride128-f32-v2",
+                "ppocr-db-contour-minarea-unclip-v2"));
     }
 
     private static PaddleOcrProfile CreateRecognizer(string dictionaryPath)
@@ -154,7 +154,7 @@ internal static class Program
                 7,
                 "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
                 "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
-                "local-exporter-unverified",
+                "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical",
                 "Apache-2.0;external-artifact-redistribution-unverified",
                 "ppocr-rec-bgr-half-range-h48-v1",
                 "ppocr-ctc-probability-greedy-v1",

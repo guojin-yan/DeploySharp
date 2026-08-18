@@ -12,7 +12,7 @@ namespace DeploySharp.ModelFactory.Tests
     public sealed class Stage19CatalogAdmissionTests
     {
         [TestMethod]
-        public void FourExternalRowsAreOptInQueryableButCannotEnterOfficialCatalog()
+        public void FiveExternalRowsAreOptInQueryableButCannotEnterOfficialCatalog()
         {
             using JsonDocument support = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "stage19-support.json")));
             var entries = new List<ModelCatalogEntry>();
@@ -27,8 +27,9 @@ namespace DeploySharp.ModelFactory.Tests
             }
 
             ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument("1.0", "2026-08-07T08:00:00Z", "external-stage19.1", new Uri("https://github.com/guojin-yan/DeploySharp"), entries));
-            Assert.AreEqual(4, catalog.Document.Entries.Count);
+            Assert.AreEqual(5, catalog.Document.Entries.Count);
             Assert.AreEqual(2, ModelCatalogQuery.Select(catalog, new ModelQuery(family: "paddle-ocr-det", format: "onnx", backend: "onnxruntime", includePreview: true)).Count + ModelCatalogQuery.Select(catalog, new ModelQuery(family: "paddle-ocr-rec", format: "onnx", backend: "onnxruntime", includePreview: true)).Count);
+            Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(family: "paddle-ocr-cls", format: "onnx", backend: "onnxruntime", includePreview: true)).Count);
             Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "anomaly-detection", backend: "openvino", includePreview: true)).Count);
             Assert.AreEqual(1, ModelCatalogQuery.Select(catalog, new ModelQuery(task: "foreground-matting", backend: "onnxruntime", includePreview: true)).Count);
             Assert.AreEqual(0, ModelCatalogQuery.Select(catalog, new ModelQuery(format: "onnx", includePreview: false)).Count);
@@ -45,6 +46,7 @@ namespace DeploySharp.ModelFactory.Tests
         {
             if (rowName == "PaddleOcrDet") return "paddle-ocr-det";
             if (rowName == "PaddleOcrRec") return "paddle-ocr-rec";
+            if (rowName == "PaddleOcrCls") return "paddle-ocr-cls";
             if (rowName == "AnomalibSeg") return "anomalib-seg";
             if (rowName == "BriaRmbg") return "bria-rmbg";
             throw new InvalidDataException("Unknown stage-19 row: " + rowName);

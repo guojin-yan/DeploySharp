@@ -1,0 +1,257 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "scope": "PP-OCRv5 local ONNX candidates; provenance and release admission only",
+  "upstreamCode": {
+    "repository": "https://github.com/PaddlePaddle/PaddleOCR",
+    "pinnedRevision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+    "licenseExpression": "Apache-2.0",
+    "codeLicenseStatus": "repository-license-recorded",
+    "modelRedistributionStatus": "not-established-by-code-license"
+  },
+  "evidenceBoundaries": {
+    "officialInferenceArchiveScope": "Official Paddle inference archives establish the immutable source inference-model identity. Their inference.json and inference.pdiparams files were matched by SHA256 to the export inputs for all six artifacts.",
+    "localInferenceMetadataScope": "Observed inference.yml files establish model-family and preprocessing metadata only; they do not establish checkpoint download provenance or the ONNX export invocation.",
+    "releaseEffect": "Exact source-file and byte-identical ONNX reproduction close source identity and export reproducibility only. They do not grant redistribution permission or create an immutable release asset."
+  },
+  "onnxMetadataObservation": {
+    "parser": "ONNX ModelProto protobuf",
+    "irVersion": 10,
+    "graphName": "PaddlePaddle Graph in PIR mode",
+    "producerName": "empty-in-all-six-artifacts",
+    "producerVersion": "empty-in-all-six-artifacts",
+    "effect": "The graph metadata corroborates Paddle PIR origin. Exporter identity is established separately by byte-identical reproduction."
+  },
+  "exportReproduction": {
+    "status": "byte-identical-all-six",
+    "verifiedAt": "2026-08-18T10:50:00Z",
+    "platform": "windows-x86_64",
+    "pythonVersion": "3.12.13",
+    "invocationId": "paddle2onnx-export-defaults-v1",
+    "invocation": "paddle2onnx.export(model_filename='inference.json', params_filename='inference.pdiparams', save_file='<output>.onnx')",
+    "optionalArguments": "all optional arguments left at paddle2onnx 2.0.2rc3 defaults, including automatic opset selection and Polygraphy constant folding",
+    "toolchainLock": [
+      { "package": "paddlepaddle", "version": "3.0.0.dev20250613", "distributionFile": "paddlepaddle-3.0.0.dev20250613-cp312-cp312-win_amd64.whl", "size": 99380043, "sha256": "37012c64c278f4761a1dfa3c711b0d8507b1981a640d5763879a550584c32319" },
+      { "package": "paddle2onnx", "version": "2.0.2rc3", "distributionFile": "paddle2onnx-2.0.2rc3-cp312-cp312-win_amd64.whl", "size": 2020926, "sha256": "a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562" },
+      { "package": "onnx", "version": "1.17.0", "distributionFile": "onnx-1.17.0-cp312-cp312-win_amd64.whl", "size": 14530453, "sha256": "659b8232d627a5460d74fd3c96947ae83db6d03f035ac633e20cd69cfa029227" },
+      { "package": "protobuf", "version": "5.29.3", "distributionFile": "protobuf-5.29.3-cp310-abi3-win_amd64.whl", "size": 434508, "sha256": "a4fa6f80816a9a0678429e84973f2f98cbc218cca434abe8db2ad0bffc98503a" },
+      { "package": "polygraphy", "version": "0.49.24", "distributionFile": "polygraphy-0.49.24-py2.py3-none-any.whl", "size": 362376, "sha256": "1e5964a24af34d21b1f2f1817536b54625ac8c7fd7464d567d0a4fbae9cff8cc" },
+      { "package": "onnx-graphsurgeon", "version": "0.5.8", "distributionFile": "onnx_graphsurgeon-0.5.8-py2.py3-none-any.whl", "size": 57923, "sha256": "6f611ea29a8e4740fbab1aae52bf4c40b8b9918f8459058d20b99acc79fce121" },
+      { "package": "onnxruntime", "version": "1.22.0", "distributionFile": "onnxruntime-1.22.0-cp312-cp312-win_amd64.whl", "size": 12692233, "sha256": "c0d534a43d1264d1273c2d4f00a5a588fa98d21117a3345b7104fa0bbcaadb9a" },
+      { "package": "numpy", "version": "2.5.2", "distributionFile": "numpy-2.5.2-cp312-cp312-win_amd64.whl", "size": 12464674, "sha256": "28ac63476ec7651484215ee7fa15a1f78b57c14621f01e392afe17b9a1390ce4" }
+    ],
+    "results": [
+      { "modelId": "paddleocr/ppocrv5/mobile-det/external", "sourceArchiveEvidenceId": "mobile-det-official-inference-archive", "inferenceJsonSize": 229777, "inferenceJsonSha256": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c", "inferenceParamsSize": 4692937, "inferenceParamsSha256": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b", "generatedOnnxSize": 4826518, "generatedOnnxSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "exactCandidateMatch": true },
+      { "modelId": "paddleocr/ppocrv5/server-det/external", "sourceArchiveEvidenceId": "server-det-official-inference-archive", "inferenceJsonSize": 402480, "inferenceJsonSha256": "af5876933d8806a1b50d895867e0781e135cd92ff37381992828fc8d1b842d28", "inferenceParamsSize": 87932887, "inferenceParamsSha256": "183146fe9d9910352f68482f623bcbbb9fa7b9e8fa1463b9ad288cef00524d2d", "generatedOnnxSize": 88116836, "generatedOnnxSha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "exactCandidateMatch": true },
+      { "modelId": "paddleocr/ppocrv5/mobile-rec/external", "sourceArchiveEvidenceId": "mobile-rec-official-inference-archive", "inferenceJsonSize": 217724, "inferenceJsonSha256": "24587345250c7332d0fc6f9a44e794d078cdaeb64c302fef906f325619de2569", "inferenceParamsSize": 16458665, "inferenceParamsSha256": "2460da90875937c94db97eba74ae3d9e5d4c4c57c42f1f41531c09a26bcc771a", "generatedOnnxSize": 16560873, "generatedOnnxSha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "exactCandidateMatch": true },
+      { "modelId": "paddleocr/ppocrv5/server-rec/external", "sourceArchiveEvidenceId": "server-rec-official-inference-archive", "inferenceJsonSize": 325204, "inferenceJsonSha256": "8e6e12e5d42531840310977fffb58165bf889fc5061408c5a8afdb6985f47fcb", "inferenceParamsSize": 84390117, "inferenceParamsSha256": "63853f062a5f4089befc16f565a68277618e0da5cb45468b49d11079de0ada77", "generatedOnnxSize": 84502992, "generatedOnnxSha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "exactCandidateMatch": true },
+      { "modelId": "paddleocr/ppocrv5/mobile-cls/external", "sourceArchiveEvidenceId": "mobile-cls-official-inference-archive", "inferenceJsonSize": 104123, "inferenceJsonSha256": "8b3f80ca25f4765594640ddb3cb26f507f00e7e5d11bfef4c2915a6b9dff5d3c", "inferenceParamsSize": 985712, "inferenceParamsSha256": "08ee1ce4bcdb30dd4e784862334d1df49d80a600294d75daae4ca4c70bc860e9", "generatedOnnxSize": 1018940, "generatedOnnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "exactCandidateMatch": true },
+      { "modelId": "paddleocr/ppocrv5/server-cls/external", "sourceArchiveEvidenceId": "server-cls-official-inference-archive", "inferenceJsonSize": 104399, "inferenceJsonSha256": "b81929eeaff8e52db0fafb49c9fbfc5bc0572f81641fe0179cc52096323fb4d4", "inferenceParamsSize": 6743918, "inferenceParamsSha256": "0de2bcf996cf553e2b848dd7b1769dafffc6917b1ccdf55c1d8efe7909fbf743", "generatedOnnxSize": 6777308, "generatedOnnxSha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "exactCandidateMatch": true }
+    ]
+  },
+  "officialInferenceArchives": [
+    {
+      "evidenceId": "mobile-det-official-inference-archive",
+      "modelName": "PP-OCRv5_mobile_det",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
+      "localFileName": "det.tar",
+      "size": 4935680,
+      "sha256": "50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    },
+    {
+      "evidenceId": "mobile-rec-official-inference-archive",
+      "modelName": "PP-OCRv5_mobile_rec",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
+      "localFileName": "rec.tar",
+      "size": 16834560,
+      "sha256": "566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    },
+    {
+      "evidenceId": "mobile-cls-official-inference-archive",
+      "modelName": "PP-LCNet_x0_25_textline_ori",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
+      "localFileName": "cls.tar",
+      "size": 1095680,
+      "sha256": "268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    },
+    {
+      "evidenceId": "server-det-official-inference-archive",
+      "modelName": "PP-OCRv5_server_det",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_infer.tar",
+      "localFileName": "PP-OCRv5_server_det_infer.tar",
+      "size": 88340480,
+      "sha256": "22a33e0ba6a21425ea4192da03bf4395c9a0c67902bd924b7328fc859073045d",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    },
+    {
+      "evidenceId": "server-rec-official-inference-archive",
+      "modelName": "PP-OCRv5_server_rec",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
+      "localFileName": "PP-OCRv5_server_rec_infer.tar",
+      "size": 84869120,
+      "sha256": "d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    },
+    {
+      "evidenceId": "server-cls-official-inference-archive",
+      "modelName": "PP-LCNet_x1_0_textline_ori",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
+      "localFileName": "PP-LCNet_x1_0_textline_ori_infer.tar",
+      "size": 6871040,
+      "sha256": "6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
+      "scope": "official-paddle-inference-source-and-semantic-reference"
+    }
+  ],
+  "localInferenceMetadata": [
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-det/external",
+      "modelName": "PP-OCRv5_mobile_det",
+      "relativePath": "PP-OCRv5_mobile_det_infer/inference.yml",
+      "size": 903,
+      "sha256": "98069072e1b6b37d727fd9d9f11725faa46d6ea0de012f2ed26caea011c37699",
+      "scope": "local-observation-not-export-provenance"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-det/external",
+      "modelName": "PP-OCRv5_server_det",
+      "relativePath": "PP-OCRv5_server_det_infer/inference.yml",
+      "size": 903,
+      "sha256": "28fb721efc3634fc8aa677e474b9602cb815a91cf569ef357a7a553d7b3ce685",
+      "scope": "local-observation-not-export-provenance"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-rec/external",
+      "modelName": "PP-OCRv5_mobile_rec",
+      "relativePath": "PP-OCRv5_mobile_rec_infer/inference.yml",
+      "size": 148345,
+      "sha256": "5dfeb2777f6d0db8177d8128a8acfcf6e6276dc4ac73ea3bf0dc06d6a5e85d8e",
+      "scope": "local-observation-not-export-provenance"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-rec/external",
+      "modelName": "PP-OCRv5_server_rec",
+      "relativePath": "PP-OCRv5_server_rec_infer/inference.yml",
+      "size": 148345,
+      "sha256": "2c719dba044c4e2228aef8ff92f5f575394d75d24c16de096a33b7cfd902f66d",
+      "scope": "local-observation-not-export-provenance"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-cls/external",
+      "modelName": "PP-LCNet_x0_25_textline_ori",
+      "relativePath": "PP-LCNet_x0_25_textline_ori_infer/PP-LCNet_x0_25_textline_ori_infer/inference.yml",
+      "size": 736,
+      "sha256": "d9a0a3fc7c5c0ae416dbb565d63a32cb4692f05aee1bf7b677b9dd571adaa759",
+      "scope": "local-observation-not-export-provenance"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-cls/external",
+      "modelName": "PP-LCNet_x1_0_textline_ori",
+      "relativePath": "PP-LCNet_x1_0_textline_ori_infer/PP-LCNet_x1_0_textline_ori_infer/inference.yml",
+      "size": 735,
+      "sha256": "8d5120d0e1a30a9df7ed46aa9119da3796ed066777089d1c1d705f132d5e90f9",
+      "scope": "local-observation-not-export-provenance"
+    }
+  ],
+  "sharedArtifacts": {
+    "dictionary": {
+      "localFileName": "ppocrv5_dict.txt",
+      "size": 74012,
+      "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+      "sourceRevision": "unrecorded",
+      "licenseStatus": "official-repository-file-separate-review-required",
+      "redistributionApproved": false
+    }
+  },
+  "artifacts": [
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-det/external",
+      "manifestFile": "ppocrv5-mobile-det.modelpack.json",
+      "localFileName": "PP-OCRv5_mobile_det_onnx.onnx",
+      "size": 4826518,
+      "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+      "opset": 11,
+      "officialSemanticEvidence": "official-image DB golden; ORT/OpenVINO",
+      "checkpointSource": "mobile-det-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-det/external",
+      "manifestFile": "ppocrv5-server-det.modelpack.json",
+      "localFileName": "PP-OCRv5_server_det_onnx.onnx",
+      "size": 88116836,
+      "sha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839",
+      "opset": 11,
+      "officialSemanticEvidence": "official-image DB golden; ORT/OpenVINO",
+      "checkpointSource": "server-det-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-rec/external",
+      "manifestFile": "ppocrv5-mobile-rec.modelpack.json",
+      "localFileName": "PP-OCRv5_mobile_rec_onnx.onnx",
+      "size": 16560873,
+      "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+      "opset": 7,
+      "officialSemanticEvidence": "official-image CTC text and token golden; ORT/OpenVINO",
+      "checkpointSource": "mobile-rec-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-rec/external",
+      "manifestFile": "ppocrv5-server-rec.modelpack.json",
+      "localFileName": "PP-OCRv5_server_rec_onnx.onnx",
+      "size": 84502992,
+      "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7",
+      "opset": 10,
+      "officialSemanticEvidence": "official-image CTC text and token golden; ORT/OpenVINO",
+      "checkpointSource": "server-rec-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-cls/external",
+      "manifestFile": "ppocrv5-mobile-cls.modelpack.json",
+      "localFileName": "PP-OCRv5_mobile_cls_onnx.onnx",
+      "size": 1018940,
+      "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+      "opset": 7,
+      "officialSemanticEvidence": "official-image orientation class and confidence golden; ORT/OpenVINO",
+      "checkpointSource": "mobile-cls-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-cls/external",
+      "manifestFile": "ppocrv5-server-cls.modelpack.json",
+      "localFileName": "PP-OCRv5_server_cls_onnx.onnx",
+      "size": 6777308,
+      "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f",
+      "opset": 7,
+      "officialSemanticEvidence": "official-image orientation class and rejection/fallback golden; ORT/OpenVINO",
+      "checkpointSource": "server-cls-official-inference-archive",
+      "exportCommand": "paddle2onnx-export-defaults-v1",
+      "redistributionApproved": false
+    }
+  ],
+  "releaseAdmission": {
+    "state": "blocked-external-only",
+    "redistributionAllowed": false,
+    "immutableReleaseAsset": "unrecorded",
+    "releaseBoundGoldenAudit": "not-run",
+    "noticeBundle": "not-recorded;review-evidence-identifies-required-contents",
+    "licenseReviewEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json"
+  },
+  "blockers": [
+    { "id": "source-checkpoint-identity", "status": "closed", "requirement": "Official immutable inference archives, archive SHA256 values, and the inference.json/inference.pdiparams SHA256 binding are recorded for every ONNX artifact." },
+    { "id": "export-reproducibility", "status": "closed", "requirement": "The exact exporter invocation and dependency lock reproduce all six candidate ONNX files byte-for-byte." },
+    { "id": "license-and-redistribution", "status": "open", "requirement": "The code Apache-2.0 observation and exact dictionary source are recorded, but all six model archives contain no LICENSE/NOTICE and explicit model/dictionary redistribution approval is still required; see paddleocr-license-redistribution-review.json." },
+    { "id": "immutable-release-binding", "status": "open", "requirement": "Publish approved immutable assets with checksums, bind them in a release manifest, and rerun the release-bound ORT/OpenVINO golden audit." },
+    { "id": "server-rec-cls-semantic-evidence", "status": "closed", "requirement": "Server recognition and classification official semantic goldens are recorded; server classification preserves the 0.9 rejection threshold and 0-degree fallback." }
+  ]
+}

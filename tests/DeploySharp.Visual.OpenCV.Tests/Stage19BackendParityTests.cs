@@ -198,7 +198,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private static PaddleOcrArtifactContract PaddleArtifact(int opset, string modelSha, string? dictionarySha = null)
         {
-            return new PaddleOcrArtifactContract(opset, modelSha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "local-exporter-unverified", "Apache-2.0", "stage19-preprocess-v1", "stage19-postprocess-v1", dictionarySha256: dictionarySha, dictionaryLicense: "official-repository-file-separate-review-required");
+            return new PaddleOcrArtifactContract(opset, modelSha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical", "Apache-2.0", "stage19-preprocess-v1", "stage19-postprocess-v1", dictionarySha256: dictionarySha, dictionaryLicense: "official-repository-file-separate-review-required");
         }
 
         private static void RequireExternal()

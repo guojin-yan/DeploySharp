@@ -100,6 +100,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     {
         private readonly IReadOnlyList<float> _means;
         private readonly IReadOnlyList<float> _standardDeviations;
+        private readonly IReadOnlyList<float> _inputDivisors;
 
         /// <summary>Initializes and validates preprocessing options. / 初始化并校验预处理配置。</summary>
         public OpenCvPreprocessOptions(
@@ -115,7 +116,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OpenCvRgbColor? paddingColor = null,
             OpenCvRgbColor? alphaBackground = null,
             OpenCvLetterboxRounding letterboxRounding = OpenCvLetterboxRounding.Nearest,
-            OpenCvInterpolation interpolation = OpenCvInterpolation.Linear)
+            OpenCvInterpolation interpolation = OpenCvInterpolation.Linear,
+            IEnumerable<float>? inputDivisors = null)
         {
             if (!Enum.IsDefined(typeof(OpenCvResizeMode), resizeMode)) throw Invalid("The resize mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualColorOrder), colorOrder) || colorOrder == VisualColorOrder.Unspecified) throw Invalid("A concrete output color order is required.");
@@ -133,6 +135,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
 
             _means = CopyFinite(means, channels, "means", false);
             _standardDeviations = CopyFinite(standardDeviations, channels, "standardDeviations", true);
+            _inputDivisors = CopyFinite(inputDivisors, channels, "inputDivisors", true);
             if (outputType == OpenCvOutputType.UInt8 && (_means.Count != 0 || _standardDeviations.Count != 0)) throw Invalid("UInt8 output cannot apply floating-point normalization.");
 
             ModelSize = modelSize;
@@ -160,6 +163,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public IReadOnlyList<float> Means => _means;
         /// <summary>Gets positive per-channel divisors. / 获取逐通道正除数。</summary>
         public IReadOnlyList<float> StandardDeviations => _standardDeviations;
+        /// <summary>Gets per-channel divisors applied to decoded byte values before mean subtraction. / 获取在减均值前应用于解码字节值的逐通道除数。</summary>
+        public IReadOnlyList<float> InputDivisors => _inputDivisors;
         /// <summary>Gets the output tensor layout. / 获取输出张量布局。</summary>
         public VisualTensorLayout Layout { get; }
         /// <summary>Gets the batch size; one prepared image is duplicated for each batch slot. / 获取批次大小；同一已准备图像复制到每个批次位置。</summary>
@@ -178,6 +183,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         internal int ChannelCount => GetChannelCount(ColorOrder);
         internal float Mean(int channel) => _means.Count == 0 ? 0f : _means[_means.Count == 1 ? 0 : channel];
         internal float StandardDeviation(int channel) => _standardDeviations.Count == 0 ? 1f : _standardDeviations[_standardDeviations.Count == 1 ? 0 : channel];
+        internal float InputDivisor(int channel) => _inputDivisors.Count == 0 ? 1f : _inputDivisors[_inputDivisors.Count == 1 ? 0 : channel];
 
         private static IReadOnlyList<float> CopyFinite(IEnumerable<float>? values, int channels, string name, bool requirePositive)
         {

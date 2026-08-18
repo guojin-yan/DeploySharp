@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "08/17/2026 00:00:00",
-  "catalogRevision": "models-20260817.detectors.2",
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "catalogRevision": "models-20260818.ppocrv5.1",
   "sourceRepository": "https://github.com/guojin-yan/DeploySharp",
   "entries": [
     {
@@ -3029,6 +3029,564 @@
       ],
       "testInputs": [],
       "documentationPath": "articles/visual-portable-detectors.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-cls",
+      "name": "PP-OCRv5 mobile text-line orientation",
+      "family": "paddle-ocr-cls",
+      "task": "text-orientation-classification",
+      "modelVersion": "PP-OCRv5-mobile-cls-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-mobile-cls-modelpack",
+          "bundleRole": "text-orientation-classifier",
+          "bundleVersion": "PP-OCRv5-mobile-cls-release",
+          "capabilities": [
+            "text-orientation-classification"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-mobile-cls-model"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-cls-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/mobile-cls.modelpack.json",
+              "relativePath": "mobile-cls.modelpack.json",
+              "size": 3087,
+              "sha256": "e0c3aff19f2f4d011d32fa97bc99b23629bda824ebe3e43013bf729eddb60717",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-cls-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-mobile-cls.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 1018940,
+              "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-cls-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-det",
+      "name": "PP-OCRv5 mobile text detector",
+      "family": "paddle-ocr-det",
+      "task": "text-detection",
+      "modelVersion": "PP-OCRv5-mobile-det-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-mobile-det-modelpack",
+          "bundleRole": "text-detector",
+          "bundleVersion": "PP-OCRv5-mobile-det-release",
+          "capabilities": [
+            "text-detection"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-mobile-det-model"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-det-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/mobile-det.modelpack.json",
+              "relativePath": "mobile-det.modelpack.json",
+              "size": 3074,
+              "sha256": "37b3d8e153cdd5f333cecc7eed0caba17eab47ac8fcb5015ee419445900b7635",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-det-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-mobile-det.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 4826518,
+              "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-det-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/mobile-rec",
+      "name": "PP-OCRv5 mobile CTC recognizer",
+      "family": "paddle-ocr-rec",
+      "task": "text-recognition",
+      "modelVersion": "PP-OCRv5-mobile-rec-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-mobile-rec-modelpack",
+          "bundleRole": "text-recognizer",
+          "bundleVersion": "PP-OCRv5-mobile-rec-release",
+          "capabilities": [
+            "text-recognition"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-mobile-rec-model",
+            "paddleocr-ppocrv5-mobile-rec-dictionary"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-rec-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/mobile-rec.modelpack.json",
+              "relativePath": "mobile-rec.modelpack.json",
+              "size": 3334,
+              "sha256": "153723e7d493a16066496d0fbe8190d0980e17d65566496157c5736123935325",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-rec-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-mobile-rec.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 16560873,
+              "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-rec-dictionary",
+              "kind": "other",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5_dict.txt",
+              "relativePath": "bundle/ppocrv5_dict.txt",
+              "size": 74012,
+              "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-mobile-rec-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-cls",
+      "name": "PP-OCRv5 server text-line orientation",
+      "family": "paddle-ocr-cls",
+      "task": "text-orientation-classification",
+      "modelVersion": "PP-OCRv5-server-cls-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-server-cls-modelpack",
+          "bundleRole": "text-orientation-classifier",
+          "bundleVersion": "PP-OCRv5-server-cls-release",
+          "capabilities": [
+            "text-orientation-classification"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-server-cls-model"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-server-cls-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/server-cls.modelpack.json",
+              "relativePath": "server-cls.modelpack.json",
+              "size": 3086,
+              "sha256": "82055b354f1735058421f7485ff74517a06f366027969448dd55b92aa12b0257",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-cls-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-server-cls.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 6777308,
+              "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-cls-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-det",
+      "name": "PP-OCRv5 server text detector",
+      "family": "paddle-ocr-det",
+      "task": "text-detection",
+      "modelVersion": "PP-OCRv5-server-det-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:22a33e0ba6a21425ea4192da03bf4395c9a0c67902bd924b7328fc859073045d",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-server-det-modelpack",
+          "bundleRole": "text-detector",
+          "bundleVersion": "PP-OCRv5-server-det-release",
+          "capabilities": [
+            "text-detection"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-server-det-model"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-server-det-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/server-det.modelpack.json",
+              "relativePath": "server-det.modelpack.json",
+              "size": 3082,
+              "sha256": "a990dab8dade3c00a3cc9c7d7315123183130486f3ababe0aa1270f9a0647b25",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-det-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-server-det.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 88116836,
+              "sha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-det-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "paddleocr/ppocrv5/server-rec",
+      "name": "PP-OCRv5 server CTC recognizer",
+      "family": "paddle-ocr-rec",
+      "task": "text-recognition",
+      "modelVersion": "PP-OCRv5-server-rec-release",
+      "status": "preview",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+        "author": "PaddlePaddle",
+        "licenseExpression": "Apache-2.0",
+        "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260818.ppocrv5.1",
+        "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": [
+            "onnxruntime",
+            "openvino"
+          ],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "paddleocr-ppocrv5-server-rec-modelpack",
+          "bundleRole": "text-recognizer",
+          "bundleVersion": "PP-OCRv5-server-rec-release",
+          "capabilities": [
+            "text-recognition"
+          ],
+          "requiredAssetIds": [
+            "paddleocr-ppocrv5-server-rec-model",
+            "paddleocr-ppocrv5-server-rec-dictionary"
+          ],
+          "assets": [
+            {
+              "assetId": "paddleocr-ppocrv5-server-rec-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/server-rec.modelpack.json",
+              "relativePath": "server-rec.modelpack.json",
+              "size": 3336,
+              "sha256": "067c847b1a6248d5a4ff08de5ce4c16aa847e2df133dd54fe46ec0fa07276cf8",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-rec-model",
+              "kind": "model",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5-server-rec.model.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 84502992,
+              "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-rec-dictionary",
+              "kind": "other",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/ppocrv5_dict.txt",
+              "relativePath": "bundle/ppocrv5_dict.txt",
+              "size": 74012,
+              "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "paddleocr-ppocrv5-server-rec-license",
+              "kind": "license",
+              "releaseTag": "models-20260818.ppocrv5.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260818.ppocrv5.1/paddleocr.LICENSE.txt",
+              "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+              "size": 11376,
+              "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+              "mediaType": "text/plain",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "paddle2onnx",
+            "exporterVersion": "2.0.2rc3",
+            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
     }
   ]
 }

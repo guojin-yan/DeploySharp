@@ -4,6 +4,6 @@
   "catalogAdmission": "External",
   "officialCatalogModelCount": 0,
   "rows": [
-    { "v1Row": "PaddleOcrCls", "task": "text-orientation-classification", "profiles": 2, "runtimeContract": "legacy x -> softmax_0.tmp_0 [-1,2]; PP-LCNet x -> fetch_name_0 [1,2]; ordered 0/180 probabilities", "status": "ContractVerified", "algorithmVerified": false, "blocker": "local ONNX checkpoint/export command and redistribution provenance plus official inference image golden require independent approval" }
+    { "v1Row": "PaddleOcrCls", "task": "text-orientation-classification", "profiles": 2, "runtimeContract": "legacy x -> softmax_0.tmp_0 [-1,2]; PP-LCNet x -> fetch_name_0 [1,2]; ordered 0/180 probabilities", "status": "ContractVerified", "algorithmVerified": false, "blocker": "PP-LCNet v5 source/export and official goldens are verified; the legacy profile still lacks source/export and official-image provenance, while v5 publication remains blocked on license/redistribution approval and immutable release binding" }
   ]
 }

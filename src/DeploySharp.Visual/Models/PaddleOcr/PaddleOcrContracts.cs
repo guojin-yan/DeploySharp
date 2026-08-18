@@ -173,14 +173,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     Visit(x, y + 1, width, height, active, visited, queue, ref tail);
                 }
 
-                int candidateWidth = maxX - minX + 1;
-                int candidateHeight = maxY - minY + 1;
-                if (Math.Min(candidateWidth, candidateHeight) < Options.MinimumSide) continue;
+                PointF[] hull = ConvexHull(queue, tail, width);
+                PointF[] box = MinimumAreaRectangle(hull);
+                if (ShortSide(box) < Options.MinimumSide) continue;
                 float score = Options.ScoreMode == PaddleDbScoreMode.Slow
                     ? checked((float)(maskScore / tail))
-                    : RectangleMean(probabilities, width, minX, minY, maxX, maxY);
+                    : PolygonMean(probabilities, width, box);
                 if (score < Options.BoxThreshold) continue;
-                candidates.Add(new Candidate(minX, minY, maxX + 1, maxY + 1, score));
+                candidates.Add(new Candidate(box, score));
             }
 
             candidates.Sort(CandidateComparer.Instance);
@@ -188,15 +188,17 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             for (int index = 0; index < candidates.Count && regions.Count < Options.MaximumRegions; index++)
             {
                 Candidate candidate = Expand(candidates[index], width, height, Options.UnclipRatio);
-                PointF topLeft = Restore(candidate.Left, candidate.Top, width, height, context);
-                PointF topRight = Restore(candidate.Right, candidate.Top, width, height, context);
-                PointF bottomRight = Restore(candidate.Right, candidate.Bottom, width, height, context);
-                PointF bottomLeft = Restore(candidate.Left, candidate.Bottom, width, height, context);
+                if (ShortSide(candidate.Box) < 5f) continue;
+                PointF topLeft = Restore(candidate.Box[0], width, height, context);
+                PointF topRight = Restore(candidate.Box[1], width, height, context);
+                PointF bottomRight = Restore(candidate.Box[2], width, height, context);
+                PointF bottomLeft = Restore(candidate.Box[3], width, height, context);
                 var quadrilateral = new TextQuadrilateral(topLeft, topRight, bottomRight, bottomLeft, TextCornerOrder.TopLeftClockwise);
                 regions.Add(new TextRegion(index, candidate.Score, quadrilateral.Polygon, quadrilateral, metadata: new[]
                 {
                     new KeyValuePair<string, string>("paddle.db.scoreMode", Options.ScoreMode.ToString()),
                     new KeyValuePair<string, string>("paddle.db.boxType", Options.BoxType.ToString()),
+                    new KeyValuePair<string, string>("paddle.db.geometry", "contour-convex-hull-min-area-rectangle"),
                     new KeyValuePair<string, string>("paddle.db.unclipRatio", Options.UnclipRatio.ToString(System.Globalization.CultureInfo.InvariantCulture))
                 }));
             }
@@ -212,31 +214,175 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             queue[tail++] = index;
         }
 
-        private static float RectangleMean(float[] values, int width, int minX, int minY, int maxX, int maxY)
+        private static float PolygonMean(float[] values, int width, PointF[] polygon)
         {
+            float minX = polygon[0].X;
+            float maxX = minX;
+            float minY = polygon[0].Y;
+            float maxY = minY;
+            for (int index = 1; index < polygon.Length; index++)
+            {
+                minX = Math.Min(minX, polygon[index].X);
+                maxX = Math.Max(maxX, polygon[index].X);
+                minY = Math.Min(minY, polygon[index].Y);
+                maxY = Math.Max(maxY, polygon[index].Y);
+            }
+            int left = Math.Max(0, (int)Math.Floor(minX));
+            int right = Math.Min((width - 1), (int)Math.Ceiling(maxX));
+            int top = Math.Max(0, (int)Math.Floor(minY));
+            int bottom = Math.Min((values.Length / width) - 1, (int)Math.Ceiling(maxY));
             double sum = 0d;
             int count = 0;
-            for (int y = minY; y <= maxY; y++) for (int x = minX; x <= maxX; x++) { sum += values[(y * width) + x]; count++; }
+            for (int y = top; y <= bottom; y++)
+                for (int x = left; x <= right; x++)
+                    if (InsideConvexPolygon(polygon, x, y)) { sum += values[(y * width) + x]; count++; }
+            if (count == 0) return 0f;
             return checked((float)(sum / count));
+        }
+
+        private static bool InsideConvexPolygon(PointF[] polygon, float x, float y)
+        {
+            for (int index = 0; index < polygon.Length; index++)
+            {
+                PointF a = polygon[index];
+                PointF b = polygon[(index + 1) % polygon.Length];
+                if (Cross(a, b, new PointF(x, y)) < -0.0001f) return false;
+            }
+            return true;
         }
 
         private static Candidate Expand(Candidate candidate, int width, int height, float ratio)
         {
-            float boxWidth = candidate.Right - candidate.Left;
-            float boxHeight = candidate.Bottom - candidate.Top;
-            float area = boxWidth * boxHeight;
-            float perimeter = 2f * (boxWidth + boxHeight);
-            // DB unclip uses distance = area * ratio / perimeter; this managed rectangle path preserves that official distance rule. / DB unclip 使用 distance = area * ratio / perimeter；此托管矩形路径保留官方距离规则。
-            float distance = perimeter <= 0f ? 0f : (area * ratio / perimeter);
-            return new Candidate(Math.Max(0f, candidate.Left - distance), Math.Max(0f, candidate.Top - distance), Math.Min(width, candidate.Right + distance), Math.Min(height, candidate.Bottom + distance), candidate.Score);
+            PointF[] box = candidate.Box;
+            double area = Math.Abs(SignedArea(box));
+            double perimeter = 0d;
+            for (int index = 0; index < box.Length; index++) perimeter += Distance(box[index], box[(index + 1) % box.Length]);
+            float distance = perimeter <= 0d ? 0f : checked((float)(area * ratio / perimeter));
+            PointF[] expanded = Offset(box, distance);
+            for (int index = 0; index < expanded.Length; index++)
+                expanded[index] = new PointF(Math.Max(0f, Math.Min(width, expanded[index].X)), Math.Max(0f, Math.Min(height, expanded[index].Y)));
+            return new Candidate(expanded, candidate.Score);
         }
 
-        private static PointF Restore(float mapX, float mapY, int mapWidth, int mapHeight, VisualDecodeContext context)
+        private static PointF Restore(PointF point, int mapWidth, int mapHeight, VisualDecodeContext context)
         {
-            float modelX = mapX * context.Input.ModelSize.Width / mapWidth;
-            float modelY = mapY * context.Input.ModelSize.Height / mapHeight;
+            float modelX = point.X * context.Input.ModelSize.Width / mapWidth;
+            float modelY = point.Y * context.Input.ModelSize.Height / mapHeight;
             PointF source = context.Input.Transform.ToSource(new PointF(modelX, modelY));
             return new PointF(Math.Max(0f, Math.Min(context.Input.SourceSize.Width, source.X)), Math.Max(0f, Math.Min(context.Input.SourceSize.Height, source.Y)));
+        }
+
+        private static PointF[] ConvexHull(int[] indices, int count, int width)
+        {
+            var points = new PointF[count];
+            for (int index = 0; index < count; index++) points[index] = new PointF(indices[index] % width, indices[index] / width);
+            Array.Sort(points, PointComparer.Instance);
+            var hull = new List<PointF>(Math.Min(count, 32));
+            for (int pass = 0; pass < 2; pass++)
+            {
+                int start = hull.Count;
+                int begin = pass == 0 ? 0 : count - 1;
+                int end = pass == 0 ? count : -1;
+                int step = pass == 0 ? 1 : -1;
+                for (int index = begin; index != end; index += step)
+                {
+                    PointF point = points[index];
+                    while (hull.Count - start >= 2 && Cross(hull[hull.Count - 2], hull[hull.Count - 1], point) <= 0f) hull.RemoveAt(hull.Count - 1);
+                    hull.Add(point);
+                }
+                hull.RemoveAt(hull.Count - 1);
+            }
+            if (hull.Count >= 3) return hull.ToArray();
+            return new[] { points[0], new PointF(points[points.Length - 1].X, points[0].Y), points[points.Length - 1], new PointF(points[0].X, points[points.Length - 1].Y) };
+        }
+
+        private static PointF[] MinimumAreaRectangle(PointF[] hull)
+        {
+            double bestArea = double.PositiveInfinity;
+            PointF[] best = hull.Length == 4 ? (PointF[])hull.Clone() : new PointF[4];
+            for (int edge = 0; edge < hull.Length; edge++)
+            {
+                PointF a = hull[edge];
+                PointF b = hull[(edge + 1) % hull.Length];
+                double dx = b.X - a.X;
+                double dy = b.Y - a.Y;
+                double length = Math.Sqrt((dx * dx) + (dy * dy));
+                if (length <= 0d) continue;
+                double ux = dx / length;
+                double uy = dy / length;
+                double vx = -uy;
+                double vy = ux;
+                double minU = double.PositiveInfinity, maxU = double.NegativeInfinity, minV = double.PositiveInfinity, maxV = double.NegativeInfinity;
+                for (int index = 0; index < hull.Length; index++)
+                {
+                    double u = (hull[index].X * ux) + (hull[index].Y * uy);
+                    double v = (hull[index].X * vx) + (hull[index].Y * vy);
+                    minU = Math.Min(minU, u); maxU = Math.Max(maxU, u); minV = Math.Min(minV, v); maxV = Math.Max(maxV, v);
+                }
+                double area = (maxU - minU) * (maxV - minV);
+                if (area >= bestArea) continue;
+                bestArea = area;
+                best = OrderQuad(
+                    PointFromProjection(minU, minV, ux, uy, vx, vy), PointFromProjection(maxU, minV, ux, uy, vx, vy),
+                    PointFromProjection(maxU, maxV, ux, uy, vx, vy), PointFromProjection(minU, maxV, ux, uy, vx, vy));
+            }
+            return best;
+        }
+
+        private static PointF[] Offset(PointF[] box, float distance)
+        {
+            if (distance <= 0f) return (PointF[])box.Clone();
+            var lines = new Line[box.Length];
+            float centerX = 0f;
+            float centerY = 0f;
+            for (int index = 0; index < box.Length; index++) { centerX += box[index].X; centerY += box[index].Y; }
+            PointF center = new PointF(centerX / box.Length, centerY / box.Length);
+            for (int index = 0; index < box.Length; index++)
+            {
+                PointF a = box[index]; PointF b = box[(index + 1) % box.Length];
+                float dx = b.X - a.X; float dy = b.Y - a.Y; float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float nx = -dy / length; float ny = dx / length;
+                if (((center.X - a.X) * nx) + ((center.Y - a.Y) * ny) > 0f) { nx = -nx; ny = -ny; }
+                lines[index] = new Line(new PointF(a.X + (nx * distance), a.Y + (ny * distance)), new PointF(dx, dy));
+            }
+            var result = new PointF[box.Length];
+            for (int index = 0; index < box.Length; index++) result[index] = Intersect(lines[(index + box.Length - 1) % box.Length], lines[index]);
+            return result;
+        }
+
+        private static float ShortSide(PointF[] box)
+        {
+            float first = Distance(box[0], box[1]);
+            float second = Distance(box[1], box[2]);
+            return Math.Min(first, second);
+        }
+
+        private static PointF Intersect(Line first, Line second)
+        {
+            double denominator = (first.Direction.X * second.Direction.Y) - (first.Direction.Y * second.Direction.X);
+            if (Math.Abs(denominator) < 0.000001) return first.Point;
+            double dx = second.Point.X - first.Point.X;
+            double dy = second.Point.Y - first.Point.Y;
+            double t = ((dx * second.Direction.Y) - (dy * second.Direction.X)) / denominator;
+            return new PointF((float)(first.Point.X + (t * first.Direction.X)), (float)(first.Point.Y + (t * first.Direction.Y)));
+        }
+
+        private static PointF PointFromProjection(double u, double v, double ux, double uy, double vx, double vy) => new PointF((float)((u * ux) + (v * vx)), (float)((u * uy) + (v * vy)));
+        private static float Cross(PointF origin, PointF first, PointF second) => ((first.X - origin.X) * (second.Y - origin.Y)) - ((first.Y - origin.Y) * (second.X - origin.X));
+        private static double SignedArea(PointF[] points) { double area = 0; for (int index = 0; index < points.Length; index++) area += (points[index].X * points[(index + 1) % points.Length].Y) - (points[(index + 1) % points.Length].X * points[index].Y); return area * .5; }
+        private static float Distance(PointF first, PointF second) { float x = second.X - first.X; float y = second.Y - first.Y; return (float)Math.Sqrt((x * x) + (y * y)); }
+
+        private static PointF[] OrderQuad(params PointF[] points)
+        {
+            float centerX = 0f;
+            float centerY = 0f;
+            foreach (PointF point in points) { centerX += point.X; centerY += point.Y; }
+            PointF center = new PointF(centerX / points.Length, centerY / points.Length);
+            Array.Sort(points, (left, right) => Math.Atan2(left.Y - center.Y, left.X - center.X).CompareTo(Math.Atan2(right.Y - center.Y, right.X - center.X)));
+            int start = 0; for (int index = 1; index < points.Length; index++) if (points[index].Y < points[start].Y || (points[index].Y == points[start].Y && points[index].X < points[start].X)) start = index;
+            var ordered = new PointF[points.Length]; for (int index = 0; index < points.Length; index++) ordered[index] = points[(start + index) % points.Length];
+            if (SignedArea(ordered) < 0) Array.Reverse(ordered);
+            return ordered;
         }
 
         private VisualException Failure(VisualDecodeContext context, string message, Exception? exception = null, string? technicalDetails = null)
@@ -244,12 +390,24 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
 
         private readonly struct Candidate
         {
-            public Candidate(float left, float top, float right, float bottom, float score) { Left = left; Top = top; Right = right; Bottom = bottom; Score = score; }
-            public float Left { get; }
-            public float Top { get; }
-            public float Right { get; }
-            public float Bottom { get; }
+            public Candidate(PointF[] box, float score) { Box = box; Score = score; }
+            public PointF[] Box { get; }
             public float Score { get; }
+            public float Left => Box[0].X;
+            public float Top => Box[0].Y;
+        }
+
+        private readonly struct Line
+        {
+            public Line(PointF point, PointF direction) { Point = point; Direction = direction; }
+            public PointF Point { get; }
+            public PointF Direction { get; }
+        }
+
+        private sealed class PointComparer : IComparer<PointF>
+        {
+            public static PointComparer Instance { get; } = new PointComparer();
+            public int Compare(PointF left, PointF right) { int x = left.X.CompareTo(right.X); return x != 0 ? x : left.Y.CompareTo(right.Y); }
         }
 
         private sealed class CandidateComparer : IComparer<Candidate>

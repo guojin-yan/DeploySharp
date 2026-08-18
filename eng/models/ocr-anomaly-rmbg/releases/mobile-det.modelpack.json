@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "paddleocr/ppocrv5/mobile-det",
+  "name": "PP-OCRv5 mobile text detector",
+  "family": "paddle-ocr-det",
+  "task": "text-detection",
+  "modelVersion": "PP-OCRv5-mobile-det-release",
+  "exporter": {
+    "name": "paddle2onnx",
+    "version": "2.0.2rc3",
+    "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562"
+  },
+  "source": {
+    "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
+    "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+    "revision": "sha256:50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+    "author": "PaddlePaddle",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "profileId": "paddle-ocr-det.paddleocr/ppocrv5/mobile-det.opset11",
+  "inputs": [
+    {
+      "name": "x",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        -1,
+        -1
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "fetch_name_0",
+      "elementType": "float32",
+      "shape": [
+        1,
+        1,
+        -1,
+        -1
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "size": 4826518,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+          "size": 11376,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 11,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-official-db-golden-verified",
+        "deploysharp.artifact-provenance": "byte-identical-local-export",
+        "deploysharp.source-inference-archive-sha256": "50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+        "deploysharp.export-reproducibility": "byte-identical;paddle2onnx-2.0.2rc3;paddlepaddle-3.0.0.dev20250613;default-options",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true",
+    "deploysharp.release-tag": "models-20260818.ppocrv5.1",
+    "deploysharp.release-repository": "guojin-yan/DeploySharp"
+  }
+}

@@ -45,7 +45,7 @@ namespace DeploySharp.Backend.OpenVINO.Tests
 
         private static PaddleOcrProfile CreateProfile(bool legacy, string variant, string sha256)
         {
-            var artifact = new PaddleOcrArtifactContract(11, sha256, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "local-exporter-unverified", "Apache-2.0;external-artifact-redistribution-unverified", legacy ? "paddle-ocr-cls-legacy-bgr-h48-w192" : "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1");
+            var artifact = new PaddleOcrArtifactContract(legacy ? 11 : 7, sha256, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", legacy ? "local-exporter-unverified" : "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical", "Apache-2.0;external-artifact-redistribution-unverified", legacy ? "paddle-ocr-cls-legacy-bgr-h48-w192" : "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1");
             var modelId = new ModelId("external/stage20-" + variant + "-cls-openvino");
             return legacy ? PaddleOcrProfiles.CreateLegacyClassification(modelId, artifact, outputName: "softmax_0.tmp_0", rejectionThreshold: 0f, allowDynamicBatch: true) : PaddleOcrProfiles.CreateTextLineOrientationClassification(modelId, artifact, rejectionThreshold: 0f);
         }

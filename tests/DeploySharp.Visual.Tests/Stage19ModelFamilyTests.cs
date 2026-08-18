@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Models;
@@ -50,13 +51,34 @@ namespace DeploySharp.Visual.Tests
             var model = new VisualSize(20, 10);
             using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 10, 20), new float[600]), source, model, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(source, model));
             var map = new float[200];
-            for (int y = 2; y <= 4; y++) for (int x = 4; x <= 7; x++) map[(y * 20) + x] = .9f;
+            for (int y = 2; y <= 5; y++) for (int x = 4; x <= 8; x++) map[(y * 20) + x] = .9f;
             var result = (TextDetectionResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile, InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 10, 20), map)), CancellationToken.None));
             Assert.AreEqual(1, result.Regions.Count);
             Assert.AreEqual(.9f, result.Regions[0].Score, .0001f);
             Assert.IsTrue(result.Regions[0].AxisAlignedBounds.Width > 8f);
             Assert.IsTrue(result.Regions[0].AxisAlignedBounds.Height > 6f);
             Assert.AreEqual("Fast", result.Regions[0].Metadata["paddle.db.scoreMode"]);
+        }
+
+        [TestMethod]
+        public void PaddleDbDecoderPreservesRotatedComponentGeometry()
+        {
+            PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(new ModelId("tests/paddle-det"), PaddleArtifact(11),
+                postprocess: new PaddleDbPostprocessOptions(.3f, .6f, 1.5f, minimumSide: 3, maximumCandidates: 8, maximumRegions: 8));
+            VisualModelProfile profile = family.VisualProfile;
+            var source = new VisualSize(32, 32);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 16, 16), new float[768]), source, new VisualSize(16, 16), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(source, new VisualSize(16, 16)));
+            var map = new float[256];
+            for (int y = 3; y < 13; y++)
+                for (int x = 2; x < 14; x++)
+                    if (Math.Abs((x - 8) * 0.5f + (y - 8) * 1.0f) < 3.5f && Math.Abs((x - 8) * 1.0f - (y - 8) * 0.5f) < 5.5f) map[(y * 16) + x] = .95f;
+
+            var result = (TextDetectionResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 16, 16), map)), CancellationToken.None));
+            Assert.AreEqual(1, result.Regions.Count);
+            Assert.IsTrue(result.Regions[0].Polygon.Vertices.Select(point => point.X).Distinct().Count() > 2);
+            Assert.IsTrue(result.Regions[0].Polygon.Vertices.Select(point => point.Y).Distinct().Count() > 2);
+            Assert.IsTrue(result.Regions[0].AxisAlignedBounds.Width > result.Regions[0].AxisAlignedBounds.Height);
         }
 
         [TestMethod]

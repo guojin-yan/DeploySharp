@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "paddleocr/ppocrv5/mobile-cls",
+  "name": "PP-OCRv5 mobile text-line orientation",
+  "family": "paddle-ocr-cls",
+  "task": "text-orientation-classification",
+  "modelVersion": "PP-OCRv5-mobile-cls-release",
+  "exporter": {
+    "name": "paddle2onnx",
+    "version": "2.0.2rc3",
+    "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562"
+  },
+  "source": {
+    "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
+    "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+    "revision": "sha256:268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+    "author": "PaddlePaddle",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "profileId": "paddle-ocr-cls.paddleocr/ppocrv5/mobile-cls.opset7",
+  "inputs": [
+    {
+      "name": "x",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        80,
+        160
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "fetch_name_0",
+      "elementType": "float32",
+      "shape": [
+        1,
+        2
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "size": 1018940,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+          "size": 11376,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 7,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-official-semantics-golden-verified",
+        "deploysharp.artifact-provenance": "byte-identical-local-export",
+        "deploysharp.source-inference-archive-sha256": "268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+        "deploysharp.export-reproducibility": "byte-identical;paddle2onnx-2.0.2rc3;paddlepaddle-3.0.0.dev20250613;default-options",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true",
+    "deploysharp.release-tag": "models-20260818.ppocrv5.1",
+    "deploysharp.release-repository": "guojin-yan/DeploySharp"
+  }
+}

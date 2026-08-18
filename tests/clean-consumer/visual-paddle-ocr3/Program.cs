@@ -32,8 +32,8 @@ internal static class Program
                 sourceSize = probe.SourceSize;
             }
 
-            PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/stage20-detector"), Artifact(11, "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "ppocr-det-resize32-imagenet-bgr-v1", "ppocr-db-managed-rectangle-v1"));
-            PaddleOcrProfile classifier = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-classifier"), Artifact(11, "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
+            PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/stage20-detector"), Artifact(11, "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "ppocr-det-resize-long960-stride128-f32-v2", "ppocr-db-contour-minarea-unclip-v2"));
+            PaddleOcrProfile classifier = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-classifier"), Artifact(7, "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
             OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(files["DEPLOYSHARP_STAGE20_OCR_DICT"], "external.ppocrv5", "v5", true, DictionarySha);
             PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(new ModelId("external/stage20-recognizer"), Artifact(7, "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha), characters);
 
@@ -54,7 +54,7 @@ internal static class Program
                 recognizer.CropProfile ?? throw new InvalidOperationException("The recognition crop profile is missing."),
                 new OcrPipelineOptions(maximumRegions: 32, maximumRecognitionBatch: 16),
                 orientationRejectionPolicy: OcrOrientationRejectionPolicy.UseZeroDegrees);
-            using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(imagePath, detector.VisualProfile.Input.Name, OpenCvStage19Preprocessing.CreatePaddleOcrDetectionOptions(sourceSize));
+            using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(imagePath, detector.VisualProfile.Input.Name, OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize));
             OcrResult result = pipeline.Run(input);
             if (result.Regions.Count == 0) throw new InvalidOperationException("The external validation image produced no text regions.");
             int classifiedRegions = 0;
@@ -92,7 +92,7 @@ internal static class Program
 
     private static PaddleOcrArtifactContract Artifact(int opset, string sha, string preprocessing, string postprocessing, string? dictionarySha = null)
     {
-        return new PaddleOcrArtifactContract(opset, sha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "local-exporter-unverified", "Apache-2.0;external-artifact-redistribution-unverified", preprocessing, postprocessing, dictionarySha256: dictionarySha, dictionaryLicense: dictionarySha == null ? "" : "official-repository-file-separate-review-required");
+        return new PaddleOcrArtifactContract(opset, sha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical", "Apache-2.0;external-artifact-redistribution-unverified", preprocessing, postprocessing, dictionarySha256: dictionarySha, dictionaryLicense: dictionarySha == null ? "" : "official-repository-file-separate-review-required");
     }
 
     private static IReadOnlyDictionary<string, string>? ResolveFiles()

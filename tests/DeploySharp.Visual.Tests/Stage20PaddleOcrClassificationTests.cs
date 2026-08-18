@@ -189,7 +189,7 @@ namespace DeploySharp.Visual.Tests
 
         private static PaddleOcrArtifactContract Artifact()
         {
-            return new PaddleOcrArtifactContract(11, Sha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "local-exporter-unverified", "Apache-2.0;external-artifact-redistribution-unverified", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1");
+            return new PaddleOcrArtifactContract(7, Sha, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical", "Apache-2.0;external-artifact-redistribution-unverified", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1");
         }
 
         private static OcrOrientationResult Decode(float[] values, float threshold)

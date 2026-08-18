@@ -69,7 +69,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         pillowMeans[channel] = options.Mean(channel);
                         pillowScales[channel] = 1f / options.StandardDeviation(channel);
                     }
-                    var pillowDescriptor = new VisualPreprocessingDescriptor(options.ColorOrder, pillowMeans, pillowScales, "OpenCV 5 preview decode plus managed Pillow-compatible antialiased bicubic resize; pixels copied before Mat disposal.");
+                    var pillowDescriptor = new VisualPreprocessingDescriptor(options.ColorOrder, pillowMeans, pillowScales, "OpenCV 5 preview decode plus managed Pillow-compatible antialiased bicubic resize; pixels copied before Mat disposal." + NormalizationNote(options));
                     return new PreparedVisualInput(inputName, resizedTensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, ImageTransform.Resize(sourceSize, options.ModelSize), pillowDescriptor, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
                 }
                 using (Mat geometric = ApplyGeometry(geometrySource, sourceSize, options, out ImageTransform transform))
@@ -85,7 +85,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         means[channel] = options.Mean(channel);
                         scales[channel] = 1f / options.StandardDeviation(channel);
                     }
-                    var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal.");
+                    var descriptor = new VisualPreprocessingDescriptor(options.ColorOrder, means, scales, "OpenCV 5 preview; pixels copied to managed tensor before Mat disposal." + NormalizationNote(options));
                     return new PreparedVisualInput(inputName, tensor, sourceSize, options.ModelSize, options.BatchSize, options.Layout, transform, descriptor, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
                 }
             }
@@ -365,6 +365,11 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return new Scalar(color.Blue, color.Green, color.Red);
         }
 
+        private static string NormalizationNote(OpenCvPreprocessOptions options)
+        {
+            return options.InputDivisors.Count == 0 ? string.Empty : "; inputDivisors=" + string.Join(",", options.InputDivisors);
+        }
+
         internal static byte[] CopyRows(Mat image)
         {
             int rowBytes = checked(image.Cols * image.Channels);
@@ -471,7 +476,11 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         {
                             int sourceIndex = ((y * width + x) * channels) + channel;
                             int destinationIndex = DestinationIndex(batch, y, x, channel, width, height, channels, options);
-                            destination[destinationIndex] = (source[sourceIndex] - options.Mean(channel)) / options.StandardDeviation(channel);
+                            float inputDivisor = options.InputDivisor(channel);
+                            // Keep contracts such as Paddle's float32 pixel/255 path as an explicit
+                            // division so the reference operation and rounding order are preserved.
+                            float scaledPixel = inputDivisor == 1f ? source[sourceIndex] : source[sourceIndex] / inputDivisor;
+                            destination[destinationIndex] = (scaledPixel - options.Mean(channel)) / options.StandardDeviation(channel);
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
@@ -27,6 +28,36 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(VisualColorOrder.Rgb, textLine.ColorOrder);
             Assert.AreEqual(123.675f, textLine.Means[0], .0001f);
             Assert.AreEqual(58.395f, textLine.StandardDeviations[0], .0001f);
+        }
+
+        [TestMethod]
+        public void OfficialMobileDetectorUsesResizeLongAndStride128()
+        {
+            OpenCvPreprocessOptions options = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(new VisualSize(720, 1150));
+
+            Assert.AreEqual(new VisualSize(640, 1024), options.ModelSize);
+            Assert.AreEqual(VisualColorOrder.Bgr, options.ColorOrder);
+            Assert.AreEqual(.485f, options.Means[0], .0001f);
+            Assert.AreEqual(.229f, options.StandardDeviations[0], .0001f);
+            Assert.AreEqual(255f, options.InputDivisors[0], .0001f);
+        }
+
+        [TestMethod]
+        public void OfficialRecognitionAndOrientationUseArchiveNormalization()
+        {
+            OpenCvPreprocessOptions recognition = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceRecognitionOptions();
+            Assert.AreEqual(new VisualSize(320, 48), recognition.ModelSize);
+            Assert.AreEqual(VisualColorOrder.Bgr, recognition.ColorOrder);
+            Assert.AreEqual(.5f, recognition.Means[0], .0001f);
+            Assert.AreEqual(.5f, recognition.StandardDeviations[0], .0001f);
+            Assert.AreEqual(255f, recognition.InputDivisors[0], .0001f);
+
+            OpenCvPreprocessOptions orientation = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceTextLineOrientationOptions();
+            Assert.AreEqual(new VisualSize(160, 80), orientation.ModelSize);
+            Assert.AreEqual(VisualColorOrder.Rgb, orientation.ColorOrder);
+            CollectionAssert.AreEqual(new[] { .485f, .456f, .406f }, orientation.Means.ToArray());
+            CollectionAssert.AreEqual(new[] { .229f, .224f, .225f }, orientation.StandardDeviations.ToArray());
+            CollectionAssert.AreEqual(new[] { 255f, 255f, 255f }, orientation.InputDivisors.ToArray());
         }
 
         [TestMethod]

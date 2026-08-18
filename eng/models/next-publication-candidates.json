@@ -9,19 +9,17 @@
       "category": "ocr",
       "modelId": "paddleocr/ppocrv5/mobile-det/external",
       "manifest": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-det.modelpack.json",
-      "localVerification": "ContractVerified",
+      "localVerification": "OfficialGoldenVerified",
       "publicationState": "blocked-external-only",
       "redistributionAllowed": false,
       "blockers": [
-        "Official DB contour plus pyclipper preprocessing and postprocessing are not reproduced by the current managed path.",
-        "The exported checkpoint and source artifact provenance have not received independent redistribution approval.",
-        "An official inference-image golden is still required."
+        "The official source archive and byte-identical ONNX export are verified, but model and notice redistribution approval is not recorded.",
+        "The candidate remains external-only until approved immutable release assets and checksums are recorded."
       ],
       "nextEvidence": [
         "Run eng/models/ocr-anomaly-rmbg/Test-PaddleOcrExternalEvidence.ps1 to reproduce the local ORT/OpenVINO three-model baseline.",
-        "Re-run the official PaddleOCR DB contour/unclip implementation on the pinned source revision.",
-        "Record the exact export command, source checkpoint, dictionary, and license/notice review.",
-        "Compare ORT/OpenVINO outputs and final contours against an official image golden."
+        "Resolve the model license/notice and redistribution review in eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json, then satisfy the immutable-release requirement in eng/models/ocr-anomaly-rmbg/paddleocr-release-admission.json.",
+        "After approval, bind the immutable ModelPack asset and rerun the release-bound ORT/OpenVINO golden audit."
       ]
     },
     {
@@ -29,17 +27,17 @@
       "category": "ocr",
       "modelId": "paddleocr/ppocrv5/mobile-rec/external",
       "manifest": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-rec.modelpack.json",
-      "localVerification": "ContractVerified",
+      "localVerification": "OfficialGoldenVerified",
       "publicationState": "blocked-external-only",
       "redistributionAllowed": false,
       "blockers": [
-        "The local ONNX checkpoint/export command and 18,385-class dictionary need independent redistribution approval.",
-        "Official inference-image recognition goldens are not yet recorded."
+        "The official source archive and byte-identical ONNX export are verified, but the model, notice, and 18,385-class dictionary still need redistribution approval.",
+        "The candidate remains external-only until approved immutable release assets and checksums are recorded."
       ],
       "nextEvidence": [
         "Run eng/models/ocr-anomaly-rmbg/Test-PaddleOcrExternalEvidence.ps1 to reproduce the local ORT/OpenVINO three-model baseline.",
-        "Pin the upstream checkpoint and dictionary revisions with a complete notice bundle.",
-        "Compare decoded CTC text and confidence against official inference on representative images."
+        "Resolve the dictionary/model license and NOTICE review in eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json, then satisfy the immutable-release requirement in eng/models/ocr-anomaly-rmbg/paddleocr-release-admission.json.",
+        "After approval, bind the immutable ModelPack asset and rerun the release-bound ORT/OpenVINO golden audit."
       ]
     },
     {

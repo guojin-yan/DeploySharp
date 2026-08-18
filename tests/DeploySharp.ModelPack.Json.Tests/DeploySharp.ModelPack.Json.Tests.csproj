@@ -23,6 +23,7 @@
     <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-mobile-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-mobile-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-legacy-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-legacy-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\ocr-anomaly-rmbg\manifests\ppocrv5-server-cls.modelpack.json" Link="fixtures\stage20\ppocrv5-server-cls.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\releases\*.modelpack.json" Link="fixtures\paddleocr-release\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\sam\manifests\*.modelpack.json" Link="fixtures\sam\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\open-vocabulary\manifests\*.modelpack.json" Link="fixtures\open-vocabulary\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\vision-language\manifests\*.modelpack.json" Link="fixtures\vision-language\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

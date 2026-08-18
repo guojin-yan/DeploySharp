@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "paddleocr/ppocrv5/server-rec",
+  "name": "PP-OCRv5 server CTC recognizer",
+  "family": "paddle-ocr-rec",
+  "task": "text-recognition",
+  "modelVersion": "PP-OCRv5-server-rec-release",
+  "exporter": {
+    "name": "paddle2onnx",
+    "version": "2.0.2rc3",
+    "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562"
+  },
+  "source": {
+    "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
+    "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+    "revision": "sha256:d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+    "author": "PaddlePaddle",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "profileId": "paddle-ocr-rec.paddleocr/ppocrv5/server-rec.opset10",
+  "inputs": [
+    {
+      "name": "x",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        3,
+        48,
+        -1
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "fetch_name_0",
+      "elementType": "float32",
+      "shape": [
+        -1,
+        -1,
+        18385
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "directory",
+      "entrypoint": "bundle",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "bundle/model.onnx",
+          "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7",
+          "size": 84502992,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "bundle/ppocrv5_dict.txt",
+          "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+          "size": 74012,
+          "mediaType": "text/plain",
+          "role": "labels"
+        },
+        {
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
+          "size": 11376,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 10,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-official-semantics-golden-verified",
+        "deploysharp.artifact-provenance": "byte-identical-local-export",
+        "deploysharp.source-inference-archive-sha256": "d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+        "deploysharp.export-reproducibility": "byte-identical;paddle2onnx-2.0.2rc3;paddlepaddle-3.0.0.dev20250613;default-options",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true",
+    "deploysharp.release-tag": "models-20260818.ppocrv5.1",
+    "deploysharp.release-repository": "guojin-yan/DeploySharp"
+  }
+}

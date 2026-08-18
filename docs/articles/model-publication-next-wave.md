@@ -1,6 +1,6 @@
 # Next model publication wave / 下一批模型发布波次
 
-The prioritized candidates are tracked in `eng/models/next-publication-candidates.json`. This file is an admission queue, not a catalog: every row currently remains blocked and is intentionally absent from the embedded official catalog.
+The prioritized candidates are tracked in `eng/models/next-publication-candidates.json`. This file is an admission queue, not a catalog: its historical external rows remain separate from the six published PP-OCRv5 release entries in the embedded official catalog.
 
 | Priority | Area | Candidate | Current evidence | Why it is not public yet |
 |---:|---|---|---|---|
@@ -17,7 +17,7 @@ The current local OCR baseline is reproducible without copying any model into th
 pwsh -File eng\models\ocr-anomaly-rmbg\Test-PaddleOcrExternalEvidence.ps1
 ```
 
-The command validates the four pinned local files, runs the ORT/OpenVINO three-model parity test on `bus.jpg`, and emits `DEPLOYSHARP_PADDLE_OCR_EXTERNAL_EVIDENCE_OK`. Its final status remains `blocked-external-only`; this is evidence collection, not publication approval.
+The command validates the pinned local files, runs the ORT/OpenVINO three-model parity test on `bus.jpg`, and emits `DEPLOYSHARP_PADDLE_OCR_EXTERNAL_EVIDENCE_OK` with `assetSource=public-release` when pointed at the downloaded Release assets. The public asset and catalog audit can be repeated with `eng\\models\\ocr-anomaly-rmbg\\Test-PaddleOcrPublishedRelease.ps1`.
 
 The current public catalog remains the source of truth for downloadable models. Use the CLI to inspect it:
 

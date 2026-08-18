@@ -30,11 +30,30 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 new[] { 123.675f, 116.28f, 103.53f }, new[] { 58.395f, 57.12f, 57.375f });
         }
 
+        /// <summary>Creates the PP-OCRv5 inference-archive resize_long=960 and stride-128 contract. / 创建 PP-OCRv5 推理归档的 resize_long=960、stride-128 合同。</summary>
+        public static OpenCvPreprocessOptions CreatePaddleOcrOfficialInferenceDetectionOptions(VisualSize sourceSize, int resizeLong = 960)
+        {
+            if (sourceSize.Width <= 0 || sourceSize.Height <= 0) throw new ArgumentOutOfRangeException(nameof(sourceSize));
+            if (resizeLong <= 0) throw new ArgumentOutOfRangeException(nameof(resizeLong));
+            float ratio = (float)resizeLong / Math.Max(sourceSize.Width, sourceSize.Height);
+            int height = RoundUpStride((int)(sourceSize.Height * ratio), 128);
+            int width = RoundUpStride((int)(sourceSize.Width * ratio), 128);
+            return new OpenCvPreprocessOptions(new VisualSize(width, height), OpenCvResizeMode.Resize, VisualColorOrder.Bgr, OpenCvAlphaMode.Drop,
+                new[] { .485f, .456f, .406f }, new[] { .229f, .224f, .225f }, inputDivisors: new[] { 255f, 255f, 255f });
+        }
+
         /// <summary>Creates PP-OCRv5 recognition options for direct BGR-to-NCHW normalization. / 创建 PP-OCRv5 识别选项，将 BGR 直接归一化为 NCHW。</summary>
         public static OpenCvPreprocessOptions CreatePaddleOcrRecognitionOptions(VisualSize modelSize)
         {
             return new OpenCvPreprocessOptions(modelSize, OpenCvResizeMode.Resize, VisualColorOrder.Bgr, OpenCvAlphaMode.Drop,
                 means: new[] { 127.5f }, standardDeviations: new[] { 127.5f });
+        }
+
+        /// <summary>Creates the PP-OCRv5 official inference-archive recognition preprocessing contract. / 创建 PP-OCRv5 官方推理归档识别预处理合同。</summary>
+        public static OpenCvPreprocessOptions CreatePaddleOcrOfficialInferenceRecognitionOptions()
+        {
+            return new OpenCvPreprocessOptions(new VisualSize(320, 48), OpenCvResizeMode.Resize, VisualColorOrder.Bgr, OpenCvAlphaMode.Drop,
+                means: new[] { .5f }, standardDeviations: new[] { .5f }, inputDivisors: new[] { 255f });
         }
 
         /// <summary>Creates legacy PaddleOCR BGR 0/180 classification preprocessing. / 创建旧版 PaddleOCR BGR 0/180 分类前处理。</summary>
@@ -49,6 +68,13 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         {
             return new OpenCvPreprocessOptions(new VisualSize(160, 80), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop,
                 means: new[] { 123.675f, 116.28f, 103.53f }, standardDeviations: new[] { 58.395f, 57.12f, 57.375f });
+        }
+
+        /// <summary>Creates the PP-LCNet text-line orientation archive preprocessing contract. / 创建 PP-LCNet 文本行方向归档预处理合同。</summary>
+        public static OpenCvPreprocessOptions CreatePaddleOcrOfficialInferenceTextLineOrientationOptions()
+        {
+            return new OpenCvPreprocessOptions(new VisualSize(160, 80), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop,
+                means: new[] { .485f, .456f, .406f }, standardDeviations: new[] { .229f, .224f, .225f }, inputDivisors: new[] { 255f, 255f, 255f });
         }
 
         /// <summary>Creates Anomalib export options; the ONNX export owns ImageNet normalization, so OpenCV only scales bytes to [0,1]. / 创建 Anomalib 导出选项；ONNX 导出自带 ImageNet 归一化，因此 OpenCV 仅将字节缩放到 [0,1]。</summary>
@@ -79,6 +105,12 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         {
             if (value <= 0) return stride;
             return checked((int)Math.Round(value / (double)stride, MidpointRounding.ToEven) * stride);
+        }
+
+        private static int RoundUpStride(int value, int stride)
+        {
+            if (value <= 0) return stride;
+            return checked(((value + stride - 1) / stride) * stride);
         }
     }
 }
