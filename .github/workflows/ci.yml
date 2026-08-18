@@ -106,7 +106,7 @@ jobs:
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath ./artifacts/packages/JYPPX.DeploySharp.Visual.2.0.0-alpha.1.nupkg
       - run: dotnet pack src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release --no-restore
-      - run: dotnet restore tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj --configfile tests/clean-consumer/model-release-smoke/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj --configfile tests/clean-consumer/model-release-smoke/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj -c Release --no-restore
       - name: Audit published YOLO and DETR release assets
         if: ${{ inputs.verify_detector_releases }}
@@ -118,51 +118,51 @@ jobs:
           DEPLOYSHARP_DETECTOR_RELEASE_SMOKE: '1'
           DEPLOYSHARP_MODEL_CACHE: ${{ runner.temp }}\\deploysharp-detector-release-smoke
         run: dotnet run --project tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj --configfile tests/clean-consumer/llamasharp/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj --configfile tests/clean-consumer/llamasharp/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/llamasharp/DeploySharp.LlamaSharp.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj --configfile tests/clean-consumer/modelpack-json/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj --configfile tests/clean-consumer/modelpack-json/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/modelpack-json/DeploySharp.ModelPack.Json.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj --configfile tests/clean-consumer/modelfactory/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj --configfile tests/clean-consumer/modelfactory/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/modelfactory/DeploySharp.ModelFactory.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj --configfile tests/clean-consumer/visual/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj --configfile tests/clean-consumer/visual/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual/DeploySharp.Visual.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj --configfile tests/clean-consumer/onnxruntime/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj --configfile tests/clean-consumer/onnxruntime/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/onnxruntime/DeploySharp.OnnxRuntime.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-segmentation/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-segmentation/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-segmentation/DeploySharp.Visual.Segmentation.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj --configfile tests/clean-consumer/visual-pose/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj --configfile tests/clean-consumer/visual-pose/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-pose/DeploySharp.Visual.Pose.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-instance-segmentation/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj --configfile tests/clean-consumer/visual-instance-segmentation/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-instance-segmentation/DeploySharp.Visual.InstanceSegmentation.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-obb/VisualObbConsumer.csproj --configfile tests/clean-consumer/visual-obb/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-obb/VisualObbConsumer.csproj --configfile tests/clean-consumer/visual-obb/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-obb/VisualObbConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-obb/VisualObbConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj --configfile tests/clean-consumer/visual-ocr/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj --configfile tests/clean-consumer/visual-ocr/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-ocr/VisualOcrConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj --configfile tests/clean-consumer/visual-anomaly/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj --configfile tests/clean-consumer/visual-anomaly/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-anomaly/VisualAnomalyConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj --configfile tests/clean-consumer/onnxruntime-missing-native/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/onnxruntime-missing-native/DeploySharp.OnnxRuntime.MissingNativeConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj --configfile tests/clean-consumer/openvino/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj --configfile tests/clean-consumer/openvino/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/openvino/DeploySharp.OpenVino.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj --configfile tests/clean-consumer/openvino-missing-native/NuGet.Config
+      - run: dotnet restore tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj --configfile tests/clean-consumer/openvino-missing-native/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj --configfile tests/clean-consumer/visual-opencv/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj --configfile tests/clean-consumer/visual-opencv/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj -c Release --no-build
-      - run: dotnet restore tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj --configfile tests/clean-consumer/visual-opencv-missing-native/NuGet.Config --locked-mode
+      - run: dotnet restore tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj --configfile tests/clean-consumer/visual-opencv-missing-native/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj -c Release --no-build
