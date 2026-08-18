@@ -11,6 +11,14 @@ The prioritized candidates are tracked in `eng/models/next-publication-candidate
 
 These blockers are deliberate. `ModelFactoryClient` rejects `External` entries, and changing a manifest flag without the missing evidence would turn a provenance record into an unsupported public promise. The next release wave can start as soon as a candidate has an approved source/notice bundle, exact release-bound hashes, official golden comparisons, and a successful immutable Release/catalog audit.
 
+The current local OCR baseline is reproducible without copying any model into the repository:
+
+```powershell
+pwsh -File eng\models\ocr-anomaly-rmbg\Test-PaddleOcrExternalEvidence.ps1
+```
+
+The command validates the four pinned local files, runs the ORT/OpenVINO three-model parity test on `bus.jpg`, and emits `DEPLOYSHARP_PADDLE_OCR_EXTERNAL_EVIDENCE_OK`. Its final status remains `blocked-external-only`; this is evidence collection, not publication approval.
+
 The current public catalog remains the source of truth for downloadable models. Use the CLI to inspect it:
 
 ```powershell

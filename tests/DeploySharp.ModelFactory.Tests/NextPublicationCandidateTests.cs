@@ -21,6 +21,8 @@ namespace DeploySharp.ModelFactory.Tests
                 StringComparer.OrdinalIgnoreCase);
             JsonElement candidates = document.RootElement.GetProperty("candidates");
             Assert.IsTrue(candidates.GetArrayLength() > 0);
+            string ocrEvidenceScript = Path.Combine(FindRepositoryRoot(), "eng", "models", "ocr-anomaly-rmbg", "Test-PaddleOcrExternalEvidence.ps1");
+            Assert.IsTrue(File.Exists(ocrEvidenceScript), "The reproducible OCR evidence command is missing.");
             foreach (JsonElement candidate in candidates.EnumerateArray())
             {
                 string modelId = candidate.GetProperty("modelId").GetString()!;

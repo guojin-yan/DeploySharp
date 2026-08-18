@@ -18,6 +18,7 @@
         "An official inference-image golden is still required."
       ],
       "nextEvidence": [
+        "Run eng/models/ocr-anomaly-rmbg/Test-PaddleOcrExternalEvidence.ps1 to reproduce the local ORT/OpenVINO three-model baseline.",
         "Re-run the official PaddleOCR DB contour/unclip implementation on the pinned source revision.",
         "Record the exact export command, source checkpoint, dictionary, and license/notice review.",
         "Compare ORT/OpenVINO outputs and final contours against an official image golden."
@@ -36,6 +37,7 @@
         "Official inference-image recognition goldens are not yet recorded."
       ],
       "nextEvidence": [
+        "Run eng/models/ocr-anomaly-rmbg/Test-PaddleOcrExternalEvidence.ps1 to reproduce the local ORT/OpenVINO three-model baseline.",
         "Pin the upstream checkpoint and dictionary revisions with a complete notice bundle.",
         "Compare decoded CTC text and confidence against official inference on representative images."
       ]
