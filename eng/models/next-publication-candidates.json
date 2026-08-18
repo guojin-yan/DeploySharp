@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "purpose": "Prioritized candidates for the next public ModelFactory release wave",
+  "policy": "A candidate remains blocked until redistribution, artifact provenance, exact algorithm evidence, and immutable release admission are all approved.",
+  "candidates": [
+    {
+      "priority": 1,
+      "category": "ocr",
+      "modelId": "paddleocr/ppocrv5/mobile-det/external",
+      "manifest": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-det.modelpack.json",
+      "localVerification": "ContractVerified",
+      "publicationState": "blocked-external-only",
+      "redistributionAllowed": false,
+      "blockers": [
+        "Official DB contour plus pyclipper preprocessing and postprocessing are not reproduced by the current managed path.",
+        "The exported checkpoint and source artifact provenance have not received independent redistribution approval.",
+        "An official inference-image golden is still required."
+      ],
+      "nextEvidence": [
+        "Re-run the official PaddleOCR DB contour/unclip implementation on the pinned source revision.",
+        "Record the exact export command, source checkpoint, dictionary, and license/notice review.",
+        "Compare ORT/OpenVINO outputs and final contours against an official image golden."
+      ]
+    },
+    {
+      "priority": 2,
+      "category": "ocr",
+      "modelId": "paddleocr/ppocrv5/mobile-rec/external",
+      "manifest": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-rec.modelpack.json",
+      "localVerification": "ContractVerified",
+      "publicationState": "blocked-external-only",
+      "redistributionAllowed": false,
+      "blockers": [
+        "The local ONNX checkpoint/export command and 18,385-class dictionary need independent redistribution approval.",
+        "Official inference-image recognition goldens are not yet recorded."
+      ],
+      "nextEvidence": [
+        "Pin the upstream checkpoint and dictionary revisions with a complete notice bundle.",
+        "Compare decoded CTC text and confidence against official inference on representative images."
+      ]
+    },
+    {
+      "priority": 3,
+      "category": "audio-speech",
+      "modelId": "audio/wav2vec2-base-960h/external",
+      "manifest": "eng/models/audio-speech/manifests/wav2vec2-base-960h.modelpack.json",
+      "localVerification": "ExternalRuntimeCompared",
+      "publicationState": "blocked-external-only",
+      "redistributionAllowed": false,
+      "blockers": [
+        "The current bundle is local evidence only and its manifest explicitly disallows redistribution.",
+        "A public release needs an approved source checkpoint, processor/tokenizer sidecars, and a complete notice record."
+      ],
+      "nextEvidence": [
+        "Obtain independent permission for the exact checkpoint and all processor/tokenizer files.",
+        "Promote the official runtime comparison to an auditable algorithm and release admission record."
+      ]
+    },
+    {
+      "priority": 4,
+      "category": "vision-language",
+      "modelId": "vision-language/siglip-base-patch16-224/external",
+      "manifest": "eng/models/vision-language/manifests/siglip-base-patch16-224-dual-encoder.modelpack.json",
+      "localVerification": "ExternalOfficialGoldenVerified",
+      "publicationState": "blocked-external-only",
+      "redistributionAllowed": false,
+      "blockers": [
+        "The local dual-encoder export is marked external-only and has no approved immutable release asset.",
+        "The bundle includes large checkpoint and tokenizer sidecars whose redistribution provenance must be reviewed together."
+      ],
+      "nextEvidence": [
+        "Approve the exact source checkpoint, tokenizer, and converted graph for redistribution.",
+        "Generate a release-bound manifest and repeat the ORT/OpenVINO official golden audit from the release assets."
+      ]
+    }
+  ]
+}

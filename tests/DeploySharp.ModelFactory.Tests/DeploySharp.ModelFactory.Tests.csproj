@@ -31,5 +31,6 @@
     <Content Include="..\..\eng\models\vision\releases\blip-caption-base.modelpack.json" Link="fixtures\blip-caption-base.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\yolo\releases\*.modelpack.json" Link="fixtures\yolo-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\detr\releases\*.modelpack.json" Link="fixtures\detr-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\eng\models\next-publication-candidates.json" Link="fixtures\next-publication-candidates.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

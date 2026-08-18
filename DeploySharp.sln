@@ -47,6 +47,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.TensorR
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.TensorRT.Tests", "tests\DeploySharp.Backend.TensorRT.Tests\DeploySharp.Backend.TensorRT.Tests.csproj", "{F161AC82-E69F-47DF-A448-069FE7E730D6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ModelFactory.Cli", "tools\DeploySharp.ModelFactory.Cli\DeploySharp.ModelFactory.Cli.csproj", "{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -297,6 +301,18 @@ Global
 		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x64.Build.0 = Release|Any CPU
 		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x86.ActiveCfg = Release|Any CPU
 		{F161AC82-E69F-47DF-A448-069FE7E730D6}.Release|x86.Build.0 = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Debug|x86.Build.0 = Debug|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|x64.Build.0 = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|x86.ActiveCfg = Release|Any CPU
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -322,5 +338,6 @@ Global
 		{BBB621FD-5C9A-4A78-BFFF-7821B7A03796} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{F45DCAB7-4418-4DEF-8CE0-B45A6D483F07} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{F161AC82-E69F-47DF-A448-069FE7E730D6} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{4C70EE6A-0702-4BEE-B9A7-A51EEB6096AB} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 	EndGlobalSection
 EndGlobal
