@@ -104,7 +104,18 @@ foreach ($model in $support.models) {
 if ($Check) {
     foreach ($item in $expected.GetEnumerator()) {
         $path = Join-Path $OutputDirectory $item.Key
-        if (-not (Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path) -ne $item.Value) {
+        $matches = $false
+        if (Test-Path -LiteralPath $path) {
+            try {
+                $actualCanonical = ([IO.File]::ReadAllText($path) | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress)
+                $expectedCanonical = ($item.Value | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress)
+                $matches = $actualCanonical -ceq $expectedCanonical
+            }
+            catch {
+                $matches = $false
+            }
+        }
+        if (-not $matches) {
             throw "YOLO ModelPack candidate is stale: $path"
         }
     }
