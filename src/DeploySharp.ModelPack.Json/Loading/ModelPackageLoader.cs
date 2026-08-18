@@ -188,7 +188,7 @@ namespace JYPPX.DeploySharp.ModelPack.Json
 
         private static void VerifyFile(string fullPath, ModelFileDocument file, string? artifactId, ModelPackageLoadOptions options, ValidatedModelPackage manifest, CancellationToken cancellationToken)
         {
-            var info = new FileInfo(fullPath);
+            FileInfo info = GetVerificationFileInfo(fullPath);
             if (options.VerifyFileSize && info.Length != file.Size) ThrowIntegrity("File size does not match the manifest.", file, artifactId, manifest);
             if (options.VerifySha256)
             {
@@ -199,13 +199,25 @@ namespace JYPPX.DeploySharp.ModelPack.Json
 
         private static async Task VerifyFileAsync(string fullPath, ModelFileDocument file, string? artifactId, ModelPackageLoadOptions options, ValidatedModelPackage manifest, CancellationToken cancellationToken)
         {
-            var info = new FileInfo(fullPath);
+            FileInfo info = GetVerificationFileInfo(fullPath);
             if (options.VerifyFileSize && info.Length != file.Size) ThrowIntegrity("File size does not match the manifest.", file, artifactId, manifest);
             if (options.VerifySha256)
             {
                 string actual = await ModelFileIntegrity.ComputeSha256Async(fullPath, cancellationToken).ConfigureAwait(false);
                 if (!string.Equals(actual, file.Sha256, StringComparison.OrdinalIgnoreCase)) ThrowIntegrity("File SHA256 does not match the manifest.", file, artifactId, manifest);
             }
+        }
+
+        private static FileInfo GetVerificationFileInfo(string fullPath)
+        {
+            var info = new FileInfo(fullPath);
+#if NET6_0_OR_GREATER
+            if ((File.GetAttributes(fullPath) & FileAttributes.ReparsePoint) != 0 && info.ResolveLinkTarget(true) is FileInfo target)
+            {
+                return target;
+            }
+#endif
+            return info;
         }
 
         private static void ThrowIntegrity(string message, ModelFileDocument file, string? artifactId, ValidatedModelPackage manifest)

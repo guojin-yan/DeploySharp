@@ -6,6 +6,7 @@
 *.md text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+eng/models/llm/evidence/*.txt text eol=lf
 *.onnx binary
 *.bin binary
 *.jpg binary
