@@ -8,6 +8,7 @@
   "repositoryType": "git",
   "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
   "symbolPolicy": "required-snupkg",
+  "packageSigningPolicy": "optional-alpha-preview-required-ga-commercial",
   "nativeRuntimePolicy": "consumer-owned",
   "centralPackages": {
     "Microsoft.NETFramework.ReferenceAssemblies": "1.0.3",

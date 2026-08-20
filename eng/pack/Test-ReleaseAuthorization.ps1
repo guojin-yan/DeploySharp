@@ -13,6 +13,9 @@ if ($authorization.schemaVersion -ne '1.0' -or $authorization.packageVersion -ne
     throw 'Release authorization schema or package version is invalid.'
 }
 if ($authorization.publication.channel -ne 'nuget.org') { throw 'Release authorization channel is invalid.' }
+if ($authorization.packageSigning.status -eq 'not-required-alpha-preview' -and $authorization.packageSigning.scope -ne '2.0.0-alpha.1 personal open-source non-commercial preview only') {
+    throw 'The alpha-preview signing exception scope is invalid.'
+}
 if ($authorization.rawPackageReproducibility.status -ne 'established-before-signing' -or
     $authorization.rawPackageReproducibility.normalizer -ne 'eng/pack/Normalize-NuGetPackage.ps1' -or
     $authorization.rawPackageReproducibility.verification -ne 'eng/pack/Invoke-ReleasePackageReproducibility.ps1') {
@@ -42,6 +45,7 @@ switch ([string]$authorization.packageSigning.status) {
         }
     }
     'not-configured' { $blockers.Add('package-signing-credential-not-configured') }
+    'not-required-alpha-preview' { }
     default { throw "Unsupported package-signing state: $($authorization.packageSigning.status)." }
 }
 

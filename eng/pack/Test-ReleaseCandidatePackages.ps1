@@ -18,6 +18,8 @@ $packageRoot = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $comparisonRoot = if ([string]::IsNullOrWhiteSpace($ComparisonPackageDirectory)) { $null } else { (Resolve-Path -LiteralPath $ComparisonPackageDirectory).Path }
 $baseline = Get-Content -LiteralPath $BaselinePath -Raw | ConvertFrom-Json
 if ($baseline.schemaVersion -ne '1.0') { throw "Unsupported release package baseline schema: $($baseline.schemaVersion)." }
+if ([string]$baseline.packageSigningPolicy -notin @('required', 'optional-alpha-preview-required-ga-commercial')) { throw "Unsupported package signing policy: $($baseline.packageSigningPolicy)." }
+$signingRequired = [string]$baseline.packageSigningPolicy -eq 'required'
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.Reflection.Metadata
@@ -378,7 +380,7 @@ foreach ($packageId in $results.Keys) {
 
 $blockers = [Collections.Generic.List[string]]::new()
 if ($dirty) { $blockers.Add('dirty-worktree') }
-if ($signedPackages -ne $definitions.Count) { $blockers.Add('unsigned-packages') }
+if ($signingRequired -and $signedPackages -ne $definitions.Count) { $blockers.Add('unsigned-packages') }
 if ($null -eq $comparisonRoot) {
     $blockers.Add('raw-nupkg-container-bit-reproducibility-not-verified')
 }
@@ -389,5 +391,5 @@ $releaseEligible = $blockers.Count -eq 0
 $comparisonStatus = if ($null -eq $comparisonRoot) { 'not-requested' } else { "$semanticMatches/$($definitions.Count)" }
 $rawStatus = if ($null -eq $comparisonRoot) { 'not-requested' } else { "$rawMatches/$($definitions.Count)" }
 $blockerText = if ($blockers.Count -eq 0) { 'none' } else { $blockers -join ',' }
-Write-Output "DEPLOYSHARP_RELEASE_CANDIDATE_GATE_OK packages=$($definitions.Count) tfms=$totalFrameworks locks=$($definitions.Count) assets=$($definitions.Count) semantic=$comparisonStatus raw-identical=$rawStatus signed=$signedPackages symbols=$($symbolFiles.Count) symbol-policy=$($baseline.symbolPolicy) native-owner=$($baseline.nativeRuntimePolicy) repository-clean=$((-not $dirty).ToString().ToLowerInvariant()) release-eligible=$($releaseEligible.ToString().ToLowerInvariant()) blockers=$blockerText"
+Write-Output "DEPLOYSHARP_RELEASE_CANDIDATE_GATE_OK packages=$($definitions.Count) tfms=$totalFrameworks locks=$($definitions.Count) assets=$($definitions.Count) semantic=$comparisonStatus raw-identical=$rawStatus signed=$signedPackages signing-policy=$($baseline.packageSigningPolicy) symbols=$($symbolFiles.Count) symbol-policy=$($baseline.symbolPolicy) native-owner=$($baseline.nativeRuntimePolicy) repository-clean=$((-not $dirty).ToString().ToLowerInvariant()) release-eligible=$($releaseEligible.ToString().ToLowerInvariant()) blockers=$blockerText"
 if ($RequireReleaseEligible -and -not $releaseEligible) { throw "Release candidate is blocked: $blockerText." }

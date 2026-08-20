@@ -29,6 +29,7 @@ $packageCacheRoot = [IO.Path]::GetFullPath($packageCacheInput)
 if (-not (Test-Path -LiteralPath $packageCacheRoot -PathType Container)) { throw "NuGet package cache is missing: $packageCacheRoot" }
 $baselinePath = Join-Path $PSScriptRoot 'release-candidate-packages.json'
 $releaseBaseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+if ([string]$releaseBaseline.packageSigningPolicy -notin @('required', 'optional-alpha-preview-required-ga-commercial')) { throw "Unsupported package signing policy: $($releaseBaseline.packageSigningPolicy)." }
 $resolvedAuthorizationPath = (Resolve-Path -LiteralPath $ReleaseAuthorizationPath).Path
 $releaseAuthorization = Get-Content -LiteralPath $resolvedAuthorizationPath -Raw | ConvertFrom-Json
 if ($releaseAuthorization.schemaVersion -ne '1.0' -or $releaseAuthorization.packageVersion -ne $releaseBaseline.packageVersion) {
@@ -906,7 +907,8 @@ if ($licenseBlockers.Count -ne $expectedFindingCounts.managedDependencyLicenseRe
 }
 $releaseBlockers = [Collections.Generic.List[string]]::new()
 if ($dirty) { $releaseBlockers.Add('dirty-worktree') }
-if ($signedCount -ne $definitions.Count) { $releaseBlockers.Add('unsigned-packages') }
+if ($releaseAuthorization.packageSigning.status -notin @('configured', 'not-required-alpha-preview')) { throw "Unsupported package signing status: $($releaseAuthorization.packageSigning.status)." }
+if ($releaseBaseline.packageSigningPolicy -eq 'required' -and $signedCount -ne $definitions.Count) { $releaseBlockers.Add('unsigned-packages') }
 if ($releaseBaseline.symbolPolicy -eq 'not-produced') { $releaseBlockers.Add('symbol-package-policy-not-authorized') }
 if ($releaseAuthorization.publication.status -ne 'authorized') { $releaseBlockers.Add('publication-authority-not-granted') }
 
@@ -919,6 +921,7 @@ foreach ($blocker in $symbolBlockers) { $releaseBlockers.Add($blocker) }
 
 $commercialReleaseBlockers = [Collections.Generic.List[string]]::new()
 foreach ($blocker in $releaseBlockers) { $commercialReleaseBlockers.Add($blocker) }
+if ($releaseBaseline.packageSigningPolicy -eq 'optional-alpha-preview-required-ga-commercial' -and $signedCount -ne $definitions.Count) { $commercialReleaseBlockers.Add('unsigned-packages') }
 foreach ($finding in $knownAdvisoryFindings) { $commercialReleaseBlockers.Add($finding) }
 $alphaPreviewPolicyEvidence = [ordered]@{
     id = [string]$previewPolicy.id

@@ -161,7 +161,7 @@ Assert-GateRejects 'third-party-notice-identity' $packages $noticeEvidence 'Thir
 $releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
 Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
     param($document)
-    $document.releaseBlockers = @($document.releaseBlockers | Where-Object { $_ -ne 'unsigned-packages' })
+    $document.releaseBlockers = @($document.releaseBlockers | Where-Object { $_ -ne 'publication-authority-not-granted' })
 }
 Assert-GateRejects 'release-blocker' $packages $releaseBlockerEvidence 'SBOM release blockers excluding worktree state'
 

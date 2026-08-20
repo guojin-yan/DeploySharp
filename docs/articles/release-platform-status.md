@@ -2,7 +2,7 @@
 
 ## Current release
 
-The repository is on `2.0.0-alpha.1`, branch `DeploySharpV2.0`. This is not a GA release. The release-candidate manifest requires `.snupkg` symbol packages, and CI normalizes and compares raw `.nupkg` and `.snupkg` containers from two independent pack invocations before signing. Release eligibility remains blocked by the dirty worktree, unsigned packages, missing publication authority, and outstanding dependency/model legal reviews. / 当前仓库为 `2.0.0-alpha.1`、分支 `DeploySharpV2.0`，不是 GA。候选清单要求 `.snupkg` 符号包，CI 会在签名前规范化并比较两次独立打包的原始 `.nupkg` 与 `.snupkg` 容器。由于工作区脏、包未签名、缺少发布授权以及依赖/模型法律审核仍未完成，当前仍不具备发布资格。
+The repository is on `2.0.0-alpha.1`, branch `DeploySharpV2.0`. This is not a GA release. The release-candidate manifest requires `.snupkg` symbol packages, and CI normalizes and compares raw `.nupkg` and `.snupkg` containers from two independent pack invocations. Personal open-source alpha preview packages may remain unsigned; GA and commercial packages remain signing-required. Release eligibility is still blocked by missing publication authority and the outstanding dependency/model legal reviews. / 当前仓库为 `2.0.0-alpha.1`、分支 `DeploySharpV2.0`，不是 GA。候选清单要求 `.snupkg` 符号包，CI 会比较两次独立打包的原始 `.nupkg` 与 `.snupkg` 容器。个人开源 alpha 预览包可以不签名；GA 与商业包仍强制签名。当前仍因缺少发布授权以及依赖/模型法律审核未完成而不具备发布资格。
 
 No formal GA Release is created by this stage. A future release must verify candidate packages, SBOM/third-party notices, NuGet.org clean installation, rollback/retraction procedure, and release-bound evidence before publication. / 本阶段不创建正式 GA Release。后续发布必须在发布前验证候选包、SBOM/第三方声明、NuGet.org 全新安装、回滚/撤回流程和与 Release 绑定的证据。
 
@@ -31,6 +31,6 @@ The manual alpha CI now prepares a backend-neutral `managed-cross-platform` job 
 
 - Licensed, exact native/model evidence for a production Multimodal path beyond the existing Visual-native adapter (ADR 0035).
 - Linux/macOS and broader model/operator evidence for the OpenCV DNN preview (ADR 0036).
-- Multi-platform/native matrix, symbol packages, NuGet.org new-install verification, rollback procedure, and release-bound supply-chain evidence.
+- Multi-platform/native matrix, GA/commercial package signing, NuGet.org new-install verification, rollback procedure, and release-bound supply-chain evidence. Alpha preview signing is explicitly optional under the version-bound release policy.
 - V1 `AlgorithmVerified` admission remains `0/32`; Preview assets must not be promoted automatically.
 - The first PP-OCRv5 candidate review is `paddleocr/ppocrv5/mobile-cls`. Its source/export identity, immutable Preview Release binding, release-bound ORT/OpenVINO local golden, and independent official Paddle Predictor golden are closed. Algorithm admission remains blocked only by attributable redistribution approval. See [ADR 0037](../adr/0037-ppocrv5-first-algorithm-admission.md).

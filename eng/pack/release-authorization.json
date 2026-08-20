@@ -10,10 +10,12 @@
     "requiredEvidence": "An attributable release-owner approval that identifies the package version, NuGet channel, and publication scope."
   },
   "packageSigning": {
-    "status": "not-configured",
+    "status": "not-required-alpha-preview",
     "certificateSha256Fingerprint": null,
     "timestampServer": null,
-    "requiredEvidence": "Configure a repository-signing certificate and timestamp authority in the protected release environment; do not commit the certificate or private key."
+    "scope": "2.0.0-alpha.1 personal open-source non-commercial preview only",
+    "requiredFor": "GA and commercial releases",
+    "requiredEvidence": "Alpha preview packages may remain unsigned. Configure a repository-signing certificate and timestamp authority before any GA or commercial release; do not commit the certificate or private key."
   },
   "rawPackageReproducibility": {
     "status": "established-before-signing",
