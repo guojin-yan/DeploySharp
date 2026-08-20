@@ -1136,8 +1136,12 @@ else {
     $expectedNonWorktreeBlockers = @($normalizedExpected.releaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
     $actualNonWorktreeBlockers = @($normalizedActual.releaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
     Assert-SameKeySet $expectedNonWorktreeBlockers $actualNonWorktreeBlockers 'SBOM release blockers excluding worktree state'
+    $expectedCommercialNonWorktreeBlockers = @($normalizedExpected.commercialReleaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
+    $actualCommercialNonWorktreeBlockers = @($normalizedActual.commercialReleaseBlockers | Where-Object { $_ -ne 'dirty-worktree' })
+    Assert-SameKeySet $expectedCommercialNonWorktreeBlockers $actualCommercialNonWorktreeBlockers 'SBOM commercial release blockers excluding worktree state'
     $normalizedActual.subject.repositoryDirty = $normalizedExpected.subject.repositoryDirty
     $normalizedActual.releaseBlockers = $normalizedExpected.releaseBlockers
+    $normalizedActual.commercialReleaseBlockers = $normalizedExpected.commercialReleaseBlockers
     $normalizedExpectedRelease = Get-ObjectMap $normalizedExpected.releasePackages 'id'
     $normalizedActualRelease = Get-ObjectMap $normalizedActual.releasePackages 'id'
     foreach ($id in $normalizedExpectedRelease.Keys) {
@@ -1146,7 +1150,9 @@ else {
         }
         $expectedFrameworks = Get-ObjectMap $normalizedExpectedRelease[$id].frameworks 'tfm'
         $actualFrameworks = Get-ObjectMap $normalizedActualRelease[$id].frameworks 'tfm'
-        foreach ($tfm in $expectedFrameworks.Keys) { $actualFrameworks[$tfm].assemblySha256 = $expectedFrameworks[$tfm].assemblySha256 }
+        foreach ($tfm in $expectedFrameworks.Keys) {
+            $actualFrameworks[$tfm].assemblySha256 = $expectedFrameworks[$tfm].assemblySha256
+        }
     }
     if ((Get-CanonicalJson $normalizedExpected) -ne (Get-CanonicalJson $normalizedActual)) { throw 'Provenance/SBOM baseline drift.' }
 
@@ -1160,7 +1166,16 @@ else {
     Assert-SameKeySet @($expectedSymbolMap.Keys) @($actualSymbolMap.Keys) 'PDB/SourceLink assembly set'
     $commitBoundSymbolFields = @('assemblySha256', 'packageAssemblySha256', 'mvid', 'codeViewGuid', 'pdbBytes', 'pdbSha256', 'portablePdbId', 'documentSha256', 'sourceLinkCommit', 'sourceLinkSha256')
     foreach ($key in $expectedSymbolMap.Keys) {
-        foreach ($field in $commitBoundSymbolFields) { $actualSymbolMap[$key].evidence[$field] = $expectedSymbolMap[$key].evidence[$field] }
+        foreach ($field in $commitBoundSymbolFields) {
+            $actualSymbolMap[$key].evidence[$field] = $expectedSymbolMap[$key].evidence[$field]
+        }
+    }
+    $expectedSymbolPackages = Get-ObjectMap $normalizedExpectedSymbols.symbolPackages 'id'
+    $actualSymbolPackages = Get-ObjectMap $normalizedActualSymbols.symbolPackages 'id'
+    Assert-SameKeySet @($expectedSymbolPackages.Keys) @($actualSymbolPackages.Keys) 'Symbol package identity set'
+    foreach ($id in $expectedSymbolPackages.Keys) {
+        $actualSymbolPackages[$id].rawPackageBytes = $expectedSymbolPackages[$id].rawPackageBytes
+        $actualSymbolPackages[$id].rawPackageSha256 = $expectedSymbolPackages[$id].rawPackageSha256
     }
     if ((Get-CanonicalJson $normalizedExpectedSymbols) -ne (Get-CanonicalJson $normalizedActualSymbols)) { throw 'PDB/SourceLink baseline drift.' }
 
