@@ -15,7 +15,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Stores opt-in PTX/CUBIN and engine/plan entries only below an explicit caller-owned root.</summary>
+    /// <summary>Stores opt-in PTX/CUBIN and engine/plan entries only below an explicit caller-owned root. / 存储 TensorRT 引擎资源。</summary>
     public sealed class TensorRtExternalCacheStore
     {
         private const int SchemaVersion = 1;
@@ -25,7 +25,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private static readonly object GateSync = new object();
         private static readonly Dictionary<string, GateState> Gates = new Dictionary<string, GateState>(StringComparer.Ordinal);
 
-        /// <summary>Initializes an opt-in store rooted at the exact absolute caller-selected directory.</summary>
+        /// <summary>Initializes an opt-in store rooted at the exact absolute caller-selected directory. / 初始化路径对象。</summary>
         public TensorRtExternalCacheStore(string rootPath, TensorRtExternalCacheOptions? options = null)
         {
             Options = options ?? TensorRtExternalCacheOptions.Default;
@@ -34,14 +34,14 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             EnsureSafeDirectory(LayoutPath, create: Options.CreateRootIfMissing);
         }
 
-        /// <summary>Gets the normalized caller-owned cache root.</summary>
+        /// <summary>Gets the normalized caller-owned cache root. / 获取缓存信息。</summary>
         public string RootPath { get; }
-        /// <summary>Gets the bounded store behavior.</summary>
+        /// <summary>Gets the bounded store behavior. / 获取相关信息。</summary>
         public TensorRtExternalCacheOptions Options { get; }
 
         private string LayoutPath { get; }
 
-        /// <summary>Looks up and reconstructs a copied CUDA artifact without invoking NVRTC.</summary>
+        /// <summary>Looks up and reconstructs a copied CUDA artifact without invoking NVRTC. / 说明 CUDA公共 API。</summary>
         public TensorRtCudaCacheResult LookupCuda(TensorRtCudaKernelLookupIdentity identity, CancellationToken cancellationToken = default)
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
@@ -49,7 +49,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return LookupCudaCore(identity, cancellationToken);
         }
 
-        /// <summary>Atomically stores a CUDA artifact after verifying every lookup and existing cache-identity field.</summary>
+        /// <summary>Atomically stores a CUDA artifact after verifying every lookup and existing cache-identity field. / 存储缓存资源。</summary>
         public TensorRtCudaCacheResult StoreCuda(
             TensorRtCudaKernelLookupIdentity identity,
             TensorRtCudaRtcArtifact artifact,
@@ -61,7 +61,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return StoreCudaCore(identity, artifact, cancellationToken);
         }
 
-        /// <summary>Returns a hit without compiling, or executes the explicit factory once per store/key and atomically stores its result.</summary>
+        /// <summary>Returns a hit without compiling, or executes the explicit factory once per store/key and atomically stores its result. / 返回状态或结果结果。</summary>
         public TensorRtCudaCacheResult GetOrCompileCuda(
             TensorRtCudaKernelLookupIdentity identity,
             Func<CancellationToken, TensorRtCudaRtcArtifact> compileFactory,
@@ -94,7 +94,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Opens a validated engine/plan stream without starting TensorRT.</summary>
+        /// <summary>Opens a validated engine/plan stream without starting TensorRT. / 打开 TensorRT 引擎资源。</summary>
         public TensorRtEngineCacheResult OpenEngine(TensorRtEngineCacheIdentity identity, CancellationToken cancellationToken = default)
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
@@ -102,7 +102,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return OpenEngineCore(identity, cancellationToken);
         }
 
-        /// <summary>Atomically stores engine/plan bytes from a caller-owned stream, which remains caller-owned.</summary>
+        /// <summary>Atomically stores engine/plan bytes from a caller-owned stream, which remains caller-owned. / 存储 TensorRT 引擎资源。</summary>
         public TensorRtEngineCacheResult StoreEngine(
             TensorRtEngineCacheIdentity identity,
             Stream payload,
@@ -115,7 +115,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return StoreEngineCore(identity, payload, cancellationToken);
         }
 
-        /// <summary>Atomically stores a regular caller-owned .engine/.plan file whose extension matches the identity.</summary>
+        /// <summary>Atomically stores a regular caller-owned .engine/.plan file whose extension matches the identity. / 存储 TensorRT 引擎资源。</summary>
         public TensorRtEngineCacheResult StoreEngineFile(
             TensorRtEngineCacheIdentity identity,
             string enginePath,
@@ -127,7 +127,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return StoreEngine(identity, stream, cancellationToken);
         }
 
-        /// <summary>Returns a hit without building, or executes the explicit stream factory once per store/key and atomically stores its result.</summary>
+        /// <summary>Returns a hit without building, or executes the explicit stream factory once per store/key and atomically stores its result. / 返回数据流结果。</summary>
         public TensorRtEngineCacheResult GetOrBuildEngine(
             TensorRtEngineCacheIdentity identity,
             Func<CancellationToken, Stream> buildFactory,
@@ -166,7 +166,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Returns a hit without building, or invokes the existing builder through an explicit caller path and stores its output.</summary>
+        /// <summary>Returns a hit without building, or invokes the existing builder through an explicit caller path and stores its output. / 返回路径结果。</summary>
         public TensorRtEngineCacheResult GetOrBuildEngine(
             TensorRtEngineCacheIdentity identity,
             ModelArtifact onnxArtifact,
@@ -208,27 +208,27 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Invalidates the completed CUDA entry for one lookup identity.</summary>
+        /// <summary>Invalidates the completed CUDA entry for one lookup identity. / 删除或失效 CUDA资源。</summary>
         public TensorRtExternalCacheResult InvalidateCuda(TensorRtCudaKernelLookupIdentity identity, CancellationToken cancellationToken = default)
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
             return Invalidate("cuda", identity.LookupKeySha256, cancellationToken);
         }
 
-        /// <summary>Invalidates the completed engine entry for one lookup identity.</summary>
+        /// <summary>Invalidates the completed engine entry for one lookup identity. / 删除或失效 TensorRT 引擎资源。</summary>
         public TensorRtExternalCacheResult InvalidateEngine(TensorRtEngineCacheIdentity identity, CancellationToken cancellationToken = default)
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
             return Invalidate("engine", identity.LookupKeySha256, cancellationToken);
         }
 
-        /// <summary>Deletes the completed CUDA entry; this is an explicit alias for invalidation.</summary>
+        /// <summary>Deletes the completed CUDA entry; this is an explicit alias for invalidation. / 删除或失效 CUDA资源。</summary>
         public TensorRtExternalCacheResult DeleteCuda(TensorRtCudaKernelLookupIdentity identity, CancellationToken cancellationToken = default)
         {
             return InvalidateCuda(identity, cancellationToken);
         }
 
-        /// <summary>Deletes the completed engine entry; this is an explicit alias for invalidation.</summary>
+        /// <summary>Deletes the completed engine entry; this is an explicit alias for invalidation. / 删除或失效 TensorRT 引擎资源。</summary>
         public TensorRtExternalCacheResult DeleteEngine(TensorRtEngineCacheIdentity identity, CancellationToken cancellationToken = default)
         {
             return InvalidateEngine(identity, cancellationToken);

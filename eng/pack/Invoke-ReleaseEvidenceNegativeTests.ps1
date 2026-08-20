@@ -30,6 +30,7 @@ function New-PackageScenario {
     $path = Join-Path $work $Name
     New-Item -ItemType Directory -Path $path | Out-Null
     Copy-Item -Path (Join-Path $packages '*.nupkg') -Destination $path
+    Copy-Item -Path (Join-Path $packages '*.snupkg') -Destination $path
     return $path
 }
 
@@ -143,6 +144,20 @@ Update-EvidenceJson (Join-Path $omissionEvidence 'package-provenance-sbom.json')
 }
 Assert-GateRejects 'sbom-omission' $packages $omissionEvidence 'SBOM managed dependency set.*drift'
 
+$catalogEvidence = New-EvidenceScenario 'official-catalog-identity'
+Update-EvidenceJson (Join-Path $catalogEvidence 'package-provenance-sbom.json') {
+    param($document)
+    $document.officialCatalog.sha256 = ('0' * 64)
+}
+Assert-GateRejects 'official-catalog-identity' $packages $catalogEvidence 'Official catalog identity drift'
+
+$noticeEvidence = New-EvidenceScenario 'third-party-notice-identity'
+Update-EvidenceJson (Join-Path $noticeEvidence 'package-provenance-sbom.json') {
+    param($document)
+    $document.thirdPartyNotices.sha256 = ('0' * 64)
+}
+Assert-GateRejects 'third-party-notice-identity' $packages $noticeEvidence 'Third-party notice identity drift'
+
 $releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
 Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
     param($document)
@@ -171,4 +186,4 @@ Update-EvidenceJson $policyScope {
 }
 Assert-GateRejects 'policy-commercial-scope' $packages $evidence $policyScope 'Alpha preview policy distribution scope is invalid'
 
-Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=10'
+Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=12'

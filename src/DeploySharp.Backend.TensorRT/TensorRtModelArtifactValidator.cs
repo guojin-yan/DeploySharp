@@ -6,10 +6,10 @@ using JYPPX.DeploySharp.Models;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Validates an external, device-bound TensorRT engine before native deserialization.</summary>
+    /// <summary>Validates an external, device-bound TensorRT engine before native deserialization. / 验证 TensorRT 引擎输入。</summary>
     public static class TensorRtModelArtifactValidator
     {
-        /// <summary>Validates a regular .engine or .plan file and its optional SHA256.</summary>
+        /// <summary>Validates a regular .engine or .plan file and its optional SHA256. / 验证 TensorRT 引擎输入。</summary>
         public static string Validate(ModelArtifact artifact, long maximumEngineBytes)
         {
             string fullPath = ResolvePath(artifact);

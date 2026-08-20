@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenCV\DeploySharp.Backend.OpenCV.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\assets\onnxruntime\classification.onnx" Link="fixtures\classification.onnx" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

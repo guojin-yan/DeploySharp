@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net8.0": {
+      "JYPPX.DeploySharp.Core": {
+        "type": "Project"
+      },
+      "JYPPX.DeploySharp.LLM": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "Microsoft.Bcl.AsyncInterfaces": "[10.0.10, )"
+        }
+      },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "TFI6OKYE1XZz4SGuTSH70c6SBdPpFktXsoa1gCxTr3mKrhmXirnvaS0tKz+J3ZWICEAmMpEGn59nO4ICtUpQXA=="
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "JYPPX.DeploySharp.Multimodal": {
+        "type": "Direct",
+        "requested": "[2.0.0-alpha.1, )",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "4p09Fdn5kMYkTxflLYxFpRga8IX7fl1PxZxOf5MxVJ+DH6r8ikp/jzsaKw0s/igv0Q4mzan2ZcWVoQ0gIy0aUQ==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "JYPPX.DeploySharp.LLM": "2.0.0-alpha.1",
+          "JYPPX.DeploySharp.Visual": "2.0.0-alpha.1",
+          "Microsoft.Bcl.AsyncInterfaces": "10.0.10",
+          "Microsoft.ML.Tokenizers": "2.0.0"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "mIU0ziJWd43Mmxjv8pY38gWCB5+LEqQo7E9Uj6uK5DGU40Mp6oXpq8iJNjpJXerRzVJrteWlSLbipYQ629TRig=="
+      },
+      "JYPPX.DeploySharp.LLM": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "dbOf5SpR/UvHrzTUFMkqi6TEMLDiOkhQ7mRCsw0g/VUdmhXCXBuuVZEIVSz6VdJLgDVavMxp8vHJIxqZvedJsg==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "Microsoft.Bcl.AsyncInterfaces": "10.0.10"
+        }
+      },
+      "JYPPX.DeploySharp.Visual": {
+        "type": "Transitive",
+        "resolved": "2.0.0-alpha.1",
+        "contentHash": "Nd6Q5qzXO7I2xjiDLI3BK4rrw3OL04Z/lHPVhiT/CWZsyCnirVWDFCXRoBWSNAc9oEMQr1v0FMfJUEUOD2rirQ==",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
+          "Microsoft.ML.Tokenizers": "2.0.0"
+        }
+      },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "TFI6OKYE1XZz4SGuTSH70c6SBdPpFktXsoa1gCxTr3mKrhmXirnvaS0tKz+J3ZWICEAmMpEGn59nO4ICtUpQXA=="
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
+        }
+      }
+    }
+  }
+}

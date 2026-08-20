@@ -183,7 +183,17 @@ $expectedPackageFiles = @($definitions | ForEach-Object { "$($_.packageId).$($ba
 $actualPackageFiles = @(Get-ChildItem -LiteralPath $packageRoot -File -Filter '*.nupkg' | Select-Object -ExpandProperty Name)
 Assert-ExactSet $actualPackageFiles $expectedPackageFiles 'Release package files'
 $symbolFiles = @(Get-ChildItem -LiteralPath $packageRoot -File -Filter '*.snupkg')
-if ($baseline.symbolPolicy -eq 'not-produced' -and $symbolFiles.Count -ne 0) { throw 'The baseline forbids symbol packages, but .snupkg files were found.' }
+$expectedSymbolFiles = @($definitions | ForEach-Object { "$($_.packageId).$($baseline.packageVersion).snupkg" })
+switch ([string]$baseline.symbolPolicy) {
+    'required-snupkg' {
+        $actualSymbolFileNames = @($symbolFiles | Select-Object -ExpandProperty Name)
+        Assert-ExactSet $actualSymbolFileNames $expectedSymbolFiles 'Release symbol package files'
+    }
+    'not-produced' {
+        if ($symbolFiles.Count -ne 0) { throw 'The baseline forbids symbol packages, but .snupkg files were found.' }
+    }
+    default { throw "Unsupported symbol policy: $($baseline.symbolPolicy)." }
+}
 
 $readmeHash = (Get-FileHash -LiteralPath (Join-Path $repository 'README.md') -Algorithm SHA256).Hash.ToLowerInvariant()
 $iconHash = (Get-FileHash -LiteralPath (Join-Path $repository 'nuget\logo.jpg') -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -369,6 +379,12 @@ foreach ($packageId in $results.Keys) {
 $blockers = [Collections.Generic.List[string]]::new()
 if ($dirty) { $blockers.Add('dirty-worktree') }
 if ($signedPackages -ne $definitions.Count) { $blockers.Add('unsigned-packages') }
+if ($null -eq $comparisonRoot) {
+    $blockers.Add('raw-nupkg-container-bit-reproducibility-not-verified')
+}
+elseif ($rawMatches -ne $definitions.Count) {
+    $blockers.Add('raw-nupkg-container-bit-reproducibility')
+}
 $releaseEligible = $blockers.Count -eq 0
 $comparisonStatus = if ($null -eq $comparisonRoot) { 'not-requested' } else { "$semanticMatches/$($definitions.Count)" }
 $rawStatus = if ($null -eq $comparisonRoot) { 'not-requested' } else { "$rawMatches/$($definitions.Count)" }

@@ -24,11 +24,25 @@ if (-not (Test-Path -LiteralPath $EvidencePath -PathType Leaf)) {
 $evidence = Get-Content -Raw -LiteralPath $EvidencePath | ConvertFrom-Json
 if ($evidence.schemaVersion -ne '1.0') { throw 'Unsupported PaddleOCR release-admission evidence schema.' }
 if ($evidence.upstreamCode.pinnedRevision -ne '2661c7c0ef5c613e8f93c6e93b2e052399f0f854') { throw 'The pinned PaddleOCR source revision drifted.' }
-if ($evidence.releaseAdmission.state -ne 'blocked-external-only' -or $evidence.releaseAdmission.redistributionAllowed) { throw 'This evidence must remain external-only until a reviewed release admission changes it.' }
+if ($evidence.releaseAdmission.state -ne 'preview-algorithm-admission-blocked') { throw 'The PaddleOCR algorithm-admission state drifted.' }
+if (-not [bool]$evidence.releaseAdmission.catalogRedistributionDeclared -or [bool]$evidence.releaseAdmission.algorithmAdmissionRedistributionApproved) {
+    throw 'The catalog publication fact and AlgorithmVerified redistribution decision must remain explicitly separated.'
+}
+if ($evidence.releaseAdmission.immutableReleaseAsset -ne 'closed-public-prerelease' -or $evidence.releaseAdmission.releaseBoundGoldenAudit -ne 'local-ort-openvino-parity-and-independent-official-predictor-complete') {
+    throw 'The immutable Release or release-bound golden boundary drifted.'
+}
 $licenseReviewPath = Join-Path $repositoryRoot ([string]$evidence.releaseAdmission.licenseReviewEvidence).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
 if (-not (Test-Path -LiteralPath $licenseReviewPath -PathType Leaf)) { throw "License review evidence is missing: $licenseReviewPath" }
 $licenseReview = Get-Content -Raw -LiteralPath $licenseReviewPath | ConvertFrom-Json
 if ($licenseReview.decision.redistributionApproved -or $licenseReview.decision.state -ne 'blocked-external-only' -or @($licenseReview.modelArchives).Count -ne 6) { throw 'License review evidence must keep all six model archives blocked and unapproved.' }
+$officialPredictorEvidencePath = Join-Path $repositoryRoot ([string]$evidence.releaseAdmission.officialPredictorGoldenEvidence).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+if (-not (Test-Path -LiteralPath $officialPredictorEvidencePath -PathType Leaf)) { throw "Official Paddle Predictor golden evidence is missing: $officialPredictorEvidencePath" }
+$officialPredictor = Get-Content -Raw -LiteralPath $officialPredictorEvidencePath | ConvertFrom-Json
+if ($officialPredictor.schemaVersion -ne '1.0' -or $officialPredictor.purpose -ne 'independent official Paddle Predictor golden for PP-OCRv5 mobile-cls') { throw 'Official Paddle Predictor golden schema drifted.' }
+if ($officialPredictor.runtime.engine -ne 'paddle.inference.Predictor' -or $officialPredictor.runtime.paddleVersion -ne '3.4.0.dev20260129' -or $officialPredictor.runtime.paddleCommit -ne '5d0f669bd5911b75da3ff9b7e8a8d39f3c91de31' -or $officialPredictor.runtime.device -ne 'cpu' -or -not [bool]$officialPredictor.runtime.irOptimization) { throw 'Official Paddle Predictor runtime identity drifted.' }
+if ([long]$officialPredictor.model.inferenceJson.size -ne 104123 -or $officialPredictor.model.inferenceJson.sha256 -ne '8b3f80ca25f4765594640ddb3cb26f507f00e7e5d11bfef4c2915a6b9dff5d3c' -or [long]$officialPredictor.model.inferenceParams.size -ne 985712 -or $officialPredictor.model.inferenceParams.sha256 -ne '08ee1ce4bcdb30dd4e784862334d1df49d80a600294d75daae4ca4c70bc860e9') { throw 'Official Paddle Predictor source-model identity drifted.' }
+if ([long]$officialPredictor.input.image.size -ne 3996 -or $officialPredictor.input.image.sha256 -ne '872200f57a1408e7aab2856d5f2c687b3a937805e0c4ff74bd7de21df1f742b9' -or $officialPredictor.input.sha256 -ne '7cda055c7450b2e6f52d5993a827dbd1c202ae8044d3fdbb132453b602c2d340') { throw 'Official Paddle Predictor input identity drifted.' }
+if ($officialPredictor.output.name -ne 'fetch_name_0' -or $officialPredictor.output.sha256 -ne 'd2820ebee4744ef48a7897cd888c659f5f733ae2b618b638577ad30902181e5d' -or [int]$officialPredictor.output.classIndex -ne 1 -or $officialPredictor.output.label -ne '180_degree' -or [Math]::Abs([double]$officialPredictor.output.confidence - 0.9986026883125305) -gt 0.00001) { throw 'Official Paddle Predictor output golden drifted.' }
 if ($evidence.exportReproduction.status -ne 'byte-identical-all-six' -or $evidence.exportReproduction.invocationId -ne 'paddle2onnx-export-defaults-v1') { throw 'The locked PaddleOCR export-reproduction contract drifted.' }
 $expectedToolchain = @{
     'paddlepaddle' = @{ Version = '3.0.0.dev20250613'; Sha256 = '37012c64c278f4761a1dfa3c711b0d8507b1981a640d5763879a550584c32319' }
@@ -63,6 +77,86 @@ function Assert-Sha256 {
     param([string]$Path, [string]$Expected, [string]$Description)
     $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
     if ($actual -ne $Expected) { throw "SHA256 mismatch for $Description. Expected $Expected, got $actual." }
+}
+
+function Assert-Sequence {
+    param([object[]]$Actual, [object[]]$Expected, [string]$Description)
+    if ([string]::Join(',', $Actual) -ne [string]::Join(',', $Expected)) { throw "$Description drifted." }
+}
+
+$algorithmCandidate = $evidence.algorithmCandidate
+if ($algorithmCandidate.catalogModelId -ne 'paddleocr/ppocrv5/mobile-cls' -or $algorithmCandidate.externalEvidenceModelId -ne 'paddleocr/ppocrv5/mobile-cls/external' -or $algorithmCandidate.catalogStatus -ne 'preview') {
+    throw 'The selected PaddleOCR algorithm candidate identity drifted.'
+}
+$release = $algorithmCandidate.release
+if ($release.repository -ne 'guojin-yan/DeploySharp' -or $release.tag -ne 'models-20260818.ppocrv5.1' -or $release.commit -ne '15dcd290c1b4daad1f3e2a14a900b6918d80f14b') {
+    throw 'The selected PaddleOCR Release identity drifted.'
+}
+
+$releaseManifestPath = Join-Path $repositoryRoot ([string]$release.manifestFile).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+if (-not (Test-Path -LiteralPath $releaseManifestPath -PathType Leaf)) { throw "The release-bound ModelPack is missing: $releaseManifestPath" }
+if ([long](Get-Item -LiteralPath $releaseManifestPath).Length -ne [long]$release.manifestSize) { throw 'The release-bound ModelPack size drifted.' }
+Assert-Sha256 -Path $releaseManifestPath -Expected $release.manifestSha256 -Description 'release-bound mobile-cls ModelPack'
+$releaseManifest = Get-Content -Raw -LiteralPath $releaseManifestPath | ConvertFrom-Json
+if ($releaseManifest.modelId -ne $algorithmCandidate.catalogModelId -or $releaseManifest.profileId -ne $algorithmCandidate.profileId -or $releaseManifest.extensions.'deploysharp.release-tag' -ne $release.tag) {
+    throw 'The release-bound ModelPack identity drifted.'
+}
+if (-not [bool]$releaseManifest.source.redistributionAllowed) { throw 'The published ModelPack redistribution declaration drifted.' }
+Assert-Sequence -Actual @($releaseManifest.inputs[0].shape) -Expected @($algorithmCandidate.contract.inputShape) -Description 'mobile-cls input shape'
+Assert-Sequence -Actual @($releaseManifest.outputs[0].shape) -Expected @($algorithmCandidate.contract.outputShape) -Description 'mobile-cls output shape'
+if ($releaseManifest.inputs[0].name -ne $algorithmCandidate.contract.inputName -or $releaseManifest.inputs[0].elementType -ne $algorithmCandidate.contract.inputElementType -or $releaseManifest.outputs[0].name -ne $algorithmCandidate.contract.outputName -or $releaseManifest.outputs[0].elementType -ne $algorithmCandidate.contract.outputElementType) {
+    throw 'The mobile-cls named tensor contract drifted.'
+}
+$releaseModelFile = @($releaseManifest.artifacts[0].files | Where-Object role -eq 'model')
+if ($releaseModelFile.Count -ne 1 -or $releaseModelFile[0].sha256 -ne $release.modelSha256 -or [long]$releaseModelFile[0].size -ne [long]$release.modelSize) {
+    throw 'The release-bound mobile-cls model identity drifted.'
+}
+
+$externalManifestPath = Join-Path $PSScriptRoot 'manifests\ppocrv5-mobile-cls.modelpack.json'
+$externalManifest = Get-Content -Raw -LiteralPath $externalManifestPath | ConvertFrom-Json
+$externalExtensions = $externalManifest.artifacts[0].extensions
+if ($externalExtensions.'deploysharp.preprocessing-version' -ne $algorithmCandidate.contract.preprocessingVersion -or $externalExtensions.'deploysharp.prepared-tensor-sha256' -ne $algorithmCandidate.golden.preparedTensorSha256 -or $externalExtensions.'deploysharp.label-order' -ne ([string]::Join(',', @($algorithmCandidate.contract.labelOrder))) -or [double]$externalExtensions.'deploysharp.reject-threshold' -ne [double]$algorithmCandidate.contract.rejectionThreshold) {
+    throw 'The mobile-cls preprocessing, label order, threshold, or prepared tensor binding drifted.'
+}
+if ($externalExtensions.'deploysharp.release-admission' -ne 'blocked-license-redistribution' -or -not ([string]$externalExtensions.'deploysharp.official-golden').Contains('independent-Paddle-Predictor-output-recorded', [System.StringComparison]::Ordinal) -or -not ([string]$externalExtensions.'deploysharp.official-golden').Contains('official-predictor-output-sha256-d2820ebe', [System.StringComparison]::Ordinal)) {
+    throw 'The mobile-cls manifest admission or golden scope drifted.'
+}
+if ($algorithmCandidate.golden.scope -ne 'pinned-official-image-and-preprocessing-semantics-with-local-export-and-independent-Paddle-Predictor-output' -or $algorithmCandidate.golden.officialPredictorOutputStatus -ne 'recorded' -or $algorithmCandidate.golden.officialPredictorGoldenEvidence -ne 'eng/models/ocr-anomaly-rmbg/paddleocr-official-predictor-golden.json' -or $algorithmCandidate.golden.officialPredictorOutputSha256 -ne $officialPredictor.output.sha256) {
+    throw 'The independent official-Predictor evidence boundary drifted.'
+}
+if ($algorithmCandidate.golden.sourceUrl -ne 'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/textline_rot180_demo.jpg' -or [long]$algorithmCandidate.golden.imageSize -ne 3996 -or $algorithmCandidate.golden.imageSha256 -ne '872200f57a1408e7aab2856d5f2c687b3a937805e0c4ff74bd7de21df1f742b9' -or $algorithmCandidate.golden.referenceOutputSha256 -ne '7b2495af2f5a8bcc459041a65440f7a3900c43e022601aa9e49e912b96ea0dd5') {
+    throw 'The fixed mobile-cls input or reference output identity drifted.'
+}
+if ([int]$algorithmCandidate.golden.classIndex -ne 1 -or $algorithmCandidate.golden.label -ne '180_degree' -or [double]$algorithmCandidate.golden.confidence -ne 0.9986026883125305 -or [double]$algorithmCandidate.golden.confidenceTolerance -ne 0.00001) {
+    throw 'The mobile-cls semantic golden or tolerance drifted.'
+}
+Assert-Sequence -Actual @($algorithmCandidate.golden.backends) -Expected @('onnxruntime-cpu', 'openvino-cpu') -Description 'mobile-cls golden backend matrix'
+
+$catalogPath = Join-Path $repositoryRoot 'src\DeploySharp.ModelFactory\catalog\deploysharp-official-catalog.json'
+$catalog = Get-Content -Raw -LiteralPath $catalogPath | ConvertFrom-Json
+$catalogCandidate = @($catalog.entries | Where-Object modelId -eq $algorithmCandidate.catalogModelId)
+if ($catalogCandidate.Count -ne 1 -or $catalogCandidate[0].status -ne 'preview' -or -not [bool]$catalogCandidate[0].source.redistributionAllowed -or $catalogCandidate[0].release.tag -ne $release.tag -or $catalogCandidate[0].release.commit -ne $release.commit) {
+    throw 'The mobile-cls catalog admission boundary drifted.'
+}
+$catalogAssets = @($catalogCandidate[0].artifacts[0].assets)
+$catalogManifestAsset = @($catalogAssets | Where-Object assetId -eq 'paddleocr-ppocrv5-mobile-cls-modelpack')
+$catalogModelAsset = @($catalogAssets | Where-Object assetId -eq 'paddleocr-ppocrv5-mobile-cls-model')
+if ($catalogManifestAsset.Count -ne 1 -or $catalogManifestAsset[0].relativePath -ne $release.manifestAssetName -or [long]$catalogManifestAsset[0].size -ne [long]$release.manifestSize -or $catalogManifestAsset[0].sha256 -ne $release.manifestSha256) {
+    throw 'The catalog-to-ModelPack Release binding drifted.'
+}
+if ($catalogModelAsset.Count -ne 1 -or [long]$catalogModelAsset[0].size -ne [long]$release.modelSize -or $catalogModelAsset[0].sha256 -ne $release.modelSha256 -or -not ([string]$catalogModelAsset[0].downloadUrl).EndsWith('/' + [string]$release.modelAssetName, [System.StringComparison]::Ordinal)) {
+    throw 'The catalog-to-model Release binding drifted.'
+}
+
+$publishedAuditRoot = Join-Path $repositoryRoot ('artifacts\model-release-public-audit-' + [string]$release.tag)
+$publishedChecksumPath = Join-Path $publishedAuditRoot ([string]$release.checksumAssetName)
+if (Test-Path -LiteralPath $publishedChecksumPath -PathType Leaf) {
+    if ([long](Get-Item -LiteralPath $publishedChecksumPath).Length -ne [long]$release.checksumSize) { throw 'The cached public SHA256SUMS size drifted.' }
+    Assert-Sha256 -Path $publishedChecksumPath -Expected $release.checksumSha256 -Description 'cached public SHA256SUMS'
+    $checksumText = Get-Content -Raw -LiteralPath $publishedChecksumPath
+    if ($checksumText -notmatch ([regex]::Escape([string]$release.manifestSha256) + '\s+' + [regex]::Escape([string]$release.manifestAssetName)) -or $checksumText -notmatch ([regex]::Escape([string]$release.modelSha256) + '\s+' + [regex]::Escape([string]$release.modelAssetName))) {
+        throw 'The cached public SHA256SUMS does not bind the mobile-cls assets.'
+    }
 }
 
 function Get-ManifestModelFile {
@@ -256,10 +350,10 @@ else {
 }
 
 $openBlockers = @($evidence.blockers | Where-Object { $_.status -eq 'open' })
-if ($openBlockers.Count -ne 2 -or $openBlockers.id -notcontains 'license-and-redistribution' -or $openBlockers.id -notcontains 'immutable-release-binding') { throw 'The release-admission evidence must retain exactly the license/redistribution and immutable-release blockers.' }
+if ($openBlockers.Count -ne 1 -or $openBlockers.id -notcontains 'license-and-redistribution') { throw 'The release-admission evidence must retain the attributable legal redistribution blocker.' }
 $missingSummary = if ($missing.Count -eq 0) { 'none' } else { [string]::Join(',', $missing) }
-Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);redistributionAllowed=false"
+Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED candidate=$($algorithmCandidate.catalogModelId);catalogStatus=preview;immutableReleaseBinding=closed;releaseBoundLocalGolden=closed;verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);algorithmAdmissionRedistributionApproved=false;officialPredictorOutputStatus=recorded"
 
 if ($RequireReleaseEligible) {
-    throw 'PaddleOCR is not release eligible: license/redistribution approval and immutable release binding remain open.'
+    throw 'PaddleOCR mobile-cls is not AlgorithmVerified eligible: attributable legal redistribution approval remains open.'
 }

@@ -7,28 +7,28 @@ using JYPPX.CudaSharp;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Identifies whether a CUDA kernel participates before or after TensorRT inference.</summary>
+    /// <summary>Identifies whether a CUDA kernel participates before or after TensorRT inference. / 定义或说明 CUDA合同。</summary>
     public enum TensorRtCudaKernelRole
     {
-        /// <summary>The kernel prepares caller-owned device buffers before inference.</summary>
+        /// <summary>The kernel prepares caller-owned device buffers before inference. / 表示 CUDA状态或选项。</summary>
         Preprocessing = 1,
-        /// <summary>The kernel transforms caller-owned device buffers after inference.</summary>
+        /// <summary>The kernel transforms caller-owned device buffers after inference. / 表示 CUDA状态或选项。</summary>
         Postprocessing = 2
     }
 
-    /// <summary>Identifies a CUDA Driver-loadable artifact emitted by NVRTC.</summary>
+    /// <summary>Identifies a CUDA Driver-loadable artifact emitted by NVRTC. / 定义或说明 CUDA合同。</summary>
     public enum TensorRtCudaRtcArtifactKind
     {
-        /// <summary>Null-terminated PTX bytes copied from NVRTC.</summary>
+        /// <summary>Null-terminated PTX bytes copied from NVRTC. / 表示 CUDA状态或选项。</summary>
         Ptx = 1,
-        /// <summary>CUBIN bytes compiled for a real SM target.</summary>
+        /// <summary>CUBIN bytes compiled for a real SM target. / 表示 CUDA状态或选项。</summary>
         Cubin = 2
     }
 
-    /// <summary>Defines one immutable virtual header supplied to NVRTC.</summary>
+    /// <summary>Defines one immutable virtual header supplied to NVRTC. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaRtcHeader
     {
-        /// <summary>Initializes a copied virtual header.</summary>
+        /// <summary>Initializes a copied virtual header. / 初始化源码对象。</summary>
         public TensorRtCudaRtcHeader(string includeName, string source)
         {
             var validated = new CudaRtcHeader(includeName, source);
@@ -36,18 +36,18 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             Source = validated.Source;
         }
 
-        /// <summary>Gets the exact virtual include name.</summary>
+        /// <summary>Gets the exact virtual include name. / 获取相关信息。</summary>
         public string IncludeName { get; }
-        /// <summary>Gets the copied header source.</summary>
+        /// <summary>Gets the copied header source. / 获取源码信息。</summary>
         public string Source { get; }
     }
 
-    /// <summary>Contains immutable CUDA C++ source and the exact kernel entry-point contract.</summary>
+    /// <summary>Contains immutable CUDA C++ source and the exact kernel entry-point contract. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaRtcKernelDefinition
     {
         private readonly ReadOnlyCollection<TensorRtCudaRtcHeader> _headers;
 
-        /// <summary>Initializes a copied CUDA/RTC kernel definition.</summary>
+        /// <summary>Initializes a copied CUDA/RTC kernel definition. / 初始化 CUDA对象。</summary>
         public TensorRtCudaRtcKernelDefinition(
             TensorRtCudaKernelRole role,
             string source,
@@ -93,30 +93,30 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             HeadersSha256 = TensorRtContractHash.Sequence(canonicalHeaders);
         }
 
-        /// <summary>Gets whether the kernel is preprocessing or postprocessing.</summary>
+        /// <summary>Gets whether the kernel is preprocessing or postprocessing. / 获取 CUDA信息。</summary>
         public TensorRtCudaKernelRole Role { get; }
-        /// <summary>Gets the copied CUDA C++ source.</summary>
+        /// <summary>Gets the copied CUDA C++ source. / 获取 CUDA信息。</summary>
         public string Source { get; }
-        /// <summary>Gets the exact unmangled entry point used when no name expression is supplied.</summary>
+        /// <summary>Gets the exact unmangled entry point used when no name expression is supplied. / 获取相关信息。</summary>
         public string KernelName { get; }
-        /// <summary>Gets the virtual program name supplied to NVRTC.</summary>
+        /// <summary>Gets the virtual program name supplied to NVRTC. / 获取 CUDA信息。</summary>
         public string ProgramName { get; }
-        /// <summary>Gets the optional C++ name expression that must resolve to the launch entry point.</summary>
+        /// <summary>Gets the optional C++ name expression that must resolve to the launch entry point. / 获取配置信息。</summary>
         public string? KernelNameExpression { get; }
-        /// <summary>Gets the copied virtual headers in canonical ordinal include-name order.</summary>
+        /// <summary>Gets the copied virtual headers in canonical ordinal include-name order. / 获取源码信息。</summary>
         public IReadOnlyList<TensorRtCudaRtcHeader> Headers => _headers;
-        /// <summary>Gets the exact UTF-8 source SHA256.</summary>
+        /// <summary>Gets the exact UTF-8 source SHA256. / 获取哈希标识信息。</summary>
         public string SourceSha256 { get; }
-        /// <summary>Gets the JYPPX.CudaSharp-compatible canonical header SHA256.</summary>
+        /// <summary>Gets the JYPPX.CudaSharp-compatible canonical header SHA256. / 获取 CUDA信息。</summary>
         public string HeadersSha256 { get; }
     }
 
-    /// <summary>Contains the exact immutable NVRTC option list and requested output kind.</summary>
+    /// <summary>Contains the exact immutable NVRTC option list and requested output kind. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaRtcCompileOptions
     {
         private readonly CudaRtcCompileOptions _nativeOptions;
 
-        /// <summary>Initializes explicit NVRTC compilation settings.</summary>
+        /// <summary>Initializes explicit NVRTC compilation settings. / 初始化 CUDA对象。</summary>
         public TensorRtCudaRtcCompileOptions(
             string targetArchitecture,
             TensorRtCudaRtcArtifactKind artifactKind = TensorRtCudaRtcArtifactKind.Ptx,
@@ -145,32 +145,32 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             OptionsSha256 = TensorRtContractHash.Sequence(_nativeOptions.Options);
         }
 
-        /// <summary>Gets the explicit compute_XX or sm_XX compiler target.</summary>
+        /// <summary>Gets the explicit compute_XX or sm_XX compiler target. / 获取相关信息。</summary>
         public string TargetArchitecture => _nativeOptions.TargetArchitecture;
-        /// <summary>Gets the requested Driver-loadable artifact kind.</summary>
+        /// <summary>Gets the requested Driver-loadable artifact kind. / 获取模型工件信息。</summary>
         public TensorRtCudaRtcArtifactKind ArtifactKind { get; }
-        /// <summary>Gets whether line information is requested.</summary>
+        /// <summary>Gets whether line information is requested. / 获取相关信息。</summary>
         public bool GenerateLineInfo => _nativeOptions.GenerateLineInfo;
-        /// <summary>Gets whether device debug output is requested.</summary>
+        /// <summary>Gets whether device debug output is requested. / 获取设备信息。</summary>
         public bool DeviceDebug => _nativeOptions.DeviceDebug;
-        /// <summary>Gets whether fast math is enabled.</summary>
+        /// <summary>Gets whether fast math is enabled. / 获取相关信息。</summary>
         public bool UseFastMath => _nativeOptions.UseFastMath;
-        /// <summary>Gets whether relocatable device code is enabled.</summary>
+        /// <summary>Gets whether relocatable device code is enabled. / 获取设备信息。</summary>
         public bool RelocatableDeviceCode => _nativeOptions.RelocatableDeviceCode;
-        /// <summary>Gets the complete immutable option list in compiler order.</summary>
+        /// <summary>Gets the complete immutable option list in compiler order. / 获取配置信息。</summary>
         public IReadOnlyList<string> Options => _nativeOptions.Options;
-        /// <summary>Gets the JYPPX.CudaSharp-compatible canonical option SHA256.</summary>
+        /// <summary>Gets the JYPPX.CudaSharp-compatible canonical option SHA256. / 获取 CUDA信息。</summary>
         public string OptionsSha256 { get; }
 
         internal CudaRtcCompileOptions NativeOptions => _nativeOptions;
     }
 
-    /// <summary>Contains copied PTX/CUBIN bytes and the complete managed compilation identity.</summary>
+    /// <summary>Contains copied PTX/CUBIN bytes and the complete managed compilation identity. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaRtcArtifact
     {
         private readonly byte[] _code;
 
-        /// <summary>Initializes a copied in-memory PTX/CUBIN artifact, including artifacts restored from caller-owned cache.</summary>
+        /// <summary>Initializes a copied in-memory PTX/CUBIN artifact, including artifacts restored from caller-owned cache. / 初始化缓存对象。</summary>
         public TensorRtCudaRtcArtifact(
             byte[] code,
             TensorRtCudaRtcArtifactKind kind,
@@ -223,40 +223,40 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             });
         }
 
-        /// <summary>Gets the artifact kind.</summary>
+        /// <summary>Gets the artifact kind. / 获取模型工件信息。</summary>
         public TensorRtCudaRtcArtifactKind Kind { get; }
-        /// <summary>Gets the preprocessing or postprocessing role.</summary>
+        /// <summary>Gets the preprocessing or postprocessing role. / 获取相关信息。</summary>
         public TensorRtCudaKernelRole Role { get; }
-        /// <summary>Gets the copied artifact byte length.</summary>
+        /// <summary>Gets the copied artifact byte length. / 获取模型工件信息。</summary>
         public int Length => _code.Length;
-        /// <summary>Gets the artifact SHA256.</summary>
+        /// <summary>Gets the artifact SHA256. / 获取模型工件信息。</summary>
         public string ArtifactSha256 { get; }
-        /// <summary>Gets the source SHA256.</summary>
+        /// <summary>Gets the source SHA256. / 获取哈希标识信息。</summary>
         public string SourceSha256 { get; }
-        /// <summary>Gets the canonical header SHA256.</summary>
+        /// <summary>Gets the canonical header SHA256. / 获取哈希标识信息。</summary>
         public string HeadersSha256 { get; }
-        /// <summary>Gets the canonical option SHA256.</summary>
+        /// <summary>Gets the canonical option SHA256. / 获取哈希标识信息。</summary>
         public string OptionsSha256 { get; }
-        /// <summary>Gets the exact loaded compiler version.</summary>
+        /// <summary>Gets the exact loaded compiler version. / 获取相关信息。</summary>
         public string CompilerVersion { get; }
-        /// <summary>Gets the explicit compiler target architecture.</summary>
+        /// <summary>Gets the explicit compiler target architecture. / 获取相关信息。</summary>
         public string TargetArchitecture { get; }
-        /// <summary>Gets the virtual program name.</summary>
+        /// <summary>Gets the virtual program name. / 获取相关信息。</summary>
         public string ProgramName { get; }
-        /// <summary>Gets the exact resolved Driver launch entry point.</summary>
+        /// <summary>Gets the exact resolved Driver launch entry point. / 获取原生运行时信息。</summary>
         public string KernelName { get; }
-        /// <summary>Gets the optional original C++ name expression.</summary>
+        /// <summary>Gets the optional original C++ name expression. / 获取配置信息。</summary>
         public string? KernelNameExpression { get; }
-        /// <summary>Gets a hash of all managed compilation inputs, excluding runtime/GPU compatibility identity.</summary>
+        /// <summary>Gets a hash of all managed compilation inputs, excluding runtime/GPU compatibility identity. / 获取原生运行时信息。</summary>
         public string CompilationInputsSha256 { get; }
-        /// <summary>Returns a new copy of the PTX/CUBIN bytes.</summary>
+        /// <summary>Returns a new copy of the PTX/CUBIN bytes. / 返回 CUDA结果。</summary>
         public byte[] ToArray() => (byte[])_code.Clone();
     }
 
-    /// <summary>Builds a complete caller-owned External/local cache key for one CUDA kernel artifact.</summary>
+    /// <summary>Builds a complete caller-owned External/local cache key for one CUDA kernel artifact. / 构建缓存。</summary>
     public sealed class TensorRtCudaKernelCacheIdentity
     {
-        /// <summary>Initializes a complete cache identity without writing a cache entry.</summary>
+        /// <summary>Initializes a complete cache identity without writing a cache entry. / 初始化缓存对象。</summary>
         public TensorRtCudaKernelCacheIdentity(
             TensorRtCudaRtcArtifact artifact,
             string compilerIdentity,
@@ -307,39 +307,39 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             });
         }
 
-        /// <summary>Gets the source SHA256.</summary>
+        /// <summary>Gets the source SHA256. / 获取哈希标识信息。</summary>
         public string SourceSha256 { get; }
-        /// <summary>Gets the virtual-header SHA256.</summary>
+        /// <summary>Gets the virtual-header SHA256. / 获取哈希标识信息。</summary>
         public string HeadersSha256 { get; }
-        /// <summary>Gets the compiler-option SHA256.</summary>
+        /// <summary>Gets the compiler-option SHA256. / 获取哈希标识信息。</summary>
         public string OptionsSha256 { get; }
-        /// <summary>Gets the PTX/CUBIN artifact SHA256.</summary>
+        /// <summary>Gets the PTX/CUBIN artifact SHA256. / 获取 CUDA信息。</summary>
         public string ArtifactSha256 { get; }
-        /// <summary>Gets the NVRTC compiler version.</summary>
+        /// <summary>Gets the NVRTC compiler version. / 获取 CUDA信息。</summary>
         public string CompilerVersion { get; }
-        /// <summary>Gets the caller-recorded exact NVRTC/compiler binary identity.</summary>
+        /// <summary>Gets the caller-recorded exact NVRTC/compiler binary identity. / 获取 CUDA信息。</summary>
         public string CompilerIdentity { get; }
-        /// <summary>Gets the requested target architecture.</summary>
+        /// <summary>Gets the requested target architecture. / 获取相关信息。</summary>
         public string TargetArchitecture { get; }
-        /// <summary>Gets the artifact kind.</summary>
+        /// <summary>Gets the artifact kind. / 获取模型工件信息。</summary>
         public TensorRtCudaRtcArtifactKind ArtifactKind { get; }
-        /// <summary>Gets the resolved kernel entry point.</summary>
+        /// <summary>Gets the resolved kernel entry point. / 获取 CUDA信息。</summary>
         public string KernelName { get; }
-        /// <summary>Gets the caller-recorded CUDA runtime version.</summary>
+        /// <summary>Gets the caller-recorded CUDA runtime version. / 获取 CUDA信息。</summary>
         public string CudaRuntimeVersion { get; }
-        /// <summary>Gets the caller-recorded exact CUDA runtime binary/package identity.</summary>
+        /// <summary>Gets the caller-recorded exact CUDA runtime binary/package identity. / 获取 CUDA信息。</summary>
         public string CudaRuntimeIdentity { get; }
-        /// <summary>Gets the caller-recorded CUDA driver version.</summary>
+        /// <summary>Gets the caller-recorded CUDA driver version. / 获取 CUDA信息。</summary>
         public string CudaDriverVersion { get; }
-        /// <summary>Gets the caller-recorded exact CUDA driver identity.</summary>
+        /// <summary>Gets the caller-recorded exact CUDA driver identity. / 获取 CUDA信息。</summary>
         public string CudaDriverIdentity { get; }
-        /// <summary>Gets the caller-recorded GPU architecture.</summary>
+        /// <summary>Gets the caller-recorded GPU architecture. / 获取相关信息。</summary>
         public string GpuArchitecture { get; }
-        /// <summary>Gets the caller-recorded GPU model or compatibility class; physical device UUIDs are intentionally excluded.</summary>
+        /// <summary>Gets the caller-recorded GPU model or compatibility class; physical device UUIDs are intentionally excluded. / 获取模型工件信息。</summary>
         public string GpuCompatibilityIdentity { get; }
-        /// <summary>Gets the caller-recorded native bridge package/binary identity.</summary>
+        /// <summary>Gets the caller-recorded native bridge package/binary identity. / 获取原生运行时信息。</summary>
         public string NativeBridgeIdentity { get; }
-        /// <summary>Gets the complete cache-key SHA256.</summary>
+        /// <summary>Gets the complete cache-key SHA256. / 获取缓存信息。</summary>
         public string CacheKeySha256 { get; }
     }
 

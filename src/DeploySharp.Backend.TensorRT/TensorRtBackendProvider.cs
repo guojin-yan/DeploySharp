@@ -6,16 +6,16 @@ using JYPPX.TensorRtSharp;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Creates managed sessions over caller-owned, serialized TensorRT engines.</summary>
+    /// <summary>Creates managed sessions over caller-owned, serialized TensorRT engines. / 创建 TensorRT 引擎对象。</summary>
     public sealed class TensorRtBackendProvider : IBackendProvider
     {
         private readonly TensorRtBackendOptions _options;
         private bool _disposed;
 
-        /// <summary>Gets the stable TensorRT backend identifier.</summary>
+        /// <summary>Gets the stable TensorRT backend identifier. / 获取相关信息。</summary>
         public static BackendId BackendId { get; } = new BackendId("tensorrt");
 
-        /// <summary>Initializes a provider over caller-owned TensorRT runtime resources.</summary>
+        /// <summary>Initializes a provider over caller-owned TensorRT runtime resources. / 初始化原生运行时对象。</summary>
         public TensorRtBackendProvider(TensorRtBackendOptions? options = null)
         {
             _options = options ?? TensorRtBackendOptions.Default;
@@ -27,10 +27,10 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 new[] { "tensorrt-engine" });
         }
 
-        /// <summary>Gets the managed adapter descriptor.</summary>
+        /// <summary>Gets the managed adapter descriptor. / 获取相关信息。</summary>
         public BackendDescriptor Descriptor { get; }
 
-        /// <summary>Determines whether a CUDA TensorRT engine request is compatible.</summary>
+        /// <summary>Determines whether a CUDA TensorRT engine request is compatible. / 说明 TensorRT 引擎公共 API。</summary>
         public bool CanCreate(ModelArtifact artifact, BackendRequest request)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -42,7 +42,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return Descriptor.Supports(request.RequiredCapabilities);
         }
 
-        /// <summary>Loads an external serialized engine into a caller-owned managed session.</summary>
+        /// <summary>Loads an external serialized engine into a caller-owned managed session. / 加载 TensorRT 引擎资源。</summary>
         public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -117,7 +117,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Disposes the provider; already-created sessions remain caller-owned.</summary>
+        /// <summary>Disposes the provider; already-created sessions remain caller-owned. / 释放推理会话资源。</summary>
         public void Dispose() => _disposed = true;
 
         private static void DisposeAfterFailedLoad(params IDisposable?[] resources)

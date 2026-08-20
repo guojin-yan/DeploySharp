@@ -7,6 +7,7 @@ param(
     [string]$PackageCacheDirectory,
     [string]$Configuration = 'Release',
     [string]$ReleasePolicyPath = (Join-Path $PSScriptRoot 'release-evidence-policy.json'),
+    [string]$ReleaseAuthorizationPath = (Join-Path $PSScriptRoot 'release-authorization.json'),
     [switch]$WriteBaseline,
     [switch]$RequireReleaseEligible
 )
@@ -28,6 +29,11 @@ $packageCacheRoot = [IO.Path]::GetFullPath($packageCacheInput)
 if (-not (Test-Path -LiteralPath $packageCacheRoot -PathType Container)) { throw "NuGet package cache is missing: $packageCacheRoot" }
 $baselinePath = Join-Path $PSScriptRoot 'release-candidate-packages.json'
 $releaseBaseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+$resolvedAuthorizationPath = (Resolve-Path -LiteralPath $ReleaseAuthorizationPath).Path
+$releaseAuthorization = Get-Content -LiteralPath $resolvedAuthorizationPath -Raw | ConvertFrom-Json
+if ($releaseAuthorization.schemaVersion -ne '1.0' -or $releaseAuthorization.packageVersion -ne $releaseBaseline.packageVersion) {
+    throw 'Release authorization schema or package version is invalid.'
+}
 $head = (& git -C $repository rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $head -notmatch '^[0-9a-f]{40}$') { throw 'Unable to resolve the repository HEAD.' }
 $globalJson = Get-Content -LiteralPath (Join-Path $repository 'global.json') -Raw | ConvertFrom-Json
@@ -698,6 +704,34 @@ function Assert-SameKeySet {
 }
 
 $definitions = @($releaseBaseline.packages)
+$expectedSymbolPackageFiles = @($definitions | ForEach-Object { "$($_.packageId).$($releaseBaseline.packageVersion).snupkg" })
+$actualSymbolPackageFiles = @(Get-ChildItem -LiteralPath $packageRoot -File -Filter '*.snupkg' | Select-Object -ExpandProperty Name)
+$symbolPackageRecords = [Collections.Generic.List[object]]::new()
+switch ([string]$releaseBaseline.symbolPolicy) {
+    'required-snupkg' {
+        Assert-SameKeySet $expectedSymbolPackageFiles $actualSymbolPackageFiles 'Release symbol package files'
+        foreach ($definition in $definitions) {
+            $symbolPackagePath = Join-Path $packageRoot "$($definition.packageId).$($releaseBaseline.packageVersion).snupkg"
+            $archive = [IO.Compression.ZipFile]::OpenRead($symbolPackagePath)
+            try {
+                $expectedPdbEntries = @($definition.targetFrameworks | ForEach-Object { "lib/$_/$($definition.assemblyName).pdb" })
+                $actualPdbEntries = @($archive.Entries | Where-Object { $_.FullName -match '^lib/[^/]+/[^/]+\.pdb$' } | Select-Object -ExpandProperty FullName)
+                Assert-SameKeySet $expectedPdbEntries $actualPdbEntries "$($definition.packageId) symbol PDB entries"
+                $symbolPackageRecords.Add([ordered]@{
+                    id = $definition.packageId
+                    rawPackageBytes = (Get-Item -LiteralPath $symbolPackagePath).Length
+                    rawPackageSha256 = Get-FileSha256 $symbolPackagePath
+                    pdbEntries = @($actualPdbEntries | Sort-Object)
+                })
+            }
+            finally { $archive.Dispose() }
+        }
+    }
+    'not-produced' {
+        if ($actualSymbolPackageFiles.Count -ne 0) { throw 'The release baseline forbids .snupkg files.' }
+    }
+    default { throw "Unsupported symbol policy: $($releaseBaseline.symbolPolicy)." }
+}
 $componentAccumulator = @{}
 $projectState = @{}
 
@@ -778,15 +812,45 @@ if ($qwenModelFile.Count -ne 1) { throw 'The exact Qwen GGUF manifest must conta
 $officialCatalogPath = Join-Path $repository 'src\DeploySharp.ModelFactory\catalog\deploysharp-official-catalog.json'
 $officialCatalog = Get-Content -LiteralPath $officialCatalogPath -Raw | ConvertFrom-Json -AsHashtable
 $officialEntries = @($officialCatalog.entries)
-if ($officialEntries.Count -ne 1) { throw "The official model catalog must contain exactly one published alpha-preview entry; found $($officialEntries.Count)." }
+if ([string]$officialCatalog.schemaVersion -ne '1.0' -or [string]::IsNullOrWhiteSpace([string]$officialCatalog.catalogRevision) -or $officialEntries.Count -eq 0) {
+    throw 'The official model catalog identity is invalid.'
+}
+$officialModelIds = @($officialEntries | ForEach-Object { [string]$_.modelId })
+if (@($officialModelIds | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0 -or @($officialModelIds | Sort-Object -Unique).Count -ne $officialEntries.Count) {
+    throw 'The official model catalog must contain unique non-empty model IDs.'
+}
 $officialQwen = @($officialEntries | Where-Object { $_.modelId -eq 'llm/qwen2.5-0.5b-instruct-q4-k-m' })
 if ($officialQwen.Count -ne 1) { throw 'The published Qwen alpha-preview catalog entry is missing.' }
-if ([string]$officialCatalog.catalogRevision -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].status -ne 'preview' -or -not [bool]$officialQwen[0].source.redistributionAllowed -or [string]$officialQwen[0].source.licenseExpression -ne 'Apache-2.0' -or [string]$officialQwen[0].release.tag -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].release.commit -ne 'd8c4ffaed3684d120f80dec832c74a1a83e562a5') {
+if ([string]$officialQwen[0].status -ne 'preview' -or -not [bool]$officialQwen[0].source.redistributionAllowed -or [string]$officialQwen[0].source.licenseExpression -ne 'Apache-2.0' -or [string]$officialQwen[0].release.tag -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].release.commit -ne 'd8c4ffaed3684d120f80dec832c74a1a83e562a5') {
     throw 'The published Qwen alpha-preview catalog provenance drifted.'
 }
 $officialQwenAssets = @($officialQwen[0].artifacts[0].assets)
 if ($officialQwen[0].artifacts.Count -ne 1 -or $officialQwenAssets.Count -ne 7 -or @($officialQwenAssets | Where-Object { $_.assetId -eq 'qwen-model' -and $_.size -eq 491400032 -and $_.sha256 -eq '74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db' }).Count -ne 1) {
     throw 'The published Qwen alpha-preview catalog assets drifted.'
+}
+$thirdPartyNoticesPath = Join-Path $repository 'THIRD-PARTY-NOTICES.md'
+if (-not (Test-Path -LiteralPath $thirdPartyNoticesPath -PathType Leaf)) { throw 'THIRD-PARTY-NOTICES.md is missing.' }
+$thirdPartyNoticesText = Get-Content -LiteralPath $thirdPartyNoticesPath -Raw
+$noticePackageIds = [Collections.Generic.List[string]]::new()
+foreach ($package in $releaseBaseline.centralPackages.PSObject.Properties) {
+    $packageId = [string]$package.Name
+    $packageVersion = [string]$package.Value
+    if ($thirdPartyNoticesText.IndexOf($packageId, [StringComparison]::Ordinal) -lt 0 -or $thirdPartyNoticesText.IndexOf($packageVersion, [StringComparison]::Ordinal) -lt 0) {
+        throw "Third-party notice is missing central dependency identity: $packageId/$packageVersion."
+    }
+    $noticePackageIds.Add($packageId)
+}
+if ($thirdPartyNoticesText.IndexOf('not an approval of any model license', [StringComparison]::OrdinalIgnoreCase) -lt 0 -or
+    $thirdPartyNoticesText.IndexOf('does not relicense', [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+    throw 'Third-party notice ownership/model boundary is missing.'
+}
+$thirdPartyNoticesEvidence = [ordered]@{
+    path = 'THIRD-PARTY-NOTICES.md'
+    bytes = (Get-Item -LiteralPath $thirdPartyNoticesPath).Length
+    sha256 = Get-FileSha256 $thirdPartyNoticesPath
+    centralPackageIds = @($noticePackageIds | Sort-Object)
+    centralPackageCount = $noticePackageIds.Count
+    modelRedistributionApproval = $false
 }
 $modelLicenses = @([ordered]@{
     modelId = $qwenManifest.modelId
@@ -843,9 +907,8 @@ if ($licenseBlockers.Count -ne $expectedFindingCounts.managedDependencyLicenseRe
 $releaseBlockers = [Collections.Generic.List[string]]::new()
 if ($dirty) { $releaseBlockers.Add('dirty-worktree') }
 if ($signedCount -ne $definitions.Count) { $releaseBlockers.Add('unsigned-packages') }
-$releaseBlockers.Add('symbol-package-policy-not-authorized')
-$releaseBlockers.Add('raw-nupkg-container-bit-reproducibility-not-established')
-$releaseBlockers.Add('publication-authority-not-granted')
+if ($releaseBaseline.symbolPolicy -eq 'not-produced') { $releaseBlockers.Add('symbol-package-policy-not-authorized') }
+if ($releaseAuthorization.publication.status -ne 'authorized') { $releaseBlockers.Add('publication-authority-not-granted') }
 
 $symbolBlockers = [Collections.Generic.List[string]]::new()
 if ($releaseBaseline.symbolPolicy -eq 'not-produced') { $symbolBlockers.Add('symbol-package-policy-not-authorized') }
@@ -900,7 +963,21 @@ $provenance = [ordered]@{
     consumerOwnedNativeRuntimes = @($consumerOwnedNativeRuntimes)
     modelLicenses = $modelLicenses
     officialCatalogEntries = $officialEntries.Count
+    officialCatalog = [ordered]@{
+        schemaVersion = [string]$officialCatalog.schemaVersion
+        revision = [string]$officialCatalog.catalogRevision
+        entries = $officialEntries.Count
+        bytes = (Get-Item -LiteralPath $officialCatalogPath).Length
+        sha256 = Get-FileSha256 $officialCatalogPath
+    }
+    thirdPartyNotices = $thirdPartyNoticesEvidence
     alphaPreviewPolicy = $alphaPreviewPolicyEvidence
+    releaseAuthorization = [ordered]@{
+        publicationStatus = [string]$releaseAuthorization.publication.status
+        packageSigningStatus = [string]$releaseAuthorization.packageSigning.status
+        rawPackageReproducibilityStatus = [string]$releaseAuthorization.rawPackageReproducibility.status
+        policySha256 = Get-FileSha256 $resolvedAuthorizationPath
+    }
     knownAdvisoryFindings = $knownAdvisoryFindings
     releaseBlockers = @($releaseBlockers | Sort-Object -Unique)
     commercialReleaseBlockers = @($commercialReleaseBlockers | Sort-Object -Unique)
@@ -940,10 +1017,11 @@ $symbols = [ordered]@{
     }
     deterministicSetting = $true
     symbolPackagePolicy = $releaseBaseline.symbolPolicy
-    rawSnupkgReproducibility = 'not-applicable-not-produced'
+    rawSnupkgReproducibility = if ($releaseBaseline.symbolPolicy -eq 'required-snupkg') { 'two-independent-pack-invocations-normalized-and-compared-before-signing' } else { 'not-applicable-not-produced' }
     assemblySymbolSemanticDefinition = 'MVID, deterministic marker, portable PDB ID/documents/sequence points, compiler options, and SourceLink identity.'
     rawNupkgDefinition = 'SHA256 of the complete NuGet ZIP container; tracked separately from semantic payload.'
     assemblies = @($symbolAssemblies | Sort-Object packageId, tfm)
+    symbolPackages = @($symbolPackageRecords | Sort-Object id)
     blockers = @($symbolBlockers | Sort-Object -Unique)
     summary = [ordered]@{
         assemblies = $symbolAssemblies.Count
@@ -953,7 +1031,7 @@ $symbols = [ordered]@{
         absoluteDocumentPaths = $absolutePdbPathCount
         packageBuildAssemblyDrifts = $packageBuildDriftCount
         embeddedSources = @($symbolAssemblies | ForEach-Object { $_.evidence.embeddedSourceCount } | Measure-Object -Sum).Sum
-        symbolPackages = 0
+        symbolPackages = $symbolPackageRecords.Count
     }
 }
 
@@ -1020,7 +1098,10 @@ else {
     Assert-SameKeySet @($expectedProvenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM managed dependency set'
     Assert-SameKeySet @($expectedProvenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM native ownership set'
     Assert-SameKeySet @($expectedProvenance.knownAdvisoryFindings) @($provenance.knownAdvisoryFindings) 'SBOM alpha preview advisory findings'
+    if ((Get-CanonicalJson $expectedProvenance.officialCatalog) -ne (Get-CanonicalJson $provenance.officialCatalog)) { throw 'Official catalog identity drift.' }
+    if ((Get-CanonicalJson $expectedProvenance.thirdPartyNotices) -ne (Get-CanonicalJson $provenance.thirdPartyNotices)) { throw 'Third-party notice identity drift.' }
     if ((Get-CanonicalJson $expectedProvenance.alphaPreviewPolicy) -ne (Get-CanonicalJson $provenance.alphaPreviewPolicy)) { throw 'Alpha preview release policy drift.' }
+    if ((Get-CanonicalJson $expectedProvenance.releaseAuthorization) -ne (Get-CanonicalJson $provenance.releaseAuthorization)) { throw 'Release authorization policy drift.' }
 
     $expectedNative = Get-ObjectMap $expectedProvenance.consumerOwnedNativeRuntimes 'id'
     $actualNative = Get-ObjectMap $provenance.consumerOwnedNativeRuntimes 'id'

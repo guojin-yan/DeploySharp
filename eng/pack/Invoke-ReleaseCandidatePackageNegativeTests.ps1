@@ -22,6 +22,7 @@ function New-Scenario {
     $path = Join-Path $work $Name
     New-Item -ItemType Directory -Path $path | Out-Null
     Copy-Item -Path (Join-Path $source '*.nupkg') -Destination $path
+    Copy-Item -Path (Join-Path $source '*.snupkg') -Destination $path
     return $path
 }
 

@@ -6,10 +6,10 @@ using JYPPX.DeploySharp.Models;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Validates a caller-owned ONNX artifact before native parsing.</summary>
+    /// <summary>Validates a caller-owned ONNX artifact before native parsing. / 验证 ONNX 模型输入。</summary>
     public static class TensorRtOnnxModelArtifactValidator
     {
-        /// <summary>Validates an ONNX regular file, its size, and its optional SHA256.</summary>
+        /// <summary>Validates an ONNX regular file, its size, and its optional SHA256. / 验证 ONNX 模型输入。</summary>
         public static string Validate(ModelArtifact artifact, long maximumOnnxBytes)
         {
             ReadResult result = ReadValidated(artifact, maximumOnnxBytes);

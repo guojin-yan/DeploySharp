@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net8.0": {
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Project"
+      },
+      "JYPPX.DeploySharp.LLM": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "Microsoft.Bcl.AsyncInterfaces": "[10.0.10, )"
+        }
+      },
+      "JYPPX.DeploySharp.Multimodal": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.LLM": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
+          "Microsoft.Bcl.AsyncInterfaces": "[10.0.10, )"
+        }
+      },
+      "JYPPX.DeploySharp.Visual": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )"
+        }
+      },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "TFI6OKYE1XZz4SGuTSH70c6SBdPpFktXsoa1gCxTr3mKrhmXirnvaS0tKz+J3ZWICEAmMpEGn59nO4ICtUpQXA=="
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
+        }
+      }
+    }
+  }
+}

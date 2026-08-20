@@ -12,8 +12,8 @@
     "name": "DeploySharp",
     "version": "2.0.0-alpha.1",
     "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-    "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-    "repositoryDirty": false
+    "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+    "repositoryDirty": true
   },
   "ownershipScopes": [
     {
@@ -41,16 +41,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 122826,
-      "rawPackageSha256": "144a7dd3fc04efb56ba27fee4e1e9441399b91dc2fabbd01d513b5b69e834d50",
-      "semanticPayloadSha256": "65a4497dfb661e69e2813d8d014ef594e726f229426a223c25260a2b6876667f",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 123327,
+      "rawPackageSha256": "27dd1427065f00db383706124204aee7af89c6e0cecc3db943b452a3c7340392",
+      "semanticPayloadSha256": "ac425f8adfa73649c6156cfac74a1c93a68dafb60cd9cd5a687bd50aa7eeb5b9",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "cbf796f3b56900a3b6d455716f618c76acde13b18f1e552b8fb557ac262ec948",
+          "assemblySha256": "81bd4eae8d3efa684617cff603ab9441bc7ab354179e945e167462f5366beb1a",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -116,7 +116,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "6ec3cb7fb34326956a3a86797014ea1eadd29432f8ae00934689806e95bb5dfd",
+          "assemblySha256": "397ea97f20be27053b73b0c07241565bad8aff1af7bb38add83bffc3b46d9dff",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -181,16 +181,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 125815,
-      "rawPackageSha256": "1f1a0deb08bfa0def58f8236b15390e2ba8056e1042009f29e19c284451f316b",
-      "semanticPayloadSha256": "d4f09f2d325c6f88efb93855af16659ede61a285b9a37ac331dc4c2718d0fe4a",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 126317,
+      "rawPackageSha256": "d611cec2acefd4617224eeb114ecdd0e5d76e94b0ca993a895c35039a66c7d8b",
+      "semanticPayloadSha256": "7c570294a7745b807999b119aff521a4b4c5f252c8ad27937383dd7b1ebea5db",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "e0030d3c0c023070ba8363f6062a9204e4e391deac7576498a9f756b3b56fe37",
+          "assemblySha256": "3c487c514f3c56ad35a07e9e8836c36474d9119c00174fd6c7ec506836c76614",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -221,7 +221,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "06ffeb9ac78c5fc6280ae87ee64410c957730bf8e599967c18c3adbc690661b8",
+          "assemblySha256": "938b2002f57740e4a670b7d19cdb220ceb57585a5f0cf8f8fbed103bb5b3b8eb",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -253,22 +253,465 @@
       ]
     },
     {
+      "id": "JYPPX.DeploySharp.Backend.OpenCV",
+      "version": "2.0.0-alpha.1",
+      "licenseScope": "deploysharp-package",
+      "licenseExpression": "Apache-2.0",
+      "repositoryType": "git",
+      "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 276273,
+      "rawPackageSha256": "8face0342ff19b2ef7a6ed8ee574d65ceb9e3926722efc4c3aba7740d4a0ea3c",
+      "semanticPayloadSha256": "d61cdff151ad32b36a72d7dae1113974856df8c039e48bfee3b7c37825b05467",
+      "signed": false,
+      "internalDependencyClosure": "validated-for-all-supported-tfms",
+      "frameworks": [
+        {
+          "tfm": "net46",
+          "assemblySha256": "46b9d79d9252f4430f8ccb4fc0886944229278914958a67471f2afe0e5a47913",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net46/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net461",
+          "assemblySha256": "fd705de1cbbdfe8cf2826ae96b0ac11e4c970bfe7b050a39184b56dfc85b37bb",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net461/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net462",
+          "assemblySha256": "07cd74fd0acc903c55ed7c6487bf2804135d82c84e3779e1033877f58c9b0dc1",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net462/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net47",
+          "assemblySha256": "36c2a1d3fe1012449323474f2cfbb02a1e3b90a5c647d64fc3313fdc2504002b",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net47/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net471",
+          "assemblySha256": "d845db4cb65e5b79ae9c76cb0ce27e3d08d71c5d3902c15a3f54fa7e1f4f8095",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net471/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net472",
+          "assemblySha256": "877df3e7a516a959ffd5c4a679dc4bf66066b620f9929837df5be5565bc1dc87",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net472/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net48",
+          "assemblySha256": "43694459b75cbe72707045990b55bc738c012d364c81b01c83347480b0fed62f",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net48/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "net481",
+          "assemblySha256": "b2aabb05c5700b5733e1857b88997d61075e7fcc3781fbfdebb90ae7e683207b",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1",
+            "Microsoft.NETFramework.ReferenceAssemblies.net481/1.0.3",
+            "Microsoft.NETFramework.ReferenceAssemblies/1.0.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "mscorlib|4.0.0.0|flags=0|pkt=b77a5c561934e089",
+            "System.Core|4.0.0.0|flags=0|pkt=b77a5c561934e089"
+          ]
+        },
+        {
+          "tfm": "netcoreapp3.1",
+          "assemblySha256": "c56eeff60916bf9620429622d1dae82e30b5c70fe0d75d7fa718b5d3eaab9d66",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.IO.FileSystem|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Resources.ResourceManager|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.Extensions|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|4.3.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading.Tasks|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net5.0",
+          "assemblySha256": "e7403e357c905271959df3c2e72ac7d92564cadca12a93dfce34c18614cdcac6",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.IO.FileSystem|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net6.0",
+          "assemblySha256": "3040d53c9b51c81da9d7565503884863034ea97b6718f1c143f4a1ed4896ae86",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net7.0",
+          "assemblySha256": "5bb42c37775f73f2fede217e9ade5209d9ff2ef7ce2aba580cbc12e3941e61f4",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net8.0",
+          "assemblySha256": "8395f1815328ead7af90d968719f15631d39f61745dbde307d71fb8355e1a012",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net9.0",
+          "assemblySha256": "6a96bba062e89f51b8119d1e08d2a157c274e600117948bee1473282a648de4d",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net10.0",
+          "assemblySha256": "4b0fb5a2e6ad6b122b40a071bab26fe4a2767abba7147d406544f011bf4a0b03",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.OpenCV.CSharp.API",
+              "version": "5.0.0-preview.1",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "JYPPX.OpenCV.CSharp.API/5.0.0-preview.1"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.OpenCV.CSharp.API|5.0.0.0|flags=0|pkt=",
+            "System.Collections|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.InteropServices|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        }
+      ]
+    },
+    {
       "id": "JYPPX.DeploySharp.Backend.OpenVINO",
       "version": "2.0.0-alpha.1",
       "licenseScope": "deploysharp-package",
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 371041,
-      "rawPackageSha256": "84e92d5b34e8a0a7c7ad2c3d8f292d2cae697ac34f18bde0a15d3d767f7e7154",
-      "semanticPayloadSha256": "ae40e747d74c3997bb6949f7ee062948738f0a76d721a748a4387c195c0f818f",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 371535,
+      "rawPackageSha256": "f19a88c43fe692afd5235d45b2be120b0a6927479399767b73dd47ad4e071041",
+      "semanticPayloadSha256": "58feaffd36fea463ce35b467bf122c33bb793a7ae315f1b81290eaf65c218528",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "766376936594509ed90ffe5ca57500e64caaea74ea753c07ef5809b715f3f934",
+          "assemblySha256": "e3c406597927d765a83c73a802f8e94a631f802c0c74af202b2caaef5a992668",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -297,7 +740,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "51687b0a11a1792c6ec21f7e8b3bdb22669d53723905f33e7f0c6a94f6466ffe",
+          "assemblySha256": "66df2538fca64bd040076517ca33c727f79fa64a4dc88a48b561f8b8cefa21ed",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -326,7 +769,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "82268842b64c083c9287cb30a9f755047f7be81d1d58d8d23861dd574496f040",
+          "assemblySha256": "99a2cc4590c46a2cac19490e9e452297cc188bf62492526ea5e916073cddf1bf",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -355,7 +798,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "f2a62d74d69dd36d7db5f1c00f1d8bb4da0899d39f2958b177840a8bf6d74b48",
+          "assemblySha256": "b52c6ca884ed7618be32b995c0cdf02761444c080a17e9b8f0ae53eda3da74a6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -384,7 +827,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "d99f1ccd48dc82be8002596a7672afbc285c47b8f73f4052caa18d6d68a9dbf6",
+          "assemblySha256": "f6653e2f9639056444c3362140713072624713f4424646279ad411c37d4de451",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -413,7 +856,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "ef9d6456863240565bc0f4f1fd4d673692f64fd261058f0ba53d95c896232460",
+          "assemblySha256": "77f8c209fc86d82d2dc9db7f79620fbe6f61b043166b0fbffdcfcb3054d50a1d",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -445,7 +888,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "00239fb57111c7d72c7e32f089ec5192512954e7d5b844f9a1203a92094f8cc1",
+          "assemblySha256": "8f17eb5d6f77481577ff12e1534d6a4feccf2ecac897818928956d44a96a85b9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -477,7 +920,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "20156dc8d98e086c1d82b6b9ddf18658690addf1460d6df4c6e2ef4fd5520a60",
+          "assemblySha256": "319e32ce86cd1f66754ed47e09921d60a509e165a6e4d3173a2fa7321c308699",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -509,7 +952,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "74c111e13759c0affb2d2465ef56c6b90fd31cfb4d5e5ce31cfc3ec5f045f7c1",
+          "assemblySha256": "dce82d715cdb80fd798844b54043d9f84724f639bde8c9ecf5c54f9e76bd1ffd",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -545,7 +988,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "e91b1c7474e750d33a3fbe7eb4097e79ce26845b87f114a420f833828690db6d",
+          "assemblySha256": "050fe18d80c0e3a55e011bf2327881abc9bd0a4955d917820865252e46120603",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -577,7 +1020,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "91b65e0f1beebe1fa39501b0e95334a4f1d6279c173895cd6677b371e7b84a4a",
+          "assemblySha256": "ba1290ea91d2b45cafd04862adffb718f7b5aa273dacc81978a0c18498ef0570",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -608,7 +1051,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "aa958ad3345c855accee4c8641acc37a065aad9d51ce5af75f337859d8858c32",
+          "assemblySha256": "eb61c255930ec1f2db72be8551587f63b5d14e3914c6fa0d3971a7dbf5d6bae6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -637,7 +1080,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "b43ad4eb099eaa7b7709de3b8084fe89e29e603a6f375c1b4450f365957beb80",
+          "assemblySha256": "af90a52124d402a604ce89e65d82f7324d6f3aed984f5ef38f699815f0d6c4e6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -666,7 +1109,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "bb450589d9ae49391ea42e92432f09113695048038243e8ea0122715f85d6b82",
+          "assemblySha256": "a60fce4938fb9b85db205116577ab793a9c58a0951dd65f3c769780484ace1fd",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -695,7 +1138,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "5820648d31cee2c1dbfdb998b68f0bd77141d9d33939595fdfe4ecf4870c131a",
+          "assemblySha256": "e03c52b9040f7c0b0aed3d101280d44e229a9f3110997ad05422498acd4b5656",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -731,16 +1174,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 153358,
-      "rawPackageSha256": "d72ffc45f9bde2ef8becc9861cb6ca652ab9428a063cecc9fa2fc43b9dfb1e3b",
-      "semanticPayloadSha256": "ed38b988d6e8d2c42d02a9e572658975c544bf66ec7a9923cab3e6a1d28f9000",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 155973,
+      "rawPackageSha256": "01e43a3835d82c79ce1002b2ee19a623fd4cc53800d85e677275d3c7e65a60df",
+      "semanticPayloadSha256": "1e348a4ed0ecb29b5304f6581c66bfdd3955bb0b07c5b3b9cab10d41193408ac",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net8.0",
-          "assemblySha256": "a3adfa3609f49f3704a0cff6de1065c91f6b0b5165c4f08e16e783bc6629cc19",
+          "assemblySha256": "e93e7d16a75fc2f937cfcf8717dc40120de4945a4a94f870eea17116080cefc0",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -780,16 +1223,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 619723,
-      "rawPackageSha256": "2ebb928c8d15121241884cd8516ef86df8627b8e81a8a3c8d77a569e1b6411a0",
-      "semanticPayloadSha256": "0e223f76a26c89b1ebbbf747442fa69231e6a90f089d237fdb81a23e14fad823",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 620184,
+      "rawPackageSha256": "664497c3578c42039ac4056304f5a6d48dd5c43155851bb50813ccd05829dd4e",
+      "semanticPayloadSha256": "606b9dbb8c1e9aa9ddd5bf24a7a997b54ca7ba4e423af25e66a4351b43f310dc",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "429462fb5c72e68e0602d239369c60a527e0bbee839a5550bb4037bff54c0294",
+          "assemblySha256": "3ce1e11b1ec8c31f3c7bbbc283b5aa0a1bb4f4f5fddb11a3951010622cd067d9",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net46/1.0.3",
@@ -801,7 +1244,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "1f63f0f43087f735c4bb9484584e73c227dc231434662428054a734c01ba7ed1",
+          "assemblySha256": "f935cc76b9bd32c67ae4d9624f8c6b962124c9aa7bcb0b202c7b8a70cd882a5d",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net461/1.0.3",
@@ -813,7 +1256,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "450211c9b01d1bc92f38bd6b9194375e2e7d100514fb81803555df1984731fcf",
+          "assemblySha256": "d17bd38016404870732ac6dbb1132bca3a8e177d33f8fb9232a24c443f2412fe",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net462/1.0.3",
@@ -825,7 +1268,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "9bada13122895ec70bafbb50bbc12472af96824ebce7f25fc7b7641ae72c4e5a",
+          "assemblySha256": "98f377b2d93fd70e609339e3aa57112b954f2ad2b7e79cc7e4a5e01712669416",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net47/1.0.3",
@@ -837,7 +1280,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "4c0c71320d67a72cd014890d9814fb9cbb6ecbd8299efbe419830d6983556b41",
+          "assemblySha256": "718a4c257cda9b2cf7d1fffe9f2bb572e17d6d59b965cd24628a138af49a9102",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net471/1.0.3",
@@ -849,7 +1292,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "856b3ec1fa702ccc70cb921f90fc06c37aa9b818900f59f409a241e43c7ddc1f",
+          "assemblySha256": "5f59eaa9e0dbace603ad0546639d15acbc65112566f161d5e72d9111fdd75c17",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net472/1.0.3",
@@ -861,7 +1304,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "8c91ba7aa1b05980f48cc59f117a488b18a6c0fe8fa91da196c4789cec52bdd7",
+          "assemblySha256": "2d8c9356b8acf90d6d7c18c26960f0420796795ca8910259573bb4b9a2d5302c",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net48/1.0.3",
@@ -873,7 +1316,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "1b5a71068310541002ba9a51f788dd295dd1a2094bf85100da7bde8c73102136",
+          "assemblySha256": "ec353d45c8eb7902b5971066393c8e528d9133c957c2437a7290ffe107594478",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETFramework.ReferenceAssemblies.net481/1.0.3",
@@ -885,7 +1328,7 @@
         },
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "8cec68807b88b15526817cc455cafb0d766d12086932a0cd9b2ab69768c135b2",
+          "assemblySha256": "8d8c77249403b95f83382fe2628f46a485a2f73980e520babfe0b9da32996978",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [
             "Microsoft.NETCore.Platforms/1.1.0",
@@ -897,7 +1340,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "3ce75d70af742e470d4ce400abb7b13de333ee292a62803d0b72c36735e009cf",
+          "assemblySha256": "a666f91797f56548e5348ec91ba48c736b990e53f86fbba133e033c60b20e514",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -911,7 +1354,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "c8b6a9dc87b5f674ea65d5bbe71b8db5b80cc4801e370556ec4f1936096fbe89",
+          "assemblySha256": "666ca36bf74169bd4898b143122dde988ca56d1744ab26bac7a71db807d492b3",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -923,7 +1366,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "f7ca5a0bc623dd2fe3ff2e3ffc29b8e28504f651127d4068436f6d964b998622",
+          "assemblySha256": "cec86266c869d3d485c61aa30641e3100b84bf7e68b3b75ca218b6ed4628bc42",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -935,7 +1378,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "81df1caf3b2dfeed9a4d5829c6bd8b9ff0b21d4be7a81c30a980565d8a21f808",
+          "assemblySha256": "ba9d4e2172bdb0ab902f7e29b1b86a404f099ae04e97f1ec2964f830a77807e2",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -946,7 +1389,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "9643a07d6b767f881fbf399a059ee47debe8a5988223f437e09e7f3a9a857862",
+          "assemblySha256": "73b2c85324ed596720fd13e212c1c0466dfa961695b319e049feffb7e6ef344c",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -957,7 +1400,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "1f7133f6a2c0b2fdf05187478e65572aaa90bf1468f6660143101393a243d74b",
+          "assemblySha256": "35d8a4c3fd1bff2c097cf74c14c5c6fa929769d4c624cc8d9dfedaee3bfe365b",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -968,7 +1411,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "42247950dc1cfef7ded4b861f8d0ee0c5cd12dfdb21edf5de0d026b813e20f46",
+          "assemblySha256": "ef27a8e9c73b2f0398f300b122a6c5cf3d36529a9198043fd98bed0f4821589e",
           "nuspecDependencies": [],
           "resolvedManagedPackages": [],
           "actualAssemblyReferences": [
@@ -986,16 +1429,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 221239,
-      "rawPackageSha256": "79aa35e91bb47967fa72bdc33aec5de3cd7d218b7136627181b99ebe08905322",
-      "semanticPayloadSha256": "719345b44dc9f5db59bddb31dbe4945d659f0679498551652507eb133d1e0c85",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 221723,
+      "rawPackageSha256": "e866533ac41d76b91d8eb5a786050b22c01d9dcde3dc5ee8e0c1e598abd74d51",
+      "semanticPayloadSha256": "8e6da38b7c3371605d9ccd373a1a6d9761c674780ff3ce30d1f1c12eb0ed1e56",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "295e2e82f2d8389018a1254cbaf475158b4bf172c1d42814d523dcba16c28d20",
+          "assemblySha256": "6178a927723064a80954e0328555144f9f2ce103e1df9eb9ea1e9c04f410a230",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1024,7 +1467,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "0bbe00ae6e35a4dff7e3fda44ba565d167293916b70ae9958f178c2bf8afc761",
+          "assemblySha256": "9a9755df9560340e1bae6480159c992730f8e76fddfe4b4db51a71936bbe6c27",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1054,7 +1497,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "f98d8e8c1dd9bbd03d39d90a97dcea93be2aee3b2094d947dc0a5a69ad20ece5",
+          "assemblySha256": "51a9241279c8d8900657c702f29a282283a6735266877400c663e30c10d79a8b",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1080,7 +1523,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "fea09670bc56c4060360496f5906eb32777934f962146336da3b25725c78ca6f",
+          "assemblySha256": "0dd49fe55ab77122e6ad6b7be77cd67cfd32687853cc771d40fefc7844c31052",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1106,7 +1549,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "54f4739ba3b03ad993f5b1d3e4494a4c29378d2abbb6e5e105646a6befb5b809",
+          "assemblySha256": "9fc34f1889d54553fdd7282bed8d1bb9af51d339b0bd2878fb535b0382d0fe76",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1132,7 +1575,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "7f7f17a2591165bf295b9eddbed9b43dae662173e3ee69742300570516e6b013",
+          "assemblySha256": "c76fd83a2bbb8cb3285c40cc65cdc3b5554377194d59dac2268ad5a7bfc853f4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1158,7 +1601,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "0225849e3f911b4f0e15f78a8bc23fe579da896e640ec2e67f41da8a3fe1b096",
+          "assemblySha256": "e740f60fc5e565785c835f07e0d113152d8233ad5e5c1091679618be81ee72ea",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1184,7 +1627,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "ee4939d9e7014ea1d34c6e8d32cf1c076a24277bec52e9171b88566c7e95e949",
+          "assemblySha256": "c290f9a0c1bc66d15964d0dff038ae29a0bc16011d58f700c784a669641981c7",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1217,16 +1660,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 374074,
-      "rawPackageSha256": "9594d939612ed2177eed11c2897e6c3fecb223f466c29c169464e9208dfb6550",
-      "semanticPayloadSha256": "01e96e5704b34cc49abfc7c030b8683a5c769a1fca90040a1a7293074a387d38",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 432931,
+      "rawPackageSha256": "df472cf2e202c83fc0f382491fa96cf0e503318200c49a8fc2364278985fa115",
+      "semanticPayloadSha256": "cf1aecd1a6e6ea096d6c2e0102b7941280255a2a77acbfb33eb547f07a82b782",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "73ac40e41c7023bd82a7f38292bd6fae13425fdc125c684f13277d9d2f2259c7",
+          "assemblySha256": "c343f704156068ad5defb070c7afa3c779a911f48a857e4a03ec70d2ae99c1f4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1272,7 +1715,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "4fb70141cbc0284064fdd3bc9deb212aed6314c35810e6442531d164bd2655ce",
+          "assemblySha256": "2ec4dbd161ea6876143a79dec24e6620e2e06fd238d551a5b7d2b44d52e07c69",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1312,7 +1755,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "9dbb31a3028e6cc4702476d25888fc8a4f4d125d9cf097ee851dadedc186e15d",
+          "assemblySha256": "272ec1f7b23b1f3ed1164a0991eb084b5afcd6d7497ba49501fd47da1b2b9745",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1352,7 +1795,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "e5a49c75fc1f02882581fdd3dfeda439a11e3f909f247d6ed30ad793de2103d0",
+          "assemblySha256": "ccb7a15fd31022b5e99d3d9731a2ed61cc06927b02b950de178723d63e771f79",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1392,16 +1835,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 234901,
-      "rawPackageSha256": "91a597a1f6322e2e49460ddbe692b49eeb52bfae45d0052c9b999dcc299540b9",
-      "semanticPayloadSha256": "7c667801e93515a828c3a972f344af7eb115b8efa172b302b51b99b101275d4b",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 235587,
+      "rawPackageSha256": "95838bd318deb63af918530f2462092d837e2512f8b47198a4df87f7ecd117e6",
+      "semanticPayloadSha256": "146b32376dbd6d91cfc2c61000bc9603ee92377ed4411d64cb211e6688ebfab5",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "54e628f8d7f064ee5ea9ff18bf5bb6390cc9e125a088cfb37cb39cf0aff20290",
+          "assemblySha256": "de1faa89a1b433472d84aca193b8c121cbb9905379d15e061064f00291529673",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1441,7 +1884,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "25d6bf1de92f7df91af2a92a6e97f3c8fd6ae60759c0fb0e9e7ec041b847e501",
+          "assemblySha256": "5e42b91dfc1a6bda1479166440d29a277aa063704c29ab7227e72a75d4a09f74",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1469,7 +1912,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "55d7686433d84b58e9254f41cb37e8e7803cff63316ea4a49e9f075d37e12cad",
+          "assemblySha256": "c59acd2e4c8e1232f944d02b366237617c07fb9d20b61f4d325131379e88af52",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1497,7 +1940,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "7733a2e5c5b79ae570a38c60f66156a126c6cef89a378d888969b7d2285f9874",
+          "assemblySha256": "0179cfa17083efa17f6b14145d0efb54799c5f949436d2882ffa140db532fad6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -1519,22 +1962,380 @@
       ]
     },
     {
+      "id": "JYPPX.DeploySharp.Multimodal",
+      "version": "2.0.0-alpha.1",
+      "licenseScope": "deploysharp-package",
+      "licenseExpression": "Apache-2.0",
+      "repositoryType": "git",
+      "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 231550,
+      "rawPackageSha256": "c7492193710f1a994b2e00b8c7ce39d2d901535108fabca3500edc41e379a75a",
+      "semanticPayloadSha256": "3b4f6c2687110f8fa40bd3a8d57673395839df498e034bfb74cdb200230de730",
+      "signed": false,
+      "internalDependencyClosure": "validated-for-all-supported-tfms",
+      "frameworks": [
+        {
+          "tfm": "netstandard2.0",
+          "assemblySha256": "6882522c220dadfd6d1b34ea7825c51ad196cb329ef7a57b0a1b44e54fd67531",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10",
+            "Microsoft.NETCore.Platforms/1.1.0",
+            "NETStandard.Library/2.0.3",
+            "System.Runtime.CompilerServices.Unsafe/6.1.2",
+            "System.Threading.Tasks.Extensions/4.6.3"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "Microsoft.Bcl.AsyncInterfaces|10.0.0.10|flags=0|pkt=cc7b13ffcd2ddd51",
+            "netstandard|2.0.0.0|flags=0|pkt=cc7b13ffcd2ddd51",
+            "System.Threading.Tasks.Extensions|4.2.1.0|flags=0|pkt=cc7b13ffcd2ddd51"
+          ]
+        },
+        {
+          "tfm": "netcoreapp3.1",
+          "assemblySha256": "99e19a4f885de0d3f87c71606494be26eca2cd2bd25b9dfac8a593595c62a5d1",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Diagnostics.Debug|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Resources.ResourceManager|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime.Extensions|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|4.2.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|4.3.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading.Tasks|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|4.1.2.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net5.0",
+          "assemblySha256": "b0de6a8da7c0d94d95f9fc3212ba2416e8303ef1ee6926745728b81d98717779",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|5.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net6.0",
+          "assemblySha256": "1611aca5eb97058d4ac9a4612c900107a5cc5e0c60cba00a27ac232c417cfb08",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Algorithms|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography.Primitives|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|6.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net7.0",
+          "assemblySha256": "655638a56d248efd766a2224cda9bec2087bd009835f09aef379fb2a31af42ba",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|7.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net8.0",
+          "assemblySha256": "aec9714d5a66eafaae5b534d3a0663c5f5bbec350281163a6af4f7a2bf8c84f9",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.ML.Tokenizers",
+              "version": "2.0.0",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Google.Protobuf/3.30.2",
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10",
+            "Microsoft.ML.Tokenizers/2.0.0"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|8.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net9.0",
+          "assemblySha256": "68f0d9338deeac1e8e4309cf1081d32359c7f92996548aeaa1b5de178e958948",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.ML.Tokenizers",
+              "version": "2.0.0",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Google.Protobuf/3.30.2",
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10",
+            "Microsoft.ML.Tokenizers/2.0.0"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|9.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        },
+        {
+          "tfm": "net10.0",
+          "assemblySha256": "e4e4ef2b6915ead9ca8ccffc2a3c42206b3e96dcfdc2dd27ba52816f3cd372a3",
+          "nuspecDependencies": [
+            {
+              "id": "JYPPX.DeploySharp.Core",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.LLM",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "JYPPX.DeploySharp.Visual",
+              "version": "2.0.0-alpha.1",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "version": "10.0.10",
+              "exclude": "Build,Analyzers"
+            },
+            {
+              "id": "Microsoft.ML.Tokenizers",
+              "version": "2.0.0",
+              "exclude": "Build,Analyzers"
+            }
+          ],
+          "resolvedManagedPackages": [
+            "Google.Protobuf/3.30.2",
+            "Microsoft.Bcl.AsyncInterfaces/10.0.10",
+            "Microsoft.ML.Tokenizers/2.0.0"
+          ],
+          "actualAssemblyReferences": [
+            "JYPPX.DeploySharp.Core|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.LLM|2.0.0.0|flags=0|pkt=",
+            "JYPPX.DeploySharp.Visual|2.0.0.0|flags=0|pkt=",
+            "System.Collections|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Linq|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Runtime|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Security.Cryptography|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a",
+            "System.Threading|10.0.0.0|flags=0|pkt=b03f5f7f11d50a3a"
+          ]
+        }
+      ]
+    },
+    {
       "id": "JYPPX.DeploySharp.Visual.OpenCV",
       "version": "2.0.0-alpha.1",
       "licenseScope": "deploysharp-package",
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 660458,
-      "rawPackageSha256": "6036ffdd340be5781c3cbb1e56e0eec4285dd9339f2b54495ea91719c9dce62e",
-      "semanticPayloadSha256": "8b6c7dc4134d805da5a9d40258db2c77ce12c7225852223e1696e11ca4c0d4b7",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 670560,
+      "rawPackageSha256": "3e93bf5c328c82a0f3cade9355d06946a91311e17eafe3691d59afaf994dc660",
+      "semanticPayloadSha256": "7d0c6f473c5b6e28e8c5dba83667a0ef119344086146901f2629dc93c09e028e",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "8adb1e730fb112beb28c9ff860fee433d4ff624f14a7fafee2fbea23feec2015",
+          "assemblySha256": "95dc1a792bf2f57473c9e8071ec8604aa99b4d2f7cb6373f4ceb236664ab537c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1563,7 +2364,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "802da37a72fc955617b367829bbed4c22fb705d7b468c7c51e0189b3e17a5056",
+          "assemblySha256": "d1a1940053bd6d6ac2866c0f12d1ce8feaf8fb1267b57eefbff8f551726a2f46",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1592,7 +2393,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "66ac9ce933f443f9d50c6a990380212c5042ae29371e9dd05a86461a5a6f89ca",
+          "assemblySha256": "4911406e88bade2c278ff39a8e240738c99112dfef13902e7c6ed08d9be1c573",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1621,7 +2422,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "f0e0a5a08fcc42efc278405f127cc765d2bfc11406757334f35a9497a4438ca9",
+          "assemblySha256": "5ea529d9059cd041ba808721b1b516f060a9a3c1499e88752ee9c84cb21ab854",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1650,7 +2451,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "1e4f8f995092d0d86cb35a9b851748b109f67814ce8f4346af83c17c486ce1d4",
+          "assemblySha256": "94a586825532a940ed842ec7490972e464354e6e5d957284d1f11477455f7c4c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1679,7 +2480,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "bf6c3ed5b6141df2718fd21b88bcc313d3cbbd1a3760a615d50303b78c48d8b3",
+          "assemblySha256": "48f54773aba919086e6b6fe4a5f05cf4a5123488117ea556bfebd1d79c14cc70",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1708,7 +2509,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "48d2c73e03e326e55f2f3fdea1f38502b02c70e806f9977caae960b648afec3e",
+          "assemblySha256": "1dbcd7dc9239a6987adaa54e9dd96393d64f66dddadd480d30f2a9e744eb2d44",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1737,7 +2538,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "36e147458d22627baaddcbe9aae6f94923a92baf46528b6bfc582516293947af",
+          "assemblySha256": "d63cf646f84bd1dfe65ffd3313ea8b3c346325e2e8041d92e129380d81d65cf9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1766,7 +2567,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "f0dbb9a6577190989880db79b82d6823974309ff4aafecf86333a9be0557f759",
+          "assemblySha256": "6cc8e8e1ad15df316fd4eede248b56bced97b78cde1415e2904612cedaff6561",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1801,7 +2602,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "1ca3137e8648240fb7302a3bfaa1cae6aa6ae34c2b746a0dae1387d4cbdb92fd",
+          "assemblySha256": "1c2d9bbadfb55b56697a45b74e6954ceca628d6f4d11acf707d2327b118bf640",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1833,7 +2634,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "0d8a03d6ad385ab8dc3a6e6905c9f3e758b033e6d7a593f3e300a3cfb7bedf7b",
+          "assemblySha256": "e287eaf408968fb7ae9f38f8e3bfed5a87c00708080e49579ea84e3497008bc6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1864,7 +2665,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "7aee6d76a013bfbbc6e6464b6d5be7c94d4e118ff44ac125700d597b4bfd82d1",
+          "assemblySha256": "464c316d8badbef81fcdad05866133fcf7e3421aefb97cc2ef9e8d8a91c6df7c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1894,7 +2695,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "5eaabba0ef850ea44f5e597a8e012710fac9348655d0a0967df2649a3a941933",
+          "assemblySha256": "3a1b8a1f43c4025706ce872d735b987daed9bb331e80fed652b36ac2660bf2f9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1931,7 +2732,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "e6db01c348400f4a844c71f78c6ab20da3b56e905afda5927fd773799a8e291d",
+          "assemblySha256": "a84ef7f1305a76943c61588ce8940f7ce41c9182d678c119c5b42530fa807bb6",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -1968,7 +2769,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "8fe71e2c7a1a5abb251bfc890566a471e957c8def9d6e2079034182286b9826f",
+          "assemblySha256": "b655fd75698579016b6b4acab4a3e7bd4fea53dce420d3b56344012739635c83",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Visual",
@@ -2012,16 +2813,16 @@
       "licenseExpression": "Apache-2.0",
       "repositoryType": "git",
       "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-      "repositoryCommit": "36f1e188fd91ace126aa42c4c376cfe3f0f12c68",
-      "rawPackageBytes": 6514660,
-      "rawPackageSha256": "a5193c5fa3c5eb6728bd1cab8e654fc37c3cff349e534b38c6c5b5ad7415026d",
-      "semanticPayloadSha256": "347da8ac884eca7b989709dea0170663bcc9b9e5b54b336b8c77eb71db01742a",
+      "repositoryCommit": "ff63f13fa6b7400ad5d1563800f751fd544bf599",
+      "rawPackageBytes": 6540169,
+      "rawPackageSha256": "7a7eb3495de2248216b252beb42e3157411cae2f5f94782f9e92e1488bf0830c",
+      "semanticPayloadSha256": "410928f3a7792ee5b3d7524633b7cbf867dff43403489aed02d4f795138f2b35",
       "signed": false,
       "internalDependencyClosure": "validated-for-all-supported-tfms",
       "frameworks": [
         {
           "tfm": "net46",
-          "assemblySha256": "b97833a9519c69d71c150441e37af8d86d51e9489727c91e1834cc36ba29fbcc",
+          "assemblySha256": "4f856ad7f251580f0b28cc80e553c8bb3777dc962f6c17b8b2fbdb92775a87e3",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2042,7 +2843,7 @@
         },
         {
           "tfm": "net461",
-          "assemblySha256": "eed4962c439537608bc7eafdb36fbcebb1e0dbf05b9df6b27f9464dfb3a36889",
+          "assemblySha256": "0b729e1cec9219c4c9201693f72f173e65241b21980ba3abccb9377e5d4b9f9c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2063,7 +2864,7 @@
         },
         {
           "tfm": "net462",
-          "assemblySha256": "ed605b5efacd6acba851caf2ae76af81a5c10dc129033a8b8b971f9131aa3b26",
+          "assemblySha256": "0d6fe089b887df2827eab5abbc0c855a5f0888c03c16f96b6587c8c1eb0eae52",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2084,7 +2885,7 @@
         },
         {
           "tfm": "net47",
-          "assemblySha256": "2474f2661cc0c41495faaae99057d72c5c786f44d7de6189b402dac4af4050c2",
+          "assemblySha256": "57bbfbcd88225a2fdc8712ea355f128bdd63365163323f19a46360c7e42bf73e",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2105,7 +2906,7 @@
         },
         {
           "tfm": "net471",
-          "assemblySha256": "bb4d93926326b56b51d041bf8aa9c4cdff026f93a67224560c94aa464f47204b",
+          "assemblySha256": "3b4f8714775ed7f33e1c826a61a1c08b7f9cd534444ee774ec015048e91b6654",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2126,7 +2927,7 @@
         },
         {
           "tfm": "net472",
-          "assemblySha256": "e57c47852645ad456d2ce16793a58809e9674d43a30c3c9cff177686e45cc5cd",
+          "assemblySha256": "6d56f15573d9f858010c121469bd2878f404c29c70d7bb1ede1721dab3834296",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2147,7 +2948,7 @@
         },
         {
           "tfm": "net48",
-          "assemblySha256": "fde25a1f2a8569f46126290c6c609c0e951314a6d908b8ca56fc32e5c25e3d24",
+          "assemblySha256": "d7a6c5c22bb5026b96980fa371af9db35dbe6ec9d71de5c59023e999701485d9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2168,7 +2969,7 @@
         },
         {
           "tfm": "net481",
-          "assemblySha256": "956436a2a1e8a473aa95f03de555276e96adf9ed7d8226741e8ff78264b153c5",
+          "assemblySha256": "8ab7b84d8f151351b7c43dbc2ed9ca18def9ec76539dd6405c6e841730f6fc70",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2189,7 +2990,7 @@
         },
         {
           "tfm": "netstandard2.0",
-          "assemblySha256": "bef49ca2da6597b85e4274d5265ba6bb9be9f30c7f5cfaf6991f3d2c735b22e8",
+          "assemblySha256": "44100dab9653a8afcae2068cd2244a0c2cd7336bf9a8f7eda742a1b5a63d9860",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2208,7 +3009,7 @@
         },
         {
           "tfm": "netcoreapp3.1",
-          "assemblySha256": "d858f5a6c7a64c9cb5377fc4182ff0459d3f951a72aac549c32b38f67139bf8b",
+          "assemblySha256": "d5f597f556bfac5e2dee1b0a3ab07c8e0a84966ee7652195c40222ec2250aece",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2235,7 +3036,7 @@
         },
         {
           "tfm": "net5.0",
-          "assemblySha256": "db827b912af50e86fd8e18af5ae18b36e381b2c544f9c8bd7129f741ba3a6609",
+          "assemblySha256": "f21598593cd96344eb4be668688398968e716a9d24a75ad53d6a2030fd840cd9",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2258,7 +3059,7 @@
         },
         {
           "tfm": "net6.0",
-          "assemblySha256": "9a5f34b7651eef8724467f90e26f842da1e6d278a500d687f0ccdbb0f5bac470",
+          "assemblySha256": "2dd6c7285432096eea35cea73ed9ca2c719c69e00709b4dfcfa07b7d6c7ff75c",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2280,7 +3081,7 @@
         },
         {
           "tfm": "net7.0",
-          "assemblySha256": "e6bd244fcda4d75262ddd3264b74428961b7f732befb81870b959696a811ded8",
+          "assemblySha256": "c367ffb520f3244de4071e97c54f0316cc9836f0336c553e5ae34c0476055d18",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2300,7 +3101,7 @@
         },
         {
           "tfm": "net8.0",
-          "assemblySha256": "a74354eb6ed42b98411747d0b560f6f4905fa12c639ab6565d1f4996451bed98",
+          "assemblySha256": "9dfcd0cb28620cef4ac3ec6db0f155232b3d9a1779e3eb4fda5a85aa6a4950d4",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2331,7 +3132,7 @@
         },
         {
           "tfm": "net9.0",
-          "assemblySha256": "8647474550674e837dde21fa0a0b1e114e88291297d34f94e88eaa0b55d9d0da",
+          "assemblySha256": "93fd97294c26dde24f5ade4b868d0e732306eb843571de71f7ddc247b850bc97",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2362,7 +3163,7 @@
         },
         {
           "tfm": "net10.0",
-          "assemblySha256": "cde38667f8445c273a28fe170a6c93341dd15b869331a54d6dec14cd5a1b42dc",
+          "assemblySha256": "82e306fa0aee9ace746f1f952d8897508b82d19f5b884e6c119ccf6326c912d2",
           "nuspecDependencies": [
             {
               "id": "JYPPX.DeploySharp.Core",
@@ -2435,6 +3236,9 @@
       "nupkgSha256": "19bc9a44b781372bc9af1e3e4a481ec02964d67093b5d13bb0daa74a393c5413",
       "cachePath": "google.protobuf/3.30.2",
       "usedBy": [
+        "JYPPX.DeploySharp.Multimodal|net10.0",
+        "JYPPX.DeploySharp.Multimodal|net8.0",
+        "JYPPX.DeploySharp.Multimodal|net9.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net10.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net8.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net9.0",
@@ -2470,6 +3274,21 @@
       "nupkgSha256": "a5d2e26d12b81b0c4e07b0f0e4370c7d438630b15b14ce9f41c7a48fca33b6b0",
       "cachePath": "jyppx.opencv.csharp.api/5.0.0-preview.1",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net10.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|net46",
+        "JYPPX.DeploySharp.Backend.OpenCV|net461",
+        "JYPPX.DeploySharp.Backend.OpenCV|net462",
+        "JYPPX.DeploySharp.Backend.OpenCV|net47",
+        "JYPPX.DeploySharp.Backend.OpenCV|net471",
+        "JYPPX.DeploySharp.Backend.OpenCV|net472",
+        "JYPPX.DeploySharp.Backend.OpenCV|net48",
+        "JYPPX.DeploySharp.Backend.OpenCV|net481",
+        "JYPPX.DeploySharp.Backend.OpenCV|net5.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|net6.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|net7.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|net8.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|net9.0",
+        "JYPPX.DeploySharp.Backend.OpenCV|netcoreapp3.1",
         "JYPPX.DeploySharp.Visual.OpenCV|net10.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net46",
         "JYPPX.DeploySharp.Visual.OpenCV|net461",
@@ -2630,7 +3449,15 @@
         "JYPPX.DeploySharp.LLM|netcoreapp3.1",
         "JYPPX.DeploySharp.LLM|netstandard2.0",
         "JYPPX.DeploySharp.ModelFactory|netstandard2.0",
-        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0"
+        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0",
+        "JYPPX.DeploySharp.Multimodal|net10.0",
+        "JYPPX.DeploySharp.Multimodal|net5.0",
+        "JYPPX.DeploySharp.Multimodal|net6.0",
+        "JYPPX.DeploySharp.Multimodal|net7.0",
+        "JYPPX.DeploySharp.Multimodal|net8.0",
+        "JYPPX.DeploySharp.Multimodal|net9.0",
+        "JYPPX.DeploySharp.Multimodal|netcoreapp3.1",
+        "JYPPX.DeploySharp.Multimodal|netstandard2.0"
       ],
       "license": {
         "metadataType": "expression",
@@ -2875,6 +3702,9 @@
       "nupkgSha256": "56f1ef70552fac61c4b67f728e32c2709d969a73e90d7320e5928291392845a2",
       "cachePath": "microsoft.ml.tokenizers/2.0.0",
       "usedBy": [
+        "JYPPX.DeploySharp.Multimodal|net10.0",
+        "JYPPX.DeploySharp.Multimodal|net8.0",
+        "JYPPX.DeploySharp.Multimodal|net9.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net10.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net8.0",
         "JYPPX.DeploySharp.Visual.OpenCV|net9.0",
@@ -2916,6 +3746,7 @@
         "JYPPX.DeploySharp.LLM|netstandard2.0",
         "JYPPX.DeploySharp.ModelFactory|netstandard2.0",
         "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0",
+        "JYPPX.DeploySharp.Multimodal|netstandard2.0",
         "JYPPX.DeploySharp.Visual|netstandard2.0"
       ],
       "license": {
@@ -2946,6 +3777,7 @@
       "nupkgSha256": "dcbb79bb3868dbfbb64c643116faa63d888ee9eccba0c4e965e9992ed7c4e35d",
       "cachePath": "microsoft.netframework.referenceassemblies.net46/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net46",
         "JYPPX.DeploySharp.Backend.OpenVINO|net46",
         "JYPPX.DeploySharp.Core|net46",
         "JYPPX.DeploySharp.Visual.OpenCV|net46",
@@ -2979,6 +3811,7 @@
       "nupkgSha256": "bd52289e5fb8765090bb189b399a06477a350c0863018a455b5e5d9e45298cc9",
       "cachePath": "microsoft.netframework.referenceassemblies.net461/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net461",
         "JYPPX.DeploySharp.Backend.OpenVINO|net461",
         "JYPPX.DeploySharp.Core|net461",
         "JYPPX.DeploySharp.Visual.OpenCV|net461",
@@ -3012,6 +3845,7 @@
       "nupkgSha256": "ee692a845743500910855d4c330ca6e9ef87c16e16f740e4474d187185d66e21",
       "cachePath": "microsoft.netframework.referenceassemblies.net462/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net462",
         "JYPPX.DeploySharp.Backend.OpenVINO|net462",
         "JYPPX.DeploySharp.Core|net462",
         "JYPPX.DeploySharp.Visual.OpenCV|net462",
@@ -3045,6 +3879,7 @@
       "nupkgSha256": "b1e7f2ea457ee84fdacaa67d0b37445b31606e4f75c8939a57bf4a6836001d45",
       "cachePath": "microsoft.netframework.referenceassemblies.net47/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net47",
         "JYPPX.DeploySharp.Backend.OpenVINO|net47",
         "JYPPX.DeploySharp.Core|net47",
         "JYPPX.DeploySharp.Visual.OpenCV|net47",
@@ -3078,6 +3913,7 @@
       "nupkgSha256": "2d1662724b3794992640c59bfceb2f010e62a3bdb581a626d1b6d7bd5149d575",
       "cachePath": "microsoft.netframework.referenceassemblies.net471/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net471",
         "JYPPX.DeploySharp.Backend.OpenVINO|net471",
         "JYPPX.DeploySharp.Core|net471",
         "JYPPX.DeploySharp.Visual.OpenCV|net471",
@@ -3111,6 +3947,7 @@
       "nupkgSha256": "ffa0a5570a39f911399164d0581ffddef99b5e3dfbaa5f220e5ce22969bcf57c",
       "cachePath": "microsoft.netframework.referenceassemblies.net472/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net472",
         "JYPPX.DeploySharp.Backend.OpenVINO|net472",
         "JYPPX.DeploySharp.Core|net472",
         "JYPPX.DeploySharp.Visual.OpenCV|net472",
@@ -3144,6 +3981,7 @@
       "nupkgSha256": "8a7e348538e7eb91351696911689f49e3d4f63f8bab517432bbe159b8b1104a2",
       "cachePath": "microsoft.netframework.referenceassemblies.net48/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net48",
         "JYPPX.DeploySharp.Backend.OpenVINO|net48",
         "JYPPX.DeploySharp.Core|net48",
         "JYPPX.DeploySharp.Visual.OpenCV|net48",
@@ -3177,6 +4015,7 @@
       "nupkgSha256": "917848bb273021e5ad42d5cd38cf5e637c52d90760ba43d1b2192ebf7bd6cf44",
       "cachePath": "microsoft.netframework.referenceassemblies.net481/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net481",
         "JYPPX.DeploySharp.Backend.OpenVINO|net481",
         "JYPPX.DeploySharp.Core|net481",
         "JYPPX.DeploySharp.Visual.OpenCV|net481",
@@ -3210,6 +4049,14 @@
       "nupkgSha256": "141a093f90c7645d101ccd312e6f727781c965540eb92a52280f95411a698441",
       "cachePath": "microsoft.netframework.referenceassemblies/1.0.3",
       "usedBy": [
+        "JYPPX.DeploySharp.Backend.OpenCV|net46",
+        "JYPPX.DeploySharp.Backend.OpenCV|net461",
+        "JYPPX.DeploySharp.Backend.OpenCV|net462",
+        "JYPPX.DeploySharp.Backend.OpenCV|net47",
+        "JYPPX.DeploySharp.Backend.OpenCV|net471",
+        "JYPPX.DeploySharp.Backend.OpenCV|net472",
+        "JYPPX.DeploySharp.Backend.OpenCV|net48",
+        "JYPPX.DeploySharp.Backend.OpenCV|net481",
         "JYPPX.DeploySharp.Backend.OpenVINO|net46",
         "JYPPX.DeploySharp.Backend.OpenVINO|net461",
         "JYPPX.DeploySharp.Backend.OpenVINO|net462",
@@ -3277,6 +4124,7 @@
         "JYPPX.DeploySharp.LLM|netstandard2.0",
         "JYPPX.DeploySharp.ModelFactory|netstandard2.0",
         "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0",
+        "JYPPX.DeploySharp.Multimodal|netstandard2.0",
         "JYPPX.DeploySharp.Visual|netstandard2.0"
       ],
       "license": {
@@ -3819,7 +4667,8 @@
         "JYPPX.DeploySharp.Backend.LlamaSharp|netstandard2.0",
         "JYPPX.DeploySharp.LLM|netstandard2.0",
         "JYPPX.DeploySharp.ModelFactory|netstandard2.0",
-        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0"
+        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0",
+        "JYPPX.DeploySharp.Multimodal|netstandard2.0"
       ],
       "license": {
         "metadataType": "expression",
@@ -3965,7 +4814,8 @@
         "JYPPX.DeploySharp.Backend.LlamaSharp|netstandard2.0",
         "JYPPX.DeploySharp.LLM|netstandard2.0",
         "JYPPX.DeploySharp.ModelFactory|netstandard2.0",
-        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0"
+        "JYPPX.DeploySharp.ModelPack.Json|netstandard2.0",
+        "JYPPX.DeploySharp.Multimodal|netstandard2.0"
       ],
       "license": {
         "metadataType": "expression",
@@ -4160,7 +5010,39 @@
       "releaseBlocker": "Local-only authorization does not grant publication or official catalog admission."
     }
   ],
-  "officialCatalogEntries": 0,
+  "officialCatalogEntries": 39,
+  "officialCatalog": {
+    "schemaVersion": "1.0",
+    "revision": "models-20260818.ppocrv5.1",
+    "entries": 39,
+    "bytes": 164629,
+    "sha256": "57e3e62e148d23cda9bd5f3f1459ef96f18b9c419951304008a1bc3b1166c88e"
+  },
+  "thirdPartyNotices": {
+    "path": "THIRD-PARTY-NOTICES.md",
+    "bytes": 3393,
+    "sha256": "5372c25d8fdd5ff15ceee5d471631764a70a70cee6b4c39a39e8635d2afba729",
+    "centralPackageIds": [
+      "JYPPX.OpenCV.CSharp.API",
+      "JYPPX.OpenCV.runtime.win-x64",
+      "JYPPX.OpenVINO.CSharp.API",
+      "JYPPX.TensorRT.CSharp.API",
+      "LLamaSharp",
+      "LLamaSharp.Backend.Cpu",
+      "Microsoft.Bcl.AsyncInterfaces",
+      "Microsoft.ML.OnnxRuntime",
+      "Microsoft.ML.OnnxRuntime.Managed",
+      "Microsoft.ML.Tokenizers",
+      "Microsoft.NET.Test.Sdk",
+      "Microsoft.NETFramework.ReferenceAssemblies",
+      "MSTest.TestAdapter",
+      "MSTest.TestFramework",
+      "OpenVINO.runtime.win",
+      "System.Text.Json"
+    ],
+    "centralPackageCount": 16,
+    "modelRedistributionApproval": false
+  },
   "alphaPreviewPolicy": {
     "id": "oss-noncommercial-alpha-preview",
     "packageVersion": "2.0.0-alpha.1",
@@ -4178,6 +5060,12 @@
       "consumerNativeLicenseReview": 2,
       "dependencyRepositoryIncomplete": 18
     }
+  },
+  "releaseAuthorization": {
+    "publicationStatus": "not-authorized",
+    "packageSigningStatus": "not-configured",
+    "rawPackageReproducibilityStatus": "established-before-signing",
+    "policySha256": "e379b93afacca0a5817e4d6ef4f4c5cc81661fa659b5d5dc4038ef9ab72e621f"
   },
   "knownAdvisoryFindings": [
     "consumer-native-license-review:Microsoft.ML.OnnxRuntime/1.28.0:blocker-license-file-manual-review",
@@ -4222,9 +5110,8 @@
     "dependency-repository-incomplete:System.ValueTuple/4.5.0"
   ],
   "releaseBlockers": [
+    "dirty-worktree",
     "publication-authority-not-granted",
-    "raw-nupkg-container-bit-reproducibility-not-established",
-    "symbol-package-policy-not-authorized",
     "unsigned-packages"
   ],
   "commercialReleaseBlockers": [
@@ -4268,17 +5155,16 @@
     "dependency-repository-incomplete:System.Runtime.CompilerServices.Unsafe/4.5.3",
     "dependency-repository-incomplete:System.Runtime.InteropServices.RuntimeInformation/4.3.0",
     "dependency-repository-incomplete:System.ValueTuple/4.5.0",
+    "dirty-worktree",
     "publication-authority-not-granted",
-    "raw-nupkg-container-bit-reproducibility-not-established",
-    "symbol-package-policy-not-authorized",
     "unsigned-packages"
   ],
   "summary": {
-    "releasePackages": 10,
-    "targetFrameworkGroups": 83,
+    "releasePackages": 12,
+    "targetFrameworkGroups": 106,
     "managedDependencyComponents": 48,
     "consumerOwnedNativeComponents": 4,
-    "deploySharpPackageLicenses": 10,
+    "deploySharpPackageLicenses": 12,
     "verifiedSpdxManagedDependencies": 28,
     "managedDependencyLicenseBlockers": 20,
     "consumerNativeLicenseBlockers": 2,

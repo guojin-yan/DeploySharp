@@ -4,23 +4,23 @@ using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Controls the TensorRT precision policy requested while building an ONNX model.</summary>
+    /// <summary>Controls the TensorRT precision policy requested while building an ONNX model. / 定义或说明 ONNX 模型合同。</summary>
     public enum TensorRtOnnxEnginePrecision
     {
-        /// <summary>Preserves TensorRT's runtime-default precision and TF32 policy.</summary>
+        /// <summary>Preserves TensorRT's runtime-default precision and TF32 policy. / 说明原生运行时公共 API。</summary>
         RuntimeDefault = 0,
-        /// <summary>Disables TensorRT's TF32 builder flag for a weakly typed FP32 build.</summary>
+        /// <summary>Disables TensorRT's TF32 builder flag for a weakly typed FP32 build. / 说明相关公共 API。</summary>
         Float32 = 1,
-        /// <summary>Enables TensorRT's FP16 builder flag.</summary>
+        /// <summary>Enables TensorRT's FP16 builder flag. / 说明相关公共 API。</summary>
         Float16 = 2,
-        /// <summary>Requires an explicitly quantized ONNX Q/DQ graph without enabling legacy implicit INT8 calibration.</summary>
+        /// <summary>Requires an explicitly quantized ONNX Q/DQ graph without enabling legacy implicit INT8 calibration. / 说明 ONNX 模型公共 API。</summary>
         Int8ExplicitQuantization = 3
     }
 
-    /// <summary>Defines one min/opt/max range for a dynamic ONNX network input.</summary>
+    /// <summary>Defines one min/opt/max range for a dynamic ONNX network input. / 定义或说明 ONNX 模型合同。</summary>
     public sealed class TensorRtOnnxInputProfile
     {
-        /// <summary>Initializes a dynamic input profile.</summary>
+        /// <summary>Initializes a dynamic input profile. / 初始化形状或执行配置对象。</summary>
         public TensorRtOnnxInputProfile(string inputName, TensorShape minimum, TensorShape optimum, TensorShape maximum)
         {
             if (string.IsNullOrWhiteSpace(inputName)) throw new ArgumentException("An ONNX input name is required.", nameof(inputName));
@@ -31,13 +31,13 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             ValidateShapes();
         }
 
-        /// <summary>Gets the exact ONNX network input name.</summary>
+        /// <summary>Gets the exact ONNX network input name. / 获取 ONNX 模型信息。</summary>
         public string InputName { get; }
-        /// <summary>Gets the minimum accepted runtime shape.</summary>
+        /// <summary>Gets the minimum accepted runtime shape. / 获取原生运行时信息。</summary>
         public TensorShape Minimum { get; }
-        /// <summary>Gets the TensorRT optimization target shape.</summary>
+        /// <summary>Gets the TensorRT optimization target shape. / 获取形状或执行配置信息。</summary>
         public TensorShape Optimum { get; }
-        /// <summary>Gets the maximum accepted runtime shape.</summary>
+        /// <summary>Gets the maximum accepted runtime shape. / 获取原生运行时信息。</summary>
         public TensorShape Maximum { get; }
 
         private void ValidateShapes()
@@ -60,10 +60,10 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Contains managed ONNX-to-engine build settings; native runtime installation remains consumer-owned.</summary>
+    /// <summary>Contains managed ONNX-to-engine build settings; native runtime installation remains consumer-owned. / 定义或说明 TensorRT 引擎合同。</summary>
     public sealed class TensorRtOnnxEngineBuildOptions
     {
-        /// <summary>Initializes ONNX-to-engine build settings.</summary>
+        /// <summary>Initializes ONNX-to-engine build settings. / 初始化 TensorRT 引擎对象。</summary>
         public TensorRtOnnxEngineBuildOptions(
             TensorRtApiVersion apiVersion = TensorRtApiVersion.TensorRt10,
             TensorRtOnnxEnginePrecision precision = TensorRtOnnxEnginePrecision.RuntimeDefault,
@@ -119,30 +119,30 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             InputProfiles = profiles.AsReadOnly();
         }
 
-        /// <summary>Gets the consumer-selected TensorRT API line.</summary>
+        /// <summary>Gets the consumer-selected TensorRT API line. / 获取相关信息。</summary>
         public TensorRtApiVersion ApiVersion { get; }
-        /// <summary>Gets the requested builder precision policy.</summary>
+        /// <summary>Gets the requested builder precision policy. / 获取配置信息。</summary>
         public TensorRtOnnxEnginePrecision Precision { get; }
-        /// <summary>Gets the managed ONNX input size limit.</summary>
+        /// <summary>Gets the managed ONNX input size limit. / 获取 ONNX 模型信息。</summary>
         public long MaximumOnnxBytes { get; }
-        /// <summary>Gets the serialized engine output size limit.</summary>
+        /// <summary>Gets the serialized engine output size limit. / 获取 TensorRT 引擎信息。</summary>
         public long MaximumEngineBytes { get; }
-        /// <summary>Gets the TensorRT workspace memory-pool limit.</summary>
+        /// <summary>Gets the TensorRT workspace memory-pool limit. / 获取相关信息。</summary>
         public ulong WorkspaceBytes { get; }
-        /// <summary>Gets the TensorRT builder optimization level, or -1 to preserve the runtime default.</summary>
+        /// <summary>Gets the TensorRT builder optimization level, or -1 to preserve the runtime default. / 获取原生运行时信息。</summary>
         public int OptimizationLevel { get; }
-        /// <summary>Gets whether a strongly typed network is requested where the selected TensorRT line supports it.</summary>
+        /// <summary>Gets whether a strongly typed network is requested where the selected TensorRT line supports it. / 获取相关信息。</summary>
         public bool StronglyTypedNetwork { get; }
-        /// <summary>Gets whether an existing caller-owned output file may be replaced.</summary>
+        /// <summary>Gets whether an existing caller-owned output file may be replaced. / 获取路径信息。</summary>
         public bool Overwrite { get; }
-        /// <summary>Gets the dynamic input profiles keyed by exact ONNX input name.</summary>
+        /// <summary>Gets the dynamic input profiles keyed by exact ONNX input name. / 获取 ONNX 模型信息。</summary>
         public IReadOnlyList<TensorRtOnnxInputProfile> InputProfiles { get; }
 
-        /// <summary>Gets default ONNX-to-engine build settings.</summary>
+        /// <summary>Gets default ONNX-to-engine build settings. / 获取 TensorRT 引擎信息。</summary>
         public static TensorRtOnnxEngineBuildOptions Default { get; } = new TensorRtOnnxEngineBuildOptions();
     }
 
-    /// <summary>Describes one completed caller-owned ONNX-to-engine build.</summary>
+    /// <summary>Describes one completed caller-owned ONNX-to-engine build. / 定义或说明 TensorRT 引擎合同。</summary>
     public sealed class TensorRtOnnxEngineBuildResult
     {
         internal TensorRtOnnxEngineBuildResult(
@@ -169,25 +169,25 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             OptimizationProfileCount = optimizationProfileCount;
         }
 
-        /// <summary>Gets the validated ONNX source path.</summary>
+        /// <summary>Gets the validated ONNX source path. / 获取 ONNX 模型信息。</summary>
         public string OnnxPath { get; }
-        /// <summary>Gets the caller-owned serialized engine path.</summary>
+        /// <summary>Gets the caller-owned serialized engine path. / 获取 TensorRT 引擎信息。</summary>
         public string EnginePath { get; }
-        /// <summary>Gets the ONNX source length.</summary>
+        /// <summary>Gets the ONNX source length. / 获取 ONNX 模型信息。</summary>
         public long OnnxBytes { get; }
-        /// <summary>Gets the serialized engine length.</summary>
+        /// <summary>Gets the serialized engine length. / 获取 TensorRT 引擎信息。</summary>
         public long EngineBytes { get; }
-        /// <summary>Gets the validated ONNX SHA256.</summary>
+        /// <summary>Gets the validated ONNX SHA256. / 获取 ONNX 模型信息。</summary>
         public string OnnxSha256 { get; }
-        /// <summary>Gets the generated engine SHA256.</summary>
+        /// <summary>Gets the generated engine SHA256. / 获取 TensorRT 引擎信息。</summary>
         public string EngineSha256 { get; }
-        /// <summary>Gets a hash of managed build inputs; a device-safe cache key must additionally bind the full native runtime and GPU identity.</summary>
+        /// <summary>Gets a hash of managed build inputs; a device-safe cache key must additionally bind the full native runtime and GPU identity. / 获取缓存信息。</summary>
         public string BuildInputsSha256 { get; }
-        /// <summary>Gets the TensorRT API line used for the build.</summary>
+        /// <summary>Gets the TensorRT API line used for the build. / 获取相关信息。</summary>
         public TensorRtApiVersion ApiVersion { get; }
-        /// <summary>Gets the requested builder precision policy.</summary>
+        /// <summary>Gets the requested builder precision policy. / 获取配置信息。</summary>
         public TensorRtOnnxEnginePrecision Precision { get; }
-        /// <summary>Gets the number of optimization profiles attached to the build.</summary>
+        /// <summary>Gets the number of optimization profiles attached to the build. / 获取形状或执行配置信息。</summary>
         public int OptimizationProfileCount { get; }
     }
 }

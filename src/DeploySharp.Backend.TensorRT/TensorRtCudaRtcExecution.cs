@@ -6,10 +6,10 @@ using JYPPX.TensorRtSharp.Shared.Interop;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Compiles explicit CUDA C++ source into copied in-memory PTX/CUBIN without writing a cache.</summary>
+    /// <summary>Compiles explicit CUDA C++ source into copied in-memory PTX/CUBIN without writing a cache. / 说明缓存公共 API。</summary>
     public static class TensorRtCudaRtcCompiler
     {
-        /// <summary>Compiles one kernel definition using the consumer-owned NVRTC/native bridge installation.</summary>
+        /// <summary>Compiles one kernel definition using the consumer-owned NVRTC/native bridge installation. / 说明 CUDA公共 API。</summary>
         public static TensorRtCudaRtcArtifact Compile(TensorRtCudaRtcKernelDefinition definition, TensorRtCudaRtcCompileOptions options)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
@@ -89,7 +89,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Owns one in-memory CUDA Driver module while borrowing all launch streams and buffers.</summary>
+    /// <summary>Owns one in-memory CUDA Driver module while borrowing all launch streams and buffers. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaCompiledKernel : IDisposable
     {
         private readonly object _lifetimeGate = new object();
@@ -104,12 +104,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             _module = module;
         }
 
-        /// <summary>Gets the copied source/artifact/kernel identity.</summary>
+        /// <summary>Gets the copied source/artifact/kernel identity. / 获取 CUDA信息。</summary>
         public TensorRtCudaRtcArtifact Artifact { get; }
-        /// <summary>Gets the CUDA device whose primary context owns the module.</summary>
+        /// <summary>Gets the CUDA device whose primary context owns the module. / 获取 CUDA信息。</summary>
         public int DeviceOrdinal { get; }
 
-        /// <summary>Loads copied PTX/CUBIN bytes into the selected consumer-owned CUDA Driver primary context.</summary>
+        /// <summary>Loads copied PTX/CUBIN bytes into the selected consumer-owned CUDA Driver primary context. / 加载 CUDA资源。</summary>
         public static TensorRtCudaCompiledKernel Load(TensorRtCudaRtcArtifact artifact, int deviceOrdinal)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -134,7 +134,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return new TensorRtCudaCompiledKernel(artifact, deviceOrdinal, module: null);
         }
 
-        /// <summary>Launches the kernel on an explicit caller-owned stream with ordered scalar/buffer arguments.</summary>
+        /// <summary>Launches the kernel on an explicit caller-owned stream with ordered scalar/buffer arguments. / 执行 CUDA操作。</summary>
         public TensorRtCudaKernelLaunch Launch(
             CudaStream stream,
             TensorRtCudaKernelLaunchOptions options,
@@ -206,7 +206,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Unloads the owned module after all returned launch owners have been disposed.</summary>
+        /// <summary>Unloads the owned module after all returned launch owners have been disposed. / 说明相关公共 API。</summary>
         public void Dispose()
         {
             lock (_lifetimeGate)
@@ -247,7 +247,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Owns one asynchronous CUDA Driver launch while borrowing its module, stream, and device buffers.</summary>
+    /// <summary>Owns one asynchronous CUDA Driver launch while borrowing its module, stream, and device buffers. / 定义或说明 CUDA合同。</summary>
     public sealed class TensorRtCudaKernelLaunch : IDisposable
     {
         private readonly object _lifetimeGate = new object();
@@ -267,11 +267,11 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             SynchronizationMode = synchronizationMode;
         }
 
-        /// <summary>Gets the complete managed launch identity.</summary>
+        /// <summary>Gets the complete managed launch identity. / 获取相关信息。</summary>
         public TensorRtCudaKernelLaunchIdentity Identity { get; }
-        /// <summary>Gets the explicit synchronization policy selected for the launch.</summary>
+        /// <summary>Gets the explicit synchronization policy selected for the launch. / 获取配置信息。</summary>
         public TensorRtCudaSynchronizationMode SynchronizationMode { get; }
-        /// <summary>Gets whether the kernel completion event has finished.</summary>
+        /// <summary>Gets whether the kernel completion event has finished. / 获取 CUDA信息。</summary>
         public bool IsCompleted
         {
             get
@@ -284,7 +284,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Waits for this kernel's completion event and surfaces asynchronous errors.</summary>
+        /// <summary>Waits for this kernel's completion event and surfaces asynchronous errors. / 说明 CUDA公共 API。</summary>
         public void Synchronize()
         {
             lock (_lifetimeGate)
@@ -294,14 +294,14 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Synchronizes pending work, releases the native launch, and releases all borrowed SafeHandle leases.</summary>
+        /// <summary>Synchronizes pending work, releases the native launch, and releases all borrowed SafeHandle leases. / 表示原生运行时状态或选项。</summary>
         public void Dispose()
         {
             DisposeCore(suppressNativeErrors: false);
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>Synchronizes and releases a forgotten launch owner.</summary>
+        /// <summary>Synchronizes and releases a forgotten launch owner. / 表示相关状态或选项。</summary>
         ~TensorRtCudaKernelLaunch()
         {
             DisposeCore(suppressNativeErrors: true);

@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net8.0": {
+      "JYPPX.OpenCV.runtime.win-x64": {
+        "type": "Direct",
+        "requested": "[5.0.0-preview.1, )",
+        "resolved": "5.0.0-preview.1",
+        "contentHash": "2I4TcBgId4eo1bZbaMZwJ0KYsiQOJVnBwFoTnN5xanqpUi8DO1aVXGW2Koe0uH1B/l7g1FHARsabaVQum4IH4g=="
+      },
+      "JYPPX.DeploySharp.Backend.OpenCV": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+        }
+      },
+      "JYPPX.DeploySharp.Core": {
+        "type": "Project"
+      },
+      "JYPPX.OpenCV.CSharp.API": {
+        "type": "CentralTransitive",
+        "requested": "[5.0.0-preview.1, )",
+        "resolved": "5.0.0-preview.1",
+        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+      }
+    }
+  }
+}

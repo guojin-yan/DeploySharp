@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "packageVersion": "2.0.0-alpha.1",
+  "publication": {
+    "status": "not-authorized",
+    "channel": "nuget.org",
+    "approver": null,
+    "approvedAt": null,
+    "evidenceReference": null,
+    "requiredEvidence": "An attributable release-owner approval that identifies the package version, NuGet channel, and publication scope."
+  },
+  "packageSigning": {
+    "status": "not-configured",
+    "certificateSha256Fingerprint": null,
+    "timestampServer": null,
+    "requiredEvidence": "Configure a repository-signing certificate and timestamp authority in the protected release environment; do not commit the certificate or private key."
+  },
+  "rawPackageReproducibility": {
+    "status": "established-before-signing",
+    "normalizer": "eng/pack/Normalize-NuGetPackage.ps1",
+    "verification": "eng/pack/Invoke-ReleasePackageReproducibility.ps1",
+    "scope": "unsigned .nupkg and .snupkg containers before repository signing"
+  }
+}

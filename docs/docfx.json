@@ -19,7 +19,7 @@
   "build": {
     "content": [
       { "files": ["api/**/*.yml", "api/index.md"] },
-      { "files": ["articles/**/*.md", "articles/**/toc.yml", "releases/**/*.md", "releases/**/toc.yml", "toc.yml", "index.md"] }
+      { "files": ["articles/**/*.md", "articles/**/toc.yml", "releases/**/*.md", "releases/**/toc.yml", "adr/*.md", "toc.yml", "index.md"] }
     ],
     "resource": [
       { "files": ["images/**"] }

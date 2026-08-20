@@ -5,6 +5,8 @@
   href: installation.md
 - name: Architecture / 架构
   href: architecture.md
+- name: Multimodal and OpenCV DNN / 多模态与 OpenCV DNN
+  href: multimodal-opencv-dnn.md
 - name: Performance and Model Fidelity / 性能与模型保真
   href: performance-and-model-fidelity.md
 - name: Visual Prepared-Tensor Quick Start / Visual 已准备张量快速开始
@@ -25,6 +27,8 @@
   href: visual-ocr-orientation.md
 - name: Supported Models / 支持模型
   href: supported-models.md
+- name: Release and Platform Status / 发布与平台状态
+  href: release-platform-status.md
 - name: Published Vision Model Collection / 已发布视觉模型集合
   href: models-vision-collection.md
 - name: Visual YOLO Detection / Visual YOLO 检测

@@ -2,6 +2,10 @@
 
 This table is generated from `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json`. Do not edit table rows by hand. / 本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 生成，请勿手工编辑表格行。
 
+The catalog currently contains 39 entries and every entry has `preview` status. Preview entries are public, downloadable, SHA-256-checked ModelFactory assets; they are not `AlgorithmVerified` and do not imply GA. Querying without `includePreview: true` intentionally excludes them. / 当前目录包含 39 条记录，且全部为 `preview`。Preview 是公开、可下载并完成 SHA-256 校验的 ModelFactory 资产；它们不是 `AlgorithmVerified`，也不代表 GA。不带 `includePreview: true` 的查询会按设计排除这些条目。
+
+The first PP-OCRv5 algorithm-admission candidate is `paddleocr/ppocrv5/mobile-cls`. Its source/archive binding, exporter reproduction, immutable Preview Release, ONNX hash, fixed-image preprocessing, ORT/OpenVINO local golden, and independent Paddle Predictor output are recorded. `license-and-redistribution` remains open in `paddleocr-release-admission.json` because no attributable model/dictionary redistribution approval has been recorded, so it remains Preview. / 首个 PP-OCRv5 算法准入候选为 `paddleocr/ppocrv5/mobile-cls`。其来源/归档绑定、导出复现、不可变 Preview Release、ONNX 哈希、固定图像前处理、ORT/OpenVINO 本机 golden 和独立 Paddle Predictor 输出均已记录；因尚未记录可归属的模型/字典再分发批准，`paddleocr-release-admission.json` 中的 `license-and-redistribution` 仍为 open，因此继续保持 Preview。
+
 | ModelId | Algorithm / Task | Artifact | Format | Backend | Precision / Quantization | Portable | Release tag | Size | SHA256 | Download | Test input | License |
 |---|---|---|---|---|---|---|---|---:|---|---|---|---|
 | deim/v2/detect | deimv2 / object-detection | onnx.fp32 | onnx | onnxruntime | fp32 / none | True | models-20260817.detr.2 | 40030960 | 08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc | [manifest](https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.detr.2/deim-v2-detect.modelpack.json) | — | Apache-2.0 |

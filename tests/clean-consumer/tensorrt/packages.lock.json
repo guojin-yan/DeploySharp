@@ -6,7 +6,7 @@
         "type": "Direct",
         "requested": "[2.0.0-alpha.1, )",
         "resolved": "2.0.0-alpha.1",
-        "contentHash": "hfcY73nWIi8MoQsIWpI9UaEzNWfdMLy9u0Y9ujaZQR6z3AHm8mC0G9cU/b+uGqcDX0zvKBSC+PQqwPbihyPTnw==",
+        "contentHash": "xuPhB+4tUT9Jd0ktjx0Cb9u3vwAefokSrAV11OF5O/P9HBFCBiN1DWIZtIvzkMInndg4+vmdI+7RXUk9rYjZ2A==",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "2.0.0-alpha.1",
           "JYPPX.TensorRT.CSharp.API": "4.0.0"
@@ -15,7 +15,7 @@
       "JYPPX.DeploySharp.Core": {
         "type": "Transitive",
         "resolved": "2.0.0-alpha.1",
-        "contentHash": "y5rrC9Hfe59KoPhjIGPQViXfTam+j9OZ7XwGSmAeEWebTcoSwyfdGoMhs7x6tEoah5xlyu/GlDlxJLn3fHcEKw=="
+        "contentHash": "mIU0ziJWd43Mmxjv8pY38gWCB5+LEqQo7E9Uj6uK5DGU40Mp6oXpq8iJNjpJXerRzVJrteWlSLbipYQ629TRig=="
       },
       "JYPPX.TensorRT.CSharp.API": {
         "type": "Transitive",

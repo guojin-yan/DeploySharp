@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0",
+  "releaseVersion": "2.0.0-alpha.1",
+  "generatedAt": "2026-08-19T00:00:00Z",
+  "supportLevels": [
+    "BuildOnly",
+    "ManagedTested",
+    "NativeSmoke",
+    "GoldenVerified",
+    "ReleaseSupported"
+  ],
+  "platforms": [
+    {
+      "platformId": "windows-x64-cpu",
+      "status": "tested",
+      "claims": [
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.LlamaSharp",
+          "level": "NativeSmoke",
+          "scope": "Exact caller-owned Qwen GGUF CPU generation, streaming, cancellation, repeat, contention, dispose, and embedding evidence; not AlgorithmVerified.",
+          "evidence": [
+            "docs/articles/llm-gguf-stage31.md",
+            "tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj"
+          ],
+          "runtimeDependencies": [
+            { "id": "LLamaSharp", "version": "0.27.0" },
+            { "id": "LLamaSharp.Backend.Cpu", "version": "0.27.0" }
+          ]
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.OnnxRuntime",
+          "level": "GoldenVerified",
+          "scope": "Windows x64 CPU managed/native execution with fixed contract and external-model goldens; native runtime remains consumer-owned.",
+          "evidence": [
+            "tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj",
+            "tests/assets/onnxruntime/classification.onnx"
+          ],
+          "runtimeDependencies": [
+            { "id": "Microsoft.ML.OnnxRuntime", "version": "1.28.0" }
+          ],
+          "goldenKind": "contract-fixture",
+          "modelSha256": "05a885298cca6e04b83732a46ff340f48203cc62e5fa89af74fe3eeab259de2a"
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.OpenCV",
+          "level": "GoldenVerified",
+          "scope": "Windows x64 CPU OpenCV DNN preview for one static batch-one NCHW float32 ReduceMean ONNX contract.",
+          "evidence": [
+            "docs/articles/multimodal-opencv-dnn.md",
+            "tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj",
+            "tests/assets/onnxruntime/classification.onnx"
+          ],
+          "runtimeDependencies": [
+            { "id": "JYPPX.OpenCV.CSharp.API", "version": "5.0.0-preview.1" },
+            { "id": "JYPPX.OpenCV.runtime.win-x64", "version": "5.0.0-preview.1" }
+          ],
+          "goldenKind": "contract-fixture",
+          "modelSha256": "05a885298cca6e04b83732a46ff340f48203cc62e5fa89af74fe3eeab259de2a"
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.OpenVINO",
+          "level": "GoldenVerified",
+          "scope": "Windows x64 CPU managed/native execution with fixed contract and external-model goldens; Linux, macOS, GPU, and NPU are excluded.",
+          "evidence": [
+            "tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj",
+            "tests/assets/onnxruntime/classification.onnx"
+          ],
+          "runtimeDependencies": [
+            { "id": "JYPPX.OpenVINO.CSharp.API", "version": "3.3.0" },
+            { "id": "OpenVINO.runtime.win", "version": "2026.2.1" }
+          ],
+          "goldenKind": "contract-fixture",
+          "modelSha256": "05a885298cca6e04b83732a46ff340f48203cc62e5fa89af74fe3eeab259de2a"
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.TensorRT",
+          "level": "ManagedTested",
+          "scope": "Managed provider, validation, and external-cache behavior only; no TensorRT/CUDA/GPU execution claim.",
+          "evidence": [
+            "tests/DeploySharp.Backend.TensorRT.Tests/DeploySharp.Backend.TensorRT.Tests.csproj",
+            "tests/clean-consumer/tensorrt/DeploySharp.TensorRT.CleanConsumer.csproj"
+          ],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Core",
+          "level": "ManagedTested",
+          "scope": "Backend-neutral contracts, tensors, registry, and result DTOs.",
+          "evidence": ["tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.LLM",
+          "level": "ManagedTested",
+          "scope": "Language-model contracts, prompt formatting, registry, and lifecycle behavior without bundled native runtime.",
+          "evidence": ["tests/DeploySharp.LLM.Tests/DeploySharp.LLM.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.ModelFactory",
+          "level": "ManagedTested",
+          "scope": "Catalog, download/cache, release binding, and offline selection contracts.",
+          "evidence": ["tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.ModelPack.Json",
+          "level": "ManagedTested",
+          "scope": "ModelPack JSON schema, validation, hashing, and multi-artifact contracts.",
+          "evidence": ["tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Multimodal",
+          "level": "ManagedTested",
+          "scope": "Backend-neutral ordered-media orchestration, stream terminal validation, cancellation, timeout, single-writer, and dispose behavior; external native VLM bundles remain unavailable probes.",
+          "evidence": [
+            "tests/DeploySharp.Multimodal.Tests/DeploySharp.Multimodal.Tests.csproj",
+            "tests/clean-consumer/multimodal/DeploySharp.Multimodal.CleanConsumer.csproj"
+          ],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Visual.OpenCV",
+          "level": "NativeSmoke",
+          "scope": "Windows x64 CPU image decode and preprocessing through caller-owned OpenCV native runtime; this is not the OpenCV DNN backend claim.",
+          "evidence": [
+            "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj",
+            "tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj"
+          ],
+          "runtimeDependencies": [
+            { "id": "JYPPX.OpenCV.CSharp.API", "version": "5.0.0-preview.1" },
+            { "id": "JYPPX.OpenCV.runtime.win-x64", "version": "5.0.0-preview.1" }
+          ]
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Visual",
+          "level": "ManagedTested",
+          "scope": "Visual preprocessing-independent profiles, pipelines, decoders, geometry, and typed result contracts.",
+          "evidence": ["tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj"],
+          "runtimeDependencies": []
+        }
+      ],
+      "blockers": []
+    },
+    {
+      "platformId": "linux-x64-cpu",
+      "status": "untested",
+      "claims": [],
+      "blockers": ["dedicated-runner-evidence-missing", "native-runtime-smoke-missing"]
+    },
+    {
+      "platformId": "linux-arm64-cpu",
+      "status": "untested",
+      "claims": [],
+      "blockers": ["dedicated-runner-evidence-missing", "arm64-native-runtime-smoke-missing"]
+    },
+    {
+      "platformId": "macos-cpu",
+      "status": "untested",
+      "claims": [],
+      "blockers": ["dedicated-runner-evidence-missing", "native-runtime-smoke-missing"]
+    },
+    {
+      "platformId": "windows-arm64-cpu",
+      "status": "untested",
+      "claims": [],
+      "blockers": ["dedicated-runner-evidence-missing", "arm64-native-runtime-smoke-missing"]
+    },
+    {
+      "platformId": "windows-x64-gpu",
+      "status": "planned",
+      "claims": [],
+      "blockers": ["authorized-gpu-runner-missing", "driver-cuda-tensorrt-identity-missing", "repeatable-golden-missing"]
+    },
+    {
+      "platformId": "windows-npu",
+      "status": "planned",
+      "claims": [],
+      "blockers": ["authorized-npu-runner-missing", "device-runtime-model-evidence-missing"]
+    }
+  ]
+}

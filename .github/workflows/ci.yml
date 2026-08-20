@@ -49,6 +49,8 @@ jobs:
             frameworks: netstandard2.0;net8.0
           - path: src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj
             frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj
+            frameworks: net8.0
           - path: src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj
             frameworks: netstandard2.0;net8.0;net9.0;net10.0
           - path: src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj
@@ -56,6 +58,10 @@ jobs:
           - path: src/DeploySharp.Visual/DeploySharp.Visual.csproj
             frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
           - path: src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj
+            frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.Multimodal/DeploySharp.Multimodal.csproj
+            frameworks: netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
+          - path: src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj
             frameworks: net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +76,29 @@ jobs:
             dotnet build '${{ matrix.project.path }}' -c Release -f $framework --no-restore
           }
 
+  managed-cross-platform:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj --locked-mode
+      - run: dotnet restore tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj --locked-mode
+      - run: dotnet restore tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj --locked-mode
+      - run: dotnet test tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj -c Release --no-restore
+      - name: Confirm platform claims remain conservative
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/platform/Test-PlatformSupportMatrix.ps1
+
   test-and-pack:
     runs-on: windows-latest
     steps:
@@ -78,6 +107,19 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore DeploySharp.sln --locked-mode
+      - name: Run minimal backend-neutral Core sample
+        run: dotnet run --project samples/CoreContractInspection/CoreContractInspection.csproj -c Release --no-restore
+      - name: Run contract and backend samples
+        shell: pwsh
+        run: |
+          $samples = @(
+            'samples/VisualProfileInspection/VisualProfileInspection.csproj',
+            'samples/LlmPromptInspection/LlmPromptInspection.csproj',
+            'samples/ModelFactoryCatalogInspection/ModelFactoryCatalogInspection.csproj',
+            'samples/MultimodalContractInspection/MultimodalContractInspection.csproj',
+            'samples/OpenCvDnnContractInspection/OpenCvDnnContractInspection.csproj'
+          )
+          foreach ($sample in $samples) { dotnet run --project $sample -c Release --no-restore }
       - run: dotnet test tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj -c Release --no-restore
       - run: dotnet test tests/DeploySharp.LLM.Tests/DeploySharp.LLM.Tests.csproj -c Release --no-restore
       - run: dotnet test tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj -c Release --no-restore
@@ -86,13 +128,26 @@ jobs:
       - run: dotnet test tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj -c Release --no-restore
       - run: dotnet test tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj -c Release --no-restore
       - run: dotnet test tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj -c Release --no-restore
+      - name: Test TensorRT managed adapter and local cache (no GPU)
+        run: dotnet test tests/DeploySharp.Backend.TensorRT.Tests/DeploySharp.Backend.TensorRT.Tests.csproj -c Release --no-restore
       - run: dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Multimodal.Tests/DeploySharp.Multimodal.Tests.csproj -c Release --no-restore
+      - run: dotnet test tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj -c Release --no-restore
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
+      - name: Validate conservative platform support levels
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/platform/Test-PlatformSupportMatrix.ps1
+      - name: Reject platform support overclaims and evidence drift
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/platform/Invoke-PlatformSupportMatrixNegativeTests.ps1 -WorkingDirectory "${{ runner.temp }}\deploysharp-platform-support-negative"
+      - name: Validate PP-OCRv5 mobile-cls algorithm-admission boundary
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/models/ocr-anomaly-rmbg/Test-PaddleOcrReleaseAdmission.ps1
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/models/yolo/Test-YoloSupportMatrix.ps1
       - shell: pwsh
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net10.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net10.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.Backend.OpenVINO/bin/Release/net10.0/JYPPX.DeploySharp.Backend.OpenVINO.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net10.0/JYPPX.DeploySharp.Visual.xml,src/DeploySharp.Visual.OpenCV/bin/Release/net10.0/JYPPX.DeploySharp.Visual.OpenCV.xml
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/docs/Test-BilingualApiDocs.ps1 -DocumentationFile src/DeploySharp.Core/bin/Release/net10.0/JYPPX.DeploySharp.Core.xml,src/DeploySharp.LLM/bin/Release/net10.0/JYPPX.DeploySharp.LLM.xml,src/DeploySharp.Backend.LlamaSharp/bin/Release/net8.0/JYPPX.DeploySharp.Backend.LlamaSharp.xml,src/DeploySharp.Backend.OnnxRuntime/bin/Release/net8.0/JYPPX.DeploySharp.Backend.OnnxRuntime.xml,src/DeploySharp.Backend.OpenVINO/bin/Release/net10.0/JYPPX.DeploySharp.Backend.OpenVINO.xml,src/DeploySharp.Backend.TensorRT/bin/Release/net8.0/JYPPX.DeploySharp.Backend.TensorRT.xml,src/DeploySharp.ModelPack.Json/bin/Release/net10.0/JYPPX.DeploySharp.ModelPack.Json.xml,src/DeploySharp.ModelFactory/bin/Release/net10.0/JYPPX.DeploySharp.ModelFactory.xml,src/DeploySharp.Visual/bin/Release/net10.0/JYPPX.DeploySharp.Visual.xml,src/DeploySharp.Visual.OpenCV/bin/Release/net10.0/JYPPX.DeploySharp.Visual.OpenCV.xml,src/DeploySharp.Multimodal/bin/Release/net10.0/JYPPX.DeploySharp.Multimodal.xml,src/DeploySharp.Backend.OpenCV/bin/Release/net10.0/JYPPX.DeploySharp.Backend.OpenCV.xml
       - run: dotnet tool restore
       - run: dotnet tool run docfx docs/docfx.json --warningsAsErrors
       - run: dotnet pack src/DeploySharp.Core/DeploySharp.Core.csproj -c Release --no-restore
@@ -100,12 +155,33 @@ jobs:
       - run: dotnet pack src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release --no-restore
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath ./artifacts/packages/JYPPX.DeploySharp.Visual.2.0.0-alpha.1.nupkg
       - run: dotnet pack src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Multimodal/DeploySharp.Multimodal.csproj -c Release --no-restore
+      - run: dotnet pack src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj -c Release --no-restore
+      - name: Establish raw NuGet and symbol-package reproducibility
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Invoke-ReleasePackageReproducibility.ps1 -PackageDirectory ./artifacts/packages -ComparisonPackageDirectory "${{ runner.temp }}\deploysharp-release-package-repro"
+      - name: Validate all release-candidate packages
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-ReleaseCandidatePackages.ps1 -PackageDirectory ./artifacts/packages -ComparisonPackageDirectory "${{ runner.temp }}\deploysharp-release-package-repro"
+      - name: Validate publication authorization and signing boundary
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-ReleaseAuthorization.ps1
+      - name: Reject release-package boundary mutations
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Invoke-ReleaseCandidatePackageNegativeTests.ps1 -PackageDirectory ./artifacts/packages -WorkingDirectory "${{ runner.temp }}\deploysharp-release-package-negative"
+      - name: Validate retained package, SBOM, SourceLink, and API evidence
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-ReleaseEvidence.ps1 -PackageDirectory ./artifacts/packages -EvidenceDirectory ./eng/pack/release-evidence
+      - name: Reject release-evidence mutations
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Invoke-ReleaseEvidenceNegativeTests.ps1 -PackageDirectory ./artifacts/packages -EvidenceDirectory ./eng/pack/release-evidence -WorkingDirectory "${{ runner.temp }}\deploysharp-release-evidence-negative"
       - run: dotnet restore tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj --configfile tests/clean-consumer/model-release-smoke/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/model-release-smoke/DetectorReleaseSmokeConsumer.csproj -c Release --no-restore
       - name: Audit published YOLO and DETR release assets
@@ -160,9 +236,21 @@ jobs:
       - run: dotnet restore tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj --configfile tests/clean-consumer/openvino-missing-native/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/openvino-missing-native/DeploySharp.OpenVino.MissingNativeConsumer.csproj -c Release --no-build
+      - name: Restore TensorRT package-only managed cache consumer
+        run: dotnet restore tests/clean-consumer/tensorrt/DeploySharp.TensorRT.CleanConsumer.csproj --configfile tests/clean-consumer/tensorrt/NuGet.Config --force-evaluate
+      - name: Build TensorRT package-only managed cache consumer
+        run: dotnet build tests/clean-consumer/tensorrt/DeploySharp.TensorRT.CleanConsumer.csproj -c Release --no-restore
+      - name: Run TensorRT managed cache miss/hit consumer (GPU not run)
+        run: dotnet run --project tests/clean-consumer/tensorrt/DeploySharp.TensorRT.CleanConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj --configfile tests/clean-consumer/visual-opencv/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-opencv/DeploySharp.Visual.OpenCv.CleanConsumer.csproj -c Release --no-build
       - run: dotnet restore tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj --configfile tests/clean-consumer/visual-opencv-missing-native/NuGet.Config --force-evaluate
       - run: dotnet build tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj -c Release --no-restore
       - run: dotnet run --project tests/clean-consumer/visual-opencv-missing-native/DeploySharp.Visual.OpenCv.MissingNativeConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/multimodal/DeploySharp.Multimodal.CleanConsumer.csproj --configfile tests/clean-consumer/multimodal/NuGet.Config --force-evaluate
+      - run: dotnet build tests/clean-consumer/multimodal/DeploySharp.Multimodal.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/multimodal/DeploySharp.Multimodal.CleanConsumer.csproj -c Release --no-build
+      - run: dotnet restore tests/clean-consumer/opencv-dnn/DeploySharp.OpenCvDnn.CleanConsumer.csproj --configfile tests/clean-consumer/opencv-dnn/NuGet.Config --force-evaluate
+      - run: dotnet build tests/clean-consumer/opencv-dnn/DeploySharp.OpenCvDnn.CleanConsumer.csproj -c Release --no-restore
+      - run: dotnet run --project tests/clean-consumer/opencv-dnn/DeploySharp.OpenCvDnn.CleanConsumer.csproj -c Release --no-build

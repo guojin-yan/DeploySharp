@@ -7,7 +7,7 @@
   "authors": "Guojin Yan",
   "repositoryType": "git",
   "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
-  "symbolPolicy": "not-produced",
+  "symbolPolicy": "required-snupkg",
   "nativeRuntimePolicy": "consumer-owned",
   "centralPackages": {
     "Microsoft.NETFramework.ReferenceAssemblies": "1.0.3",
@@ -41,6 +41,13 @@
       "assemblyName": "JYPPX.DeploySharp.Backend.OnnxRuntime",
       "targetFrameworks": ["netstandard2.0", "net8.0"],
       "assemblyReferenceSha256": "9c53d0fb9c51c4da259cd4de7f2ad0df01a948816dfafa181990f4afd66490fc"
+    },
+    {
+      "projectPath": "src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj",
+      "packageId": "JYPPX.DeploySharp.Backend.OpenCV",
+      "assemblyName": "JYPPX.DeploySharp.Backend.OpenCV",
+      "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "bc628d3d9580926620f380fa31152a05b1ce1eeab5e459f57a7696e981efb057"
     },
     {
       "projectPath": "src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj",
@@ -83,6 +90,13 @@
       "assemblyName": "JYPPX.DeploySharp.ModelPack.Json",
       "targetFrameworks": ["netstandard2.0", "net8.0", "net9.0", "net10.0"],
       "assemblyReferenceSha256": "df73bb56a610b09b074b4ea21e84ff42d94337fd621e3f4e3e73592110c23fde"
+    },
+    {
+      "projectPath": "src/DeploySharp.Multimodal/DeploySharp.Multimodal.csproj",
+      "packageId": "JYPPX.DeploySharp.Multimodal",
+      "assemblyName": "JYPPX.DeploySharp.Multimodal",
+      "targetFrameworks": ["netstandard2.0", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
+      "assemblyReferenceSha256": "dbda118e4ddeb715107d1d33fa5033baa01d26a5819f764da7dd8fc819221bc5"
     },
     {
       "projectPath": "src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj",

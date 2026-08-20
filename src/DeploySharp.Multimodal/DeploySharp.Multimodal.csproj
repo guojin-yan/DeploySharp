@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Multimodal</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Multimodal</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Multimodal</PackageId>
+    <Title>DeploySharp Multimodal</Title>
+    <Description>Backend-neutral multimodal orchestration, ordered media identity, streaming, cancellation, and Visual/LLM adapter contracts for DeploySharp.</Description>
+    <PackageTags>DeploySharp;Multimodal;VLM;VisionLanguage;Streaming;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="..\DeploySharp.LLM\DeploySharp.LLM.csproj" />
+    <ProjectReference Include="..\DeploySharp.Visual\DeploySharp.Visual.csproj" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-08-18T00:00:00Z",
-  "scope": "PP-OCRv5 local ONNX candidates; provenance and release admission only",
+  "generatedAt": "2026-08-19T00:00:00Z",
+  "scope": "PP-OCRv5 local ONNX provenance plus mobile-cls Preview Release and AlgorithmVerified admission boundary",
   "upstreamCode": {
     "repository": "https://github.com/PaddlePaddle/PaddleOCR",
     "pinnedRevision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
@@ -12,7 +12,7 @@
   "evidenceBoundaries": {
     "officialInferenceArchiveScope": "Official Paddle inference archives establish the immutable source inference-model identity. Their inference.json and inference.pdiparams files were matched by SHA256 to the export inputs for all six artifacts.",
     "localInferenceMetadataScope": "Observed inference.yml files establish model-family and preprocessing metadata only; they do not establish checkpoint download provenance or the ONNX export invocation.",
-    "releaseEffect": "Exact source-file and byte-identical ONNX reproduction close source identity and export reproducibility only. They do not grant redistribution permission or create an immutable release asset."
+    "releaseEffect": "Exact source-file and byte-identical ONNX reproduction close source identity and export reproducibility only. The later public Preview Release establishes immutable asset identity, but neither fact grants AlgorithmVerified redistribution approval."
   },
   "onnxMetadataObservation": {
     "parser": "ONNX ModelProto protobuf",
@@ -165,6 +165,54 @@
       "redistributionApproved": false
     }
   },
+  "algorithmCandidate": {
+    "catalogModelId": "paddleocr/ppocrv5/mobile-cls",
+    "externalEvidenceModelId": "paddleocr/ppocrv5/mobile-cls/external",
+    "catalogStatus": "preview",
+    "profileId": "paddle-ocr-cls.paddleocr/ppocrv5/mobile-cls.opset7",
+    "release": {
+      "repository": "guojin-yan/DeploySharp",
+      "tag": "models-20260818.ppocrv5.1",
+      "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b",
+      "manifestFile": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
+      "manifestAssetName": "mobile-cls.modelpack.json",
+      "manifestSize": 3087,
+      "manifestSha256": "e0c3aff19f2f4d011d32fa97bc99b23629bda824ebe3e43013bf729eddb60717",
+      "modelAssetName": "ppocrv5-mobile-cls.model.onnx",
+      "modelSize": 1018940,
+      "modelSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+      "checksumAssetName": "SHA256SUMS",
+      "checksumSize": 1299,
+      "checksumSha256": "8d713c3501f43ca96c52a6d5572ce90b8e9b4925295bc25f1667f1179adad1be"
+    },
+    "contract": {
+      "inputName": "x",
+      "inputElementType": "float32",
+      "inputShape": [1, 3, 80, 160],
+      "outputName": "fetch_name_0",
+      "outputElementType": "float32",
+      "outputShape": [1, 2],
+      "preprocessingVersion": "pp-lcnet-textline-rgb-imagenet-v1",
+      "labelOrder": ["0_degree", "180_degree"],
+      "rejectionThreshold": 0.9
+    },
+    "golden": {
+      "scope": "pinned-official-image-and-preprocessing-semantics-with-local-export-and-independent-Paddle-Predictor-output",
+      "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/textline_rot180_demo.jpg",
+      "imageSize": 3996,
+      "imageSha256": "872200f57a1408e7aab2856d5f2c687b3a937805e0c4ff74bd7de21df1f742b9",
+      "preparedTensorSha256": "7cda055c7450b2e6f52d5993a827dbd1c202ae8044d3fdbb132453b602c2d340",
+      "referenceOutputSha256": "7b2495af2f5a8bcc459041a65440f7a3900c43e022601aa9e49e912b96ea0dd5",
+      "officialPredictorGoldenEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-official-predictor-golden.json",
+      "officialPredictorOutputSha256": "d2820ebee4744ef48a7897cd888c659f5f733ae2b618b638577ad30902181e5d",
+      "classIndex": 1,
+      "label": "180_degree",
+      "confidence": 0.9986026883125305,
+      "confidenceTolerance": 0.00001,
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "officialPredictorOutputStatus": "recorded"
+    }
+  },
   "artifacts": [
     {
       "modelId": "paddleocr/ppocrv5/mobile-det/external",
@@ -240,18 +288,22 @@
     }
   ],
   "releaseAdmission": {
-    "state": "blocked-external-only",
-    "redistributionAllowed": false,
-    "immutableReleaseAsset": "unrecorded",
-    "releaseBoundGoldenAudit": "not-run",
+    "state": "preview-algorithm-admission-blocked",
+    "catalogRedistributionDeclared": true,
+    "algorithmAdmissionRedistributionApproved": false,
+    "immutableReleaseAsset": "closed-public-prerelease",
+    "releaseBoundGoldenAudit": "local-ort-openvino-parity-and-independent-official-predictor-complete",
     "noticeBundle": "not-recorded;review-evidence-identifies-required-contents",
-    "licenseReviewEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json"
+    "licenseReviewEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json",
+    "officialPredictorGoldenEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-official-predictor-golden.json"
   },
   "blockers": [
     { "id": "source-checkpoint-identity", "status": "closed", "requirement": "Official immutable inference archives, archive SHA256 values, and the inference.json/inference.pdiparams SHA256 binding are recorded for every ONNX artifact." },
     { "id": "export-reproducibility", "status": "closed", "requirement": "The exact exporter invocation and dependency lock reproduce all six candidate ONNX files byte-for-byte." },
-    { "id": "license-and-redistribution", "status": "open", "requirement": "The code Apache-2.0 observation and exact dictionary source are recorded, but all six model archives contain no LICENSE/NOTICE and explicit model/dictionary redistribution approval is still required; see paddleocr-license-redistribution-review.json." },
-    { "id": "immutable-release-binding", "status": "open", "requirement": "Publish approved immutable assets with checksums, bind them in a release manifest, and rerun the release-bound ORT/OpenVINO golden audit." },
+    { "id": "immutable-release-binding", "status": "closed", "requirement": "The public prerelease tag, commit, ModelPack asset, ONNX asset, SHA256SUMS, and catalog entry are identity-bound for mobile-cls. This records publication fact only and does not approve AlgorithmVerified redistribution." },
+    { "id": "release-bound-local-golden", "status": "closed", "requirement": "The released mobile-cls ONNX identity is bound to the fixed official image, prepared tensor, output shape, class, label, confidence tolerance, and ORT/OpenVINO CPU parity evidence." },
+    { "id": "license-and-redistribution", "status": "open", "requirement": "The public Preview catalog declares redistribution, but the algorithm-admission review has no attributable approval covering the model archive and derived ONNX; this discrepancy must be resolved before AlgorithmVerified promotion." },
+    { "id": "official-predictor-golden", "status": "closed", "requirement": "An independently generated Paddle Predictor CPU output is recorded for the pinned official inference.json/inference.pdiparams and fixed image, with runtime identity, input/output hashes, class, label, and confidence." },
     { "id": "server-rec-cls-semantic-evidence", "status": "closed", "requirement": "Server recognition and classification official semantic goldens are recorded; server classification preserves the 0.9 rejection threshold and 0-degree fallback." }
   ]
 }

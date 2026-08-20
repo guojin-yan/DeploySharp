@@ -5,23 +5,23 @@ using JYPPX.DeploySharp.Models;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Reports how a local engine or CUDA kernel was resolved.</summary>
+    /// <summary>Reports how a local engine or CUDA kernel was resolved. / 报告 TensorRT 引擎状态。</summary>
     public enum TensorRtLocalCacheResolutionStatus
     {
-        /// <summary>A complete validated local entry was reused.</summary>
+        /// <summary>A complete validated local entry was reused. / 表示相关状态或选项。</summary>
         CacheHit = 1,
-        /// <summary>An engine was built and published after a normal miss.</summary>
+        /// <summary>An engine was built and published after a normal miss. / 表示 TensorRT 引擎状态或选项。</summary>
         Built = 2,
-        /// <summary>A CUDA artifact was compiled and published after a normal miss.</summary>
+        /// <summary>A CUDA artifact was compiled and published after a normal miss. / 表示 CUDA状态或选项。</summary>
         Compiled = 3,
-        /// <summary>One exact invalid entry was removed and rebuilt once.</summary>
+        /// <summary>One exact invalid entry was removed and rebuilt once. / 表示错误状态或选项。</summary>
         RebuiltAfterInvalidCache = 4
     }
 
-    /// <summary>Configures the application-owned TensorRT local cache root.</summary>
+    /// <summary>Configures the application-owned TensorRT local cache root. / 定义或说明缓存合同。</summary>
     public sealed class TensorRtLocalCacheOptions
     {
-        /// <summary>Initializes a local cache configuration.</summary>
+        /// <summary>Initializes a local cache configuration. / 初始化缓存对象。</summary>
         public TensorRtLocalCacheOptions(
             string? cacheRootPath = null,
             TensorRtExternalCacheOptions? storeOptions = null)
@@ -35,12 +35,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             StoreOptions = storeOptions ?? TensorRtExternalCacheOptions.Default;
         }
 
-        /// <summary>Gets the normalized absolute application-owned cache root.</summary>
+        /// <summary>Gets the normalized absolute application-owned cache root. / 获取缓存信息。</summary>
         public string CacheRootPath { get; }
-        /// <summary>Gets the bounded manifest, payload, conflict and remediation settings.</summary>
+        /// <summary>Gets the bounded manifest, payload, conflict and remediation settings. / 获取配置信息。</summary>
         public TensorRtExternalCacheOptions StoreOptions { get; }
 
-        /// <summary>Gets the current user's default TensorRT cache root.</summary>
+        /// <summary>Gets the current user's default TensorRT cache root. / 获取缓存信息。</summary>
         public static string GetDefaultCacheRootPath()
         {
             string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -52,7 +52,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Owns one validated local engine stream.</summary>
+    /// <summary>Owns one validated local engine stream. / 定义或说明 TensorRT 引擎合同。</summary>
     public sealed class TensorRtLocalEngineResult : IDisposable
     {
         private Stream? _stream;
@@ -69,20 +69,20 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             _stream = stream;
         }
 
-        /// <summary>Gets how the engine was resolved.</summary>
+        /// <summary>Gets how the engine was resolved. / 获取 TensorRT 引擎信息。</summary>
         public TensorRtLocalCacheResolutionStatus Status { get; }
-        /// <summary>Gets the complete engine compatibility identity.</summary>
+        /// <summary>Gets the complete engine compatibility identity. / 获取 TensorRT 引擎信息。</summary>
         public TensorRtEngineCacheIdentity Identity { get; }
-        /// <summary>Gets the validated local entry metadata.</summary>
+        /// <summary>Gets the validated local entry metadata. / 获取相关信息。</summary>
         public TensorRtExternalCacheEntryMetadata Metadata { get; }
-        /// <summary>Gets the pre-build compatibility key.</summary>
+        /// <summary>Gets the pre-build compatibility key. / 获取相关信息。</summary>
         public string CacheKeySha256 => Identity.LookupKeySha256;
-        /// <summary>Gets the SHA256 of the validated serialized engine.</summary>
+        /// <summary>Gets the SHA256 of the validated serialized engine. / 获取 TensorRT 引擎信息。</summary>
         public string EngineSha256 => Metadata.PayloadSha256;
-        /// <summary>Gets the readable engine stream owned by this result.</summary>
+        /// <summary>Gets the readable engine stream owned by this result. / 获取 TensorRT 引擎信息。</summary>
         public Stream Stream => _stream ?? throw new ObjectDisposedException(nameof(TensorRtLocalEngineResult));
 
-        /// <inheritdoc />
+        /// <summary>Releases the owned engine stream. / 释放持有的引擎数据流。</summary>
         public void Dispose()
         {
             Stream? stream = Interlocked.Exchange(ref _stream, null);
@@ -95,7 +95,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Owns a session created from a resolved local engine.</summary>
+    /// <summary>Owns a session created from a resolved local engine. / 定义或说明 TensorRT 引擎合同。</summary>
     public sealed class TensorRtLocalSessionResult : IDisposable
     {
         private IInferenceSession? _session;
@@ -112,16 +112,16 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             _session = session;
         }
 
-        /// <summary>Gets how the session's engine was resolved.</summary>
+        /// <summary>Gets how the session's engine was resolved. / 获取 TensorRT 引擎信息。</summary>
         public TensorRtLocalCacheResolutionStatus Status { get; }
-        /// <summary>Gets the engine compatibility key.</summary>
+        /// <summary>Gets the engine compatibility key. / 获取 TensorRT 引擎信息。</summary>
         public string CacheKeySha256 { get; }
-        /// <summary>Gets the SHA256 of the loaded serialized engine.</summary>
+        /// <summary>Gets the SHA256 of the loaded serialized engine. / 获取 TensorRT 引擎信息。</summary>
         public string EngineSha256 { get; }
-        /// <summary>Gets the inference session owned by this result.</summary>
+        /// <summary>Gets the inference session owned by this result. / 获取推理会话信息。</summary>
         public IInferenceSession Session => _session ?? throw new ObjectDisposedException(nameof(TensorRtLocalSessionResult));
 
-        /// <inheritdoc />
+        /// <summary>Releases the owned inference session. / 释放持有的推理会话。</summary>
         public void Dispose()
         {
             IInferenceSession? session = Interlocked.Exchange(ref _session, null);
@@ -129,7 +129,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Owns a loaded CUDA kernel resolved through the local PTX/CUBIN cache.</summary>
+    /// <summary>Owns a loaded CUDA kernel resolved through the local PTX/CUBIN cache. / 定义或说明缓存合同。</summary>
     public sealed class TensorRtLocalCudaKernelResult : IDisposable
     {
         private TensorRtCudaCompiledKernel? _kernel;
@@ -146,18 +146,18 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             _kernel = kernel;
         }
 
-        /// <summary>Gets how the CUDA artifact was resolved.</summary>
+        /// <summary>Gets how the CUDA artifact was resolved. / 获取 CUDA信息。</summary>
         public TensorRtLocalCacheResolutionStatus Status { get; }
-        /// <summary>Gets the complete pre-compilation compatibility identity.</summary>
+        /// <summary>Gets the complete pre-compilation compatibility identity. / 获取相关信息。</summary>
         public TensorRtCudaKernelLookupIdentity Identity { get; }
-        /// <summary>Gets the validated local entry metadata.</summary>
+        /// <summary>Gets the validated local entry metadata. / 获取相关信息。</summary>
         public TensorRtExternalCacheEntryMetadata Metadata { get; }
-        /// <summary>Gets the pre-compilation compatibility key.</summary>
+        /// <summary>Gets the pre-compilation compatibility key. / 获取相关信息。</summary>
         public string CacheKeySha256 => Identity.LookupKeySha256;
-        /// <summary>Gets the loaded CUDA kernel owned by this result.</summary>
+        /// <summary>Gets the loaded CUDA kernel owned by this result. / 获取 CUDA信息。</summary>
         public TensorRtCudaCompiledKernel Kernel => _kernel ?? throw new ObjectDisposedException(nameof(TensorRtLocalCudaKernelResult));
 
-        /// <inheritdoc />
+        /// <summary>Releases the owned CUDA kernel. / 释放持有的 CUDA 内核。</summary>
         public void Dispose()
         {
             TensorRtCudaCompiledKernel? kernel = Interlocked.Exchange(ref _kernel, null);
@@ -165,7 +165,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
-    /// <summary>Explicitly resolves local engines and CUDA kernels without changing provider behavior.</summary>
+    /// <summary>Explicitly resolves local engines and CUDA kernels without changing provider behavior. / 说明 TensorRT 引擎公共 API。</summary>
     public sealed class TensorRtLocalSessionFactory : IDisposable
     {
         private readonly TensorRtExternalCacheStore _store;
@@ -176,7 +176,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private TensorRtBackendProvider? _ownedProvider;
         private bool _disposed;
 
-        /// <summary>Initializes an explicit TensorRT local-cache facade.</summary>
+        /// <summary>Initializes an explicit TensorRT local-cache facade. / 初始化缓存对象。</summary>
         public TensorRtLocalSessionFactory(TensorRtLocalCacheOptions? options = null)
             : this(
                 options ?? new TensorRtLocalCacheOptions(),
@@ -204,12 +204,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             CacheRootPath = _store.RootPath;
         }
 
-        /// <summary>Gets the normalized absolute local cache root.</summary>
+        /// <summary>Gets the normalized absolute local cache root. / 获取缓存信息。</summary>
         public string CacheRootPath { get; }
-        /// <summary>Gets whether construction created the local cache root.</summary>
+        /// <summary>Gets whether construction created the local cache root. / 获取缓存信息。</summary>
         public bool CacheRootCreated { get; }
 
-        /// <summary>Resolves a validated engine stream, building only after a miss or exact-entry rejection.</summary>
+        /// <summary>Resolves a validated engine stream, building only after a miss or exact-entry rejection. / 解析 TensorRT 引擎资源。</summary>
         public TensorRtLocalEngineResult ResolveOrBuildEngine(
             ModelArtifact onnxArtifact,
             TensorRtOnnxEngineBuildOptions buildOptions,
@@ -224,7 +224,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 cancellationToken);
         }
 
-        /// <summary>Resolves an engine through an explicit managed build seam.</summary>
+        /// <summary>Resolves an engine through an explicit managed build seam. / 解析 TensorRT 引擎资源。</summary>
         public TensorRtLocalEngineResult ResolveOrBuildEngine(
             ModelArtifact onnxArtifact,
             TensorRtOnnxEngineBuildOptions buildOptions,
@@ -262,7 +262,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 resolved);
         }
 
-        /// <summary>Builds or reuses an engine and creates a TensorRT session from its validated bytes.</summary>
+        /// <summary>Builds or reuses an engine and creates a TensorRT session from its validated bytes. / 构建 TensorRT 引擎。</summary>
         public TensorRtLocalSessionResult CreateSessionFromOnnx(
             ModelArtifact onnxArtifact,
             TensorRtOnnxEngineBuildOptions buildOptions,
@@ -315,7 +315,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Compiles or reuses PTX/CUBIN and loads the declared kernel on one CUDA device.</summary>
+        /// <summary>Compiles or reuses PTX/CUBIN and loads the declared kernel on one CUDA device. / 说明 CUDA公共 API。</summary>
         public TensorRtLocalCudaKernelResult ResolveOrCompileCudaKernel(
             TensorRtCudaRtcKernelDefinition definition,
             TensorRtCudaRtcCompileOptions compileOptions,
@@ -358,7 +358,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 cancellationToken);
         }
 
-        /// <summary>Resolves and loads a CUDA kernel through an explicit managed compiler seam.</summary>
+        /// <summary>Resolves and loads a CUDA kernel through an explicit managed compiler seam. / 解析 CUDA资源。</summary>
         public TensorRtLocalCudaKernelResult ResolveOrCompileCudaKernel(
             TensorRtCudaKernelLookupIdentity identity,
             Func<CancellationToken, TensorRtCudaRtcArtifact> compileFactory,
@@ -392,21 +392,21 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
-        /// <summary>Invalidates one exact engine key.</summary>
+        /// <summary>Invalidates one exact engine key. / 删除或失效 TensorRT 引擎资源。</summary>
         public TensorRtExternalCacheResult InvalidateEngine(TensorRtEngineCacheIdentity identity, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
             return _store.InvalidateEngine(identity, cancellationToken);
         }
 
-        /// <summary>Invalidates one exact CUDA key.</summary>
+        /// <summary>Invalidates one exact CUDA key. / 删除或失效 CUDA资源。</summary>
         public TensorRtExternalCacheResult InvalidateCuda(TensorRtCudaKernelLookupIdentity identity, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
             return _store.InvalidateCuda(identity, cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>Releases facade-owned cache resources. / 释放门面持有的缓存资源。</summary>
         public void Dispose()
         {
             if (_disposed) return;

@@ -10,10 +10,10 @@ using JYPPX.TensorRtSharp;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    /// <summary>Builds caller-owned TensorRT engines from validated ONNX artifacts.</summary>
+    /// <summary>Builds caller-owned TensorRT engines from validated ONNX artifacts. / 构建 TensorRT 引擎。</summary>
     public sealed class TensorRtOnnxEngineBuilder
     {
-        /// <summary>Computes the managed build-input hash used before a device/runtime identity is appended to a complete engine cache key.</summary>
+        /// <summary>Computes the managed build-input hash used before a device/runtime identity is appended to a complete engine cache key. / 计算缓存值。</summary>
         public static string GetBuildInputsSha256(string onnxSha256, TensorRtOnnxEngineBuildOptions? options = null)
         {
             if (string.IsNullOrWhiteSpace(onnxSha256) || onnxSha256.Length != 64 || onnxSha256.Any(character => !Uri.IsHexDigit(character)))
@@ -24,7 +24,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return ComputeBuildInputsSha256(onnxSha256.ToLowerInvariant(), options);
         }
 
-        /// <summary>Builds and atomically writes one External/local-cache .engine or .plan file.</summary>
+        /// <summary>Builds and atomically writes one External/local-cache .engine or .plan file. / 构建缓存。</summary>
         public TensorRtOnnxEngineBuildResult Build(
             ModelArtifact onnxArtifact,
             string enginePath,

@@ -2,20 +2,26 @@
 
 DeploySharp 是一套正在重构中的模块化 .NET 深度学习模型部署工具。
 
+## 当前状态
+
+`2.0.0-alpha.1` 是工程预览版。内置 ModelFactory catalog 当前包含 **39 个公开 Preview 条目**，覆盖 Qwen、视觉/检测器资产和六个 PP-OCRv5 bundle；这些 Release 可下载且已有 SHA-256 校验。Preview 表示已发布并有本机运行与 ModelPack/ModelFactory 证据，不等于 `AlgorithmVerified`，也不等于 GA。`ContractVerified` 表示 DeploySharp 任务合同已覆盖；`LocalBackendVerified` 表示声明的本机后端矩阵已运行；`AlgorithmVerified` 还要求精确上游来源、官方 golden 对齐、性能证据和准入审核；`GA` 要求方案书中的全部发布与平台门禁通过。V1 严格完成数仍为 `0/32`，本机后端覆盖为 `32/32`。下方历史 Stage 段落保留当时的状态快照，不应解读为当前 catalog 状态。
+
+当前 TFM/平台证据、包边界差异、符号包策略与 GA blocker 记录在[发布与平台状态](docs/articles/release-platform-status.md)。第三方软件边界见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)，与模型许可记录分开。最小可运行 Core 示例位于 [samples](samples/README.md)。
+
 ## 本次更新
 
-当前 `2.0.0-alpha.1` 已在现有 Visual 包中加入完整 V1 YOLO 检测合同：工件绑定的 v5/v6/v7/v8/v9/v10/v11/v12/v13/v26 Profile、四类显式 raw/end-to-end 输出合同、官方风格 OpenCV letterbox 输入，以及十个本机 ONNX 工件的真实 ONNX Runtime/OpenVINO CPU 验证。精确来源、再分发许可和官方黄金审核完成前，候选清单不会进入仍为空的官方 catalog。详见 [Visual YOLO 检测指南](docs/articles/visual-yolo-detection.md)、[本版本说明](docs/releases/2.0.0-alpha.1.md)与[版本索引](docs/releases/README.md)。
+当前 Visual 包已覆盖完整 V1 YOLO 检测合同：工件绑定的 v5/v6/v7/v8/v9/v10/v11/v12/v13/v26 Profile、四类显式 raw/end-to-end 输出合同、OpenCV letterbox 输入，以及十个本机 ONNX 工件的 ORT/OpenVINO CPU 验证。只有分别完成发布准入的候选才进入当前 39 条 Preview catalog；其余候选继续保持 External。详见 [Visual YOLO 检测指南](docs/articles/visual-yolo-detection.md)、[本版本说明](docs/releases/2.0.0-alpha.1.md)与[版本索引](docs/releases/README.md)。
 
 阶段 25 新增工件绑定的 BLIP/BLIP-2/InstructBLIP 生成合同、精确 Processor/Tokenizer/Generation Identity 与有状态多次 Caption 生命周期。官方 BLIP Base Caption 已在同一获授权图片上通过官方 Predictor、ORT CPU、OpenVINO CPU 与 OpenCV 路径的 Token/EOS/文本及中间数值门控；BLIP VQA、BLIP-2 和 InstructBLIP 保持显式 External blocker。阶段 1-25 的模型已汇总到[开发模型总清单](docs/articles/development-model-inventory.md)，新获取/转换工件统一使用 `E:\DeploySharp-Models\<模型名>`；再分发未获准前不会上传模型。详见 [BLIP 模型族指南](docs/articles/visual-generative-vision-language.md)。
 
-阶段 26 新增工件绑定的 LLaVA OneVision Vision/Projector、Managed Qwen2 Tokenizer/Embedding、Empty-past Prefill、24 层具名 KV Decode 与 Anyres OpenCV，并完成 ORT/OpenVINO CPU 真实执行。官方 Predictor 与当前 Runtime 的 Token/文本差异被如实保留；Qwen2.5-VL 与 Phi-3.5 Vision 保持精确 blocker。阶段 1-26 的[开发模型总清单](docs/articles/development-model-inventory.md)现有 60 条，全部新工件统一放在 `E:\DeploySharp-Models\<模型名>`；上传与可下载仍为 0。详见[原生多模态指南](docs/articles/visual-native-multimodal.md)。
+阶段 26 新增工件绑定的 LLaVA OneVision Vision/Projector、Managed Qwen2 Tokenizer/Embedding、Empty-past Prefill、24 层具名 KV Decode 与 Anyres OpenCV，并完成 ORT/OpenVINO CPU 真实执行。官方 Predictor 与当前 Runtime 的 Token/文本差异被如实保留；Qwen2.5-VL 与 Phi-3.5 Vision 保持精确 blocker。当时清单为 60 条且尚无上传资产；当前 catalog 状态以上方摘要为准。详见[原生多模态指南](docs/articles/visual-native-multimodal.md)。
 
-阶段 28 新增音频语音工件绑定合同、Wav2Vec2 base-960h CTC 的 ORT/OpenVINO/OpenCV 与纯包证据、四份 Manifest，以及 Whisper/HuBERT/pyannote 的明确 blocker。阶段 1-28 的[开发模型总清单](docs/articles/development-model-inventory.md)现有 67 条，warehouse 有 21 个预期目录；Wav2Vec2 仍为 External，上传与下载仍为 0。详见[音频指南](docs/articles/visual-audio-speech.md)、[获取指南](docs/articles/model-acquisition-audio-speech.md)和[阶段 28 说明](docs/releases/stage-28.md)。
+阶段 28 新增音频语音工件绑定合同、Wav2Vec2 base-960h CTC 的 ORT/OpenVINO/OpenCV 与纯包证据、四份 Manifest，以及 Whisper/HuBERT/pyannote 的明确 blocker。当时清单为 67 条、warehouse 有 21 个预期目录且尚无上传资产；Wav2Vec2 当前仍为 External。详见[音频指南](docs/articles/visual-audio-speech.md)、[获取指南](docs/articles/model-acquisition-audio-speech.md)和[阶段 28 说明](docs/releases/stage-28.md)。
 
 
-阶段 29 已记录不可变 LLM Profile/Bundle Identity 与 LLamaSharp 单写入取消语义。`E:\DeploySharp-Models` 没有精确 GGUF，`DEPLOYSHARP_LLAMA_MODEL` 未设置，因此 `llm/gguf/external-blocker` 保持 External，清单有 68 条记录和 55 份结构化 Manifest，上传/下载资产均为 0。详见 [LLM/GGUF 指南](docs/articles/llm-gguf-stage29.md) 与 [阶段 29 说明](docs/releases/stage-29.md)。
+阶段 29 已记录不可变 LLM Profile/Bundle Identity 与 LLamaSharp 单写入取消语义；当时未配置精确 GGUF，因而保持 External 且尚无上传资产。该历史状态已由下文公开 Qwen Preview 更新。详见 [LLM/GGUF 指南](docs/articles/llm-gguf-stage29.md) 与 [阶段 29 说明](docs/releases/stage-29.md)。
 
-阶段 31 通过 `LLamaSharp.Backend.Cpu 0.27.0` 的真实 Generate、Stream、Cancel、Repeat、contention、Dispose 与 896 维 Embedding 矩阵，准入一个精确授权的 Qwen2.5 0.5B Instruct Q4_K_M GGUF。清单增至 69 条记录和 56 份结构化 Manifest；模型继续保持本地 External、非 AlgorithmVerified、未上传、不可下载且不进入空 official catalog。详见[运行实证](docs/articles/llm-gguf-stage31.md)、[获取记录](docs/articles/model-acquisition-llm-gguf.md)与[阶段 31 说明](docs/releases/stage-31.md)。
+阶段 31 通过 `LLamaSharp.Backend.Cpu 0.27.0` 的真实 Generate、Stream、Cancel、Repeat、contention、Dispose 与 896 维 Embedding 矩阵准入精确 Qwen2.5 0.5B Instruct Q4_K_M GGUF；其当时是本地 External，后续不可变 Release 已将同一 Bundle 作为 Preview 收录，仍非 `AlgorithmVerified`。详见[运行实证](docs/articles/llm-gguf-stage31.md)、[获取记录](docs/articles/model-acquisition-llm-gguf.md)与[阶段 31 说明](docs/releases/stage-31.md)。
 
 阶段 32 将该准入收紧为不可变边界：门禁读取 GGUF magic、校验全部模型/来源 sidecar 和结构化运行 evidence；证据写入拒绝覆盖，并验证并发 Dispose 与调用方持有的无 native/CPU 纯包资产图。本阶段没有新增模型或 evidence。详见[阶段 32 指南](docs/articles/llm-gguf-stage32.md)与[阶段 32 说明](docs/releases/stage-32.md)。
 
@@ -25,7 +31,7 @@ DeploySharp 是一套正在重构中的模块化 .NET 深度学习模型部署�
 
 阶段 35 建立并由阶段 48 扩展的候选门禁现覆盖十个可打包项目、83 个 TFM 组、五类负向突变与全部 30 项纯包 consumer。当前候选的元数据、依赖闭包、DLL/XML payload 和程序集引用全部通过；原阶段 35 双包复现结论仍保留为语义 `9/9`、原始 ZIP `0/9`。未签名包、脏工作树、符号/源码策略和明确发布授权继续作为 blocker。详见[阶段 35 审计](docs/articles/release-candidate-governance-stage35.md)与[阶段 35 说明](docs/releases/stage-35.md)。
 
-阶段 36 evidence 经阶段 48 扩展后覆盖十个包、83 个 TFM，保留机器可读的来源/许可证/SBOM、PDB/SourceLink 与公共 API 证据。十类独立突变均被拒绝；仅 `2.0.0-alpha.1` 开源非商业预览可将 22 项许可证复核和 18 项依赖来源发现标记为已知提示，商业发布仍由同一批发现阻塞，签名、符号、位级复现和发布授权 blocker 继续保留。PDB 使用稳定的 `/_/` 映射路径而不保留本机物理路径。详见[阶段 36 审计](docs/articles/release-evidence-governance-stage36.md)与[阶段 36 说明](docs/releases/stage-36.md)。
+阶段 36 evidence 当前覆盖 12 个包、106 个 TFM，保留机器可读的来源/许可证/SBOM、PDB/SourceLink 与公共 API 证据。正向门禁通过 12/12 包 payload、106/106 SourceLink/PDB/API 合同、39 项 official catalog 身份及 `THIRD-PARTY-NOTICES.md` 中 16 项中央依赖身份；12 类独立突变均被拒绝。仅 `2.0.0-alpha.1` 开源非商业预览将 20 项托管许可证、2 项 native 许可证和 18 项依赖来源发现标记为已知提示，商业发布仍由同一批发现阻塞，签名、符号、位级复现和发布授权 blocker 继续保留。PDB 使用稳定的 `/_/` 映射路径而不保留本机物理路径。详见[阶段 36 审计](docs/articles/release-evidence-governance-stage36.md)与[阶段 36 说明](docs/releases/stage-36.md)。
 
 阶段 37 审计本地缓存的 `JYPPX.TensorRT.CSharp.API 4.0.0`，确认 15 个 TFM、45 个托管 DLL、关键 API、repository/content hash 与无 native payload。由于包许可证元数据缺失、上游 Owner 许可证决策未完成且不可变 `v4.0.0` tag 无法核验，本阶段未创建 TensorRT 后端、engine、native probe、GPU 结论、包或公共 API。详见[阶段 37 审计](docs/articles/tensorrt-admission-stage37.md)与[阶段 37 说明](docs/releases/stage-37.md)。
 
@@ -73,11 +79,13 @@ The TensorRT package loads caller-owned engines, builds ONNX engines through the
 请先阅读 [本地 LLM 快速开始](docs/articles/llm-getting-started.md)、[LLamaSharp 原生后端指南](docs/articles/llamasharp-native-backends.md) 和 [LLM 兼容性与生命周期](docs/articles/llamasharp-compatibility.md)。
 视觉流程请阅读 [Visual 已准备张量快速开始](docs/articles/visual-getting-started.md)、[Visual 坐标与解码](docs/articles/visual-coordinate-decoding.md)、[Visual YOLO 检测](docs/articles/visual-yolo-detection.md)、[Visual 语义分割](docs/articles/visual-semantic-segmentation.md)、[Visual Pose](docs/articles/visual-pose-estimation.md)、[Visual 实例分割](docs/articles/visual-instance-segmentation.md)、[Visual OBB 旋转框](docs/articles/visual-oriented-detection.md)、[Visual OCR](docs/articles/visual-ocr.md)、[OCR 方向与自动纠正](docs/articles/visual-ocr-orientation.md)、[Visual 异常检测](docs/articles/visual-anomaly-detection.md) 和 [Visual 生命周期与兼容性](docs/articles/visual-lifecycle-compatibility.md)。项目级门禁见 [性能与模型保真](docs/articles/performance-and-model-fidelity.md)，Ultralytics 等模型族的实现/准入状态见[支持模型路线表](docs/articles/supported-models.md)。
 
-模型清单和下载流程请阅读 [开发模型总清单](docs/articles/development-model-inventory.md)、[ModelPack JSON 快速开始](docs/articles/modelpack-json-getting-started.md)、[ModelFactory 快速开始](docs/articles/modelfactory-getting-started.md) 与 [官方模型目录](docs/articles/model-catalog.md)。官方目录在获得真实 Release 和模型再分发授权前保持为空。
+模型清单和下载流程请阅读 [开发模型总清单](docs/articles/development-model-inventory.md)、[ModelPack JSON 快速开始](docs/articles/modelpack-json-getting-started.md)、[ModelFactory 快速开始](docs/articles/modelfactory-getting-started.md) 与 [官方模型目录](docs/articles/model-catalog.md)。官方目录当前有 39 条公开 Preview；其他模型必须分别具备真实 Release、来源/许可、SHA-256 和准入证据后才能收录。
 
 ONNX CPU 推理请阅读 [ONNX Runtime 快速开始](docs/articles/onnxruntime-getting-started.md) 与 [兼容性和生命周期](docs/articles/onnxruntime-compatibility.md)。
 
 OpenVINO CPU 推理请阅读 [OpenVINO 快速开始](docs/articles/openvino-getting-started.md) 与 [兼容性和生命周期](docs/articles/openvino-compatibility.md)。
+
+独立 `JYPPX.DeploySharp.Multimodal` 包已提供有序媒体、流式、取消、超时和单写入会话合同；`JYPPX.DeploySharp.Backend.OpenCV` 已提供 Windows x64 CPU preview 的真实 ONNX DNN 推理。包边界、固定 golden、能力探测和未验证路径见[多模态与 OpenCV DNN 指南](docs/articles/multimodal-opencv-dnn.md)。
 
 ## 当前状态
 
