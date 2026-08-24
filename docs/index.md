@@ -19,6 +19,7 @@ V2 is a clean API design and does not provide source, binary, configuration, or 
 - [API Reference / API 参考](api/index.md)
 - [ModelPack JSON quick start / ModelPack JSON 快速开始](articles/modelpack-json-getting-started.md)
 - [ModelFactory quick start / ModelFactory 快速开始](articles/modelfactory-getting-started.md)
+- [Model Release inference quick start / 模型 Release 推理快速开始](articles/model-release-inference-getting-started.md)
 - [Official model catalog / 官方模型目录](articles/model-catalog.md)
 - [Next model publication wave / 下一批模型发布波次](articles/model-publication-next-wave.md)
 

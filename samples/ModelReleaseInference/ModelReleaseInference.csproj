@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DeploySharp.ModelFactory\DeploySharp.ModelFactory.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Visual\DeploySharp.Visual.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
+  </ItemGroup>
+</Project>

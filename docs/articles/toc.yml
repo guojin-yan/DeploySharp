@@ -205,6 +205,8 @@
   href: modelpack-json-schema-security.md
 - name: ModelFactory Quick Start / ModelFactory 快速开始
   href: modelfactory-getting-started.md
+- name: Model Release Inference Quick Start / 模型 Release 推理快速开始
+  href: model-release-inference-getting-started.md
 - name: ModelFactory Release and Cache Security / ModelFactory Release 与缓存安全
   href: modelfactory-release-cache-security.md
 - name: Official Model Catalog / 官方模型目录
