@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "bria/rmbg-1.4",
+  "name": "BRIA RMBG 1.4",
+  "family": "bria-rmbg",
+  "task": "foreground-matting",
+  "modelVersion": "1.4-local-onnx-opset11",
+  "exporter": {
+    "name": "PyTorch-ONNX",
+    "version": "pytorch-2.1.0-opset11",
+    "sourceRevision": "2ceba5a5efaec153162aedea169f76caf9b46cf8"
+  },
+  "source": {
+    "sourceUrl": "https://huggingface.co/briaai/RMBG-1.4",
+    "projectUrl": "https://bria.ai/",
+    "revision": "local-onnx-provenance-unverified",
+    "author": "BRIA AI",
+    "licenseExpression": "LicenseRef-BRIA-RMBG-1.4",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-08-23T00:00:00Z",
+  "profileId": "bria-rmbg.1-4.bria/rmbg-1.4.opset11",
+  "inputs": [
+    { "name": "input", "elementType": "float32", "shape": [1, 3, 1024, 1024] }
+  ],
+  "outputs": [
+    { "name": "output", "elementType": "float32", "shape": [1, 1, 1024, 1024] }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "model.onnx",
+      "compatibleBackends": ["onnxruntime", "openvino"],
+      "files": [
+        { "relativePath": "model.onnx", "sha256": "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f", "size": 176153355, "mediaType": "application/onnx", "role": "model" }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 11,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-ort-openvino-contract-verified",
+        "deploysharp.preprocessing-version": "bria-rmbg14-rgb-mean05-std1-v1",
+        "deploysharp.prepared-tensor-sha256": "cfadd44a103cbd6d5726fa07b27d7aad2f67ed3930ff96901c486a5beaf7e723",
+        "deploysharp.postprocessing-version": "bria-alpha-bilinear-source-restore-v1",
+        "deploysharp.output-semantics": "sigmoid-alpha-not-class-mask",
+        "deploysharp.matting-refinement": "not-present",
+        "deploysharp.release-admission": "alpha-preview-direct-reproducibility-asset"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "alpha-preview",
+    "deploysharp.downloadable": "true",
+    "deploysharp.release-tag": "models-20260817.vision.1",
+    "deploysharp.release-repository": "guojin-yan/DeploySharp"
+  }
+}

@@ -43,6 +43,8 @@
     "localSize": 74012,
     "localSha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
     "sourceUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt",
+    "sourceRevision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+    "sourceStatus": "official-pinned-repository-file",
     "sourceObservation": {
       "httpStatus": 200,
       "size": 74012,

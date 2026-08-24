@@ -43,7 +43,7 @@ The inventory below was read from `origin/DeploySharpV1.0:src/DeploySharp/Model/
 
 | V1 model type / V1 模型类型 | Task / 任务 | V2 reusable contract / V2 可复用合同 | Migration state / 迁移状态 |
 | --- | --- | --- | --- |
-| `AnomalibSeg` | Image anomaly and anomaly segmentation / 图像异常与异常分割 | Artifact-bound PaDiM/PatchCore four-output anomaly export | ContractVerified + LocalBackendVerified (ORT; PaDiM OpenVINO); checkpoint category/transform/threshold/tiling/golden/license blocked / 工件绑定 PaDiM/PatchCore 四输出异常导出与本机后端已验证；checkpoint 类别/transform/阈值/tiling/golden/许可证阻断 |
+| `AnomalibSeg` | Image anomaly and anomaly segmentation / 图像异常与异常分割 | Artifact-bound PaDiM/PatchCore four-output anomaly export | PaDiM MVTec AD bottle is published Preview and ContractVerified + LocalBackendVerified (ORT/OpenVINO); strict AlgorithmVerified golden/provenance remains blocked / PaDiM MVTec AD bottle 已发布为 Preview 并完成 ContractVerified + LocalBackendVerified（ORT/OpenVINO）；严格 AlgorithmVerified 的 golden/来源证据仍阻断 |
 | `DEIMv2Det` | Detection / 检测 | Artifact-bound decoded DEIMv2 rows | ContractVerified + LocalBackendVerified (ORT); OpenVINO auxiliary alias and admission evidence blocked / 工件绑定 DEIMv2 解码行与 ORT 已验证；OpenVINO 辅助别名和准入证据阻断 |
 | `RFDETRDet` | Detection / 检测 | Artifact-bound RF-DETR raw query logits | ContractVerified + LocalBackendVerified (ORT/OpenVINO); provenance/golden/release blocked / 工件绑定 RF-DETR 原始 query logit 与双后端已验证；来源/golden/发布阻断 |
 | `RFDETRSeg` | Instance segmentation / 实例分割 | Artifact-bound RF-DETR raw query masks | ContractVerified + LocalBackendVerified (ORT/OpenVINO); provenance/golden/release blocked / 工件绑定 RF-DETR 原始 query mask 与双后端已验证；来源/golden/发布阻断 |

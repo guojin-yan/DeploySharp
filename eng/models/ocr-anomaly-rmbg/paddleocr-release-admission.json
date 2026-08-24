@@ -105,6 +105,14 @@
       "scope": "official-paddle-inference-source-and-semantic-reference"
     }
   ],
+  "officialOnnxInferenceArchives": [
+    { "modelId": "paddleocr/ppocrv5/mobile-det/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_onnx_infer.tar", "archiveSize": 4843520, "archiveSha256": "781056046c9ed77a15c94681605db6a0f62317c2e9cce6931c71da2478d4bc30", "archiveEntry": "PP-OCRv5_mobile_det_onnx_infer/inference.onnx", "onnxSize": 4826518, "onnxSha256": "a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" },
+    { "modelId": "paddleocr/ppocrv5/mobile-rec/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_onnx_infer.tar", "archiveSize": 16701440, "archiveSha256": "f7e792bc836f36e7ef895ad47c426d75b0b75b1650caa6d63fe9418441ffba8c", "archiveEntry": "PP-OCRv5_mobile_rec_onnx_infer/inference.onnx", "onnxSize": 16534782, "onnxSha256": "da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" },
+    { "modelId": "paddleocr/ppocrv5/mobile-cls/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_onnx_infer.tar", "archiveSize": 1044480, "archiveSha256": "e29f1bffb2cec4db1ef8da9b2369d033d0a16d0a1a8f033b518d6063e6b9a1af", "archiveEntry": "PP-LCNet_x0_25_textline_ori_onnx_infer/inference.onnx", "onnxSize": 1019454, "onnxSha256": "94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" },
+    { "modelId": "paddleocr/ppocrv5/server-det/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_onnx_infer.tar", "archiveSize": 88135680, "archiveSha256": "cd28389ed2c11dfe02d6a9847ec95ca6153a51bf38bc1c4e2521c1f548188f58", "archiveEntry": "PP-OCRv5_server_det_onnx_infer/inference.onnx", "onnxSize": 88116791, "onnxSha256": "10803475a591f7dc623e24670fb5752ec94d39a1f8cf069aac1b6f0ce19cfc85", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" },
+    { "modelId": "paddleocr/ppocrv5/server-rec/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_onnx_infer.tar", "archiveSize": 84674560, "archiveSha256": "67af91d7ab16288116d578c8055d1d4d114c8380d8059ad3c044cd52cae206f1", "archiveEntry": "PP-OCRv5_server_rec_onnx_infer/inference.onnx", "onnxSize": 84503027, "onnxSha256": "d9dc333c9c7b042c6dffb8e33d72b6f65c9c1d463d0a3c2f78174fea55e94752", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" },
+    { "modelId": "paddleocr/ppocrv5/server-cls/external", "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_onnx_infer.tar", "archiveSize": 6799360, "archiveSha256": "274241c75b18f4c1787915383f6a2b73a76f2b56e5023d581af1ce856ba98e1e", "archiveEntry": "PP-LCNet_x1_0_textline_ori_onnx_infer/inference.onnx", "onnxSize": 6777816, "onnxSha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "scope": "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" }
+  ],
   "localInferenceMetadata": [
     {
       "modelId": "paddleocr/ppocrv5/mobile-det/external",
@@ -160,7 +168,9 @@
       "localFileName": "ppocrv5_dict.txt",
       "size": 74012,
       "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
-      "sourceRevision": "unrecorded",
+      "sourceUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt",
+      "sourceRevision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+      "sourceStatus": "official-pinned-repository-file",
       "licenseStatus": "official-repository-file-separate-review-required",
       "redistributionApproved": false
     }

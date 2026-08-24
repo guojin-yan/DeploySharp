@@ -35,7 +35,7 @@ function Assert-FileEvidence {
 if ([int]$evidence.upstreamCode.licenseObservation.httpStatus -ne 200 -or $evidence.upstreamCode.licenseObservation.sha256 -ne '3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e') { throw 'Pinned PaddleOCR LICENSE observation drifted.' }
 if ([int]$evidence.upstreamCode.readmeLicenseObservation.httpStatus -ne 200 -or -not $evidence.upstreamCode.readmeLicenseObservation.licenseStatementObserved) { throw 'Pinned PaddleOCR README license observation is incomplete.' }
 if (@($evidence.officialWebsite.pages).Count -lt 3 -or @($evidence.officialWebsite.pages | Where-Object { $_.httpStatus -ne 200 }).Count -ne 0 -or @($evidence.officialWebsite.pages | Where-Object { $_.modelLicenseStatementObserved }).Count -ne 0) { throw 'Official PaddleOCR website license observations are incomplete or unexpectedly permissive.' }
-if ([int]$evidence.dictionary.sourceObservation.httpStatus -ne 200 -or -not $evidence.dictionary.sourceObservation.exactLocalMatch) { throw 'The dictionary source identity observation is incomplete.' }
+if ([int]$evidence.dictionary.sourceObservation.httpStatus -ne 200 -or -not $evidence.dictionary.sourceObservation.exactLocalMatch -or $evidence.dictionary.sourceRevision -ne $evidence.upstreamCode.pinnedRevision -or $evidence.dictionary.sourceStatus -ne 'official-pinned-repository-file' -or -not ([string]$evidence.dictionary.sourceUrl).EndsWith('/ppocrv5_dict.txt', [StringComparison]::Ordinal)) { throw 'The dictionary source identity observation is incomplete.' }
 
 $modelRoots = @($ModelRoot, $siblingRoot) | Select-Object -Unique
 function Find-LocalFile {

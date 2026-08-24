@@ -1,26 +1,38 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-08-11T00:00:00Z",
+  "generatedAt": "2026-08-23T00:00:00Z",
   "warehouseRootDefault": "E:\\DeploySharp-Models",
-  "scope": "All model, checkpoint, converted graph, blocker, and contract-fixture families evidenced during DeploySharp V2 Stages 1-35. Stage 1 had no model execution; Stage 31 admitted one authorized local-only Qwen GGUF with real LLamaSharp CPU evidence; Stages 32-35 revalidated its immutable model, sidecar, evidence, and package boundary without adding an inventory row.",
+  "scope": "All model, checkpoint, converted graph, blocker, and contract-fixture families evidenced during DeploySharp V2 Stages 1-61. The inventory distinguishes current bundled ModelFactory Preview releases from historical/local External manifests.",
   "policy": {
     "userAssetRootsRemainReadOnly": [
       "E:\\Model",
       "E:\\Data"
     ],
-    "officialCatalogAdmission": "empty",
-    "releaseAssetsWritten": false,
+    "officialCatalogAdmission": "current-bundled-preview",
+    "officialCatalogRevision": "models-20260818.ppocrv5.1",
+    "officialCatalogEntries": 42,
+    "officialCatalogDownloadableEntries": 42,
+    "officialCatalogAssetCount": 142,
+    "officialCatalogReleaseTags": [
+      "models-20260817.detr.2",
+      "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+      "models-20260817.vision.1",
+      "models-20260817.yolo.1",
+      "models-20260818.ppocrv5.1"
+    ],
+    "releaseAssetsWritten": true,
     "actionsInvoked": false,
     "uploadRule": "Only artifacts with an independently audited redistribution grant and an immutable authorized URI may become downloadable ModelFactory assets.",
     "requestedDestination": "DeploySharp ModelFactory immutable release assets and content-addressed cache",
-    "publicationState": "metadata-indexed-binaries-blocked-by-redistribution-and-no-release-authority"
+    "publicationState": "bundled-preview-release-assets-available;algorithm-admission-and-ga-blocked"
   },
   "counts": {
-    "entries": 69,
-    "structuredManifests": 56,
+    "entries": 112,
+    "structuredManifests": 99,
     "contractFixtures": 11,
-    "downloadable": 0,
-    "uploaded": 0
+    "downloadable": 43,
+    "uploaded": 43,
+    "publishedPreviewRows": 43
   },
   "entries": [
     {
@@ -617,6 +629,55 @@
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
     },
     {
+      "inventoryId": "yolo/v10/detect/n",
+      "stage": 16,
+      "family": "yolov10",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v10-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/THU-MIG/yolov10/tree/453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+        "projectUrl": "https://github.com/THU-MIG/yolov10",
+        "revision": "453c6e38a51e9d1d5a2aa5fb7f1014a711913397",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 9454100,
+          "sha256": "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
       "inventoryId": "yolo/v11/detect/n",
       "stage": 16,
       "family": "yolo11",
@@ -651,6 +712,251 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v11/detect/n",
+      "stage": 16,
+      "family": "yolo11",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v11-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 10720330,
+          "sha256": "7060132736a0e5856a8b91d68fd7558ac6daf8c5fb7cec46dbc9cb034f8409c3"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v11/obb/s",
+      "stage": 16,
+      "family": "yolo11",
+      "task": "oriented-object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v11-obb-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 39172187,
+          "sha256": "50ae0e11b742007fcd297408382be94a25c884093d63dce00ead62f37ea2cad0"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v11/pose/s",
+      "stage": 16,
+      "family": "yolo11",
+      "task": "pose-estimation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v11-pose-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 39942660,
+          "sha256": "5b8d5bce3dff5ac176ea922faf14705fa46fa3b0d3a4b7974b765c355806bae5"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v11/segment/s",
+      "stage": 16,
+      "family": "yolo11",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v11-segment-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/636685ace98527cd0113656fd024a82291fa3122",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "636685ace98527cd0113656fd024a82291fa3122",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 40657020,
+          "sha256": "0707f946915fcdfdbc5438d1f45ca446e70d388805e422ac849996240880fe48"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v12/detect/n",
+      "stage": 16,
+      "family": "yolo12",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v12-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/sunsmarterjie/yolov12/tree/01a22c0603e0eaa6d9bd62120a391e744d92cea2",
+        "projectUrl": "https://github.com/sunsmarterjie/yolov12",
+        "revision": "01a22c0603e0eaa6d9bd62120a391e744d92cea2",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 10671234,
+          "sha256": "9a99a764c60423ffaef870bf22687c66da284c6b2ad7f249605ced9c8a2a3e80"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
@@ -700,6 +1006,55 @@
       "family": "yolov13",
       "task": "object-detection",
       "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v13-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/iMoonLab/YOLOv13/tree/73289949533efac82bb5f72ec19b746618656bd2",
+        "projectUrl": "https://github.com/iMoonLab/YOLOv13",
+        "revision": "73289949533efac82bb5f72ec19b746618656bd2",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 10310579,
+          "sha256": "a589a4e351e9f9be6712ba4d6831cfbcc16b7ac58d6498c02a8386eca828cf80"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-yolov12-13.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v13/detect/n",
+      "stage": 16,
+      "family": "yolov13",
+      "task": "object-detection",
+      "kind": "audited-external-model",
       "manifestPath": "eng/models/yolo/manifests/yolov13-detect-n.modelpack.json",
       "source": {
         "sourceUrl": "https://github.com/iMoonLab/YOLOv13",
@@ -729,6 +1084,55 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v26/detect/n",
+      "stage": 16,
+      "family": "yolo26",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v26-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 9941955,
+          "sha256": "bd169d41c0c04abe18bc1ea6220ff295cf77a38c165071b1acc76ee6ef0c10c4"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
@@ -773,6 +1177,153 @@
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
     },
     {
+      "inventoryId": "yolo/v26/obb/s",
+      "stage": 16,
+      "family": "yolo26",
+      "task": "oriented-object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v26-obb-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 39438174,
+          "sha256": "bbc7c924dcac9e94888ef706f7aa5648cbc38f5fbd4c8a360401ebee7be955df"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v26/pose/s",
+      "stage": 16,
+      "family": "yolo26",
+      "task": "pose-estimation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v26-pose-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 41859220,
+          "sha256": "55c609d18dc635b54a91c8f038d29138a421a4f8e700f645c78779fe6080ddcc"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v26/segment/s",
+      "stage": 16,
+      "family": "yolo26",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v26-segment-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/6f6158be448c73471c000cf41db5cd9169300ed9",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "6f6158be448c73471c000cf41db5cd9169300ed9",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 41912261,
+          "sha256": "79682f271d30833adfe97c97572cd85d348eb1636be8d5b13009ae48e51dbd6f"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
       "inventoryId": "yolo/v5/detect/n",
       "stage": 16,
       "family": "yolov5",
@@ -807,6 +1358,153 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v5/detect/n",
+      "stage": 16,
+      "family": "yolov5",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v5-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/yolov5/tree/20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "projectUrl": "https://github.com/ultralytics/yolov5",
+        "revision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 7903142,
+          "sha256": "1cad0ece41bc351e2e1a3bd9b244dc4219f1b7b4d322928f13b6e7d19a00ef9d"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v5/segment/s",
+      "stage": 16,
+      "family": "yolov5",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v5-segment-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/yolov5/tree/20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "projectUrl": "https://github.com/ultralytics/yolov5",
+        "revision": "20d1d78a08277e365d57bfa3a2cce752772d9e59",
+        "licenseExpression": "GPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 30897895,
+          "sha256": "ab44adf19119521f4764966a48f76fbac9125d22f5db776589bf049b49267576"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+          "role": "license",
+          "size": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v6/detect/s",
+      "stage": 16,
+      "family": "yolov6",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v6-detect-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/meituan/YOLOv6/tree/e86a483f3f6bded25d45970b56831345a99744a4",
+        "projectUrl": "https://github.com/meituan/YOLOv6",
+        "revision": "e86a483f3f6bded25d45970b56831345a99744a4",
+        "licenseExpression": "GPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 69046664,
+          "sha256": "f6fddae83fb23ff02578d5b5e9f4eb9d68b5d8e7f469bb80edf4041681c757f6"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+          "role": "license",
+          "size": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
@@ -856,6 +1554,55 @@
       "family": "yolov7",
       "task": "object-detection",
       "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v7-detect-base.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov7/tree/a207844b1ce82d204ab36d87d496728d3d2348e7",
+        "projectUrl": "https://github.com/WongKinYiu/yolov7",
+        "revision": "a207844b1ce82d204ab36d87d496728d3d2348e7",
+        "licenseExpression": "GPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 147764877,
+          "sha256": "8ee07ed4aa95070ae1c9e7a37c2407c2aa065e989f887cb1193bcb117603c641"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+          "role": "license",
+          "size": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v7/detect/base",
+      "stage": 16,
+      "family": "yolov7",
+      "task": "object-detection",
+      "kind": "audited-external-model",
       "manifestPath": "eng/models/yolo/manifests/yolov7-detect-base.modelpack.json",
       "source": {
         "sourceUrl": "https://github.com/WongKinYiu/yolov7",
@@ -885,6 +1632,55 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v8/classify/s",
+      "stage": 16,
+      "family": "yolov8",
+      "task": "image-classification",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v8-classify-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 25460947,
+          "sha256": "6d7265a72c1a9006e4faaf8ada744fbf72c32d53e6def3be05c125407adfdcee"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
@@ -945,6 +1741,202 @@
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
     },
     {
+      "inventoryId": "yolo/v8/detect/n",
+      "stage": 16,
+      "family": "yolov8",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v8-detect-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/1367566337fb8056223a1aeb469360747f1b1bcd",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "1367566337fb8056223a1aeb469360747f1b1bcd",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 12836453,
+          "sha256": "50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v8/obb/s",
+      "stage": 16,
+      "family": "yolov8",
+      "task": "oriented-object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v8-obb-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 45980835,
+          "sha256": "2bbf67f4cbab45e18779f9a0b602a71cd9f266cb8d34f8df5bd3e8ab4bdcb981"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v8/pose/s",
+      "stage": 16,
+      "family": "yolov8",
+      "task": "pose-estimation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v8-pose-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 46787174,
+          "sha256": "253504de521c91115afba4dcee4c77d23a7a0a87b8f8101b170d6cae4f9c302b"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v8/segment/n",
+      "stage": 16,
+      "family": "yolov8",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v8-segment-n.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/ultralytics/ultralytics/tree/ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "projectUrl": "https://github.com/ultralytics/ultralytics",
+        "revision": "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+        "licenseExpression": "AGPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 13821992,
+          "sha256": "986ba70310322ad2d5aec429c4a07d27d3a1c1f5a4eb8f9127ae7c2d358be5c2"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
+          "role": "license",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
       "inventoryId": "yolo/v9/detect/s",
       "stage": 16,
       "family": "yolov9",
@@ -984,6 +1976,104 @@
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
     },
     {
+      "inventoryId": "yolo/v9/detect/s",
+      "stage": 16,
+      "family": "yolov9",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v9-detect-s.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov9/tree/5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "projectUrl": "https://github.com/WongKinYiu/yolov9",
+        "revision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "licenseExpression": "GPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 29153318,
+          "sha256": "e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+          "role": "license",
+          "size": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "yolo/v9/segment/c",
+      "stage": 16,
+      "family": "yolov9",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/yolo/releases/yolo-v9-segment-c.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/WongKinYiu/yolov9/tree/5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "projectUrl": "https://github.com/WongKinYiu/yolov9",
+        "revision": "5b1ea9a8b3f0ffe4fe0e203ec6232d788bb3fcff",
+        "licenseExpression": "GPL-3.0-only",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 110001237,
+          "sha256": "2cc4ea632009115d72f30841d7295d5ca064cc9697a2fb4efbea3ce41ac0a2a0"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
+          "role": "license",
+          "size": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\yolo"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.yolo.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
       "inventoryId": "ultralytics/yolo-multitask/local-matrix",
       "stage": 17,
       "family": "yolo-multitask",
@@ -1011,6 +2101,55 @@
       },
       "evidence": "Stage 17 ORT/OpenVINO/OpenCV local execution matrix; exact files remain caller-owned.",
       "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+    },
+    {
+      "inventoryId": "deim/v2/detect",
+      "stage": 18,
+      "family": "deimv2",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/deim-v2-detect.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2/tree/0fff8d4dcdc272e6cf2d84be31399db471357941",
+        "projectUrl": "https://github.com/Intellindust-AI-Lab/DEIMv2",
+        "revision": "0fff8d4dcdc272e6cf2d84be31399db471357941",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 40030960,
+          "sha256": "08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-deimv2.txt",
+          "role": "license",
+          "size": 11564,
+          "sha256": "f25a3c7b894c50f203813bc72183a22124c89c27b15d420b92e4621ca4b0f9cf"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\DEIMv2"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
     },
     {
       "inventoryId": "deim/v2/detect/external",
@@ -1047,6 +2186,55 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+    },
+    {
+      "inventoryId": "pp-yoloe/plus-crn-l",
+      "stage": 18,
+      "family": "pp-yoloe",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/pp-yoloe-plus-crn-l.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 209181410,
+          "sha256": "68866d9841e41f6637d4a1c13db6c70a42c9f0367c79870b0a8a9e9df32b8504"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+          "role": "license",
+          "size": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ppyoloe"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
@@ -1091,6 +2279,55 @@
       "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
     },
     {
+      "inventoryId": "rf-detr/detect",
+      "stage": 18,
+      "family": "rf-detr",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/rf-detr-detect.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "projectUrl": "https://github.com/roboflow/rf-detr",
+        "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 121321053,
+          "sha256": "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+          "role": "license",
+          "size": 11345,
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\rf-detr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+    },
+    {
       "inventoryId": "rf-detr/detect/external",
       "stage": 18,
       "family": "rf-detr",
@@ -1125,6 +2362,55 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+    },
+    {
+      "inventoryId": "rf-detr/segment",
+      "stage": 18,
+      "family": "rf-detr",
+      "task": "instance-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/rf-detr-segment.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/roboflow/rf-detr/tree/cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "projectUrl": "https://github.com/roboflow/rf-detr",
+        "revision": "cc538cea510c24d6d7bc64332f0bf29875a5b2d6",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 131311092,
+          "sha256": "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
+          "role": "license",
+          "size": 11345,
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\rf-detr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
@@ -1208,6 +2494,47 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "anomalib/padim/mvtec-bottle",
+      "stage": 19,
+      "family": "anomalib-seg",
+      "task": "anomaly-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/anomalib-padim-mvtec-bottle.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/open-edge-platform/anomalib",
+        "projectUrl": "https://github.com/open-edge-platform/anomalib",
+        "revision": "ffde4cce3db38964f9cf627b524dd325401c6107",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "model.onnx",
+          "role": "model",
+          "size": 176641352,
+          "sha256": "bde19ca3086d3fa52bb3cbc2b9ea2d554ce1f10b4c8a8b38d7393bd54247ffff"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\anomalib"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "anomalib/patchcore/external",
       "stage": 19,
       "family": "anomalib-seg",
@@ -1247,6 +2574,47 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "bria/rmbg-1.4",
+      "stage": 19,
+      "family": "bria-rmbg",
+      "task": "foreground-matting",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/bria-rmbg-1.4.modelpack.json",
+      "source": {
+        "sourceUrl": "https://huggingface.co/briaai/RMBG-1.4",
+        "projectUrl": "https://bria.ai/",
+        "revision": "local-onnx-provenance-unverified",
+        "licenseExpression": "LicenseRef-BRIA-RMBG-1.4",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "model.onnx",
+          "role": "model",
+          "size": 176153355,
+          "sha256": "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RMBG"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "bria/rmbg-1.4/external",
       "stage": 19,
       "family": "bria-rmbg",
@@ -1281,6 +2649,88 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
+      "inventoryId": "bria/rmbg-2.0",
+      "stage": 19,
+      "family": "bria-rmbg",
+      "task": "foreground-matting",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/bria-rmbg-2.0-fp32.modelpack.json",
+      "source": {
+        "sourceUrl": "https://huggingface.co/briaai/RMBG-2.0",
+        "projectUrl": "https://bria.ai/",
+        "revision": "gated-upstream-local-onnx-provenance-unverified",
+        "licenseExpression": "LicenseRef-BRIA-RMBG-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "model.onnx",
+          "role": "model",
+          "size": 1024331469,
+          "sha256": "5b486f08200f513f460da46dd701db5fbb47d79b4be4b708a19444bcd4e79958"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RMBG"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
+      "inventoryId": "bria/rmbg-2.0",
+      "stage": 19,
+      "family": "bria-rmbg",
+      "task": "foreground-matting",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/bria-rmbg-2.0-int8.modelpack.json",
+      "source": {
+        "sourceUrl": "https://huggingface.co/briaai/RMBG-2.0",
+        "projectUrl": "https://bria.ai/",
+        "revision": "gated-upstream-local-onnx-provenance-unverified",
+        "licenseExpression": "LicenseRef-BRIA-RMBG-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.dynamic-int8",
+          "format": "onnx",
+          "relativePath": "model.onnx",
+          "role": "model",
+          "size": 366087549,
+          "sha256": "fcea23951a378f92634834888896cc1eec54655366ae6e949282646ce17c5420"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RMBG"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
@@ -1333,6 +2783,104 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "paddleocr/ppocrv5/mobile-cls",
+      "stage": 19,
+      "family": "paddle-ocr-cls",
+      "task": "text-orientation-classification",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 1018940,
+          "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
+      "inventoryId": "paddleocr/ppocrv5/mobile-det",
+      "stage": 19,
+      "family": "paddle-ocr-det",
+      "task": "text-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/mobile-det.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 4826518,
+          "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "paddleocr/ppocrv5/mobile-det/external",
       "stage": 19,
       "family": "paddle-ocr-det",
@@ -1340,9 +2888,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-det.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1372,6 +2920,63 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "paddleocr/ppocrv5/mobile-rec",
+      "stage": 19,
+      "family": "paddle-ocr-rec",
+      "task": "text-recognition",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/mobile-rec.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 16560873,
+          "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/ppocrv5_dict.txt",
+          "role": "labels",
+          "size": 74012,
+          "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "paddleocr/ppocrv5/mobile-rec/external",
       "stage": 19,
       "family": "paddle-ocr-rec",
@@ -1379,9 +2984,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-rec.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1419,6 +3024,104 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "paddleocr/ppocrv5/server-cls",
+      "stage": 19,
+      "family": "paddle-ocr-cls",
+      "task": "text-orientation-classification",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/server-cls.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 6777308,
+          "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
+      "inventoryId": "paddleocr/ppocrv5/server-det",
+      "stage": 19,
+      "family": "paddle-ocr-det",
+      "task": "text-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/server-det.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:22a33e0ba6a21425ea4192da03bf4395c9a0c67902bd924b7328fc859073045d",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 88116836,
+          "sha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "paddleocr/ppocrv5/server-det/external",
       "stage": 19,
       "family": "paddle-ocr-det",
@@ -1426,9 +3129,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-server-det.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:22a33e0ba6a21425ea4192da03bf4395c9a0c67902bd924b7328fc859073045d",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1458,6 +3161,63 @@
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
     },
     {
+      "inventoryId": "paddleocr/ppocrv5/server-rec",
+      "stage": 19,
+      "family": "paddle-ocr-rec",
+      "task": "text-recognition",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/ocr-anomaly-rmbg/releases/server-rec.modelpack.json",
+      "source": {
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "revision": "sha256:d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 84502992,
+          "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/ppocrv5_dict.txt",
+          "role": "labels",
+          "size": 74012,
+          "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
+          "role": "license",
+          "size": 11376,
+          "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\ocr"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260818.ppocrv5.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
       "inventoryId": "paddleocr/ppocrv5/server-rec/external",
       "stage": 19,
       "family": "paddle-ocr-rec",
@@ -1465,9 +3225,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-server-rec.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1551,9 +3311,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-mobile-cls.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1590,9 +3350,9 @@
       "kind": "audited-external-model",
       "manifestPath": "eng/models/ocr-anomaly-rmbg/manifests/ppocrv5-server-cls.modelpack.json",
       "source": {
-        "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR",
+        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "local-artifact-provenance-unverified",
+        "revision": "sha256:6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
         "licenseExpression": "Apache-2.0",
         "redistributionAllowed": false
       },
@@ -1620,6 +3380,63 @@
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+    },
+    {
+      "inventoryId": "rt-detr/r50vd-decoded-vector-ir",
+      "stage": 21,
+      "family": "rt-detr",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "openvino-ir.fp32",
+          "format": "openvino-ir",
+          "relativePath": "bundle/model.xml",
+          "role": "model",
+          "size": 1556096,
+          "sha256": "9d49703964c07567de7f00bda85bae1760da322e2b0655bfae110f2c222c778d"
+        },
+        {
+          "artifactId": "openvino-ir.fp32",
+          "format": "openvino-ir",
+          "relativePath": "bundle/model.bin",
+          "role": "weights",
+          "size": 85633634,
+          "sha256": "c4f2ea6021314c23d691e5d6911da0804191202d049f3927cfa242f181600455"
+        },
+        {
+          "artifactId": "openvino-ir.fp32",
+          "format": "openvino-ir",
+          "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+          "role": "license",
+          "size": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RT-DETR"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-decoded-vector-ir/external",
@@ -1669,6 +3486,55 @@
       "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
     },
     {
+      "inventoryId": "rt-detr/r50vd-decoded-vector-onnx",
+      "stage": 21,
+      "family": "rt-detr",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 169228279,
+          "sha256": "a0477cb6cb33f431eae72438cd9a38fa80c46bca9b8d397a4ece49a9ee4353db"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+          "role": "license",
+          "size": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RT-DETR"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+    },
+    {
       "inventoryId": "rt-detr/r50vd-decoded-vector-onnx/external",
       "stage": 21,
       "family": "rt-detr",
@@ -1703,6 +3569,55 @@
         "uploaded": false,
         "downloadable": false,
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+    },
+    {
+      "inventoryId": "rt-detr/r50vd-raw-query",
+      "stage": 21,
+      "family": "rt-detr",
+      "task": "object-detection",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/detr/releases/rt-detr-r50vd-raw-query.modelpack.json",
+      "source": {
+        "sourceUrl": "https://github.com/PaddlePaddle/PaddleDetection/tree/b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "projectUrl": "https://github.com/PaddlePaddle/PaddleDetection",
+        "revision": "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/model.onnx",
+          "role": "model",
+          "size": 169218784,
+          "sha256": "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad"
+        },
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
+          "role": "license",
+          "size": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "legacy-read-only",
+          "path": "E:\\Model\\RT-DETR"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
@@ -1987,6 +3902,58 @@
       "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
     },
     {
+      "inventoryId": "segmentation/sam-v1-vit-b",
+      "stage": 22,
+      "family": "sam",
+      "task": "promptable-image-segmentation",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/vision/releases/sam-v1-vit-b.modelpack.json",
+      "source": {
+        "sourceUrl": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+        "projectUrl": "https://github.com/facebookresearch/segment-anything/tree/dca509fe793f601edb92606367a655c15ac00fdf",
+        "revision": "dca509fe793f601edb92606367a655c15ac00fdf",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "sam-v1-vit-b.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "sam-v1-vit-b/image-encoder.onnx",
+          "role": "model",
+          "size": 359210513,
+          "sha256": "95ea8873d6dbbf1226bf124f56930c1652c09c19f84c032b3721979699a21c3a"
+        },
+        {
+          "artifactId": "sam-v1-vit-b.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "sam-v1-vit-b/prompt-mask-decoder.onnx",
+          "role": "model",
+          "size": 16496903,
+          "sha256": "b520bc95e049862bde768b959c124d6c2a53436df81bf9c5e8689f6e406ba21a"
+        },
+        {
+          "artifactId": "sam-v1-vit-b.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "sam-v1-vit-b/LICENSE",
+          "role": "license",
+          "size": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "localStorage": [],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+    },
+    {
       "inventoryId": "grounded-sam/yoloworldv2-person-bus-sam-v1-vit-b/external",
       "stage": 23,
       "family": "grounded-sam",
@@ -2250,6 +4217,95 @@
       "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
     },
     {
+      "inventoryId": "vision-language/clip-vit-b-32",
+      "stage": 24,
+      "family": "clip",
+      "task": "vision-language-embedding",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/vision/releases/clip-vit-b-32.modelpack.json",
+      "source": {
+        "sourceUrl": "https://huggingface.co/openai/clip-vit-base-patch32/tree/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "projectUrl": "https://github.com/openai/CLIP/tree/d05afc436d78f1c48dc0dbf8e5980a9d471f35f6",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "licenseExpression": "MIT",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/image-encoder.onnx",
+          "role": "model",
+          "size": 351593168,
+          "sha256": "51e6e8f7c1d0f43c9434751d55238bba6cd6fde02865a4839683f82928e30963"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/text-encoder.onnx",
+          "role": "model",
+          "size": 253943687,
+          "sha256": "e167dd8f5510fb1bf6cdf6458f0582e69f27abacd123fe660b93ca90db4be3a8"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/preprocessor_config.json",
+          "role": "configuration",
+          "size": 316,
+          "sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/tokenizer.json",
+          "role": "tokenizer",
+          "size": 2224041,
+          "sha256": "b556ac8c99757ffb677208af34bc8c6721572114111a6e0aaf5fa69ff0b8d842"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/vocab.json",
+          "role": "vocabulary",
+          "size": 862328,
+          "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/merges.txt",
+          "role": "vocabulary",
+          "size": 524657,
+          "sha256": "f526393189112391ce6f9795d4695f704121ce452c3aad1f5335cc41337eba85"
+        },
+        {
+          "artifactId": "dual-encoder.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "clip/LICENSE",
+          "role": "license",
+          "size": 1064,
+          "sha256": "987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "canonical",
+          "path": "E:\\DeploySharp-Models\\clip-vit-base-patch32"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+    },
+    {
       "inventoryId": "vision-language/clip-vit-b-32/external",
       "stage": 24,
       "family": "clip",
@@ -2461,6 +4517,87 @@
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-clip-siglip.md"
+    },
+    {
+      "inventoryId": "generative-vision-language/blip-caption-base",
+      "stage": 25,
+      "family": "blip",
+      "task": "image-captioning",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/vision/releases/blip-caption-base.modelpack.json",
+      "source": {
+        "sourceUrl": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth",
+        "projectUrl": "https://github.com/salesforce/BLIP/tree/056a169437371659074aa2732649d5de3bffb4a8",
+        "revision": "056a169437371659074aa2732649d5de3bffb4a8",
+        "licenseExpression": "BSD-3-Clause",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/vision-encoder.onnx",
+          "role": "model",
+          "size": 344502972,
+          "sha256": "304b912cc437706e2fd34a54cfde1d156134a08a437bc7f46a29d2ea7fa759ef"
+        },
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/language-decoder.onnx",
+          "role": "model",
+          "size": 645794706,
+          "sha256": "56fcfa494c561f630b36bdf8ef62adc0597b559588995a73b56bdbab5604e686"
+        },
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/vocab.txt",
+          "role": "vocabulary",
+          "size": 231508,
+          "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+        },
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/generation-config.json",
+          "role": "configuration",
+          "size": 258,
+          "sha256": "640f3443087a7ba7cf4e6819ca9c69379669b8556acc5c178cd0e121b2d74519"
+        },
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/processor-contract.json",
+          "role": "configuration",
+          "size": 356,
+          "sha256": "76aa309c203810ad36f1ce32132dde5dc3b9c89675a19c2933df36d7085c751c"
+        },
+        {
+          "artifactId": "blip-caption-base.onnx.fp32",
+          "format": "onnx",
+          "relativePath": "blip-caption-base/LICENSE.txt",
+          "role": "license",
+          "size": 1482,
+          "sha256": "7d5df2d28b2bf297ecec0b51eb23f6d8d0c39338dae8d92f6d61d9441f77b856"
+        }
+      ],
+      "localStorage": [
+        {
+          "kind": "canonical",
+          "path": "E:\\DeploySharp-Models\\blip-caption-base"
+        }
+      ],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.vision.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/development-model-inventory.md"
     },
     {
       "inventoryId": "generative-vision-language/blip-caption-base/external",
@@ -4007,6 +6144,82 @@
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-acquisition-audio-speech.md"
+    },
+    {
+      "inventoryId": "llm/qwen2.5-0.5b-instruct-q4-k-m",
+      "stage": 29,
+      "family": "qwen2.5",
+      "task": "language-generation-and-embedding",
+      "kind": "audited-external-model",
+      "manifestPath": "eng/models/llm/releases/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
+      "source": {
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "projectUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67",
+        "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "artifacts": [
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "role": "model",
+          "size": 491400032,
+          "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+        },
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "source/config.json",
+          "role": "configuration",
+          "size": 659,
+          "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45"
+        },
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "source/generation_config.json",
+          "role": "configuration",
+          "size": 242,
+          "sha256": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6"
+        },
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "source/tokenizer_config.json",
+          "role": "tokenizer",
+          "size": 7305,
+          "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583"
+        },
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "source/LICENSE",
+          "role": "license",
+          "size": 11343,
+          "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+        },
+        {
+          "artifactId": "qwen2.5-0.5b-instruct.q4-k-m.gguf",
+          "format": "gguf",
+          "relativePath": "source/README.gguf.md",
+          "role": "other",
+          "size": 4856,
+          "sha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999"
+        }
+      ],
+      "localStorage": [],
+      "modelFactory": {
+        "state": "published-preview",
+        "uploaded": true,
+        "downloadable": true,
+        "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
+        "catalogRevision": "models-20260818.ppocrv5.1",
+        "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1"
+      },
+      "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
+      "acquisitionArticle": "docs/articles/model-acquisition-llm-gguf.md"
     },
     {
       "inventoryId": "llm/gguf/external-blocker",

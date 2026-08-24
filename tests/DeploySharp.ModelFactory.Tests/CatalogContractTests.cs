@@ -22,7 +22,7 @@ namespace DeploySharp.ModelFactory.Tests
             using (JsonDocument schema = JsonDocument.Parse(ModelCatalogSchema.GetJson())) Assert.IsFalse(schema.RootElement.GetProperty("additionalProperties").GetBoolean());
             ValidatedModelCatalog official = OfficialModelCatalog.Load();
             Assert.AreEqual("models-20260818.ppocrv5.1", official.CatalogRevision);
-            Assert.AreEqual(39, official.Document.Entries.Count);
+            Assert.AreEqual(42, official.Document.Entries.Count);
         }
 
         [TestMethod]

@@ -3587,6 +3587,255 @@
       ],
       "testInputs": [],
       "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "anomalib/padim/mvtec-bottle",
+      "name": "Anomalib PaDiM MVTec AD bottle",
+      "family": "anomalib-seg",
+      "task": "anomaly-detection",
+      "modelVersion": "mvtec-ad-bottle-pytorch-2.7.1-opset14",
+      "status": "preview",
+      "description": "Public alpha-preview Anomalib PaDiM ONNX model for MVTec AD bottle reproduction.",
+      "source": {
+        "sourceUrl": "https://github.com/open-edge-platform/anomalib",
+        "projectUrl": "https://github.com/open-edge-platform/anomalib",
+        "revision": "ffde4cce3db38964f9cf627b524dd325401c6107",
+        "author": "Anomalib maintainers",
+        "licenseExpression": "Apache-2.0",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.vision.1",
+        "commit": "93947165a7d6bd474b4acfc30b18ca38e4dd468c"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": ["onnxruntime", "openvino"],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "anomalib-padim-mvtec-bottle-modelpack",
+          "bundleRole": "anomaly-detector",
+          "bundleVersion": "mvtec-ad-bottle-pytorch-2.7.1-opset14",
+          "capabilities": ["anomaly-detection"],
+          "assets": [
+            {
+              "assetId": "anomalib-padim-mvtec-bottle-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/anomalib-padim-mvtec-bottle.modelpack.json",
+              "relativePath": "anomalib-padim-mvtec-bottle.modelpack.json",
+              "size": 2628,
+              "sha256": "f7fb8c2f60f9224ac5fdcaeccd4219c4c57b822bfd17e51d3c49a3dbd3f792bc",
+              "mediaType": "application/json",
+              "licenseExpression": "Apache-2.0"
+            },
+            {
+              "assetId": "anomalib-padim-mvtec-bottle-model",
+              "kind": "model",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/padim.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 176641352,
+              "sha256": "bde19ca3086d3fa52bb3cbc2b9ea2d554ce1f10b4c8a8b38d7393bd54247ffff",
+              "mediaType": "application/onnx",
+              "licenseExpression": "Apache-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "anomalib-to_onnx",
+            "exporterVersion": "pytorch-2.7.1-opset14",
+            "sourceRevision": "ffde4cce3db38964f9cf627b524dd325401c6107",
+            "notes": "The local PaDiM ONNX graph passed the existing ORT/OpenVINO four-output contract tests; the bundle is published for direct MVTec AD bottle reproduction."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+    },
+    {
+      "modelId": "bria/rmbg-1.4",
+      "name": "BRIA RMBG 1.4",
+      "family": "bria-rmbg",
+      "task": "foreground-matting",
+      "modelVersion": "1.4-local-onnx-opset11",
+      "status": "preview",
+      "description": "Public alpha-preview BRIA RMBG 1.4 ONNX foreground-matting model with immutable GitHub Release assets and SHA-256 checksums.",
+      "source": {
+        "sourceUrl": "https://huggingface.co/briaai/RMBG-1.4",
+        "projectUrl": "https://bria.ai/",
+        "revision": "local-onnx-provenance-unverified",
+        "author": "BRIA AI",
+        "licenseExpression": "LicenseRef-BRIA-RMBG-1.4",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.vision.1",
+        "commit": "93947165a7d6bd474b4acfc30b18ca38e4dd468c"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": ["onnxruntime", "openvino"],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "bria-rmbg-1-4-modelpack",
+          "bundleRole": "foreground-matting",
+          "bundleVersion": "1.4-local-onnx-opset11",
+          "capabilities": ["foreground-matting"],
+          "assets": [
+            {
+              "assetId": "bria-rmbg-1-4-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/bria-rmbg-1.4.modelpack.json",
+              "relativePath": "bria-rmbg-1.4.modelpack.json",
+              "size": 2286,
+              "sha256": "0ea0fb958caee29a168fdafa0316e23efb40e2648206becf9b5efc5c93eee848",
+              "mediaType": "application/json",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-1.4"
+            },
+            {
+              "assetId": "bria-rmbg-1-4-model",
+              "kind": "model",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/bria-rmbg-1.4.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 176153355,
+              "sha256": "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f",
+              "mediaType": "application/onnx",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-1.4"
+            }
+          ],
+          "conversion": {
+            "exporter": "PyTorch-ONNX",
+            "exporterVersion": "pytorch-2.1.0-opset11",
+            "sourceRevision": "2ceba5a5efaec153162aedea169f76caf9b46cf8",
+            "notes": "Local ORT/OpenVINO alpha contract evidence is recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-anomaly-detection.md"
+    },
+    {
+      "modelId": "bria/rmbg-2.0",
+      "name": "BRIA RMBG 2.0",
+      "family": "bria-rmbg",
+      "task": "foreground-matting",
+      "modelVersion": "2.0-local-onnx-opset14",
+      "status": "preview",
+      "description": "Public alpha-preview BRIA RMBG 2.0 ONNX foreground-matting model with full-precision and dynamic-int8 Release variants.",
+      "source": {
+        "sourceUrl": "https://huggingface.co/briaai/RMBG-2.0",
+        "projectUrl": "https://bria.ai/",
+        "revision": "gated-upstream-local-onnx-provenance-unverified",
+        "author": "BRIA AI",
+        "licenseExpression": "LicenseRef-BRIA-RMBG-2.0",
+        "redistributionAllowed": true
+      },
+      "release": {
+        "owner": "guojin-yan",
+        "repository": "DeploySharp",
+        "tag": "models-20260817.vision.1",
+        "commit": "93947165a7d6bd474b4acfc30b18ca38e4dd468c"
+      },
+      "artifacts": [
+        {
+          "artifactId": "onnx.fp32",
+          "format": "onnx",
+          "compatibleBackends": ["onnxruntime", "openvino"],
+          "precision": "fp32",
+          "quantization": "none",
+          "portable": true,
+          "manifestAssetId": "bria-rmbg-2-0-fp32-modelpack",
+          "bundleRole": "foreground-matting",
+          "bundleVersion": "2.0-local-onnx-opset14",
+          "capabilities": ["foreground-matting"],
+          "assets": [
+            {
+              "assetId": "bria-rmbg-2-0-fp32-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/bria-rmbg-2.0-fp32.modelpack.json",
+              "relativePath": "bria-rmbg-2.0-fp32.modelpack.json",
+              "size": 2310,
+              "sha256": "2f012da4cd23e064629eaea824224dcc5201cf9c8b419ee38ea1aaf3e4be6276",
+              "mediaType": "application/json",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-2.0"
+            },
+            {
+              "assetId": "bria-rmbg-2-0-fp32-model",
+              "kind": "model",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/RMBG-2.0.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 1024331469,
+              "sha256": "5b486f08200f513f460da46dd701db5fbb47d79b4be4b708a19444bcd4e79958",
+              "mediaType": "application/onnx",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "ONNX export",
+            "exporterVersion": "local-exporter-unverified-opset14",
+            "sourceRevision": "5df4c9c76d8170882c34f6986e848ee07fd0ba43",
+            "notes": "Local ORT 1024x1024 alpha contract evidence is recorded in the released ModelPack."
+          }
+        },
+        {
+          "artifactId": "onnx.dynamic-int8",
+          "format": "onnx",
+          "compatibleBackends": ["onnxruntime", "openvino"],
+          "precision": "int8",
+          "quantization": "dynamic",
+          "portable": true,
+          "manifestAssetId": "bria-rmbg-2-0-int8-modelpack",
+          "bundleRole": "foreground-matting",
+          "bundleVersion": "2.0-local-onnx-opset14",
+          "capabilities": ["foreground-matting"],
+          "assets": [
+            {
+              "assetId": "bria-rmbg-2-0-int8-modelpack",
+              "kind": "manifest",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/bria-rmbg-2.0-int8.modelpack.json",
+              "relativePath": "bria-rmbg-2.0-int8.modelpack.json",
+              "size": 2318,
+              "sha256": "d5e381429e8bb9162e82fbadfb81058121cf20b2753fddfe798a8d22ce1bdd67",
+              "mediaType": "application/json",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-2.0"
+            },
+            {
+              "assetId": "bria-rmbg-2-0-int8-model",
+              "kind": "model",
+              "releaseTag": "models-20260817.vision.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/RMBG-2.0_quantized.onnx",
+              "relativePath": "bundle/model.onnx",
+              "size": 366087549,
+              "sha256": "fcea23951a378f92634834888896cc1eec54655366ae6e949282646ce17c5420",
+              "mediaType": "application/onnx",
+              "licenseExpression": "LicenseRef-BRIA-RMBG-2.0"
+            }
+          ],
+          "conversion": {
+            "exporter": "ONNX export",
+            "exporterVersion": "local-exporter-unverified-opset14",
+            "sourceRevision": "5df4c9c76d8170882c34f6986e848ee07fd0ba43",
+            "notes": "Local ORT 1024x1024 alpha contract evidence is recorded in the released ModelPack."
+          }
+        }
+      ],
+      "testInputs": [],
+      "documentationPath": "articles/visual-anomaly-detection.md"
     }
   ]
 }

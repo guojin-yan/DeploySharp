@@ -1,6 +1,6 @@
 # Stage 36 package provenance, license, symbol, and SBOM evidence / 阶段 36 包来源、许可证、符号与 SBOM 证据门
 
-Stage 36 adds `eng/pack/Test-ReleaseEvidence.ps1` and a retained evidence set under `eng/pack/release-evidence/`. The current gate reads 12 pack definitions, all 12 lock/assets pairs, generated nuspecs, local NuGet cache metadata, Release assemblies/PDBs, public XML contracts, the exact Qwen manifest, and the 39-entry official catalog. It does not restore from the network, change dependencies, sign packages, or publish artifacts. / 阶段 36 新增 `eng/pack/Test-ReleaseEvidence.ps1`，并在 `eng/pack/release-evidence/` 保留机器可读证据。当前门禁读取 12 个包定义、12 组 lock/assets、生成的 nuspec、本地 NuGet 缓存元数据、Release 程序集/PDB、公共 XML 合同、精确 Qwen Manifest 和 39 项 official catalog；不联网恢复、不升级依赖、不签名、不发布。
+Stage 36 adds `eng/pack/Test-ReleaseEvidence.ps1` and a retained evidence set under `eng/pack/release-evidence/`. The current gate reads 12 pack definitions, all 12 lock/assets pairs, generated nuspecs, local NuGet cache metadata, Release assemblies/PDBs, public XML contracts, the exact Qwen manifest, and the 40-entry official catalog. It does not restore from the network, change dependencies, sign packages, or publish artifacts. / 阶段 36 新增 `eng/pack/Test-ReleaseEvidence.ps1`，并在 `eng/pack/release-evidence/` 保留机器可读证据。当前门禁读取 12 个包定义、12 组 lock/assets、生成的 nuspec、本地 NuGet 缓存元数据、Release 程序集/PDB、公共 XML 合同、精确 Qwen Manifest 和 40 项 official catalog；不联网恢复、不升级依赖、不签名、不发布。
 
 ## Evidence formats / 证据格式
 

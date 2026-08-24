@@ -80,6 +80,39 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public void OfficialOnnxArchivesAndDictionaryRemainPinnedOutsideCurrentModelPack()
+        {
+            string evidencePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "paddleocr-release-admission.json");
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(evidencePath));
+            JsonElement root = document.RootElement;
+
+            JsonElement archives = root.GetProperty("officialOnnxInferenceArchives");
+            Assert.AreEqual(6, archives.GetArrayLength());
+            Assert.IsTrue(archives.EnumerateArray().All(archive =>
+                archive.GetProperty("scope").GetString() ==
+                    "official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack" &&
+                archive.GetProperty("sourceUrl").GetString()!.StartsWith(
+                    "https://paddle-model-ecology.bj.bcebos.com/", StringComparison.Ordinal) &&
+                archive.GetProperty("sourceUrl").GetString()!.EndsWith(
+                    "_onnx_infer.tar", StringComparison.Ordinal) &&
+                archive.GetProperty("archiveEntry").GetString()!.EndsWith(
+                    "/inference.onnx", StringComparison.Ordinal)));
+
+            JsonElement mobileClassifier = archives.EnumerateArray().Single(archive =>
+                archive.GetProperty("modelId").GetString() == "paddleocr/ppocrv5/mobile-cls/external");
+            Assert.AreEqual(1044480L, mobileClassifier.GetProperty("archiveSize").GetInt64());
+            Assert.AreEqual("e29f1bffb2cec4db1ef8da9b2369d033d0a16d0a1a8f033b518d6063e6b9a1af", mobileClassifier.GetProperty("archiveSha256").GetString());
+            Assert.AreEqual(1019454L, mobileClassifier.GetProperty("onnxSize").GetInt64());
+            Assert.AreEqual("94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3", mobileClassifier.GetProperty("onnxSha256").GetString());
+
+            JsonElement dictionary = root.GetProperty("sharedArtifacts").GetProperty("dictionary");
+            Assert.AreEqual("https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt", dictionary.GetProperty("sourceUrl").GetString());
+            Assert.AreEqual("2661c7c0ef5c613e8f93c6e93b2e052399f0f854", dictionary.GetProperty("sourceRevision").GetString());
+            Assert.AreEqual("official-pinned-repository-file", dictionary.GetProperty("sourceStatus").GetString());
+            Assert.AreEqual("d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b", dictionary.GetProperty("sha256").GetString());
+        }
+
+        [TestMethod]
         public void MobileClassifierEvidenceRejectsIdentityContractGoldenAndBlockerDrift()
         {
             string evidencePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "paddleocr-release-admission.json");

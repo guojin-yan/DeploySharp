@@ -85,10 +85,12 @@ namespace DeploySharp.ModelFactory.Cli
 
         private static async Task<int> InstallAsync(string[] args)
         {
-            EnsureKnownOptions(args, "--model-id", "--backend", "--format", "--cache", "--preview", "--offline", "--timeout-minutes", "--max-retries");
+            EnsureKnownOptions(args, "--model-id", "--backend", "--format", "--precision", "--quantization", "--cache", "--preview", "--offline", "--timeout-minutes", "--max-retries");
             string modelId = RequireOption(args, "--model-id");
             string? backend = ReadOption(args, "--backend");
             string? format = ReadOption(args, "--format");
+            string? precision = ReadOption(args, "--precision");
+            string? quantization = ReadOption(args, "--quantization");
             string cacheRoot = ReadOption(args, "--cache") ?? GetDefaultCacheRoot();
             bool includePreview = HasFlag(args, "--preview");
             bool offline = HasFlag(args, "--offline");
@@ -106,6 +108,8 @@ namespace DeploySharp.ModelFactory.Cli
                 modelId: modelId,
                 backend: backend,
                 format: format,
+                precision: precision,
+                quantization: quantization,
                 includePreview: includePreview));
 
             Console.WriteLine("selected=" + selection.Entry.ModelId + ";artifact=" + selection.Artifact.ArtifactId + ";format=" + selection.Artifact.Format + ";backend=" + string.Join(",", selection.Artifact.CompatibleBackends));
@@ -221,6 +225,8 @@ namespace DeploySharp.ModelFactory.Cli
             return string.Equals(option, "--model-id", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(option, "--backend", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(option, "--format", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(option, "--precision", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(option, "--quantization", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(option, "--cache", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(option, "--timeout-minutes", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(option, "--max-retries", StringComparison.OrdinalIgnoreCase);
@@ -232,12 +238,14 @@ namespace DeploySharp.ModelFactory.Cli
             Console.WriteLine();
             Console.WriteLine("Commands:");
             Console.WriteLine("  list [--preview]");
-            Console.WriteLine("  install --model-id <id> [--backend <id>] [--format <format>] [--cache <path>] [--preview] [--offline]");
+            Console.WriteLine("  install --model-id <id> [--backend <id>] [--format <format>] [--precision <id>] [--quantization <id>]");
+            Console.WriteLine("          [--cache <path>] [--preview] [--offline]");
             Console.WriteLine("          [--timeout-minutes <number>] [--max-retries <number>]");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- list --preview");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id yolo/v8/detect/n --backend onnxruntime --format onnx --preview");
+            Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id bria/rmbg-2.0 --backend onnxruntime --format onnx --precision int8 --quantization dynamic --preview");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id yolo/v8/detect/n --offline --cache D:\\DeploySharpCache");
         }
     }

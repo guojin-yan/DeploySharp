@@ -1,6 +1,6 @@
 # Development model inventory / 开发模型总清单
 
-DeploySharp keeps one machine-readable inventory for every model, converted graph, external blocker, and contract fixture used in Stages 1-35: `eng/models/inventory/development-model-inventory.json`. Regenerate it with `eng/models/inventory/Update-DevelopmentModelInventory.ps1`; use `-Check` in gates. Stage 1 used no model. The current snapshot contains 69 entries: 56 structured manifests, 11 contract-fixture groups, the Stage 2 gated GGUF row, the Stage 17 local YOLO matrix, the Stage 30 GGUF admission blocker, and the Stage 31 exact Qwen external row. Stages 32-35 added no inventory row. / DeploySharp 使用一份机器可读清单汇总阶段 1-35 的所有模型、转换图、External blocker 与合同 Fixture。当前快照仍为 69 条/56 份结构化 Manifest；阶段 32-35 没有新增清单行。
+DeploySharp keeps one machine-readable inventory for every model, converted graph, external blocker, and contract fixture used in Stages 1-61: `eng/models/inventory/development-model-inventory.json`. Regenerate it with `eng/models/inventory/Update-DevelopmentModelInventory.ps1`; use `-Check` in gates. Stage 1 used no model. The current snapshot contains 112 entries: 99 structured manifests, 11 contract-fixture groups, and the current ModelFactory Preview release rows. The inventory distinguishes bundled Preview publication from `AlgorithmVerified` and GA admission. / DeploySharp 使用一份机器可读清单汇总阶段 1-61 的所有模型、转换图、External blocker 与合同 Fixture。当前快照为 112 条/99 份结构化 Manifest/11 组合同 Fixture，并纳入当前 ModelFactory Preview 发布行；清单明确区分 Preview 发布、AlgorithmVerified 与 GA 准入。
 
 ## Storage layout / 存储布局
 
@@ -26,9 +26,15 @@ The executable `audio/wav2vec2-base-960h/external` row contains exact ONNX/OpenV
 
 ## ModelFactory publication state / ModelFactory 发布状态
 
-The inventory separately records metadata readiness, upload state, and download state. The audited manifests, including the Stage 31 local-only Qwen row, remain non-published; therefore `uploaded=0`, `downloadable=0`, and the embedded official catalog remains empty. ModelFactory already supports immutable HTTPS Release assets, size/SHA verification, content-addressed cache, and offline reuse, but local possession is not redistribution permission. / 清单分别记录元数据就绪、上传和下载状态。包括阶段 31 本地 Qwen 在内的已审核 Manifest 均未发布，因此上传数和可下载数为 0，内置 official catalog 保持为空。本机持有不等于再分发授权。
+The inventory separately records metadata readiness, upload state, and download state. The 43 release manifests matching the current catalog artifacts are `uploaded=true` and `downloadable=true`; the other 69 rows remain non-published. ModelFactory already supports immutable HTTPS Release assets, size/SHA verification, content-addressed cache, and offline reuse, but public Preview availability is not redistribution permission for every external candidate. / 清单分别记录元数据就绪、上传和下载状态。与当前 catalog artifact 匹配的 43 份 Release Manifest 标记为 `uploaded=true` 和 `downloadable=true`；其余 69 条仍未发布。ModelFactory 已支持不可变 HTTPS Release 资产、大小/SHA 校验、内容寻址缓存与离线复用，但公开 Preview 可用不等于所有 External 候选都获得再分发许可。
 
-A model becomes downloadable only after all of these are true: exact artifact terms permit redistribution; required notices/source obligations are prepared; every file and sidecar has a reviewed size/SHA; an immutable Release URI exists; the catalog entry passes validation; and an explicit release operation is authorized. This stage performs none of those external publication actions. / 只有工件条款明确允许再分发、义务已准备、全部文件已审核、不可变 Release URI 已存在、目录校验通过且得到明确发布授权后，模型才可下载。本阶段不执行外部发布。
+## Current publication snapshot / 当前发布快照
+
+The bundled catalog revision is `models-20260818.ppocrv5.1`. It contains 42 Preview entries, 142 declared assets, and five immutable prerelease tags; every catalog asset has an HTTPS Release URL, a positive size, and a SHA-256. The inventory marks only the 43 matching `eng/models/**/releases` manifests/artifact rows as `published-preview`; this is publication/download evidence, not `AlgorithmVerified` or GA. / 当前内置 catalog revision 为 `models-20260818.ppocrv5.1`，包含 42 条 Preview、142 个声明资产和 5 个不可变 prerelease tag；每个 catalog 资产均有 HTTPS Release URL、正数大小与 SHA-256。清单仅将匹配 `eng/models/**/releases` 的 43 份 Manifest/Artifact 行标记为 `published-preview`；这表示已发布/可下载证据，不表示 `AlgorithmVerified` 或 GA。
+
+The V1 migration matrix has 32 local execution rows. All thirty-two have a published catalog mapping, including `BriaRmbg` through the BRIA RMBG 1.4 Preview entry. The strict V1 `AlgorithmVerified` count remains `0/32`. / V1 迁移矩阵共有 32 条本地执行行，32 条均已有已发布 catalog 映射，其中 `BriaRmbg` 对应 BRIA RMBG 1.4 Preview 条目。严格 V1 `AlgorithmVerified` 计数仍为 `0/32`。
+
+A model becomes downloadable only after all of these are true: exact artifact terms permit redistribution; required notices/source obligations are prepared; every file and sidecar has a reviewed size/SHA; an immutable Release URI exists; the catalog entry passes validation; and an explicit release operation is authorized. The BRIA RMBG 1.4/2.0 assets were published to the existing Vision Release under the user's direct publication authorization. / 只有工件条款明确允许再分发、义务已准备、全部文件已审核、不可变 Release URI 已存在、目录校验通过且得到明确发布授权后，模型才可下载。本轮 BRIA RMBG 1.4/2.0 资产已根据用户直接发布授权加入现有 Vision Release。
 
 ## Family acquisition guides / 模型族获取指南
 

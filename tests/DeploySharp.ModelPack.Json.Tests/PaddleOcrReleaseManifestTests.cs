@@ -13,7 +13,11 @@ namespace DeploySharp.ModelPack.Json.Tests
         public void SixPaddleOcrV5ReleaseManifestsAreDownloadableAndIntegrityBound()
         {
             string directory = Path.Combine(AppContext.BaseDirectory, "fixtures", "paddleocr-release");
-            string[] files = Directory.GetFiles(directory, "*.modelpack.json").OrderBy(path => path, StringComparer.Ordinal).ToArray();
+            string[] files = Directory.GetFiles(directory, "*.modelpack.json")
+                .Where(path => Path.GetFileName(path).StartsWith("mobile-", StringComparison.Ordinal)
+                    || Path.GetFileName(path).StartsWith("server-", StringComparison.Ordinal))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .ToArray();
 
             Assert.AreEqual(6, files.Length);
             foreach (string file in files)

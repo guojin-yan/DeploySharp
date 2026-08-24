@@ -10,12 +10,32 @@ $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) { $RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $PSScriptRoot 'development-model-inventory.json' }
 
+$officialCatalogPath = Join-Path $RepositoryRoot 'src\DeploySharp.ModelFactory\catalog\deploysharp-official-catalog.json'
+if (-not (Test-Path -LiteralPath $officialCatalogPath -PathType Leaf)) { throw "Official catalog is missing: $officialCatalogPath" }
+$officialCatalog = Get-Content -LiteralPath $officialCatalogPath -Raw | ConvertFrom-Json
+$officialCatalogEntries = @($officialCatalog.entries)
+$officialCatalogByModelId = @{}
+foreach ($catalogEntry in $officialCatalogEntries) {
+    $catalogModelId = [string]$catalogEntry.modelId
+    if ([string]::IsNullOrWhiteSpace($catalogModelId) -or $officialCatalogByModelId.ContainsKey($catalogModelId)) { throw "Official catalog model IDs must be unique and non-empty: $catalogModelId" }
+    $officialCatalogByModelId[$catalogModelId] = $catalogEntry
+}
+$officialCatalogAssetCount = @($officialCatalogEntries | ForEach-Object { $_.artifacts | ForEach-Object { $_.assets } }).Count
+$officialCatalogDownloadableCount = @($officialCatalogEntries | Where-Object {
+    $_.status -eq 'preview' -and [bool]$_.source.redistributionAllowed -and
+    @($_.artifacts | ForEach-Object { $_.assets } | Where-Object { [string]::IsNullOrWhiteSpace([string]$_.downloadUrl) }).Count -eq 0
+}).Count
+$officialCatalogReleaseTags = @($officialCatalogEntries | ForEach-Object { [string]$_.release.tag } | Sort-Object -Unique)
+
 function Get-StageNumber([string]$modelId, [string]$manifestPath) {
     if ($manifestPath -match '\\yolo\\') { return 16 }
     if ($modelId.StartsWith('rt-detr/', [System.StringComparison]::OrdinalIgnoreCase)) { return 21 }
     if ($manifestPath -match '\\detr\\') { return 18 }
     if ($modelId -match '/(legacy|mobile|server)-cls/') { return 20 }
     if ($manifestPath -match '\\ocr-anomaly-rmbg\\') { return 19 }
+    if ($modelId.StartsWith('segmentation/sam-', [System.StringComparison]::OrdinalIgnoreCase)) { return 22 }
+    if ($modelId.StartsWith('vision-language/', [System.StringComparison]::OrdinalIgnoreCase)) { return 24 }
+    if ($modelId.StartsWith('generative-vision-language/', [System.StringComparison]::OrdinalIgnoreCase)) { return 25 }
     if ($manifestPath -match '\\sam\\') { return 22 }
     if ($manifestPath -match '\\open-vocabulary\\') { return 23 }
     if ($manifestPath -match '\\vision-language\\') { return 24 }
@@ -159,12 +179,26 @@ foreach ($file in Get-ChildItem -LiteralPath $manifestRoot -Recurse -Filter '*.m
     }
     $redistributionAllowed = [bool]$manifest.source.redistributionAllowed
     $isExactGgufBlocker = $manifest.modelId -eq 'llm/gguf/external-blocker'
-    $blocker = if ($isExactGgufBlocker) {
+    $isPublishedCatalogEntry = $relativeManifest -match '/releases/' -and $officialCatalogByModelId.ContainsKey([string]$manifest.modelId)
+    $catalogEntry = if ($isPublishedCatalogEntry) { $officialCatalogByModelId[[string]$manifest.modelId] } else { $null }
+    $blocker = if ($isPublishedCatalogEntry) {
+        'Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.'
+    } elseif ($isExactGgufBlocker) {
         [string]$manifest.artifacts[0].extensions.'deploysharp.blocker'
     } elseif ($redistributionAllowed) {
         'No immutable DeploySharp model-asset URI has been authorized or published.'
     } else {
         'The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review.'
+    }
+    $modelFactory = [ordered]@{
+        state = if ($isPublishedCatalogEntry) { 'published-preview' } elseif ($isExactGgufBlocker) { 'external-blocked' } else { 'external-metadata-ready' }
+        uploaded = [bool]$isPublishedCatalogEntry
+        downloadable = [bool]$isPublishedCatalogEntry
+        blocker = $blocker
+    }
+    if ($isPublishedCatalogEntry) {
+        $modelFactory.catalogRevision = [string]$officialCatalog.catalogRevision
+        $modelFactory.releaseTag = [string]$catalogEntry.release.tag
     }
     $rows.Add([ordered]@{
         inventoryId = $manifest.modelId
@@ -182,12 +216,7 @@ foreach ($file in Get-ChildItem -LiteralPath $manifestRoot -Recurse -Filter '*.m
         }
         artifacts = $artifactFiles
         localStorage = @(Get-LocalStorage $manifest.modelId)
-        modelFactory = [ordered]@{
-            state = if ($isExactGgufBlocker) { 'external-blocked' } else { 'external-metadata-ready' }
-            uploaded = $false
-            downloadable = $false
-            blocker = $blocker
-        }
+        modelFactory = $modelFactory
         evidence = if ($isExactGgufBlocker) { 'Stage 30 found no exact GGUF; the ModelPack retains hash-protected blocker audit evidence only.' } else { 'The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.' }
         acquisitionArticle = Get-AcquisitionArticle $manifest.modelId $file.FullName
     })
@@ -196,17 +225,22 @@ foreach ($file in Get-ChildItem -LiteralPath $manifestRoot -Recurse -Filter '*.m
 $orderedRows = @($rows | Sort-Object @{ Expression = { [int]$_['stage'] } }, @{ Expression = { [string]$_['inventoryId'] } })
 $document = [ordered]@{
     schemaVersion = '1.0'
-    generatedAt = '2026-08-11T00:00:00Z'
+    generatedAt = '2026-08-23T00:00:00Z'
     warehouseRootDefault = $WarehouseRoot
-    scope = 'All model, checkpoint, converted graph, blocker, and contract-fixture families evidenced during DeploySharp V2 Stages 1-35. Stage 1 had no model execution; Stage 31 admitted one authorized local-only Qwen GGUF with real LLamaSharp CPU evidence; Stages 32-35 revalidated its immutable model, sidecar, evidence, and package boundary without adding an inventory row.'
+    scope = 'All model, checkpoint, converted graph, blocker, and contract-fixture families evidenced during DeploySharp V2 Stages 1-61. The inventory distinguishes current bundled ModelFactory Preview releases from historical/local External manifests.'
     policy = [ordered]@{
         userAssetRootsRemainReadOnly = @('E:\Model','E:\Data')
-        officialCatalogAdmission = 'empty'
-        releaseAssetsWritten = $false
+        officialCatalogAdmission = 'current-bundled-preview'
+        officialCatalogRevision = [string]$officialCatalog.catalogRevision
+        officialCatalogEntries = $officialCatalogEntries.Count
+        officialCatalogDownloadableEntries = $officialCatalogDownloadableCount
+        officialCatalogAssetCount = $officialCatalogAssetCount
+        officialCatalogReleaseTags = $officialCatalogReleaseTags
+        releaseAssetsWritten = $true
         actionsInvoked = $false
         uploadRule = 'Only artifacts with an independently audited redistribution grant and an immutable authorized URI may become downloadable ModelFactory assets.'
         requestedDestination = 'DeploySharp ModelFactory immutable release assets and content-addressed cache'
-        publicationState = 'metadata-indexed-binaries-blocked-by-redistribution-and-no-release-authority'
+        publicationState = 'bundled-preview-release-assets-available;algorithm-admission-and-ga-blocked'
     }
     counts = [ordered]@{
         entries = $orderedRows.Count
@@ -214,6 +248,7 @@ $document = [ordered]@{
         contractFixtures = @($orderedRows | Where-Object { $_.kind -eq 'contract-fixture' }).Count
         downloadable = @($orderedRows | Where-Object { $_.modelFactory.downloadable }).Count
         uploaded = @($orderedRows | Where-Object { $_.modelFactory.uploaded }).Count
+        publishedPreviewRows = @($orderedRows | Where-Object { $_.modelFactory.state -eq 'published-preview' }).Count
     }
     entries = $orderedRows
 }

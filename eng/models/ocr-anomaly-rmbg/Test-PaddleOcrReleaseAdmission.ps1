@@ -35,6 +35,27 @@ $licenseReviewPath = Join-Path $repositoryRoot ([string]$evidence.releaseAdmissi
 if (-not (Test-Path -LiteralPath $licenseReviewPath -PathType Leaf)) { throw "License review evidence is missing: $licenseReviewPath" }
 $licenseReview = Get-Content -Raw -LiteralPath $licenseReviewPath | ConvertFrom-Json
 if ($licenseReview.decision.redistributionApproved -or $licenseReview.decision.state -ne 'blocked-external-only' -or @($licenseReview.modelArchives).Count -ne 6) { throw 'License review evidence must keep all six model archives blocked and unapproved.' }
+$officialOnnx = @{}
+$expectedOfficialOnnx = @{
+    'paddleocr/ppocrv5/mobile-det/external' = @{ ArchiveSize = 4843520; ArchiveSha256 = '781056046c9ed77a15c94681605db6a0f62317c2e9cce6931c71da2478d4bc30'; OnnxSize = 4826518; OnnxSha256 = 'a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d' }
+    'paddleocr/ppocrv5/mobile-rec/external' = @{ ArchiveSize = 16701440; ArchiveSha256 = 'f7e792bc836f36e7ef895ad47c426d75b0b75b1650caa6d63fe9418441ffba8c'; OnnxSize = 16534782; OnnxSha256 = 'da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092' }
+    'paddleocr/ppocrv5/mobile-cls/external' = @{ ArchiveSize = 1044480; ArchiveSha256 = 'e29f1bffb2cec4db1ef8da9b2369d033d0a16d0a1a8f033b518d6063e6b9a1af'; OnnxSize = 1019454; OnnxSha256 = '94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3' }
+    'paddleocr/ppocrv5/server-det/external' = @{ ArchiveSize = 88135680; ArchiveSha256 = 'cd28389ed2c11dfe02d6a9847ec95ca6153a51bf38bc1c4e2521c1f548188f58'; OnnxSize = 88116791; OnnxSha256 = '10803475a591f7dc623e24670fb5752ec94d39a1f8cf069aac1b6f0ce19cfc85' }
+    'paddleocr/ppocrv5/server-rec/external' = @{ ArchiveSize = 84674560; ArchiveSha256 = '67af91d7ab16288116d578c8055d1d4d114c8380d8059ad3c044cd52cae206f1'; OnnxSize = 84503027; OnnxSha256 = 'd9dc333c9c7b042c6dffb8e33d72b6f65c9c1d463d0a3c2f78174fea55e94752' }
+    'paddleocr/ppocrv5/server-cls/external' = @{ ArchiveSize = 6799360; ArchiveSha256 = '274241c75b18f4c1787915383f6a2b73a76f2b56e5023d581af1ce856ba98e1e'; OnnxSize = 6777816; OnnxSha256 = '38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345' }
+}
+foreach ($archive in @($evidence.officialOnnxInferenceArchives)) {
+    if ($officialOnnx.ContainsKey([string]$archive.modelId)) { throw "Duplicate official ONNX source identity '$($archive.modelId)'." }
+    if (-not $expectedOfficialOnnx.ContainsKey([string]$archive.modelId)) { throw "Unexpected official ONNX source identity '$($archive.modelId)'." }
+    $expected = $expectedOfficialOnnx[[string]$archive.modelId]
+    $uri = [Uri]$archive.sourceUrl
+    if ($uri.Scheme -ne 'https' -or $uri.Host -ne 'paddle-model-ecology.bj.bcebos.com' -or -not $uri.AbsolutePath.EndsWith('_onnx_infer.tar', [StringComparison]::Ordinal)) { throw "Official ONNX source URL is not an immutable Paddle archive for $($archive.modelId)." }
+    if ([long]$archive.archiveSize -ne $expected.ArchiveSize -or [string]$archive.archiveSha256 -ne $expected.ArchiveSha256 -or [long]$archive.onnxSize -ne $expected.OnnxSize -or [string]$archive.onnxSha256 -ne $expected.OnnxSha256 -or -not ([string]$archive.archiveEntry).EndsWith('/inference.onnx', [StringComparison]::Ordinal)) { throw "Official ONNX source identity drifted for $($archive.modelId)." }
+    if ([string]$archive.scope -ne 'official-paddle-onnx-inference-archive;not-the-current-DeploySharp-ModelPack') { throw "Official ONNX source scope drifted for $($archive.modelId)." }
+    $officialOnnx[[string]$archive.modelId] = $archive
+}
+if ($officialOnnx.Count -ne $expectedOfficialOnnx.Count) { throw "Expected $($expectedOfficialOnnx.Count) official ONNX source contracts, found $($officialOnnx.Count)." }
+if ($evidence.sharedArtifacts.dictionary.sourceRevision -ne $evidence.upstreamCode.pinnedRevision -or -not ([string]$evidence.sharedArtifacts.dictionary.sourceUrl).EndsWith('/ppocrv5_dict.txt', [StringComparison]::Ordinal) -or $evidence.sharedArtifacts.dictionary.sourceStatus -ne 'official-pinned-repository-file') { throw 'Official dictionary source binding is incomplete.' }
 $officialPredictorEvidencePath = Join-Path $repositoryRoot ([string]$evidence.releaseAdmission.officialPredictorGoldenEvidence).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
 if (-not (Test-Path -LiteralPath $officialPredictorEvidencePath -PathType Leaf)) { throw "Official Paddle Predictor golden evidence is missing: $officialPredictorEvidencePath" }
 $officialPredictor = Get-Content -Raw -LiteralPath $officialPredictorEvidencePath | ConvertFrom-Json
@@ -352,7 +373,7 @@ else {
 $openBlockers = @($evidence.blockers | Where-Object { $_.status -eq 'open' })
 if ($openBlockers.Count -ne 1 -or $openBlockers.id -notcontains 'license-and-redistribution') { throw 'The release-admission evidence must retain the attributable legal redistribution blocker.' }
 $missingSummary = if ($missing.Count -eq 0) { 'none' } else { [string]::Join(',', $missing) }
-Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED candidate=$($algorithmCandidate.catalogModelId);catalogStatus=preview;immutableReleaseBinding=closed;releaseBoundLocalGolden=closed;verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);algorithmAdmissionRedistributionApproved=false;officialPredictorOutputStatus=recorded"
+Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED candidate=$($algorithmCandidate.catalogModelId);catalogStatus=preview;immutableReleaseBinding=closed;releaseBoundLocalGolden=closed;verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedOfficialOnnxSources=$($officialOnnx.Count)/$($expectedOfficialOnnx.Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);algorithmAdmissionRedistributionApproved=false;officialPredictorOutputStatus=recorded"
 
 if ($RequireReleaseEligible) {
     throw 'PaddleOCR mobile-cls is not AlgorithmVerified eligible: attributable legal redistribution approval remains open.'
