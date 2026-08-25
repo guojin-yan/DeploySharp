@@ -144,7 +144,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             IReadOnlyList<TensorRtEngineTensorBinding> outputs = _bindings.Report.GetOutputs();
             foreach (TensorRtEngineTensorBinding output in outputs)
             {
-                TensorRtDims runtimeShape = ResolveOutputShape(output);
+                TensorRtDims runtimeShape = ResolveOutputShape(output, allowMaximumForDataDependent: true);
                 _bindings.AllocateDeviceBuffer(output.Name, runtimeShape, output.EstimateByteSize(runtimeShape));
             }
 
@@ -160,7 +160,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             foreach (TensorRtEngineTensorBinding output in outputs)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                TensorRtDims shape = _bindings.Buffers[output.Name].RuntimeShape ?? ResolveOutputShape(output);
+                TensorRtDims shape = ResolveOutputShapeAfterEnqueue(output);
                 namedOutputs.Add(new NamedTensor(output.Name, ReadOutput(output, shape)));
             }
 
@@ -208,7 +208,8 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             if (elementType == TensorElementType.Unknown) throw UnsupportedType(binding.Name, binding.DataType, TensorElementType.Unknown);
             TensorRtInferenceBuffer buffer = _bindings.Buffers[binding.Name];
             TensorRtBindingContract.ValidateOutputBuffer(binding, shape, buffer.SizeInBytes, _artifact.ModelId);
-            byte[] bytes = buffer.Memory.ToArray(buffer.SizeInBytes);
+            int bytesToRead = checked(binding.EstimateByteSize(shape));
+            byte[] bytes = buffer.Memory.ToArray(bytesToRead);
             if (binding.DataType == TensorRtDataType.Float)
             {
                 float[] values = new float[checked(bytes.Length / sizeof(float))];
@@ -220,16 +221,84 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return CreateTensor(elementType, ToCoreShape(shape), valuesArray);
         }
 
-        private TensorRtDims ResolveOutputShape(TensorRtEngineTensorBinding output)
+        private TensorRtDims ResolveOutputShapeAfterEnqueue(TensorRtEngineTensorBinding output)
+        {
+            if (_bindings.Buffers.TryGetValue(output.Name, out TensorRtInferenceBuffer? buffer) &&
+                buffer.RuntimeShape != null &&
+                IsConcreteShape(buffer.RuntimeShape) &&
+                output.EngineShape.Values.Any(value => value < 0))
+            {
+                // Data-dependent outputs may not emit a shape notification through every
+                // bridge. The buffer was allocated from TensorRT's max-output-size bound,
+                // so returning that bounded shape is safe and preserves the complete buffer.
+                return buffer.RuntimeShape;
+            }
+
+            return ResolveOutputShape(output, allowMaximumForDataDependent: false);
+        }
+
+        private TensorRtDims ResolveOutputShape(TensorRtEngineTensorBinding output, bool allowMaximumForDataDependent)
         {
             TensorRtDims shape;
             try { shape = _context.GetTensorShape(output.Name); }
             catch { shape = output.EngineShape; }
+            if (IsConcreteShape(shape)) return shape;
+
+            if (allowMaximumForDataDependent && output.EngineShape.Values.Any(value => value < 0))
+            {
+                TensorRtDims? maximumShape = TryResolveMaximumOutputShape(output);
+                if (maximumShape != null) return maximumShape;
+            }
+
             if (shape.Values.Length == 0 || shape.Values.Any(value => value <= 0))
             {
-                throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT did not expose a concrete output shape after shape inference.", modelId: _artifact.ModelId, tensorName: output.Name, operation: "shape");
+                throw new TensorRtBackendException(
+                    TensorRtErrorCodes.TensorInvalid,
+                    "TensorRT did not expose a concrete output shape after shape inference.",
+                    modelId: _artifact.ModelId,
+                    tensorName: output.Name,
+                    operation: "shape",
+                    technicalDetails: "engineShape=" + output.EngineShape + ";contextShape=" + shape);
             }
             return shape;
+        }
+
+        private TensorRtDims? TryResolveMaximumOutputShape(TensorRtEngineTensorBinding output)
+        {
+            long maximumBytes;
+            try { maximumBytes = _context.GetMaxOutputSize(output.Name); }
+            catch { return null; }
+            if (maximumBytes <= 0) return null;
+
+            long bytesPerElement = checked((long)output.EffectiveBytesPerComponent * output.EffectiveComponentsPerElement);
+            if (bytesPerElement <= 0 || maximumBytes % bytesPerElement != 0) return null;
+            long maximumElements = maximumBytes / bytesPerElement;
+            int[] dimensions = output.EngineShape.Values.ToArray();
+            int unresolvedIndex = -1;
+            long fixedElements = 1;
+            for (int index = 0; index < dimensions.Length; index++)
+            {
+                if (dimensions[index] == -1)
+                {
+                    if (unresolvedIndex >= 0) return null;
+                    unresolvedIndex = index;
+                }
+                else
+                {
+                    fixedElements = checked(fixedElements * dimensions[index]);
+                }
+            }
+
+            if (unresolvedIndex < 0 || fixedElements <= 0 || maximumElements % fixedElements != 0) return null;
+            long unresolvedExtent = maximumElements / fixedElements;
+            if (unresolvedExtent <= 0 || unresolvedExtent > int.MaxValue) return null;
+            dimensions[unresolvedIndex] = checked((int)unresolvedExtent);
+            return new TensorRtDims(dimensions);
+        }
+
+        private static bool IsConcreteShape(TensorRtDims shape)
+        {
+            return shape.Values.Length > 0 && shape.Values.All(value => value > 0);
         }
 
         private static TensorRtDims ToTensorRtShape(TensorShape shape, string tensorName)

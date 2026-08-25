@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.TensorRtSharp;
@@ -62,7 +63,9 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         public static void ValidateOutputBuffer(TensorRtEngineTensorBinding binding, TensorRtDims shape, int actualBytes, ModelId modelId)
         {
             int expectedBytes = binding.EstimateByteSize(shape);
-            if (actualBytes != expectedBytes)
+            bool hasDataDependentDimension = binding.EngineShape.Values.Any(value => value < 0);
+            if ((hasDataDependentDimension && actualBytes < expectedBytes) ||
+                (!hasDataDependentDimension && actualBytes != expectedBytes))
             {
                 throw Invalid(binding, modelId, "The TensorRT output buffer size does not match its concrete shape and element layout.");
             }

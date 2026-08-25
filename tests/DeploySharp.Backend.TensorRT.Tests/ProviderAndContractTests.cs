@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Google.Protobuf;
 using JYPPX.CudaSharp;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.TensorRT;
@@ -12,6 +13,7 @@ using JYPPX.DeploySharp.Tensors;
 using JYPPX.TensorRtSharp;
 using JYPPX.TensorRtSharp.Shared.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Onnx;
 
 namespace DeploySharp.Backend.TensorRT.Tests
 {
@@ -116,6 +118,10 @@ namespace DeploySharp.Backend.TensorRT.Tests
 
             TensorRtBindingContract.ValidateOutputBuffer(fixedBinding, new TensorRtDims(new[] { 1, 3, 4, 4 }), 192, ModelId);
             Assert.ThrowsExactly<TensorRtBackendException>(() => TensorRtBindingContract.ValidateOutputBuffer(fixedBinding, new TensorRtDims(new[] { 1, 3, 4, 4 }), 188, ModelId));
+
+            TensorRtEngineTensorBinding dataDependentOutput = Binding(shape: new[] { -1, 7 }, ioMode: TensorRtIOMode.Output);
+            TensorRtBindingContract.ValidateOutputBuffer(dataDependentOutput, new TensorRtDims(new[] { 25216, 7 }), 25216 * sizeof(float) * 7, ModelId);
+            Assert.ThrowsExactly<TensorRtBackendException>(() => TensorRtBindingContract.ValidateOutputBuffer(dataDependentOutput, new TensorRtDims(new[] { 25216, 7 }), 7, ModelId));
         }
 
         [TestMethod]
@@ -197,6 +203,39 @@ namespace DeploySharp.Backend.TensorRT.Tests
             Assert.IsTrue(TensorRtOnnxEngineBuilder.ShouldAttachParserBuilderConfig(TensorRtApiVersion.TensorRt11));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
                 TensorRtOnnxEngineBuilder.ShouldAttachParserBuilderConfig((TensorRtApiVersion)9));
+        }
+
+        [TestMethod]
+        public void OnnxCompatibilityPassAddsPaddleGatherSqueezeAxes()
+        {
+            var model = new ModelProto
+            {
+                IrVersion = 8,
+                Graph = new GraphProto()
+            };
+            var constant = new NodeProto { OpType = "Constant" };
+            constant.Output.Add("index");
+            constant.Attribute.Add(new AttributeProto
+            {
+                Name = "value",
+                Type = AttributeProto.Types.AttributeType.Tensor,
+                T = new TensorProto { DataType = (int)TensorProto.Types.DataType.Int64, Int64Data = { 1 }, Dims = { 1 } }
+            });
+            var gather = new NodeProto { OpType = "Gather" };
+            gather.Input.Add("selected");
+            gather.Input.Add("index");
+            gather.Output.Add("gathered");
+            gather.Attribute.Add(new AttributeProto { Name = "axis", Type = AttributeProto.Types.AttributeType.Int, I = 1 });
+            var squeeze = new NodeProto { OpType = "Squeeze" };
+            squeeze.Input.Add("gathered");
+            squeeze.Output.Add("result");
+            model.Graph.Node.Add(constant);
+            model.Graph.Node.Add(gather);
+            model.Graph.Node.Add(squeeze);
+
+            ModelProto normalized = ModelProto.Parser.ParseFrom(TensorRtOnnxCompatibilityPasses.Normalize(model.ToByteArray()));
+            AttributeProto axes = normalized.Graph.Node.Single(node => node.OpType == "Squeeze").Attribute.Single(attribute => attribute.Name == "axes");
+            CollectionAssert.AreEqual(new long[] { 1 }, axes.Ints.ToArray());
         }
 
         [TestMethod]
@@ -460,6 +499,7 @@ namespace DeploySharp.Backend.TensorRT.Tests
             int[]? shape = null,
             TensorRtTensorLocation location = TensorRtTensorLocation.Device,
             bool isShapeInferenceIo = false,
+            TensorRtIOMode ioMode = TensorRtIOMode.Input,
             TensorRtTensorFormat format = TensorRtTensorFormat.Linear,
             int vectorizedDimension = -1,
             int componentsPerElement = 1,
@@ -470,7 +510,7 @@ namespace DeploySharp.Backend.TensorRT.Tests
                 0,
                 "images",
                 TensorRtDataType.Float,
-                TensorRtIOMode.Input,
+                ioMode,
                 new TensorRtDims(shape ?? new[] { 1, 3, 4, 4 }),
                 location,
                 isShapeInferenceIo,

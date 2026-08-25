@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
     <PackageReference Include="JYPPX.TensorRT.CSharp.API" />
+    <PackageReference Include="OnnxSharp" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,6 +17,7 @@
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="JYPPX.OpenVINO.CSharp.API" Version="3.3.0" />
     <PackageVersion Include="JYPPX.TensorRT.CSharp.API" Version="4.0.0" />
+    <PackageVersion Include="OnnxSharp" Version="0.3.2" />
     <PackageVersion Include="JYPPX.OpenCV.CSharp.API" Version="5.0.0-preview.1" />
     <PackageVersion Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0-preview.1" />
     <PackageVersion Include="OpenVINO.runtime.win" Version="2026.2.1" />

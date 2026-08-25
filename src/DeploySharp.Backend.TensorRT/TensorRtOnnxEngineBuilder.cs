@@ -49,6 +49,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             var profiles = new List<TensorRtOptimizationProfile>();
             try
             {
+                byte[] parserBytes = TensorRtOnnxCompatibilityPasses.Normalize(source.Bytes);
                 logger = new TensorRtLogger(TensorRtApiLineMapper.Map(options.ApiVersion));
                 builder = new TensorRtBuilder(logger);
                 network = builder.CreateNetwork(options.StronglyTypedNetwork);
@@ -60,7 +61,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     throw BuildFailure(onnxArtifact, TensorRtErrorCodes.EngineBuildFailed, "TensorRT rejected the ONNX parser builder configuration.");
                 }
 
-                if (!parser.TryParse(source.Bytes, out IReadOnlyList<TensorRtOnnxParserDiagnostic> diagnostics))
+                if (!parser.TryParse(parserBytes, out IReadOnlyList<TensorRtOnnxParserDiagnostic> diagnostics))
                 {
                     throw BuildFailure(onnxArtifact, TensorRtErrorCodes.OnnxParseFailed, "TensorRT could not parse the ONNX model.", FormatDiagnostics(diagnostics));
                 }
@@ -375,9 +376,10 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             using (var writer = new Utf8JsonWriter(stream))
             {
                 writer.WriteStartObject();
-                writer.WriteString("contract", "deploysharp-tensorrt-onnx-build-v1");
+                writer.WriteString("contract", "deploysharp-tensorrt-onnx-build-v2");
                 writer.WriteString("dependency", "JYPPX.TensorRT.CSharp.API/4.0.0");
                 writer.WriteString("dependencyContentHash", "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow==");
+                writer.WriteString("onnxCompatibilityPasses", "paddle-gather-squeeze-axes-v1");
                 writer.WriteString("onnxSha256", onnxSha256);
                 writer.WriteNumber("apiVersion", (int)options.ApiVersion);
                 writer.WriteNumber("precision", (int)options.Precision);
