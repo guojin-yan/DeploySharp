@@ -19,7 +19,7 @@
           "level": "NativeSmoke",
           "scope": "Exact caller-owned Qwen GGUF CPU generation, streaming, cancellation, repeat, contention, dispose, and embedding evidence; not AlgorithmVerified.",
           "evidence": [
-            "docs/articles/llm-gguf-stage31.md",
+            "docs/history/llm-gguf-stage31.md",
             "tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj"
           ],
           "runtimeDependencies": [

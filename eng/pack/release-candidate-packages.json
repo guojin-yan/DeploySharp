@@ -23,6 +23,7 @@
     "Microsoft.ML.Tokenizers": "2.0.0",
     "JYPPX.OpenVINO.CSharp.API": "3.3.0",
     "JYPPX.TensorRT.CSharp.API": "4.0.0",
+    "OnnxSharp": "0.3.2",
     "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1",
     "JYPPX.OpenCV.runtime.win-x64": "5.0.0-preview.1",
     "OpenVINO.runtime.win": "2026.2.1",
@@ -62,7 +63,7 @@
       "packageId": "JYPPX.DeploySharp.Backend.TensorRT",
       "assemblyName": "JYPPX.DeploySharp.Backend.TensorRT",
       "targetFrameworks": ["net8.0"],
-      "assemblyReferenceSha256": "64f5d4cc13e4a275bb1fbf24757946c64c8d6bf4c366d22d47890af17de95707"
+      "assemblyReferenceSha256": "8328ce337b9b22639418977c705b30251d91f444391becdd1d800a8db0d64b97"
     },
     {
       "projectPath": "src/DeploySharp.Core/DeploySharp.Core.csproj",
