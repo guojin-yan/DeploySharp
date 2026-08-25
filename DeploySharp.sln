@@ -53,7 +53,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.ModelFactory.Cl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreContractInspection", "samples\CoreContractInspection\CoreContractInspection.csproj", "{5CCD813F-89AF-49B6-BA04-BCAEA4EB5186}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreContractInspection", "samples\01-core\CoreContractInspection.csproj", "{5CCD813F-89AF-49B6-BA04-BCAEA4EB5186}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Multimodal", "src\DeploySharp.Multimodal\DeploySharp.Multimodal.csproj", "{69D2C8DA-B08F-4F3B-B927-F1DE1A87EF05}"
 EndProject
@@ -63,17 +63,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.OpenCV"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeploySharp.Backend.OpenCV.Tests", "tests\DeploySharp.Backend.OpenCV.Tests\DeploySharp.Backend.OpenCV.Tests.csproj", "{EA88BD09-224E-4DA9-AC28-F5E26A473269}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultimodalContractInspection", "samples\MultimodalContractInspection\MultimodalContractInspection.csproj", "{0BEFE41C-885A-4B7D-9A1D-129ABA0E957F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultimodalContractInspection", "samples\04-multimodal\MultimodalContractInspection.csproj", "{0BEFE41C-885A-4B7D-9A1D-129ABA0E957F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCvDnnContractInspection", "samples\OpenCvDnnContractInspection\OpenCvDnnContractInspection.csproj", "{01D33B3E-E218-46D7-9D42-90B12B25F20A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCvDnnContractInspection", "samples\03-backends\OpenCvDnnContractInspection.csproj", "{01D33B3E-E218-46D7-9D42-90B12B25F20A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualProfileInspection", "samples\VisualProfileInspection\VisualProfileInspection.csproj", "{41455C39-CFF5-4243-97FC-6CE989186DD3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualProfileInspection", "samples\02-visual\VisualProfileInspection.csproj", "{41455C39-CFF5-4243-97FC-6CE989186DD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlmPromptInspection", "samples\LlmPromptInspection\LlmPromptInspection.csproj", "{58B9E934-167C-42B2-AEBE-75AA9B155B77}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlmPromptInspection", "samples\05-llm\LlmPromptInspection.csproj", "{58B9E934-167C-42B2-AEBE-75AA9B155B77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelFactoryCatalogInspection", "samples\ModelFactoryCatalogInspection\ModelFactoryCatalogInspection.csproj", "{C1D9420A-C78D-42E5-836F-0DA100BFE817}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelFactoryCatalogInspection", "samples\06-models\catalog-workflow\ModelFactoryCatalogInspection.csproj", "{C1D9420A-C78D-42E5-836F-0DA100BFE817}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelReleaseInference", "samples\ModelReleaseInference\ModelReleaseInference.csproj", "{6C39575B-6AD9-4874-880E-60FA99EB8893}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelReleaseInference", "samples\06-models\release-inference\ModelReleaseInference.csproj", "{6C39575B-6AD9-4874-880E-60FA99EB8893}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "07-benchmarks", "07-benchmarks", "{B2BFEA15-E784-2B8B-4B5E-EF09B522962C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InferenceSpeedBenchmark", "samples\07-benchmarks\InferenceSpeedBenchmark\InferenceSpeedBenchmark.csproj", "{4029CC1B-5740-4961-B361-97A5CA9BC1B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -469,6 +473,18 @@ Global
 		{6C39575B-6AD9-4874-880E-60FA99EB8893}.Release|x64.Build.0 = Release|Any CPU
 		{6C39575B-6AD9-4874-880E-60FA99EB8893}.Release|x86.ActiveCfg = Release|Any CPU
 		{6C39575B-6AD9-4874-880E-60FA99EB8893}.Release|x86.Build.0 = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|x64.Build.0 = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Debug|x86.Build.0 = Debug|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|x64.ActiveCfg = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|x64.Build.0 = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|x86.ActiveCfg = Release|Any CPU
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -506,5 +522,7 @@ Global
 		{58B9E934-167C-42B2-AEBE-75AA9B155B77} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{C1D9420A-C78D-42E5-836F-0DA100BFE817} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{6C39575B-6AD9-4874-880E-60FA99EB8893} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{B2BFEA15-E784-2B8B-4B5E-EF09B522962C} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{4029CC1B-5740-4961-B361-97A5CA9BC1B5} = {B2BFEA15-E784-2B8B-4B5E-EF09B522962C}
 	EndGlobalSection
 EndGlobal

@@ -1,20 +1,54 @@
 # Samples / 示例
 
-`CoreContractInspection` is a minimal net8.0 runnable example that uses only the backend-neutral Core contract. It intentionally does not download a model or claim inference support. Run it from the repository root with:
+Samples are organized by complete workflows. A workflow may combine profile registration, preprocessing, backend selection, inference, decoding, output ownership, cancellation, and cleanup; a sample is not created merely to expose one method.
+
+## Module map / 模块划分
+
+| Folder | Complete workflow | Entry point |
+| --- | --- | --- |
+| 01-core | Backend-neutral model/tensor/profile contract lifecycle | CoreContractInspection |
+| 02-visual | Visual profile registration, exact tensor bindings, decoder ownership, registry freeze | VisualProfileInspection |
+| 03-backends | OpenCV DNN native loading, named tensor execution, golden check, disposal | OpenCvDnnContractInspection |
+| 04-multimodal | Ordered media, in-memory adapter, streaming, cancellation, lifecycle | MultimodalContractInspection |
+| 05-llm | Conversation history, prompt formatting, assistant boundary | LlmPromptInspection |
+| 06-models | Catalog-wide model selection plus published model download/inference | See the model workflows below |
+| 07-benchmarks | Same-model backend/platform latency and throughput measurement | InferenceSpeedBenchmark |
+
+Every module has a README with its prerequisites and command. Run commands from the repository root.
 
 ```powershell
-dotnet run --project samples/CoreContractInspection/CoreContractInspection.csproj -c Release
+dotnet run --project samples/01-core/CoreContractInspection.csproj -c Release
+dotnet run --project samples/03-backends/OpenCvDnnContractInspection.csproj -c Release
+dotnet run --project samples/04-multimodal/MultimodalContractInspection.csproj -c Release
+dotnet run --project samples/05-llm/LlmPromptInspection.csproj -c Release
+dotnet run --project samples/07-benchmarks/InferenceSpeedBenchmark/InferenceSpeedBenchmark.csproj -c Release -- --backend all --warmup 10 --iterations 100 --output artifacts/benchmark.json
 ```
 
-Backend-specific examples remain represented by the package-only consumers under `tests/clean-consumer/`, where their native/runtime ownership and verification boundaries are explicit.
+## Model workflows / 模型工作流
 
-`MultimodalContractInspection` runs the independent backend-neutral Multimodal contract with an in-memory adapter. `OpenCvDnnContractInspection` loads the pinned 297-byte classification ONNX fixture through the real OpenCV DNN backend and checks its `ReduceMean` golden. Both are CPU-only and do not download model assets. / `MultimodalContractInspection` 使用内存适配器运行独立的后端中立多模态合同；`OpenCvDnnContractInspection` 通过真实 OpenCV DNN 后端加载固定的 297 字节分类 ONNX 夹具并校验 `ReduceMean` golden。两者均仅使用 CPU，不下载模型资产。
-
-`VisualProfileInspection`, `LlmPromptInspection`, and `ModelFactoryCatalogInspection` cover deterministic Visual profile registration, LLM prompt formatting, and validation of the embedded official model catalog. / `VisualProfileInspection`、`LlmPromptInspection` 与 `ModelFactoryCatalogInspection` 分别覆盖确定性的 Visual Profile 注册、LLM 提示词格式化和内置官方模型目录验证。
-
-`ModelReleaseInference` is the shortest end-to-end path from an immutable GitHub Release asset to CPU inference. It downloads and verifies a BRIA RMBG 1.4/2.0 or Anomalib PaDiM package through ModelFactory, runs the existing Visual + ONNX Runtime contracts, and writes a portable PGM alpha/anomaly mask. It requires the application-owned ONNX Runtime and Windows x64 OpenCV runtime packages; models are never stored in the repository. / `ModelReleaseInference` 是从不可变 GitHub Release 资产到 CPU 推理的最短端到端路径。它通过 ModelFactory 下载并校验 BRIA RMBG 1.4/2.0 或 Anomalib PaDiM，运行现有 Visual + ONNX Runtime 合同，并写出可移植的 PGM Alpha/异常掩码。它要求应用自行提供 ONNX Runtime 与 Windows x64 OpenCV runtime 包；模型不会存入仓库。
+06-models/catalog-workflow walks every official catalog entry and every artifact variant. It selects a compatible backend with explicit format, precision, and quantization filters, verifies the selected artifact identity, and prints the task/artifact matrix without downloading large files. A single model can be inspected with --model-id.
 
 ```powershell
-dotnet run --project samples/ModelReleaseInference -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg
-dotnet run --project samples/ModelReleaseInference -- --model-id anomalib/padim/mvtec-bottle --image E:\Model\anomalib\Padim\images\your-image.jpg
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id bria/rmbg-2.0
 ```
+
+06-models/release-inference is the real published-model path. ModelFactory downloads the immutable Release ModelPack, verifies size/SHA256, Visual prepares the image, ONNX Runtime runs CPU inference, and the task decoder writes an inspectable PGM mask. It has independent cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
+
+```powershell
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4 --image <image>
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id anomalib/padim/mvtec-bottle --image <image>
+```
+
+06-models/cases contains one folder for each of the 42 current official catalog entries. Each folder records the model ID, task, artifact variant, complete workflow stages, and exact starting command. The three published vision entries have a runnable inference path; the other entries begin with catalog/package verification and explicitly state the input, native runtime, tokenizer, or task-decoder prerequisites still required for real inference.
+
+07-benchmarks/InferenceSpeedBenchmark measures the same pinned classification fixture through ONNX Runtime, OpenCV DNN, and OpenVINO when their native runtimes are available. It reports warm P50/P95 latency, average latency, throughput, and managed allocation together with OS and architecture metadata. The sample records an unavailable backend explicitly; it does not turn an unavailable runtime into a zero result. See its [benchmark README](07-benchmarks/InferenceSpeedBenchmark/README.md) and the [performance benchmarking guide](../docs/articles/performance-benchmarking.md).
+
+The catalog-to-case mapping is checked with: `pwsh -NoProfile -File eng/model-catalog/Test-ModelSampleCoverage.ps1`.
+
+All 42 model case READMEs now include a release verification record. Run the complete online audit with pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -UpdateReadmes -CachePath E:/DeploySharpModelAudit/metadata; add -ModelId <id> for one case or -DownloadAssets for a full local asset download and SHA256 check. The full published payload is about 6.2 GB, so payload downloads are opt-in.
+
+## Ownership and evidence / 所有权与证据
+
+Samples never commit large model files, native runtimes, or user images. Release models are application-cache assets and remain SHA256/ModelPack verified. A successful catalog selection is not reported as algorithm or inference verification; the case README states the evidence boundary.
