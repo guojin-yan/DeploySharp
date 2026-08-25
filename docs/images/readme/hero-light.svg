@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp - reproducible AI inference workflows for .NET</title>
+  <desc id="desc">A .NET model deployment toolkit showing an image becoming a tensor and an owned inference result.</desc>
+  <rect width="1200" height="300" fill="#f7fafc"/>
+  <rect x="30" y="24" width="1140" height="252" rx="22" fill="#ffffff" stroke="#d8e2ea" stroke-width="2"/>
+
+  <g font-family="Segoe UI, Inter, Arial, sans-serif">
+    <text x="70" y="86" fill="#102a43" font-size="42" font-weight="700">DeploySharp</text>
+    <text x="72" y="119" fill="#486581" font-size="18">Reproducible AI inference workflows for .NET</text>
+
+    <rect x="70" y="150" width="370" height="42" rx="10" fill="#102a43"/>
+    <circle cx="91" cy="171" r="5" fill="#7bdcb5"/>
+    <text x="106" y="177" fill="#ffffff" font-size="14">dotnet restore</text>
+    <text x="248" y="177" fill="#7bdcb5" font-size="14" font-weight="600">--locked-mode</text>
+
+    <rect x="70" y="211" width="105" height="25" rx="12" fill="#e5f6ef"/>
+    <text x="88" y="228" fill="#176b52" font-size="12" font-weight="600">Core</text>
+    <rect x="184" y="211" width="105" height="25" rx="12" fill="#e8f0fb"/>
+    <text x="202" y="228" fill="#245b9a" font-size="12" font-weight="600">Visual</text>
+    <rect x="298" y="211" width="142" height="25" rx="12" fill="#fff0e9"/>
+    <text x="317" y="228" fill="#a64b2a" font-size="12" font-weight="600">Models / Backends</text>
+
+    <rect x="520" y="63" width="186" height="172" rx="16" fill="#f1f8f5" stroke="#b9dfcf" stroke-width="2"/>
+    <text x="544" y="91" fill="#176b52" font-size="12" font-weight="700" letter-spacing="1">INPUT IMAGE</text>
+    <rect x="544" y="108" width="138" height="96" rx="10" fill="#d5eee4"/>
+    <circle cx="648" cy="132" r="15" fill="#f4b860"/>
+    <path d="M544 180 L577 150 L601 168 L627 140 L682 190 L682 204 L544 204 Z" fill="#6da9c2"/>
+    <path d="M544 186 L574 163 L596 179 L623 157 L682 197 L682 204 L544 204 Z" fill="#2f7893" opacity=".75"/>
+    <rect x="569" y="159" width="47" height="34" rx="4" fill="none" stroke="#e77952" stroke-width="3"/>
+
+    <path d="M722 149 H766" fill="none" stroke="#78a995" stroke-width="3"/>
+    <path d="M762 141 L774 149 L762 157" fill="none" stroke="#78a995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="788" y="63" width="164" height="172" rx="16" fill="#f9f5ed" stroke="#ead8b8" stroke-width="2"/>
+    <text x="813" y="91" fill="#9a6426" font-size="12" font-weight="700" letter-spacing="1">TENSOR</text>
+    <rect x="813" y="110" width="114" height="96" rx="8" fill="#ffffff" stroke="#e6d7bc"/>
+    <g fill="#6fbf9e">
+      <rect x="826" y="123" width="17" height="17" rx="3"/><rect x="847" y="123" width="17" height="17" rx="3" fill="#87c9e0"/><rect x="868" y="123" width="17" height="17" rx="3" fill="#e77952"/><rect x="889" y="123" width="17" height="17" rx="3" fill="#f4b860"/>
+      <rect x="826" y="144" width="17" height="17" rx="3" fill="#87c9e0"/><rect x="847" y="144" width="17" height="17" rx="3"/><rect x="868" y="144" width="17" height="17" rx="3" fill="#f4b860"/><rect x="889" y="144" width="17" height="17" rx="3" fill="#87c9e0"/>
+      <rect x="826" y="165" width="17" height="17" rx="3" fill="#e77952"/><rect x="847" y="165" width="17" height="17" rx="3" fill="#f4b860"/><rect x="868" y="165" width="17" height="17" rx="3"/><rect x="889" y="165" width="17" height="17" rx="3" fill="#87c9e0"/>
+      <rect x="826" y="186" width="17" height="7" rx="3" fill="#87c9e0"/><rect x="847" y="186" width="17" height="7" rx="3" fill="#6fbf9e"/><rect x="868" y="186" width="17" height="7" rx="3" fill="#e77952"/><rect x="889" y="186" width="17" height="7" rx="3" fill="#f4b860"/>
+    </g>
+
+    <path d="M968 149 H1004" fill="none" stroke="#d28c4f" stroke-width="3"/>
+    <path d="M1000 141 L1012 149 L1000 157" fill="none" stroke="#d28c4f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="1024" y="63" width="118" height="172" rx="16" fill="#fff4f0" stroke="#efc8ba" stroke-width="2"/>
+    <text x="1046" y="91" fill="#a64b2a" font-size="12" font-weight="700" letter-spacing="1">RESULT</text>
+    <rect x="1046" y="111" width="74" height="70" rx="8" fill="#f7dfd4"/>
+    <path d="M1046 164 L1062 149 L1077 157 L1090 138 L1120 168 L1120 181 L1046 181 Z" fill="#e77952" opacity=".72"/>
+    <rect x="1060" y="132" width="38" height="32" rx="4" fill="none" stroke="#176b52" stroke-width="3"/>
+    <text x="1046" y="207" fill="#7b4b3a" font-size="12">owned output</text>
+  </g>
+</svg>

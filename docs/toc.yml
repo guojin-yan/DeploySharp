@@ -3,6 +3,14 @@
   href: index.md
 - name: Guides / 指南
   href: articles/
+- name: Model and Backend Matrix / 模型与后端矩阵
+  href: model-backend-verification-matrix.md
+- name: Roadmap / 路线图
+  href: roadmap/
+- name: Verification Templates / 验证模板
+  href: templates/
+- name: Engineering History / 工程历史
+  href: history/
 - name: Releases / 版本记录
   href: releases/
 - name: API Reference / API 参考

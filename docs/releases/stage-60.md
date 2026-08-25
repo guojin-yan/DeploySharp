@@ -6,6 +6,6 @@ Release `368273346`, body/tag/tree, 20 assets, GitHub managed asset, NuGet catal
 
 Current execution passes focused tests `17/0/0`, inventory `-Check` with 69 entries, exact Qwen admission and all protected hashes, and read-only Git/upstream freshness. Pure-package/GPU passes and synchronization expected-failure remain retained evidence with zero unexpected failures. Wider pack, Stage 35/36, full solution, NuGet audits, eight-class admission, pure-package execution, and GPU execution were skipped by the identity rule. / 本轮 focused、inventory、Qwen 与 freshness 通过；纯包/GPU 为 retained pass，同步 fault 为 retained expected-failure。其余宽门禁按 identity 规则跳过。
 
-No source, API, dependency, model, retained evidence, cache payload, or Git/GitHub publication state changed. Full details are in the [Stage 60 audit](../articles/tensorrt-retained-evidence-accepted-risk-stage60.md). / 本轮无执行路径回退或外部发布写入，详见 Stage 60 审计。
+No source, API, dependency, model, retained evidence, cache payload, or Git/GitHub publication state changed. Full details are in the [Stage 60 audit](../history/tensorrt-retained-evidence-accepted-risk-stage60.md). / 本轮无执行路径回退或外部发布写入，详见 Stage 60 审计。
 
 This is the final Stage in the repeated retained-evidence maintenance sequence. Later proof checks run only as release gates or after real identity changes; Stage 61 resumes complete-module development with the caller-owned TensorRT External cache store. / 本阶段结束重复证据维护循环；后续 proof 只在发布门禁或真实 identity 变化时检查。Stage 61 转入调用方拥有的 TensorRT External cache store 完整模块开发。

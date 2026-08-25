@@ -4,7 +4,7 @@ Stage 43 rechecks Release ID `368273346` and the exact NuGet.org package. The Re
 
 Both remaining blockers are retained: exact immutable Release-to-NuGet hash binding and same-build immutable provenance. New blockers and disappeared blockers are zero. No adapter, project, package reference, TFM, lock/assets, consumer, native probe, engine/plan/cache, or GPU evidence was created. / 两项剩余 blocker 均 retained，新增/消失均为 0；未创建适配器、项目、包引用、TFM、lock/assets、consumer、native probe、engine/plan/cache 或 GPU 证据。
 
-Detailed evidence is in [the Stage 43 review](../articles/tensorrt-release-binding-admission-stage43.md). / 详见 [Stage 43 复核](../articles/tensorrt-release-binding-admission-stage43.md)。
+Detailed evidence is in [the Stage 43 review](../history/tensorrt-release-binding-admission-stage43.md). / 详见 [Stage 43 复核](../history/tensorrt-release-binding-admission-stage43.md)。
 
 TensorRT baseline is blocked by exactly the two retained proof conditions, `-RequireAdmitted` is the expected failure, all 8/8 TensorRT negative scenarios pass, and `dotnet nuget verify --all` passes the NuGet.org Repository signature. Stage 35 passes 9 packages/82 TFMs and 5/5 negatives; Stage 36 passes 82/82 SourceLink/PDB/API and 7/7 negatives. / TensorRT 基线精确保留两项发布证明 blocker，严格准入为预期失败，8/8 负向与 NuGet.org Repository signature 校验通过；Stage 35/36 分别通过 5/5 与 7/7 负向。
 

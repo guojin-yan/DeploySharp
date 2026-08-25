@@ -16,4 +16,4 @@ Stage 20 adds PaddleOCR two-class text-line orientation profiles and an optional
 
 The existing two-model `OcrPipeline` constructor remains the no-orientation path. Existing four-class `OcrOrientationWorkflow` behavior is retained as whole-image orientation. Results continue to use `OcrResult`, `OcrRegionResult`, `TextRegion`, and `OcrOrientationResult`; no duplicate Paddle-specific result or rotation implementation was added. / 既有双模型构造函数仍是无方向路径，既有四方向 workflow 保持整图方向行为。结果继续复用现有通用类型，没有新增 Paddle 专用结果或旋转实现。
 
-Classifier candidates are External only. See [the three-model guide](visual-paddle-ocr3.md) for exact labels, preprocessing, rejection behavior, local backend evidence, native ownership, and blockers. / 分类器候选仅为 External；精确标签、前处理、拒绝行为、本地后端证据、native 所有权与 blocker 参阅[三模型指南](visual-paddle-ocr3.md)。
+Classifier candidates are External only. See [the three-model guide](../articles/visual-paddle-ocr3.md) for exact labels, preprocessing, rejection behavior, local backend evidence, native ownership, and blockers. / 分类器候选仅为 External；精确标签、前处理、拒绝行为、本地后端证据、native 所有权与 blocker 参阅[三模型指南](../articles/visual-paddle-ocr3.md)。

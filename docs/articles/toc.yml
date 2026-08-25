@@ -1,215 +1,141 @@
-# Guide navigation / 指南导航
-- name: Getting Started / 快速开始
-  href: getting-started.md
-- name: Installation / 安装
-  href: installation.md
-- name: Architecture / 架构
-  href: architecture.md
-- name: Multimodal and OpenCV DNN / 多模态与 OpenCV DNN
-  href: multimodal-opencv-dnn.md
-- name: Performance and Model Fidelity / 性能与模型保真
-  href: performance-and-model-fidelity.md
-- name: Visual Prepared-Tensor Quick Start / Visual 已准备张量快速开始
-  href: visual-getting-started.md
-- name: Visual Coordinates and Decoding / Visual 坐标与解码
-  href: visual-coordinate-decoding.md
-- name: Visual Semantic Segmentation / Visual 语义分割
-  href: visual-semantic-segmentation.md
-- name: Visual Pose Estimation / Visual 姿态估计
-  href: visual-pose-estimation.md
-- name: Visual Instance Segmentation / Visual 实例分割
-  href: visual-instance-segmentation.md
-- name: Visual OBB Detection / Visual 旋转框检测
-  href: visual-oriented-detection.md
-- name: Visual OCR / Visual OCR
-  href: visual-ocr.md
-- name: Visual OCR Orientation / Visual OCR 方向
-  href: visual-ocr-orientation.md
-- name: Supported Models / 支持模型
-  href: supported-models.md
-- name: Release and Platform Status / 发布与平台状态
-  href: release-platform-status.md
-- name: Published Vision Model Collection / 已发布视觉模型集合
-  href: models-vision-collection.md
-- name: Visual YOLO Detection / Visual YOLO 检测
-  href: visual-yolo-detection.md
-- name: Visual YOLO Multi-task / Visual YOLO 多任务
-  href: visual-yolo-multitask.md
-- name: Visual Portable Detectors / Visual 便携检测器
-  href: visual-portable-detectors.md
-- name: Segment Anything Family / Segment Anything 模型族
-  href: visual-sam-family.md
-- name: Open-vocabulary and Grounded-SAM / 开放词汇与 Grounded-SAM
-  href: visual-open-vocabulary.md
-- name: CLIP, SigLIP, and SigLIP 2 / CLIP、SigLIP 与 SigLIP 2
-  href: visual-vision-language.md
-- name: BLIP, BLIP-2, and InstructBLIP / BLIP、BLIP-2 与 InstructBLIP
-  href: visual-generative-vision-language.md
-- name: Native Multimodal Dialogue / 原生多模态对话
-  href: visual-native-multimodal.md
-- name: Document Intelligence and Layout Understanding / 文档智能与版面理解
-  href: visual-document-understanding.md
-- name: Audio Speech Understanding / 音频语音理解
-  href: visual-audio-speech.md
-- name: Development Model Inventory / 开发模型总清单
-  href: development-model-inventory.md
-- name: Acquire YOLO Models / 获取 YOLO 模型
-  href: model-acquisition-yolo.md
-- name: Acquire DETR and RT-DETR / 获取 DETR 与 RT-DETR
-  href: model-acquisition-detr-rtdetr.md
-- name: Acquire OCR, Anomaly, and RMBG / 获取 OCR、异常与 RMBG
-  href: model-acquisition-ocr-anomaly-rmbg.md
-- name: Acquire SAM and Grounded-SAM / 获取 SAM 与 Grounded-SAM
-  href: model-acquisition-sam-grounded-sam.md
-- name: Acquire CLIP and SigLIP / 获取 CLIP 与 SigLIP
-  href: model-acquisition-clip-siglip.md
-- name: Acquire BLIP Family / 获取 BLIP 模型族
-  href: model-acquisition-blip-family.md
-- name: Acquire Native Multimodal Models / 获取原生多模态模型
-  href: model-acquisition-native-multimodal.md
-- name: Acquire Document-Understanding Models / 获取文档理解模型
-  href: model-acquisition-document-understanding.md
-- name: Acquire Audio Speech Models / 获取音频语音模型
-  href: model-acquisition-audio-speech.md
-- name: PaddleOCR, Anomalib, and BRIA RMBG / PaddleOCR、Anomalib 与 BRIA RMBG
-  href: visual-ocr-anomaly-rmbg.md
-- name: PaddleOCR Three-model Pipeline / PaddleOCR 三模型流水线
-  href: visual-paddle-ocr3.md
-- name: Stage 17 API changes / 阶段 17 API 变更
-  href: api-changes-stage17.md
-- name: Stage 18 API changes / 阶段 18 API 变更
-  href: api-changes-stage18.md
-- name: Stage 19 API changes / 阶段 19 API 变更
-  href: api-changes-stage19.md
-- name: Stage 20 API changes / 阶段 20 API 变更
-  href: api-changes-stage20.md
-- name: Stage 21 API changes / 阶段 21 API 变更
-  href: api-changes-stage21.md
-- name: Stage 22 API changes / 阶段 22 API 变更
-  href: api-changes-stage22.md
-- name: Stage 23 API changes / 阶段 23 API 变更
-  href: api-changes-stage23.md
-- name: Stage 24 API changes / 阶段 24 API 变更
-  href: api-changes-stage24.md
-- name: Stage 25 API changes / 阶段 25 API 变更
-  href: api-changes-stage25.md
-- name: Stage 26 API changes / 阶段 26 API 变更
-  href: api-changes-stage26.md
-- name: Stage 27 API changes / 阶段 27 API 变更
-  href: api-changes-stage27.md
-- name: Stage 28 API changes / 阶段 28 API 变更
-  href: api-changes-stage28.md
-- name: V1 Model Capability Migration / V1 模型能力迁移
-  href: v1-model-migration.md
-- name: Visual Anomaly Detection / Visual 异常检测
-  href: visual-anomaly-detection.md
-- name: Anomaly AlgorithmVerified Template / 异常模型准入模板
-  href: anomaly-algorithm-verification-template.md
-- name: OCR AlgorithmVerified Template / OCR 算法准入模板
-  href: ocr-algorithm-verification-template.md
-- name: Visual Lifecycle and Compatibility / Visual 生命周期与兼容性
-  href: visual-lifecycle-compatibility.md
-- name: Visual.OpenCV Quick Start / Visual.OpenCV 快速开始
-  href: visual-opencv-getting-started.md
-- name: Visual.OpenCV Compatibility / Visual.OpenCV 兼容性
-  href: visual-opencv-compatibility.md
-- name: ONNX Runtime Quick Start / ONNX Runtime 快速开始
-  href: onnxruntime-getting-started.md
-- name: ONNX Runtime Compatibility / ONNX Runtime 兼容性
-  href: onnxruntime-compatibility.md
-- name: OpenVINO Quick Start / OpenVINO 快速开始
-  href: openvino-getting-started.md
-- name: OpenVINO Compatibility / OpenVINO 兼容性
-  href: openvino-compatibility.md
-- name: Local LLM Quick Start / 本地 LLM 快速开始
-  href: llm-getting-started.md
-- name: LLamaSharp Native Backends / LLamaSharp 原生后端
-  href: llamasharp-native-backends.md
-- name: LLM Compatibility and Lifecycle / LLM 兼容性与生命周期
-  href: llamasharp-compatibility.md
-- name: LLM and GGUF Stage 29 / LLM 与 GGUF 阶段 29
-  href: llm-gguf-stage29.md
-- name: Exact GGUF Admission Audit / 精确 GGUF 准入审计
-  href: llm-gguf-stage30.md
-- name: Authorized Qwen GGUF CPU Evidence / 授权 Qwen GGUF CPU 实证
-  href: llm-gguf-stage31.md
-- name: GGUF Admission Immutability / GGUF 准入不可变性
-  href: llm-gguf-stage32.md
-- name: LLamaSharp Package Maintenance Gate / LLamaSharp 包维护门
-  href: llm-gguf-stage33.md
-- name: LLamaSharp Support Baseline / LLamaSharp 支持基线
-  href: llm-gguf-stage34.md
-- name: All-package Release-candidate Governance / 全包发布候选治理
-  href: release-candidate-governance-stage35.md
-- name: Package Provenance, Licenses, Symbols, and SBOM / 包来源、许可证、符号与 SBOM
-  href: release-evidence-governance-stage36.md
-- name: TensorRT 4.0.0 Admission Audit / TensorRT 4.0.0 准入审计
-  href: tensorrt-admission-stage37.md
-- name: TensorRT License and Formal-release Review / TensorRT 许可证与正式版本复核
-  href: tensorrt-license-release-review-stage38.md
-- name: TensorRT Formal-admission Input Review / TensorRT 正式准入输入复核
-  href: tensorrt-formal-admission-input-review-stage39.md
-- name: TensorRT Approved-rebuild Package Review / TensorRT 已批准版本包重建复核
-  href: tensorrt-approved-rebuild-package-review-stage40.md
-- name: TensorRT Formal-release Asset Review / TensorRT 正式 Release 资产复核
-  href: tensorrt-formal-release-asset-review-stage41.md
-- name: TensorRT NuGet.org Package Review / TensorRT NuGet.org 正式包复核
-  href: tensorrt-nuget-org-package-review-stage42.md
-- name: TensorRT Release Binding Admission / TensorRT 正式发布绑定准入
-  href: tensorrt-release-binding-admission-stage43.md
-- name: TensorRT Immutable Proof Admission / TensorRT 不可变证明准入
-  href: tensorrt-immutable-proof-admission-stage44.md
-- name: TensorRT Formal Proof Convergence / TensorRT 正式证明收敛
-  href: tensorrt-formal-proof-convergence-stage45.md
-- name: TensorRT Immutable Release Proof Review / TensorRT 不可变发布证明复核
-  href: tensorrt-immutable-release-proof-stage46.md
-- name: TensorRT Release Proof Recheck / TensorRT 发布证明再复核
-  href: tensorrt-release-proof-recheck-stage47.md
-- name: TensorRT Managed Adapter Admission / TensorRT managed adapter 准入
-  href: tensorrt-managed-adapter-stage48.md
-- name: TensorRT Managed Adapter Hardening / TensorRT managed adapter 加固
-  href: tensorrt-managed-adapter-hardening-stage49.md
-- name: TensorRT Formal Proof and GPU Gate / TensorRT 正式证明与 GPU 门禁
-  href: tensorrt-formal-proof-gpu-gate-stage50.md
-- name: TensorRT ONNX-to-engine Builder / TensorRT ONNX 转 engine 构建器
-  href: tensorrt-onnx-engine-builder-stage51.md
-- name: TensorRT CUDA/RTC Managed Execution / TensorRT CUDA/RTC managed 执行
-  href: tensorrt-cuda-rtc-managed-stage52.md
-- name: TensorRT CUDA/RTC GPU and Formal-proof Incremental Admission / TensorRT CUDA/RTC GPU 与正式证明增量准入
-  href: tensorrt-cuda-rtc-gpu-proof-stage53.md
-- name: TensorRT CUDA/RTC GPU and Formal-proof Incremental Admission Stage 54 / TensorRT CUDA/RTC GPU 与正式证明增量准入阶段 54
-  href: tensorrt-cuda-rtc-gpu-proof-stage54.md
-- name: TensorRT CUDA/RTC Real-GPU Proof Stage 55 / TensorRT CUDA/RTC 真实 GPU 证明阶段 55
-  href: tensorrt-cuda-rtc-gpu-proof-stage55.md
-- name: TensorRT Formal Proof and Exact Pure-Package Admission Stage 56 / TensorRT 正式证明与精确纯包准入阶段 56
-  href: tensorrt-formal-proof-pure-package-stage56.md
-- name: TensorRT Formal Proof and Retained-Evidence Admission Stage 57 / TensorRT 正式证明与保留证据准入阶段 57
-  href: tensorrt-formal-proof-retained-evidence-stage57.md
-- name: TensorRT Formal Proof and Retained-Evidence Admission Stage 58 / TensorRT 正式证明与保留证据准入阶段 58
-  href: tensorrt-formal-proof-retained-evidence-stage58.md
-- name: TensorRT Formal Proof and Retained-Evidence Admission Stage 59 / TensorRT 正式证明与保留证据准入阶段 59
-  href: tensorrt-formal-proof-retained-evidence-stage59.md
-- name: TensorRT Retained Evidence and Accepted Supply-Chain Gaps Stage 60 / TensorRT 保留证据与已接受供应链缺口阶段 60
-  href: tensorrt-retained-evidence-accepted-risk-stage60.md
-- name: TensorRT Local Engine and CUDA Artifact Cache Stage 61 / TensorRT 本地 Engine 与 CUDA 工件缓存阶段 61
-  href: tensorrt-external-cache-stage61.md
-- name: LLM/GGUF acquisition / LLM/GGUF 获取
-  href: model-acquisition-llm-gguf.md
-- name: Stage 29 API changes / 阶段 29 API 变更
-  href: api-changes-stage29.md
-- name: Stage 30 API changes / 阶段 30 API 变更
-  href: api-changes-stage30.md
-- name: ModelPack JSON Quick Start / ModelPack JSON 快速开始
-  href: modelpack-json-getting-started.md
-- name: ModelPack JSON Schema and Security / ModelPack JSON Schema 与安全
-  href: modelpack-json-schema-security.md
-- name: ModelFactory Quick Start / ModelFactory 快速开始
-  href: modelfactory-getting-started.md
-- name: Model Release Inference Quick Start / 模型 Release 推理快速开始
-  href: model-release-inference-getting-started.md
-- name: ModelFactory Release and Cache Security / ModelFactory Release 与缓存安全
-  href: modelfactory-release-cache-security.md
-- name: Official Model Catalog / 官方模型目录
-  href: model-catalog.md
-- name: API Changes alpha.1 / alpha.1 API 变更
-  href: api-changes-alpha1.md
+# User guide navigation / 用户指南导航
+
+- name: Start here / 从这里开始
+  items:
+  - name: Documentation guide / 文档指南
+    href: index.md
+  - name: Getting started / 快速开始
+    href: getting-started.md
+  - name: Installation / 安装
+    href: installation.md
+  - name: Architecture / 架构
+    href: architecture.md
+  - name: Release and platform status / 发布与平台状态
+    href: release-platform-status.md
+  - name: 2.0.0-alpha.1 release notes / 2.0.0-alpha.1 发布说明
+    href: release-2.0.0-alpha.1.md
+  - name: Platform and backend support / 平台与后端支持
+    href: platform-support.md
+  - name: Usage tutorial / 使用教程
+    href: usage-tutorial.md
+  - name: Inference performance benchmarking / 推理性能基准
+    href: performance-benchmarking.md
+  - name: Performance and model fidelity / 性能与模型保真
+    href: performance-and-model-fidelity.md
+  - name: V1 model capability migration / V1 模型能力迁移
+    href: v1-model-migration.md
+  - name: Visual lifecycle and compatibility / Visual 生命周期与兼容性
+    href: visual-lifecycle-compatibility.md
+  - name: API changes in alpha.1 / alpha.1 API 变更
+    href: api-changes-alpha1.md
+
+- name: Visual workflows / 视觉流程
+  items:
+  - name: Prepared-tensor quick start / 已准备张量快速开始
+    href: visual-getting-started.md
+  - name: Coordinates, decoding, and NMS / 坐标、解码与 NMS
+    href: visual-coordinate-decoding.md
+  - name: Classification, detection, and YOLO / 分类、检测与 YOLO
+    href: visual-yolo-detection.md
+  - name: YOLO multi-task / YOLO 多任务
+    href: visual-yolo-multitask.md
+  - name: Portable detectors and RT-DETR / 便携检测器与 RT-DETR
+    href: visual-portable-detectors.md
+  - name: Semantic segmentation / 语义分割
+    href: visual-semantic-segmentation.md
+  - name: Instance segmentation / 实例分割
+    href: visual-instance-segmentation.md
+  - name: Pose estimation / 姿态估计
+    href: visual-pose-estimation.md
+  - name: Oriented-box detection / 旋转框检测
+    href: visual-oriented-detection.md
+  - name: OCR detection and recognition / OCR 检测与识别
+    href: visual-ocr.md
+  - name: OCR orientation and correction / OCR 方向与纠正
+    href: visual-ocr-orientation.md
+  - name: PaddleOCR three-model pipeline / PaddleOCR 三模型流水线
+    href: visual-paddle-ocr3.md
+  - name: Anomaly detection / 异常检测
+    href: visual-anomaly-detection.md
+  - name: PaddleOCR, Anomalib, and RMBG / PaddleOCR、Anomalib 与 RMBG
+    href: visual-ocr-anomaly-rmbg.md
+  - name: Segment Anything family / Segment Anything 模型族
+    href: visual-sam-family.md
+  - name: Open-vocabulary and Grounded-SAM / 开放词汇与 Grounded-SAM
+    href: visual-open-vocabulary.md
+  - name: CLIP and SigLIP / CLIP 与 SigLIP
+    href: visual-vision-language.md
+  - name: BLIP-family generation / BLIP 模型族生成
+    href: visual-generative-vision-language.md
+  - name: Native multimodal dialogue / 原生多模态对话
+    href: visual-native-multimodal.md
+  - name: Document intelligence / 文档智能
+    href: visual-document-understanding.md
+  - name: Audio speech / 音频语音
+    href: visual-audio-speech.md
+  - name: Multimodal and OpenCV DNN / 多模态与 OpenCV DNN
+    href: multimodal-opencv-dnn.md
+  - name: Visual.OpenCV quick start / Visual.OpenCV 快速开始
+    href: visual-opencv-getting-started.md
+  - name: Visual.OpenCV compatibility / Visual.OpenCV 兼容性
+    href: visual-opencv-compatibility.md
+
+- name: Backend guides / 后端指南
+  items:
+  - name: ONNX Runtime quick start / ONNX Runtime 快速开始
+    href: onnxruntime-getting-started.md
+  - name: ONNX Runtime compatibility / ONNX Runtime 兼容性
+    href: onnxruntime-compatibility.md
+  - name: OpenVINO quick start / OpenVINO 快速开始
+    href: openvino-getting-started.md
+  - name: OpenVINO compatibility / OpenVINO 兼容性
+    href: openvino-compatibility.md
+  - name: Local LLM quick start / 本地 LLM 快速开始
+    href: llm-getting-started.md
+  - name: LLamaSharp native backends / LLamaSharp 原生后端
+    href: llamasharp-native-backends.md
+  - name: LLamaSharp compatibility and lifecycle / LLamaSharp 兼容性与生命周期
+    href: llamasharp-compatibility.md
+
+- name: Models and reproducibility / 模型与复现
+  items:
+  - name: Official model catalog / 官方模型目录
+    href: model-catalog.md
+  - name: Published vision model collection / 已发布视觉模型集合
+    href: models-vision-collection.md
+  - name: Supported model roadmap / 支持模型路线表
+    href: supported-models.md
+  - name: Supported model guide / 模型支持指南
+    href: model-support.md
+  - name: ModelFactory quick start / ModelFactory 快速开始
+    href: modelfactory-getting-started.md
+  - name: Model Release inference / 模型 Release 推理
+    href: model-release-inference-getting-started.md
+  - name: ModelFactory Release and cache security / ModelFactory Release 与缓存安全
+    href: modelfactory-release-cache-security.md
+  - name: ModelPack JSON quick start / ModelPack JSON 快速开始
+    href: modelpack-json-getting-started.md
+  - name: ModelPack JSON schema and security / ModelPack JSON Schema 与安全
+    href: modelpack-json-schema-security.md
+  - name: Qwen2.5 GGUF preview / Qwen2.5 GGUF 预览
+    href: models-qwen2.5-0.5b-instruct-q4-k-m.md
+  - name: Acquire YOLO models / 获取 YOLO 模型
+    href: model-acquisition-yolo.md
+  - name: Acquire DETR and RT-DETR / 获取 DETR 与 RT-DETR
+    href: model-acquisition-detr-rtdetr.md
+  - name: Acquire OCR, anomaly, and RMBG / 获取 OCR、异常与 RMBG
+    href: model-acquisition-ocr-anomaly-rmbg.md
+  - name: Acquire SAM and Grounded-SAM / 获取 SAM 与 Grounded-SAM
+    href: model-acquisition-sam-grounded-sam.md
+  - name: Acquire CLIP and SigLIP / 获取 CLIP 与 SigLIP
+    href: model-acquisition-clip-siglip.md
+  - name: Acquire BLIP family / 获取 BLIP 模型族
+    href: model-acquisition-blip-family.md
+  - name: Acquire native multimodal models / 获取原生多模态模型
+    href: model-acquisition-native-multimodal.md
+  - name: Acquire document-understanding models / 获取文档理解模型
+    href: model-acquisition-document-understanding.md
+  - name: Acquire audio speech models / 获取音频语音模型
+    href: model-acquisition-audio-speech.md
+  - name: Acquire LLM GGUF / 获取 LLM GGUF
+    href: model-acquisition-llm-gguf.md

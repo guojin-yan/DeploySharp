@@ -10,6 +10,12 @@ V2 is a clean API design and does not provide source, binary, configuration, or 
 
 ## Documentation / 文档
 
+- [Documentation guide / 文档指南](articles/index.md)
+- [2.0.0-alpha.1 release notes / 2.0.0-alpha.1 发布说明](articles/release-2.0.0-alpha.1.md)
+- [Platform and backend support / 平台与后端支持](articles/platform-support.md)
+- [Supported model guide / 模型支持指南](articles/model-support.md)
+- [Usage tutorial / 使用教程](articles/usage-tutorial.md)
+- [Inference performance benchmarking / 推理性能基准](articles/performance-benchmarking.md)
 - [Getting Started / 快速开始](articles/getting-started.md)
 - [Installation / 安装](articles/installation.md)
 - [Architecture / 架构](articles/architecture.md)
@@ -21,6 +27,6 @@ V2 is a clean API design and does not provide source, binary, configuration, or 
 - [ModelFactory quick start / ModelFactory 快速开始](articles/modelfactory-getting-started.md)
 - [Model Release inference quick start / 模型 Release 推理快速开始](articles/model-release-inference-getting-started.md)
 - [Official model catalog / 官方模型目录](articles/model-catalog.md)
-- [Next model publication wave / 下一批模型发布波次](articles/model-publication-next-wave.md)
+- [Next model publication wave / 下一批模型发布波次](roadmap/model-publication-next-wave.md)
 
 The current `2.0.0-alpha.1` documentation describes the Core, Visual, LLM, ModelPack, ModelFactory, and LLamaSharp alpha modules. APIs may change before the first release candidate. / 当前 `2.0.0-alpha.1` 文档涵盖 Core、Visual、LLM、ModelPack、ModelFactory 与 LLamaSharp alpha 模块，公共 API 在首个候选版本前仍可能调整。

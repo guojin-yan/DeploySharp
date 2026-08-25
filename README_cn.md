@@ -1,96 +1,262 @@
-# DeploySharp V2.0
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/hero-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/readme/hero-light.svg">
+  <img alt="DeploySharp - 面向 .NET 的可复现 AI 推理工作流" src="docs/images/readme/hero-light.svg" width="100%">
+</picture>
 
-DeploySharp 是一套正在重构中的模块化 .NET 深度学习模型部署工具。
+<p align="center">
+  面向 .NET 的模块化模型部署工具，为视觉、语言和多模态模型提供可复现、可替换后端的推理工作流。
+</p>
 
-## 当前状态
+<p align="center">
+  <a href="https://github.com/guojin-yan/DeploySharp/actions/workflows/ci.yml?query=branch%3ADeploySharpV2.0"><img src="https://github.com/guojin-yan/DeploySharp/actions/workflows/ci.yml/badge.svg?branch=DeploySharpV2.0" alt="Windows CI" /></a>
+  <a href="https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/LICENSE.txt"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache-2.0 许可证" /></a>
+  <a href="https://github.com/guojin-yan/DeploySharp/stargazers"><img src="https://img.shields.io/github/stars/guojin-yan/DeploySharp?style=flat&amp;label=stars" alt="GitHub Stars" /></a>
+  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-net46%20to%20net10.0-512BD4" alt=".NET Framework 4.6 至 .NET 10" /></a>
+  <a href="docs/articles/platform-support.md"><img src="https://img.shields.io/badge/platform-Windows%20x64%20Alpha-0078D4" alt="Windows x64 Alpha" /></a>
+</p>
 
-`2.0.0-alpha.1` 是工程预览版。内置 ModelFactory catalog 当前包含 **39 个公开 Preview 条目**，覆盖 Qwen、视觉/检测器资产和六个 PP-OCRv5 bundle；这些 Release 可下载且已有 SHA-256 校验。Preview 表示已发布并有本机运行与 ModelPack/ModelFactory 证据，不等于 `AlgorithmVerified`，也不等于 GA。`ContractVerified` 表示 DeploySharp 任务合同已覆盖；`LocalBackendVerified` 表示声明的本机后端矩阵已运行；`AlgorithmVerified` 还要求精确上游来源、官方 golden 对齐、性能证据和准入审核；`GA` 要求方案书中的全部发布与平台门禁通过。V1 严格完成数仍为 `0/32`，本机后端覆盖为 `32/32`。下方历史 Stage 段落保留当时的状态快照，不应解读为当前 catalog 状态。
+<p align="center">
+  <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX 文档" /></a>
+  <a href="docs/articles/release-2.0.0-alpha.1.md"><img src="https://img.shields.io/badge/release-2.0.0--alpha.1-f59e0b" alt="DeploySharp 2.0.0-alpha.1" /></a>
+  <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
+</p>
 
-当前 TFM/平台证据、包边界差异、符号包策略与 GA blocker 记录在[发布与平台状态](docs/articles/release-platform-status.md)。第三方软件边界见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)，与模型许可记录分开。最小可运行 Core 示例位于 [samples](samples/README.md)。
+<p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
 
-## 本次更新
+# DeploySharp
 
-当前 Visual 包已覆盖完整 V1 YOLO 检测合同：工件绑定的 v5/v6/v7/v8/v9/v10/v11/v12/v13/v26 Profile、四类显式 raw/end-to-end 输出合同、OpenCV letterbox 输入，以及十个本机 ONNX 工件的 ORT/OpenVINO CPU 验证。只有分别完成发布准入的候选才进入当前 39 条 Preview catalog；其余候选继续保持 External。详见 [Visual YOLO 检测指南](docs/articles/visual-yolo-detection.md)、[本版本说明](docs/releases/2.0.0-alpha.1.md)与[版本索引](docs/releases/README.md)。
+DeploySharp V2 为模型工件、类型化张量、Session、视觉流程、语言/多模态工作流、ModelPack 完整性、ModelFactory 获取和可替换推理后端提供明确契约。应用负责模型文件和原生运行时，DeploySharp 让后端选择与执行边界保持可见。
 
-阶段 25 新增工件绑定的 BLIP/BLIP-2/InstructBLIP 生成合同、精确 Processor/Tokenizer/Generation Identity 与有状态多次 Caption 生命周期。官方 BLIP Base Caption 已在同一获授权图片上通过官方 Predictor、ORT CPU、OpenVINO CPU 与 OpenCV 路径的 Token/EOS/文本及中间数值门控；BLIP VQA、BLIP-2 和 InstructBLIP 保持显式 External blocker。阶段 1-25 的模型已汇总到[开发模型总清单](docs/articles/development-model-inventory.md)，新获取/转换工件统一使用 `E:\DeploySharp-Models\<模型名>`；再分发未获准前不会上传模型。详见 [BLIP 模型族指南](docs/articles/visual-generative-vision-language.md)。
+## 📖 项目介绍
 
-阶段 26 新增工件绑定的 LLaVA OneVision Vision/Projector、Managed Qwen2 Tokenizer/Embedding、Empty-past Prefill、24 层具名 KV Decode 与 Anyres OpenCV，并完成 ORT/OpenVINO CPU 真实执行。官方 Predictor 与当前 Runtime 的 Token/文本差异被如实保留；Qwen2.5-VL 与 Phi-3.5 Vision 保持精确 blocker。当时清单为 60 条且尚无上传资产；当前 catalog 状态以上方摘要为准。详见[原生多模态指南](docs/articles/visual-native-multimodal.md)。
+项目围绕四个实际边界设计：
 
-阶段 28 新增音频语音工件绑定合同、Wav2Vec2 base-960h CTC 的 ORT/OpenVINO/OpenCV 与纯包证据、四份 Manifest，以及 Whisper/HuBERT/pyannote 的明确 blocker。当时清单为 67 条、warehouse 有 21 个预期目录且尚无上传资产；Wav2Vec2 当前仍为 External。详见[音频指南](docs/articles/visual-audio-speech.md)、[获取指南](docs/articles/model-acquisition-audio-speech.md)和[阶段 28 说明](docs/releases/stage-28.md)。
+- **稳定的应用契约：**模型身份、类型化张量、命名输入/输出、Session、诊断、取消和释放。
+- **完整推理工作流：**分类、检测、分割、姿态、OBB、OCR、异常、提示分割、视觉语言、LLM 和多模态路径。
+- **显式后端所有权：**ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT/CUDA 和 LLamaSharp 适配器，不会静默安装全部厂商运行时。
+- **可复现模型交付：**ModelPack 清单、工件大小/SHA-256 校验、不可变 Release 下载、离线缓存复用，以及每个目录模型一份可运行案例。
 
+V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为兼容。
 
-阶段 29 已记录不可变 LLM Profile/Bundle Identity 与 LLamaSharp 单写入取消语义；当时未配置精确 GGUF，因而保持 External 且尚无上传资产。该历史状态已由下文公开 Qwen Preview 更新。详见 [LLM/GGUF 指南](docs/articles/llm-gguf-stage29.md) 与 [阶段 29 说明](docs/releases/stage-29.md)。
+## ✨ 版本亮点
 
-阶段 31 通过 `LLamaSharp.Backend.Cpu 0.27.0` 的真实 Generate、Stream、Cancel、Repeat、contention、Dispose 与 896 维 Embedding 矩阵准入精确 Qwen2.5 0.5B Instruct Q4_K_M GGUF；其当时是本地 External，后续不可变 Release 已将同一 Bundle 作为 Preview 收录，仍非 `AlgorithmVerified`。详见[运行实证](docs/articles/llm-gguf-stage31.md)、[获取记录](docs/articles/model-acquisition-llm-gguf.md)与[阶段 31 说明](docs/releases/stage-31.md)。
+- Core、Visual、LLM、Multimodal、ModelPack、ModelFactory、五类后端和七个分组示例模块。
+- 42 个 Preview 目录条目、43 个工件变体，以及生成的模型/后端验证矩阵。
+- Windows x64 上已完成 ONNX Runtime、OpenVINO 和 OpenCV DNN CPU 验证；RTX 3060 上留存 TensorRT 11 + CUDA 12.9 本机证据。
+- 可复现的跨后端速度案例，记录热推理延迟、P50/P95、吞吐、托管分配和环境信息。
+- 双语 API 文档和 DocFX 站点，开发/审计历史与用户文档入口分离。
 
-阶段 32 将该准入收紧为不可变边界：门禁读取 GGUF magic、校验全部模型/来源 sidecar 和结构化运行 evidence；证据写入拒绝覆盖，并验证并发 Dispose 与调用方持有的无 native/CPU 纯包资产图。本阶段没有新增模型或 evidence。详见[阶段 32 指南](docs/articles/llm-gguf-stage32.md)与[阶段 32 说明](docs/releases/stage-32.md)。
+## 📢 当前更新：2.0.0-alpha.1
 
-阶段 33 复验打包后的纯托管依赖边界与隔离 `net8.0` 的 skip/no-native/真实 CPU consumer 矩阵。模型、sidecar 和既有 evidence 的大小与哈希均无漂移，不需要修改实现或公共合同。详见[阶段 33 审计](docs/articles/llm-gguf-stage33.md)与[阶段 33 说明](docs/releases/stage-33.md)。
+<code>2.0.0-alpha.1</code> 是 DeploySharp V2 的首次工程预览版。目前以 Windows 10/11 x64 源码复现为主，公共 API 和包边界仍会继续调整。
 
-阶段 34 将上述手工检查固化为贯通中央版本、项目引用、lock/assets、nuspec、严格 payload 和程序集引用的可复用只读包边界门。正向包、注入 native payload 的负向包、隔离 skip/missing-SHA/no-native/真实 CPU consumer、取消与并发 Dispose 均通过；两次独立包的语义 payload 一致，同时如实保留 NuGet 容器元数据导致的非位复现结论。详见[阶段 34 审计](docs/articles/llm-gguf-stage34.md)与[阶段 34 说明](docs/releases/stage-34.md)。
+完整的首发变更、验证快照、已知边界和复现命令见 [2.0.0-alpha.1 发布说明](docs/articles/release-2.0.0-alpha.1.md)。后续版本将新增独立的详细版本文档，主页只保留摘要。
 
-阶段 35 建立并由阶段 48 扩展的候选门禁现覆盖十个可打包项目、83 个 TFM 组、五类负向突变与全部 30 项纯包 consumer。当前候选的元数据、依赖闭包、DLL/XML payload 和程序集引用全部通过；原阶段 35 双包复现结论仍保留为语义 `9/9`、原始 ZIP `0/9`。未签名包、脏工作树、符号/源码策略和明确发布授权继续作为 blocker。详见[阶段 35 审计](docs/articles/release-candidate-governance-stage35.md)与[阶段 35 说明](docs/releases/stage-35.md)。
+## 🚀 30 秒开始
 
-阶段 36 evidence 当前覆盖 12 个包、106 个 TFM，保留机器可读的来源/许可证/SBOM、PDB/SourceLink 与公共 API 证据。正向门禁通过 12/12 包 payload、106/106 SourceLink/PDB/API 合同、39 项 official catalog 身份及 `THIRD-PARTY-NOTICES.md` 中 16 项中央依赖身份；12 类独立突变均被拒绝。仅 `2.0.0-alpha.1` 开源非商业预览将 20 项托管许可证、2 项 native 许可证和 18 项依赖来源发现标记为已知提示，商业发布仍由同一批发现阻塞，签名、符号、位级复现和发布授权 blocker 继续保留。PDB 使用稳定的 `/_/` 映射路径而不保留本机物理路径。详见[阶段 36 审计](docs/articles/release-evidence-governance-stage36.md)与[阶段 36 说明](docs/releases/stage-36.md)。
+### 1. 安装包
 
-阶段 37 审计本地缓存的 `JYPPX.TensorRT.CSharp.API 4.0.0`，确认 15 个 TFM、45 个托管 DLL、关键 API、repository/content hash 与无 native payload。由于包许可证元数据缺失、上游 Owner 许可证决策未完成且不可变 `v4.0.0` tag 无法核验，本阶段未创建 TensorRT 后端、engine、native probe、GPU 结论、包或公共 API。详见[阶段 37 审计](docs/articles/tensorrt-admission-stage37.md)与[阶段 37 说明](docs/releases/stage-37.md)。
+Alpha 包当前作为带版本号的 Release 候选在本地构建。包源可用时，按同一版本安装 Core 和所需后端；源码复现时直接使用本仓库项目引用。
 
-阶段 38 确认 TensorRT 包身份和 Stage 37 三项 blocker 均未变化且没有 blocker 消失，并新增一项正式构建 lock/assets 未与包提交和 nupkg 绑定的进入证据 blocker。retained JSON 保持字节不变，负向套件扩展为八类，未开始适配器、native 或 GPU 实现。详见[阶段 38 复核](docs/articles/tensorrt-license-release-review-stage38.md)与[阶段 38 说明](docs/releases/stage-38.md)。
+~~~powershell
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
+~~~
 
-阶段 39 发现上游新 HEAD `3107d2f...` 已记录 Owner-approved `Apache-2.0` policy，但字节不变的 nupkg 仍绑定旧提交 `be2e507...`，其 Owner 决策仍未完成。没有重建持许可证包、不可变 `v4.0.0` 正式身份或 release-bound lock/assets，因此四项 blocker 全部保留，未开始 TensorRT 实现或 GPU 工作。详见[阶段 39 复核](docs/articles/tensorrt-formal-admission-input-review-stage39.md)与[阶段 39 说明](docs/releases/stage-39.md)。
+原生运行时由应用显式负责。OpenCV DNN 和 OpenVINO 需要匹配目标 RID 的原生运行时包；TensorRT 需要用户安装 TensorRT/CUDA/cuDNN 环境。
 
-阶段 40 确认候选集合仍为上游 20 个 artifact 路径加 NuGet cache 1 个副本；全部缺少包许可证/签名，也没有候选声明获批 HEAD。上游 `4.0.0` 发布说明不能替代不可变 proof：没有 `v4.0.0` tag，当前 HEAD 包数为 0，Owner approval pending，public publish disabled，且没有包绑定 lock/assets。详见[阶段 40 复核](docs/articles/tensorrt-approved-rebuild-package-review-stage40.md)与[阶段 40 说明](docs/releases/stage-40.md)。
+### 2. 编写几行 C# 代码
 
-阶段 41 发现真实公开 `v4.0.0` Release：tag 指向 `673e120...`，新 managed asset 为 15,595,749 bytes、SHA256 `58add436...`。但 Release 仍为 `immutable=false`，没有 SHA512/contentHash 或包绑定 provenance，新包也未在本地交付以复核 nuspec/API/payload/signature；四项 blocker 全部保留，未开始适配器或 GPU 工作。详见[阶段 41 复核](docs/articles/tensorrt-formal-release-asset-review-stage41.md)与[阶段 41 说明](docs/releases/stage-41.md)。
+创建模型工件、注册 ONNX Runtime、建立命名张量 Session，并执行一次类型化输入：
 
-阶段 42 从 NuGet.org 复核精确 `4.0.0` repository-signed 包，确认 `Apache-2.0`、`673e120...`、15 TFM/45 managed DLL、关键 PE/XML 合同、无 native/model/engine payload，以及 net8 的 311 个导出类型与 4,374 个 public declared methods。package license 与 Owner decision 两项 blocker 已消失，仅保留 Release 跨渠道不可变绑定与同次构建 provenance；未开始适配器或 GPU 工作。详见[阶段 42 复核](docs/articles/tensorrt-nuget-org-package-review-stage42.md)与[阶段 42 说明](docs/releases/stage-42.md)。
+~~~csharp
+using System.Threading;
+using JYPPX.DeploySharp;
+using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Registry;
+using JYPPX.DeploySharp.Tensors;
 
-阶段 43 再次核对公开 Release，并在新的隔离 cache 恢复精确 NuGet.org 包。Release 仍为 `immutable=false`，资产仍只有 19 个 nupkg 与 source ZIP，没有 manifest/provenance；两项剩余 blocker 均 retained，包与 API 身份不变。详见[阶段 43 复核](docs/articles/tensorrt-release-binding-admission-stage43.md)与[阶段 43 说明](docs/releases/stage-43.md)。
+using var backends = new BackendRegistry();
+backends.UseOnnxRuntime();
 
-阶段 44 不重新打开已消失的许可证问题，只复核两项最终发布证明。Release ID `368273346` 仍为 mutable，20 个资产没有跨渠道 manifest 或同次构建 provenance；精确 NuGet.org 包、API 与 Repository signature 均未变化。两项当前 blocker 继续 retained，不开始适配器、native 或 GPU 工作。详见[阶段 44 复核](docs/articles/tensorrt-immutable-proof-admission-stage44.md)与[阶段 44 说明](docs/releases/stage-44.md)。
+var artifact = new ModelArtifact(
+    new ModelId("examples/classifier"),
+    "onnx",
+    @"models\classifier.onnx",
+    preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+var request = new BackendRequest(
+    BackendCapabilities.TensorInference,
+    OnnxRuntimeBackendProvider.BackendId,
+    "cpu");
+using IInferenceSession session = backends.CreateSession(
+    artifact, request, SessionOptions.Default);
 
-阶段 45 确认 Release 自发布后仍未变化：`immutable=false`、20 个原资产且 proof asset 为 0。tag tree 没有 lock/assets 或通用 release manifest/provenance/attestation，精确 NuGet.org 包及全部 managed/API/signature 检查也未变化。两项 blocker 继续 retained，不开始适配器或 GPU 工作。详见[阶段 45 复核](docs/articles/tensorrt-formal-proof-convergence-stage45.md)与[阶段 45 说明](docs/releases/stage-45.md)。
+var input = new Tensor<float>(
+    new TensorShape(1, 3),
+    new[] { 0.1f, 0.2f, 0.7f });
+InferenceOutputs outputs = session.Run(
+    InferenceInputs.Create("images", input),
+    CancellationToken.None);
+Console.WriteLine(outputs.Count);
+~~~
 
-阶段 46 再次确认同一公开状态：Release ID `368273346` 仍为 mutable 且未更新，proof asset 仍为 0，完整 tag tree 仍没有 lock/assets 或通用 release provenance；精确 NuGet.org 包及全部 managed/API/signature 检查不变。两项 blocker 继续 retained，不开始适配器或 GPU 工作。详见[阶段 46 复核](docs/articles/tensorrt-immutable-release-proof-stage46.md)与[阶段 46 说明](docs/releases/stage-46.md)。
+完整的代码路径、视觉准备、ModelFactory 下载流程和模型案例见[使用教程](docs/articles/usage-tutorial.md)及 [samples](samples/README.md)。
 
-阶段 47 确认 Release 仍为 mutable 且未更新，proof asset 仍为 0，完整 tag tree 仍没有 lock/assets 或通用 provenance；精确 NuGet.org 包及 managed/API/signature 检查不变。两项 blocker 继续 retained，不开始适配器或 GPU 工作。详见[阶段 47 复核](docs/articles/tensorrt-release-proof-recheck-stage47.md)与[阶段 47 说明](docs/releases/stage-47.md)。
+## 📦 包结构
 
-阶段 48 将两项缺失证明降级为仅阻止正式发布，并实现隔离的 `JYPPX.DeploySharp.Backend.TensorRT` net8 managed adapter。适配器只校验和加载调用方持有的 External `.engine/.plan`，通过精确 NuGet.org 4.0.0 API 映射 Core 命名张量，不打包 native runtime、engine、模型或 TensorRT-LLM。纯包 consumer、4 项适配器测试、Stage 35/36 门禁和全解决方案均通过；真实 GPU 推理仍需另行授权精确 plan/model 与 runtime identity。详见[阶段 48 指南](docs/articles/tensorrt-managed-adapter-stage48.md)与[阶段 48 说明](docs/releases/stage-48.md)。
+| 包族 | 内容 | 原生运行时所有权 |
+| --- | --- | --- |
+| <code>JYPPX.DeploySharp.Core</code> | 模型、张量、Session、结果、诊断、后端注册 | 无 |
+| <code>JYPPX.DeploySharp.Visual</code> | 视觉 Profile、预处理元数据、解码器、规范化结果 | 无 |
+| <code>JYPPX.DeploySharp.Visual.OpenCV</code> | OpenCV 图像读取和张量准备 | 应用选择 OpenCV runtime |
+| <code>JYPPX.DeploySharp.LLM</code> / <code>Multimodal</code> | 生成、对话、Embedding、有序媒体、流式 | 应用选择模型运行时 |
+| <code>JYPPX.DeploySharp.ModelPack.Json</code> / <code>ModelFactory</code> | 清单、完整性校验、目录下载、离线缓存 | 无，模型文件由应用持有 |
+| <code>JYPPX.DeploySharp.Backend.*</code> | ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT、LLamaSharp 适配器 | 按后端显式选择 |
 
-阶段 51 在同一隔离包中新增 `TensorRtOnnxEngineBuilder`：校验并 hash 单文件 ONNX，应用 workspace、精度/优化策略与动态 min/opt/max profile，原子写入调用方 External `.engine/.plan`。推理 provider 继续只接收 engine；native runtime 和生成 engine 继续由 consumer 持有。CUDA/RTC 前后处理是下一层独立 managed 能力，本阶段不加入占位 API。详见[阶段 51 指南](docs/articles/tensorrt-onnx-engine-builder-stage51.md)与[阶段 51 说明](docs/releases/stage-51.md)。
+## 🌐 公共包与 Release 资产
 
-阶段 52 新增独立 managed CUDA/RTC 执行层，提供显式 compiler、stream、device-buffer、launch 与同步合同；它不改变 provider 默认行为，也不隐式持久化 PTX/CUBIN。详见[阶段 52 指南](docs/articles/tensorrt-cuda-rtc-managed-stage52.md)与[阶段 52 说明](docs/releases/stage-52.md)。
+当前 DeploySharp 包尚未发布到 nuget.org。这里保留包 ID 和精确的 Alpha 候选版本，确保第一次发布时无需修改应用引用。
 
+| 包 | 版本 | NuGet.org | GitHub Packages | 用途 |
+| --- | --- | --- | --- | --- |
+| <code>JYPPX.DeploySharp.Core</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Core) | 未发布 | Core 契约和后端注册 |
+| <code>JYPPX.DeploySharp.Visual</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Visual) | 未发布 | 视觉 Profile、预处理和解码器 |
+| <code>JYPPX.DeploySharp.Visual.OpenCV</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Visual.OpenCV) | 未发布 | OpenCV 图像准备 |
+| <code>JYPPX.DeploySharp.LLM</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.LLM) | 未发布 | LLM 生成与 Embedding 契约 |
+| <code>JYPPX.DeploySharp.Multimodal</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Multimodal) | 未发布 | 有序多模态编排 |
+| <code>JYPPX.DeploySharp.ModelPack.Json</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.ModelPack.Json) | 未发布 | 模型清单和完整性校验 |
+| <code>JYPPX.DeploySharp.ModelFactory</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.ModelFactory) | 未发布 | 目录选择、下载、缓存和离线复用 |
+| <code>JYPPX.DeploySharp.Backend.OnnxRuntime</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OnnxRuntime) | 未发布 | ONNX Runtime 命名张量适配器 |
+| <code>JYPPX.DeploySharp.Backend.OpenVINO</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OpenVINO) | 未发布 | OpenVINO 命名张量适配器 |
+| <code>JYPPX.DeploySharp.Backend.OpenCV</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OpenCV) | 未发布 | OpenCV DNN 适配器 |
+| <code>JYPPX.DeploySharp.Backend.TensorRT</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.TensorRT) | 未发布 | TensorRT 推理和 ONNX 转 Engine 边界 |
+| <code>JYPPX.DeploySharp.Backend.LlamaSharp</code> | <code>2.0.0-alpha.1</code> | 未发布；[搜索](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.LlamaSharp) | 未发布 | LLamaSharp GGUF 生成和 Embedding |
 
-阶段 53 确认上游 package/Release identity 未变化，并保留 215-member inference/builder/CUDA-RTC public contract；正式发布仍只受两项不可变 proof 阻断。focused managed tests 通过，真实 GPU 继续 skip/blocked；在禁止下载的边界下，因精确上游 nupkg 本地不存在，当前纯包 consumer 复验如实记录为 blocked，未用旧缓存包替代。详见[阶段 53 审计](docs/articles/tensorrt-cuda-rtc-gpu-proof-stage53.md)与[阶段 53 说明](docs/releases/stage-53.md)。
+| 发布渠道 | 当前状态 | 资产 |
+| --- | --- | --- |
+| [NuGet.org](https://www.nuget.org/) | DeploySharp 包尚未发布 | 后续托管包源 |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp 包尚未发布 | 后续包镜像 |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 不可变 ModelPack 资产和验证元数据 |
 
-阶段 55 在固定身份的 RTX 3060/CUDA 12.9/TensorRT 10.11 matrix 上真实通过 CUDA/RTC 前后处理、同步错误传播、ONNX build 与 TensorRT inference；随后提供的精确 NuGet.org repository-signed 包也通过本地纯包 consumer。215-member public contract 与 consumer ownership 不变，正式发布仍缺两项 immutable proof。详见[阶段 55 审计](docs/articles/tensorrt-cuda-rtc-gpu-proof-stage55.md)与[阶段 55 说明](docs/releases/stage-55.md)。
+### 应用负责的运行时包
 
-阶段 61 提供有界本地 PTX/CUBIN 与 engine/plan 存储及显式 `TensorRtLocalSessionFactory` 门面，可使用稳定的每用户 local-data root 或调用方绝对路径。key 绑定 ONNX/build、managed/native runtime、driver 与 GPU 兼容输入，但不绑定物理 GPU UUID。同进程按 root/kind/key 去重，不同进程不得并发写同一 root；手工复制的 engine 仍可由现有 provider 直接加载，最终兼容性由 TensorRT native deserialize 决定。缓存、native runtime、engine、plan、PTX 与 CUBIN 继续由 consumer 持有且不进入包。详见[本地缓存指南](docs/articles/tensorrt-external-cache-stage61.md)与[阶段 61 说明](docs/releases/stage-61.md)。
+下面是当前 Windows Alpha 使用的依赖/运行时包。它们不会由 DeploySharp 托管契约静默安装：
 
-仓库外的 `E:\GitSpace\DeploySharp-V2.0\plan\开发计划-轮次收口清单.md` 现已固定每轮的临时文件清理、模型仓库存放、转换文章、清单校验、Git 提交/推送状态、阻塞请求和下一阶段提示词检查。
+| 包 | 版本 | 作用 |
+| --- | --- | --- |
+| [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) | [![NuGet version](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) | ONNX Runtime CPU 原生执行 |
+| [JYPPX.OpenCV.runtime.win-x64](https://www.nuget.org/packages/JYPPX.OpenCV.runtime.win-x64/) | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.OpenCV.runtime.win-x64.svg?label=version)](https://www.nuget.org/packages/JYPPX.OpenCV.runtime.win-x64/) | Windows x64 OpenCV 原生运行时 |
+| [OpenVINO.runtime.win](https://www.nuget.org/packages/OpenVINO.runtime.win/) | [![NuGet version](https://img.shields.io/nuget/v/OpenVINO.runtime.win.svg?label=version)](https://www.nuget.org/packages/OpenVINO.runtime.win/) | Windows OpenVINO 原生运行时 |
+| [JYPPX.TensorRT.CSharp.API](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.TensorRT.CSharp.API.svg?label=version)](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | 托管 TensorRT/CUDA API；NVIDIA 库仍由用户安装 |
+| [LLamaSharp.Backend.Cpu](https://www.nuget.org/packages/LLamaSharp.Backend.Cpu/) | [![NuGet version](https://img.shields.io/nuget/v/LLamaSharp.Backend.Cpu.svg?label=version)](https://www.nuget.org/packages/LLamaSharp.Backend.Cpu/) | LLamaSharp GGUF 工作流的 CPU 原生后端 |
 
-DeploySharp 将算法速度和官方模型保真作为产品要求。后端微型合同夹具只能证明适配器行为；只有预处理、张量解释和后处理通过可复现黄金对照与官方实现一致后，具体模型才会标记为支持。性能测量会拆分预处理、主机/设备传输、后端执行、后处理和端到端耗时，并在保留旧框架兼容的同时为现代 TFM 提供经过测量的优化路径。
+托管包表格不代表自动安装原生依赖。选择部署 RID 前请阅读[安装和运行时所有权说明](docs/articles/installation.md)。
 
-V2 将稳定契约、领域流程、托管后端适配器和平台原生运行时完全拆分，不提供与 DeploySharp V1 的源码、二进制、配置或行为兼容。
+## 🖥️ 平台与目标框架
 
-The TensorRT package loads caller-owned engines, builds ONNX engines through the explicit builder, exposes CUDA/RTC stream/buffer contracts, and offers configurable local engine/PTX/CUBIN cache. Native runtimes, models, generated artifacts and cache roots remain consumer-owned; independent processes must not write the same cache root concurrently. / TensorRT 包加载调用方持有的 engine，通过显式 builder 构建 ONNX engine，提供 CUDA/RTC stream/buffer 合同，并提供可配置的本地 engine/PTX/CUBIN 缓存。native runtime、模型、生成工件和 cache root 继续由 consumer 持有；独立进程不得并发写入同一 cache root。
+| 平台 | 构建/包边界 | 推理验证 | 原生运行时/包 |
+| --- | --- | --- | --- |
+| Windows 10 x64 | Alpha 支持 | ONNX Runtime、OpenVINO、OpenCV DNN CPU；TensorRT GPU 本机证据 | 已验证 Windows 包和本机 NVIDIA 环境 |
+| Windows 11 x64 | Alpha 支持 | 与 Windows 10 x64 使用同一代码路径 | 匹配的 Windows x64 runtime 包 |
+| Windows ARM64 | 仅构建范围 | 未测试 | 暂缓 |
+| Linux x64/ARM64 | 托管源码可能构建 | 本 Alpha 未测试 | 暂缓；启用时安装匹配厂商 runtime |
+| macOS x64/ARM64 | 托管源码可能构建 | 本 Alpha 未测试 | 暂缓 |
+| Android/iOS/NPU | 无发布声明 | 未测试 | 暂缓 |
 
-请先阅读 [本地 LLM 快速开始](docs/articles/llm-getting-started.md)、[LLamaSharp 原生后端指南](docs/articles/llamasharp-native-backends.md) 和 [LLM 兼容性与生命周期](docs/articles/llamasharp-compatibility.md)。
-视觉流程请阅读 [Visual 已准备张量快速开始](docs/articles/visual-getting-started.md)、[Visual 坐标与解码](docs/articles/visual-coordinate-decoding.md)、[Visual YOLO 检测](docs/articles/visual-yolo-detection.md)、[Visual 语义分割](docs/articles/visual-semantic-segmentation.md)、[Visual Pose](docs/articles/visual-pose-estimation.md)、[Visual 实例分割](docs/articles/visual-instance-segmentation.md)、[Visual OBB 旋转框](docs/articles/visual-oriented-detection.md)、[Visual OCR](docs/articles/visual-ocr.md)、[OCR 方向与自动纠正](docs/articles/visual-ocr-orientation.md)、[Visual 异常检测](docs/articles/visual-anomaly-detection.md) 和 [Visual 生命周期与兼容性](docs/articles/visual-lifecycle-compatibility.md)。项目级门禁见 [性能与模型保真](docs/articles/performance-and-model-fidelity.md)，Ultralytics 等模型族的实现/准入状态见[支持模型路线表](docs/articles/supported-models.md)。
+完整框架列表和后端证据见[平台与后端支持](docs/articles/platform-support.md)。可构建不等于已完成推理验证。
 
-模型清单和下载流程请阅读 [开发模型总清单](docs/articles/development-model-inventory.md)、[ModelPack JSON 快速开始](docs/articles/modelpack-json-getting-started.md)、[ModelFactory 快速开始](docs/articles/modelfactory-getting-started.md) 与 [官方模型目录](docs/articles/model-catalog.md)。官方目录当前有 39 条公开 Preview；其他模型必须分别具备真实 Release、来源/许可、SHA-256 和准入证据后才能收录。
+## 🤖 支持的模型
 
-ONNX CPU 推理请阅读 [ONNX Runtime 快速开始](docs/articles/onnxruntime-getting-started.md) 与 [兼容性和生命周期](docs/articles/onnxruntime-compatibility.md)。
+首个目录包含 42 个 Preview 条目和 43 个工件变体：
 
-OpenVINO CPU 推理请阅读 [OpenVINO 快速开始](docs/articles/openvino-getting-started.md) 与 [兼容性和生命周期](docs/articles/openvino-compatibility.md)。
+| 模型族 | 条目数 | 当前范围 |
+| --- | ---: | --- |
+| YOLO v5-v13/v26 | 22 | 检测、分类、分割、姿态和 OBB |
+| DETR 系列 | 8 | DEIMv2、PP-YOLOE、RF-DETR 和 RT-DETR 变体 |
+| PP-OCRv5 | 6 | Mobile/Server 分类、检测和识别 |
+| Anomalib / BRIA | 3 条目 / 4 工件 | PaDiM、RMBG 1.4、RMBG 2.0 fp32/dynamic-int8 |
+| 视觉语言 / 分割 / LLM | 4 | CLIP、BLIP、SAM 和 Qwen GGUF |
 
-独立 `JYPPX.DeploySharp.Multimodal` 包已提供有序媒体、流式、取消、超时和单写入会话合同；`JYPPX.DeploySharp.Backend.OpenCV` 已提供 Windows x64 CPU preview 的真实 ONNX DNN 推理。包边界、固定 golden、能力探测和未验证路径见[多模态与 OpenCV DNN 指南](docs/articles/multimodal-opencv-dnn.md)。
+全部目录 ID 见[模型支持指南](docs/articles/model-support.md)，每个工件的当前状态见[43 工件模型/后端矩阵](docs/model-backend-verification-matrix.md)。
 
-## 当前状态
+## 🧪 示例系列
 
-`2.0.0-alpha.1` 是早期架构基线，在首个 RC 版本前公共 API 仍可能调整。
+示例按完整工作流组织，而不是一个方法一个示例：
 
-## 许可证
+| 模块 | 演示内容 |
+| --- | --- |
+| <code>01-core</code> | 后端无关的模型/张量生命周期 |
+| <code>02-visual</code> | 视觉 Profile、预处理元数据、解码器所有权 |
+| <code>03-backends</code> | OpenCV DNN 原生加载和命名张量执行 |
+| <code>04-multimodal</code> | 有序媒体、流式、取消和清理 |
+| <code>05-llm</code> | 对话历史和提示词格式化 |
+| <code>06-models</code> | 目录选择、模型案例、Release 下载/推理 |
+| <code>07-benchmarks</code> | 同模型后端/平台延迟和吞吐 |
 
-Apache-2.0。
+详见[示例学习路径](samples/README.md)。速度测试器可写出 JSON 报告，并显式记录不可用的原生运行时。
+
+## 📚 文档
+
+| 资源 | 链接 | 说明 |
+| --- | --- | --- |
+| 文档索引 | [docs/index.md](docs/index.md) | DocFX 入口和双语文档索引 |
+| 首次版本说明 | [2.0.0-alpha.1](docs/articles/release-2.0.0-alpha.1.md) | 首发版本完整快照 |
+| 使用教程 | [使用教程](docs/articles/usage-tutorial.md) | 代码优先的张量和视觉工作流 |
+| 平台/后端支持 | [支持表](docs/articles/platform-support.md) | 目标框架和验证边界 |
+| 模型支持 | [模型指南](docs/articles/model-support.md) | 目录 ID、模型族和状态语义 |
+| 性能基准 | [基准指南](docs/articles/performance-benchmarking.md) | 跨后端、跨平台测试方法 |
+| 工程历史 | [历史记录](docs/history/README.md) | 独立于用户指南的维护记录 |
+
+## 🔨 源码构建
+
+~~~powershell
+dotnet restore DeploySharp.sln --locked-mode
+dotnet build DeploySharp.sln -c Release --no-restore
+dotnet test DeploySharp.sln -c Release --no-build --no-restore
+~~~
+
+当前 Windows 验证使用发布说明中记录的隔离缓存。默认全局缓存中可能存在已知的 OpenVINO NU1403 上游包内容哈希不一致；这是本地包缓存问题，不是 DeploySharp API 失败。
+
+## ⚖️ 许可证
+
+DeploySharp 源码采用 [Apache License 2.0](LICENSE.txt) 许可证。模型和厂商运行时属于独立工件，分别遵循其运行时和分发条款。
+
+## 📮 联系与赞助
+
+如果你有使用问题、Issue、测试反馈或赞助意愿，欢迎通过项目主页和 Issue 区与我们联系。
+
+<p align="center">
+  <img src="docs/images/readme/contact-support-zh.png" width="100%" alt="作者联系方式、社区入口与微信和支付宝赞助二维码">
+</p>
+
+---
+
+## ⚠️ 软件声明与免责声明
+
+### 📜 1. 开源协议声明
+
+作者所有开源项目代码均遵循 **Apache License 2.0** 开源协议。
+
+*特别说明：本项目集成了若干第三方库。若任何第三方库的许可协议与 Apache 2.0 协议存在冲突或不一致，均以该第三方库的原始许可协议为准。本项目不包含也不代表这些第三方库的授权声明，使用前请务必阅读并遵守第三方库的相关许可。*
+
+### 🤖 2. 代码开发与质量说明
+
+- **AI 辅助开发**：本代码在开发过程中使用了人工智能（AI）辅助生成与优化，并非完全由人工逐行编写。
+- **安全性承诺**：**作者郑重声明，本代码中绝无任何有意设置的后门、病毒、木马或旨在破坏用户设备、窃取数据的恶意代码。**
+- **技术局限性**：受限于作者个人的技术水平与能力，代码中可能存在因逻辑不严谨、优化不足或经验欠缺导致的低级问题（例如但不限于内存泄漏、偶发崩溃、资源未释放等）。这些问题纯属能力不足所致，并非主观故意。
+- **测试范围**：由于作者精力有限，未对本软件进行全方位、覆盖所有边缘场景的完整测试。
+
+### 🚨 3. 免责声明（重要）
+
+**请在将本代码应用于任何实际项目（特别是商业、工业或关键任务环境）之前，务必进行详尽、严格的自行测试与验证。** 鉴于上述可能存在的代码缺陷及测试覆盖不足，**因使用本代码而导致的任何直接或间接损失（包括但不限于设备故障、数据丢失、系统瘫痪或利润损失等），本作者概不负责。** 一旦您开始使用本代码，即表示您已知晓上述风险并同意自行承担一切后果，相关问题与本作者无关。
+
+### 🔓 4. 代码开源范围
+
+本项目承诺核心逻辑代码完全开源，但上述提到的“第三方库”的二进制文件、源代码或相关资源不在本项目的开源义务范围内，请根据其各自的指引获取。
+
+### 🤝 5. 社区与反馈
+
+尽管存在上述不足，我们仍欢迎大家下载使用、提交 Issue 或参与测试，共同完善项目。如果你在使用过程中发现 Bug、内存溢出或有改进建议，欢迎通过项目主页提供的联系方式与作者取得联系，我们将尽力在有限的时间内提供协助。

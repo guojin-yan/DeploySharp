@@ -14,4 +14,4 @@ Stage 19 adds PaddleOCR detection/recognition, Anomalib export, and BRIA alpha c
 
 Core gains no OpenCV, Paddle, PyTorch, Anomalib, BRIA, ONNX Runtime, or OpenVINO dependency. Existing OCR/anomaly/geometry/pipeline results remain authoritative; no duplicate result DTO is introduced. Profiles reject incompatible tensor names and shapes rather than guessing a family from rank. / Core 不新增 OpenCV、Paddle、PyTorch、Anomalib、BRIA、ONNX Runtime 或 OpenVINO 依赖。既有 OCR、异常、几何与 pipeline 结果仍是权威类型，不新增重复 DTO。Profile 拒绝不兼容的 tensor 名称与 shape，不根据 rank 猜测模型族。
 
-All Stage 19 candidates remain External and outside the official catalog. See [the Stage 19 guide](visual-ocr-anomaly-rmbg.md) for exact contracts, tolerances, native ownership, and blockers. / 阶段 19 全部候选保持 External，不进入官方 catalog。精确合同、容差、native 所有权和 blocker 参阅[阶段 19 指南](visual-ocr-anomaly-rmbg.md)。
+All Stage 19 candidates remain External and outside the official catalog. See [the Stage 19 guide](../articles/visual-ocr-anomaly-rmbg.md) for exact contracts, tolerances, native ownership, and blockers. / 阶段 19 全部候选保持 External，不进入官方 catalog。精确合同、容差、native 所有权和 blocker 参阅[阶段 19 指南](../articles/visual-ocr-anomaly-rmbg.md)。

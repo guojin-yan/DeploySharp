@@ -1,0 +1,6 @@
+- name: Verification templates / 验证模板
+  href: README.md
+- name: OCR AlgorithmVerified template / OCR AlgorithmVerified 模板
+  href: ocr-algorithm-verification-template.md
+- name: Anomaly AlgorithmVerified template / 异常模型 AlgorithmVerified 模板
+  href: anomaly-algorithm-verification-template.md

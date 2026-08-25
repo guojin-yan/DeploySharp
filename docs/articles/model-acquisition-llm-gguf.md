@@ -28,7 +28,7 @@ The same model directory retains the following source evidence:
 
 The upstream distribution declares Apache-2.0 and includes the retained license file. DeploySharp records `redistributionAllowed:false` because the user's authorization is local-only and no publication was requested. Native loading confirmed GGUF V3, architecture `qwen2`, `Q4_K - Medium`, context 32,768, embedding length 896, GPT-2/Qwen2 tokenizer identity, BOS 151643, EOS 151645, PAD 151643, and the embedded Qwen ChatML template. `LLamaSharp.Backend.Cpu 0.27.0` selected the Windows x64 AVX2 libraries built from llama.cpp revision `3f7c29d318e317b63f54c558bc69803963d7d88c`.
 
-The retained runtime evidence is `evidence/deploysharp-stage31-runtime.json`, 7,364 bytes, SHA256 `68f2b1e144c3d4537cb2f7c91473554296bda97a52bc5e5b5e9517dfb0dfc973`. It records real CPU Generate, Stream, in-flight Cancel, deterministic Repeat, `DS-LLM-4004` contention, idempotent Dispose/use-after-dispose, and a normalized 896-dimensional embedding. See [Stage 31 GGUF evidence](llm-gguf-stage31.md). This local execution evidence does not make the model AlgorithmVerified or downloadable.
+The retained runtime evidence is `evidence/deploysharp-stage31-runtime.json`, 7,364 bytes, SHA256 `68f2b1e144c3d4537cb2f7c91473554296bda97a52bc5e5b5e9517dfb0dfc973`. It records real CPU Generate, Stream, in-flight Cancel, deterministic Repeat, `DS-LLM-4004` contention, idempotent Dispose/use-after-dispose, and a normalized 896-dimensional embedding. See [Stage 31 GGUF evidence](../history/llm-gguf-stage31.md). This local execution evidence does not make the model AlgorithmVerified or downloadable.
 
 ## Stage 32 immutability audit / 阶段 32 不可变性审计
 

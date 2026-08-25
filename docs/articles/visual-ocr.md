@@ -73,7 +73,7 @@ The repository constant graphs are `ContractVerified` fixtures, not PaddleOCR, D
 
 Alpha.1 implements explicit polygon/score detection. Probability-map morphology and contour extraction are not advertised. Greedy CTC is implemented; beam search, language-model correction, layout analysis, table/formula recognition, translation, and VLM are unsupported. / Alpha.1 实现显式 polygon/score 检测，不声明 probability-map 形态学和轮廓提取能力；实现 greedy CTC，不支持 beam search、语言模型纠错、版面分析、表格/公式识别、翻译或 VLM。
 
-Use the [OCR AlgorithmVerified template](ocr-algorithm-verification-template.md) before registering a production OCR suite. / 注册正式 OCR 套件前必须使用 [OCR AlgorithmVerified 模板](ocr-algorithm-verification-template.md)。
+Use the [OCR AlgorithmVerified template](../templates/ocr-algorithm-verification-template.md) before registering a production OCR suite. / 注册正式 OCR 套件前必须使用 [OCR AlgorithmVerified 模板](../templates/ocr-algorithm-verification-template.md)。
 
 ## ModelPack and ModelFactory suite / ModelPack 与 ModelFactory 套件
 

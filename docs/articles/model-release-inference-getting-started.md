@@ -14,9 +14,9 @@ The sample uses the existing `Microsoft.ML.OnnxRuntime` CPU runtime and `JYPPX.O
 ## BRIA RMBG / BRIA RMBG
 
 ```powershell
-dotnet run --project samples/ModelReleaseInference -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
-dotnet run --project samples/ModelReleaseInference -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg
-dotnet run --project samples/ModelReleaseInference -- --model-id bria/rmbg-1.4 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-1.4 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
 ```
 
 The command writes `deploysharp-alpha.pgm` by default. The output is a grayscale alpha mask with the source-image dimensions. `PGM` can be opened by common image tools or converted to PNG by the caller. The BRIA 2.0 Release evidence is verified at the inspected 1024x1024 contract; arbitrary dynamic sizes are not claimed. / 命令默认写出 `deploysharp-alpha.pgm`，它是与源图尺寸相同的灰度 Alpha 掩码。常见图像工具可以打开 `PGM`，调用方也可以将其转换为 PNG。BRIA 2.0 Release 证据在已检查的 1024x1024 合同上验证，不宣称任意动态尺寸。
@@ -24,7 +24,7 @@ The command writes `deploysharp-alpha.pgm` by default. The output is a grayscale
 ## PaDiM / PaDiM
 
 ```powershell
-dotnet run --project samples/ModelReleaseInference -- --model-id anomalib/padim/mvtec-bottle --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id anomalib/padim/mvtec-bottle --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
 ```
 
 The command writes `deploysharp-anomaly-mask.pgm` by default and prints the image score, anomalous-pixel ratio, canonical result SHA256, and output path. The published PaDiM artifact is the MVTec AD `bottle` preview package. / 命令默认写出 `deploysharp-anomaly-mask.pgm`，并打印图像分数、异常像素比例、规范结果 SHA256 和输出路径。已发布 PaDiM 工件是 MVTec AD `bottle` Preview 包。
@@ -34,5 +34,5 @@ The command writes `deploysharp-anomaly-mask.pgm` by default and prints the imag
 Use `--cache <path>` to choose an application-owned cache. After a successful online run, repeat the same command with `--offline` to require the verified local package and prevent network fallback: / 使用 `--cache <path>` 指定应用自有缓存。在线运行成功后，加上 `--offline` 再次运行即可强制使用已校验本地包，禁止联网回退：
 
 ```powershell
-dotnet run --project samples/ModelReleaseInference -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg --cache D:\DeploySharpCache --offline
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg --cache D:\DeploySharpCache --offline
 ```

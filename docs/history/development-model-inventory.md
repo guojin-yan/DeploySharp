@@ -38,16 +38,16 @@ A model becomes downloadable only after all of these are true: exact artifact te
 
 ## Family acquisition guides / 模型族获取指南
 
-- [YOLO family](model-acquisition-yolo.md)
-- [DETR and RT-DETR family](model-acquisition-detr-rtdetr.md)
-- [OCR, anomaly, and RMBG](model-acquisition-ocr-anomaly-rmbg.md)
-- [SAM and Grounded-SAM](model-acquisition-sam-grounded-sam.md)
-- [CLIP, SigLIP, and SigLIP 2](model-acquisition-clip-siglip.md)
-- [BLIP, BLIP-2, and InstructBLIP](model-acquisition-blip-family.md)
-- [Document intelligence and layout models](model-acquisition-document-understanding.md)
-- [LLaVA, Qwen-VL, and Phi Vision](model-acquisition-native-multimodal.md)
-- [Audio speech family](model-acquisition-audio-speech.md)
-- [LLM/GGUF](model-acquisition-llm-gguf.md)
+- [YOLO family](../articles/model-acquisition-yolo.md)
+- [DETR and RT-DETR family](../articles/model-acquisition-detr-rtdetr.md)
+- [OCR, anomaly, and RMBG](../articles/model-acquisition-ocr-anomaly-rmbg.md)
+- [SAM and Grounded-SAM](../articles/model-acquisition-sam-grounded-sam.md)
+- [CLIP, SigLIP, and SigLIP 2](../articles/model-acquisition-clip-siglip.md)
+- [BLIP, BLIP-2, and InstructBLIP](../articles/model-acquisition-blip-family.md)
+- [Document intelligence and layout models](../articles/model-acquisition-document-understanding.md)
+- [LLaVA, Qwen-VL, and Phi Vision](../articles/model-acquisition-native-multimodal.md)
+- [Audio speech family](../articles/model-acquisition-audio-speech.md)
+- [LLM/GGUF](../articles/model-acquisition-llm-gguf.md)
 
 Always select an exact manifest first. Its source revision, artifact files, ports, size/SHA, license conclusion, backend evidence, and blocker override filenames or remembered defaults. / 始终先选择精确 Manifest；其中的 revision、文件、端口、大小/SHA、许可证、后端证据与 blocker 优先于文件名和经验默认值。
 

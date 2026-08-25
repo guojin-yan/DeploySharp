@@ -18,4 +18,4 @@ Paddle decoded graphs own decode/NMS and return source-pixel xyxy rows. Paddle r
 
 Auxiliary arrays are copied into owned Core tensors held by `PreparedVisualInput`; backend sessions never borrow OpenCV memory. The common pipeline preserves cancellation, async execution, bounded concurrency, one managed decode, result ownership after backend outputs are disposed, deterministic capacity failures, and stable disposed/backend diagnostics. / 辅助数组复制到由 PreparedVisualInput 持有的 Core tensor；backend session 不借用 OpenCV 内存。通用管线继续保证取消、异步、有界并发、单次托管解码、输出释放后结果自有、确定性容量失败与稳定释放/backend 诊断。
 
-See [the RT-DETR family guide](visual-portable-detectors.md) for exact tensor names, auxiliary values, dynamic axes, backend evidence, and blockers. / 精确 tensor 名、辅助值、动态轴、后端证据与 blocker 参阅模型族指南。
+See [the RT-DETR family guide](../articles/visual-portable-detectors.md) for exact tensor names, auxiliary values, dynamic axes, backend evidence, and blockers. / 精确 tensor 名、辅助值、动态轴、后端证据与 blocker 参阅模型族指南。

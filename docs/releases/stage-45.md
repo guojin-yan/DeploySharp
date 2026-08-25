@@ -6,7 +6,7 @@ The exact NuGet.org package, `Apache-2.0`, repository commit, SHA256/SHA512/cont
 
 Both current blockers remain retained; Stage 45 adds or removes none. The two Stage 42 license/Owner decision blockers remain historical disappeared entries. No adapter/package/reference/API/TFM, DeploySharp lock/assets, consumer, native/GPU probe, engine/plan/cache, or algorithm/performance evidence was created. / 两项当前 blocker 继续 retained，新增/消失均为 0；历史许可证项不回退。未创建适配器、native/GPU/engine 或算法/性能证据。
 
-TensorRT baseline, expected `-RequireAdmitted` failure, 8/8 negatives, and NuGet.org signature verification pass their intended contracts. Full validation is recorded in the detailed [Stage 45 review](../articles/tensorrt-formal-proof-convergence-stage45.md). / TensorRT baseline、预期失败、8/8 负向与签名门均符合合同；详见 [Stage 45 复核](../articles/tensorrt-formal-proof-convergence-stage45.md)。
+TensorRT baseline, expected `-RequireAdmitted` failure, 8/8 negatives, and NuGet.org signature verification pass their intended contracts. Full validation is recorded in the detailed [Stage 45 review](../history/tensorrt-formal-proof-convergence-stage45.md). / TensorRT baseline、预期失败、8/8 负向与签名门均符合合同；详见 [Stage 45 复核](../history/tensorrt-formal-proof-convergence-stage45.md)。
 
 Stage 35/36 pass 9 packages/82 TFMs with 5/5 and 7/7 negatives. The full solution passes `378/50/0`; inventory passes at 69 entries/56 manifests; exact Qwen is `ADMITTED missing=none`; NuGet vulnerable/deprecated rows are zero and 113 outdated rows are report-only. Retained Stage 36, TensorRT, Qwen, inventory, and catalog identities remain unchanged. / Stage 35/36、全解决方案、inventory、精确 Qwen 与 NuGet 报告均复核通过，retained evidence 和受保护模型/目录状态不变。
 

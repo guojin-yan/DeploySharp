@@ -80,4 +80,4 @@ One observed run, not a benchmark: OpenCV preprocess `177.380 ms`; ORT Vision+pa
 
 Stable native multimodal errors are `DS-VISUAL-4901..4908`: invalid contract/port, identity mismatch, invalid state, invalid generation/KV/logits, concurrency, capacity, tokenizer, and unavailable capability. Existing cancellation, timeout, native-load, inference, and disposed errors remain unchanged. / 稳定错误覆盖合同、Identity、状态、生成/KV、并发、容量、Tokenizer 与能力不可用；取消、超时、Native、推理与 Dispose 复用既有错误。
 
-See [the acquisition article](model-acquisition-native-multimodal.md), [all-stage inventory](development-model-inventory.md), and `eng/models/native-multimodal/native-multimodal-family-support.json`. TensorRT remains unimplemented. / 供应链、统一仓库与发布状态见获取文章、全阶段清单和结构化支持文件；TensorRT 仍未实现。
+See [the acquisition article](model-acquisition-native-multimodal.md), [all-stage inventory](../history/development-model-inventory.md), and `eng/models/native-multimodal/native-multimodal-family-support.json`. TensorRT remains unimplemented. / 供应链、统一仓库与发布状态见获取文章、全阶段清单和结构化支持文件；TensorRT 仍未实现。
