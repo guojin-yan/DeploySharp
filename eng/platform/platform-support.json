@@ -19,7 +19,7 @@
           "level": "NativeSmoke",
           "scope": "Exact caller-owned Qwen GGUF CPU generation, streaming, cancellation, repeat, contention, dispose, and embedding evidence; not AlgorithmVerified.",
           "evidence": [
-            "docs/articles/llamasharp-compatibility.md",
+            "docs/articles/llamasharp-native-backends.md",
             "tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj"
           ],
           "runtimeDependencies": [

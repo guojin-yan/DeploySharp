@@ -4,6 +4,8 @@
 
 当前版本为源码优先的 `2.0.0-alpha.1`。NuGet 包尚未发布到公共源时，可以直接引用仓库项目；包 ID、职责和候选版本见根目录 README。
 
+各包的直接 Target Framework 以[平台与后端支持](platform-support.md)为唯一事实来源；安装后端时还要按应用的目标框架选择匹配资产，不能只看项目能够还原成功。
+
 ```xml
 <ProjectReference Include="..\DeploySharp\src\DeploySharp.Core\DeploySharp.Core.csproj" />
 ```

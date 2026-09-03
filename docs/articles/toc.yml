@@ -12,10 +12,10 @@
     href: usage-tutorial.md
   - name: 架构概览
     href: architecture.md
-  - name: 发布与平台状态
-    href: release-platform-status.md
   - name: 平台与后端支持
     href: platform-support.md
+  - name: Batch、Session 池与并发
+    href: batch-session-concurrency.md
   - name: 性能基准方法
     href: performance-benchmarking.md
   - name: 设备性能实测
@@ -47,8 +47,10 @@
     href: visual-ocr.md
   - name: PaddleOCR 三模型流水线
     href: visual-paddle-ocr3.md
-  - name: 异常检测与背景移除
-    href: visual-ocr-anomaly-rmbg.md
+  - name: 异常检测
+    href: visual-anomaly-detection.md
+  - name: 背景移除（RMBG）
+    href: visual-background-removal.md
   - name: 提示分割与开放词汇
     href: visual-sam-family.md
   - name: 视觉语言与图像生成
@@ -76,8 +78,6 @@
     href: tensorrt-cuda-ocr.md
   - name: 本地 LLM 与 LLamaSharp
     href: llm-getting-started.md
-  - name: LLamaSharp 兼容性
-    href: llamasharp-compatibility.md
   - name: LLamaSharp 原生后端
     href: llamasharp-native-backends.md
   - name: OpenCV DNN 兼容性

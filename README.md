@@ -152,7 +152,7 @@ The complete framework list and backend evidence are in [platform and backend su
 
 ## 🤖 Supported Models
 
-The catalog covers YOLO, DETR, PaddleOCR v4/v5/v6, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. Use the [model support guide](docs/articles/model-support.md) for catalog IDs and the [model/backend matrix](docs/model-backend-verification-matrix.md) for current backend cells.
+The catalog covers YOLO, DETR, PaddleOCR v5 Preview, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. PaddleOCR v4/v6 also have local pipeline evidence but are not presented as downloadable catalog entries. Use the [model support guide](docs/articles/model-support.md) for catalog IDs and the [model/backend matrix](docs/model-backend-verification-matrix.md) for current backend cells.
 
 ## 🧪 Example Series
 

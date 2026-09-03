@@ -1,6 +1,6 @@
 # 平台与后端支持
 
-本文汇总 DeploySharp 2.0.0-alpha.1 的目标框架、操作系统和推理后端范围。这里的“可构建”仅表示托管程序集能够编译；只有完成真实模型推理验证的组合才算“已验证”。
+本文是 DeploySharp 2.0.0-alpha.1 关于目标框架、操作系统和推理后端的唯一事实来源。这里的“可构建”仅表示托管程序集能够编译；只有完成真实模型推理验证的组合才算“已验证”。版本能力清单和已知阻断见 [2.0.0-alpha.1 发布说明](../releases/2.0.0-alpha.1.md)，本页不重复维护另一份发布状态表。
 
 ## 当前发布范围
 
@@ -13,15 +13,20 @@
 
 跨平台使用时，还需要确认所选后端的原生库、驱动和模型格式在目标设备上可用。
 
+当前 Alpha 的发布基线是 Windows 10/11 x64。Linux、macOS、Windows ARM64、移动平台、NPU 和未验证的 GPU 组合可以构建或存在适配代码，但不作本版本的运行兼容性承诺。只有验证矩阵中标记为“通过”的精确模型、工件、输入合同和后端组合，才表示完成了真实推理验证。
+
 ## 目标框架
 
-| 包组 | 目标框架 |
+| 包组 | 实际目标框架 |
 | --- | --- |
-| Core、ModelPack、ModelFactory | <code>netstandard2.0</code>、<code>net8.0</code>、<code>net10.0</code> |
-| Visual 与主要视觉适配器 | <code>net8.0</code>、<code>net10.0</code> |
-| 依赖特定原生运行时的后端 | 以对应 NuGet 包和本机原生库要求为准 |
+| Core、Visual | <code>net46</code>-<code>net481</code>、<code>netstandard2.0</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code> |
+| Visual.OpenCV、Backend.OpenCV、Backend.OpenVINO | <code>net46</code>-<code>net481</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code>（不发布 <code>netstandard2.0</code>） |
+| LLM、Multimodal | <code>netstandard2.0</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code> |
+| ModelPack.Json、ModelFactory | <code>netstandard2.0</code>、<code>net8.0</code>、<code>net9.0</code>、<code>net10.0</code> |
+| Backend.OnnxRuntime、Backend.LlamaSharp | <code>netstandard2.0</code>、<code>net8.0</code> |
+| Backend.TensorRT、Visual.TensorRT | <code>net8.0</code> |
 
-建议新项目优先使用 .NET 10；需要兼容现有应用时可选择 .NET 8。
+建议新项目优先使用 .NET 10；需要兼容现有应用时可选择 .NET 8。Visual.TensorRT 和 Backend.TensorRT 当前只提供 net8.0 资产。
 
 ## 推理后端
 

@@ -7,7 +7,7 @@
 | 你要完成的事 | 从这里开始 | 下一步 |
 | --- | --- | --- |
 | 运行仓库或创建首个会话 | [快速开始](getting-started.md) | [安装与运行时](installation.md) |
-| 了解版本边界 | [发布说明](../releases/2.0.0-alpha.1.md) | [发布与平台状态](release-platform-status.md) |
+| 了解版本边界 | [发布说明](../releases/2.0.0-alpha.1.md) | [平台与后端支持](platform-support.md) |
 | 选择后端 | [平台与后端支持](platform-support.md) | [ONNX Runtime](onnxruntime-getting-started.md) 或 [OpenVINO](openvino-getting-started.md) |
 | 编写视觉推理 | [Visual 快速开始](visual-getting-started.md) | 对应[视觉任务指南](visual-yolo-detection.md) |
 | 处理视频或大图小目标 | [异步帧流水线与滑动窗口](visual-async-and-sliding-window.md) | [性能基准方法](performance-benchmarking.md) |
@@ -15,6 +15,7 @@
 | 下载并验证模型 | [ModelFactory](modelfactory-getting-started.md) | [ModelFactory CLI](model-factory-cli.md) |
 | 查询模型可用性 | [模型支持状态](model-support.md) | [模型与后端验证矩阵](../model-backend-verification-matrix.md) |
 | 复现性能数据 | [性能基准方法](performance-benchmarking.md) | [设备性能实测](device-performance-benchmarks.md) |
+| 设计批量与并发 | [Batch、Session 池与并发](batch-session-concurrency.md) | 对应视觉任务指南 |
 
 ## 阅读约定
 

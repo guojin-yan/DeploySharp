@@ -151,7 +151,7 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 
 ## 🤖 支持的模型
 
-模型目录覆盖 YOLO、DETR、PaddleOCR v4/v5/v6、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。目录 ID 与当前状态见[模型支持指南](docs/articles/model-support.md)，每个模型/后端组合见[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
+模型目录覆盖 YOLO、DETR、PaddleOCR v5 Preview、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。PaddleOCR v4/v6 已有本地流水线验证，但当前不作为可下载目录条目展示。目录 ID 与当前状态见[模型支持指南](docs/articles/model-support.md)，每个模型/后端组合见[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
 
 ## 🧪 示例系列
 

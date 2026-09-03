@@ -3117,7 +3117,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "paddleocr/ppocrv5/mobile-det",
@@ -3206,7 +3206,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "paddleocr/ppocrv5/mobile-rec",
@@ -3307,7 +3307,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "paddleocr/ppocrv5/server-cls",
@@ -3396,7 +3396,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "paddleocr/ppocrv5/server-det",
@@ -3485,7 +3485,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "paddleocr/ppocrv5/server-rec",
@@ -3586,7 +3586,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-paddle-ocr3.md"
     },
     {
       "modelId": "anomalib/padim/mvtec-bottle",
@@ -3655,7 +3655,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-anomaly-detection.md"
     },
     {
       "modelId": "bria/rmbg-1.4",
@@ -3724,7 +3724,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-background-removal.md"
     },
     {
       "modelId": "bria/rmbg-2.0",
@@ -3835,7 +3835,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
+      "documentationPath": "articles/visual-background-removal.md"
     }
   ]
 }

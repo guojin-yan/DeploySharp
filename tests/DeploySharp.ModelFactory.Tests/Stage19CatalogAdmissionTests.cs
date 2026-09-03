@@ -23,7 +23,8 @@ namespace DeploySharp.ModelFactory.Tests
                 string family = ToFamily(rowName);
                 var source = new ModelSourceDocument("https://github.com/guojin-yan/DeploySharp", null, "external-local-contract", "Upstream maintainers", null, "NOASSERTION", null, false);
                 var artifact = new ModelCatalogArtifact("onnx.fp32", "onnx", new[] { "onnxruntime", "openvino" }, "fp32", "none", true, null, Array.Empty<ModelCatalogAsset>(), new ModelCatalogConversion("external-export", null, null, row.GetProperty("blocker").GetString()));
-                entries.Add(new ModelCatalogEntry("stage19/" + family + "/external", rowName + " external family", family, task, "external", ModelCatalogStatus.External, row.GetProperty("blocker").GetString(), source, null, new[] { artifact }, Array.Empty<ModelCatalogAsset>(), documentationPath: "articles/visual-ocr-anomaly-rmbg.md"));
+                string documentationPath = family == "anomalib-seg" ? "articles/visual-anomaly-detection.md" : family == "bria-rmbg" ? "articles/visual-background-removal.md" : "articles/visual-paddle-ocr3.md";
+                entries.Add(new ModelCatalogEntry("stage19/" + family + "/external", rowName + " external family", family, task, "external", ModelCatalogStatus.External, row.GetProperty("blocker").GetString(), source, null, new[] { artifact }, Array.Empty<ModelCatalogAsset>(), documentationPath: documentationPath));
             }
 
             ValidatedModelCatalog catalog = ModelCatalogValidator.Validate(new ModelCatalogDocument("1.0", "2026-08-07T08:00:00Z", "external-stage19.1", new Uri("https://github.com/guojin-yan/DeploySharp"), entries));

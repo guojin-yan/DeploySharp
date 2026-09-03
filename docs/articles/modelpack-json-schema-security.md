@@ -24,14 +24,16 @@
 
 ## 目标框架
 
+ModelPack.Json 的直接 NuGet 资产与项目事实来源保持一致；不要把“可由某个应用引用”写成包本身发布了该 TFM。完整的跨包矩阵以[平台与后端支持](platform-support.md)为准。
+
 | 包资产 | 直接构建目标 |
 | --- | --- |
-| `netstandard2.0` | .NET Framework 4.6.1–4.8.1、.NET Core 3.1、.NET 5–7 |
-| `net8.0` | .NET 8 |
-| `net9.0` | .NET 9 |
-| `net10.0` | .NET 10 |
+| `netstandard2.0` | `netstandard2.0` |
+| `net8.0` | `net8.0` |
+| `net9.0` | `net9.0` |
+| `net10.0` | `net10.0` |
 
-包不单独发布 `net46`、`netcoreapp3.1` 或 `net5.0`–`net7.0` 资产；这些目标通过 `netstandard2.0` 兼容资产使用。最终应用仍需按目标框架和 RID 选择合适的 native 后端包。
+应用可以在支持 `netstandard2.0` 的目标（例如 .NET Framework 4.6.1+、.NET Core 3.1 和 .NET 5–7）中消费兼容资产，但这不改变包的直接构建目标。最终应用仍需按目标框架和 RID 选择合适的 native 后端包。
 
 ## 验证建议
 

@@ -59,4 +59,4 @@ registry.UseLlamaSharp(options);
 | 内存不足 | 降低上下文、batch、GPU layer 或独立 session 数量 |
 | 并发结果互相影响 | 每个请求使用独立 session，不共享生成上下文 |
 
-适配器会将 native 加载失败、损坏 GGUF 和上下文超限映射为稳定错误码，同时保留原始异常。详细模型选择和文本生成示例见[本地 LLM 快速开始](llm-getting-started.md)，版本边界见[LLamaSharp 兼容性](llamasharp-compatibility.md)。
+适配器会将 native 加载失败、损坏 GGUF 和上下文超限映射为稳定错误码，同时保留原始异常。详细模型选择和文本生成示例见[本地 LLM 快速开始](llm-getting-started.md)。当前托管适配器发布 `netstandard2.0` 与 `net8.0` 资产；实际支持范围还取决于应用选择的 `LLamaSharp.Backend.*` 原生包、RID、驱动和指令集。

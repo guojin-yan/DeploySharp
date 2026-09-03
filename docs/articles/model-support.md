@@ -18,7 +18,7 @@
 | --- | --- | --- |
 | YOLO | v5、v6、v7、v8、v9、v10、v11、v12、v13、v26 | 检测、分类、分割、姿态、OBB | 以目录中的精确 ONNX/Engine 工件为准。 |
 | DETR | DEIMv2、PP-YOLOE、RF-DETR、RT-DETR | 检测、实例分割 | 不同导出图的输入输出合同不同。 |
-| PaddleOCR | PP-OCRv5 mobile/server | 检测、识别、方向分类 | v4/v5/v6 流水线支持见专门教程和实测矩阵。 |
+| PaddleOCR | PP-OCRv5 mobile/server（Preview） | 检测、识别、方向分类 | PP-OCRv4/v6 目前有本地流水线验证记录，但尚未纳入官方可下载目录；组合和后端状态见专门教程与实测矩阵。 |
 | 异常与抠图 | PaDiM、BRIA RMBG 1.4/2.0 | 异常分数/掩码、前景 alpha | RMBG 2.0 的精度和后端按工件分别记录。 |
 | 视觉语言 | CLIP、BLIP Caption Base | 图文相似度、图像描述 | 仅完整的双图/生成工件可复现。 |
 | 可提示分割 | SAM v1 | 点、框、掩码提示 | SAM2/SAM3 不属于当前公开 Preview。 |

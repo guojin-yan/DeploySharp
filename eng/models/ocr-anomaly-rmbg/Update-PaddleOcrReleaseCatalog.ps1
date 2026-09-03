@@ -109,7 +109,7 @@ foreach ($manifestFile in $manifests) {
             }
         })
         testInputs = @()
-        documentationPath = 'articles/visual-ocr-anomaly-rmbg.md'
+        documentationPath = 'articles/visual-paddle-ocr3.md'
     })
 }
 
