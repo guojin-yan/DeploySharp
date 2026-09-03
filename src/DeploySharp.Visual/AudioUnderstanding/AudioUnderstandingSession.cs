@@ -96,21 +96,35 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    linked.Token.ThrowIfCancellationRequested(); ValidateInput(input, Bundle.Profile);
-                    float[] copy = ((float[])input.Tensor.Buffer).ToArray(); linked.Token.ThrowIfCancellationRequested();
-                    var tensor = new Tensor<float>(new TensorShape(input.Tensor.Shape.ToArray()), copy, TensorBufferOwnership.Transfer);
-                    string stateIdentity = AudioUnderstandingHash.Text(Bundle.Identity + "|" + input.Identity + "|" + input.FeatureSha256);
-                    var summary = new AudioStateSummary(stateIdentity, input); var state = new CachedAudio(tensor, summary);
-                    lock (_gate) { EnsureUsableLocked(); _state = state; }
-                    return summary;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                finally { if (options.DisposeOwnedInputOnCompletion) input.Dispose(); ExitOperation(); }
+                operationToken.ThrowIfCancellationRequested(); ValidateInput(input, Bundle.Profile);
+                float[] copy = ((float[])input.Tensor.Buffer).ToArray(); operationToken.ThrowIfCancellationRequested();
+                var tensor = new Tensor<float>(new TensorShape(input.Tensor.Shape.ToArray()), copy, TensorBufferOwnership.Transfer);
+                string stateIdentity = AudioUnderstandingHash.Text(Bundle.Identity + "|" + input.Identity + "|" + input.FeatureSha256);
+                var summary = new AudioStateSummary(stateIdentity, input); var state = new CachedAudio(tensor, summary);
+                lock (_gate) { EnsureUsableLocked(); _state = state; }
+                return summary;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion) input.Dispose();
+                ExitOperation();
             }
         }
 
@@ -118,27 +132,39 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    ValidateRequest(request, Bundle.Profile); CachedAudio state;
-                    lock (_gate) { EnsureUsableLocked(); state = _state ?? throw new VisualException(VisualErrorCodes.AudioStateInvalid, "SetAudio must succeed before transcription.", profileId: Bundle.Profile.ProfileId); }
-                    linked.Token.ThrowIfCancellationRequested(); AudioArtifactContract contract = Bundle.Profile.GetArtifact(AudioArtifactRole.CtcEncoderHead);
-                    var inferenceWatch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous
-                        ? await _session.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, state.InputValues), linked.Token).ConfigureAwait(false)
-                        : _session.Run(InferenceInputs.Create(contract.Inputs[0].Name, state.InputValues), linked.Token);
-                    inferenceWatch.Stop(); ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
-                    var decodeWatch = Stopwatch.StartNew(); AudioCtcDecodedResult decoded = _decoder.Decode(outputs.GetRequired("logits"), request.IncludeCtcTokenTimestamps); decodeWatch.Stop();
-                    return new AudioTranscriptionResult(request, decoded, state.Summary, Bundle.Profile, new AudioExecutionTiming(state.Summary.PreprocessTime, inferenceWatch.Elapsed, decodeWatch.Elapsed));
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Audio CTC inference failed.", exception, Bundle.Profile.ProfileId); }
-                finally { ExitOperation(); }
+                ValidateRequest(request, Bundle.Profile); CachedAudio state;
+                lock (_gate) { EnsureUsableLocked(); state = _state ?? throw new VisualException(VisualErrorCodes.AudioStateInvalid, "SetAudio must succeed before transcription.", profileId: Bundle.Profile.ProfileId); }
+                operationToken.ThrowIfCancellationRequested(); AudioArtifactContract contract = Bundle.Profile.GetArtifact(AudioArtifactRole.CtcEncoderHead);
+                var inferenceWatch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous
+                    ? await _session.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, state.InputValues), operationToken).ConfigureAwait(false)
+                    : _session.Run(InferenceInputs.Create(contract.Inputs[0].Name, state.InputValues), operationToken);
+                inferenceWatch.Stop(); ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
+                var decodeWatch = Stopwatch.StartNew(); AudioCtcDecodedResult decoded = _decoder.Decode(outputs.GetRequired("logits"), request.IncludeCtcTokenTimestamps); decodeWatch.Stop();
+                return new AudioTranscriptionResult(request, decoded, state.Summary, Bundle.Profile, new AudioExecutionTiming(state.Summary.PreprocessTime, inferenceWatch.Elapsed, decodeWatch.Elapsed));
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Audio CTC inference failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 

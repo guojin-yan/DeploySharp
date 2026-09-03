@@ -94,8 +94,15 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (document == null) throw new ArgumentNullException(nameof(document));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            if (caller.CanBeCanceled || timeout != null)
+            {
+                linked = timeout == null ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose) : CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose);
+                operationToken = linked.Token;
+            }
+            try
             {
                 try
                 {
@@ -103,7 +110,7 @@ namespace JYPPX.DeploySharp.Visual
                     PreparedDocumentPage page = document.Pages[0];
                     DocumentArtifactContract contract = Bundle.Profile.GetArtifact(DocumentArtifactRole.DocumentEncoder);
                     var watch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous ? await _encoder.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, page.VisualInput.Tensor), linked.Token).ConfigureAwait(false) : _encoder.Run(InferenceInputs.Create(contract.Inputs[0].Name, page.VisualInput.Tensor), linked.Token);
+                    InferenceOutputs outputs = asynchronous ? await _encoder.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, page.VisualInput.Tensor), operationToken).ConfigureAwait(false) : _encoder.Run(InferenceInputs.Create(contract.Inputs[0].Name, page.VisualInput.Tensor), operationToken);
                     watch.Stop();
                     ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
                     Tensor<float> features = CopyFiniteFloat(outputs.GetRequired("last_hidden_state"), contract.Outputs[0], Bundle.Profile.ProfileId);
@@ -115,25 +122,33 @@ namespace JYPPX.DeploySharp.Visual
                     return publicState;
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+                catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
                 catch (VisualException) { throw; }
                 catch (Exception exception) { throw Failure("Document encoding failed.", exception, Bundle.Profile.ProfileId); }
                 finally { if (options.DisposeOwnedInputOnCompletion) document.Dispose(); ExitOperation(); }
             }
+            finally { linked?.Dispose(); timeout?.Dispose(); }
         }
 
         private async Task<DocumentUnderstandingResult> GenerateCoreAsync(DocumentTaskRequest request, IDocumentUnderstandingTokenizer tokenizer, Action<GenerationChunk>? stream, VisualExecutionOptions options, bool asynchronous, CancellationToken caller)
         {
             if (request == null || tokenizer == null) throw new ArgumentNullException(request == null ? nameof(request) : nameof(tokenizer));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            if (caller.CanBeCanceled || timeout != null)
+            {
+                linked = timeout == null ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose) : CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose);
+                operationToken = linked.Token;
+            }
+            try
             {
                 try
                 {
                     EncodedState state;
                     lock (_gate) { EnsureUsableLocked(); state = _state ?? throw new VisualException(VisualErrorCodes.DocumentUnderstandingStateInvalid, "SetDocument must succeed before generation.", profileId: Bundle.Profile.ProfileId); }
-                    linked.Token.ThrowIfCancellationRequested();
+                    operationToken.ThrowIfCancellationRequested();
                     ValidateRequest(request, tokenizer, Bundle.Profile);
                     var tokenizeWatch = Stopwatch.StartNew(); DocumentTokenSequence prompt = tokenizer.Encode(Bundle.Profile, request); tokenizeWatch.Stop();
                     ValidatePrompt(prompt, tokenizer, Bundle.Profile);
@@ -145,13 +160,13 @@ namespace JYPPX.DeploySharp.Visual
                         new NamedTensor("encoder_hidden_states", state.Features)
                     });
                     var prefillWatch = Stopwatch.StartNew();
-                    InferenceOutputs current = asynchronous ? await _prefill.RunAsync(prefillInputs, linked.Token).ConfigureAwait(false) : _prefill.Run(prefillInputs, linked.Token);
+                    InferenceOutputs current = asynchronous ? await _prefill.RunAsync(prefillInputs, operationToken).ConfigureAwait(false) : _prefill.Run(prefillInputs, operationToken);
                     prefillWatch.Stop(); ValidateOutputs(current, prefillContract, Bundle.Profile.ProfileId);
                     KvValues kv = CopyPrefillKv(current, Bundle.Profile);
                     var completion = new List<int>(); var decodeTimes = new List<TimeSpan>(); var tokenScores = new List<GenerativeTokenScore>(); string streamed = string.Empty; bool eos = false;
                     while (promptIds.Length + completion.Count < Bundle.Profile.Tokenizer.MaximumContextTokens)
                     {
-                        linked.Token.ThrowIfCancellationRequested();
+                        operationToken.ThrowIfCancellationRequested();
                         SelectedToken selected = SelectToken(current.GetRequired("logits"), Bundle.Profile, completion.Count);
                         completion.Add(selected.TokenId); tokenScores.Add(new GenerativeTokenScore(completion.Count - 1, selected.TokenId, selected.Logit, selected.LogProbability));
                         string cumulative = tokenizer.Decode(completion); string fragment = cumulative.StartsWith(streamed, StringComparison.Ordinal) ? cumulative.Substring(streamed.Length) : cumulative; streamed = cumulative;
@@ -160,7 +175,7 @@ namespace JYPPX.DeploySharp.Visual
                         if (eos) break;
                         InferenceInputs decodeInputs = CreateDecodeInputs(selected.TokenId, kv, Bundle.Profile);
                         var stepWatch = Stopwatch.StartNew();
-                        current = asynchronous ? await _decode.RunAsync(decodeInputs, linked.Token).ConfigureAwait(false) : _decode.Run(decodeInputs, linked.Token);
+                        current = asynchronous ? await _decode.RunAsync(decodeInputs, operationToken).ConfigureAwait(false) : _decode.Run(decodeInputs, operationToken);
                         stepWatch.Stop(); decodeTimes.Add(stepWatch.Elapsed);
                         ValidateOutputs(current, Bundle.Profile.GetArtifact(DocumentArtifactRole.DecoderWithPast), Bundle.Profile.ProfileId);
                         kv = CopyDecodeKv(current, kv.Cross, Bundle.Profile);
@@ -177,11 +192,12 @@ namespace JYPPX.DeploySharp.Visual
                     return result;
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+                catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
                 catch (VisualException) { throw; }
                 catch (Exception exception) { throw Failure("Document Prefill/KV generation failed.", exception, Bundle.Profile.ProfileId); }
                 finally { ExitOperation(); }
             }
+            finally { linked?.Dispose(); timeout?.Dispose(); }
         }
 
         private static InferenceInputs CreateDecodeInputs(int token, KvValues kv, DocumentUnderstandingProfile profile)
@@ -227,7 +243,12 @@ namespace JYPPX.DeploySharp.Visual
         private static Tensor<float> CopyKv(ITensor tensor, DocumentKvCacheContract contract, int minimumTokens, int maximumTokens, string name, string profileId)
         {
             if (tensor.ElementType != TensorElementType.Float32 || tensor.Shape.Rank != 4 || tensor.Shape[0] != 1 || tensor.Shape[1] != contract.Heads || tensor.Shape[2] < minimumTokens || tensor.Shape[2] > maximumTokens || tensor.Shape[3] != contract.HeadDimension) throw new VisualException(VisualErrorCodes.DocumentUnderstandingGenerationInvalid, "KV type or axes differ from the profile.", profileId: profileId, tensorName: name);
-            float[] values = ((float[])tensor.Buffer).ToArray(); if (values.Any(value => float.IsNaN(value) || float.IsInfinity(value))) throw new VisualException(VisualErrorCodes.DocumentUnderstandingGenerationInvalid, "KV contains NaN or Infinity.", profileId: profileId, tensorName: name);
+            float[] values = ((float[])tensor.Buffer).ToArray();
+            for (int index = 0; index < values.Length; index++)
+            {
+                float value = values[index];
+                if (float.IsNaN(value) || float.IsInfinity(value)) throw new VisualException(VisualErrorCodes.DocumentUnderstandingGenerationInvalid, "KV contains NaN or Infinity.", profileId: profileId, tensorName: name);
+            }
             return new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer);
         }
 
@@ -297,7 +318,12 @@ namespace JYPPX.DeploySharp.Visual
         private static Tensor<float> CopyFiniteFloat(ITensor tensor, GenerativeVisionLanguageTensorContract contract, string profileId)
         {
             if (tensor.ElementType != TensorElementType.Float32 || !GenerativeVisionLanguageHash.ShapeMatches(contract.ShapePattern, tensor.Shape) || tensor.Length > contract.MaximumElements) throw new VisualException(VisualErrorCodes.DocumentUnderstandingContractInvalid, "Runtime tensor type/shape/capacity differs from the document profile.", profileId: profileId, tensorName: contract.Name);
-            float[] values = ((float[])tensor.Buffer).ToArray(); if (values.Any(value => float.IsNaN(value) || float.IsInfinity(value))) throw new VisualException(VisualErrorCodes.DocumentUnderstandingContractInvalid, "Runtime document tensor contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            float[] values = ((float[])tensor.Buffer).ToArray();
+            for (int index = 0; index < values.Length; index++)
+            {
+                float value = values[index];
+                if (float.IsNaN(value) || float.IsInfinity(value)) throw new VisualException(VisualErrorCodes.DocumentUnderstandingContractInvalid, "Runtime document tensor contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            }
             return new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer);
         }
 

@@ -14,6 +14,7 @@
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.10" />
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
     <PackageVersion Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.28.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.28.0" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="JYPPX.OpenVINO.CSharp.API" Version="3.3.0" />
     <PackageVersion Include="JYPPX.TensorRT.CSharp.API" Version="4.0.0" />

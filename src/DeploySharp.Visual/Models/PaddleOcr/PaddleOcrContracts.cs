@@ -1,4 +1,7 @@
 using System;
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+using System.Buffers;
+#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -94,6 +97,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
     /// <summary>Decodes a strict DB probability map into ordered source-space text regions. / 将严格 DB 概率图解码为有序源图文本区域。</summary>
     public sealed class PaddleDbTextDetectionDecoder : IVisualDecoder
     {
+        private const float ProbabilityTolerance = 1e-5f;
+
         /// <summary>Initializes a DB decoder. / 初始化 DB 解码器。</summary>
         public PaddleDbTextDetectionDecoder(string outputName, PaddleDbPostprocessOptions? options = null, int maximumSide = 4000)
         {
@@ -131,56 +136,64 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             long pixels = checked((long)width * height);
             if (pixels != tensor.Length || pixels > Options.MaximumMapPixels || pixels > int.MaxValue) throw Failure(context, "DB probability-map pixels exceed their configured bound.");
             if (checked(pixels * 17L) > Options.MaximumWorkspaceBytes) throw Failure(context, "Estimated DB workspace exceeds its configured bound.");
-            float[] probabilities = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, OutputName);
-            var active = new bool[(int)pixels];
-            for (int index = 0; index < probabilities.Length; index++)
-            {
-                float value = probabilities[index];
-                if (value < 0f || value > 1f) throw Failure(context, "DB probability values must remain in [0,1].", technicalDetails: "index=" + index + ";value=" + value);
-                active[index] = value > Options.ProbabilityThreshold;
-            }
-
-            var visited = new bool[active.Length];
-            var queue = new int[active.Length];
+            float[] probabilities = VisualTensorReader.ReadScoresForFusedValidation(tensor, context.Profile.ProfileId, OutputName);
+            byte[] visited = RentByteScratch((int)pixels);
+            int[] queue = RentIntScratch((int)pixels);
             var candidates = new List<Candidate>();
-            for (int start = 0; start < active.Length; start++)
+            try
             {
-                if ((start & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
-                if (!active[start] || visited[start]) continue;
-                if (candidates.Count >= Options.MaximumCandidates) throw Failure(context, "DB connected candidates exceed their configured bound.");
-                int head = 0;
-                int tail = 0;
-                int minX = width;
-                int minY = height;
-                int maxX = -1;
-                int maxY = -1;
-                double maskScore = 0d;
-                visited[start] = true;
-                queue[tail++] = start;
-                while (head < tail)
+                // Initialize the background/visited mask while validating and normalizing the
+                // probability map. Connected-component expansion can then test one byte instead
+                // of reloading and comparing the probability for every neighboring pixel.
+                for (int index = 0; index < probabilities.Length; index++)
                 {
-                    int current = queue[head++];
-                    int x = current % width;
-                    int y = current / width;
-                    minX = Math.Min(minX, x);
-                    minY = Math.Min(minY, y);
-                    maxX = Math.Max(maxX, x);
-                    maxY = Math.Max(maxY, y);
-                    maskScore += probabilities[current];
-                    Visit(x - 1, y, width, height, active, visited, queue, ref tail);
-                    Visit(x + 1, y, width, height, active, visited, queue, ref tail);
-                    Visit(x, y - 1, width, height, active, visited, queue, ref tail);
-                    Visit(x, y + 1, width, height, active, visited, queue, ref tail);
+                    float value = probabilities[index];
+                    // CPU kernels can round a sigmoid boundary to a few ulps outside [0,1].
+                    // Accept only that numerical noise, then normalize it before thresholding.
+                    if (float.IsNaN(value) || float.IsInfinity(value) || value < -ProbabilityTolerance || value > 1f + ProbabilityTolerance) throw Failure(context, "DB probability values must remain finite and in [0,1].", technicalDetails: "index=" + index + ";value=" + value);
+                    if (value < 0f) value = 0f;
+                    else if (value > 1f) value = 1f;
+                    probabilities[index] = value;
+                    visited[index] = value <= Options.ProbabilityThreshold ? (byte)1 : (byte)0;
                 }
 
-                PointF[] hull = ConvexHull(queue, tail, width);
-                PointF[] box = MinimumAreaRectangle(hull);
-                if (ShortSide(box) < Options.MinimumSide) continue;
-                float score = Options.ScoreMode == PaddleDbScoreMode.Slow
-                    ? checked((float)(maskScore / tail))
-                    : PolygonMean(probabilities, width, box);
-                if (score < Options.BoxThreshold) continue;
-                candidates.Add(new Candidate(box, score));
+                int pixelCount = checked((int)pixels);
+                int lastRowStart = pixelCount - width;
+                for (int start = 0; start < pixels; start++)
+                {
+                    if ((start & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    if (visited[start] != 0) continue;
+                    if (candidates.Count >= Options.MaximumCandidates) throw Failure(context, "DB connected candidates exceed their configured bound.");
+                    int head = 0;
+                    int tail = 0;
+                    double maskScore = 0d;
+                    visited[start] = 1;
+                    queue[tail++] = start;
+                    while (head < tail)
+                    {
+                        int current = queue[head++];
+                        int x = current % width;
+                        maskScore += probabilities[current];
+                        if (x != 0) Visit(current - 1, visited, queue, ref tail);
+                        if (x != width - 1) Visit(current + 1, visited, queue, ref tail);
+                        if (current >= width) Visit(current - width, visited, queue, ref tail);
+                        if (current < lastRowStart) Visit(current + width, visited, queue, ref tail);
+                    }
+
+                    PointF[] hull = ConvexHull(queue, tail, width, height);
+                    PointF[] box = MinimumAreaRectangle(hull);
+                    if (ShortSide(box) < Options.MinimumSide) continue;
+                    float score = Options.ScoreMode == PaddleDbScoreMode.Slow
+                        ? checked((float)(maskScore / tail))
+                        : PolygonMean(probabilities, width, box);
+                    if (score < Options.BoxThreshold) continue;
+                    candidates.Add(new Candidate(box, score));
+                }
+            }
+            finally
+            {
+                ReturnByteScratch(visited);
+                ReturnIntScratch(queue);
             }
 
             candidates.Sort(CandidateComparer.Instance);
@@ -205,12 +218,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             return new TextDetectionResult(regions, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
         }
 
-        private static void Visit(int x, int y, int width, int height, bool[] active, bool[] visited, int[] queue, ref int tail)
+        private static void Visit(int index, byte[] visited, int[] queue, ref int tail)
         {
-            if (x < 0 || x >= width || y < 0 || y >= height) return;
-            int index = (y * width) + x;
-            if (!active[index] || visited[index]) return;
-            visited[index] = true;
+            if (visited[index] != 0) return;
+            visited[index] = 1;
             queue[tail++] = index;
         }
 
@@ -234,10 +245,65 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             double sum = 0d;
             int count = 0;
             for (int y = top; y <= bottom; y++)
-                for (int x = left; x <= right; x++)
-                    if (InsideConvexPolygon(polygon, x, y)) { sum += values[(y * width) + x]; count++; }
+            {
+                if (!TryGetConvexRowRange(polygon, y, left, right, out int rowLeft, out int rowRight)) continue;
+                int rowOffset = y * width;
+                for (int x = rowLeft; x <= rowRight; x++)
+                {
+                    sum += values[rowOffset + x];
+                    count++;
+                }
+            }
             if (count == 0) return 0f;
             return checked((float)(sum / count));
+        }
+
+        private static bool TryGetConvexRowRange(PointF[] polygon, int y, int left, int right, out int rowLeft, out int rowRight)
+        {
+            const float tolerance = 0.0001f;
+            float lower = left;
+            float upper = right;
+            for (int index = 0; index < polygon.Length; index++)
+            {
+                PointF a = polygon[index];
+                PointF b = polygon[(index + 1) % polygon.Length];
+                float dx = b.X - a.X;
+                float dy = b.Y - a.Y;
+                if (dy > 0f)
+                {
+                    float bound = ((dx * (y - a.Y)) + (dy * a.X) + tolerance) / dy;
+                    upper = Math.Min(upper, bound);
+                }
+                else if (dy < 0f)
+                {
+                    float bound = ((dx * (y - a.Y)) + (dy * a.X) + tolerance) / dy;
+                    lower = Math.Max(lower, bound);
+                }
+                else if ((dx * (y - a.Y)) < -tolerance)
+                {
+                    rowLeft = 0;
+                    rowRight = -1;
+                    return false;
+                }
+            }
+
+            if (lower > upper)
+            {
+                rowLeft = 0;
+                rowRight = -1;
+                return false;
+            }
+
+            // Start one pixel outside the analytic interval and correct with the
+            // original half-plane predicate. This preserves boundary semantics
+            // even when division rounds an edge by a few ulps.
+            rowLeft = Math.Max(left, checked((int)Math.Floor(lower)) - 1);
+            rowRight = Math.Min(right, checked((int)Math.Ceiling(upper)) + 1);
+            while (rowLeft <= rowRight && !InsideConvexPolygon(polygon, rowLeft, y)) rowLeft++;
+            while (rowRight >= rowLeft && !InsideConvexPolygon(polygon, rowRight, y)) rowRight--;
+            while (rowLeft > left && InsideConvexPolygon(polygon, rowLeft - 1, y)) rowLeft--;
+            while (rowRight < right && InsideConvexPolygon(polygon, rowRight + 1, y)) rowRight++;
+            return rowLeft <= rowRight;
         }
 
         private static bool InsideConvexPolygon(PointF[] polygon, float x, float y)
@@ -246,7 +312,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             {
                 PointF a = polygon[index];
                 PointF b = polygon[(index + 1) % polygon.Length];
-                if (Cross(a, b, new PointF(x, y)) < -0.0001f) return false;
+                // Keep the hot score-mask loop allocation-free and avoid constructing a
+                // temporary PointF for every probability-map pixel.
+                if (((b.X - a.X) * (y - a.Y)) - ((b.Y - a.Y) * (x - a.X)) < -0.0001f) return false;
             }
             return true;
         }
@@ -272,28 +340,112 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             return new PointF(Math.Max(0f, Math.Min(context.Input.SourceSize.Width, source.X)), Math.Max(0f, Math.Min(context.Input.SourceSize.Height, source.Y)));
         }
 
-        private static PointF[] ConvexHull(int[] indices, int count, int width)
+        private static PointF[] ConvexHull(int[] indices, int count, int width, int height)
         {
-            var points = new PointF[count];
-            for (int index = 0; index < count; index++) points[index] = new PointF(indices[index] % width, indices[index] / width);
-            Array.Sort(points, PointComparer.Instance);
-            var hull = new List<PointF>(Math.Min(count, 32));
-            for (int pass = 0; pass < 2; pass++)
+            int[] columnRanges = RentIntScratch(checked(width * 2));
+            PointF[] points = RentPointScratch(Math.Min(count, checked(width * 2)));
+            int pointCount = 0;
+            try
             {
-                int start = hull.Count;
-                int begin = pass == 0 ? 0 : count - 1;
-                int end = pass == 0 ? count : -1;
-                int step = pass == 0 ? 1 : -1;
-                for (int index = begin; index != end; index += step)
+                for (int x = 0; x < width; x++)
                 {
-                    PointF point = points[index];
-                    while (hull.Count - start >= 2 && Cross(hull[hull.Count - 2], hull[hull.Count - 1], point) <= 0f) hull.RemoveAt(hull.Count - 1);
-                    hull.Add(point);
+                    columnRanges[x * 2] = height;
+                    columnRanges[(x * 2) + 1] = -1;
                 }
-                hull.RemoveAt(hull.Count - 1);
+                for (int index = 0; index < count; index++)
+                {
+                    int value = indices[index];
+                    int x = value % width;
+                    int y = value / width;
+                    int range = x * 2;
+                    if (y < columnRanges[range]) columnRanges[range] = y;
+                    if (y > columnRanges[range + 1]) columnRanges[range + 1] = y;
+                }
+
+                // Per-column extrema are sufficient for the convex hull of an integer pixel set.
+                // Emitting them in x/y order removes the boundary scan and O(n log n) sort while
+                // preserving the exact input order seen by the monotone-chain hull algorithm.
+                for (int x = 0; x < width; x++)
+                {
+                    int range = x * 2;
+                    int minimumY = columnRanges[range];
+                    int maximumY = columnRanges[range + 1];
+                    if (maximumY < 0) continue;
+                    points[pointCount++] = new PointF(x, minimumY);
+                    if (maximumY != minimumY) points[pointCount++] = new PointF(x, maximumY);
+                }
+
+                var hull = new List<PointF>(Math.Min(pointCount, 32));
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    int start = hull.Count;
+                    int begin = pass == 0 ? 0 : pointCount - 1;
+                    int end = pass == 0 ? pointCount : -1;
+                    int step = pass == 0 ? 1 : -1;
+                    for (int index = begin; index != end; index += step)
+                    {
+                        PointF point = points[index];
+                        while (hull.Count - start >= 2 && Cross(hull[hull.Count - 2], hull[hull.Count - 1], point) <= 0f) hull.RemoveAt(hull.Count - 1);
+                        hull.Add(point);
+                    }
+                    hull.RemoveAt(hull.Count - 1);
+                }
+                if (hull.Count >= 3) return hull.ToArray();
+                return new[] { points[0], new PointF(points[pointCount - 1].X, points[0].Y), points[pointCount - 1], new PointF(points[0].X, points[pointCount - 1].Y) };
             }
-            if (hull.Count >= 3) return hull.ToArray();
-            return new[] { points[0], new PointF(points[points.Length - 1].X, points[0].Y), points[points.Length - 1], new PointF(points[0].X, points[points.Length - 1].Y) };
+            finally
+            {
+                ReturnIntScratch(columnRanges);
+                ReturnPointScratch(points);
+            }
+        }
+
+        private static byte[] RentByteScratch(int length)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            return ArrayPool<byte>.Shared.Rent(length);
+#else
+            return new byte[length];
+#endif
+        }
+
+        private static void ReturnByteScratch(byte[] values)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            ArrayPool<byte>.Shared.Return(values);
+#endif
+        }
+
+        private static int[] RentIntScratch(int length)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            return ArrayPool<int>.Shared.Rent(length);
+#else
+            return new int[length];
+#endif
+        }
+
+        private static void ReturnIntScratch(int[] values)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            ArrayPool<int>.Shared.Return(values);
+#endif
+        }
+
+        private static PointF[] RentPointScratch(int length)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            return ArrayPool<PointF>.Shared.Rent(length);
+#else
+            return new PointF[length];
+#endif
+        }
+
+        private static void ReturnPointScratch(PointF[] values)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            ArrayPool<PointF>.Shared.Return(values);
+#endif
         }
 
         private static PointF[] MinimumAreaRectangle(PointF[] hull)
@@ -402,12 +554,6 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             public Line(PointF point, PointF direction) { Point = point; Direction = direction; }
             public PointF Point { get; }
             public PointF Direction { get; }
-        }
-
-        private sealed class PointComparer : IComparer<PointF>
-        {
-            public static PointComparer Instance { get; } = new PointComparer();
-            public int Compare(PointF left, PointF right) { int x = left.X.CompareTo(right.X); return x != 0 ? x : left.Y.CompareTo(right.Y); }
         }
 
         private sealed class CandidateComparer : IComparer<Candidate>
@@ -596,7 +742,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
             if (string.IsNullOrWhiteSpace(inputName) || string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("Exact tensor names are required.");
             if (float.IsNaN(rejectionThreshold) || float.IsInfinity(rejectionThreshold) || rejectionThreshold < 0f || rejectionThreshold > 1f) throw new ArgumentOutOfRangeException(nameof(rejectionThreshold));
-            if (maximumBatch != 1) throw new ArgumentOutOfRangeException(nameof(maximumBatch), "The current orientation result contract requires single-region inference.");
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
+            if (maximumBatch > 1 && !allowDynamicBatch) throw new ArgumentException("A classification batch larger than one requires allowDynamicBatch=true.", nameof(allowDynamicBatch));
             var mapping = new[] { TextOrientation.Degrees0, TextOrientation.Degrees180 };
             long batchDimension = allowDynamicBatch ? -1 : 1;
             var schema = new OcrOrientationSchema(outputName, new TensorShape(batchDimension, 2), TensorElementType.Float32, mapping, OcrOrientationValueSemantics.Probability, applySoftmax: false, allowDynamicBatch: allowDynamicBatch);

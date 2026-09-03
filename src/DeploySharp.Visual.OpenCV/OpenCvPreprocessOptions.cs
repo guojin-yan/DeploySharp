@@ -101,6 +101,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         private readonly IReadOnlyList<float> _means;
         private readonly IReadOnlyList<float> _standardDeviations;
         private readonly IReadOnlyList<float> _inputDivisors;
+        private readonly float[] _expandedMeans;
+        private readonly float[] _expandedStandardDeviations;
+        private readonly float[] _expandedInputDivisors;
 
         /// <summary>Initializes and validates preprocessing options. / 初始化并校验预处理配置。</summary>
         public OpenCvPreprocessOptions(
@@ -137,6 +140,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             _standardDeviations = CopyFinite(standardDeviations, channels, "standardDeviations", true);
             _inputDivisors = CopyFinite(inputDivisors, channels, "inputDivisors", true);
             if (outputType == OpenCvOutputType.UInt8 && (_means.Count != 0 || _standardDeviations.Count != 0)) throw Invalid("UInt8 output cannot apply floating-point normalization.");
+            _expandedMeans = Expand(_means, channels, 0f);
+            _expandedStandardDeviations = Expand(_standardDeviations, channels, 1f);
+            _expandedInputDivisors = Expand(_inputDivisors, channels, 1f);
 
             ModelSize = modelSize;
             ResizeMode = resizeMode;
@@ -181,9 +187,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public OpenCvInterpolation Interpolation { get; }
 
         internal int ChannelCount => GetChannelCount(ColorOrder);
-        internal float Mean(int channel) => _means.Count == 0 ? 0f : _means[_means.Count == 1 ? 0 : channel];
-        internal float StandardDeviation(int channel) => _standardDeviations.Count == 0 ? 1f : _standardDeviations[_standardDeviations.Count == 1 ? 0 : channel];
-        internal float InputDivisor(int channel) => _inputDivisors.Count == 0 ? 1f : _inputDivisors[_inputDivisors.Count == 1 ? 0 : channel];
+        internal float Mean(int channel) => _expandedMeans[channel];
+        internal float StandardDeviation(int channel) => _expandedStandardDeviations[channel];
+        internal float InputDivisor(int channel) => _expandedInputDivisors[channel];
 
         private static IReadOnlyList<float> CopyFinite(IEnumerable<float>? values, int channels, string name, bool requirePositive)
         {
@@ -198,6 +204,24 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             }
             if (result.Count != 0 && result.Count != 1 && result.Count != channels) throw Invalid("Normalization values must be empty, scalar, or match the output channel count.", name + "Count=" + result.Count + ";channels=" + channels);
             return result.AsReadOnly();
+        }
+
+        private static float[] Expand(IReadOnlyList<float> values, int channels, float defaultValue)
+        {
+            var expanded = new float[channels];
+            if (values.Count == 0)
+            {
+                for (int channel = 0; channel < channels; channel++) expanded[channel] = defaultValue;
+            }
+            else if (values.Count == 1)
+            {
+                for (int channel = 0; channel < channels; channel++) expanded[channel] = values[0];
+            }
+            else
+            {
+                for (int channel = 0; channel < channels; channel++) expanded[channel] = values[channel];
+            }
+            return expanded;
         }
 
         private static int GetChannelCount(VisualColorOrder colorOrder)

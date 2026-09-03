@@ -81,6 +81,18 @@ namespace JYPPX.DeploySharp.Visual
     {
         public static float[] ReadFiniteScores(ITensor tensor, string profileId, string tensorName)
         {
+            float[] values = ReadScoresForFusedValidation(tensor, profileId, tensorName);
+            for (int index = 0; index < values.Length; index++)
+            {
+                if (float.IsNaN(values[index]) || float.IsInfinity(values[index])) throw new VisualException(VisualErrorCodes.DecodeFailed, "Tensor contains NaN or infinity.", profileId: profileId, tensorName: tensorName, technicalDetails: "index=" + index);
+            }
+            return values;
+        }
+
+        // Used only when a decoder validates every borrowed value as part of its own
+        // required scan, avoiding a separate full-tensor finite-value pass.
+        public static float[] ReadScoresForFusedValidation(ITensor tensor, string profileId, string tensorName)
+        {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
             float[] values;
             if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] floats)
@@ -96,11 +108,6 @@ namespace JYPPX.DeploySharp.Visual
             else
             {
                 throw new VisualException(VisualErrorCodes.TensorInvalid, "Decoder requires a Float32 or Float64 tensor.", profileId: profileId, tensorName: tensorName);
-            }
-
-            for (int index = 0; index < values.Length; index++)
-            {
-                if (float.IsNaN(values[index]) || float.IsInfinity(values[index])) throw new VisualException(VisualErrorCodes.DecodeFailed, "Tensor contains NaN or infinity.", profileId: profileId, tensorName: tensorName, technicalDetails: "index=" + index);
             }
 
             return values;

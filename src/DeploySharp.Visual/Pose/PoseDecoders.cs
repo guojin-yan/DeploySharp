@@ -296,10 +296,10 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw Failure(context, VisualErrorCodes.DecodeFailed, "Direct Pose decoder currently requires batch size one.", Schema.KeypointsOutputName);
             int expectedOutputs = 1 + (Schema.BoxesOutputName == null ? 0 : 1) + (Schema.InstanceScoresOutputName == null ? 0 : 1);
             if (context.Outputs.Count != expectedOutputs) throw Failure(context, VisualErrorCodes.TensorInvalid, "Direct Pose outputs contain missing or undeclared tensors.", Schema.KeypointsOutputName);
             ITensor keypointTensor = Required(context, Schema.KeypointsOutputName);
+            if (context.Input.BatchSize > 1) return DecodeBatch(context, keypointTensor, expectedOutputs);
             TensorShape shape = keypointTensor.Shape;
             if (shape.Rank != 4 || shape[0] != 1 || shape[2] != Schema.KeypointCount || shape[3] != Schema.ComponentCount) throw Failure(context, VisualErrorCodes.TensorInvalid, "Direct Pose keypoints must match [1,candidates,keypoints,components].", Schema.KeypointsOutputName, shape.ToString());
             int candidateCount = CheckedDimension(shape[1], context, Schema.KeypointsOutputName);
@@ -360,6 +360,81 @@ namespace JYPPX.DeploySharp.Visual
             candidates.Sort(CompareInstances);
             List<PoseInstance> kept = Suppress(candidates, context);
             return new PoseEstimationResult(Topology, kept, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
+        }
+
+        private object DecodeBatch(VisualDecodeContext context, ITensor keypointTensor, int expectedOutputs)
+        {
+            int batch = context.Input.BatchSize;
+            TensorShape shape = keypointTensor.Shape;
+            if (shape.Rank != 4 || shape[0] != batch || shape[2] != Schema.KeypointCount || shape[3] != Schema.ComponentCount)
+                throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched direct Pose keypoints must match [B,candidates,keypoints,components].", Schema.KeypointsOutputName, shape.ToString());
+            int candidates = CheckedDimension(shape[1], context, Schema.KeypointsOutputName);
+            if (candidates > Options.MaximumCandidates || keypointTensor.Length != (long)batch * candidates * Schema.KeypointCount * Schema.ComponentCount)
+                throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched direct Pose keypoint element count is inconsistent with its shape.", Schema.KeypointsOutputName, shape.ToString());
+            ITensor? boxesTensor = Schema.BoxesOutputName == null ? null : Required(context, Schema.BoxesOutputName);
+            ITensor? scoresTensor = Schema.InstanceScoresOutputName == null ? null : Required(context, Schema.InstanceScoresOutputName);
+            if (boxesTensor != null) ValidateBatchCompanion(context, boxesTensor, Schema.BoxesOutputName!, batch, candidates, 4);
+            if (scoresTensor != null) ValidateBatchCompanion(context, scoresTensor, Schema.InstanceScoresOutputName!, batch, candidates, 1);
+            int keypointRowLength = checked(candidates * Schema.KeypointCount * Schema.ComponentCount);
+            int boxRowLength = checked(candidates * 4);
+            int scoreRowLength = candidates;
+            var results = new List<PoseEstimationResult>(batch);
+            for (int row = 0; row < batch; row++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                VisualInputFrame frame = context.Input.BatchFrames[row];
+                PreparedVisualInput rowInput = CreateRowInput(context, frame, row);
+                var rowOutputs = new List<NamedTensor>(expectedOutputs)
+                {
+                    new NamedTensor(Schema.KeypointsOutputName, SliceTensor(keypointTensor, new TensorShape(1, candidates, Schema.KeypointCount, Schema.ComponentCount), row, keypointRowLength, context, Schema.KeypointsOutputName))
+                };
+                if (boxesTensor != null) rowOutputs.Add(new NamedTensor(Schema.BoxesOutputName!, SliceTensor(boxesTensor, new TensorShape(1, candidates, 4), row, boxRowLength, context, Schema.BoxesOutputName!)));
+                if (scoresTensor != null) rowOutputs.Add(new NamedTensor(Schema.InstanceScoresOutputName!, SliceTensor(scoresTensor, new TensorShape(1, candidates), row, scoreRowLength, context, Schema.InstanceScoresOutputName!)));
+                results.Add((PoseEstimationResult)Decode(new VisualDecodeContext(rowInput, context.Profile, new InferenceOutputs(rowOutputs), context.CancellationToken)));
+            }
+            return new PoseEstimationBatchResult(results);
+        }
+
+        private static void ValidateBatchCompanion(VisualDecodeContext context, ITensor tensor, string name, int batch, int candidates, int fields)
+        {
+            TensorShape shape = tensor.Shape;
+            bool valid = fields == 1
+                ? shape.Rank == 2 && shape[0] == batch && shape[1] == candidates
+                : shape.Rank == 3 && shape[0] == batch && shape[1] == candidates && shape[2] == fields;
+            if (!valid || tensor.Length != (long)batch * candidates * fields)
+                throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched Pose companion output must match [B,candidates,fields].", name, shape.ToString());
+        }
+
+        private static PreparedVisualInput CreateRowInput(VisualDecodeContext context, VisualInputFrame frame, int row)
+        {
+            TensorShape shape = context.Input.Tensor.Shape;
+            if (shape.Rank < 1 || shape[0] != context.Input.BatchSize || shape.IsDynamic) throw Failure(context, VisualErrorCodes.InputInvalid, "A batched Pose input must expose a static runtime batch shape.", context.Input.InputName, shape.ToString());
+            int rowLength = checked((int)(shape.GetElementCount() / shape[0]));
+            ITensor rowTensor = SliceTensor(context.Input.Tensor, NewRowShape(shape), row, rowLength, context, context.Input.InputName);
+            return new PreparedVisualInput(context.Input.InputName, rowTensor, frame.SourceSize, frame.ModelSize, 1, context.Input.Layout, frame.Transform, context.Input.Preprocessing, frame.InputId, PreparedInputOwnership.Borrowed);
+        }
+
+        private static TensorShape NewRowShape(TensorShape shape)
+        {
+            long[] dimensions = shape.ToArray();
+            dimensions[0] = 1;
+            return new TensorShape(dimensions);
+        }
+
+        private static ITensor SliceTensor(ITensor tensor, TensorShape shape, int row, int rowLength, VisualDecodeContext context, string name)
+        {
+            int offset = checked(row * rowLength);
+            if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] values)
+            {
+                if (offset < 0 || offset > values.Length - rowLength) throw Failure(context, VisualErrorCodes.TensorInvalid, "Pose batch slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var copy = new float[rowLength]; Array.Copy(values, offset, copy, 0, rowLength); return new Tensor<float>(shape, copy, TensorBufferOwnership.Transfer);
+            }
+            if (tensor.ElementType == TensorElementType.Float64 && tensor.Buffer is double[] doubles)
+            {
+                if (offset < 0 || offset > doubles.Length - rowLength) throw Failure(context, VisualErrorCodes.TensorInvalid, "Pose batch slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var copy = new float[rowLength]; for (int index = 0; index < rowLength; index++) copy[index] = checked((float)doubles[offset + index]); return new Tensor<float>(shape, copy, TensorBufferOwnership.Transfer);
+            }
+            throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched Pose outputs require Float32 or Float64 tensors.", name, tensor.Shape.ToString());
         }
 
         private List<PoseInstance> Suppress(List<PoseInstance> ordered, VisualDecodeContext context)
@@ -479,10 +554,10 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.DecodeFailed, "Heatmap Pose decoder currently requires batch size one.", Schema.HeatmapOutputName);
             int expectedOutputs = Schema.InstanceScoreOutputName == null ? 1 : 2;
             if (context.Outputs.Count != expectedOutputs) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Heatmap Pose outputs contain missing or undeclared tensors.", Schema.HeatmapOutputName);
             ITensor tensor = DirectPoseDecoder.Required(context, Schema.HeatmapOutputName);
+            if (context.Input.BatchSize > 1) return DecodeBatch(context, tensor, expectedOutputs);
             TensorShape shape = tensor.Shape;
             if (shape.Rank != 4 || shape[0] != 1) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Pose heatmap must have rank four and batch one.", Schema.HeatmapOutputName, shape.ToString());
             int keypoints; int height; int width;
@@ -545,6 +620,66 @@ namespace JYPPX.DeploySharp.Visual
             var instances = new List<PoseInstance>(1);
             if (instanceScore >= Options.InstanceScoreThreshold) instances.Add(new PoseInstance(0, instanceScore, points, null, null, null));
             return new PoseEstimationResult(Topology, instances, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
+        }
+
+        private object DecodeBatch(VisualDecodeContext context, ITensor heatmapTensor, int expectedOutputs)
+        {
+            int batch = context.Input.BatchSize;
+            TensorShape shape = heatmapTensor.Shape;
+            if (shape.Rank != 4 || shape[0] != batch) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Batched Pose heatmaps must expose [B,...].", Schema.HeatmapOutputName, shape.ToString());
+            int keypoints; int height; int width;
+            try
+            {
+                if (Schema.Layout == PoseHeatmapLayout.Nchw) { keypoints = checked((int)shape[1]); height = checked((int)shape[2]); width = checked((int)shape[3]); }
+                else { height = checked((int)shape[1]); width = checked((int)shape[2]); keypoints = checked((int)shape[3]); }
+            }
+            catch (OverflowException exception) { throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Batched Pose heatmap dimensions exceed Int32 bounds.", Schema.HeatmapOutputName, shape.ToString(), exception); }
+            int plane = checked(height * width);
+            int rowLength = checked(keypoints * plane);
+            if (keypoints != Schema.KeypointCount || height <= 0 || width <= 0 || heatmapTensor.Length != (long)batch * rowLength)
+                throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Batched Pose heatmap shape is incompatible with its schema.", Schema.HeatmapOutputName, shape.ToString());
+            ITensor? scoreTensor = Schema.InstanceScoreOutputName == null ? null : DirectPoseDecoder.Required(context, Schema.InstanceScoreOutputName);
+            if (scoreTensor != null && scoreTensor.Length != batch) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Batched heatmap instance scores must contain one value per row.", Schema.InstanceScoreOutputName!, scoreTensor.Shape.ToString());
+            var results = new List<PoseEstimationResult>(batch);
+            for (int row = 0; row < batch; row++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                VisualInputFrame frame = context.Input.BatchFrames[row];
+                PreparedVisualInput rowInput = CreateRowInput(context, frame, row);
+                var rowOutputs = new List<NamedTensor>(expectedOutputs)
+                {
+                    new NamedTensor(Schema.HeatmapOutputName, SliceTensor(heatmapTensor, new TensorShape(1, shape[1], shape[2], shape[3]), row, rowLength, context, Schema.HeatmapOutputName))
+                };
+                if (scoreTensor != null) rowOutputs.Add(new NamedTensor(Schema.InstanceScoreOutputName!, SliceTensor(scoreTensor, new TensorShape(1), row, 1, context, Schema.InstanceScoreOutputName!)));
+                results.Add((PoseEstimationResult)Decode(new VisualDecodeContext(rowInput, context.Profile, new InferenceOutputs(rowOutputs), context.CancellationToken)));
+            }
+            return new PoseEstimationBatchResult(results);
+        }
+
+        private static PreparedVisualInput CreateRowInput(VisualDecodeContext context, VisualInputFrame frame, int row)
+        {
+            TensorShape shape = context.Input.Tensor.Shape;
+            if (shape.Rank < 1 || shape[0] != context.Input.BatchSize || shape.IsDynamic) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.InputInvalid, "A batched heatmap input must expose a static runtime batch shape.", context.Input.InputName, shape.ToString());
+            int rowLength = checked((int)(shape.GetElementCount() / shape[0]));
+            long[] dimensions = shape.ToArray(); dimensions[0] = 1;
+            ITensor rowTensor = SliceTensor(context.Input.Tensor, new TensorShape(dimensions), row, rowLength, context, context.Input.InputName);
+            return new PreparedVisualInput(context.Input.InputName, rowTensor, frame.SourceSize, frame.ModelSize, 1, context.Input.Layout, frame.Transform, context.Input.Preprocessing, frame.InputId, PreparedInputOwnership.Borrowed);
+        }
+
+        private static ITensor SliceTensor(ITensor tensor, TensorShape shape, int row, int rowLength, VisualDecodeContext context, string name)
+        {
+            int offset = checked(row * rowLength);
+            if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] values)
+            {
+                if (offset < 0 || offset > values.Length - rowLength) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Heatmap batch slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var copy = new float[rowLength]; Array.Copy(values, offset, copy, 0, rowLength); return new Tensor<float>(shape, copy, TensorBufferOwnership.Transfer);
+            }
+            if (tensor.ElementType == TensorElementType.Float64 && tensor.Buffer is double[] doubles)
+            {
+                if (offset < 0 || offset > doubles.Length - rowLength) throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Heatmap batch slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var copy = new float[rowLength]; for (int index = 0; index < rowLength; index++) copy[index] = checked((float)doubles[offset + index]); return new Tensor<float>(shape, copy, TensorBufferOwnership.Transfer);
+            }
+            throw DirectPoseDecoder.Failure(context, VisualErrorCodes.TensorInvalid, "Batched heatmaps require Float32 or Float64 tensors.", name, tensor.Shape.ToString());
         }
 
         private float ReadHeatmap(float[] values, int keypoint, int y, int x, int keypoints, int height, int width, int plane)

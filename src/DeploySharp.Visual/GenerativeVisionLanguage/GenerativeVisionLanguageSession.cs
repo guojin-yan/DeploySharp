@@ -99,33 +99,49 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue)
                 {
-                    input.EnsureUsable();
-                    GenerativeVisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.VisionEncoder);
-                    ValidatePreparedInput(input, contract, Bundle.Profile);
-                    var watch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous ? await _visionEncoder.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), linked.Token).ConfigureAwait(false) : _visionEncoder.Run(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), linked.Token);
-                    watch.Stop();
-                    ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
-                    GenerativeVisionLanguageTensorContract outputContract = contract.Outputs.Single();
-                    Tensor<float> encoderState = CopyFiniteFloatTensor(outputs.GetRequired(outputContract.Name), outputContract, Bundle.Profile.ProfileId);
-                    string sourceSha = input.InputId ?? throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageIdentityMismatch, "Set-image requires PreparedVisualInput.InputId to be the exact encoded-source SHA256.", profileId: Bundle.Profile.ProfileId);
-                    var identity = new GenerativeVisionLanguageImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, Bundle.Profile.Processor.Sha256, sourceSha, input.SourceSize, input.ModelSize);
-                    GenerativeVisionLanguageImageState publicState = Summarize(identity, outputContract.Name, encoderState, watch.Elapsed);
-                    var mask = new Tensor<long>(new TensorShape(encoderState.Shape[0], encoderState.Shape[1]), Enumerable.Repeat(1L, checked((int)(encoderState.Shape[0] * encoderState.Shape[1]))).ToArray(), TensorBufferOwnership.Transfer);
-                    var newState = new ImageState(encoderState, mask, publicState);
-                    lock (_gate) { EnsureUsableLocked(); _imageState = newState; }
-                    return publicState;
+                    timeoutSource = new CancellationTokenSource(options.Timeout.Value);
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Vision encoding failed.", exception, Bundle.Profile.ProfileId); }
-                finally { if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose(); ExitOperation(); }
+                if (caller.CanBeCanceled || timeoutSource != null)
+                {
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
+                }
+                input.EnsureUsable();
+                GenerativeVisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.VisionEncoder);
+                ValidatePreparedInput(input, contract, Bundle.Profile);
+                var watch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous ? await _visionEncoder.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), operationToken).ConfigureAwait(false) : _visionEncoder.Run(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), operationToken);
+                watch.Stop();
+                ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
+                GenerativeVisionLanguageTensorContract outputContract = contract.Outputs.Single();
+                Tensor<float> encoderState = CopyFiniteFloatTensor(outputs.GetRequired(outputContract.Name), outputContract, Bundle.Profile.ProfileId);
+                string sourceSha = input.InputId ?? throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageIdentityMismatch, "Set-image requires PreparedVisualInput.InputId to be the exact encoded-source SHA256.", profileId: Bundle.Profile.ProfileId);
+                var identity = new GenerativeVisionLanguageImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, Bundle.Profile.Processor.Sha256, sourceSha, input.SourceSize, input.ModelSize);
+                GenerativeVisionLanguageImageState publicState = Summarize(identity, outputContract.Name, encoderState, watch.Elapsed);
+                var mask = new Tensor<long>(new TensorShape(encoderState.Shape[0], encoderState.Shape[1]), CreateOnes(checked((int)(encoderState.Shape[0] * encoderState.Shape[1]))), TensorBufferOwnership.Transfer);
+                var newState = new ImageState(encoderState, mask, publicState);
+                lock (_gate) { EnsureUsableLocked(); _imageState = newState; }
+                return publicState;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Vision encoding failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose();
+                ExitOperation();
             }
         }
 
@@ -134,66 +150,86 @@ namespace JYPPX.DeploySharp.Visual
             if (request == null) throw new ArgumentNullException(nameof(request));
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue)
                 {
-                    ImageState state;
-                    lock (_gate) { EnsureUsableLocked(); state = _imageState ?? throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageStateInvalid, "Set-image must succeed before generation.", profileId: Bundle.Profile.ProfileId); }
-                    linked.Token.ThrowIfCancellationRequested();
-                    var tokenizeWatch = Stopwatch.StartNew();
-                    GenerativeTokenSequence prefix = tokenizer.EncodePrefix(Bundle.Profile, request);
-                    tokenizeWatch.Stop();
-                    ValidatePrefix(prefix, Bundle.Profile);
-                    var sequence = prefix.CopyTokenIds().ToList();
-                    var completion = new List<int>();
-                    var scores = new List<GenerativeTokenScore>();
-                    var stepTimes = new List<TimeSpan>();
-                    string streamedText = string.Empty;
-                    bool emittedEos = false;
-                    GenerativeVisionLanguageArtifactContract decoder = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.LanguageDecoder);
-                    while (sequence.Count < Bundle.Profile.Generation.MaximumTotalTokens)
-                    {
-                        linked.Token.ThrowIfCancellationRequested();
-                        InferenceInputs inputs = CreateDecoderInputs(decoder, sequence, state);
-                        var stepWatch = Stopwatch.StartNew();
-                        InferenceOutputs outputs = asynchronous ? await _decoder.RunAsync(inputs, linked.Token).ConfigureAwait(false) : _decoder.Run(inputs, linked.Token);
-                        stepWatch.Stop();
-                        stepTimes.Add(stepWatch.Elapsed);
-                        ValidateOutputs(outputs, decoder, Bundle.Profile.ProfileId);
-                        SelectedToken selected = SelectToken(outputs.GetRequired(decoder.Outputs[0].Name), sequence.Count, Bundle.Profile);
-                        sequence.Add(selected.TokenId);
-                        completion.Add(selected.TokenId);
-                        scores.Add(new GenerativeTokenScore(completion.Count - 1, selected.TokenId, selected.Logit, selected.LogProbability));
-                        string cumulative = tokenizer.DecodeCompletion(completion);
-                        string fragment = cumulative.StartsWith(streamedText, StringComparison.Ordinal) ? cumulative.Substring(streamedText.Length) : cumulative;
-                        streamedText = cumulative;
-                        emittedEos = selected.TokenId == Bundle.Profile.Tokenizer.EosTokenId;
-                        stream?.Invoke(new GenerationChunk(completion.Count - 1, fragment, selected.TokenId, emittedEos ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.None));
-                        if (emittedEos) break;
-                    }
-                    var finalWatch = Stopwatch.StartNew();
-                    string text = tokenizer.DecodeCompletion(completion);
-                    finalWatch.Stop();
-                    GenerationFinishReason finish = emittedEos ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.MaxTokens;
-                    if (!emittedEos) stream?.Invoke(new GenerationChunk(completion.Count, string.Empty, null, finish));
-                    var generation = new GenerationResult(text, finish, new TokenUsage(prefix.Count, completion.Count), completion);
-                    var identity = new GenerationIdentity(state.PublicState.Identity, prefix.ContentSha256, tokenizer.Sha256, Bundle.Profile.Generation.Identity, completion.Count);
-                    return new GenerativeVisionLanguageResult(generation, request, prefix.NormalizedPrompt, identity, scores, new GenerativeVisionLanguageTiming(tokenizeWatch.Elapsed, stepTimes, finalWatch.Elapsed));
+                    timeoutSource = new CancellationTokenSource(options.Timeout.Value);
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Image-conditioned generation failed.", exception, Bundle.Profile.ProfileId); }
-                finally { ExitOperation(); }
+                if (caller.CanBeCanceled || timeoutSource != null)
+                {
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
+                }
+                ImageState state;
+                lock (_gate) { EnsureUsableLocked(); state = _imageState ?? throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageStateInvalid, "Set-image must succeed before generation.", profileId: Bundle.Profile.ProfileId); }
+                operationToken.ThrowIfCancellationRequested();
+                var tokenizeWatch = Stopwatch.StartNew();
+                GenerativeTokenSequence prefix = tokenizer.EncodePrefix(Bundle.Profile, request);
+                tokenizeWatch.Stop();
+                ValidatePrefix(prefix, Bundle.Profile);
+                var sequence = prefix.CopyTokenIds().ToList();
+                var completion = new List<int>();
+                var scores = new List<GenerativeTokenScore>();
+                var stepTimes = new List<TimeSpan>();
+                string streamedText = string.Empty;
+                bool emittedEos = false;
+                GenerativeVisionLanguageArtifactContract decoder = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.LanguageDecoder);
+                while (sequence.Count < Bundle.Profile.Generation.MaximumTotalTokens)
+                {
+                    operationToken.ThrowIfCancellationRequested();
+                    InferenceInputs inputs = CreateDecoderInputs(decoder, sequence, state);
+                    var stepWatch = Stopwatch.StartNew();
+                    InferenceOutputs outputs = asynchronous ? await _decoder.RunAsync(inputs, operationToken).ConfigureAwait(false) : _decoder.Run(inputs, operationToken);
+                    stepWatch.Stop();
+                    stepTimes.Add(stepWatch.Elapsed);
+                    ValidateOutputs(outputs, decoder, Bundle.Profile.ProfileId);
+                    SelectedToken selected = SelectToken(outputs.GetRequired(decoder.Outputs[0].Name), sequence.Count, Bundle.Profile);
+                    sequence.Add(selected.TokenId);
+                    completion.Add(selected.TokenId);
+                    scores.Add(new GenerativeTokenScore(completion.Count - 1, selected.TokenId, selected.Logit, selected.LogProbability));
+                    string cumulative = tokenizer.DecodeCompletion(completion);
+                    string fragment = cumulative.StartsWith(streamedText, StringComparison.Ordinal) ? cumulative.Substring(streamedText.Length) : cumulative;
+                    streamedText = cumulative;
+                    emittedEos = selected.TokenId == Bundle.Profile.Tokenizer.EosTokenId;
+                    stream?.Invoke(new GenerationChunk(completion.Count - 1, fragment, selected.TokenId, emittedEos ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.None));
+                    if (emittedEos) break;
+                }
+                var finalWatch = Stopwatch.StartNew();
+                string text = tokenizer.DecodeCompletion(completion);
+                finalWatch.Stop();
+                GenerationFinishReason finish = emittedEos ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.MaxTokens;
+                if (!emittedEos) stream?.Invoke(new GenerationChunk(completion.Count, string.Empty, null, finish));
+                var generation = new GenerationResult(text, finish, new TokenUsage(prefix.Count, completion.Count), completion);
+                var identity = new GenerationIdentity(state.PublicState.Identity, prefix.ContentSha256, tokenizer.Sha256, Bundle.Profile.Generation.Identity, completion.Count);
+                return new GenerativeVisionLanguageResult(generation, request, prefix.NormalizedPrompt, identity, scores, new GenerativeVisionLanguageTiming(tokenizeWatch.Elapsed, stepTimes, finalWatch.Elapsed));
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Image-conditioned generation failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 
         private static InferenceInputs CreateDecoderInputs(GenerativeVisionLanguageArtifactContract contract, IReadOnlyList<long> sequence, ImageState state)
         {
-            long[] ids = sequence.ToArray();
-            long[] mask = Enumerable.Repeat(1L, ids.Length).ToArray();
+            long[] ids = new long[sequence.Count];
+            long[] mask = new long[sequence.Count];
+            for (int index = 0; index < ids.Length; index++)
+            {
+                ids[index] = sequence[index];
+                mask[index] = 1L;
+            }
             var tensors = new List<NamedTensor>
             {
                 new NamedTensor(contract.Inputs[0].Name, new Tensor<long>(new TensorShape(1, ids.Length), ids, TensorBufferOwnership.Transfer)),
@@ -202,6 +238,13 @@ namespace JYPPX.DeploySharp.Visual
                 new NamedTensor(contract.Inputs[3].Name, state.EncoderAttentionMask)
             };
             return new InferenceInputs(tensors);
+        }
+
+        private static long[] CreateOnes(int length)
+        {
+            var values = new long[length];
+            for (int index = 0; index < values.Length; index++) values[index] = 1L;
+            return values;
         }
 
         private static SelectedToken SelectToken(ITensor tensor, int sequenceLength, GenerativeVisionLanguageProfile profile)
@@ -245,7 +288,11 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (tensor.ElementType != TensorElementType.Float32 || !GenerativeVisionLanguageHash.ShapeMatches(contract.ShapePattern, tensor.Shape) || tensor.Length > contract.MaximumElements) throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageContractInvalid, "Encoder output shape/type differs from the profile.", profileId: profileId, tensorName: contract.Name);
             float[] values = ((float[])tensor.Buffer).ToArray();
-            if (values.Any(value => float.IsNaN(value) || float.IsInfinity(value))) throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageContractInvalid, "Encoder output contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            for (int index = 0; index < values.Length; index++)
+            {
+                float value = values[index];
+                if (float.IsNaN(value) || float.IsInfinity(value)) throw new VisualException(VisualErrorCodes.GenerativeVisionLanguageContractInvalid, "Encoder output contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            }
             return new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer);
         }
 

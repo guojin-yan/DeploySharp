@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 
@@ -39,7 +40,7 @@ namespace JYPPX.DeploySharp.Visual
             if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
             if (values == null) throw new ArgumentNullException(nameof(values));
             if ((long)width * height != values.LongLength) throw new ArgumentException("Alpha dimensions do not match the value count.", nameof(values));
-            for (int index = 0; index < values.Length; index++)
+            if (!takeOwnership) for (int index = 0; index < values.Length; index++)
             {
                 float value = values[index];
                 if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f || value > 1f) throw new ArgumentException("Alpha values must be finite and remain in [0,1].", nameof(values));
@@ -145,6 +146,29 @@ namespace JYPPX.DeploySharp.Visual
         public ModelId ModelId { get; }
     }
 
+    /// <summary>Contains one background-removal result for every row of a true model batch. / 包含真正模型 Batch 中每一行的背景移除结果。</summary>
+    public sealed class BackgroundRemovalBatchResult
+    {
+        private readonly IReadOnlyList<BackgroundRemovalResult> _items;
+
+        /// <summary>Initializes an ordered background-removal batch result. / 初始化有序背景移除 Batch 结果。</summary>
+        public BackgroundRemovalBatchResult(IEnumerable<BackgroundRemovalResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<BackgroundRemovalResult>();
+            foreach (BackgroundRemovalResult item in items) copied.Add(item ?? throw new ArgumentException("Background-removal batch items cannot contain null values.", nameof(items)));
+            if (copied.Count <= 1) throw new ArgumentException("A batch result requires at least two items; batch one uses BackgroundRemovalResult.", nameof(items));
+            _items = copied.AsReadOnly();
+        }
+
+        /// <summary>Gets the number of decoded rows. / 获取已解码行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets a result by input-row index. / 按输入行索引获取结果。</summary>
+        public BackgroundRemovalResult this[int index] => _items[index];
+        /// <summary>Gets ordered background-removal results. / 获取有序背景移除结果。</summary>
+        public IReadOnlyList<BackgroundRemovalResult> Items => _items;
+    }
+
     /// <summary>Defines one strict semantic-alpha output. / 定义一个严格的语义 Alpha 输出。</summary>
     public sealed class AlphaOutputSchema
     {
@@ -206,65 +230,190 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw Failure(context, "BRIA alpha decoding requires batch size one.");
             ITensor tensor;
             try { tensor = context.Outputs.GetRequired(Schema.OutputName); }
             catch (KeyNotFoundException exception) { throw Failure(context, "The configured alpha output is missing.", exception); }
             if (tensor.ElementType != TensorElementType.Float32 && tensor.ElementType != TensorElementType.Float64) throw Failure(context, "Alpha output requires Float32 or Float64.");
             TensorShape shape = tensor.Shape;
-            if (shape.Rank != 4 || shape[0] != 1) throw Failure(context, "Alpha output must have rank four and batch one.", technicalDetails: shape.ToString());
+            if (shape.Rank != 4 || shape[0] <= 0 || shape[0] != context.Input.BatchSize) throw Failure(context, "Alpha output batch must match the prepared input batch.", technicalDetails: shape.ToString());
             long channels = Schema.Layout == AlphaTensorLayout.Nchw ? shape[1] : shape[3];
             long height = Schema.Layout == AlphaTensorLayout.Nchw ? shape[2] : shape[1];
             long width = Schema.Layout == AlphaTensorLayout.Nchw ? shape[3] : shape[2];
             if (channels != 1 || width <= 0 || height <= 0 || width > int.MaxValue || height > int.MaxValue) throw Failure(context, "Alpha output must contain one finite spatial channel.", technicalDetails: shape.ToString());
-            long tensorPixels = checked(width * height);
-            long sourcePixels = checked((long)context.Input.SourceSize.Width * context.Input.SourceSize.Height);
-            long modelPixels = checked((long)context.Input.ModelSize.Width * context.Input.ModelSize.Height);
+            int batch = checked((int)shape[0]);
+            int tensorPixels = checked((int)(width * height));
+            if (tensor.Length != checked((long)batch * tensorPixels)) throw Failure(context, "Alpha output element count does not match its shape.", technicalDetails: shape.ToString());
+            if (batch == 1) return DecodeSingle(context, tensor, 0, tensorPixels, checked((int)width), checked((int)height));
+            EnsureBatchBounded(context, batch, tensorPixels);
+            var results = new List<BackgroundRemovalResult>(batch);
+            for (int index = 0; index < batch; index++)
+            {
+                if ((index & 7) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                results.Add(DecodeSingle(context, tensor, checked(index * tensorPixels), tensorPixels, checked((int)width), checked((int)height), index));
+            }
+            return new BackgroundRemovalBatchResult(results);
+        }
+
+        private BackgroundRemovalResult DecodeSingle(VisualDecodeContext context, ITensor tensor, int offset, int tensorPixels, int width, int height, int batchIndex = 0)
+        {
+            VisualInputFrame frame = context.Input.BatchFrames[batchIndex];
+            long sourcePixels = checked((long)frame.SourceSize.Width * frame.SourceSize.Height);
+            long modelPixels = checked((long)frame.ModelSize.Width * frame.ModelSize.Height);
             if (tensorPixels > Options.MaximumPixels || sourcePixels > Options.MaximumPixels || modelPixels > Options.MaximumPixels) throw Failure(context, "Alpha pixels exceed the configured bound.");
             if (checked((tensorPixels + sourcePixels + modelPixels) * sizeof(float)) > Options.MaximumWorkspaceBytes) throw Failure(context, "Estimated alpha workspace exceeds the configured bound.");
-            float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
-            var plane = new float[checked((int)tensorPixels)];
-            for (int y = 0; y < (int)height; y++)
-            {
-                if ((y & 63) == 0) context.CancellationToken.ThrowIfCancellationRequested();
-                for (int x = 0; x < (int)width; x++)
-                {
-                    int sourceIndex = Schema.Layout == AlphaTensorLayout.Nchw ? (y * (int)width) + x : ((y * (int)width + x) * 1);
-                    float value = values[sourceIndex];
-                    if (!Schema.OutputIsProbability) value = 1f / (1f + (float)Math.Exp(-value));
-                    if (value < 0f || value > 1f) throw Failure(context, "Alpha probabilities must remain in [0,1].", technicalDetails: "index=" + sourceIndex + ";value=" + value);
-                    plane[(y * (int)width) + x] = value;
-                }
-            }
-
-            float[] modelPlane = (int)width == context.Input.ModelSize.Width && (int)height == context.Input.ModelSize.Height
+            float[] plane = ReadAlphaPlane(tensor, tensorPixels, context, offset);
+            float[] modelPlane = width == frame.ModelSize.Width && height == frame.ModelSize.Height
                 ? plane
-                : Resize(plane, (int)width, (int)height, context.Input.ModelSize.Width, context.Input.ModelSize.Height, context.CancellationToken);
-            float[] sourcePlane = RestoreSource(modelPlane, context);
+                : Resize(plane, width, height, frame.ModelSize.Width, frame.ModelSize.Height, context.CancellationToken);
+            float[] sourcePlane = RestoreSource(modelPlane, frame, context.CancellationToken);
+            return new BackgroundRemovalResult(new AlphaMask(frame.SourceSize.Width, frame.SourceSize.Height, sourcePlane, true), frame.SourceSize, frame.Transform, context.Profile.ProfileId, context.Profile.ModelId);
+        }
+
+        private void EnsureBatchBounded(VisualDecodeContext context, int batch, int tensorPixels)
+        {
+            long estimated = 0L;
+            for (int index = 0; index < batch; index++)
+            {
+                VisualInputFrame frame = context.Input.BatchFrames[index];
+                estimated = checked(estimated + ((long)tensorPixels + ((long)frame.SourceSize.Width * frame.SourceSize.Height) + ((long)frame.ModelSize.Width * frame.ModelSize.Height)) * sizeof(float));
+            }
+            if (estimated > Options.MaximumWorkspaceBytes) throw Failure(context, "Estimated alpha batch workspace exceeds the configured bound.");
+        }
+
+        internal BackgroundRemovalResult CreateCudaDecodedResult(VisualDecodeContext context, float[] sourcePlane)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (sourcePlane == null) throw new ArgumentNullException(nameof(sourcePlane));
+            context.CancellationToken.ThrowIfCancellationRequested();
+            if (context.Input.BatchSize != 1) throw Failure(context, "BRIA alpha decoding requires batch size one.");
+            if (sourcePlane.LongLength != checked((long)context.Input.SourceSize.Width * context.Input.SourceSize.Height)) throw Failure(context, "CUDA-restored alpha dimensions do not match the source image.");
             return new BackgroundRemovalResult(new AlphaMask(context.Input.SourceSize.Width, context.Input.SourceSize.Height, sourcePlane, true), context.Input.SourceSize, context.Input.Transform, context.Profile.ProfileId, context.Profile.ModelId);
         }
 
-        private static float[] RestoreSource(float[] model, VisualDecodeContext context)
+        private float[] ReadAlphaPlane(ITensor tensor, int pixels, VisualDecodeContext context, int offset = 0)
         {
-            int sourceWidth = context.Input.SourceSize.Width;
-            int sourceHeight = context.Input.SourceSize.Height;
-            int modelWidth = context.Input.ModelSize.Width;
-            int modelHeight = context.Input.ModelSize.Height;
+            if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] floats)
+            {
+                if (offset < 0 || offset > floats.Length - pixels) throw Failure(context, "Alpha output element offset does not match its shape.");
+                if (Schema.OutputIsProbability)
+                {
+                    // Float32 backend output is borrowed only for this synchronous decode. The
+                    // source-space result below owns a different buffer, so avoid copying a full
+                    // model-size alpha plane solely to validate its already-probabilistic values.
+                    for (int index = 0; index < pixels; index++)
+                    {
+                        if ((index & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                        ValidateAlphaProbability(floats[offset + index], offset + index, context);
+                    }
+                    if (offset == 0 && floats.Length == pixels) return floats;
+                    var plane = new float[pixels];
+                    Array.Copy(floats, offset, plane, 0, pixels);
+                    return plane;
+                }
+
+                var result = new float[pixels];
+                for (int index = 0; index < pixels; index++)
+                {
+                    if ((index & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    float value = floats[offset + index];
+                    if (float.IsNaN(value) || float.IsInfinity(value)) throw Failure(context, "Alpha output must contain finite values.", technicalDetails: "index=" + index);
+                    result[index] = Sigmoid(value);
+                }
+                return result;
+            }
+
+            if (tensor.ElementType == TensorElementType.Float64 && tensor.Buffer is double[] doubles)
+            {
+                if (offset < 0 || offset > doubles.Length - pixels) throw Failure(context, "Alpha output element offset does not match its shape.");
+                var result = new float[pixels];
+                for (int index = 0; index < pixels; index++)
+                {
+                    if ((index & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    double raw = doubles[offset + index];
+                    if (double.IsNaN(raw) || double.IsInfinity(raw) || raw > float.MaxValue || raw < -float.MaxValue) throw Failure(context, "Alpha output must contain finite Float32-representable values.", technicalDetails: "index=" + index);
+                    float value = (float)raw;
+                    if (Schema.OutputIsProbability) ValidateAlphaProbability(value, index, context);
+                    else value = Sigmoid(value);
+                    result[index] = value;
+                }
+                return result;
+            }
+
+            throw Failure(context, "Alpha output requires Float32 or Float64.");
+        }
+
+        private void ValidateAlphaProbability(float value, int index, VisualDecodeContext context)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f || value > 1f) throw Failure(context, "Alpha probabilities must remain finite and in [0,1].", technicalDetails: "index=" + index + ";value=" + value);
+        }
+
+        private static float Sigmoid(float value)
+        {
+            if (value >= 0f) return 1f / (1f + (float)Math.Exp(-value));
+            float exponential = (float)Math.Exp(value);
+            return exponential / (1f + exponential);
+        }
+
+        private static float[] RestoreSource(float[] model, VisualInputFrame frame, CancellationToken cancellationToken)
+        {
+            int sourceWidth = frame.SourceSize.Width;
+            int sourceHeight = frame.SourceSize.Height;
+            int modelWidth = frame.ModelSize.Width;
+            int modelHeight = frame.ModelSize.Height;
+            AxisSample[] xSamples = BuildAxisSamples(sourceWidth, modelWidth, frame.Transform.ScaleX, frame.Transform.OffsetX);
+            AxisSample[] ySamples = BuildAxisSamples(sourceHeight, modelHeight, frame.Transform.ScaleY, frame.Transform.OffsetY);
             var result = new float[checked(sourceWidth * sourceHeight)];
             for (int y = 0; y < sourceHeight; y++)
             {
-                if ((y & 63) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                if ((y & 63) == 0) cancellationToken.ThrowIfCancellationRequested();
+                AxisSample ySample = ySamples[y];
+                if (!ySample.Valid) continue;
+                int row0 = ySample.Lower * modelWidth;
+                int row1 = ySample.Upper * modelWidth;
+                float inverseY = 1f - ySample.Weight;
+                int resultRow = y * sourceWidth;
                 for (int x = 0; x < sourceWidth; x++)
                 {
-                    // Pixel-center restoration avoids treating a semantic mask as a categorical segmentation map. / 像素中心恢复避免将语义 Alpha 误作离散语义分割图。
-                    float modelX = ((x + 0.5f) * context.Input.Transform.ScaleX) + context.Input.Transform.OffsetX - 0.5f;
-                    float modelY = ((y + 0.5f) * context.Input.Transform.ScaleY) + context.Input.Transform.OffsetY - 0.5f;
-                    result[(y * sourceWidth) + x] = modelX < -0.5f || modelX > modelWidth - 0.5f || modelY < -0.5f || modelY > modelHeight - 0.5f
-                        ? 0f
-                        : Sample(model, modelWidth, modelHeight, modelX, modelY);
+                    AxisSample xSample = xSamples[x];
+                    if (!xSample.Valid) continue;
+                    float top = model[row0 + xSample.Lower] + ((model[row0 + xSample.Upper] - model[row0 + xSample.Lower]) * xSample.Weight);
+                    float bottom = model[row1 + xSample.Lower] + ((model[row1 + xSample.Upper] - model[row1 + xSample.Lower]) * xSample.Weight);
+                    result[resultRow + x] = (top * inverseY) + (bottom * ySample.Weight);
                 }
             }
             return result;
+        }
+
+        private static AxisSample[] BuildAxisSamples(int sourceLength, int modelLength, float scale, float offset)
+        {
+            var samples = new AxisSample[sourceLength];
+            for (int index = 0; index < sourceLength; index++)
+            {
+                // Pixel-center restoration preserves the original half-pixel contract,
+                // while making all coordinate math independent of the inner pixel loop.
+                float coordinate = ((index + 0.5f) * scale) + offset - 0.5f;
+                if (coordinate < -0.5f || coordinate > modelLength - 0.5f) continue;
+                coordinate = Math.Max(0f, Math.Min(modelLength - 1, coordinate));
+                int lower = (int)Math.Floor(coordinate);
+                samples[index] = new AxisSample(lower, Math.Min(modelLength - 1, lower + 1), coordinate - lower);
+            }
+            return samples;
+        }
+
+        private readonly struct AxisSample
+        {
+            public AxisSample(int lower, int upper, float weight)
+            {
+                Lower = lower;
+                Upper = upper;
+                Weight = weight;
+                Valid = true;
+            }
+
+            public bool Valid { get; }
+            public int Lower { get; }
+            public int Upper { get; }
+            public float Weight { get; }
         }
 
         private static float[] Resize(float[] source, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, System.Threading.CancellationToken cancellationToken)
@@ -308,13 +457,14 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class BriaRmbgProfileOptions
     {
         /// <summary>Initializes BRIA profile options. / 初始化 BRIA Profile 选项。</summary>
-        public BriaRmbgProfileOptions(int opset, VisualSize modelSize, string inputName, string outputName, string artifactSha256, string upstreamCommit, string exporterVersion, string license, string modelFormat = "onnx", string upstreamRepository = "https://huggingface.co/briaai", int maximumDynamicSide = 4096)
+        public BriaRmbgProfileOptions(int opset, VisualSize modelSize, string inputName, string outputName, string artifactSha256, string upstreamCommit, string exporterVersion, string license, string modelFormat = "onnx", string upstreamRepository = "https://huggingface.co/briaai", int maximumDynamicSide = 4096, int maximumBatch = 1)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(inputName)) throw new ArgumentException("An input name is required.", nameof(inputName));
             if (string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("An output name is required.", nameof(outputName));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
             if (maximumDynamicSide <= 0) throw new ArgumentOutOfRangeException(nameof(maximumDynamicSide));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             Opset = opset;
             ModelSize = modelSize;
             InputName = inputName.Trim();
@@ -326,6 +476,7 @@ namespace JYPPX.DeploySharp.Visual
             License = license ?? string.Empty;
             ModelFormat = modelFormat.Trim();
             MaximumDynamicSide = maximumDynamicSide;
+            MaximumBatch = maximumBatch;
         }
 
         /// <summary>Gets ONNX opset. / 获取 ONNX opset。</summary>
@@ -350,6 +501,8 @@ namespace JYPPX.DeploySharp.Visual
         public string ModelFormat { get; }
         /// <summary>Gets dynamic-side safety bound. / 获取动态边长安全上限。</summary>
         public int MaximumDynamicSide { get; }
+        /// <summary>Gets the maximum image batch size. / 获取最大图像 Batch 大小。</summary>
+        public int MaximumBatch { get; }
 
         private static string NormalizeSha(string value)
         {
@@ -395,12 +548,13 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model ID is required.");
             if (options == null) throw new ArgumentNullException(nameof(options));
-            TensorShape inputShape = dynamicSpatial ? new TensorShape(1, 3, -1, -1) : new TensorShape(1, 3, options.ModelSize.Height, options.ModelSize.Width);
-            TensorShape outputShape = dynamicSpatial ? new TensorShape(1, 1, -1, -1) : new TensorShape(1, 1, options.ModelSize.Height, options.ModelSize.Width);
+            long batch = options.MaximumBatch > 1 ? -1L : 1L;
+            TensorShape inputShape = dynamicSpatial ? new TensorShape(batch, 3, -1, -1) : new TensorShape(batch, 3, options.ModelSize.Height, options.ModelSize.Width);
+            TensorShape outputShape = dynamicSpatial ? new TensorShape(batch, 1, -1, -1) : new TensorShape(batch, 1, options.ModelSize.Height, options.ModelSize.Width);
             string profileId = "bria-rmbg." + (family == BriaRmbgFamily.Rmbg14 ? "1-4" : "2-0") + "." + modelId.Value + ".opset" + options.Opset;
             var decoder = new AlphaMattingDecoder(new AlphaOutputSchema(options.OutputName, AlphaTensorLayout.Nchw, true), new AlphaDecoderOptions(checked((long)options.MaximumDynamicSide * options.MaximumDynamicSide)));
             var visual = new VisualModelProfile(profileId, modelId, VisualTaskId.ForegroundMatting, "bria-rmbg/" + family + "/opset" + options.Opset, options.ModelFormat,
-                new VisualInputBinding(options.InputName, TensorElementType.Float32, inputShape, VisualTensorLayout.Nchw),
+                new VisualInputBinding(options.InputName, TensorElementType.Float32, inputShape, VisualTensorLayout.Nchw, 1, options.MaximumBatch),
                 new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, outputShape) },
                 Array.Empty<VisualLabel>(), decoder);
             return new BriaRmbgProfile(family, options, visual);

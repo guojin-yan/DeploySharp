@@ -27,8 +27,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
                     var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
                     var conversionOptions = new OpenCvPreprocessOptions(new VisualSize(384, 384), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, layout: VisualTensorLayout.Nchw, outputType: OpenCvOutputType.UInt8);
-                    byte[] native = OpenCvVisualInputFactory.CopyRows(decoded);
-                    byte[] rgb = OpenCvVisualInputFactory.ConvertChannels(native, decoded.Cols, decoded.Rows, decoded.Channels, conversionOptions);
+                    byte[] rgb = OpenCvVisualInputFactory.CopyRowsAndConvertChannels(decoded, conversionOptions);
                     NativeMultimodalImageGrid grid = profile.Processor.SelectGrid(sourceSize);
                     int patch = profile.Processor.PatchSize;
                     byte[] baseImage = OpenCvVisualInputFactory.PillowBicubicResize(rgb, sourceSize.Width, sourceSize.Height, 3, patch, patch, cancellationToken);
@@ -49,23 +48,29 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         resizedWidth = Math.Min(checked((int)Math.Ceiling(sourceSize.Width * scaleHeight)), targetWidth);
                     }
                     byte[] resized = OpenCvVisualInputFactory.PillowBicubicResize(rgb, sourceSize.Width, sourceSize.Height, 3, resizedWidth, resizedHeight, cancellationToken);
-                    var padded = new byte[checked(targetHeight * targetWidth * 3)];
                     int left = (targetWidth - resizedWidth) / 2;
                     int top = (targetHeight - resizedHeight) / 2;
-                    for (int row = 0; row < resizedHeight; row++) Array.Copy(resized, row * resizedWidth * 3, padded, ((top + row) * targetWidth + left) * 3, resizedWidth * 3);
                     int crops = checked(grid.PatchCount + 1);
                     var pixels = new float[checked(crops * 3 * patch * patch)];
+                    for (int index = 0; index < pixels.Length; index++) pixels[index] = -1f;
                     WriteCrop(baseImage, pixels, 0, patch, cancellationToken);
                     for (int gridRow = 0; gridRow < grid.Rows; gridRow++)
                     {
                         for (int gridColumn = 0; gridColumn < grid.Columns; gridColumn++)
                         {
                             int crop = 1 + (gridRow * grid.Columns) + gridColumn;
-                            for (int y = 0; y < patch; y++)
+                            int cropLeft = gridColumn * patch;
+                            int cropTop = gridRow * patch;
+                            int copyLeft = Math.Max(cropLeft, left);
+                            int copyTop = Math.Max(cropTop, top);
+                            int copyRight = Math.Min(cropLeft + patch, left + resizedWidth);
+                            int copyBottom = Math.Min(cropTop + patch, top + resizedHeight);
+                            for (int y = copyTop; y < copyBottom; y++)
                             {
                                 if ((y & 31) == 0) OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
-                                int sourceOffset = ((((gridRow * patch) + y) * targetWidth) + (gridColumn * patch)) * 3;
-                                WriteRow(padded, sourceOffset, pixels, crop, y, patch);
+                                int sourceOffset = (((y - top) * resizedWidth) + (copyLeft - left)) * 3;
+                                int destinationX = copyLeft - cropLeft;
+                                WriteRow(resized, sourceOffset, pixels, crop, y - cropTop, patch, destinationX, copyRight - copyLeft);
                             }
                         }
                     }
@@ -93,18 +98,18 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             for (int y = 0; y < patch; y++)
             {
                 if ((y & 31) == 0) OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
-                WriteRow(source, y * patch * 3, destination, crop, y, patch);
+                WriteRow(source, y * patch * 3, destination, crop, y, patch, 0, patch);
             }
         }
 
-        private static void WriteRow(byte[] source, int sourceOffset, float[] destination, int crop, int y, int patch)
+        private static void WriteRow(byte[] source, int sourceOffset, float[] destination, int crop, int y, int patch, int destinationX, int count)
         {
             int plane = patch * patch;
             int cropOffset = crop * 3 * plane;
-            for (int x = 0; x < patch; x++)
+            for (int x = 0; x < count; x++)
             {
                 int pixel = sourceOffset + (x * 3);
-                int spatial = (y * patch) + x;
+                int spatial = (y * patch) + destinationX + x;
                 destination[cropOffset + spatial] = (source[pixel] - 127.5f) / 127.5f;
                 destination[cropOffset + plane + spatial] = (source[pixel + 1] - 127.5f) / 127.5f;
                 destination[cropOffset + (2 * plane) + spatial] = (source[pixel + 2] - 127.5f) / 127.5f;

@@ -359,4 +359,34 @@ namespace JYPPX.DeploySharp.Visual
             return result.AsReadOnly();
         }
     }
+
+    /// <summary>Contains ordered semantic-segmentation results decoded from one true model batch. / 包含从一个真正模型 Batch 解码出的有序语义分割结果。</summary>
+    public sealed class SemanticSegmentationBatchResult
+    {
+        private readonly IReadOnlyList<SemanticSegmentationResult> _items;
+
+        /// <summary>Initializes an ordered non-empty semantic-segmentation batch result. / 初始化有序且非空的语义分割批结果。</summary>
+        public SemanticSegmentationBatchResult(IEnumerable<SemanticSegmentationResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<SemanticSegmentationResult>();
+            foreach (SemanticSegmentationResult item in items)
+            {
+                if (item == null) throw new ArgumentException("Batch results cannot contain null.", nameof(items));
+                copied.Add(item);
+            }
+
+            if (copied.Count == 0) throw new ArgumentException("A batch result requires at least one item.", nameof(items));
+            _items = copied.AsReadOnly();
+        }
+
+        /// <summary>Gets results in input batch-row order. / 按输入 Batch 行顺序获取结果。</summary>
+        public IReadOnlyList<SemanticSegmentationResult> Items => _items;
+
+        /// <summary>Gets the number of decoded batch rows. / 获取已解码的 Batch 行数。</summary>
+        public int Count => _items.Count;
+
+        /// <summary>Gets one result by its zero-based input batch-row index. / 按从零开始的输入 Batch 行索引获取一个结果。</summary>
+        public SemanticSegmentationResult this[int index] => _items[index];
+    }
 }

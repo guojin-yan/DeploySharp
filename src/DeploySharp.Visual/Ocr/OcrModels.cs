@@ -336,6 +336,30 @@ namespace JYPPX.DeploySharp.Visual
             CharacterSetSha256 = ValidateHash(characterSetSha256);
         }
 
+        // Internal decoder/pipeline paths already own an immutable token list.
+        // Re-wrapping that list avoids a second List allocation and element copy,
+        // while the public constructor above keeps its defensive-copy contract.
+        private RecognizedText(int sourceRegionIndex, string text, float confidence, IReadOnlyList<OcrToken> ownedTokens, string characterSetId, string characterSetVersion, string characterSetSha256)
+        {
+            if (sourceRegionIndex < 0) throw new ArgumentOutOfRangeException(nameof(sourceRegionIndex));
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (float.IsNaN(confidence) || float.IsInfinity(confidence) || confidence < 0 || confidence > 1) throw new ArgumentOutOfRangeException(nameof(confidence));
+            if (ownedTokens == null) throw new ArgumentNullException(nameof(ownedTokens));
+            SourceRegionIndex = sourceRegionIndex;
+            Text = text;
+            Confidence = confidence;
+            _tokens = ownedTokens;
+            CharacterSetId = VisualGuard.Identifier(characterSetId, nameof(characterSetId));
+            CharacterSetVersion = string.IsNullOrWhiteSpace(characterSetVersion) ? throw new ArgumentException("A character-set version is required.", nameof(characterSetVersion)) : characterSetVersion;
+            CharacterSetSha256 = ValidateHash(characterSetSha256);
+        }
+
+        internal static RecognizedText CreateDecoded(int sourceRegionIndex, string text, float confidence, List<OcrToken> tokens, string characterSetId, string characterSetVersion, string characterSetSha256)
+        {
+            if (tokens == null) throw new ArgumentNullException(nameof(tokens));
+            return new RecognizedText(sourceRegionIndex, text, confidence, tokens.AsReadOnly(), characterSetId, characterSetVersion, characterSetSha256);
+        }
+
         /// <summary>Gets source region index. / 获取源区域索引。</summary>
         public int SourceRegionIndex { get; }
         /// <summary>Gets recognized text. / 获取识别文本。</summary>
@@ -351,7 +375,10 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets character-set SHA256. / 获取字符表 SHA256。</summary>
         public string CharacterSetSha256 { get; }
 
-        internal RecognizedText WithSourceRegionIndex(int sourceRegionIndex) => new RecognizedText(sourceRegionIndex, Text, Confidence, _tokens, CharacterSetId, CharacterSetVersion, CharacterSetSha256);
+        internal RecognizedText WithSourceRegionIndex(int sourceRegionIndex)
+            => SourceRegionIndex == sourceRegionIndex
+                ? this
+                : new RecognizedText(sourceRegionIndex, Text, Confidence, _tokens, CharacterSetId, CharacterSetVersion, CharacterSetSha256);
 
         private static string ValidateHash(string value)
         {
@@ -373,6 +400,17 @@ namespace JYPPX.DeploySharp.Visual
             var copy = new List<RecognizedText>();
             foreach (RecognizedText item in items) copy.Add(item ?? throw new ArgumentException("Recognition items cannot contain null.", nameof(items)));
             _items = copy.AsReadOnly();
+        }
+
+        private TextRecognitionBatchResult(IReadOnlyList<RecognizedText> ownedItems)
+        {
+            _items = ownedItems ?? throw new ArgumentNullException(nameof(ownedItems));
+        }
+
+        internal static TextRecognitionBatchResult CreateDecoded(List<RecognizedText> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            return new TextRecognitionBatchResult(items.AsReadOnly());
         }
 
         /// <summary>Gets batch-position results. / 获取批次位置结果。</summary>
@@ -487,11 +525,23 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes a crop request. / 初始化裁剪请求。</summary>
         public TextCropRequest(TextRegion region, TextCropProfile profile)
+            : this(region, profile, null)
+        {
+        }
+
+        internal TextCropRequest(TextRegion region, TextCropProfile profile, int targetWidth)
+            : this(region, profile, (int?)targetWidth)
+        {
+        }
+
+        private TextCropRequest(TextRegion region, TextCropProfile profile, int? targetWidth)
         {
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Profile = profile ?? throw new ArgumentNullException(nameof(profile));
             Quadrilateral = region.CropQuadrilateral ?? throw new VisualException(VisualErrorCodes.CapabilityUnavailable, "Perspective OCR cropping requires explicit quadrilateral corner roles.", profileId: profile.ProfileId);
-            TargetWidth = profile.CalculateWidth(Quadrilateral, region.Orientation);
+            int naturalWidth = profile.CalculateWidth(Quadrilateral, region.Orientation);
+            if (targetWidth.HasValue && (targetWidth.Value < naturalWidth || targetWidth.Value > profile.MaximumWidth)) throw new ArgumentOutOfRangeException(nameof(targetWidth));
+            TargetWidth = targetWidth ?? naturalWidth;
             TargetHeight = profile.TargetHeight;
             if (checked((long)TargetWidth * TargetHeight) > profile.MaximumCropPixels) throw new VisualException(VisualErrorCodes.InputInvalid, "The OCR crop exceeds its pixel limit.", profileId: profile.ProfileId);
         }
@@ -536,11 +586,47 @@ namespace JYPPX.DeploySharp.Visual
         public RecognizedText Recognition { get; }
     }
 
+    /// <summary>Contains detailed OCR work timings for backend and adapter profiling. / 包含用于后端与适配器分析的 OCR 详细工作时长。</summary>
+    public sealed class OcrDetailedStageTiming
+    {
+        /// <summary>Initializes detailed OCR work timings. / 初始化 OCR 详细工作时长。</summary>
+        public OcrDetailedStageTiming(TimeSpan detectionInference, TimeSpan detectionPostprocessing, TimeSpan recognitionPreparationWork, TimeSpan recognitionInferenceWork, TimeSpan recognitionPostprocessingWork, int recognitionBatchCount)
+        {
+            if (detectionInference < TimeSpan.Zero || detectionPostprocessing < TimeSpan.Zero || recognitionPreparationWork < TimeSpan.Zero || recognitionInferenceWork < TimeSpan.Zero || recognitionPostprocessingWork < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(detectionInference));
+            if (recognitionBatchCount < 0) throw new ArgumentOutOfRangeException(nameof(recognitionBatchCount));
+            DetectionInference = detectionInference;
+            DetectionPostprocessing = detectionPostprocessing;
+            RecognitionPreparationWork = recognitionPreparationWork;
+            RecognitionInferenceWork = recognitionInferenceWork;
+            RecognitionPostprocessingWork = recognitionPostprocessingWork;
+            RecognitionBatchCount = recognitionBatchCount;
+        }
+
+        /// <summary>Gets detector backend inference time. / 获取检测后端推理时长。</summary>
+        public TimeSpan DetectionInference { get; }
+        /// <summary>Gets detector decoder/postprocessing time. / 获取检测解码与后处理时长。</summary>
+        public TimeSpan DetectionPostprocessing { get; }
+        /// <summary>Gets summed recognition crop/tensor preparation work across batches. / 获取所有识别批次裁剪与 Tensor 准备的累计工作时长。</summary>
+        public TimeSpan RecognitionPreparationWork { get; }
+        /// <summary>Gets summed recognizer backend inference work across batches. / 获取所有识别批次后端推理的累计工作时长。</summary>
+        public TimeSpan RecognitionInferenceWork { get; }
+        /// <summary>Gets summed recognition decoder/postprocessing work across batches. / 获取所有识别批次解码与后处理的累计工作时长。</summary>
+        public TimeSpan RecognitionPostprocessingWork { get; }
+        /// <summary>Gets the number of physical recognition batches. / 获取物理识别批次数。</summary>
+        public int RecognitionBatchCount { get; }
+    }
+
     /// <summary>Contains measured OCR stages for one end-to-end call. / 包含一次端到端调用测得的 OCR 阶段。</summary>
     public sealed class OcrStageTiming
     {
         /// <summary>Initializes OCR timing. / 初始化 OCR 时长。</summary>
         public OcrStageTiming(TimeSpan detection, TimeSpan cropAndBatch, TimeSpan recognition, TimeSpan orchestration, TimeSpan? orientationClassification = null)
+            : this(detection, cropAndBatch, recognition, orchestration, orientationClassification, null)
+        {
+        }
+
+        /// <summary>Initializes OCR timing with optional detailed backend and adapter work. / 使用可选的后端与适配器详细工作时长初始化 OCR 时长。</summary>
+        public OcrStageTiming(TimeSpan detection, TimeSpan cropAndBatch, TimeSpan recognition, TimeSpan orchestration, TimeSpan? orientationClassification, OcrDetailedStageTiming? details)
         {
             if (detection < TimeSpan.Zero || cropAndBatch < TimeSpan.Zero || recognition < TimeSpan.Zero || orchestration < TimeSpan.Zero || orientationClassification.GetValueOrDefault() < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(detection));
             Detection = detection;
@@ -548,6 +634,7 @@ namespace JYPPX.DeploySharp.Visual
             Recognition = recognition;
             Orchestration = orchestration;
             OrientationClassification = orientationClassification.GetValueOrDefault();
+            Details = details;
         }
         /// <summary>Gets detector pipeline time. / 获取检测器 Pipeline 时长。</summary>
         public TimeSpan Detection { get; }
@@ -559,6 +646,8 @@ namespace JYPPX.DeploySharp.Visual
         public TimeSpan OrientationClassification { get; }
         /// <summary>Gets ordering and merge overhead. / 获取排序与合并开销。</summary>
         public TimeSpan Orchestration { get; }
+        /// <summary>Gets optional detailed work timings; batch work values are summed and may exceed wall time when batches overlap. / 获取可选详细工作时长；批次工作时长按批累加，并发重叠时可能大于墙钟时间。</summary>
+        public OcrDetailedStageTiming? Details { get; }
         /// <summary>Gets measured total. / 获取测量总时长。</summary>
         public TimeSpan Total => Detection + CropAndBatch + OrientationClassification + Recognition + Orchestration;
     }

@@ -10,6 +10,7 @@
     <PackageTags>DeploySharp;Visual;OpenCV;Image;Preprocessing;AnomalyDetection;AnomalySegmentation;OCR;Perspective;Warp;Tensor</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

@@ -28,7 +28,7 @@ namespace JYPPX.DeploySharp.Visual
             if (logits.ElementType != TensorElementType.Float32 || logits.Shape.Rank != 3 || logits.Shape[0] != 1 || logits.Shape[1] <= 0 || logits.Shape[2] != contract.VocabularySize) throw new VisualException(VisualErrorCodes.AudioCtcDecodeInvalid, "CTC logits type or shape differs from the vocabulary contract.", tensorName: "logits");
             if (logits.Shape[1] > int.MaxValue) throw AudioFailure.Limit("CTC frame count exceeds managed capacity.", tensorName: "logits");
             float[] values = (float[])logits.Buffer; int frames = checked((int)logits.Shape[1]); int classes = contract.VocabularySize;
-            var raw = new List<int>(frames); var collapsed = new List<int>(); var segments = new List<MutableSegment>(); int previous = -1;
+            var raw = new List<int>(frames); var collapsed = new List<int>(Math.Min(frames, 256)); var segments = new List<MutableSegment>(includeTokenTimestamps ? Math.Min(frames, 256) : 0); int previous = -1;
             for (int frame = 0; frame < frames; frame++)
             {
                 int offset = checked(frame * classes); int selected = 0; float maximum = values[offset];
@@ -41,24 +41,34 @@ namespace JYPPX.DeploySharp.Visual
                 raw.Add(selected);
                 if (selected != contract.BlankTokenId && selected != previous)
                 {
-                    collapsed.Add(selected); segments.Add(new MutableSegment(selected, frame, Probability(values, offset, classes, selected, maximum)));
+                    collapsed.Add(selected);
+                    if (includeTokenTimestamps) segments.Add(new MutableSegment(selected, frame, Probability(values, offset, classes, selected, maximum)));
                 }
-                else if (selected != contract.BlankTokenId && selected == previous)
+                else if (includeTokenTimestamps && selected != contract.BlankTokenId && selected == previous)
                 {
                     MutableSegment segment = segments[segments.Count - 1]; segment.EndFrameExclusive = frame + 1; segment.ProbabilitySum += Probability(values, offset, classes, selected, maximum); segment.FrameCount++;
                 }
                 previous = selected;
             }
             var text = new StringBuilder(); var outputSegments = new List<AudioCtcTokenSegment>(segments.Count);
-            foreach (MutableSegment segment in segments)
+            if (includeTokenTimestamps)
             {
-                string token = Vocabulary.GetToken(segment.TokenId);
-                if (segment.TokenId == contract.WordDelimiterTokenId) text.Append(' ');
-                else if (segment.TokenId == contract.UnknownTokenId) text.Append(token);
-                else if (!(token.StartsWith("<", StringComparison.Ordinal) && token.EndsWith(">", StringComparison.Ordinal))) text.Append(token);
-                if (includeTokenTimestamps) outputSegments.Add(new AudioCtcTokenSegment(segment.TokenId, token, segment.StartFrame, segment.EndFrameExclusive, Timestamps.SecondsPerFrame, (float)(segment.ProbabilitySum / segment.FrameCount)));
+                foreach (MutableSegment segment in segments)
+                {
+                    string token = Vocabulary.GetToken(segment.TokenId);
+                    AppendTokenText(text, token, segment.TokenId, contract);
+                    outputSegments.Add(new AudioCtcTokenSegment(segment.TokenId, token, segment.StartFrame, segment.EndFrameExclusive, Timestamps.SecondsPerFrame, (float)(segment.ProbabilitySum / segment.FrameCount)));
+                }
             }
+            else foreach (int tokenId in collapsed) AppendTokenText(text, Vocabulary.GetToken(tokenId), tokenId, contract);
             return new AudioCtcDecodedResult(text.ToString().Trim(), raw, collapsed, outputSegments);
+        }
+
+        private static void AppendTokenText(StringBuilder text, string token, int tokenId, AudioTokenizerContract contract)
+        {
+            if (tokenId == contract.WordDelimiterTokenId) text.Append(' ');
+            else if (tokenId == contract.UnknownTokenId) text.Append(token);
+            else if (!(token.StartsWith("<", StringComparison.Ordinal) && token.EndsWith(">", StringComparison.Ordinal))) text.Append(token);
         }
 
         private static double Probability(float[] values, int offset, int classes, int selected, float maximum)

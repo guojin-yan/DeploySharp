@@ -129,45 +129,54 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (callerToken.CanBeCanceled || timeoutSource != null)
                 {
-                    ValidatePreparedImage(input);
-                    SamV1TensorMap map = Bundle.Profile.SamV1TensorMap!;
-                    var watch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous
-                        ? await _encoder.RunAsync(InferenceInputs.Create(map.ImageInput, input.Tensor), linked.Token).ConfigureAwait(false)
-                        : _encoder.Run(InferenceInputs.Create(map.ImageInput, input.Tensor), linked.Token);
-                    watch.Stop();
-                    PromptableSegmentationArtifactContract encoderContract = Bundle.Profile.GetArtifact(PromptableSegmentationArtifactRole.ImageEncoder);
-                    ValidateOutputs(outputs, encoderContract, Bundle.Profile.ProfileId);
-                    var tensors = new Dictionary<string, Tensor<float>>(StringComparer.Ordinal);
-                    var summaries = new List<PromptableImageEmbeddingSummary>();
-                    foreach (PromptableTensorContract output in encoderContract.Outputs)
-                    {
-                        Tensor<float> owned = CopyFloatTensor(outputs.GetRequired(output.Name), output.Name, encoderContract.MaximumTensorElements);
-                        tensors.Add(output.Name, owned);
-                        summaries.Add(Summarize(output.Name, owned));
-                    }
-                    string contentSha = input.InputId ?? throw new VisualException(VisualErrorCodes.PromptableSegmentationIdentityMismatch, "Set-image requires the exact encoded-image SHA256 in PreparedVisualInput.InputId.", profileId: Bundle.Profile.ProfileId);
-                    var identity = new PromptableImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, contentSha, input.SourceSize, input.ModelSize);
-                    ImageTransform transform = CloneTransform(input.Transform);
-                    var publicEmbedding = new PromptableImageEmbedding(identity, summaries, watch.Elapsed);
-                    var state = new EmbeddingState(identity, tensors, transform, publicEmbedding);
-                    lock (_lifetimeGate) { EnsureUsableLocked(); _state = state; }
-                    return publicEmbedding;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(callerToken, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, callerToken); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Image encoding failed.", exception); }
-                finally
+                ValidatePreparedImage(input);
+                SamV1TensorMap map = Bundle.Profile.SamV1TensorMap!;
+                var watch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous
+                    ? await _encoder.RunAsync(InferenceInputs.Create(map.ImageInput, input.Tensor), operationToken).ConfigureAwait(false)
+                    : _encoder.Run(InferenceInputs.Create(map.ImageInput, input.Tensor), operationToken);
+                watch.Stop();
+                PromptableSegmentationArtifactContract encoderContract = Bundle.Profile.GetArtifact(PromptableSegmentationArtifactRole.ImageEncoder);
+                ValidateOutputs(outputs, encoderContract, Bundle.Profile.ProfileId);
+                var tensors = new Dictionary<string, Tensor<float>>(StringComparer.Ordinal);
+                var summaries = new List<PromptableImageEmbeddingSummary>();
+                foreach (PromptableTensorContract output in encoderContract.Outputs)
                 {
-                    if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose();
-                    ExitOperation();
+                    Tensor<float> owned = CopyFloatTensor(outputs.GetRequired(output.Name), output.Name, encoderContract.MaximumTensorElements);
+                    tensors.Add(output.Name, owned);
+                    summaries.Add(Summarize(output.Name, owned));
                 }
+                string contentSha = input.InputId ?? throw new VisualException(VisualErrorCodes.PromptableSegmentationIdentityMismatch, "Set-image requires the exact encoded-image SHA256 in PreparedVisualInput.InputId.", profileId: Bundle.Profile.ProfileId);
+                var identity = new PromptableImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, contentSha, input.SourceSize, input.ModelSize);
+                ImageTransform transform = CloneTransform(input.Transform);
+                var publicEmbedding = new PromptableImageEmbedding(identity, summaries, watch.Elapsed);
+                var state = new EmbeddingState(identity, tensors, transform, publicEmbedding);
+                lock (_lifetimeGate) { EnsureUsableLocked(); _state = state; }
+                return publicEmbedding;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, callerToken); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Image encoding failed.", exception); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose();
+                ExitOperation();
             }
         }
 
@@ -175,37 +184,50 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (prompt == null) throw new ArgumentNullException(nameof(prompt));
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (callerToken.CanBeCanceled || timeoutSource != null)
                 {
-                    EmbeddingState state;
-                    lock (_lifetimeGate)
-                    {
-                        EnsureUsableLocked();
-                        state = _state ?? throw new VisualException(VisualErrorCodes.PromptableSegmentationStateInvalid, "Set-image must succeed before prompt decoding.", profileId: Bundle.Profile.ProfileId);
-                    }
-                    var prepareWatch = Stopwatch.StartNew();
-                    InferenceInputs decoderInputs = CreateDecoderInputs(prompt, state);
-                    prepareWatch.Stop();
-                    var decodeWatch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous
-                        ? await _decoder.RunAsync(decoderInputs, linked.Token).ConfigureAwait(false)
-                        : _decoder.Run(decoderInputs, linked.Token);
-                    decodeWatch.Stop();
-                    PromptableSegmentationArtifactContract decoderContract = Bundle.Profile.GetArtifact(PromptableSegmentationArtifactRole.PromptMaskDecoder);
-                    ValidateOutputs(outputs, decoderContract, Bundle.Profile.ProfileId);
-                    var restoreWatch = Stopwatch.StartNew();
-                    PromptableSegmentationResult result = Decode(outputs, prompt, state, prepareWatch.Elapsed, decodeWatch.Elapsed, linked.Token);
-                    restoreWatch.Stop();
-                    return WithRestoreTiming(result, restoreWatch.Elapsed);
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(callerToken, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, callerToken); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Prompt decoding failed.", exception); }
-                finally { ExitOperation(); }
+                EmbeddingState state;
+                lock (_lifetimeGate)
+                {
+                    EnsureUsableLocked();
+                    state = _state ?? throw new VisualException(VisualErrorCodes.PromptableSegmentationStateInvalid, "Set-image must succeed before prompt decoding.", profileId: Bundle.Profile.ProfileId);
+                }
+                operationToken.ThrowIfCancellationRequested();
+                var prepareWatch = Stopwatch.StartNew();
+                InferenceInputs decoderInputs = CreateDecoderInputs(prompt, state);
+                prepareWatch.Stop();
+                var decodeWatch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous
+                    ? await _decoder.RunAsync(decoderInputs, operationToken).ConfigureAwait(false)
+                    : _decoder.Run(decoderInputs, operationToken);
+                decodeWatch.Stop();
+                PromptableSegmentationArtifactContract decoderContract = Bundle.Profile.GetArtifact(PromptableSegmentationArtifactRole.PromptMaskDecoder);
+                ValidateOutputs(outputs, decoderContract, Bundle.Profile.ProfileId);
+                var restoreWatch = Stopwatch.StartNew();
+                PromptableSegmentationResult result = Decode(outputs, prompt, state, prepareWatch.Elapsed, decodeWatch.Elapsed, operationToken);
+                restoreWatch.Stop();
+                return WithRestoreTiming(result, restoreWatch.Elapsed);
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, callerToken); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Prompt decoding failed.", exception); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 
@@ -296,15 +318,32 @@ namespace JYPPX.DeploySharp.Visual
                 if (float.IsNaN(rawQuality) || float.IsInfinity(rawQuality)) throw TensorError(map.Quality, "Quality output contains NaN or Infinity.", qualities.Shape);
                 var binary = new byte[sourcePixels];
                 int maskOffset = checked(sourceIndex * sourcePixels);
-                for (int index = 0; index < binary.Length; index++)
+                int foreground = 0;
+                int minimumX = state.Identity.SourceSize.Width;
+                int minimumY = state.Identity.SourceSize.Height;
+                int maximumX = -1;
+                int maximumY = -1;
+                for (int y = 0; y < state.Identity.SourceSize.Height; y++)
                 {
-                    float value = maskValues[maskOffset + index];
-                    if (float.IsNaN(value) || float.IsInfinity(value)) throw TensorError(map.Masks, "Mask output contains NaN or Infinity.", masks.Shape);
-                    binary[index] = value > profile.MaskThreshold ? (byte)1 : (byte)0;
+                    if ((y & 31) == 0) token.ThrowIfCancellationRequested();
+                    int rowOffset = y * state.Identity.SourceSize.Width;
+                    for (int x = 0; x < state.Identity.SourceSize.Width; x++)
+                    {
+                        int index = rowOffset + x;
+                        float value = maskValues[maskOffset + index];
+                        if (float.IsNaN(value) || float.IsInfinity(value)) throw TensorError(map.Masks, "Mask output contains NaN or Infinity.", masks.Shape);
+                        if (value <= profile.MaskThreshold) continue;
+                        binary[index] = 1;
+                        foreground++;
+                        if (x < minimumX) minimumX = x;
+                        if (x > maximumX) maximumX = x;
+                        if (y < minimumY) minimumY = y;
+                        if (y > maximumY) maximumY = y;
+                    }
                 }
-                var ownedMask = new InstanceBinaryMask(state.Identity.SourceSize.Width, state.Identity.SourceSize.Height, binary, InstanceMaskCoordinateSpace.SourceImage);
-                RectangleF? bounds = ownedMask.GetForegroundBounds();
-                if (!bounds.HasValue) continue;
+                if (foreground == 0) continue;
+                var ownedMask = new InstanceBinaryMask(state.Identity.SourceSize.Width, state.Identity.SourceSize.Height, binary, InstanceMaskCoordinateSpace.SourceImage, 0, 0, foreground);
+                RectangleF bounds = new RectangleF(minimumX, minimumY, maximumX - minimumX + 1, maximumY - minimumY + 1);
                 var lowCopy = new float[lowPixels];
                 Array.Copy(lowValues, checked(sourceIndex * lowPixels), lowCopy, 0, lowPixels);
                 var logits = new PromptableMaskLogits(low, low, lowCopy, state.Identity);
@@ -314,7 +353,7 @@ namespace JYPPX.DeploySharp.Visual
                     new KeyValuePair<string, string>("maskThreshold", profile.MaskThreshold.ToString("R", System.Globalization.CultureInfo.InvariantCulture))
                 };
                 if (prompt.PromptId != null) metadata.Add(new KeyValuePair<string, string>("promptId", prompt.PromptId));
-                var instance = new InstanceSegmentationInstance(sourceIndex, 0, "prompt", CanonicalScore(rawQuality), bounds.Value, ownedMask, InstanceMaskRle.Encode(ownedMask), prompt.PromptId, metadata);
+                var instance = new InstanceSegmentationInstance(sourceIndex, 0, "prompt", CanonicalScore(rawQuality), bounds, ownedMask, InstanceMaskRle.Encode(ownedMask), prompt.PromptId, metadata);
                 instances.Add(instance);
                 candidates.Add(new PromptableMaskCandidate(sourceIndex, rawQuality, profile.QualityKind, logits));
             }

@@ -3724,7 +3724,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-anomaly-detection.md"
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
     },
     {
       "modelId": "bria/rmbg-2.0",
@@ -3835,7 +3835,7 @@
         }
       ],
       "testInputs": [],
-      "documentationPath": "articles/visual-anomaly-detection.md"
+      "documentationPath": "articles/visual-ocr-anomaly-rmbg.md"
     }
   ]
 }

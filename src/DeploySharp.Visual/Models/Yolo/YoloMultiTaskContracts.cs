@@ -71,7 +71,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             string? profileId = null,
             string preprocessingVersion = "ultralytics-letterbox-rgb-nchw-v1",
             string postprocessingVersion = "deploysharp-yolo-multitask-v1",
-            YoloPackedDecoderOptions? decoderOptions = null)
+            YoloPackedDecoderOptions? decoderOptions = null,
+            int maximumBatch = 1)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (candidateCount <= 0) throw new ArgumentOutOfRangeException(nameof(candidateCount));
@@ -89,6 +90,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             PreprocessingVersion = Required(preprocessingVersion, nameof(preprocessingVersion));
             PostprocessingVersion = Required(postprocessingVersion, nameof(postprocessingVersion));
             DecoderOptions = decoderOptions ?? new YoloPackedDecoderOptions();
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
+            MaximumBatch = maximumBatch;
             if (CandidateCount > DecoderOptions.MaximumCandidates) throw new ArgumentException("The declared candidate count exceeds the decoder bound.", nameof(decoderOptions));
         }
 
@@ -116,6 +119,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public string PostprocessingVersion { get; }
         /// <summary>Gets bounded packed-decoder options. / 获取有界的打包解码选项。</summary>
         public YoloPackedDecoderOptions DecoderOptions { get; }
+        /// <summary>Gets the maximum true model batch; one keeps the static export contract. / 获取真正模型 Batch 最大值；1 表示保持静态导出合同。</summary>
+        public int MaximumBatch { get; }
 
         private static string Required(string value, string parameterName)
         {
@@ -128,13 +133,14 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
     public sealed class YoloClassificationProfileOptions
     {
         /// <summary>Initializes YOLO classification profile options. / 初始化 YOLO 分类 Profile 选项。</summary>
-        public YoloClassificationProfileOptions(int opset, VisualSize? modelSize = null, string inputName = "images", string outputName = "output0", int topK = 5, string modelFormat = "onnx", string? profileId = null)
+        public YoloClassificationProfileOptions(int opset, VisualSize? modelSize = null, string inputName = "images", string outputName = "output0", int topK = 5, string modelFormat = "onnx", string? profileId = null, int maximumBatch = 1)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(inputName)) throw new ArgumentException("An input name is required.", nameof(inputName));
             if (string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("An output name is required.", nameof(outputName));
             if (topK <= 0) throw new ArgumentOutOfRangeException(nameof(topK));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             Opset = opset;
             ModelSize = modelSize ?? new VisualSize(224, 224);
             InputName = inputName.Trim();
@@ -142,6 +148,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             TopK = topK;
             ModelFormat = modelFormat.Trim();
             ProfileId = string.IsNullOrWhiteSpace(profileId) ? null : profileId;
+            MaximumBatch = maximumBatch;
         }
 
         /// <summary>Gets the exact ONNX opset. / 获取精确的 ONNX opset。</summary>
@@ -158,13 +165,15 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public string ModelFormat { get; }
         /// <summary>Gets an optional stable profile identifier. / 获取可选的稳定 Profile 标识符。</summary>
         public string? ProfileId { get; }
+        /// <summary>Gets the maximum true model batch; one keeps the static export contract. / 获取真正模型 Batch 最大值；1 表示保持静态导出合同。</summary>
+        public int MaximumBatch { get; }
     }
 
     /// <summary>Controls score filtering, NMS, mask, keypoint, and workspace bounds for packed YOLO exports. / 控制打包 YOLO 导出的分数筛选、NMS、掩码、关键点和工作区边界。</summary>
     public sealed class YoloPackedDecoderOptions
     {
         /// <summary>Initializes bounded YOLO packed decoding. / 初始化有界的 YOLO 打包解码。</summary>
-        public YoloPackedDecoderOptions(float scoreThreshold = 0.25f, float iouThreshold = 0.45f, DetectionNmsMode nmsMode = DetectionNmsMode.ClassAware, int maximumCandidates = 30000, int maximumDetections = 100, float maskThreshold = 0.5f, float keypointThreshold = 0.5f, long maximumWorkspaceBytes = 256L * 1024 * 1024)
+        public YoloPackedDecoderOptions(float scoreThreshold = 0.25f, float iouThreshold = 0.45f, DetectionNmsMode nmsMode = DetectionNmsMode.ClassAware, int maximumCandidates = 30000, int maximumDetections = 100, float maskThreshold = 0.5f, float keypointThreshold = 0.5f, long maximumWorkspaceBytes = 256L * 1024 * 1024, bool generateRle = false)
         {
             if (float.IsNaN(scoreThreshold) || float.IsInfinity(scoreThreshold) || scoreThreshold < 0 || scoreThreshold > 1) throw new ArgumentOutOfRangeException(nameof(scoreThreshold));
             if (float.IsNaN(iouThreshold) || float.IsInfinity(iouThreshold) || iouThreshold < 0 || iouThreshold > 1) throw new ArgumentOutOfRangeException(nameof(iouThreshold));
@@ -182,6 +191,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             MaskThreshold = maskThreshold;
             KeypointThreshold = keypointThreshold;
             MaximumWorkspaceBytes = maximumWorkspaceBytes;
+            GenerateRle = generateRle;
         }
 
         /// <summary>Gets the strict score threshold. / 获取严格分数阈值。</summary>
@@ -200,6 +210,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public float KeypointThreshold { get; }
         /// <summary>Gets the maximum temporary workspace. / 获取最大临时工作区。</summary>
         public long MaximumWorkspaceBytes { get; }
+        /// <summary>Gets whether retained segmentation masks also generate DeploySharp row-major RLE. / 获取保留的分割掩码是否同时生成 DeploySharp 行优先 RLE。</summary>
+        public bool GenerateRle { get; }
     }
 
     /// <summary>Defines an exact packed segmentation output and prototype contract. / 定义精确的打包分割输出和原型合同。</summary>
@@ -313,8 +325,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             var profile = new VisualModelProfile(
                 options.ProfileId ?? "yolo.classify.v8." + options.ModelFormat + "." + modelId.Value,
                 modelId, VisualTaskId.ImageClassification, "2.0.0", options.ModelFormat,
-                new VisualInputBinding(options.InputName, TensorElementType.Float32, new TensorShape(1, 3, options.ModelSize.Height, options.ModelSize.Width), VisualTensorLayout.Nchw),
-                new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, new TensorShape(1, visualLabels.Count)) }, visualLabels, decoder);
+                new VisualInputBinding(options.InputName, TensorElementType.Float32, new TensorShape(options.MaximumBatch > 1 ? -1 : 1, 3, options.ModelSize.Height, options.ModelSize.Width), VisualTensorLayout.Nchw, 1, options.MaximumBatch),
+                new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, new TensorShape(options.MaximumBatch > 1 ? -1 : 1, visualLabels.Count)) }, visualLabels, decoder);
             return Build(YoloDetectionFamily.YoloV8, modelId, artifactSha256, upstreamCommit, exporterVersion, options.Opset, "ultralytics-classify-center-crop-rgb-nchw-v1", "ultralytics-exported-probabilities-v1", new YoloImagePreprocessingContract(options.ModelSize, YoloImageResizeMode.CenterCrop, 1, 0), profile);
         }
 
@@ -330,8 +342,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             var decoder = new YoloInstanceSegmentationDecoder(contract, options.DecoderOptions);
             var outputs = new[]
             {
-                new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount)),
-                new VisualOutputBinding(options.PrototypeOutputName, TensorElementType.Float32, new TensorShape(1, contract.MaskCoefficientCount, options.ModelSize.Height / 4, options.ModelSize.Width / 4))
+                new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount, options.MaximumBatch)),
+                new VisualOutputBinding(options.PrototypeOutputName, TensorElementType.Float32, new TensorShape(options.MaximumBatch > 1 ? -1 : 1, contract.MaskCoefficientCount, options.ModelSize.Height / 4, options.ModelSize.Width / 4))
             };
             VisualModelProfile profile = VisualProfile(options.ProfileId, "segment", family, modelId, options, VisualTaskId.InstanceSegmentation, visualLabels, outputs, decoder);
             return Build(family, modelId, artifactSha256, upstreamCommit, exporterVersion, options.Opset, options.PreprocessingVersion, options.PostprocessingVersion, new YoloImagePreprocessingContract(options.ModelSize, YoloImageResizeMode.Letterbox, options.Stride), profile);
@@ -346,7 +358,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             var contract = new YoloPoseOutputContract(options.OutputName, layout, options.CandidateCount, 1, 17, 3);
             var labels = new List<VisualLabel> { new VisualLabel(0, "person") };
             var decoder = new YoloPoseDecoder(contract, YoloPoseTopologies.Coco17, options.DecoderOptions);
-            VisualModelProfile profile = VisualProfile(options.ProfileId, "pose", family, modelId, options, VisualTaskId.PoseEstimation, labels, new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount)) }, decoder);
+            VisualModelProfile profile = VisualProfile(options.ProfileId, "pose", family, modelId, options, VisualTaskId.PoseEstimation, labels, new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount, options.MaximumBatch)) }, decoder);
             return Build(family, modelId, artifactSha256, upstreamCommit, exporterVersion, options.Opset, options.PreprocessingVersion, options.PostprocessingVersion, new YoloImagePreprocessingContract(options.ModelSize, YoloImageResizeMode.Letterbox, options.Stride), profile);
         }
 
@@ -359,14 +371,15 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             YoloPackedTensorLayout layout = Layout(family);
             var contract = new YoloObbOutputContract(options.OutputName, layout, options.CandidateCount, visualLabels.Count);
             var decoder = new YoloObbDecoder(contract, options.DecoderOptions);
-            VisualModelProfile profile = VisualProfile(options.ProfileId, "obb", family, modelId, options, VisualTaskId.OrientedObjectDetection, visualLabels, new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount)) }, decoder);
+            VisualModelProfile profile = VisualProfile(options.ProfileId, "obb", family, modelId, options, VisualTaskId.OrientedObjectDetection, visualLabels, new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, PackedShape(layout, options.CandidateCount, contract.FieldCount, options.MaximumBatch)) }, decoder);
             return Build(family, modelId, artifactSha256, upstreamCommit, exporterVersion, options.Opset, options.PreprocessingVersion, options.PostprocessingVersion, new YoloImagePreprocessingContract(options.ModelSize, YoloImageResizeMode.Letterbox, options.Stride), profile);
         }
 
         private static VisualModelProfile VisualProfile(string? profileId, string task, YoloDetectionFamily family, ModelId modelId, YoloPackedProfileOptions options, VisualTaskId taskId, List<VisualLabel> labels, IEnumerable<VisualOutputBinding> outputs, IVisualDecoder decoder)
-            => new VisualModelProfile(profileId ?? "yolo." + task + ".v" + ((int)family).ToString(System.Globalization.CultureInfo.InvariantCulture) + "." + options.ModelFormat + "." + modelId.Value, modelId, taskId, "2.0.0", options.ModelFormat, new VisualInputBinding(options.InputName, TensorElementType.Float32, new TensorShape(1, 3, options.ModelSize.Height, options.ModelSize.Width), VisualTensorLayout.Nchw), outputs, labels, decoder);
+            => new VisualModelProfile(profileId ?? "yolo." + task + ".v" + ((int)family).ToString(System.Globalization.CultureInfo.InvariantCulture) + "." + options.ModelFormat + "." + modelId.Value, modelId, taskId, "2.0.0", options.ModelFormat, new VisualInputBinding(options.InputName, TensorElementType.Float32, new TensorShape(options.MaximumBatch > 1 ? -1 : 1, 3, options.ModelSize.Height, options.ModelSize.Width), VisualTensorLayout.Nchw, 1, options.MaximumBatch), outputs, labels, decoder);
 
-        private static TensorShape PackedShape(YoloPackedTensorLayout layout, int candidates, int fields) => layout == YoloPackedTensorLayout.AttributeMajor ? new TensorShape(1, fields, candidates) : new TensorShape(1, candidates, fields);
+        private static TensorShape PackedShape(YoloPackedTensorLayout layout, int candidates, int fields, int maximumBatch = 1)
+            => layout == YoloPackedTensorLayout.AttributeMajor ? new TensorShape(maximumBatch > 1 ? -1 : 1, fields, candidates) : new TensorShape(maximumBatch > 1 ? -1 : 1, candidates, fields);
         private static YoloPackedTensorLayout Layout(YoloDetectionFamily family) => family == YoloDetectionFamily.YoloV5 ? YoloPackedTensorLayout.CandidateMajor : (family == YoloDetectionFamily.YoloV26 ? YoloPackedTensorLayout.EndToEnd : YoloPackedTensorLayout.AttributeMajor);
 
         private static YoloMultiTaskProfile Build(YoloDetectionFamily family, ModelId modelId, string hash, string commit, string exporter, int opset, string preprocessingVersion, string postprocessingVersion, YoloImagePreprocessingContract preprocessing, VisualModelProfile visual)

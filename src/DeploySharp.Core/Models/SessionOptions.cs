@@ -19,7 +19,7 @@ namespace JYPPX.DeploySharp.Models
             EnableProfiling = enableProfiling;
         }
 
-        /// <summary>Gets the requested maximum concurrent inference operations. / 获取请求的最大并发推理操作数。</summary>
+        /// <summary>Gets the number of independently-created single-channel sessions used to serve concurrent inference operations. / 获取用于服务并发推理操作、彼此独立创建的单通道 Session 数量。</summary>
         public int MaxConcurrency { get; }
 
         /// <summary>Gets whether backend profiling should be enabled when supported. / 获取在后端支持时是否启用性能分析。</summary>

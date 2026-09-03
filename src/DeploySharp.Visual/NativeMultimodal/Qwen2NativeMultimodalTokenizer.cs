@@ -82,8 +82,14 @@ namespace JYPPX.DeploySharp.Visual
         public string DecodeCompletion(IEnumerable<int> tokenIds)
         {
             if (tokenIds == null) throw new ArgumentNullException(nameof(tokenIds));
-            var values = tokenIds.Where(value => value != Contract.ImEndTokenId && value != Contract.EndOfTextTokenId).ToList();
-            if (values.Any(value => value < 0 || value >= Contract.VocabularySize)) throw new VisualException(VisualErrorCodes.NativeMultimodalTokenizerInvalid, "A completion token is outside the tokenizer vocabulary.");
+            int capacity = tokenIds is ICollection<int> collection ? collection.Count : 8;
+            var values = new List<int>(capacity);
+            foreach (int value in tokenIds)
+            {
+                if (value < 0 || value >= Contract.VocabularySize) throw new VisualException(VisualErrorCodes.NativeMultimodalTokenizerInvalid, "A completion token is outside the tokenizer vocabulary.");
+                if (value == Contract.ImEndTokenId || value == Contract.EndOfTextTokenId) continue;
+                values.Add(value);
+            }
             return values.Count == 0 ? string.Empty : _tokenizer.Decode(values);
         }
 

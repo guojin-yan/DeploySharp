@@ -9,8 +9,8 @@ namespace JYPPX.DeploySharp.Tensors
     /// </summary>
     public abstract class NamedTensorCollection : IReadOnlyList<NamedTensor>
     {
-        private readonly List<NamedTensor> _items;
-        private readonly Dictionary<string, ITensor> _byName;
+        private readonly IReadOnlyList<NamedTensor> _items;
+        private readonly Dictionary<string, ITensor>? _byName;
 
         /// <summary>Initializes a named tensor collection. / 初始化命名张量集合。</summary>
         protected NamedTensorCollection(IEnumerable<NamedTensor> tensors)
@@ -20,8 +20,9 @@ namespace JYPPX.DeploySharp.Tensors
                 throw new ArgumentNullException(nameof(tensors));
             }
 
-            _items = new List<NamedTensor>();
-            _byName = new Dictionary<string, ITensor>(StringComparer.Ordinal);
+            int capacity = tensors is ICollection<NamedTensor> collection ? collection.Count : 0;
+            var items = capacity > 0 ? new List<NamedTensor>(capacity) : new List<NamedTensor>();
+            var byName = capacity > 0 ? new Dictionary<string, ITensor>(capacity, StringComparer.Ordinal) : new Dictionary<string, ITensor>(StringComparer.Ordinal);
             foreach (NamedTensor item in tensors)
             {
                 if (item == null)
@@ -29,14 +30,24 @@ namespace JYPPX.DeploySharp.Tensors
                     throw new ArgumentException("Tensor collections cannot contain null items.", nameof(tensors));
                 }
 
-                if (_byName.ContainsKey(item.Name))
+                if (byName.ContainsKey(item.Name))
                 {
                     throw new ArgumentException($"A tensor named '{item.Name}' was added more than once.", nameof(tensors));
                 }
 
-                _items.Add(item);
-                _byName.Add(item.Name, item.Tensor);
+                items.Add(item);
+                byName.Add(item.Name, item.Tensor);
             }
+            _items = items;
+            _byName = byName;
+        }
+
+        /// <summary>Initializes a collection containing one tensor without creating an intermediate enumerable. / 初始化只包含一个张量且不创建中间可枚举对象的集合。</summary>
+        protected NamedTensorCollection(string name, ITensor tensor)
+        {
+            NamedTensor item = new NamedTensor(name, tensor);
+            _items = new[] { item };
+            _byName = null;
         }
 
         /// <inheritdoc />
@@ -57,12 +68,17 @@ namespace JYPPX.DeploySharp.Tensors
                 throw new ArgumentNullException(nameof(name));
             }
 
-            if (!_byName.TryGetValue(name, out ITensor? tensor))
+            if (_byName != null && _byName.TryGetValue(name, out ITensor? tensor))
             {
-                throw new KeyNotFoundException($"No tensor named '{name}' exists in the collection.");
+                return tensor;
             }
 
-            return tensor;
+            if (_byName == null && _items.Count == 1 && string.Equals(_items[0].Name, name, StringComparison.Ordinal))
+            {
+                return _items[0].Tensor;
+            }
+
+            throw new KeyNotFoundException($"No tensor named '{name}' exists in the collection.");
         }
 
         /// <summary>
@@ -76,7 +92,19 @@ namespace JYPPX.DeploySharp.Tensors
                 return false;
             }
 
-            return _byName.TryGetValue(name, out tensor);
+            if (_byName != null)
+            {
+                return _byName.TryGetValue(name, out tensor);
+            }
+
+            if (_items.Count == 1 && string.Equals(_items[0].Name, name, StringComparison.Ordinal))
+            {
+                tensor = _items[0].Tensor;
+                return true;
+            }
+
+            tensor = null;
+            return false;
         }
 
         /// <inheritdoc />

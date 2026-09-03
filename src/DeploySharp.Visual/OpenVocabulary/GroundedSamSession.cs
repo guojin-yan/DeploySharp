@@ -212,25 +212,34 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (callerToken.CanBeCanceled || timeoutSource != null)
                 {
-                    input.EnsureUsable();
-                    VisualInferenceResult detectorResult = asynchronous ? await _detector.RunAsync(input.DetectorInput, options, linked.Token).ConfigureAwait(false) : _detector.Run(input.DetectorInput, options, linked.Token);
-                    OpenVocabularyDetectionResult detections = detectorResult.GetValue<OpenVocabularyDetectionResult>();
-                    PromptableImageEmbedding embedding = asynchronous ? await _segmentation.SetImageAsync(input.SegmentationInput, options, linked.Token).ConfigureAwait(false) : _segmentation.SetImage(input.SegmentationInput, options, linked.Token);
-                    if (!string.Equals(embedding.Identity.ContentSha256, input.SourceSha256, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.OpenVocabularyIdentityMismatch, "SAM installed an embedding for a different encoded image.", profileId: DetectorProfile.ProfileId);
-                    var state = new GroundedSamImageState(input.SourceSha256, input.SourceSize, detections, embedding, detectorResult.Timing.Inference + detectorResult.Timing.Postprocessing);
-                    lock (_lifetimeGate) { EnsureUsableLocked(); _state = state; }
-                    return state;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(callerToken, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                finally
-                {
-                    if (options.DisposeOwnedInputOnCompletion) input.Dispose();
-                    ExitOperation();
-                }
+                input.EnsureUsable();
+                VisualInferenceResult detectorResult = asynchronous ? await _detector.RunAsync(input.DetectorInput, options, operationToken).ConfigureAwait(false) : _detector.Run(input.DetectorInput, options, operationToken);
+                OpenVocabularyDetectionResult detections = detectorResult.GetValue<OpenVocabularyDetectionResult>();
+                PromptableImageEmbedding embedding = asynchronous ? await _segmentation.SetImageAsync(input.SegmentationInput, options, operationToken).ConfigureAwait(false) : _segmentation.SetImage(input.SegmentationInput, options, operationToken);
+                if (!string.Equals(embedding.Identity.ContentSha256, input.SourceSha256, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.OpenVocabularyIdentityMismatch, "SAM installed an embedding for a different encoded image.", profileId: DetectorProfile.ProfileId);
+                var state = new GroundedSamImageState(input.SourceSha256, input.SourceSize, detections, embedding, detectorResult.Timing.Inference + detectorResult.Timing.Postprocessing);
+                lock (_lifetimeGate) { EnsureUsableLocked(); _state = state; }
+                return state;
+            }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion) input.Dispose();
+                ExitOperation();
             }
         }
 
@@ -239,28 +248,40 @@ namespace JYPPX.DeploySharp.Visual
             if (maximumDetections <= 0 || maximumDetections > DetectorProfile.MaximumDetections) throw new VisualException(VisualErrorCodes.OpenVocabularyLimitExceeded, "The Grounded-SAM detection capacity is invalid.", profileId: DetectorProfile.ProfileId);
             if (float.IsNaN(minimumScore) || float.IsInfinity(minimumScore) || minimumScore < 0f || minimumScore > 1f) throw new VisualException(VisualErrorCodes.OpenVocabularyContractInvalid, "The minimum score must be finite and between zero and one.", profileId: DetectorProfile.ProfileId);
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (callerToken.CanBeCanceled || timeoutSource != null)
                 {
-                    GroundedSamImageState state;
-                    lock (_lifetimeGate) { EnsureUsableLocked(); state = _state ?? throw new VisualException(VisualErrorCodes.OpenVocabularyStateInvalid, "Set-image must succeed before Grounded-SAM composition.", profileId: DetectorProfile.ProfileId); }
-                    var watch = Stopwatch.StartNew();
-                    var instances = new List<GroundedSamInstance>();
-                    for (int index = 0; index < state.Detections.Detections.Detections.Count && instances.Count < maximumDetections; index++)
-                    {
-                        linked.Token.ThrowIfCancellationRequested();
-                        Detection detection = state.Detections.Detections.Detections[index];
-                        if (detection.Label.Score < minimumScore) continue;
-                        var prompt = new PromptableSegmentationPrompt(box: detection.Box, returnMultipleMasks: false, promptId: "grounded-detection-" + index.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                        PromptableSegmentationResult segmentation = asynchronous ? await _segmentation.PredictAsync(prompt, options, linked.Token).ConfigureAwait(false) : _segmentation.Predict(prompt, options, linked.Token);
-                        instances.Add(new GroundedSamInstance(index, detection, state.Detections.Matches[index], segmentation));
-                    }
-                    watch.Stop();
-                    return new GroundedSamResult(state, instances, watch.Elapsed);
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(callerToken, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                finally { ExitOperation(); }
+                GroundedSamImageState state;
+                lock (_lifetimeGate) { EnsureUsableLocked(); state = _state ?? throw new VisualException(VisualErrorCodes.OpenVocabularyStateInvalid, "Set-image must succeed before Grounded-SAM composition.", profileId: DetectorProfile.ProfileId); }
+                var watch = Stopwatch.StartNew();
+                var instances = new List<GroundedSamInstance>();
+                for (int index = 0; index < state.Detections.Detections.Detections.Count && instances.Count < maximumDetections; index++)
+                {
+                    operationToken.ThrowIfCancellationRequested();
+                    Detection detection = state.Detections.Detections.Detections[index];
+                    if (detection.Label.Score < minimumScore) continue;
+                    var prompt = new PromptableSegmentationPrompt(box: detection.Box, returnMultipleMasks: false, promptId: "grounded-detection-" + index.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    PromptableSegmentationResult segmentation = asynchronous ? await _segmentation.PredictAsync(prompt, options, operationToken).ConfigureAwait(false) : _segmentation.Predict(prompt, options, operationToken);
+                    instances.Add(new GroundedSamInstance(index, detection, state.Detections.Matches[index], segmentation));
+                }
+                watch.Stop();
+                return new GroundedSamResult(state, instances, watch.Elapsed);
+            }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 

@@ -13,6 +13,7 @@ namespace JYPPX.DeploySharp.Visual
     /// <remarks>The tokenizer owns parsed vocabulary state only; external files and document/backend sessions remain caller-owned. / Tokenizer 仅拥有 Parsed Vocabulary State；外部文件与 Document/Backend Session 保持调用方所有。</remarks>
     public sealed class DonutDocumentTokenizer : IDocumentUnderstandingTokenizer
     {
+        private readonly object _gate = new object();
         private readonly SentencePieceTokenizer _tokenizer;
 
         /// <summary>Loads and verifies sentencepiece, tokenizer.json, and added-token sidecars from one external checkpoint directory. / 从一个 External Checkpoint 目录加载并校验 SentencePiece、tokenizer.json 与 Added-token Sidecar。</summary>
@@ -50,7 +51,8 @@ namespace JYPPX.DeploySharp.Visual
             if (!string.Equals(request.SchemaId, profile.Schema.SchemaId, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.DocumentUnderstandingIdentityMismatch, "The request schema differs from the profile-bound schema.", profileId: profile.ProfileId);
             string prompt = string.IsNullOrWhiteSpace(request.Prompt) ? Contract.DefaultTaskPrompt : request.Prompt;
             if (!string.Equals(prompt, Contract.DefaultTaskPrompt, StringComparison.Ordinal)) throw new VisualException(VisualErrorCodes.DocumentUnderstandingCapabilityUnavailable, "This Donut checkpoint supports only its exact CORD-v2 task prompt.", profileId: profile.ProfileId);
-            IReadOnlyList<int> ids = _tokenizer.EncodeToIds(prompt, false, false, true, true);
+            IReadOnlyList<int> ids;
+            lock (_gate) ids = _tokenizer.EncodeToIds(prompt, false, false, true, true);
             if (ids.Count != 1 || ids[0] != 57579) throw new VisualException(VisualErrorCodes.DocumentUnderstandingTokenizerInvalid, "The exact CORD-v2 prompt did not encode to token 57579.", profileId: profile.ProfileId);
             return new DocumentTokenSequence(prompt, ids.Select(value => (long)value), TokenizerId, Identity);
         }
@@ -59,9 +61,17 @@ namespace JYPPX.DeploySharp.Visual
         public string Decode(IEnumerable<int> tokenIds)
         {
             if (tokenIds == null) throw new ArgumentNullException(nameof(tokenIds));
-            var values = tokenIds.Where(value => value != Contract.EosTokenId && value != Contract.PadTokenId).Select(value => value >= 4 && value <= 57520 ? value - 1 : value).ToList();
-            if (values.Any(value => value < 0 || value >= Contract.VocabularySize)) throw new VisualException(VisualErrorCodes.DocumentUnderstandingTokenizerInvalid, "A generated token ID is outside the Donut vocabulary.");
-            return values.Count == 0 ? string.Empty : _tokenizer.Decode(values, true).Trim();
+            int capacity = tokenIds is ICollection<int> collection ? collection.Count : 8;
+            var values = new List<int>(capacity);
+            foreach (int tokenId in tokenIds)
+            {
+                if (tokenId == Contract.EosTokenId || tokenId == Contract.PadTokenId) continue;
+                int value = tokenId >= 4 && tokenId <= 57520 ? tokenId - 1 : tokenId;
+                if (value < 0 || value >= Contract.VocabularySize) throw new VisualException(VisualErrorCodes.DocumentUnderstandingTokenizerInvalid, "A generated token ID is outside the Donut vocabulary.");
+                values.Add(value);
+            }
+            if (values.Count == 0) return string.Empty;
+            lock (_gate) return _tokenizer.Decode(values, true).Trim();
         }
 
         private static void Verify(string path, string expected, string role)

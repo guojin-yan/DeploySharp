@@ -25,6 +25,10 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
         private readonly IReadOnlyList<TensorDescriptor> _outputs;
         private readonly int _maximumConcurrency;
         private readonly string _device;
+        private readonly bool _reuseInferRequest;
+        private readonly bool _reuseNativeInputList;
+        private InferRequest? _reusableRequest;
+        private List<OvTensor>? _singleNativeInputs;
         private bool _disposed;
 
         public OpenVinoSession(ModelArtifact artifact, Core core, Model model, CompiledModel compiledModel, int maximumConcurrency, bool allowDynamicShapes, string device)
@@ -36,6 +40,11 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             _maximumConcurrency = maximumConcurrency;
             _device = device;
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
+            // BackendRegistry creates one-channel sessions for its pool. Reusing the
+            // request in that common case removes a native request allocation on every
+            // inference while preserving independent requests for direct multi-channel use.
+            _reuseInferRequest = maximumConcurrency == 1;
+            _reuseNativeInputList = maximumConcurrency == 1;
             Metadata = OpenVinoTensorBridge.CreateMetadata(artifact, model, compiledModel, allowDynamicShapes);
             _inputs = Metadata.Inputs.ToDictionary(value => value.Name, StringComparer.Ordinal);
             _outputs = Metadata.Outputs;
@@ -48,21 +57,31 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             EnsureUsable();
             bool entered = false;
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeSource.Token))
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            // The pooled path supplies the disposal token itself; avoid linking
+            // a token to an identical token for every synchronous inference.
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
             {
-                try
-                {
-                    _operationGate.Wait(linked.Token);
-                    entered = true;
-                    EnsureUsable();
-                    linked.Token.ThrowIfCancellationRequested();
-                    InferenceOutputs outputs = RunCore(inputs);
-                    // Synchronous OpenVINO infer has no safe managed cancellation hook; cancellation is observed at native boundaries. / 同步 OpenVINO infer 没有安全的托管取消钩子，因此取消只在原生调用边界观察。
-                    linked.Token.ThrowIfCancellationRequested();
-                    return outputs;
-                }
-                catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run", _device, linked.Token); }
-                finally { if (entered) _operationGate.Release(); }
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                _operationGate.Wait(operationToken);
+                entered = true;
+                EnsureUsable();
+                operationToken.ThrowIfCancellationRequested();
+                InferenceOutputs outputs = RunCore(inputs);
+                // Synchronous OpenVINO infer has no safe managed cancellation hook; cancellation is observed at native boundaries. / 同步 OpenVINO infer 没有安全的托管取消钩子，因此取消只在原生调用边界观察。
+                operationToken.ThrowIfCancellationRequested();
+                return outputs;
+            }
+            catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run", _device, operationToken); }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
             }
         }
 
@@ -71,17 +90,25 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             EnsureUsable();
             bool entered = false;
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeSource.Token))
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
             {
-                try
-                {
-                    await _operationGate.WaitAsync(linked.Token).ConfigureAwait(false);
-                    entered = true;
-                    EnsureUsable();
-                    return await RunNativeAsync(inputs, linked.Token).ConfigureAwait(false);
-                }
-                catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run-async", _device, linked.Token); }
-                finally { if (entered) _operationGate.Release(); }
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                await _operationGate.WaitAsync(operationToken).ConfigureAwait(false);
+                entered = true;
+                EnsureUsable();
+                return await RunNativeAsync(inputs, operationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run-async", _device, operationToken); }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
             }
         }
 
@@ -98,9 +125,29 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             {
                 // Acquiring every slot keeps compiled model/core handles alive until all independent requests exit. / 获取全部槽位可保证所有独立请求退出前编译模型和 Core 句柄仍然有效。
                 for (; acquired < _maximumConcurrency; acquired++) _operationGate.Wait();
-                _compiledModel.Dispose();
-                _model.Dispose();
-                _core.Dispose();
+                try
+                {
+                    _reusableRequest?.Dispose();
+                    _reusableRequest = null;
+                }
+                finally
+                {
+                    try
+                    {
+                        _compiledModel.Dispose();
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            _model.Dispose();
+                        }
+                        finally
+                        {
+                            _core.Dispose();
+                        }
+                    }
+                }
             }
             finally
             {
@@ -113,7 +160,8 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
         private InferenceOutputs RunCore(InferenceInputs inputs)
         {
             ValidateInputNames(inputs);
-            using (InferRequest request = _compiledModel.CreateInferRequest())
+            InferRequest request = AcquireInferRequest(out bool disposeRequest);
+            try
             {
                 List<OvTensor> nativeInputs = BindInputs(request, inputs);
                 try
@@ -121,14 +169,16 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                     request.Infer();
                     return OpenVinoTensorBridge.CopyOutputs(_artifact, request, _outputs);
                 }
-                finally { foreach (OvTensor tensor in nativeInputs) tensor.Dispose(); }
+                finally { DisposeNativeInputs(nativeInputs); }
             }
+            finally { if (disposeRequest) request.Dispose(); }
         }
 
         private async Task<InferenceOutputs> RunNativeAsync(InferenceInputs inputs, CancellationToken cancellationToken)
         {
             ValidateInputNames(inputs);
-            using (InferRequest request = _compiledModel.CreateInferRequest())
+            InferRequest request = AcquireInferRequest(out bool disposeRequest);
+            try
             {
                 List<OvTensor> nativeInputs = BindInputs(request, inputs);
                 bool started = false;
@@ -144,7 +194,10 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                             TryCancelAndDrain(request);
                             cancellationToken.ThrowIfCancellationRequested();
                         }
-                        await Task.Delay(1).ConfigureAwait(false);
+                        // WaitFor already yields to the native request for up to
+                        // 10 ms. Yield without a timer here so the continuation
+                        // stays asynchronous without adding a fixed 1 ms tail.
+                        await Task.Yield();
                     }
                     cancellationToken.ThrowIfCancellationRequested();
                     return OpenVinoTensorBridge.CopyOutputs(_artifact, request, _outputs);
@@ -152,14 +205,29 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 finally
                 {
                     if (started && cancellationToken.IsCancellationRequested) TryCancelAndDrain(request);
-                    foreach (OvTensor tensor in nativeInputs) tensor.Dispose();
+                    DisposeNativeInputs(nativeInputs);
                 }
             }
+            finally { if (disposeRequest) request.Dispose(); }
+        }
+
+        private InferRequest AcquireInferRequest(out bool disposeRequest)
+        {
+            if (!_reuseInferRequest)
+            {
+                disposeRequest = true;
+                return _compiledModel.CreateInferRequest();
+            }
+
+            disposeRequest = false;
+            return _reusableRequest ??= _compiledModel.CreateInferRequest();
         }
 
         private List<OvTensor> BindInputs(InferRequest request, InferenceInputs inputs)
         {
-            var values = new List<OvTensor>(inputs.Count);
+            List<OvTensor> values = _reuseNativeInputList
+                ? (_singleNativeInputs ??= new List<OvTensor>(inputs.Count))
+                : new List<OvTensor>(inputs.Count);
             try
             {
                 foreach (NamedTensor input in inputs)
@@ -173,8 +241,15 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             catch
             {
                 foreach (OvTensor tensor in values) tensor.Dispose();
+                values.Clear();
                 throw;
             }
+        }
+
+        private static void DisposeNativeInputs(List<OvTensor> values)
+        {
+            foreach (OvTensor tensor in values) tensor.Dispose();
+            values.Clear();
         }
 
         private void ValidateInputNames(InferenceInputs inputs)

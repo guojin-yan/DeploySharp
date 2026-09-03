@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.Results;
+using JYPPX.DeploySharp.Results.Vision;
 using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual.Models.Yolo
@@ -28,34 +30,95 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public object Decode(VisualDecodeContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context.Input.BatchSize > 1)
+            {
+                ITensor packed = YoloPackedTensor.Required(context, Contract.OutputName);
+                ITensor prototypes = YoloPackedTensor.Required(context, Contract.PrototypeOutputName);
+                int batch = YoloPackedTensor.ResolveBatch(context, packed, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
+                if (prototypes.Shape.Rank != 4 || (prototypes.Shape[0] != 1 && prototypes.Shape[0] != batch) || prototypes.Shape[1] != Contract.MaskCoefficientCount)
+                    throw YoloPackedTensor.Failure(context, "Batched YOLO prototypes must be [1,C,H/4,W/4] or [B,C,H/4,W/4].", Contract.PrototypeOutputName, prototypes.Shape.ToString());
+                float[] packedValues = VisualTensorReader.ReadFiniteScores(packed, context.Profile.ProfileId, Contract.OutputName);
+                float[] prototypeValues = VisualTensorReader.ReadFiniteScores(prototypes, context.Profile.ProfileId, Contract.PrototypeOutputName);
+                var results = new List<InstanceSegmentationResult>(batch);
+                for (int row = 0; row < batch; row++)
+                {
+                    context.CancellationToken.ThrowIfCancellationRequested();
+                    VisualInputFrame frame = context.Input.BatchFrames[row];
+                    PreparedVisualInput rowInput = YoloPackedTensor.CreateRowInput(context, frame, row);
+                    int packedLength = checked(Contract.CandidateCount * Contract.FieldCount);
+                    int packedOffset = checked(row * packedLength);
+                    int prototypePlane = checked((int)(prototypes.Length / prototypes.Shape[0]));
+                    int prototypeRow = prototypes.Shape[0] == 1 ? 0 : row;
+                    int prototypeOffset = checked(prototypeRow * prototypePlane);
+                    var rowOutputs = new InferenceOutputs(new[]
+                    {
+                        new NamedTensor(Contract.OutputName, new Tensor<float>(PackedShape(Contract.Layout, Contract.CandidateCount, Contract.FieldCount), CopySlice(packedValues, packedOffset, packedLength), TensorBufferOwnership.Transfer)),
+                        new NamedTensor(Contract.PrototypeOutputName, new Tensor<float>(new TensorShape(1, (int)prototypes.Shape[1], (int)prototypes.Shape[2], (int)prototypes.Shape[3]), CopySlice(prototypeValues, prototypeOffset, prototypePlane), TensorBufferOwnership.Transfer))
+                    });
+                    results.Add((InstanceSegmentationResult)DecodeSingle(new VisualDecodeContext(rowInput, context.Profile, rowOutputs, context.CancellationToken)));
+                }
+                return new InstanceSegmentationBatchResult(results);
+            }
+            return DecodeSingle(context);
+        }
+
+        private object DecodeSingle(VisualDecodeContext context)
+        {
+            YoloCudaInstanceSegmentationPlan plan = PrepareCudaPlan(context);
+            ITensor prototypesTensor = YoloPackedTensor.Required(context, Contract.PrototypeOutputName);
+            float[] prototypes = VisualTensorReader.ReadFiniteScores(prototypesTensor, context.Profile.ProfileId, Contract.PrototypeOutputName);
+            int plane = checked(plan.PrototypeWidth * plan.PrototypeHeight);
+            float[] combined = VisualArrayPool<float>.Rent(plane);
+            var instances = new List<InstanceSegmentationInstance>(plan.Candidates.Count);
+            try
+            {
+                for (int instanceIndex = 0; instanceIndex < plan.Candidates.Count; instanceIndex++)
+                {
+                    context.CancellationToken.ThrowIfCancellationRequested();
+                    VisualDetectionCandidate candidate = plan.Candidates[instanceIndex];
+                    CombinePrototypes(plan.Coefficients, prototypes, combined, instanceIndex, plan.MaskCoefficientCount, plane, context);
+                    InstanceBinaryMask mask = InstanceMaskRestorer.Restore(
+                        combined, 0, plan.PrototypeWidth, plan.PrototypeHeight, context.Input, candidate.ModelBox,
+                        InstanceMaskValueKind.Logits, InstanceMaskActivation.Sigmoid, InstanceMaskInterpolationMode.BilinearHalfPixel,
+                        InstanceMaskThresholdOrder.AfterResize, InstanceMaskCropSpace.ModelInput, InstanceMaskCropOrder.BeforeResize,
+                        Options.MaskThreshold, context.CancellationToken);
+                    InstanceMaskRle? rle = InstanceSegmentationDecoding.EncodeRle(mask, plan.DecoderOptions, context, Contract.PrototypeOutputName);
+                    instances.Add(CreateInstance(context, candidate, mask, rle));
+                }
+
+                return InstanceSegmentationDecoding.CreateResult(instances, context, plan.DecoderOptions);
+            }
+            finally
+            {
+                VisualArrayPool<float>.Return(combined);
+            }
+        }
+
+        internal YoloCudaInstanceSegmentationPlan PrepareCudaPlan(VisualDecodeContext context)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
             if (context.Input.BatchSize != 1) throw YoloPackedTensor.Failure(context, "YOLO instance segmentation requires batch size one.", Contract.OutputName);
             if (context.Outputs.Count != 2) throw YoloPackedTensor.Failure(context, "YOLO instance segmentation requires exactly the packed and prototype outputs.", Contract.OutputName);
             ITensor packedTensor = YoloPackedTensor.Required(context, Contract.OutputName);
             float[] packed = YoloPackedTensor.Read(context, packedTensor, Contract.OutputName, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
-            ITensor prototypes = YoloPackedTensor.Required(context, Contract.PrototypeOutputName);
-            ValidatePrototypes(context, prototypes);
+            ITensor prototypesTensor = YoloPackedTensor.Required(context, Contract.PrototypeOutputName);
+            ValidatePrototypeShape(context, prototypesTensor);
 
             int candidates = Contract.CandidateCount;
-            var boxes = new float[checked(candidates * 4)];
-            var scores = new float[candidates];
-            var classes = new float[candidates];
-            var coefficients = new float[checked(candidates * Contract.MaskCoefficientCount)];
             int classOffset = Contract.HasObjectness ? 5 : 4;
             int coefficientOffset = classOffset + Contract.ClassCount;
+            DetectionBoxFormat boxFormat = Contract.IsEndToEnd ? DetectionBoxFormat.Xyxy : DetectionBoxFormat.Cxcywh;
+            var selected = new List<VisualDetectionCandidate>(Math.Min(candidates, Options.MaximumDetections * 4));
             for (int candidate = 0; candidate < candidates; candidate++)
             {
                 if ((candidate & 255) == 0) context.CancellationToken.ThrowIfCancellationRequested();
                 int selectedClass;
                 float score;
-                int extraOffset;
-                DetectionBoxFormat boxFormat;
                 if (Contract.IsEndToEnd)
                 {
                     score = YoloPackedTensor.Probability(YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 4, Contract.Layout), context, Contract.OutputName, candidate, "score");
                     selectedClass = YoloPackedTensor.ClassIndex(YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 5, Contract.Layout), Contract.ClassCount, context, Contract.OutputName, candidate);
-                    extraOffset = 6;
-                    boxFormat = DetectionBoxFormat.Xyxy;
                 }
                 else
                 {
@@ -68,62 +131,227 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                         if (current > classScore) { classScore = current; selectedClass = classIndex; }
                     }
                     score = objectness * classScore;
-                    extraOffset = coefficientOffset;
-                    boxFormat = DetectionBoxFormat.Cxcywh;
                 }
 
-                classes[candidate] = selectedClass;
-                scores[candidate] = score;
-                if (score > Options.ScoreThreshold)
-                {
-                    int boxOffset = checked(candidate * 4);
-                    for (int field = 0; field < 4; field++) boxes[boxOffset + field] = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, field, Contract.Layout);
-                    ValidateBox(boxes, boxOffset, boxFormat, context, candidate);
-                }
-                int destination = checked(candidate * Contract.MaskCoefficientCount);
-                for (int coefficient = 0; coefficient < Contract.MaskCoefficientCount; coefficient++) coefficients[destination + coefficient] = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, extraOffset + coefficient, Contract.Layout);
+                // The previous adapter expanded every dense candidate into four managed
+                // tensors before the generic decoder filtered them. Keep only candidates
+                // that can survive the strict YOLO threshold, while retaining their original
+                // indices so result identity and coefficient lookup remain unchanged.
+                if (score <= Options.ScoreThreshold) continue;
+                float first = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 0, Contract.Layout);
+                float second = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 1, Contract.Layout);
+                float third = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 2, Contract.Layout);
+                float fourth = YoloPackedTensor.Value(packed, candidates, Contract.FieldCount, candidate, 3, Contract.Layout);
+                ValidateBox(first, second, third, fourth, boxFormat, context, candidate);
+                RectangleF modelBox = DetectionPostprocessing.DecodeModelBox(boxFormat, false, context.Input.ModelSize, first, second, third, fourth);
+                RectangleF sourceBox = context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
+                if (sourceBox.Width <= 0 || sourceBox.Height <= 0) continue;
+                selected.Add(new VisualDetectionCandidate(candidate, selectedClass, score, modelBox, sourceBox));
             }
 
-            const string boxesName = "__yolo_boxes";
-            const string scoresName = "__yolo_scores";
-            const string classesName = "__yolo_classes";
-            const string coefficientsName = "__yolo_coefficients";
-            var candidateSchema = new InstanceSegmentationCandidateSchema(boxesName, scoresName, classesName, Contract.IsEndToEnd ? DetectionBoxFormat.Xyxy : DetectionBoxFormat.Cxcywh);
-            var schema = new PrototypeInstanceSegmentationOutputSchema(
-                candidateSchema, Contract.PrototypeOutputName, coefficientsName, InstanceMaskTensorLayout.Nchw,
-                InstanceMaskValueKind.Logits, InstanceMaskActivation.Sigmoid, InstanceMaskInterpolationMode.BilinearHalfPixel,
-                InstanceMaskThresholdOrder.AfterResize, InstanceMaskCropSpace.ModelInput, InstanceMaskCropOrder.BeforeResize);
             var genericOptions = new InstanceSegmentationDecoderOptions(
                 Math.Max(Options.ScoreThreshold, float.Epsilon), Options.MaskThreshold, Contract.IsEndToEnd ? 1f : Options.IouThreshold, Options.NmsMode,
-                InstanceMaskOverlapMode.Independent, true, candidates, Options.MaximumDetections, Contract.MaskCoefficientCount,
+                InstanceMaskOverlapMode.Independent, Options.GenerateRle, candidates, Options.MaximumDetections, Contract.MaskCoefficientCount,
                 maximumWorkspaceBytes: Options.MaximumWorkspaceBytes);
-            var decoder = new PrototypeInstanceSegmentationDecoder(schema, genericOptions);
-            var unpacked = new InferenceOutputs(new[]
-            {
-                new NamedTensor(boxesName, new Tensor<float>(new TensorShape(1, candidates, 4), boxes, TensorBufferOwnership.Transfer)),
-                new NamedTensor(scoresName, new Tensor<float>(new TensorShape(1, candidates), scores, TensorBufferOwnership.Transfer)),
-                new NamedTensor(classesName, new Tensor<float>(new TensorShape(1, candidates), classes, TensorBufferOwnership.Transfer)),
-                new NamedTensor(Contract.PrototypeOutputName, prototypes),
-                new NamedTensor(coefficientsName, new Tensor<float>(new TensorShape(1, candidates, Contract.MaskCoefficientCount), coefficients, TensorBufferOwnership.Transfer))
-            });
-            return decoder.Decode(new VisualDecodeContext(context.Input, context.Profile, unpacked, context.CancellationToken));
+
+            selected.Sort(YoloPackedTensor.CompareCandidates);
+            List<VisualDetectionCandidate> kept = DetectionPostprocessing.Suppress(selected, genericOptions.IouThreshold, genericOptions.NmsMode, genericOptions.MaximumInstances, context.CancellationToken);
+            InstanceSegmentationDecoding.EnsureResultBound(context, kept.Count, genericOptions);
+            int prototypeWidth = context.Input.ModelSize.Width / 4;
+            int prototypeHeight = context.Input.ModelSize.Height / 4;
+            int plane = checked(prototypeWidth * prototypeHeight);
+            InstanceSegmentationDecoding.EnsureTensorMaskBound(context, checked((long)Contract.MaskCoefficientCount * plane), genericOptions, Contract.PrototypeOutputName);
+            InstanceSegmentationDecoding.EnsureCombinedWorkspace(context, genericOptions, checked((long)plane * sizeof(float)), packedTensor, prototypesTensor);
+            int coefficientFieldOffset = Contract.IsEndToEnd ? 6 : coefficientOffset;
+            return new YoloCudaInstanceSegmentationPlan(packed, kept, genericOptions, coefficientFieldOffset, prototypeWidth, prototypeHeight, Contract);
         }
 
-        private void ValidatePrototypes(VisualDecodeContext context, ITensor tensor)
+        internal YoloCudaInstanceSegmentationPlan PrepareCudaPlan(
+            VisualDecodeContext context,
+            byte[] selectedFlags,
+            int[] classIndices,
+            float[] scores,
+            float[] boxes,
+            float[] coefficients)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            context.CancellationToken.ThrowIfCancellationRequested();
+            if (context.Input.BatchSize != 1 || context.Outputs.Count != 2) throw YoloPackedTensor.Failure(context, "YOLO instance segmentation requires batch one and exactly two outputs.", Contract.OutputName);
+            ITensor packedTensor = YoloPackedTensor.Required(context, Contract.OutputName);
+            YoloPackedTensor.ValidateShape(context, packedTensor, Contract.OutputName, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
+            ITensor prototypesTensor = YoloPackedTensor.Required(context, Contract.PrototypeOutputName);
+            ValidatePrototypeShape(context, prototypesTensor);
+            int candidates = Contract.CandidateCount;
+            if (selectedFlags == null || selectedFlags.Length != candidates || classIndices == null || classIndices.Length != candidates || scores == null || scores.Length != candidates
+                || boxes == null || boxes.Length != checked(candidates * 4) || coefficients == null || coefficients.Length != checked(candidates * Contract.MaskCoefficientCount))
+            {
+                throw new ArgumentException("CUDA candidate buffers do not match the YOLO contract.", nameof(selectedFlags));
+            }
+
+            DetectionBoxFormat boxFormat = Contract.IsEndToEnd ? DetectionBoxFormat.Xyxy : DetectionBoxFormat.Cxcywh;
+            var selected = new List<VisualDetectionCandidate>(Math.Min(candidates, Options.MaximumDetections * 4));
+            for (int candidate = 0; candidate < candidates; candidate++)
+            {
+                if ((candidate & 255) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                byte selectedFlag = selectedFlags[candidate];
+                if (selectedFlag > 1) throw YoloPackedTensor.Failure(context, "CUDA candidate filter emitted a non-binary selection flag.", Contract.OutputName, "candidate=" + candidate);
+                if (selectedFlag == 0) continue;
+                int selectedClass = classIndices[candidate];
+                float score = scores[candidate];
+                if (selectedClass < 0 || selectedClass >= Contract.ClassCount || float.IsNaN(score) || float.IsInfinity(score) || score <= Options.ScoreThreshold || score > 1f)
+                    throw YoloPackedTensor.Failure(context, "CUDA candidate filter emitted invalid class or score metadata.", Contract.OutputName, "candidate=" + candidate);
+                int boxOffset = candidate * 4;
+                float first = boxes[boxOffset];
+                float second = boxes[boxOffset + 1];
+                float third = boxes[boxOffset + 2];
+                float fourth = boxes[boxOffset + 3];
+                ValidateBox(first, second, third, fourth, boxFormat, context, candidate);
+                RectangleF modelBox = DetectionPostprocessing.DecodeModelBox(boxFormat, false, context.Input.ModelSize, first, second, third, fourth);
+                RectangleF sourceBox = context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
+                if (sourceBox.Width <= 0 || sourceBox.Height <= 0) continue;
+                selected.Add(new VisualDetectionCandidate(candidate, selectedClass, score, modelBox, sourceBox));
+            }
+
+            var genericOptions = new InstanceSegmentationDecoderOptions(
+                Math.Max(Options.ScoreThreshold, float.Epsilon), Options.MaskThreshold, Contract.IsEndToEnd ? 1f : Options.IouThreshold, Options.NmsMode,
+                InstanceMaskOverlapMode.Independent, Options.GenerateRle, candidates, Options.MaximumDetections, Contract.MaskCoefficientCount,
+                maximumWorkspaceBytes: Options.MaximumWorkspaceBytes);
+            selected.Sort(YoloPackedTensor.CompareCandidates);
+            List<VisualDetectionCandidate> kept = DetectionPostprocessing.Suppress(selected, genericOptions.IouThreshold, genericOptions.NmsMode, genericOptions.MaximumInstances, context.CancellationToken);
+            InstanceSegmentationDecoding.EnsureResultBound(context, kept.Count, genericOptions);
+            int prototypeWidth = context.Input.ModelSize.Width / 4;
+            int prototypeHeight = context.Input.ModelSize.Height / 4;
+            int plane = checked(prototypeWidth * prototypeHeight);
+            InstanceSegmentationDecoding.EnsureTensorMaskBound(context, checked((long)Contract.MaskCoefficientCount * plane), genericOptions, Contract.PrototypeOutputName);
+            InstanceSegmentationDecoding.EnsureCombinedWorkspace(context, genericOptions, checked((long)plane * sizeof(float)), packedTensor, prototypesTensor);
+            return new YoloCudaInstanceSegmentationPlan(coefficients, kept, genericOptions, prototypeWidth, prototypeHeight, Contract.MaskCoefficientCount);
+        }
+
+        internal object CreateCudaDecodedResult(VisualDecodeContext context, YoloCudaInstanceSegmentationPlan plan, byte[] masks, int[] foregroundPixelCounts)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (plan == null) throw new ArgumentNullException(nameof(plan));
+            if (masks == null) throw new ArgumentNullException(nameof(masks));
+            if (foregroundPixelCounts == null) throw new ArgumentNullException(nameof(foregroundPixelCounts));
+            int instanceCount = plan.Candidates.Count;
+            int pixels = checked(context.Input.SourceSize.Width * context.Input.SourceSize.Height);
+            if (masks.Length != checked(instanceCount * pixels) || foregroundPixelCounts.Length != instanceCount) throw new ArgumentException("CUDA mask output does not match the retained instance count.", nameof(masks));
+            var instances = new List<InstanceSegmentationInstance>(instanceCount);
+            for (int index = 0; index < instanceCount; index++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                var mask = new InstanceBinaryMask(context.Input.SourceSize.Width, context.Input.SourceSize.Height, masks, checked(index * pixels), InstanceMaskCoordinateSpace.SourceImage, 0, 0, foregroundPixelCounts[index]);
+                InstanceMaskRle? rle = InstanceSegmentationDecoding.EncodeRle(mask, plan.DecoderOptions, context, Contract.PrototypeOutputName);
+                instances.Add(CreateInstance(context, plan.Candidates[index], mask, rle));
+            }
+            return InstanceSegmentationDecoding.CreateResult(instances, context, plan.DecoderOptions);
+        }
+
+        private void ValidatePrototypeShape(VisualDecodeContext context, ITensor tensor)
         {
             TensorShape shape = tensor.Shape;
             int expectedHeight = context.Input.ModelSize.Height / 4;
             int expectedWidth = context.Input.ModelSize.Width / 4;
             if (shape.Rank != 4 || shape[0] != 1 || shape[1] != Contract.MaskCoefficientCount || shape[2] != expectedHeight || shape[3] != expectedWidth || tensor.Length != (long)Contract.MaskCoefficientCount * expectedHeight * expectedWidth)
                 throw YoloPackedTensor.Failure(context, "YOLO prototypes do not match [1,C,H/4,W/4].", Contract.PrototypeOutputName, shape.ToString());
-            VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Contract.PrototypeOutputName);
         }
 
-        private static void ValidateBox(float[] boxes, int offset, DetectionBoxFormat format, VisualDecodeContext context, int candidate)
+        private static TensorShape PackedShape(YoloPackedTensorLayout layout, int candidates, int fields)
+            => layout == YoloPackedTensorLayout.AttributeMajor ? new TensorShape(1, fields, candidates) : new TensorShape(1, candidates, fields);
+
+        private static float[] CopySlice(float[] values, int offset, int length)
         {
-            float width = format == DetectionBoxFormat.Xyxy ? boxes[offset + 2] - boxes[offset] : boxes[offset + 2];
-            float height = format == DetectionBoxFormat.Xyxy ? boxes[offset + 3] - boxes[offset + 1] : boxes[offset + 3];
+            var copy = new float[length];
+            Array.Copy(values, offset, copy, 0, length);
+            return copy;
+        }
+
+        private static InstanceSegmentationInstance CreateInstance(VisualDecodeContext context, VisualDetectionCandidate candidate, InstanceBinaryMask mask, InstanceMaskRle? rle)
+            => new InstanceSegmentationInstance(candidate.SourceIndex, candidate.ClassIndex, context.Profile.GetLabel(candidate.ClassIndex), candidate.Score, candidate.SourceBox, mask, rle);
+
+        private void CombinePrototypes(float[] coefficients, float[] prototypes, float[] combined, int instanceIndex, int coefficientCount, int plane, VisualDecodeContext context)
+        {
+            Array.Clear(combined, 0, plane);
+            for (int channel = 0; channel < coefficientCount; channel++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                float coefficient = coefficients[(instanceIndex * coefficientCount) + channel];
+                int prototypeOffset = checked(channel * plane);
+                for (int position = 0; position < plane; position++) combined[position] += coefficient * prototypes[prototypeOffset + position];
+            }
+            for (int position = 0; position < plane; position++)
+            {
+                if (float.IsNaN(combined[position]) || float.IsInfinity(combined[position])) throw YoloPackedTensor.Failure(context, "Prototype linear combination produced a non-finite mask value.", Contract.PrototypeOutputName, "position=" + position);
+            }
+        }
+
+        private static void ValidateBox(float first, float second, float third, float fourth, DetectionBoxFormat format, VisualDecodeContext context, int candidate)
+        {
+            float width = format == DetectionBoxFormat.Xyxy ? third - first : third;
+            float height = format == DetectionBoxFormat.Xyxy ? fourth - second : fourth;
             if (width <= 0 || height <= 0) throw YoloPackedTensor.Failure(context, "A retained YOLO segmentation box has non-positive size.", technicalDetails: "candidate=" + candidate);
+        }
+    }
+
+    internal sealed class YoloCudaInstanceSegmentationPlan
+    {
+        internal YoloCudaInstanceSegmentationPlan(float[] packed, List<VisualDetectionCandidate> candidates, InstanceSegmentationDecoderOptions decoderOptions, int coefficientFieldOffset, int prototypeWidth, int prototypeHeight, YoloInstanceSegmentationOutputContract contract)
+        {
+            Candidates = candidates;
+            DecoderOptions = decoderOptions;
+            PrototypeWidth = prototypeWidth;
+            PrototypeHeight = prototypeHeight;
+            MaskCoefficientCount = contract.MaskCoefficientCount;
+            Coefficients = new float[checked(candidates.Count * MaskCoefficientCount)];
+            for (int instance = 0; instance < candidates.Count; instance++)
+            {
+                int candidate = candidates[instance].SourceIndex;
+                for (int channel = 0; channel < MaskCoefficientCount; channel++)
+                {
+                    Coefficients[(instance * MaskCoefficientCount) + channel] = YoloPackedTensor.Value(packed, contract.CandidateCount, contract.FieldCount, candidate, coefficientFieldOffset + channel, contract.Layout);
+                }
+            }
+        }
+
+        internal YoloCudaInstanceSegmentationPlan(float[] indexedCoefficients, List<VisualDetectionCandidate> candidates, InstanceSegmentationDecoderOptions decoderOptions, int prototypeWidth, int prototypeHeight, int maskCoefficientCount)
+        {
+            Candidates = candidates;
+            DecoderOptions = decoderOptions;
+            PrototypeWidth = prototypeWidth;
+            PrototypeHeight = prototypeHeight;
+            MaskCoefficientCount = maskCoefficientCount;
+            Coefficients = new float[checked(candidates.Count * maskCoefficientCount)];
+            for (int instance = 0; instance < candidates.Count; instance++)
+            {
+                Array.Copy(indexedCoefficients, checked(candidates[instance].SourceIndex * maskCoefficientCount), Coefficients, checked(instance * maskCoefficientCount), maskCoefficientCount);
+            }
+        }
+
+        internal float[] Coefficients { get; }
+        internal List<VisualDetectionCandidate> Candidates { get; }
+        internal InstanceSegmentationDecoderOptions DecoderOptions { get; }
+        internal int PrototypeWidth { get; }
+        internal int PrototypeHeight { get; }
+        internal int MaskCoefficientCount { get; }
+
+        internal void FillCoefficientBuffer(float[] result)
+        {
+            if (result == null || result.Length != Coefficients.Length) throw new ArgumentException("Coefficient buffer length is incompatible.", nameof(result));
+            Array.Copy(Coefficients, result, Coefficients.Length);
+        }
+
+        internal void FillModelBoxBuffer(float[] result)
+        {
+            if (result == null || result.Length != checked(Candidates.Count * 4)) throw new ArgumentException("Model-box buffer length is incompatible.", nameof(result));
+            for (int instance = 0; instance < Candidates.Count; instance++)
+            {
+                RectangleF box = Candidates[instance].ModelBox;
+                int offset = instance * 4;
+                result[offset] = box.X;
+                result[offset + 1] = box.Y;
+                result[offset + 2] = box.Right;
+                result[offset + 3] = box.Bottom;
+            }
         }
     }
 
@@ -149,10 +377,24 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Outputs.Count != 1 || context.Input.BatchSize != 1) throw YoloPackedTensor.Failure(context, "YOLO Pose requires batch one and exactly one output.", Contract.OutputName);
+            if (context.Outputs.Count != 1) throw YoloPackedTensor.Failure(context, "YOLO Pose requires exactly one output.", Contract.OutputName);
             ITensor tensor = YoloPackedTensor.Required(context, Contract.OutputName);
-            float[] values = YoloPackedTensor.Read(context, tensor, Contract.OutputName, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
-            List<YoloSelectedCandidate> selected = SelectBoxes(context, values);
+            int batch = YoloPackedTensor.ResolveBatch(context, tensor, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
+            float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Contract.OutputName);
+            var results = new List<PoseEstimationResult>(batch);
+            for (int batchIndex = 0; batchIndex < batch; batchIndex++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                results.Add(DecodeSingle(context, tensor, values, batchIndex, batch));
+            }
+            return batch == 1 ? results[0] : new PoseEstimationBatchResult(results);
+        }
+
+        private PoseEstimationResult DecodeSingle(VisualDecodeContext context, ITensor tensor, float[] values, int batchIndex, int batch)
+        {
+            int baseOffset = checked(batchIndex * Contract.CandidateCount * Contract.FieldCount);
+            VisualInputFrame frame = context.Input.BatchFrames[batchIndex];
+            List<YoloSelectedCandidate> selected = SelectBoxes(context, values, baseOffset, frame);
             int count = selected.Count;
             var boxes = new float[checked(count * 4)];
             var scores = new float[count];
@@ -167,7 +409,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 boxes[(resultIndex * 4) + 3] = item.ModelBox.Bottom;
                 scores[resultIndex] = item.Score;
                 int destination = resultIndex * Contract.KeypointCount * Contract.ComponentsPerKeypoint;
-                for (int field = 0; field < Contract.KeypointCount * Contract.ComponentsPerKeypoint; field++) keypoints[destination + field] = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, item.SourceIndex, extraOffset + field, Contract.Layout);
+                for (int field = 0; field < Contract.KeypointCount * Contract.ComponentsPerKeypoint; field++) keypoints[destination + field] = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, item.SourceIndex, extraOffset + field, Contract.Layout);
             }
 
             const string keypointsName = "__yolo_keypoints";
@@ -183,7 +425,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 new NamedTensor(boxesName, new Tensor<float>(new TensorShape(1, count, 4), boxes, TensorBufferOwnership.Transfer)),
                 new NamedTensor(scoresName, new Tensor<float>(new TensorShape(1, count), scores, TensorBufferOwnership.Transfer))
             });
-            PoseEstimationResult decoded = (PoseEstimationResult)decoder.Decode(new VisualDecodeContext(context.Input, context.Profile, unpacked, context.CancellationToken));
+            PreparedVisualInput rowInput = batch == 1 ? context.Input : YoloPackedTensor.CreateRowInput(context, frame, batchIndex);
+            PoseEstimationResult decoded = (PoseEstimationResult)decoder.Decode(new VisualDecodeContext(rowInput, context.Profile, unpacked, context.CancellationToken));
             var remapped = new List<PoseInstance>(decoded.Instances.Count);
             for (int index = 0; index < decoded.Instances.Count; index++)
             {
@@ -191,13 +434,12 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 int sourceIndex = selected[item.SourceIndex].SourceIndex;
                 remapped.Add(new PoseInstance(sourceIndex, item.Score, item.Keypoints, item.BoundingBox, selected[item.SourceIndex].ClassIndex, item.ExternalId));
             }
-            return new PoseEstimationResult(Topology, remapped, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
+            return new PoseEstimationResult(Topology, remapped, frame.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
         }
 
-        private List<YoloSelectedCandidate> SelectBoxes(VisualDecodeContext context, float[] values)
+        private List<YoloSelectedCandidate> SelectBoxes(VisualDecodeContext context, float[] values, int baseOffset, VisualInputFrame frame)
         {
-            var candidates = new List<VisualDetectionCandidate>();
-            var bySource = new Dictionary<int, YoloSelectedCandidate>();
+            var candidates = new List<VisualDetectionCandidate>(Math.Min(Contract.CandidateCount, Options.MaximumCandidates));
             for (int index = 0; index < Contract.CandidateCount; index++)
             {
                 if ((index & 255) == 0) context.CancellationToken.ThrowIfCancellationRequested();
@@ -206,38 +448,41 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 DetectionBoxFormat format;
                 if (Contract.IsEndToEnd)
                 {
-                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "score");
-                    classIndex = YoloPackedTensor.ClassIndex(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 5, Contract.Layout), Contract.ClassCount, context, Contract.OutputName, index);
+                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "score");
+                    classIndex = YoloPackedTensor.ClassIndex(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 5, Contract.Layout), Contract.ClassCount, context, Contract.OutputName, index);
                     format = DetectionBoxFormat.Xyxy;
                 }
                 else
                 {
                     classIndex = 0;
-                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "class-score");
+                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "class-score");
                     for (int candidateClass = 1; candidateClass < Contract.ClassCount; candidateClass++)
                     {
-                        float current = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4 + candidateClass, Contract.Layout), context, Contract.OutputName, index, "class-score");
+                        float current = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4 + candidateClass, Contract.Layout), context, Contract.OutputName, index, "class-score");
                         if (current > score) { score = current; classIndex = candidateClass; }
                     }
                     format = DetectionBoxFormat.Cxcywh;
                 }
                 if (score <= Options.ScoreThreshold) continue;
-                RectangleF modelBox = DetectionPostprocessing.DecodeModelBox(format, false, context.Input.ModelSize,
-                    YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 0, Contract.Layout),
-                    YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 1, Contract.Layout),
-                    YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 2, Contract.Layout),
-                    YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 3, Contract.Layout));
+                RectangleF modelBox = DetectionPostprocessing.DecodeModelBox(format, false, frame.ModelSize,
+                    YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 0, Contract.Layout),
+                    YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 1, Contract.Layout),
+                    YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 2, Contract.Layout),
+                    YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 3, Contract.Layout));
                 if (modelBox.Width <= 0 || modelBox.Height <= 0) throw YoloPackedTensor.Failure(context, "A retained YOLO Pose box has non-positive size.", Contract.OutputName, "candidate=" + index);
-                RectangleF sourceBox = context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
+                RectangleF sourceBox = frame.Transform.ClipToSource(frame.Transform.ToSource(modelBox));
                 if (sourceBox.Width <= 0 || sourceBox.Height <= 0) continue;
                 var candidate = new VisualDetectionCandidate(index, classIndex, score, modelBox, sourceBox);
                 candidates.Add(candidate);
-                bySource.Add(index, new YoloSelectedCandidate(index, classIndex, score, modelBox));
             }
             candidates.Sort(YoloPackedTensor.CompareCandidates);
             List<VisualDetectionCandidate> kept = Contract.IsEndToEnd ? candidates.GetRange(0, Math.Min(candidates.Count, Options.MaximumDetections)) : DetectionPostprocessing.Suppress(candidates, Options.IouThreshold, Options.NmsMode, Options.MaximumDetections, context.CancellationToken, true);
             var result = new List<YoloSelectedCandidate>(kept.Count);
-            for (int index = 0; index < kept.Count; index++) result.Add(bySource[kept[index].SourceIndex]);
+            for (int index = 0; index < kept.Count; index++)
+            {
+                VisualDetectionCandidate item = kept[index];
+                result.Add(new YoloSelectedCandidate(item.SourceIndex, item.ClassIndex, item.Score, item.ModelBox));
+            }
             return result;
         }
     }
@@ -261,10 +506,24 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Outputs.Count != 1 || context.Input.BatchSize != 1) throw YoloPackedTensor.Failure(context, "YOLO OBB requires batch one and exactly one output.", Contract.OutputName);
+            if (context.Outputs.Count != 1) throw YoloPackedTensor.Failure(context, "YOLO OBB requires exactly one output.", Contract.OutputName);
             ITensor tensor = YoloPackedTensor.Required(context, Contract.OutputName);
-            float[] values = YoloPackedTensor.Read(context, tensor, Contract.OutputName, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
-            var candidates = new List<YoloObbCandidate>();
+            int batch = YoloPackedTensor.ResolveBatch(context, tensor, Contract.Layout, Contract.CandidateCount, Contract.FieldCount);
+            float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Contract.OutputName);
+            var batchResults = new List<OrientedDetectionResult>(batch);
+            for (int batchIndex = 0; batchIndex < batch; batchIndex++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                batchResults.Add(DecodeSingle(context, values, batchIndex));
+            }
+            return batch == 1 ? batchResults[0] : new OrientedDetectionBatchResult(batchResults);
+        }
+
+        private OrientedDetectionResult DecodeSingle(VisualDecodeContext context, float[] values, int batchIndex)
+        {
+            int baseOffset = checked(batchIndex * Contract.CandidateCount * Contract.FieldCount);
+            VisualInputFrame frame = context.Input.BatchFrames[batchIndex];
+            var candidates = new List<YoloObbCandidate>(Math.Min(Contract.CandidateCount, Options.MaximumCandidates));
             for (int index = 0; index < Contract.CandidateCount; index++)
             {
                 if ((index & 255) == 0) context.CancellationToken.ThrowIfCancellationRequested();
@@ -273,27 +532,27 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 int angleIndex;
                 if (Contract.IsEndToEnd)
                 {
-                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "score");
-                    classIndex = YoloPackedTensor.ClassIndex(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 5, Contract.Layout), Contract.ClassCount, context, Contract.OutputName, index);
+                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "score");
+                    classIndex = YoloPackedTensor.ClassIndex(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 5, Contract.Layout), Contract.ClassCount, context, Contract.OutputName, index);
                     angleIndex = 6;
                 }
                 else
                 {
                     classIndex = 0;
-                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "class-score");
+                    score = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4, Contract.Layout), context, Contract.OutputName, index, "class-score");
                     for (int candidateClass = 1; candidateClass < Contract.ClassCount; candidateClass++)
                     {
-                        float current = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 4 + candidateClass, Contract.Layout), context, Contract.OutputName, index, "class-score");
+                        float current = YoloPackedTensor.Probability(YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 4 + candidateClass, Contract.Layout), context, Contract.OutputName, index, "class-score");
                         if (current > score) { score = current; classIndex = candidateClass; }
                     }
                     angleIndex = 4 + Contract.ClassCount;
                 }
                 if (score <= Options.ScoreThreshold) continue;
-                float centerX = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 0, Contract.Layout);
-                float centerY = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 1, Contract.Layout);
-                float width = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 2, Contract.Layout);
-                float height = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, 3, Contract.Layout);
-                float angle = YoloPackedTensor.Value(values, Contract.CandidateCount, Contract.FieldCount, index, angleIndex, Contract.Layout);
+                float centerX = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 0, Contract.Layout);
+                float centerY = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 1, Contract.Layout);
+                float width = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 2, Contract.Layout);
+                float height = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, 3, Contract.Layout);
+                float angle = YoloPackedTensor.Value(values, baseOffset, Contract.CandidateCount, Contract.FieldCount, index, angleIndex, Contract.Layout);
                 if (width <= 0 || height <= 0) throw YoloPackedTensor.Failure(context, "A retained YOLO OBB has non-positive size.", Contract.OutputName, "candidate=" + index);
                 Regularize(ref width, ref height, ref angle);
                 candidates.Add(new YoloObbCandidate(index, classIndex, score, centerX, centerY, width, height, angle));
@@ -306,13 +565,13 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
                 YoloObbCandidate item = kept[index];
-                OrientedQuadrilateral model = OrientedGeometry.CreateCenterSizeAngleCorners(item.CenterX, item.CenterY, item.Width, item.Height, item.Angle, schema, context.Input.ModelSize);
+                OrientedQuadrilateral model = OrientedGeometry.CreateCenterSizeAngleCorners(item.CenterX, item.CenterY, item.Width, item.Height, item.Angle, schema, frame.ModelSize);
                 var sourcePoints = new PointF[4];
-                for (int point = 0; point < 4; point++) sourcePoints[point] = context.Input.Transform.ToSource(model.Vertices[point]);
+                for (int point = 0; point < 4; point++) sourcePoints[point] = frame.Transform.ToSource(model.Vertices[point]);
                 OrientedQuadrilateral source = OrientedQuadrilateral.Canonicalize(sourcePoints, OrientedVertexOrder.CounterClockwise, OrientedStartVertexRule.MinimumYThenX);
                 results.Add(new OrientedDetection(item.SourceIndex, item.ClassIndex, context.Profile.GetLabel(item.ClassIndex), item.Score, source, -item.Angle, true));
             }
-            return new OrientedDetectionResult(results, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
+            return new OrientedDetectionResult(results, frame.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
         }
 
         private List<YoloObbCandidate> FastRotatedNms(List<YoloObbCandidate> ordered, System.Threading.CancellationToken cancellationToken)
@@ -409,6 +668,41 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
 
     internal static class YoloPackedTensor
     {
+        public static int ResolveBatch(VisualDecodeContext context, ITensor tensor, YoloPackedTensorLayout layout, int candidates, int fields)
+        {
+            TensorShape shape = tensor.Shape;
+            int expected = context.Input.BatchSize;
+            bool valid = shape.Rank == 3 && shape[0] == expected
+                && (layout == YoloPackedTensorLayout.AttributeMajor ? shape[1] == fields && shape[2] == candidates : shape[1] == candidates && shape[2] == fields)
+                && tensor.Length == (long)expected * candidates * fields;
+            if (!valid) throw Failure(context, "A YOLO packed tensor does not match the input batch and exact layout.", tensorName: null, technicalDetails: shape.ToString());
+            return expected;
+        }
+
+        public static PreparedVisualInput CreateRowInput(VisualDecodeContext context, VisualInputFrame frame, int row)
+        {
+            TensorShape inputShape = context.Input.Tensor.Shape;
+            if (inputShape.Rank < 1 || inputShape[0] != context.Input.BatchSize) throw Failure(context, "A batched YOLO input must expose its batch dimension.", context.Input.InputName, inputShape.ToString());
+            long rowLengthLong = inputShape.GetElementCount() / inputShape[0];
+            int rowLength = checked((int)rowLengthLong);
+            float[] rowValues = new float[rowLength];
+            int offset = checked(row * rowLength);
+            if (context.Input.Tensor.ElementType == TensorElementType.Float32 && context.Input.Tensor.Buffer is float[] values)
+            {
+                if (offset < 0 || offset > values.Length - rowLength) throw Failure(context, "A YOLO input row exceeds its tensor.", context.Input.InputName, inputShape.ToString());
+                Array.Copy(values, offset, rowValues, 0, rowLength);
+            }
+            else if (context.Input.Tensor.ElementType == TensorElementType.Float64 && context.Input.Tensor.Buffer is double[] doubles)
+            {
+                if (offset < 0 || offset > doubles.Length - rowLength) throw Failure(context, "A YOLO input row exceeds its tensor.", context.Input.InputName, inputShape.ToString());
+                for (int index = 0; index < rowLength; index++) rowValues[index] = checked((float)doubles[offset + index]);
+            }
+            else throw Failure(context, "Batched YOLO inputs require Float32 or Float64 tensors.", context.Input.InputName, inputShape.ToString());
+            long[] dimensions = inputShape.ToArray();
+            dimensions[0] = 1;
+            return new PreparedVisualInput(context.Input.InputName, new Tensor<float>(new TensorShape(dimensions), rowValues, TensorBufferOwnership.Transfer), frame.SourceSize, frame.ModelSize, 1, context.Input.Layout, frame.Transform, context.Input.Preprocessing, frame.InputId, PreparedInputOwnership.Borrowed);
+        }
+
         public static ITensor Required(VisualDecodeContext context, string name)
         {
             try { return context.Outputs.GetRequired(name); }
@@ -417,16 +711,24 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
 
         public static float[] Read(VisualDecodeContext context, ITensor tensor, string name, YoloPackedTensorLayout layout, int candidates, int fields)
         {
+            ValidateShape(context, tensor, name, layout, candidates, fields);
+            return VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, name);
+        }
+
+        public static void ValidateShape(VisualDecodeContext context, ITensor tensor, string name, YoloPackedTensorLayout layout, int candidates, int fields)
+        {
             TensorShape shape = tensor.Shape;
             bool valid = layout == YoloPackedTensorLayout.AttributeMajor
                 ? shape.Rank == 3 && shape[0] == 1 && shape[1] == fields && shape[2] == candidates
                 : shape.Rank == 3 && shape[0] == 1 && shape[1] == candidates && shape[2] == fields;
             if (!valid || tensor.Length != (long)candidates * fields) throw Failure(context, "A packed YOLO tensor does not match its exact layout and shape.", name, shape.ToString());
-            return VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, name);
         }
 
         public static float Value(float[] values, int candidates, int fields, int candidate, int field, YoloPackedTensorLayout layout)
             => layout == YoloPackedTensorLayout.AttributeMajor ? values[(field * candidates) + candidate] : values[(candidate * fields) + field];
+
+        public static float Value(float[] values, int baseOffset, int candidates, int fields, int candidate, int field, YoloPackedTensorLayout layout)
+            => layout == YoloPackedTensorLayout.AttributeMajor ? values[baseOffset + (field * candidates) + candidate] : values[baseOffset + (candidate * fields) + field];
 
         public static float Probability(float value, VisualDecodeContext context, string tensorName, int candidate, string field)
         {

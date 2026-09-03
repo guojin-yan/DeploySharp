@@ -49,7 +49,11 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime.Internal
         private static bool IsProviderFailure(Exception exception)
         {
             string message = exception.Message ?? string.Empty;
-            return message.IndexOf("execution provider", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("provider", StringComparison.OrdinalIgnoreCase) >= 0 && message.IndexOf("available", StringComparison.OrdinalIgnoreCase) >= 0;
+            return message.IndexOf("execution provider", StringComparison.OrdinalIgnoreCase) >= 0
+                || message.IndexOf("provider", StringComparison.OrdinalIgnoreCase) >= 0 && message.IndexOf("available", StringComparison.OrdinalIgnoreCase) >= 0
+                || message.IndexOf("cuda failure", StringComparison.OrdinalIgnoreCase) >= 0
+                || message.IndexOf("cuda_execution_provider", StringComparison.OrdinalIgnoreCase) >= 0
+                || message.IndexOf("cudnn", StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

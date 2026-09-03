@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Internal;
 using JYPPX.DeploySharp.Models;
 
 namespace JYPPX.DeploySharp.Registry
@@ -83,7 +84,19 @@ namespace JYPPX.DeploySharp.Registry
 
                 if (provider.CanCreate(artifact, request))
                 {
-                    return provider.CreateSession(artifact, request, options ?? SessionOptions.Default);
+                    SessionOptions requested = options ?? SessionOptions.Default;
+                    var sessions = new List<IInferenceSession>(requested.MaxConcurrency);
+                    try
+                    {
+                        var singleChannel = new SessionOptions(1, requested.EnableProfiling);
+                        for (int sessionIndex = 0; sessionIndex < requested.MaxConcurrency; sessionIndex++) sessions.Add(provider.CreateSession(artifact, request, singleChannel));
+                        return new PooledInferenceSession(sessions.AsReadOnly());
+                    }
+                    catch
+                    {
+                        for (int sessionIndex = sessions.Count - 1; sessionIndex >= 0; sessionIndex--) sessions[sessionIndex].Dispose();
+                        throw;
+                    }
                 }
             }
 

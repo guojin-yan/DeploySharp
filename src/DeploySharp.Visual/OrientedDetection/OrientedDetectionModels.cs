@@ -390,4 +390,27 @@ namespace JYPPX.DeploySharp.Visual
             return new string(result);
         }
     }
+
+    /// <summary>Contains one oriented-detection result for every row of a true model batch. / 包含真正模型 Batch 中每一行的旋转检测结果。</summary>
+    public sealed class OrientedDetectionBatchResult
+    {
+        private readonly IReadOnlyList<OrientedDetectionResult> _items;
+
+        /// <summary>Initializes an ordered oriented-detection batch result. / 初始化有序旋转检测 Batch 结果。</summary>
+        public OrientedDetectionBatchResult(IEnumerable<OrientedDetectionResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<OrientedDetectionResult>();
+            foreach (OrientedDetectionResult item in items) copied.Add(item ?? throw new ArgumentException("Oriented-detection batch items cannot contain null values.", nameof(items)));
+            if (copied.Count <= 1) throw new ArgumentException("A batch result requires at least two items; batch one uses OrientedDetectionResult.", nameof(items));
+            _items = copied.AsReadOnly();
+        }
+
+        /// <summary>Gets the number of decoded rows. / 获取已解码行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets a result by input-row index. / 按输入行索引获取结果。</summary>
+        public OrientedDetectionResult this[int index] => _items[index];
+        /// <summary>Gets ordered oriented-detection results. / 获取有序旋转检测结果。</summary>
+        public IReadOnlyList<OrientedDetectionResult> Items => _items;
+    }
 }

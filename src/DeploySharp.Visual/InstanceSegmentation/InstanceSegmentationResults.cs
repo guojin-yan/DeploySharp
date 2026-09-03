@@ -105,14 +105,17 @@ namespace JYPPX.DeploySharp.Visual
             if (mask == null) throw new ArgumentNullException(nameof(mask));
             if (maximumRuns <= 0) throw new ArgumentOutOfRangeException(nameof(maximumRuns));
             var runs = new List<InstanceMaskRun>();
+            byte[] pixels = mask.GetPixelsUnsafe();
+            int pixelOffset = mask.PixelOffset;
+            int pixelCount = mask.PixelCount;
             int index = 0;
-            while (index < mask.PixelCount)
+            while (index < pixelCount)
             {
                 if ((index & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
-                while (index < mask.PixelCount && mask.GetPixelUnchecked(index) == 0) index++;
-                if (index == mask.PixelCount) break;
+                while (index < pixelCount && pixels[pixelOffset + index] == 0) index++;
+                if (index == pixelCount) break;
                 int start = index;
-                while (index < mask.PixelCount && mask.GetPixelUnchecked(index) != 0)
+                while (index < pixelCount && pixels[pixelOffset + index] != 0)
                 {
                     index++;
                     if ((index & 4095) == 0) cancellationToken.ThrowIfCancellationRequested();
@@ -144,6 +147,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class InstanceBinaryMask
     {
         private readonly byte[] _pixels;
+        private readonly int _pixelOffset;
         private readonly int _foregroundPixelCount;
 
         /// <summary>Initializes a mask by defensively copying bytes whose values must be zero or one. / 通过防御性复制值必须为零或一的字节来初始化掩码。</summary>
@@ -173,6 +177,7 @@ namespace JYPPX.DeploySharp.Visual
             OriginY = originY;
             _foregroundPixelCount = foreground;
             _pixels = takeOwnership ? pixels : (byte[])pixels.Clone();
+            _pixelOffset = 0;
         }
 
         internal InstanceBinaryMask(int width, int height, byte[] pixels, InstanceMaskCoordinateSpace coordinateSpace, int originX, int originY, int foregroundPixelCount)
@@ -187,6 +192,23 @@ namespace JYPPX.DeploySharp.Visual
             OriginY = originY;
             _foregroundPixelCount = foregroundPixelCount;
             _pixels = pixels;
+            _pixelOffset = 0;
+        }
+
+        internal InstanceBinaryMask(int width, int height, byte[] pixels, int pixelOffset, InstanceMaskCoordinateSpace coordinateSpace, int originX, int originY, int foregroundPixelCount)
+        {
+            int pixelCount = checked(width * height);
+            if (width <= 0 || height <= 0 || pixels == null || pixelOffset < 0 || pixelOffset > pixels.Length - pixelCount) throw new ArgumentException("Owned mask slice dimensions are invalid.", nameof(pixels));
+            if (!Enum.IsDefined(typeof(InstanceMaskCoordinateSpace), coordinateSpace)) throw new ArgumentOutOfRangeException(nameof(coordinateSpace));
+            if (foregroundPixelCount < 0 || foregroundPixelCount > pixelCount) throw new ArgumentOutOfRangeException(nameof(foregroundPixelCount));
+            Width = width;
+            Height = height;
+            CoordinateSpace = coordinateSpace;
+            OriginX = originX;
+            OriginY = originY;
+            _foregroundPixelCount = foregroundPixelCount;
+            _pixels = pixels;
+            _pixelOffset = pixelOffset;
         }
 
         /// <summary>Gets the mask width. / 获取掩码宽度。</summary>
@@ -200,7 +222,7 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets the vertical origin in the declared coordinate space. / 获取所声明坐标空间中的垂直原点。</summary>
         public int OriginY { get; }
         /// <summary>Gets the total pixel count. / 获取总像素数。</summary>
-        public int PixelCount => _pixels.Length;
+        public int PixelCount => checked(Width * Height);
         /// <summary>Gets the foreground pixel count. / 获取前景像素数。</summary>
         public int ForegroundPixelCount => _foregroundPixelCount;
 
@@ -209,23 +231,25 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (x < 0 || x >= Width) throw new ArgumentOutOfRangeException(nameof(x));
             if (y < 0 || y >= Height) throw new ArgumentOutOfRangeException(nameof(y));
-            return _pixels[(y * Width) + x] != 0;
+            return _pixels[_pixelOffset + (y * Width) + x] != 0;
         }
 
         /// <summary>Copies all row-major pixels to a caller-provided buffer. / 将所有行优先像素复制到调用方提供的缓冲区。</summary>
         public void CopyTo(byte[] destination, int destinationIndex = 0)
         {
             if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (destinationIndex < 0 || destinationIndex > destination.Length - _pixels.Length) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-            Array.Copy(_pixels, 0, destination, destinationIndex, _pixels.Length);
+            int pixelCount = PixelCount;
+            if (destinationIndex < 0 || destinationIndex > destination.Length - pixelCount) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
+            Array.Copy(_pixels, _pixelOffset, destination, destinationIndex, pixelCount);
         }
 
         /// <summary>Copies all row-major pixels as Boolean foreground values. / 将所有行优先像素作为布尔前景值复制到调用方缓冲区。</summary>
         public void CopyTo(bool[] destination, int destinationIndex = 0)
         {
             if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (destinationIndex < 0 || destinationIndex > destination.Length - _pixels.Length) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-            for (int index = 0; index < _pixels.Length; index++) destination[destinationIndex + index] = _pixels[index] != 0;
+            int pixelCount = PixelCount;
+            if (destinationIndex < 0 || destinationIndex > destination.Length - pixelCount) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
+            for (int index = 0; index < pixelCount; index++) destination[destinationIndex + index] = _pixels[_pixelOffset + index] != 0;
         }
 
         /// <summary>Gets the half-open foreground bounds in the declared coordinate space, or null for an empty mask. / 获取所声明坐标空间中的半开前景边界；空掩码返回 null。</summary>
@@ -241,7 +265,7 @@ namespace JYPPX.DeploySharp.Visual
                 int rowOffset = y * Width;
                 for (int x = 0; x < Width; x++)
                 {
-                    if (_pixels[rowOffset + x] == 0) continue;
+                    if (_pixels[_pixelOffset + rowOffset + x] == 0) continue;
                     if (x < minimumX) minimumX = x;
                     if (x > maximumX) maximumX = x;
                     if (y < minimumY) minimumY = y;
@@ -253,12 +277,17 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         /// <summary>Returns a defensive row-major pixel copy. / 返回行优先像素的防御性副本。</summary>
-        public byte[] ToArray() => (byte[])_pixels.Clone();
+        public byte[] ToArray()
+        {
+            var result = new byte[PixelCount];
+            Array.Copy(_pixels, _pixelOffset, result, 0, result.Length);
+            return result;
+        }
 
         /// <summary>Computes SHA-256 over coordinate metadata and row-major pixels. / 对坐标元数据和行优先像素计算 SHA-256。</summary>
         public string ComputeSha256()
         {
-            using var stream = new MemoryStream(_pixels.Length + 32);
+            using var stream = new MemoryStream(PixelCount + 32);
             using (var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true))
             {
                 writer.Write((int)CoordinateSpace);
@@ -266,14 +295,20 @@ namespace JYPPX.DeploySharp.Visual
                 writer.Write(OriginY);
                 writer.Write(Width);
                 writer.Write(Height);
-                writer.Write(_pixels);
+                writer.Write(_pixels, _pixelOffset, PixelCount);
             }
 
             using SHA256 sha = SHA256.Create();
             return Hex(sha.ComputeHash(stream.ToArray()));
         }
 
-        internal byte GetPixelUnchecked(int index) => _pixels[index];
+        internal byte GetPixelUnchecked(int index) => _pixels[_pixelOffset + index];
+
+        // Internal decoder fast path. The array remains owned by this mask and is never exposed
+        // through the public API; callers use it only while the mask is immutable.
+        internal byte[] GetPixelsUnsafe() => _pixels;
+
+        internal int PixelOffset => _pixelOffset;
 
         internal static string Hex(byte[] bytes)
         {
@@ -479,5 +514,28 @@ namespace JYPPX.DeploySharp.Visual
             using SHA256 sha = SHA256.Create();
             return InstanceBinaryMask.Hex(sha.ComputeHash(stream.ToArray()));
         }
+    }
+
+    /// <summary>Contains one instance-segmentation result for every row of a true model batch. / 包含真正模型 Batch 中每一行的实例分割结果。</summary>
+    public sealed class InstanceSegmentationBatchResult
+    {
+        private readonly IReadOnlyList<InstanceSegmentationResult> _items;
+
+        /// <summary>Initializes an ordered instance-segmentation batch result. / 初始化有序实例分割 Batch 结果。</summary>
+        public InstanceSegmentationBatchResult(IEnumerable<InstanceSegmentationResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<InstanceSegmentationResult>();
+            foreach (InstanceSegmentationResult item in items) copied.Add(item ?? throw new ArgumentException("Instance-segmentation batch items cannot contain null values.", nameof(items)));
+            if (copied.Count <= 1) throw new ArgumentException("A batch result requires at least two items; batch one uses InstanceSegmentationResult.", nameof(items));
+            _items = new ReadOnlyCollection<InstanceSegmentationResult>(copied);
+        }
+
+        /// <summary>Gets the number of decoded rows. / 获取已解码行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets a result by input-row index. / 按输入行索引获取结果。</summary>
+        public InstanceSegmentationResult this[int index] => _items[index];
+        /// <summary>Gets ordered instance-segmentation results. / 获取有序实例分割结果。</summary>
+        public IReadOnlyList<InstanceSegmentationResult> Items => _items;
     }
 }

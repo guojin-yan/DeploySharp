@@ -23,7 +23,9 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             string? profileId = null,
             string preprocessingVersion = "ultralytics-letterbox-rgb-nchw-v1",
             string postprocessingVersion = "deploysharp-yolo-detection-v1",
-            string modelFormat = "onnx")
+            string modelFormat = "onnx",
+            YoloDetectionOutputKind? outputKind = null,
+            int maximumBatch = 1)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A YOLO model format is required.", nameof(modelFormat));
@@ -31,6 +33,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             if (outputName != null && string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("A YOLO output name cannot be empty.", nameof(outputName));
             if (stride <= 0) throw new ArgumentOutOfRangeException(nameof(stride));
             if (!Enum.IsDefined(typeof(YoloScoreActivation), scoreActivation)) throw new ArgumentOutOfRangeException(nameof(scoreActivation));
+            if (outputKind.HasValue && !Enum.IsDefined(typeof(YoloDetectionOutputKind), outputKind.Value)) throw new ArgumentOutOfRangeException(nameof(outputKind));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             if (string.IsNullOrWhiteSpace(preprocessingVersion)) throw new ArgumentException("A preprocessing contract version is required.", nameof(preprocessingVersion));
             if (string.IsNullOrWhiteSpace(postprocessingVersion)) throw new ArgumentException("A postprocessing contract version is required.", nameof(postprocessingVersion));
             Opset = opset;
@@ -47,6 +51,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             ProfileId = string.IsNullOrWhiteSpace(profileId) ? null : profileId;
             PreprocessingVersion = preprocessingVersion.Trim();
             PostprocessingVersion = postprocessingVersion.Trim();
+            OutputKind = outputKind;
+            MaximumBatch = maximumBatch;
         }
 
         /// <summary>Gets the ONNX opset imported by the exact artifact. / 获取精确工件导入的 ONNX opset。</summary>
@@ -77,6 +83,10 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public string PreprocessingVersion { get; }
         /// <summary>Gets the pinned postprocessing contract version. / 获取锁定的后处理合同版本。</summary>
         public string PostprocessingVersion { get; }
+        /// <summary>Gets an optional artifact-specific physical output contract override. / 获取可选的工件特定物理输出合同覆盖。</summary>
+        public YoloDetectionOutputKind? OutputKind { get; }
+        /// <summary>Gets the maximum true model batch; one keeps the legacy static contract. / 获取真正模型 Batch 最大值；1 表示保持旧静态合同。</summary>
+        public int MaximumBatch { get; }
     }
 
     /// <summary>Binds one exact YOLO artifact and upstream provenance to a Visual profile. / 将一个精确 YOLO 工件及其上游来源绑定到 Visual Profile。</summary>
@@ -163,9 +173,10 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             YoloDetectionProfileOptions effective = options ?? throw Invalid("Artifact-specific YOLO profile options are required.");
             List<VisualLabel> visualLabels = CopyLabels(labels);
             string outputName = effective.OutputName ?? DefaultOutputName(family);
-            YoloDetectionOutputKind outputKind = DefaultOutputKind(family);
+            YoloDetectionOutputKind outputKind = effective.OutputKind ?? DefaultOutputKind(family);
+            if (effective.MaximumBatch > 1 && outputKind == YoloDetectionOutputKind.BatchedEndToEnd) throw Invalid("The embedded-batch YOLOv7 output contract cannot be combined with a true dynamic model batch.");
             var output = new YoloDetectionOutputContract(outputName, outputKind, visualLabels.Count, effective.ScoreActivation);
-            TensorShape outputShape = Shape(output);
+            TensorShape outputShape = Shape(output, effective.MaximumBatch);
             var decoder = new YoloDetectionDecoder(output, effective.DecoderOptions);
             string profileId = effective.ProfileId ?? "yolo.detect." + FamilyId(family) + "." + OutputKindId(outputKind) + "." + effective.ModelFormat + "." + modelId.Value;
             var visual = new VisualModelProfile(
@@ -177,8 +188,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 new VisualInputBinding(
                     effective.InputName,
                     TensorElementType.Float32,
-                    effective.DynamicShapes ? new TensorShape(1, 3, -1, -1) : new TensorShape(1, 3, effective.ModelSize.Height, effective.ModelSize.Width),
-                    VisualTensorLayout.Nchw),
+                    effective.MaximumBatch > 1 ? new TensorShape(-1, 3, effective.DynamicShapes ? -1 : effective.ModelSize.Height, effective.DynamicShapes ? -1 : effective.ModelSize.Width) : (effective.DynamicShapes ? new TensorShape(1, 3, -1, -1) : new TensorShape(1, 3, effective.ModelSize.Height, effective.ModelSize.Width)),
+                    VisualTensorLayout.Nchw, 1, effective.MaximumBatch),
                 new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, outputShape) },
                 visualLabels,
                 decoder);
@@ -210,12 +221,13 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             return result;
         }
 
-        private static TensorShape Shape(YoloDetectionOutputContract contract)
+        private static TensorShape Shape(YoloDetectionOutputContract contract, int maximumBatch)
         {
-            if (contract.Kind == YoloDetectionOutputKind.RawCandidateMajor) return new TensorShape(1, -1, contract.FieldCount);
-            if (contract.Kind == YoloDetectionOutputKind.RawAttributeMajor) return new TensorShape(1, contract.FieldCount, -1);
+            long batch = maximumBatch > 1 ? -1L : 1L;
+            if (contract.Kind == YoloDetectionOutputKind.RawCandidateMajor) return new TensorShape(batch, -1, contract.FieldCount);
+            if (contract.Kind == YoloDetectionOutputKind.RawAttributeMajor) return new TensorShape(batch, contract.FieldCount, -1);
             if (contract.Kind == YoloDetectionOutputKind.BatchedEndToEnd) return new TensorShape(-1, contract.FieldCount);
-            return new TensorShape(1, -1, contract.FieldCount);
+            return new TensorShape(batch, -1, contract.FieldCount);
         }
 
         private static YoloDetectionOutputKind DefaultOutputKind(YoloDetectionFamily family)

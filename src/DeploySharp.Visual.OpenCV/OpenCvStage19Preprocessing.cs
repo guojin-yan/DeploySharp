@@ -35,7 +35,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         {
             if (sourceSize.Width <= 0 || sourceSize.Height <= 0) throw new ArgumentOutOfRangeException(nameof(sourceSize));
             if (resizeLong <= 0) throw new ArgumentOutOfRangeException(nameof(resizeLong));
-            float ratio = (float)resizeLong / Math.Max(sourceSize.Width, sourceSize.Height);
+            // Match PaddleOCR's max-side behavior: small images are not enlarged.
+            // Upscaling a 500x500 source to the 960/1024 detector canvas multiplies
+            // detector work without adding information and made CPU timings misleading.
+            float ratio = Math.Min(1f, (float)resizeLong / Math.Max(sourceSize.Width, sourceSize.Height));
             int height = RoundUpStride((int)(sourceSize.Height * ratio), 128);
             int width = RoundUpStride((int)(sourceSize.Width * ratio), 128);
             return new OpenCvPreprocessOptions(new VisualSize(width, height), OpenCvResizeMode.Resize, VisualColorOrder.Bgr, OpenCvAlphaMode.Drop,

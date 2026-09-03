@@ -33,7 +33,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
                     var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
                     var options = new OpenCvPreprocessOptions(sourceSize, OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, layout: VisualTensorLayout.Nchw, outputType: OpenCvOutputType.UInt8);
-                    byte[] rgb = OpenCvVisualInputFactory.ConvertChannels(OpenCvVisualInputFactory.CopyRows(decoded), decoded.Cols, decoded.Rows, decoded.Channels, options);
+                    byte[] rgb = OpenCvVisualInputFactory.CopyRowsAndConvertChannels(decoded, options);
                     int canvasWidth = profile.Processor.ModelSize.Width;
                     int canvasHeight = profile.Processor.ModelSize.Height;
                     int shortest = Math.Min(canvasWidth, canvasHeight);
@@ -104,6 +104,28 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 return new PreparedDocument(profile, prepared);
             }
             catch { foreach (PreparedDocumentPage page in prepared) page.Dispose(); throw; }
+        }
+
+        /// <summary>Creates independently executable single-page documents for bounded page-batch inference; partial documents are disposed on failure. / 为受限页面批量推理创建可独立执行的单页 Document；失败时释放部分 Document。</summary>
+        /// <remarks>This method preserves a model's single-page contract. The returned list order is the source-page order, while every child document has its own zero-based model-local page. / 本方法保留模型的单页合同；返回列表顺序即源页面顺序，而每个子 Document 都拥有自己的模型局部第零页。</remarks>
+        public IReadOnlyList<PreparedDocument> CreatePageBatch(IEnumerable<OpenCvImageSource> pages, DocumentUnderstandingProfile profile, int maximumPages = 256, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (pages == null || profile == null) throw new ArgumentNullException(pages == null ? nameof(pages) : nameof(profile));
+            if (maximumPages <= 0) throw new ArgumentOutOfRangeException(nameof(maximumPages));
+            var sources = pages.ToList();
+            if (sources.Count == 0 || sources.Count > maximumPages) throw new VisualException(VisualErrorCodes.DocumentUnderstandingLimitExceeded, "Page batch capacity was exceeded.", profileId: profile.ProfileId);
+            var documents = new List<PreparedDocument>(sources.Count);
+            try
+            {
+                foreach (OpenCvImageSource source in sources)
+                {
+                    PreparedDocumentPage page = CreatePage(source, profile, cancellationToken: cancellationToken);
+                    try { documents.Add(new PreparedDocument(profile, new[] { page })); }
+                    catch { page.Dispose(); throw; }
+                }
+                return documents.AsReadOnly();
+            }
+            catch { foreach (PreparedDocument document in documents) document.Dispose(); throw; }
         }
     }
 }

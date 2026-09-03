@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JYPPX.DeploySharp.Backends.OnnxRuntime.Internal;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Models;
@@ -16,7 +17,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         /// <summary>Gets the stable ONNX Runtime backend identifier. / 获取稳定的 ONNX Runtime 后端标识。</summary>
         public static BackendId BackendId { get; } = new BackendId("onnxruntime");
 
-        /// <summary>Initializes a CPU-only managed provider. Native runtime selection remains application-owned. / 初始化仅 CPU 的托管 Provider；原生运行时选择仍由应用负责。</summary>
+        /// <summary>Initializes a managed provider. Native runtime selection remains application-owned; CUDA requires a matching official GPU runtime package. / 初始化托管 Provider；原生运行时选择仍由应用负责，CUDA 需要匹配的官方 GPU 运行时包。</summary>
         public OnnxRuntimeBackendProvider(OnnxRuntimeOptions? options = null)
         {
             _options = options ?? OnnxRuntimeOptions.Default;
@@ -26,7 +27,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         /// <summary>Gets verified format and managed execution capabilities. / 获取已验证的格式与托管执行能力。</summary>
         public BackendDescriptor Descriptor { get; }
 
-        /// <summary>Determines whether a CPU ONNX session can satisfy the request. / 确定 CPU ONNX 会话是否能够满足请求。</summary>
+        /// <summary>Determines whether an ONNX session can satisfy the request. / 确定 ONNX 会话是否能够满足请求。</summary>
         public bool CanCreate(ModelArtifact artifact, BackendRequest request)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -34,11 +35,18 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             ThrowIfDisposed();
             if (request.BackendId.HasValue && request.BackendId.Value != BackendId) return false;
             if (!string.Equals(artifact.Format, "onnx", StringComparison.Ordinal)) return false;
-            if (!IsCpu(request.Device)) return false;
+            if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cpu)
+            {
+                if (!IsCpu(request.Device)) return false;
+            }
+            else if (!IsCuda(request.Device))
+            {
+                return false;
+            }
             return Descriptor.Supports(request.RequiredCapabilities);
         }
 
-        /// <summary>Validates and loads a local ONNX model into a caller-owned session. / 验证并加载本地 ONNX 模型，返回调用方持有的会话。</summary>
+        /// <summary>Validates and loads a local ONNX model into a caller-owned session or independent session pool. / 验证并加载本地 ONNX 模型，返回调用方持有的会话或彼此独立的会话池。</summary>
         public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, CoreSessionOptions options)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -47,27 +55,34 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             ThrowIfDisposed();
             if (!CanCreate(artifact, request))
             {
-                if (!IsCpu(request.Device)) throw new OnnxRuntimeBackendException(OnnxRuntimeErrorCodes.ConfigurationInvalid, "This package has verified only the CPU execution provider; request device 'cpu'.", modelId: artifact.ModelId, operation: "configure", technicalDetails: "device=" + request.Device);
+                string expectedDevice = _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? "cuda" : "cpu";
+                if ((_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cpu && !IsCpu(request.Device)) || (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda && !IsCuda(request.Device)))
+                {
+                    throw new OnnxRuntimeBackendException(OnnxRuntimeErrorCodes.ConfigurationInvalid, "The configured ONNX Runtime execution provider requires request device '" + expectedDevice + "'.", modelId: artifact.ModelId, operation: "configure", technicalDetails: "device=" + request.Device);
+                }
                 throw new BackendNotCompatibleException(artifact.ModelId, request.BackendId ?? BackendId);
             }
             string modelPath = OnnxModelArtifactValidator.Validate(artifact);
             OnnxRuntimeNativePreflight.Validate(artifact);
-            Microsoft.ML.OnnxRuntime.SessionOptions? nativeOptions = null;
-            InferenceSession? nativeSession = null;
             try
             {
-                nativeOptions = CreateNativeOptions(options, artifact);
-                nativeSession = new InferenceSession(modelPath, nativeOptions);
-                var session = new OnnxRuntimeSession(artifact, nativeSession, options.MaxConcurrency, _options.IntraOpThreads != 1);
-                nativeSession = null;
-                return session;
+                if (options.MaxConcurrency == 1) return CreateSingleSession(modelPath, artifact, options);
+                var sessions = new List<OnnxRuntimeSession>(options.MaxConcurrency);
+                try
+                {
+                    for (int index = 0; index < options.MaxConcurrency; index++) sessions.Add(CreateSingleSession(modelPath, artifact, options));
+                    return new OnnxRuntimeSessionPool(sessions);
+                }
+                catch
+                {
+                    foreach (OnnxRuntimeSession session in sessions) session.Dispose();
+                    throw;
+                }
             }
             catch (Exception exception)
             {
-                nativeSession?.Dispose();
                 throw OnnxRuntimeExceptionMapper.Map(exception, artifact, "load");
             }
-            finally { nativeOptions?.Dispose(); }
         }
 
         /// <summary>Disposes this provider without disposing sessions already returned to callers. / 释放当前 Provider，但不释放已返回给调用方的会话。</summary>
@@ -97,8 +112,34 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 value.ProfileOutputPathPrefix = _options.ProfilingOutputPathPrefix;
                 value.EnableProfiling = true;
             }
-            value.AppendExecutionProvider_CPU(_options.EnableCpuMemoryArena ? 1 : 0);
+            if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda)
+            {
+                value.AppendExecutionProvider_CUDA(_options.CudaDeviceId);
+            }
+            else
+            {
+                value.AppendExecutionProvider_CPU(_options.EnableCpuMemoryArena ? 1 : 0);
+            }
             return value;
+        }
+
+        private OnnxRuntimeSession CreateSingleSession(string modelPath, ModelArtifact artifact, CoreSessionOptions options)
+        {
+            Microsoft.ML.OnnxRuntime.SessionOptions? nativeOptions = null;
+            InferenceSession? nativeSession = null;
+            try
+            {
+                nativeOptions = CreateNativeOptions(options, artifact);
+                nativeSession = new InferenceSession(modelPath, nativeOptions);
+                var session = new OnnxRuntimeSession(artifact, nativeSession, 1, _options.IntraOpThreads != 1);
+                nativeSession = null;
+                return session;
+            }
+            finally
+            {
+                nativeSession?.Dispose();
+                nativeOptions?.Dispose();
+            }
         }
 
         private static GraphOptimizationLevel Map(OnnxRuntimeGraphOptimization value)
@@ -117,6 +158,11 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         {
             if (string.IsNullOrWhiteSpace(device)) return true;
             return string.Equals(device!.Trim(), "cpu", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsCuda(string? device)
+        {
+            return !string.IsNullOrWhiteSpace(device) && string.Equals(device!.Trim(), "cuda", StringComparison.OrdinalIgnoreCase);
         }
 
         private void ThrowIfDisposed()

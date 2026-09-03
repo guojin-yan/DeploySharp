@@ -5,6 +5,12 @@ using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual
 {
+    internal interface ISequenceArgMaxVisualDecoder
+    {
+        public SequenceArgMaxRequest CreateSequenceArgMaxRequest();
+        public object DecodeSequenceArgMax(SequenceArgMaxResult result, PreparedVisualInput input, VisualModelProfile profile, System.Threading.CancellationToken cancellationToken);
+    }
+
     /// <summary>Identifies CTC output dimension order. / 标识 CTC 输出维度顺序。</summary>
     public enum CtcTensorLayout
     {
@@ -119,7 +125,7 @@ namespace JYPPX.DeploySharp.Visual
     }
 
     /// <summary>Decodes strict named CTC tensors using deterministic greedy selection. / 使用确定性贪心选择解码严格命名的 CTC 张量。</summary>
-    public sealed class GreedyCtcDecoder : IVisualDecoder
+    public sealed class GreedyCtcDecoder : IVisualDecoder, ISequenceArgMaxVisualDecoder
     {
         /// <summary>Initializes a greedy CTC decoder. / 初始化贪心 CTC 解码器。</summary>
         public GreedyCtcDecoder(CtcOutputSchema schema, OcrCharacterSet characterSet, CtcDecoderOptions options)
@@ -162,13 +168,114 @@ namespace JYPPX.DeploySharp.Visual
             if (classes != ExpectedClassCount) throw Failure(context, VisualErrorCodes.TensorInvalid, "CTC class dimension does not match character set plus reserved classes.", Schema.OutputName, "classes=" + classes + ";expected=" + ExpectedClassCount);
             if (tensor.Length != checked((long)batch * time * classes)) throw Failure(context, VisualErrorCodes.TensorInvalid, "CTC tensor element count is inconsistent with shape.", Schema.OutputName, shape.ToString());
             long workspace = tensor.ElementType == TensorElementType.Float64 ? checked(tensor.Length * sizeof(float)) : 0;
-            workspace = checked(workspace + checked((long)classes * sizeof(double)));
+            if (Options.ApplySoftmax) workspace = checked(workspace + checked((long)classes * sizeof(double)));
             if (workspace > Options.MaximumWorkspaceBytes) throw Failure(context, VisualErrorCodes.DecodeFailed, "CTC workspace exceeds its configured bound.", Schema.OutputName, "workspaceBytes=" + workspace);
-            float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
+            float[] values = Options.ApplySoftmax
+                ? VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName)
+                : VisualTensorReader.ReadScoresForFusedValidation(tensor, context.Profile.ProfileId, Schema.OutputName);
             var results = new List<RecognizedText>(batch);
-            var probabilities = new double[classes];
+            double[] probabilities = Options.ApplySoftmax ? new double[classes] : Array.Empty<double>();
             for (int batchIndex = 0; batchIndex < batch; batchIndex++) results.Add(DecodeSequence(values, batchIndex, batch, time, classes, probabilities, context));
-            return new TextRecognitionBatchResult(results);
+            return TextRecognitionBatchResult.CreateDecoded(results);
+        }
+
+        SequenceArgMaxRequest ISequenceArgMaxVisualDecoder.CreateSequenceArgMaxRequest()
+        {
+            SequenceTensorLayout layout = Schema.Layout == CtcTensorLayout.BatchTimeClasses
+                ? SequenceTensorLayout.BatchTimeClasses
+                : SequenceTensorLayout.TimeBatchClasses;
+            return new SequenceArgMaxRequest(
+                Schema.OutputName,
+                layout,
+                ExpectedClassCount,
+                Options.ApplySoftmax,
+                requireUnitInterval: !Options.ApplySoftmax,
+                Options.MaximumBatch,
+                Options.MaximumSequenceLength);
+        }
+
+        object ISequenceArgMaxVisualDecoder.DecodeSequenceArgMax(SequenceArgMaxResult result, PreparedVisualInput input, VisualModelProfile profile, System.Threading.CancellationToken cancellationToken)
+        {
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (result.Batch != input.BatchSize) throw ReducedFailure(profile, VisualErrorCodes.TensorInvalid, "CTC output batch does not match prepared input batch.", "output=" + result.Batch + ";input=" + input.BatchSize);
+            if (result.Batch > Options.MaximumBatch) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "CTC batch exceeds its configured bound.", "batch=" + result.Batch);
+            if (result.Time > Options.MaximumSequenceLength) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "CTC sequence length exceeds its configured bound.", "time=" + result.Time);
+            if (result.Classes != ExpectedClassCount) throw ReducedFailure(profile, VisualErrorCodes.TensorInvalid, "CTC class dimension does not match character set plus reserved classes.", "classes=" + result.Classes + ";expected=" + ExpectedClassCount);
+            var results = new List<RecognizedText>(result.Batch);
+            for (int batchIndex = 0; batchIndex < result.Batch; batchIndex++)
+            {
+                int invalidOffset = result.GetInvalidOffset(batchIndex);
+                if (invalidOffset >= 0)
+                {
+                    int timestep = invalidOffset / result.Classes;
+                    int classIndex = invalidOffset % result.Classes;
+                    string message = Options.ApplySoftmax
+                        ? "CTC logits must be finite."
+                        : "CTC probabilities must be finite and in [0,1] when softmax is disabled.";
+                    throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, message, "batch=" + batchIndex + ";time=" + timestep + ";class=" + classIndex);
+                }
+                results.Add(DecodeReducedSequence(result, batchIndex, profile, cancellationToken));
+            }
+            return TextRecognitionBatchResult.CreateDecoded(results);
+        }
+
+        private RecognizedText DecodeReducedSequence(SequenceArgMaxResult result, int batchIndex, VisualModelProfile profile, System.Threading.CancellationToken cancellationToken)
+        {
+            var tokens = new List<OcrToken>(result.Time);
+            var text = new StringBuilder(Math.Min(result.Time, Options.MaximumCharacters));
+            int previousClass = -1;
+            int emittedCount = 0;
+            double confidenceSum = 0;
+            double confidenceLogSum = 0;
+            float minimum = 1;
+            for (int timestep = 0; timestep < result.Time; timestep++)
+            {
+                if ((timestep & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
+                int selected = result.GetClassIndex(batchIndex, timestep);
+                float confidence = result.GetConfidence(batchIndex, timestep);
+                if (selected < 0 || selected >= result.Classes) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "Backend sequence argmax returned an invalid class index.", "batch=" + batchIndex + ";time=" + timestep + ";class=" + selected);
+                if (!(confidence >= 0 && confidence <= 1)) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "Backend sequence argmax returned an invalid confidence.", "batch=" + batchIndex + ";time=" + timestep + ";confidence=" + confidence.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                bool blank = selected == Options.BlankIndex;
+                bool unknown = Options.UnknownClassIndex.HasValue && selected == Options.UnknownClassIndex.Value;
+                bool repeated = Options.CollapseRepeats && !blank && selected == previousClass;
+                bool emitted = false;
+                string? tokenText = null;
+                if (blank)
+                {
+                    if (!Options.RemoveBlank) { tokenText = Options.BlankText; emitted = true; }
+                }
+                else if (!repeated && unknown)
+                {
+                    if (Options.UnknownBehavior == CtcUnknownTokenBehavior.Throw) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "CTC selected the explicitly reserved unknown class.", "batch=" + batchIndex + ";time=" + timestep);
+                    if (Options.UnknownBehavior == CtcUnknownTokenBehavior.Replace) { tokenText = Options.UnknownReplacement; emitted = true; }
+                }
+                else if (!repeated)
+                {
+                    tokenText = CharacterSet.GetCharacter(CharacterIndex(selected));
+                    emitted = true;
+                }
+
+                if (emitted)
+                {
+                    emittedCount++;
+                    if (emittedCount > Options.MaximumCharacters) throw ReducedFailure(profile, VisualErrorCodes.DecodeFailed, "CTC emitted character count exceeds its configured bound.", "batch=" + batchIndex);
+                    text.Append(tokenText);
+                    confidenceSum += confidence;
+                    confidenceLogSum += Math.Log(Math.Max(confidence, 1e-30f));
+                    minimum = Math.Min(minimum, confidence);
+                }
+                tokens.Add(new OcrToken(timestep, selected, confidence, tokenText, blank, repeated, unknown, emitted));
+                previousClass = selected;
+            }
+            float aggregate = emittedCount == 0 ? 0 : Options.ConfidenceAggregation == CtcConfidenceAggregation.Minimum
+                ? minimum
+                : Options.ConfidenceAggregation == CtcConfidenceAggregation.GeometricMean
+                    ? checked((float)Math.Exp(confidenceLogSum / emittedCount))
+                    : checked((float)(confidenceSum / emittedCount));
+            return RecognizedText.CreateDecoded(batchIndex, text.ToString(), aggregate, tokens, CharacterSet.Id, CharacterSet.Version, CharacterSet.Sha256);
         }
 
         private RecognizedText DecodeSequence(float[] values, int batchIndex, int batch, int time, int classes, double[] probabilities, VisualDecodeContext context)
@@ -183,14 +290,19 @@ namespace JYPPX.DeploySharp.Visual
             for (int timestep = 0; timestep < time; timestep++)
             {
                 if ((timestep & 31) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                int rowOffset = Schema.Layout == CtcTensorLayout.BatchTimeClasses
+                    ? checked(((batchIndex * time + timestep) * classes))
+                    : checked(((timestep * batch + batchIndex) * classes));
                 int selected = 0;
-                float selectedRaw = Value(values, batchIndex, timestep, 0, batch, time, classes);
+                float selectedRaw = values[rowOffset];
+                if (!Options.ApplySoftmax) ValidateProbability(selectedRaw, batchIndex, timestep, 0, context);
                 for (int classIndex = 1; classIndex < classes; classIndex++)
                 {
-                    float candidate = Value(values, batchIndex, timestep, classIndex, batch, time, classes);
+                    float candidate = values[rowOffset + classIndex];
+                    if (!Options.ApplySoftmax) ValidateProbability(candidate, batchIndex, timestep, classIndex, context);
                     if (candidate > selectedRaw) { selectedRaw = candidate; selected = classIndex; }
                 }
-                float confidence = Options.ApplySoftmax ? SoftmaxConfidence(values, batchIndex, timestep, selected, batch, time, classes, probabilities) : Probability(values, batchIndex, timestep, selected, batch, time, classes, context);
+                float confidence = Options.ApplySoftmax ? SoftmaxConfidence(values, rowOffset, selected, classes, probabilities) : selectedRaw;
                 bool blank = selected == Options.BlankIndex;
                 bool unknown = Options.UnknownClassIndex.HasValue && selected == Options.UnknownClassIndex.Value;
                 bool repeated = Options.CollapseRepeats && !blank && selected == previousClass;
@@ -228,26 +340,21 @@ namespace JYPPX.DeploySharp.Visual
                 : Options.ConfidenceAggregation == CtcConfidenceAggregation.GeometricMean
                     ? checked((float)Math.Exp(confidenceLogSum / emittedCount))
                     : checked((float)(confidenceSum / emittedCount));
-            return new RecognizedText(batchIndex, text.ToString(), aggregate, tokens, CharacterSet.Id, CharacterSet.Version, CharacterSet.Sha256);
+            return RecognizedText.CreateDecoded(batchIndex, text.ToString(), aggregate, tokens, CharacterSet.Id, CharacterSet.Version, CharacterSet.Sha256);
         }
 
-        private float SoftmaxConfidence(float[] values, int batchIndex, int timestep, int selected, int batch, int time, int classes, double[] probabilities)
+        private float SoftmaxConfidence(float[] values, int rowOffset, int selected, int classes, double[] probabilities)
         {
-            double maximum = Value(values, batchIndex, timestep, 0, batch, time, classes);
-            for (int classIndex = 1; classIndex < classes; classIndex++) maximum = Math.Max(maximum, Value(values, batchIndex, timestep, classIndex, batch, time, classes));
+            double maximum = values[rowOffset];
+            for (int classIndex = 1; classIndex < classes; classIndex++) maximum = Math.Max(maximum, values[rowOffset + classIndex]);
             double sum = 0;
-            for (int classIndex = 0; classIndex < classes; classIndex++) { double value = Math.Exp(Value(values, batchIndex, timestep, classIndex, batch, time, classes) - maximum); probabilities[classIndex] = value; sum += value; }
+            for (int classIndex = 0; classIndex < classes; classIndex++) { double value = Math.Exp(values[rowOffset + classIndex] - maximum); probabilities[classIndex] = value; sum += value; }
             return checked((float)(probabilities[selected] / sum));
         }
 
-        private float Probability(float[] values, int batchIndex, int timestep, int selected, int batch, int time, int classes, VisualDecodeContext context)
+        private void ValidateProbability(float value, int batchIndex, int timestep, int classIndex, VisualDecodeContext context)
         {
-            for (int classIndex = 0; classIndex < classes; classIndex++)
-            {
-                float value = Value(values, batchIndex, timestep, classIndex, batch, time, classes);
-                if (value < 0 || value > 1) throw Failure(context, VisualErrorCodes.DecodeFailed, "CTC probabilities must be in [0,1] when softmax is disabled.", Schema.OutputName, "batch=" + batchIndex + ";time=" + timestep + ";class=" + classIndex);
-            }
-            return Value(values, batchIndex, timestep, selected, batch, time, classes);
+            if (!(value >= 0 && value <= 1)) throw Failure(context, VisualErrorCodes.DecodeFailed, "CTC probabilities must be finite and in [0,1] when softmax is disabled.", Schema.OutputName, "batch=" + batchIndex + ";time=" + timestep + ";class=" + classIndex);
         }
 
         private int CharacterIndex(int classIndex)
@@ -259,15 +366,8 @@ namespace JYPPX.DeploySharp.Visual
             return index;
         }
 
-        private float Value(float[] values, int batchIndex, int timestep, int classIndex, int batch, int time, int classes)
-        {
-            int offset = Schema.Layout == CtcTensorLayout.BatchTimeClasses
-                ? checked(((batchIndex * time + timestep) * classes) + classIndex)
-                : checked(((timestep * batch + batchIndex) * classes) + classIndex);
-            return values[offset];
-        }
-
         private static ITensor Required(VisualDecodeContext context, string name) { try { return context.Outputs.GetRequired(name); } catch (KeyNotFoundException exception) { throw Failure(context, VisualErrorCodes.TensorInvalid, "The required CTC output is missing.", name, null, exception); } }
         private static VisualException Failure(VisualDecodeContext context, string code, string message, string? tensorName = null, string? details = null, Exception? exception = null) => new VisualException(code, message, exception, context.Profile.ProfileId, tensorName, modelId: context.Profile.ModelId, technicalDetails: details);
+        private VisualException ReducedFailure(VisualModelProfile profile, string code, string message, string? details = null) => new VisualException(code, message, profileId: profile.ProfileId, tensorName: Schema.OutputName, modelId: profile.ModelId, technicalDetails: details);
     }
 }

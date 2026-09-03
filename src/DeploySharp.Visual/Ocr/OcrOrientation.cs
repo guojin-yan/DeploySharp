@@ -208,6 +208,25 @@ namespace JYPPX.DeploySharp.Visual
         }
     }
 
+    /// <summary>Contains owned orientation results for one dynamic batch. / 包含一个动态批次的自有方向结果。</summary>
+    public sealed class OcrOrientationBatchResult
+    {
+        private readonly IReadOnlyList<OcrOrientationResult> _items;
+
+        /// <summary>Initializes a non-empty orientation batch result. / 初始化非空方向批结果。</summary>
+        public OcrOrientationBatchResult(IEnumerable<OcrOrientationResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copy = new List<OcrOrientationResult>();
+            foreach (OcrOrientationResult item in items) copy.Add(item ?? throw new ArgumentException("Orientation results cannot contain null.", nameof(items)));
+            if (copy.Count == 0) throw new ArgumentException("Orientation batches cannot be empty.", nameof(items));
+            _items = new ReadOnlyCollection<OcrOrientationResult>(copy);
+        }
+
+        /// <summary>Gets results in input batch order. / 获取按输入批次顺序排列的结果。</summary>
+        public IReadOnlyList<OcrOrientationResult> Items => _items;
+    }
+
     /// <summary>Decodes a named two- or four-class orientation tensor without guessing class order. / 解码命名二分类或四分类方向张量，不猜测类别顺序。</summary>
     public sealed class OcrOrientationDecoder : IVisualDecoder
     {
@@ -219,7 +238,7 @@ namespace JYPPX.DeploySharp.Visual
         public OcrOrientationDecoderOptions Options { get; }
         /// <summary>Gets the OCR text-orientation classification task identifier. / 获取 OCR 文本方向分类任务标识。</summary>
         public VisualTaskId Task => VisualTaskId.TextOrientationClassification;
-        /// <summary>Decodes one strict named orientation tensor into an owned orientation result. / 将一个严格命名的方向张量解码为自有方向结果。</summary>
+        /// <summary>Decodes a strict named orientation tensor into one result or a batch result. / 将严格命名的方向张量解码为单个结果或批结果。</summary>
         public object Decode(VisualDecodeContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
@@ -231,26 +250,36 @@ namespace JYPPX.DeploySharp.Visual
             if (tensor.ElementType != Schema.ElementType || !ShapeMatches(tensor.Shape)) throw Failure(context, "The orientation output type or shape does not match its schema.", tensorName: Schema.OutputName);
             float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
             int classCount = Schema.ClassCount;
-            if (values.Length < classCount) throw Failure(context, "The orientation output contains fewer values than its declared class count.", tensorName: Schema.OutputName);
-            var scores = new float[classCount];
-            double sum = 0;
-            if (Schema.Semantics == OcrOrientationValueSemantics.Probability)
+            int batch = context.Input.BatchSize;
+            if (values.Length != checked(batch * classCount)) throw Failure(context, "The orientation output element count does not match its batch and class dimensions.", tensorName: Schema.OutputName);
+            if (Options.MaximumResultBytes < checked(values.Length * sizeof(float))) throw new VisualException(VisualErrorCodes.OcrOrientationLimitExceeded, "The OCR orientation batch result exceeds its configured byte limit.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, modelId: context.Profile.ModelId, technicalDetails: "requiredBytes=" + checked(values.Length * sizeof(float)).ToString(CultureInfo.InvariantCulture));
+            var items = new List<OcrOrientationResult>(batch);
+            for (int batchIndex = 0; batchIndex < batch; batchIndex++)
             {
-                for (int index = 0; index < classCount; index++) { if (Options.ValidateProbabilities && (values[index] < 0 || values[index] > 1)) throw Failure(context, "Orientation probabilities must be in [0,1].", tensorName: Schema.OutputName, details: "index=" + index); scores[index] = values[index]; sum += scores[index]; }
-                if (Options.ValidateProbabilities && Math.Abs(sum - 1.0) > 0.001) throw Failure(context, "Orientation probabilities must sum to one.", tensorName: Schema.OutputName);
+                context.CancellationToken.ThrowIfCancellationRequested();
+                var scores = new float[classCount];
+                int offset = checked(batchIndex * classCount);
+                double sum = 0;
+                if (Schema.Semantics == OcrOrientationValueSemantics.Probability)
+                {
+                    for (int index = 0; index < classCount; index++) { float value = values[offset + index]; if (Options.ValidateProbabilities && (value < 0 || value > 1)) throw Failure(context, "Orientation probabilities must be in [0,1].", tensorName: Schema.OutputName, details: "batch=" + batchIndex + ";index=" + index); scores[index] = value; sum += value; }
+                    if (Options.ValidateProbabilities && Math.Abs(sum - 1.0) > 0.001) throw Failure(context, "Orientation probabilities must sum to one.", tensorName: Schema.OutputName, details: "batch=" + batchIndex);
+                }
+                else
+                {
+                    double max = double.NegativeInfinity;
+                    for (int index = 0; index < classCount; index++) max = Math.Max(max, values[offset + index]);
+                    if (Schema.ApplySoftmax) { double denominator = 0; for (int index = 0; index < classCount; index++) denominator += Math.Exp(values[offset + index] - max); for (int index = 0; index < classCount; index++) scores[index] = (float)(Math.Exp(values[offset + index] - max) / denominator); }
+                    else for (int index = 0; index < classCount; index++) scores[index] = values[offset + index];
+                }
+                int selected = 0;
+                for (int index = 1; index < classCount; index++) if (scores[index] > scores[selected] + Options.TieEpsilon) selected = index;
+                bool rejected = scores[selected] < Options.RejectionThreshold;
+                items.Add(new OcrOrientationResult(rejected ? TextOrientation.Degrees0 : Schema.ClassToOrientation[selected], selected, scores[selected], scores, rejected, context.Profile.ProfileId, context.Profile.ModelId, context.Profile.ModelId.IsEmpty ? default(BackendId) : new BackendId("unknown"), context.Input.SourceSize, context.Input.ModelSize, TimeSpan.Zero, rejected ? new[] { "ocr.orientation.rejected" } : Array.Empty<string>()));
             }
-            else
-            {
-                if (Schema.ApplySoftmax) { double max = values.Take(classCount).Max(); double denominator = 0; for (int index = 0; index < classCount; index++) denominator += Math.Exp(values[index] - max); for (int index = 0; index < classCount; index++) scores[index] = (float)(Math.Exp(values[index] - max) / denominator); }
-                else for (int index = 0; index < classCount; index++) scores[index] = values[index];
-            }
-            int selected = 0;
-            for (int index = 1; index < classCount; index++) { context.CancellationToken.ThrowIfCancellationRequested(); if (scores[index] > scores[selected] + Options.TieEpsilon) selected = index; }
-            if (Options.MaximumResultBytes < checked(scores.Length * sizeof(float))) throw new VisualException(VisualErrorCodes.OcrOrientationLimitExceeded, "The OCR orientation result exceeds its configured byte limit.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, modelId: context.Profile.ModelId, technicalDetails: "requiredBytes=" + checked(scores.Length * sizeof(float)).ToString(CultureInfo.InvariantCulture));
-            bool rejected = scores[selected] < Options.RejectionThreshold;
-            return new OcrOrientationResult(rejected ? TextOrientation.Degrees0 : Schema.ClassToOrientation[selected], selected, scores[selected], scores, rejected, context.Profile.ProfileId, context.Profile.ModelId, context.Profile.ModelId.IsEmpty ? default(BackendId) : new BackendId("unknown"), context.Input.SourceSize, context.Input.ModelSize, TimeSpan.Zero, rejected ? new[] { "ocr.orientation.rejected" } : Array.Empty<string>());
+            return batch == 1 ? items[0] : new OcrOrientationBatchResult(items);
         }
-        private bool ShapeMatches(TensorShape shape) => shape.Rank == Schema.OutputShape.Rank && (shape.Rank == 1 ? shape[0] == Schema.ClassCount : shape[0] == 1 && shape[1] == Schema.ClassCount);
+        private bool ShapeMatches(TensorShape shape) => shape.Rank == Schema.OutputShape.Rank && (shape.Rank == 1 ? shape[0] == Schema.ClassCount : shape[1] == Schema.ClassCount && (shape[0] == 1 || Schema.AllowDynamicBatch && shape[0] > 0));
         private static VisualException Failure(VisualDecodeContext context, string message, Exception? inner = null, string? tensorName = null, string? details = null) => new VisualException(VisualErrorCodes.OcrOrientationContractInvalid, message, inner, context.Profile.ProfileId, tensorName, modelId: context.Profile.ModelId, technicalDetails: details);
     }
 
@@ -262,6 +291,8 @@ namespace JYPPX.DeploySharp.Visual
         public OcrOrientationPipeline(BackendRegistry backendRegistry, VisualProfileSelection selection, BackendRequest request, SessionOptions? sessionOptions = null) { _pipeline = new VisualPipeline(backendRegistry ?? throw new ArgumentNullException(nameof(backendRegistry)), selection ?? throw new ArgumentNullException(nameof(selection)), request ?? throw new ArgumentNullException(nameof(request)), sessionOptions); Selection = selection; }
         /// <summary>Gets the shared visual selection. / 获取共享视觉选择。</summary>
         public VisualProfileSelection Selection { get; }
+        /// <summary>Gets the number of independently-created backend sessions available to this orientation pipeline. / 获取此方向 Pipeline 可用的独立后端 Session 数量。</summary>
+        public int MaximumConcurrency => _pipeline.MaximumConcurrency;
         /// <summary>Runs synchronous direction classification. / 同步运行方向分类。</summary>
         public OcrOrientationResult Run(PreparedVisualInput input, VisualExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -270,12 +301,20 @@ namespace JYPPX.DeploySharp.Visual
         }
         /// <summary>Runs asynchronous direction classification. / 异步运行方向分类。</summary>
         public Task<OcrOrientationResult> RunAsync(PreparedVisualInput input, VisualExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken)) => RunCoreAsync(input, options, cancellationToken);
+        /// <summary>Runs dynamic-batch orientation inference and returns results in input order. / 运行动态批方向推理并按输入顺序返回结果。</summary>
+        public Task<IReadOnlyList<OcrOrientationResult>> RunBatchAsync(PreparedVisualInput input, VisualExecutionOptions? options = null, CancellationToken cancellationToken = default(CancellationToken)) => RunBatchCoreAsync(input, options, cancellationToken);
         /// <summary>Idempotently releases the owned Visual inference pipeline. / 幂等释放所拥有的 Visual 推理 Pipeline。</summary>
         public void Dispose() => _pipeline.Dispose();
         private async Task<OcrOrientationResult> RunCoreAsync(PreparedVisualInput input, VisualExecutionOptions? options, CancellationToken token)
         {
             VisualInferenceResult inference = await _pipeline.RunAsync(input, options, token).ConfigureAwait(false);
             return inference.GetValue<OcrOrientationResult>().WithExecution(inference.BackendId, inference.Timing.Total);
+        }
+        private async Task<IReadOnlyList<OcrOrientationResult>> RunBatchCoreAsync(PreparedVisualInput input, VisualExecutionOptions? options, CancellationToken token)
+        {
+            VisualInferenceResult inference = await _pipeline.RunAsync(input, options, token).ConfigureAwait(false);
+            if (inference.Value is OcrOrientationBatchResult batch) { var items = new List<OcrOrientationResult>(batch.Items.Count); foreach (OcrOrientationResult item in batch.Items) items.Add(item.WithExecution(inference.BackendId, inference.Timing.Total)); return items.AsReadOnly(); }
+            return new[] { inference.GetValue<OcrOrientationResult>().WithExecution(inference.BackendId, inference.Timing.Total) };
         }
     }
 

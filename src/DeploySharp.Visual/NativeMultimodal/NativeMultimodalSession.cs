@@ -113,34 +113,47 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (image == null) throw new ArgumentNullException(nameof(image));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    ValidatePreparedImage(image, Bundle.Profile);
-                    GenerativeVisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.VisionEncoder);
-                    var visionWatch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous ? await _vision.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, image.Input.Tensor), linked.Token).ConfigureAwait(false) : _vision.Run(InferenceInputs.Create(contract.Inputs[0].Name, image.Input.Tensor), linked.Token);
-                    visionWatch.Stop();
-                    ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
-                    Tensor<float> raw = CopyFiniteFloat(outputs.GetRequired("image_features"), contract.Outputs[0], Bundle.Profile.ProfileId);
-                    var packingWatch = Stopwatch.StartNew();
-                    Tensor<float> packed = NativeMultimodalImagePacker.Pack(raw, _imageNewline, image, Bundle.Profile.Processor);
-                    packingWatch.Stop();
-                    string sourceSha = image.Input.InputId ?? throw new VisualException(VisualErrorCodes.NativeMultimodalIdentityMismatch, "Set-image requires the exact encoded-source SHA256.", profileId: Bundle.Profile.ProfileId);
-                    var identity = new GenerativeVisionLanguageImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, Bundle.Profile.Processor.Identity, sourceSha, image.Input.SourceSize, new VisualSize(Bundle.Profile.Processor.PatchSize, Bundle.Profile.Processor.PatchSize));
-                    GenerativeVisionLanguageImageState featureState = Summarize(identity, "packed_image_features", packed, visionWatch.Elapsed);
-                    var publicState = new NativeMultimodalImageState(featureState, image.Grid, image.Input.BatchSize, image.PackedImageTokens, packingWatch.Elapsed);
-                    var state = new ImageState(packed, publicState);
-                    lock (_gate) { EnsureUsableLocked(); _imageState = state; _lastKvState = null; }
-                    return publicState;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Native multimodal image encoding failed.", exception, Bundle.Profile.ProfileId); }
-                finally { if (options.DisposeOwnedInputOnCompletion && image.Input.Ownership == PreparedInputOwnership.Owned) image.Dispose(); ExitOperation(); }
+                ValidatePreparedImage(image, Bundle.Profile);
+                GenerativeVisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.VisionEncoder);
+                var visionWatch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous ? await _vision.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, image.Input.Tensor), operationToken).ConfigureAwait(false) : _vision.Run(InferenceInputs.Create(contract.Inputs[0].Name, image.Input.Tensor), operationToken);
+                visionWatch.Stop();
+                ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
+                Tensor<float> raw = CopyFiniteFloat(outputs.GetRequired("image_features"), contract.Outputs[0], Bundle.Profile.ProfileId);
+                var packingWatch = Stopwatch.StartNew();
+                Tensor<float> packed = NativeMultimodalImagePacker.Pack(raw, _imageNewline, image, Bundle.Profile.Processor);
+                packingWatch.Stop();
+                string sourceSha = image.Input.InputId ?? throw new VisualException(VisualErrorCodes.NativeMultimodalIdentityMismatch, "Set-image requires the exact encoded-source SHA256.", profileId: Bundle.Profile.ProfileId);
+                var identity = new GenerativeVisionLanguageImageIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, Bundle.Profile.Processor.Identity, sourceSha, image.Input.SourceSize, new VisualSize(Bundle.Profile.Processor.PatchSize, Bundle.Profile.Processor.PatchSize));
+                GenerativeVisionLanguageImageState featureState = Summarize(identity, "packed_image_features", packed, visionWatch.Elapsed);
+                var publicState = new NativeMultimodalImageState(featureState, image.Grid, image.Input.BatchSize, image.PackedImageTokens, packingWatch.Elapsed);
+                var state = new ImageState(packed, publicState);
+                lock (_gate) { EnsureUsableLocked(); _imageState = state; _lastKvState = null; }
+                return publicState;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Native multimodal image encoding failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion && image.Input.Ownership == PreparedInputOwnership.Owned) image.Dispose();
+                ExitOperation();
             }
         }
 
@@ -149,29 +162,37 @@ namespace JYPPX.DeploySharp.Visual
             if (request == null) throw new ArgumentNullException(nameof(request));
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
             CancellationToken dispose = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, dispose))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = dispose;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    ImageState image;
-                    lock (_gate) { EnsureUsableLocked(); image = _imageState ?? throw new VisualException(VisualErrorCodes.NativeMultimodalStateInvalid, "Set-image must succeed before generation.", profileId: Bundle.Profile.ProfileId); }
-                    linked.Token.ThrowIfCancellationRequested();
-                    var tokenizeWatch = Stopwatch.StartNew();
-                    NativeMultimodalTokenSequence prompt = tokenizer.Encode(Bundle.Profile, request, image.PublicState.ImageTokenCount);
-                    tokenizeWatch.Stop();
-                    ValidatePrompt(prompt, tokenizer, Bundle.Profile, image);
-                    long[] promptIds = prompt.CopyTokenIds();
-                    GenerativeVisionLanguageArtifactContract embeddingContract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.TokenEmbedding);
-                    var embeddingWatch = Stopwatch.StartNew();
-                    Tensor<float> promptEmbeddings = await RunEmbeddingAsync(promptIds, embeddingContract, asynchronous, linked.Token).ConfigureAwait(false);
-                    embeddingWatch.Stop();
-                    TimeSpan embeddingTime = embeddingWatch.Elapsed;
-                    ReplaceImageSentinels(promptIds, promptEmbeddings, image.Features, Bundle.Profile);
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, dispose)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, dispose);
+                    operationToken = linked.Token;
+                }
+                ImageState image;
+                lock (_gate) { EnsureUsableLocked(); image = _imageState ?? throw new VisualException(VisualErrorCodes.NativeMultimodalStateInvalid, "Set-image must succeed before generation.", profileId: Bundle.Profile.ProfileId); }
+                operationToken.ThrowIfCancellationRequested();
+                var tokenizeWatch = Stopwatch.StartNew();
+                NativeMultimodalTokenSequence prompt = tokenizer.Encode(Bundle.Profile, request, image.PublicState.ImageTokenCount);
+                tokenizeWatch.Stop();
+                ValidatePrompt(prompt, tokenizer, Bundle.Profile, image);
+                long[] promptIds = prompt.CopyTokenIds();
+                GenerativeVisionLanguageArtifactContract embeddingContract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.TokenEmbedding);
+                var embeddingWatch = Stopwatch.StartNew();
+                Tensor<float> promptEmbeddings = await RunEmbeddingAsync(promptIds, embeddingContract, asynchronous, operationToken, true).ConfigureAwait(false);
+                embeddingWatch.Stop();
+                TimeSpan embeddingTime = embeddingWatch.Elapsed;
+                ReplaceImageSentinels(promptIds, promptEmbeddings, image.Features, Bundle.Profile);
 
-                    List<Tensor<float>> past = CreateEmptyPast(Bundle.Profile.KvCache);
-                    long[] attentionMask = Enumerable.Repeat(1L, promptIds.Length).ToArray();
-                    long[] positionIds = Enumerable.Range(0, promptIds.Length).Select(value => (long)value).ToArray();
+                List<Tensor<float>> past = CreateEmptyPast(Bundle.Profile.KvCache);
+                long[] attentionMask = CreateOnes(promptIds.Length);
+                long[] positionIds = CreateRange(promptIds.Length);
                     var completion = new List<int>();
                     var tokenScores = new List<GenerativeTokenScore>();
                     var decodeTimes = new List<TimeSpan>();
@@ -180,11 +201,11 @@ namespace JYPPX.DeploySharp.Visual
                     bool emittedEos = false;
                     for (int step = 0; step < Bundle.Profile.Generation.MaximumTotalTokens; step++)
                     {
-                        linked.Token.ThrowIfCancellationRequested();
+                        operationToken.ThrowIfCancellationRequested();
                         GenerativeVisionLanguageArtifactContract decoderContract = Bundle.Profile.GetArtifact(GenerativeVisionLanguageArtifactRole.LanguageDecoder);
                         InferenceInputs decoderInputs = CreateDecoderInputs(attentionMask, positionIds, past, promptEmbeddings, Bundle.Profile);
                         var stepWatch = Stopwatch.StartNew();
-                        InferenceOutputs outputs = asynchronous ? await _decoder.RunAsync(decoderInputs, linked.Token).ConfigureAwait(false) : _decoder.Run(decoderInputs, linked.Token);
+                        InferenceOutputs outputs = asynchronous ? await _decoder.RunAsync(decoderInputs, operationToken).ConfigureAwait(false) : _decoder.Run(decoderInputs, operationToken);
                         stepWatch.Stop();
                         if (step == 0) prefillTime = stepWatch.Elapsed; else decodeTimes.Add(stepWatch.Elapsed);
                         ValidateOutputs(outputs, decoderContract, Bundle.Profile.ProfileId);
@@ -200,11 +221,11 @@ namespace JYPPX.DeploySharp.Visual
                         stream?.Invoke(new GenerationChunk(step, fragment, selected.TokenId, emittedEos ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.None));
                         if (emittedEos) break;
                         var nextEmbeddingWatch = Stopwatch.StartNew();
-                        promptEmbeddings = await RunEmbeddingAsync(new long[] { selected.TokenId }, embeddingContract, asynchronous, linked.Token).ConfigureAwait(false);
+                        promptEmbeddings = await RunEmbeddingAsync(new long[] { selected.TokenId }, embeddingContract, asynchronous, operationToken, false).ConfigureAwait(false);
                         nextEmbeddingWatch.Stop();
                         embeddingTime = embeddingTime.Add(nextEmbeddingWatch.Elapsed);
                         int position = checked(promptIds.Length + completion.Count - 1);
-                        attentionMask = Enumerable.Repeat(1L, position + 1).ToArray();
+                        attentionMask = CreateOnes(position + 1);
                         positionIds = new long[] { position };
                     }
                     var finalWatch = Stopwatch.StartNew();
@@ -220,19 +241,37 @@ namespace JYPPX.DeploySharp.Visual
                     var nativeTiming = new NativeMultimodalExecutionTiming(tokenizeWatch.Elapsed, embeddingTime, prefillTime, decodeTimes, finalWatch.Elapsed);
                     var result = new NativeMultimodalResult(common, kvSummary, nativeTiming);
                     lock (_gate) { EnsureUsableLocked(); _lastKvState = kvSummary; }
-                    return result;
-                }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw Failure("Native multimodal Prefill/KV generation failed.", exception, Bundle.Profile.ProfileId); }
-                finally { ExitOperation(); }
+                return result;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw Failure("Native multimodal Prefill/KV generation failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 
-        private async Task<Tensor<float>> RunEmbeddingAsync(long[] ids, GenerativeVisionLanguageArtifactContract contract, bool asynchronous, CancellationToken token)
+        private static long[] CreateOnes(int length)
         {
-            var input = new Tensor<long>(new TensorShape(1, ids.Length), (long[])ids.Clone(), TensorBufferOwnership.Transfer);
+            var values = new long[length];
+            for (int index = 0; index < values.Length; index++) values[index] = 1L;
+            return values;
+        }
+
+        private static long[] CreateRange(int length)
+        {
+            var values = new long[length];
+            for (int index = 0; index < values.Length; index++) values[index] = index;
+            return values;
+        }
+
+        private async Task<Tensor<float>> RunEmbeddingAsync(long[] ids, GenerativeVisionLanguageArtifactContract contract, bool asynchronous, CancellationToken token, bool copyInput)
+        {
+            var input = new Tensor<long>(new TensorShape(1, ids.Length), copyInput ? (long[])ids.Clone() : ids, TensorBufferOwnership.Transfer);
             InferenceOutputs outputs = asynchronous ? await _embedding.RunAsync(InferenceInputs.Create("input_ids", input), token).ConfigureAwait(false) : _embedding.Run(InferenceInputs.Create("input_ids", input), token);
             ValidateOutputs(outputs, contract, Bundle.Profile.ProfileId);
             return CopyFiniteFloat(outputs.GetRequired("inputs_embeds"), contract.Outputs[0], Bundle.Profile.ProfileId);
@@ -259,8 +298,8 @@ namespace JYPPX.DeploySharp.Visual
             if (past.Count != profile.KvCache.LayerCount * 2) throw new VisualException(VisualErrorCodes.NativeMultimodalStateInvalid, "KV tensor count differs from the profile.", profileId: profile.ProfileId);
             var values = new List<NamedTensor>
             {
-                new NamedTensor("attention_mask", new Tensor<long>(new TensorShape(1, attentionMask.Length), (long[])attentionMask.Clone(), TensorBufferOwnership.Transfer)),
-                new NamedTensor("position_ids", new Tensor<long>(new TensorShape(1, positionIds.Length), (long[])positionIds.Clone(), TensorBufferOwnership.Transfer))
+                new NamedTensor("attention_mask", new Tensor<long>(new TensorShape(1, attentionMask.Length), attentionMask, TensorBufferOwnership.Transfer)),
+                new NamedTensor("position_ids", new Tensor<long>(new TensorShape(1, positionIds.Length), positionIds, TensorBufferOwnership.Transfer))
             };
             for (int layer = 0; layer < profile.KvCache.LayerCount; layer++)
             {
@@ -284,18 +323,25 @@ namespace JYPPX.DeploySharp.Visual
             long? past = null;
             for (int layer = 0; layer < profile.KvCache.LayerCount; layer++)
             {
-                foreach (string name in new[] { profile.KvCache.PresentKey(layer), profile.KvCache.PresentValue(layer) })
-                {
-                    ITensor tensor = outputs.GetRequired(name);
-                    if (tensor.ElementType != TensorElementType.Float32 || tensor.Shape.Rank != 4 || tensor.Shape[0] != 1 || tensor.Shape[1] != profile.KvCache.KeyValueHeads || tensor.Shape[3] != profile.KvCache.HeadDimension || tensor.Shape[2] <= 0 || tensor.Shape[2] > profile.KvCache.MaximumPastTokens) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "A present KV tensor differs from the exact profile axes or capacity.", profileId: profile.ProfileId, tensorName: name);
-                    if (past.HasValue && past.Value != tensor.Shape[2]) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "Present KV tensors have inconsistent sequence lengths.", profileId: profile.ProfileId, tensorName: name);
-                    past = tensor.Shape[2];
-                    float[] values = ((float[])tensor.Buffer).ToArray();
-                    if (values.Any(value => float.IsNaN(value) || float.IsInfinity(value))) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "Present KV contains NaN or Infinity.", profileId: profile.ProfileId, tensorName: name);
-                    result.Add(new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer));
-                }
+                CopyPresentTensor(outputs, profile, profile.KvCache.PresentKey(layer), result, ref past);
+                CopyPresentTensor(outputs, profile, profile.KvCache.PresentValue(layer), result, ref past);
             }
             return result;
+        }
+
+        private static void CopyPresentTensor(InferenceOutputs outputs, NativeMultimodalProfile profile, string name, List<Tensor<float>> result, ref long? past)
+        {
+            ITensor tensor = outputs.GetRequired(name);
+            if (tensor.ElementType != TensorElementType.Float32 || tensor.Shape.Rank != 4 || tensor.Shape[0] != 1 || tensor.Shape[1] != profile.KvCache.KeyValueHeads || tensor.Shape[3] != profile.KvCache.HeadDimension || tensor.Shape[2] <= 0 || tensor.Shape[2] > profile.KvCache.MaximumPastTokens) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "A present KV tensor differs from the exact profile axes or capacity.", profileId: profile.ProfileId, tensorName: name);
+            if (past.HasValue && past.Value != tensor.Shape[2]) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "Present KV tensors have inconsistent sequence lengths.", profileId: profile.ProfileId, tensorName: name);
+            past = tensor.Shape[2];
+            float[] values = ((float[])tensor.Buffer).ToArray();
+            for (int index = 0; index < values.Length; index++)
+            {
+                float value = values[index];
+                if (float.IsNaN(value) || float.IsInfinity(value)) throw new VisualException(VisualErrorCodes.NativeMultimodalGenerationInvalid, "Present KV contains NaN or Infinity.", profileId: profile.ProfileId, tensorName: name);
+            }
+            result.Add(new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer));
         }
 
         private static SelectedToken SelectToken(ITensor logits, NativeMultimodalProfile profile, int step)
@@ -377,7 +423,11 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (tensor.ElementType != TensorElementType.Float32 || !GenerativeVisionLanguageHash.ShapeMatches(contract.ShapePattern, tensor.Shape) || tensor.Length > contract.MaximumElements) throw new VisualException(VisualErrorCodes.NativeMultimodalContractInvalid, "Runtime tensor shape/type/capacity differs from the profile.", profileId: profileId, tensorName: contract.Name);
             float[] values = ((float[])tensor.Buffer).ToArray();
-            if (values.Any(value => float.IsNaN(value) || float.IsInfinity(value))) throw new VisualException(VisualErrorCodes.NativeMultimodalContractInvalid, "Runtime tensor contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            for (int index = 0; index < values.Length; index++)
+            {
+                float value = values[index];
+                if (float.IsNaN(value) || float.IsInfinity(value)) throw new VisualException(VisualErrorCodes.NativeMultimodalContractInvalid, "Runtime tensor contains NaN or Infinity.", profileId: profileId, tensorName: contract.Name);
+            }
             return new Tensor<float>(new TensorShape(tensor.Shape.ToArray()), values, TensorBufferOwnership.Transfer);
         }
 

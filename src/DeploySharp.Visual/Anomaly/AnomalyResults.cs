@@ -25,7 +25,7 @@ namespace JYPPX.DeploySharp.Visual
             if ((long)width * height != values.LongLength) throw new ArgumentException("Map dimensions do not match the value count.", nameof(values));
             if (!Enum.IsDefined(typeof(AnomalyMapValueMode), valueMode)) throw new ArgumentOutOfRangeException(nameof(valueMode));
             if (!Enum.IsDefined(typeof(AnomalyNormalizationMode), normalization)) throw new ArgumentOutOfRangeException(nameof(normalization));
-            for (int index = 0; index < values.Length; index++) ValidateValue(values[index], valueMode, normalization, nameof(values));
+            if (!takeOwnership) for (int index = 0; index < values.Length; index++) ValidateValue(values[index], valueMode, normalization, nameof(values));
             SourceSize = sourceSize;
             Width = width;
             Height = height;
@@ -84,7 +84,7 @@ namespace JYPPX.DeploySharp.Visual
             if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
             if (values == null) throw new ArgumentNullException(nameof(values));
             if ((long)width * height != values.LongLength) throw new ArgumentException("Mask dimensions do not match the value count.", nameof(values));
-            for (int index = 0; index < values.Length; index++) if (values[index] > 1) throw new ArgumentException("Binary mask values must be zero or one.", nameof(values));
+            if (!takeOwnership) for (int index = 0; index < values.Length; index++) if (values[index] > 1) throw new ArgumentException("Binary mask values must be zero or one.", nameof(values));
             Width = width;
             Height = height;
             _values = takeOwnership ? values : (byte[])values.Clone();
@@ -112,9 +112,20 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class AnomalyDetectionResult
     {
         private readonly IReadOnlyList<PredictionWarning> _warnings;
+        private readonly int _anomalousPixelCount;
 
         /// <summary>Initializes a complete anomaly result. / 初始化完整异常结果。</summary>
         public AnomalyDetectionResult(float imageScore, AnomalyScoreMap? rawMap, AnomalyScoreMap normalizedMap, AnomalyBinaryMask mask, float threshold, ImageTransform transform, InferenceTiming? timing = null, IEnumerable<PredictionWarning>? warnings = null)
+            : this(imageScore, rawMap, normalizedMap, mask, threshold, transform, null, timing, warnings)
+        {
+        }
+
+        internal AnomalyDetectionResult(float imageScore, AnomalyScoreMap? rawMap, AnomalyScoreMap normalizedMap, AnomalyBinaryMask mask, float threshold, ImageTransform transform, int anomalousPixelCount, InferenceTiming? timing = null, IEnumerable<PredictionWarning>? warnings = null)
+            : this(imageScore, rawMap, normalizedMap, mask, threshold, transform, (int?)anomalousPixelCount, timing, warnings)
+        {
+        }
+
+        private AnomalyDetectionResult(float imageScore, AnomalyScoreMap? rawMap, AnomalyScoreMap normalizedMap, AnomalyBinaryMask mask, float threshold, ImageTransform transform, int? trustedAnomalousPixelCount, InferenceTiming? timing, IEnumerable<PredictionWarning>? warnings)
         {
             if (float.IsNaN(imageScore) || float.IsInfinity(imageScore)) throw new ArgumentOutOfRangeException(nameof(imageScore));
             if (normalizedMap == null) throw new ArgumentNullException(nameof(normalizedMap));
@@ -130,9 +141,10 @@ namespace JYPPX.DeploySharp.Visual
             Threshold = threshold;
             Transform = transform;
             Timing = timing ?? InferenceTiming.Zero;
-            int anomalous = 0;
             byte[] maskValues = mask.DangerousGetReadOnlyBuffer();
-            for (int index = 0; index < maskValues.Length; index++) anomalous += maskValues[index];
+            int anomalous = trustedAnomalousPixelCount ?? CountAnomalous(maskValues);
+            if (anomalous < 0 || anomalous > maskValues.Length) throw new ArgumentOutOfRangeException(nameof(trustedAnomalousPixelCount));
+            _anomalousPixelCount = anomalous;
             AnomalousPixelRatio = (double)anomalous / maskValues.Length;
             var copiedWarnings = new List<PredictionWarning>();
             if (warnings != null) foreach (PredictionWarning warning in warnings) copiedWarnings.Add(warning ?? throw new ArgumentException("Warnings cannot contain null.", nameof(warnings)));
@@ -176,7 +188,14 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        internal AnomalyDetectionResult WithTiming(InferenceTiming timing) => new AnomalyDetectionResult(ImageScore, RawMap, NormalizedMap, Mask, Threshold, Transform, timing, _warnings);
+        internal AnomalyDetectionResult WithTiming(InferenceTiming timing) => new AnomalyDetectionResult(ImageScore, RawMap, NormalizedMap, Mask, Threshold, Transform, _anomalousPixelCount, timing, _warnings);
+
+        private static int CountAnomalous(byte[] values)
+        {
+            int result = 0;
+            for (int index = 0; index < values.Length; index++) result += values[index];
+            return result;
+        }
 
         private static void WriteMap(HashWriter writer, AnomalyScoreMap? map)
         {
@@ -238,5 +257,28 @@ namespace JYPPX.DeploySharp.Visual
             }
             public void Complete() => _hash.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
         }
+    }
+
+    /// <summary>Contains one anomaly result for every row of a true model batch. / 包含真正模型 Batch 中每一行的异常结果。</summary>
+    public sealed class AnomalyDetectionBatchResult
+    {
+        private readonly IReadOnlyList<AnomalyDetectionResult> _items;
+
+        /// <summary>Initializes an ordered anomaly batch result. / 初始化有序异常 Batch 结果。</summary>
+        public AnomalyDetectionBatchResult(IEnumerable<AnomalyDetectionResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<AnomalyDetectionResult>();
+            foreach (AnomalyDetectionResult item in items) copied.Add(item ?? throw new ArgumentException("Anomaly batch items cannot contain null values.", nameof(items)));
+            if (copied.Count <= 1) throw new ArgumentException("A batch result requires at least two items; batch one uses AnomalyDetectionResult.", nameof(items));
+            _items = copied.AsReadOnly();
+        }
+
+        /// <summary>Gets the number of decoded rows. / 获取已解码行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets an anomaly result by input-row index. / 按输入行索引获取异常结果。</summary>
+        public AnomalyDetectionResult this[int index] => _items[index];
+        /// <summary>Gets ordered anomaly results. / 获取有序异常结果。</summary>
+        public IReadOnlyList<AnomalyDetectionResult> Items => _items;
     }
 }

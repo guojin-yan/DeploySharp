@@ -392,4 +392,27 @@ namespace JYPPX.DeploySharp.Visual
             return new string(characters);
         }
     }
+
+    /// <summary>Contains one Pose result for every row of a true model batch. / 包含真正模型 Batch 中每一行的 Pose 结果。</summary>
+    public sealed class PoseEstimationBatchResult
+    {
+        private readonly IReadOnlyList<PoseEstimationResult> _items;
+
+        /// <summary>Initializes an ordered Pose batch result. / 初始化有序 Pose Batch 结果。</summary>
+        public PoseEstimationBatchResult(IEnumerable<PoseEstimationResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copied = new List<PoseEstimationResult>();
+            foreach (PoseEstimationResult item in items) copied.Add(item ?? throw new ArgumentException("Pose batch items cannot contain null values.", nameof(items)));
+            if (copied.Count <= 1) throw new ArgumentException("A batch result requires at least two items; batch one uses PoseEstimationResult.", nameof(items));
+            _items = copied.AsReadOnly();
+        }
+
+        /// <summary>Gets the number of decoded rows. / 获取已解码行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets a result by input-row index. / 按输入行索引获取结果。</summary>
+        public PoseEstimationResult this[int index] => _items[index];
+        /// <summary>Gets ordered Pose results. / 获取有序 Pose 结果。</summary>
+        public IReadOnlyList<PoseEstimationResult> Items => _items;
+    }
 }

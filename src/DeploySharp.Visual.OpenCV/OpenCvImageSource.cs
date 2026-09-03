@@ -89,7 +89,12 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         /// <summary>Copies an encoded image memory block into an independent image source. / 将编码图像内存块复制到独立图像源。</summary>
         public static OpenCvImageSource FromBytes(ReadOnlyMemory<byte> bytes, long maximumBytes = DefaultMaximumBytes)
         {
-            return FromBytes(bytes.ToArray(), maximumBytes);
+            if (maximumBytes <= 0) throw Boundary("The image size limit must be positive.");
+            if (bytes.Length == 0 || bytes.Length > maximumBytes) throw Boundary("The encoded image buffer is empty or exceeds the configured size limit.", technicalDetails: "length=" + bytes.Length + ";limit=" + maximumBytes);
+
+            // ToArray is the required ownership boundary for caller memory, but routing through
+            // FromBytes(byte[]) would immediately clone it again. Keep this hot path to one copy.
+            return new OpenCvImageSource(OpenCvImageSourceKind.Bytes, null, bytes.ToArray(), maximumBytes);
         }
 #endif
 
@@ -112,7 +117,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 catch (Exception exception) { throw Boundary("The image file could not be read.", exception); }
             }
 
-            return (byte[])_bytes!.Clone();
+            // The constructor already took ownership of a defensive clone. The only caller is the
+            // native decoder, which does not mutate the buffer, so avoid cloning on every decode.
+            return _bytes!;
         }
 
         private static string ComputeFileHash(string path)

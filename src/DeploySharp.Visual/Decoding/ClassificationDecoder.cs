@@ -16,7 +16,7 @@ namespace JYPPX.DeploySharp.Visual
         Probabilities = 1
     }
 
-    /// <summary>Decodes one-batch classification scores into a canonical Core classification result. / 将单批次分类分数解码为 Core 规范分类结果。</summary>
+    /// <summary>Decodes classification scores into a canonical result; dynamic [batch,classes] outputs return <see cref="ClassificationBatchResult"/>. / 将分类分数解码为规范结果；动态 [batch,classes] 输出返回 ClassificationBatchResult。</summary>
     public sealed class ClassificationDecoder : IVisualDecoder
     {
         /// <summary>Initializes a classification decoder. / 初始化分类解码器。</summary>
@@ -50,52 +50,89 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Classification decoder currently requires batch size one.", profileId: context.Profile.ProfileId, tensorName: OutputName);
             ITensor tensor;
             try { tensor = context.Outputs.GetRequired(OutputName); }
             catch (KeyNotFoundException exception) { throw new VisualException(VisualErrorCodes.TensorInvalid, "Classification output tensor is missing.", exception, context.Profile.ProfileId, OutputName, modelId: context.Profile.ModelId); }
-            if (tensor.Shape.Rank != 1 && !(tensor.Shape.Rank == 2 && tensor.Shape[0] == 1)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Classification output shape must be [classes] or [1,classes].", profileId: context.Profile.ProfileId, tensorName: OutputName, modelId: context.Profile.ModelId, technicalDetails: tensor.Shape.ToString());
-            int classCount = checked((int)tensor.Shape[tensor.Shape.Rank - 1]);
-            if (classCount <= 0 || tensor.Length != classCount) throw new VisualException(VisualErrorCodes.TensorInvalid, "Classification output contains no classes or an inconsistent element count.", profileId: context.Profile.ProfileId, tensorName: OutputName);
+            int batch;
+            int classCount;
+            if (tensor.Shape.Rank == 1)
+            {
+                if (context.Input.BatchSize != 1) throw InvalidShape(context, tensor, "A batched classification input requires a [batch,classes] output.");
+                batch = 1;
+                classCount = checked((int)tensor.Shape[0]);
+            }
+            else if (tensor.Shape.Rank == 2)
+            {
+                batch = checked((int)tensor.Shape[0]);
+                classCount = checked((int)tensor.Shape[1]);
+                if (batch != context.Input.BatchSize) throw InvalidShape(context, tensor, "Classification output batch does not match the input batch.");
+            }
+            else throw InvalidShape(context, tensor, "Classification output shape must be [classes] or [batch,classes].");
+            if (batch <= 0 || classCount <= 0 || tensor.Length != (long)batch * classCount) throw InvalidShape(context, tensor, "Classification output contains no classes or an inconsistent element count.");
             if (context.Profile.Labels.Count > 0 && context.Profile.Labels.Any(label => label.Index >= classCount)) throw new VisualException(VisualErrorCodes.DecodeFailed, "A profile label index exceeds the classification tensor class count.", profileId: context.Profile.ProfileId, tensorName: OutputName);
             float[] raw = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, OutputName);
-            float[] scores = ScoreMode == ClassificationScoreMode.Logits ? Softmax(raw) : ValidateProbabilities(raw, context.Profile.ProfileId, OutputName);
-            var candidates = new List<ClassificationCandidate>(scores.Length);
-            for (int index = 0; index < scores.Length; index++)
+            var results = new List<ClassificationResult>(batch);
+            for (int row = 0; row < batch; row++)
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
+                results.Add(DecodeRow(raw, row * classCount, classCount, context));
+            }
+            return batch == 1 ? results[0] : new ClassificationBatchResult(results);
+        }
+
+        private ClassificationResult DecodeRow(float[] raw, int offset, int classCount, VisualDecodeContext context)
+        {
+            float[] scores = ScoreMode == ClassificationScoreMode.Logits ? Softmax(raw, offset, classCount) : ValidateProbabilities(raw, offset, classCount, context.Profile.ProfileId, OutputName);
+            var candidates = new List<ClassificationCandidate>(classCount);
+            for (int index = 0; index < classCount; index++)
+            {
                 if (scores[index] >= Threshold) candidates.Add(new ClassificationCandidate(index, scores[index]));
             }
 
-            IEnumerable<ClassificationCandidate> ordered = candidates.OrderByDescending(value => value.Score).ThenBy(value => value.Index).Take(Math.Min(TopK, candidates.Count));
-            var predictions = new List<LabelScore>();
-            foreach (ClassificationCandidate candidate in ordered) predictions.Add(new LabelScore(candidate.Index, context.Profile.GetLabel(candidate.Index), candidate.Score));
+            candidates.Sort((left, right) =>
+            {
+                int score = right.Score.CompareTo(left.Score);
+                return score != 0 ? score : left.Index.CompareTo(right.Index);
+            });
+            int count = Math.Min(TopK, candidates.Count);
+            if (candidates.Count > count) candidates.RemoveRange(count, candidates.Count - count);
+            var predictions = new List<LabelScore>(count);
+            for (int index = 0; index < count; index++)
+            {
+                ClassificationCandidate candidate = candidates[index];
+                predictions.Add(new LabelScore(candidate.Index, context.Profile.GetLabel(candidate.Index), candidate.Score));
+            }
             return new ClassificationResult(predictions);
         }
 
-        private static float[] Softmax(float[] values)
+        private static float[] Softmax(float[] values, int offset, int count)
         {
-            float maximum = values[0];
-            for (int index = 1; index < values.Length; index++) if (values[index] > maximum) maximum = values[index];
-            var exponentials = new double[values.Length];
+            float maximum = values[offset];
+            for (int index = 1; index < count; index++) if (values[offset + index] > maximum) maximum = values[offset + index];
             double sum = 0;
-            for (int index = 0; index < values.Length; index++)
-            {
-                double exponential = Math.Exp(values[index] - maximum);
-                exponentials[index] = exponential;
-                sum += exponential;
-            }
+            for (int index = 0; index < count; index++) sum += Math.Exp(values[offset + index] - maximum);
             if (double.IsNaN(sum) || double.IsInfinity(sum) || sum <= 0) throw new VisualException(VisualErrorCodes.DecodeFailed, "Softmax normalization is not finite.");
-            var result = new float[values.Length];
-            for (int index = 0; index < result.Length; index++) result[index] = (float)(exponentials[index] / sum);
+            var result = new float[count];
+            // Recompute the exponentials into the single retained Float32 result
+            // buffer. This removes the temporary Double[] while preserving the
+            // stable max-subtraction and accumulation order.
+            for (int index = 0; index < result.Length; index++) result[index] = (float)(Math.Exp(values[offset + index] - maximum) / sum);
             return result;
         }
 
-        private static float[] ValidateProbabilities(float[] values, string profileId, string tensorName)
+        private static float[] ValidateProbabilities(float[] values, int offset, int count, string profileId, string tensorName)
         {
-            for (int index = 0; index < values.Length; index++) if (values[index] < 0 || values[index] > 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Classification probability must be in [0,1].", profileId: profileId, tensorName: tensorName, technicalDetails: "index=" + index);
-            return values;
+            var result = new float[count];
+            for (int index = 0; index < count; index++)
+            {
+                float value = values[offset + index];
+                if (value < 0 || value > 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Classification probability must be in [0,1].", profileId: profileId, tensorName: tensorName, technicalDetails: "index=" + (offset + index));
+                result[index] = value;
+            }
+            return result;
         }
+
+        private VisualException InvalidShape(VisualDecodeContext context, ITensor tensor, string message) => new VisualException(VisualErrorCodes.TensorInvalid, message, profileId: context.Profile.ProfileId, tensorName: OutputName, modelId: context.Profile.ModelId, technicalDetails: tensor.Shape.ToString());
 
         private sealed class ClassificationCandidate
         {

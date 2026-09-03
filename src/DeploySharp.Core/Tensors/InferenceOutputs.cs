@@ -13,10 +13,15 @@ namespace JYPPX.DeploySharp.Tensors
         {
         }
 
+        private InferenceOutputs(string name, ITensor tensor)
+            : base(name, tensor)
+        {
+        }
+
         /// <summary>Creates a single-output collection. / 创建单输出集合。</summary>
         public static InferenceOutputs Create(string name, ITensor tensor)
         {
-            return new InferenceOutputs(new[] { new NamedTensor(name, tensor) });
+            return new InferenceOutputs(name, tensor);
         }
     }
 }

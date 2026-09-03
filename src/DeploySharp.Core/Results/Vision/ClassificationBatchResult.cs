@@ -1,0 +1,34 @@
+using System;
+using System.Collections.Generic;
+
+namespace JYPPX.DeploySharp.Results.Vision
+{
+    /// <summary>Contains one ordered classification result for every input in a true model batch. / 包含真正模型 Batch 中每个输入的有序分类结果。</summary>
+    public sealed class ClassificationBatchResult
+    {
+        private readonly IReadOnlyList<ClassificationResult> _results;
+
+        /// <summary>Initializes a batch result and preserves input order. / 初始化批量结果并保留输入顺序。</summary>
+        public ClassificationBatchResult(IEnumerable<ClassificationResult> results)
+        {
+            if (results == null) throw new ArgumentNullException(nameof(results));
+            var values = new List<ClassificationResult>();
+            foreach (ClassificationResult result in results)
+            {
+                if (result == null) throw new ArgumentException("Classification results cannot contain null values.", nameof(results));
+                values.Add(result);
+            }
+            if (values.Count == 0) throw new ArgumentException("A classification batch must contain at least one result.", nameof(results));
+            _results = values.AsReadOnly();
+        }
+
+        /// <summary>Gets one classification result per batch row in input order. / 获取按输入顺序排列的每个 Batch 行分类结果。</summary>
+        public IReadOnlyList<ClassificationResult> Results => _results;
+
+        /// <summary>Gets the number of decoded batch rows. / 获取已解码 Batch 行数。</summary>
+        public int Count => _results.Count;
+
+        /// <summary>Gets one decoded row by zero-based batch index. / 按从零开始的 Batch 索引获取一行结果。</summary>
+        public ClassificationResult this[int index] => _results[index];
+    }
+}

@@ -219,6 +219,20 @@
         "resolved": "5.0.0-preview.1",
         "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
       },
+      "OnnxSharp": {
+        "type": "Direct",
+        "requested": "[0.3.2, )",
+        "resolved": "0.3.2",
+        "contentHash": "zXoFIRPxxW1hUnte/o4am/cjSBWi2WC1aD7Ppc2LOFE3P/CURMWk2Ni6gY4x0fO9yT5oZTnntBI7KFIbmhpsKw==",
+        "dependencies": {
+          "Google.Protobuf": "3.29.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.29.3",
+        "contentHash": "t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw=="
+      },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
       }
@@ -263,6 +277,20 @@
         "resolved": "5.0.0-preview.1",
         "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
       },
+      "OnnxSharp": {
+        "type": "Direct",
+        "requested": "[0.3.2, )",
+        "resolved": "0.3.2",
+        "contentHash": "zXoFIRPxxW1hUnte/o4am/cjSBWi2WC1aD7Ppc2LOFE3P/CURMWk2Ni6gY4x0fO9yT5oZTnntBI7KFIbmhpsKw==",
+        "dependencies": {
+          "Google.Protobuf": "3.29.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.29.3",
+        "contentHash": "t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw=="
+      },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
       }
@@ -273,6 +301,20 @@
         "requested": "[5.0.0-preview.1, )",
         "resolved": "5.0.0-preview.1",
         "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+      },
+      "OnnxSharp": {
+        "type": "Direct",
+        "requested": "[0.3.2, )",
+        "resolved": "0.3.2",
+        "contentHash": "zXoFIRPxxW1hUnte/o4am/cjSBWi2WC1aD7Ppc2LOFE3P/CURMWk2Ni6gY4x0fO9yT5oZTnntBI7KFIbmhpsKw==",
+        "dependencies": {
+          "Google.Protobuf": "3.29.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.29.3",
+        "contentHash": "t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"

@@ -1,7 +1,12 @@
 using System;
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+using System.Buffers;
+#endif
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.OpenCvSharp;
@@ -60,8 +65,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 if (options.Interpolation == OpenCvInterpolation.PillowBicubic)
                 {
                     byte[] resized = PillowBicubicResize(CopyRows(geometrySource), geometrySource.Cols, geometrySource.Rows, geometrySource.Channels, options.ModelSize.Width, options.ModelSize.Height, cancellationToken);
-                    byte[] requested = ConvertChannels(resized, options.ModelSize.Width, options.ModelSize.Height, geometrySource.Channels, options);
-                    ITensor resizedTensor = CreateTensor(requested, options.ModelSize.Width, options.ModelSize.Height, options, cancellationToken);
+                    ITensor resizedTensor = CreateTensorFromPixels(resized, options.ModelSize.Width, options.ModelSize.Height, geometrySource.Channels, options, cancellationToken);
                     var pillowMeans = new float[options.ChannelCount];
                     var pillowScales = new float[options.ChannelCount];
                     for (int channel = 0; channel < pillowScales.Length; channel++)
@@ -75,9 +79,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat geometric = ApplyGeometry(geometrySource, sourceSize, options, out ImageTransform transform))
                 {
                     ObserveCancellation(cancellationToken);
-                    byte[] nativeOrder = CopyRows(geometric);
-                    byte[] requestedOrder = ConvertChannels(nativeOrder, geometric.Cols, geometric.Rows, geometric.Channels, options);
-                    ITensor tensor = CreateTensor(requestedOrder, geometric.Cols, geometric.Rows, options, cancellationToken);
+                    // Stream rows directly from the native Mat into the final tensor.
+                    // This avoids retaining a full-size managed pixel copy for the
+                    // common OpenCV resize/letterbox paths.
+                    ITensor tensor = CreateTensorFromMat(geometric, options, cancellationToken);
                     var means = new float[options.ChannelCount];
                     var scales = new float[options.ChannelCount];
                     for (int channel = 0; channel < scales.Length; channel++)
@@ -222,9 +227,13 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             var intermediate = new byte[checked(sourceHeight * targetWidth * channels)];
             var destination = new byte[checked(targetHeight * targetWidth * channels)];
 
-            for (int y = 0; y < sourceHeight; y++)
+            // Pillow-compatible sampling is intentionally kept byte-for-byte identical, but the
+            // two separable passes are independent by row.  Parallelizing only sufficiently large
+            // images removes a major preprocessing bottleneck for BLIP/Donut/SAM without adding
+            // thread-pool overhead to OCR-sized crops or unit-test fixtures.
+            ParallelOptions parallel = CreateResizeParallelOptions(cancellationToken, sourceHeight, targetHeight, targetWidth, channels);
+            Parallel.For(0, sourceHeight, parallel, y =>
             {
-                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
                 for (int x = 0; x < targetWidth; x++)
                 {
                     ResampleCoefficient coefficient = horizontal[x];
@@ -235,11 +244,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         intermediate[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
                     }
                 }
-            }
+            });
 
-            for (int y = 0; y < targetHeight; y++)
+            Parallel.For(0, targetHeight, parallel, y =>
             {
-                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
                 ResampleCoefficient coefficient = vertical[y];
                 for (int x = 0; x < targetWidth; x++)
                 {
@@ -250,7 +258,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         destination[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
                     }
                 }
-            }
+            });
 
             return destination;
         }
@@ -261,9 +269,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             ResampleCoefficient[] vertical = CreatePillowBilinearCoefficients(sourceHeight, targetHeight);
             var intermediate = new byte[checked(sourceHeight * targetWidth * channels)];
             var destination = new byte[checked(targetHeight * targetWidth * channels)];
-            for (int y = 0; y < sourceHeight; y++)
+            ParallelOptions parallel = CreateResizeParallelOptions(cancellationToken, sourceHeight, targetHeight, targetWidth, channels);
+            Parallel.For(0, sourceHeight, parallel, y =>
             {
-                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
                 for (int x = 0; x < targetWidth; x++)
                 {
                     ResampleCoefficient coefficient = horizontal[x];
@@ -274,10 +282,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         intermediate[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
                     }
                 }
-            }
-            for (int y = 0; y < targetHeight; y++)
+            });
+            Parallel.For(0, targetHeight, parallel, y =>
             {
-                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
                 ResampleCoefficient coefficient = vertical[y];
                 for (int x = 0; x < targetWidth; x++)
                 {
@@ -288,8 +295,20 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         destination[((y * targetWidth + x) * channels) + channel] = ClipByte(sum);
                     }
                 }
-            }
+            });
             return destination;
+        }
+
+        private static ParallelOptions CreateResizeParallelOptions(CancellationToken cancellationToken, int sourceHeight, int targetHeight, int targetWidth, int channels)
+        {
+            // Keep tiny crops deterministic and allocation-free from the caller's perspective.
+            // Large image transforms are where parallel row work amortizes scheduler overhead.
+            int work = Math.Max(sourceHeight, targetHeight) * Math.Max(1, targetWidth) * Math.Max(1, channels);
+            return new ParallelOptions
+            {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = work >= 262144 ? Math.Max(1, Environment.ProcessorCount) : 1
+            };
         }
 
         private static ResampleCoefficient[] CreatePillowBilinearCoefficients(int sourceSize, int targetSize)
@@ -374,19 +393,81 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         {
             int rowBytes = checked(image.Cols * image.Channels);
             var result = new byte[checked(rowBytes * image.Rows)];
+            CopyRows(image, result);
+            return result;
+        }
+
+        // Copies into caller-owned scratch storage to avoid one managed allocation per OCR crop.
+        // The returned byte count covers only the active rows; callers may reuse the same buffer.
+        internal static int CopyRows(Mat image, byte[] destination)
+        {
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+            int rowBytes = checked(image.Cols * image.Channels);
+            int required = checked(rowBytes * image.Rows);
+            if (destination.Length < required) throw new ArgumentException("The destination scratch buffer is smaller than the image.", nameof(destination));
             ulong step = image.Step.ToUInt64();
             if (step < (ulong)rowBytes) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV reported a row stride smaller than the pixel row.", technicalDetails: "step=" + step + ";rowBytes=" + rowBytes);
             if (step > int.MaxValue) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV reported an unsupported row stride.", technicalDetails: "step=" + step);
             IntPtr data = image.Data;
             if (data == IntPtr.Zero) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV returned a null image buffer.");
-            for (int row = 0; row < image.Rows; row++) Marshal.Copy(IntPtr.Add(data, checked(row * (int)step)), result, row * rowBytes, rowBytes);
-            return result;
+            for (int row = 0; row < image.Rows; row++) Marshal.Copy(IntPtr.Add(data, checked(row * (int)step)), destination, row * rowBytes, rowBytes);
+            return required;
         }
 
         internal static byte[] ConvertChannels(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options)
         {
             int targetChannels = options.ChannelCount;
             var result = new byte[checked(width * height * targetChannels)];
+            ConvertChannelsInto(source, width, height, sourceChannels, options, result, 0);
+            return result;
+        }
+
+        // Performs stride-safe native row copies and channel conversion directly into one
+        // contiguous destination. This avoids retaining a full-size BGR scratch image.
+        internal static byte[] CopyRowsAndConvertChannels(Mat image, OpenCvPreprocessOptions options)
+        {
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            int sourceRowBytes = checked(image.Cols * image.Channels);
+            int destinationRowBytes = checked(image.Cols * options.ChannelCount);
+            var result = new byte[checked(destinationRowBytes * image.Rows)];
+            ulong step = image.Step.ToUInt64();
+            if (step < (ulong)sourceRowBytes || step > int.MaxValue) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV reported an unsupported row stride.", technicalDetails: "step=" + step + ";rowBytes=" + sourceRowBytes);
+            IntPtr data = image.Data;
+            if (data == IntPtr.Zero) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV returned a null image buffer.");
+            Action<int, byte[]> processRow = (y, row) =>
+            {
+                Marshal.Copy(IntPtr.Add(data, checked(y * (int)step)), row, 0, sourceRowBytes);
+                ConvertChannelsInto(row, image.Cols, 1, image.Channels, options, result, y * destinationRowBytes);
+            };
+            int work = checked(image.Cols * image.Rows * Math.Max(1, image.Channels));
+            if (work >= 262144)
+            {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+                ArrayPool<byte> pool = ArrayPool<byte>.Shared;
+                Parallel.For(0, image.Rows,
+                    () => pool.Rent(sourceRowBytes),
+                    (y, _, row) => { processRow(y, row); return row; },
+                    row => pool.Return(row));
+#else
+                Parallel.For(0, image.Rows,
+                    () => new byte[sourceRowBytes],
+                    (y, _, row) => { processRow(y, row); return row; },
+                    _ => { });
+#endif
+            }
+            else
+            {
+                var row = new byte[sourceRowBytes];
+                for (int y = 0; y < image.Rows; y++) processRow(y, row);
+            }
+            return result;
+        }
+
+        private static void ConvertChannelsInto(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options, byte[] result, int resultOffset)
+        {
+            int targetChannels = options.ChannelCount;
             int pixels = checked(width * height);
             for (int pixel = 0; pixel < pixels; pixel++)
             {
@@ -412,7 +493,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     alpha = 255;
                 }
 
-                int targetOffset = pixel * targetChannels;
+                int targetOffset = resultOffset + (pixel * targetChannels);
                 if (options.ColorOrder == VisualColorOrder.Gray)
                 {
                     result[targetOffset] = checked((byte)((red * 77 + green * 150 + blue * 29 + 128) >> 8));
@@ -432,26 +513,270 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     if (targetChannels == 4) result[targetOffset + 3] = alpha;
                 }
             }
-            return result;
         }
 
         private static byte Composite(byte foreground, byte background, byte alpha) => checked((byte)(((foreground * alpha) + (background * (255 - alpha)) + 127) / 255));
 
-        private static ITensor CreateTensor(byte[] pixels, int width, int height, OpenCvPreprocessOptions options, CancellationToken cancellationToken)
+        // Converts channel order, alpha, layout, and normalization directly into the final
+        // tensor buffer. This fuses the former ConvertChannels -> Rearrange sequence so large
+        // model inputs do not allocate or copy a second full pixel buffer.
+        private static ITensor CreateTensorFromPixels(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options, CancellationToken cancellationToken)
         {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (sourceChannels != 1 && sourceChannels != 3 && sourceChannels != 4) throw new ArgumentOutOfRangeException(nameof(sourceChannels));
             TensorShape shape = CreateShape(width, height, options);
             int channels = options.ChannelCount;
             int perImage = checked(width * height * channels);
-            if (options.OutputType == OpenCvOutputType.UInt8)
-            {
-                var output = new byte[checked(perImage * options.BatchSize)];
-                Rearrange(pixels, output, width, height, channels, options, cancellationToken, false);
-                return new Tensor<byte>(shape, output, TensorBufferOwnership.Transfer);
-            }
+            int batches = options.BatchSize;
+            byte[]? byteOutput = options.OutputType == OpenCvOutputType.UInt8 ? new byte[checked(perImage * batches)] : null;
+            float[]? floatOutput = options.OutputType == OpenCvOutputType.UInt8 ? null : new float[checked(perImage * batches)];
+            FillTensorImage(source, width, height, sourceChannels, options, byteOutput, floatOutput, cancellationToken);
+            CopyTensorImageToBatches(byteOutput, floatOutput, perImage, batches);
+            if (byteOutput != null) return new Tensor<byte>(shape, byteOutput, TensorBufferOwnership.Transfer);
+            return new Tensor<float>(shape, floatOutput!, TensorBufferOwnership.Transfer);
+        }
 
-            var floats = new float[checked(perImage * options.BatchSize)];
-            Rearrange(pixels, floats, width, height, channels, options, cancellationToken);
-            return new Tensor<float>(shape, floats, TensorBufferOwnership.Transfer);
+        private static ITensor CreateTensorFromMat(Mat image, OpenCvPreprocessOptions options, CancellationToken cancellationToken)
+        {
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            if (image.Channels != 1 && image.Channels != 3 && image.Channels != 4) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "OpenCV returned an unsupported channel count.", technicalDetails: "channels=" + image.Channels);
+            int width = image.Cols;
+            int height = image.Rows;
+            int sourceRowBytes = checked(width * image.Channels);
+            TensorShape shape = CreateShape(width, height, options);
+            int channels = options.ChannelCount;
+            int perImage = checked(width * height * channels);
+            int batches = options.BatchSize;
+            byte[]? byteOutput = options.OutputType == OpenCvOutputType.UInt8 ? new byte[checked(perImage * batches)] : null;
+            float[]? floatOutput = options.OutputType == OpenCvOutputType.UInt8 ? null : new float[checked(perImage * batches)];
+            var row = new byte[sourceRowBytes];
+            ulong step = image.Step.ToUInt64();
+            if (step < (ulong)sourceRowBytes || step > int.MaxValue) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV reported an unsupported row stride.", technicalDetails: "step=" + step + ";rowBytes=" + sourceRowBytes);
+            IntPtr data = image.Data;
+            if (data == IntPtr.Zero) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV returned a null image buffer.");
+            bool isNchw = options.Layout == VisualTensorLayout.Nchw || options.Layout == VisualTensorLayout.Chw;
+            bool isGray = options.ColorOrder == VisualColorOrder.Gray;
+            bool isRgb = options.ColorOrder == VisualColorOrder.Rgb || options.ColorOrder == VisualColorOrder.Rgba;
+            int plane = checked(width * height);
+            float mean0 = options.Mean(0);
+            float deviation0 = options.StandardDeviation(0);
+            float divisor0 = options.InputDivisor(0);
+            float mean1 = channels > 1 ? options.Mean(1) : 0f;
+            float deviation1 = channels > 1 ? options.StandardDeviation(1) : 1f;
+            float divisor1 = channels > 1 ? options.InputDivisor(1) : 1f;
+            float mean2 = channels > 2 ? options.Mean(2) : 0f;
+            float deviation2 = channels > 2 ? options.StandardDeviation(2) : 1f;
+            float divisor2 = channels > 2 ? options.InputDivisor(2) : 1f;
+            float mean3 = channels > 3 ? options.Mean(3) : 0f;
+            float deviation3 = channels > 3 ? options.StandardDeviation(3) : 1f;
+            float divisor3 = channels > 3 ? options.InputDivisor(3) : 1f;
+            Action<int, byte[]> processRow = (y, row) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Marshal.Copy(IntPtr.Add(data, checked(y * (int)step)), row, 0, sourceRowBytes);
+                for (int x = 0; x < width; x++)
+                {
+                    int sourceOffset = x * image.Channels;
+                    byte blue;
+                    byte green;
+                    byte red;
+                    byte alpha = 255;
+                    if (image.Channels == 1) blue = green = red = row[sourceOffset];
+                    else
+                    {
+                        blue = row[sourceOffset];
+                        green = row[sourceOffset + 1];
+                        red = row[sourceOffset + 2];
+                        if (image.Channels == 4) alpha = row[sourceOffset + 3];
+                    }
+                    if (image.Channels == 4 && options.AlphaMode == OpenCvAlphaMode.Composite)
+                    {
+                        blue = Composite(blue, options.AlphaBackground.Blue, alpha);
+                        green = Composite(green, options.AlphaBackground.Green, alpha);
+                        red = Composite(red, options.AlphaBackground.Red, alpha);
+                        alpha = 255;
+                    }
+                    int pixel = y * width + x;
+                    if (isGray)
+                    {
+                        byte value = checked((byte)((red * 77 + green * 150 + blue * 29 + 128) >> 8));
+                        if (byteOutput != null) byteOutput[pixel] = value;
+                        else floatOutput![pixel] = Normalize(value, mean0, deviation0, divisor0);
+                    }
+                    else if (isNchw)
+                    {
+                        int first = pixel;
+                        int second = plane + pixel;
+                        int third = (plane * 2) + pixel;
+                        if (byteOutput != null)
+                        {
+                            byteOutput[first] = isRgb ? red : blue;
+                            byteOutput[second] = green;
+                            byteOutput[third] = isRgb ? blue : red;
+                            if (channels == 4) byteOutput[(plane * 3) + pixel] = alpha;
+                        }
+                        else
+                        {
+                            floatOutput![first] = Normalize(isRgb ? red : blue, mean0, deviation0, divisor0);
+                            floatOutput[second] = Normalize(green, mean1, deviation1, divisor1);
+                            floatOutput[third] = Normalize(isRgb ? blue : red, mean2, deviation2, divisor2);
+                            if (channels == 4) floatOutput[(plane * 3) + pixel] = Normalize(alpha, mean3, deviation3, divisor3);
+                        }
+                    }
+                    else
+                    {
+                        int destination = pixel * channels;
+                        if (byteOutput != null)
+                        {
+                            byteOutput[destination] = isRgb ? red : blue;
+                            byteOutput[destination + 1] = green;
+                            byteOutput[destination + 2] = isRgb ? blue : red;
+                            if (channels == 4) byteOutput[destination + 3] = alpha;
+                        }
+                        else
+                        {
+                            floatOutput![destination] = Normalize(isRgb ? red : blue, mean0, deviation0, divisor0);
+                            floatOutput[destination + 1] = Normalize(green, mean1, deviation1, divisor1);
+                            floatOutput[destination + 2] = Normalize(isRgb ? blue : red, mean2, deviation2, divisor2);
+                            if (channels == 4) floatOutput[destination + 3] = Normalize(alpha, mean3, deviation3, divisor3);
+                        }
+                    }
+                }
+            };
+            int work = checked(width * height * Math.Max(1, image.Channels));
+            if (work >= 262144)
+            {
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+                ArrayPool<byte> pool = ArrayPool<byte>.Shared;
+                Parallel.For(0, height, new ParallelOptions { CancellationToken = cancellationToken, MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount) },
+                    () => pool.Rent(sourceRowBytes),
+                    (y, _, row) => { processRow(y, row); return row; },
+                    row => pool.Return(row));
+#else
+                Parallel.For(0, height, new ParallelOptions { CancellationToken = cancellationToken, MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount) },
+                    () => new byte[sourceRowBytes],
+                    (y, _, row) => { processRow(y, row); return row; },
+                    _ => { });
+#endif
+            }
+            else
+            {
+                var serialRow = new byte[sourceRowBytes];
+                for (int y = 0; y < height; y++) processRow(y, serialRow);
+            }
+            CopyTensorImageToBatches(byteOutput, floatOutput, perImage, batches);
+            if (byteOutput != null) return new Tensor<byte>(shape, byteOutput, TensorBufferOwnership.Transfer);
+            return new Tensor<float>(shape, floatOutput!, TensorBufferOwnership.Transfer);
+        }
+
+        private static void FillTensorImage(byte[] source, int width, int height, int sourceChannels, OpenCvPreprocessOptions options, byte[]? byteOutput, float[]? floatOutput, CancellationToken cancellationToken)
+        {
+            bool isNchw = options.Layout == VisualTensorLayout.Nchw || options.Layout == VisualTensorLayout.Chw;
+            bool isGray = options.ColorOrder == VisualColorOrder.Gray;
+            bool isRgb = options.ColorOrder == VisualColorOrder.Rgb || options.ColorOrder == VisualColorOrder.Rgba;
+            int channels = options.ChannelCount;
+            int plane = checked(width * height);
+            float mean0 = options.Mean(0);
+            float deviation0 = options.StandardDeviation(0);
+            float divisor0 = options.InputDivisor(0);
+            float mean1 = channels > 1 ? options.Mean(1) : 0f;
+            float deviation1 = channels > 1 ? options.StandardDeviation(1) : 1f;
+            float divisor1 = channels > 1 ? options.InputDivisor(1) : 1f;
+            float mean2 = channels > 2 ? options.Mean(2) : 0f;
+            float deviation2 = channels > 2 ? options.StandardDeviation(2) : 1f;
+            float divisor2 = channels > 2 ? options.InputDivisor(2) : 1f;
+            float mean3 = channels > 3 ? options.Mean(3) : 0f;
+            float deviation3 = channels > 3 ? options.StandardDeviation(3) : 1f;
+            float divisor3 = channels > 3 ? options.InputDivisor(3) : 1f;
+            for (int y = 0; y < height; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                for (int x = 0; x < width; x++)
+                {
+                    int sourceOffset = (y * width + x) * sourceChannels;
+                    byte blue;
+                    byte green;
+                    byte red;
+                    byte alpha = 255;
+                    if (sourceChannels == 1) blue = green = red = source[sourceOffset];
+                    else
+                    {
+                        blue = source[sourceOffset];
+                        green = source[sourceOffset + 1];
+                        red = source[sourceOffset + 2];
+                        if (sourceChannels == 4) alpha = source[sourceOffset + 3];
+                    }
+                    if (sourceChannels == 4 && options.AlphaMode == OpenCvAlphaMode.Composite)
+                    {
+                        blue = Composite(blue, options.AlphaBackground.Blue, alpha);
+                        green = Composite(green, options.AlphaBackground.Green, alpha);
+                        red = Composite(red, options.AlphaBackground.Red, alpha);
+                        alpha = 255;
+                    }
+                    int pixel = y * width + x;
+                    if (isGray)
+                    {
+                        byte value = checked((byte)((red * 77 + green * 150 + blue * 29 + 128) >> 8));
+                        if (byteOutput != null) byteOutput[pixel] = value;
+                        else floatOutput![pixel] = Normalize(value, mean0, deviation0, divisor0);
+                    }
+                    else if (isNchw)
+                    {
+                        int first = pixel;
+                        int second = plane + pixel;
+                        int third = (plane * 2) + pixel;
+                        if (byteOutput != null)
+                        {
+                            byteOutput[first] = isRgb ? red : blue;
+                            byteOutput[second] = green;
+                            byteOutput[third] = isRgb ? blue : red;
+                            if (channels == 4) byteOutput[(plane * 3) + pixel] = alpha;
+                        }
+                        else
+                        {
+                            floatOutput![first] = Normalize(isRgb ? red : blue, mean0, deviation0, divisor0);
+                            floatOutput[second] = Normalize(green, mean1, deviation1, divisor1);
+                            floatOutput[third] = Normalize(isRgb ? blue : red, mean2, deviation2, divisor2);
+                            if (channels == 4) floatOutput[(plane * 3) + pixel] = Normalize(alpha, mean3, deviation3, divisor3);
+                        }
+                    }
+                    else
+                    {
+                        int destination = pixel * channels;
+                        if (byteOutput != null)
+                        {
+                            byteOutput[destination] = isRgb ? red : blue;
+                            byteOutput[destination + 1] = green;
+                            byteOutput[destination + 2] = isRgb ? blue : red;
+                            if (channels == 4) byteOutput[destination + 3] = alpha;
+                        }
+                        else
+                        {
+                            floatOutput![destination] = Normalize(isRgb ? red : blue, mean0, deviation0, divisor0);
+                            floatOutput[destination + 1] = Normalize(green, mean1, deviation1, divisor1);
+                            floatOutput[destination + 2] = Normalize(isRgb ? blue : red, mean2, deviation2, divisor2);
+                            if (channels == 4) floatOutput[destination + 3] = Normalize(alpha, mean3, deviation3, divisor3);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void CopyTensorImageToBatches(byte[]? byteOutput, float[]? floatOutput, int perImage, int batches)
+        {
+            if (batches <= 1) return;
+            for (int batch = 1; batch < batches; batch++)
+            {
+                if (byteOutput != null) Buffer.BlockCopy(byteOutput, 0, byteOutput, checked(batch * perImage), perImage);
+                else Buffer.BlockCopy(floatOutput!, 0, floatOutput!, checked(batch * perImage * sizeof(float)), checked(perImage * sizeof(float)));
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float Normalize(byte value, float mean, float standardDeviation, float divisor)
+        {
+            float scaled = divisor == 1f ? value : value / divisor;
+            return (scaled - mean) / standardDeviation;
         }
 
         private static TensorShape CreateShape(int width, int height, OpenCvPreprocessOptions options)
@@ -461,55 +786,6 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (options.Layout == VisualTensorLayout.Nhwc) return new TensorShape(options.BatchSize, height, width, channels);
             if (options.BatchSize != 1) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Unbatched CHW/HWC layouts require batch size one.");
             return options.Layout == VisualTensorLayout.Chw ? new TensorShape(channels, height, width) : new TensorShape(height, width, channels);
-        }
-
-        private static void Rearrange(byte[] source, float[] destination, int width, int height, int channels, OpenCvPreprocessOptions options, CancellationToken cancellationToken)
-        {
-            for (int batch = 0; batch < options.BatchSize; batch++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    if ((y & 31) == 0) ObserveCancellation(cancellationToken);
-                    for (int x = 0; x < width; x++)
-                    {
-                        for (int channel = 0; channel < channels; channel++)
-                        {
-                            int sourceIndex = ((y * width + x) * channels) + channel;
-                            int destinationIndex = DestinationIndex(batch, y, x, channel, width, height, channels, options);
-                            float inputDivisor = options.InputDivisor(channel);
-                            // Keep contracts such as Paddle's float32 pixel/255 path as an explicit
-                            // division so the reference operation and rounding order are preserved.
-                            float scaledPixel = inputDivisor == 1f ? source[sourceIndex] : source[sourceIndex] / inputDivisor;
-                            destination[destinationIndex] = (scaledPixel - options.Mean(channel)) / options.StandardDeviation(channel);
-                        }
-                    }
-                }
-            }
-        }
-
-        private static void Rearrange(byte[] source, byte[] destination, int width, int height, int channels, OpenCvPreprocessOptions options, CancellationToken cancellationToken, bool unused)
-        {
-            for (int batch = 0; batch < options.BatchSize; batch++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    if ((y & 31) == 0) ObserveCancellation(cancellationToken);
-                    for (int x = 0; x < width; x++)
-                    {
-                        for (int channel = 0; channel < channels; channel++)
-                        {
-                            int sourceIndex = ((y * width + x) * channels) + channel;
-                            destination[DestinationIndex(batch, y, x, channel, width, height, channels, options)] = source[sourceIndex];
-                        }
-                    }
-                }
-            }
-        }
-
-        private static int DestinationIndex(int batch, int y, int x, int channel, int width, int height, int channels, OpenCvPreprocessOptions options)
-        {
-            if (options.Layout == VisualTensorLayout.Nchw || options.Layout == VisualTensorLayout.Chw) return (((batch * channels + channel) * height + y) * width) + x;
-            return (((batch * height + y) * width + x) * channels) + channel;
         }
 
         internal static void ObserveCancellation(CancellationToken cancellationToken)

@@ -140,11 +140,46 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             TensorRtCudaKernelLaunchOptions options,
             IEnumerable<TensorRtCudaKernelArgument> arguments)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            return LaunchPrepared(stream, PrepareLaunch(options, arguments));
+        }
+
+        internal TensorRtCudaPreparedLaunch PrepareLaunch(
+            TensorRtCudaKernelLaunchOptions options,
+            IEnumerable<TensorRtCudaKernelArgument> arguments)
+        {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (arguments == null) throw new ArgumentNullException(nameof(arguments));
             TensorRtCudaKernelArgument[] copiedArguments = arguments.ToArray();
             if (copiedArguments.Any(argument => argument == null)) throw new ArgumentException("CUDA kernel arguments cannot contain null entries.", nameof(arguments));
+            TensorRtCudaDeviceBuffer? mismatchedBuffer = copiedArguments
+                .Where(argument => argument.Buffer != null)
+                .Select(argument => argument.Buffer)
+                .FirstOrDefault(buffer => buffer!.DeviceOrdinal != DeviceOrdinal);
+            if (mismatchedBuffer != null)
+            {
+                throw new TensorRtBackendException(
+                    TensorRtErrorCodes.CudaContractInvalid,
+                    "Every caller-owned CUDA device buffer must use the loaded module device.",
+                    tensorName: mismatchedBuffer.Descriptor.Name,
+                    operation: "cuda-kernel-device",
+                    technicalDetails: "moduleDevice=" + DeviceOrdinal + ";bufferDevice=" + mismatchedBuffer.DeviceOrdinal);
+            }
+            lock (_lifetimeGate)
+            {
+                if (_disposed) throw new ObjectDisposedException(nameof(TensorRtCudaCompiledKernel));
+            }
+            return new TensorRtCudaPreparedLaunch(
+                this,
+                options,
+                copiedArguments.Select(argument => argument.NativeArgument).ToArray(),
+                new TensorRtCudaKernelLaunchIdentity(Artifact, options, copiedArguments));
+        }
+
+        internal TensorRtCudaKernelLaunch LaunchPrepared(CudaStream stream, TensorRtCudaPreparedLaunch prepared)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (prepared == null) throw new ArgumentNullException(nameof(prepared));
+            if (!ReferenceEquals(prepared.Owner, this)) throw new ArgumentException("The CUDA launch plan belongs to a different compiled kernel.", nameof(prepared));
             int streamDeviceOrdinal = ResolveStreamDeviceOrdinal(stream);
             if (streamDeviceOrdinal != DeviceOrdinal)
             {
@@ -154,20 +189,6 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     operation: "cuda-kernel-device",
                     technicalDetails: "moduleDevice=" + DeviceOrdinal + ";streamDevice=" + streamDeviceOrdinal);
             }
-            TensorRtCudaDeviceBuffer? mismatchedBuffer = copiedArguments
-                .Where(argument => argument.Buffer != null)
-                .Select(argument => argument.Buffer)
-                .FirstOrDefault(buffer => buffer!.DeviceOrdinal != DeviceOrdinal);
-            if (mismatchedBuffer != null)
-            {
-                throw new TensorRtBackendException(
-                    TensorRtErrorCodes.CudaContractInvalid,
-                    "Every caller-owned CUDA device buffer must use the module and stream device.",
-                    tensorName: mismatchedBuffer.Descriptor.Name,
-                    operation: "cuda-kernel-device",
-                    technicalDetails: "moduleDevice=" + DeviceOrdinal + ";bufferDevice=" + mismatchedBuffer.DeviceOrdinal);
-            }
-            var identity = new TensorRtCudaKernelLaunchIdentity(Artifact, options, copiedArguments);
             lock (_lifetimeGate)
             {
                 if (_disposed) throw new ObjectDisposedException(nameof(TensorRtCudaCompiledKernel));
@@ -180,12 +201,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 CudaDriverModule module = _module ?? throw new InvalidOperationException("A managed CUDA kernel test double cannot launch native work.");
                 CudaDriverKernelLaunch nativeLaunch = module.Launch(
                     Artifact.KernelName,
-                    options.NativeConfiguration,
+                    prepared.Options.NativeConfiguration,
                     stream,
-                    copiedArguments.Select(argument => argument.NativeArgument).ToArray());
-                launch = new TensorRtCudaKernelLaunch(this, nativeLaunch, identity, options.SynchronizationMode);
-                if (options.SynchronizationMode == TensorRtCudaSynchronizationMode.KernelCompletion) launch.Synchronize();
-                else if (options.SynchronizationMode == TensorRtCudaSynchronizationMode.StreamCompletion) stream.Synchronize();
+                    prepared.NativeArguments);
+                launch = new TensorRtCudaKernelLaunch(this, nativeLaunch, prepared.Identity, prepared.Options.SynchronizationMode);
+                if (prepared.Options.SynchronizationMode == TensorRtCudaSynchronizationMode.KernelCompletion) launch.Synchronize();
+                else if (prepared.Options.SynchronizationMode == TensorRtCudaSynchronizationMode.StreamCompletion) stream.Synchronize();
                 return launch;
             }
             catch (Exception exception)
@@ -245,6 +266,26 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 return CudaDevice.Current;
             }
         }
+    }
+
+    internal sealed class TensorRtCudaPreparedLaunch
+    {
+        internal TensorRtCudaPreparedLaunch(
+            TensorRtCudaCompiledKernel owner,
+            TensorRtCudaKernelLaunchOptions options,
+            CudaKernelArgument[] nativeArguments,
+            TensorRtCudaKernelLaunchIdentity identity)
+        {
+            Owner = owner;
+            Options = options;
+            NativeArguments = nativeArguments;
+            Identity = identity;
+        }
+
+        internal TensorRtCudaCompiledKernel Owner { get; }
+        internal TensorRtCudaKernelLaunchOptions Options { get; }
+        internal CudaKernelArgument[] NativeArguments { get; }
+        internal TensorRtCudaKernelLaunchIdentity Identity { get; }
     }
 
     /// <summary>Owns one asynchronous CUDA Driver launch while borrowing its module, stream, and device buffers. / 定义或说明 CUDA合同。</summary>

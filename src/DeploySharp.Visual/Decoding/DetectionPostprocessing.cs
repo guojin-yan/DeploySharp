@@ -69,13 +69,13 @@ namespace JYPPX.DeploySharp.Visual
                 cancellationToken.ThrowIfCancellationRequested();
                 VisualDetectionCandidate candidate = ordered[candidateIndex];
                 bool suppressed = false;
+                RectangleF candidateBox = useModelCoordinates ? candidate.ModelBox : candidate.SourceBox;
                 for (int keptIndex = 0; keptIndex < kept.Count; keptIndex++)
                 {
                     if ((keptIndex & 255) == 0) cancellationToken.ThrowIfCancellationRequested();
                     VisualDetectionCandidate existing = kept[keptIndex];
                     if (mode == DetectionNmsMode.ClassAware && existing.ClassIndex != candidate.ClassIndex) continue;
                     RectangleF existingBox = useModelCoordinates ? existing.ModelBox : existing.SourceBox;
-                    RectangleF candidateBox = useModelCoordinates ? candidate.ModelBox : candidate.SourceBox;
                     if (DetectionDecoder.IntersectionOverUnion(existingBox, candidateBox) > iouThreshold)
                     {
                         suppressed = true;

@@ -22,6 +22,10 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         private readonly IReadOnlyList<string> _outputNames;
         private readonly int _maximumConcurrency;
         private readonly bool _nativeAsyncEnabled;
+        private readonly bool _hasDynamicOutputs;
+        private readonly bool _reuseInputCollections;
+        private List<string>? _singleInputNames;
+        private List<OrtValue>? _singleInputValues;
         private bool _disposed;
 
         public OnnxRuntimeSession(ModelArtifact artifact, InferenceSession session, int maximumConcurrency, bool nativeAsyncEnabled)
@@ -31,9 +35,23 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             _maximumConcurrency = maximumConcurrency;
             _nativeAsyncEnabled = nativeAsyncEnabled;
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
+            // BackendRegistry normally supplies one independent channel per pool slot.
+            // Reusing the short-lived input collection in that common case avoids two
+            // managed list allocations on every inference without changing the
+            // thread-safety contract of direct multi-channel sessions.
+            _reuseInputCollections = maximumConcurrency == 1;
             Metadata = OnnxTensorBridge.CreateMetadata(artifact, session);
             _inputs = Metadata.Inputs.ToDictionary(value => value.Name, StringComparer.Ordinal);
             _outputNames = Metadata.Outputs.Select(value => value.Name).ToList().AsReadOnly();
+            _hasDynamicOutputs = false;
+            for (int index = 0; index < Metadata.Outputs.Count; index++)
+            {
+                if (Metadata.Outputs[index].Shape.IsDynamic)
+                {
+                    _hasDynamicOutputs = true;
+                    break;
+                }
+            }
         }
 
         public CoreModelMetadata Metadata { get; }
@@ -43,17 +61,28 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             EnsureUsable();
             bool entered = false;
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeSource.Token))
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            // Pooled callers pass this session's disposal token directly. It is
+            // already linked to the session lifetime, so creating a one-shot
+            // linked CTS would only add an allocation on every inference.
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
             {
-                try
-                {
-                    _operationGate.Wait(linked.Token);
-                    entered = true;
-                    EnsureUsable();
-                    return RunCore(inputs, linked.Token);
-                }
-                catch (Exception exception) { throw OnnxRuntimeExceptionMapper.Map(exception, _artifact, "run", linked.Token); }
-                finally { if (entered) _operationGate.Release(); }
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                _operationGate.Wait(operationToken);
+                entered = true;
+                EnsureUsable();
+                return RunCore(inputs, operationToken);
+            }
+            catch (Exception exception) { throw OnnxRuntimeExceptionMapper.Map(exception, _artifact, "run", operationToken); }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
             }
         }
 
@@ -62,19 +91,27 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             EnsureUsable();
             bool entered = false;
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeSource.Token))
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
             {
-                try
-                {
-                    await _operationGate.WaitAsync(linked.Token).ConfigureAwait(false);
-                    entered = true;
-                    EnsureUsable();
-                    // ORT 1.28 native RunAsync can fail to complete its callback when RunOptions.Terminate races the call. Cancellable requests therefore use the synchronous native path, which honors terminate; no worker task is fabricated. / ORT 1.28 原生 RunAsync 在 RunOptions.Terminate 与调用竞争时可能无法完成回调，因此可取消请求使用能够响应 terminate 的同步原生路径，且不伪造工作线程任务。
-                    if (!_nativeAsyncEnabled || cancellationToken.CanBeCanceled || Metadata.Outputs.Any(value => value.Shape.IsDynamic)) return RunCore(inputs, linked.Token);
-                    return await RunNativeAsync(inputs, linked.Token).ConfigureAwait(false);
-                }
-                catch (Exception exception) { throw OnnxRuntimeExceptionMapper.Map(exception, _artifact, "run-async", linked.Token); }
-                finally { if (entered) _operationGate.Release(); }
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                await _operationGate.WaitAsync(operationToken).ConfigureAwait(false);
+                entered = true;
+                EnsureUsable();
+                // ORT 1.28 native RunAsync can fail to complete its callback when RunOptions.Terminate races the call. Cancellable requests therefore use the synchronous native path, which honors terminate; no worker task is fabricated. / ORT 1.28 原生 RunAsync 在 RunOptions.Terminate 与调用竞争时可能无法完成回调，因此可取消请求使用能够响应 terminate 的同步原生路径，且不伪造工作线程任务。
+                if (!_nativeAsyncEnabled || cancellationToken.CanBeCanceled || _hasDynamicOutputs) return RunCore(inputs, operationToken);
+                return await RunNativeAsync(inputs, operationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) { throw OnnxRuntimeExceptionMapper.Map(exception, _artifact, "run-async", operationToken); }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
             }
         }
 
@@ -104,8 +141,12 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         private InferenceOutputs RunCore(InferenceInputs inputs, CancellationToken cancellationToken)
         {
             ValidateInputNames(inputs);
-            var inputNames = new List<string>(inputs.Count);
-            var inputValues = new List<OrtValue>(inputs.Count);
+            List<string> inputNames = _reuseInputCollections
+                ? (_singleInputNames ??= new List<string>(inputs.Count))
+                : new List<string>(inputs.Count);
+            List<OrtValue> inputValues = _reuseInputCollections
+                ? (_singleInputValues ??= new List<OrtValue>(inputs.Count))
+                : new List<OrtValue>(inputs.Count);
             using (var runOptions = new RunOptions())
             using (CancellationTokenRegistration registration = cancellationToken.Register(() => TryTerminate(runOptions)))
             {
@@ -122,15 +163,24 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                         return OnnxTensorBridge.CopyOutputs(_artifact, _outputNames, outputs);
                     }
                 }
-                finally { foreach (OrtValue value in inputValues) value.Dispose(); }
+                finally
+                {
+                    foreach (OrtValue value in inputValues) value.Dispose();
+                    inputValues.Clear();
+                    inputNames.Clear();
+                }
             }
         }
 
         private async Task<InferenceOutputs> RunNativeAsync(InferenceInputs inputs, CancellationToken cancellationToken)
         {
             ValidateInputNames(inputs);
-            var inputNames = new List<string>(inputs.Count);
-            var inputValues = new List<OrtValue>(inputs.Count);
+            List<string> inputNames = _reuseInputCollections
+                ? (_singleInputNames ??= new List<string>(inputs.Count))
+                : new List<string>(inputs.Count);
+            List<OrtValue> inputValues = _reuseInputCollections
+                ? (_singleInputValues ??= new List<OrtValue>(inputs.Count))
+                : new List<OrtValue>(inputs.Count);
             var outputValues = new List<OrtValue>(_outputNames.Count);
             using (var runOptions = new RunOptions())
             {
@@ -151,6 +201,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 {
                     foreach (OrtValue value in outputValues) value.Dispose();
                     foreach (OrtValue value in inputValues) value.Dispose();
+                    inputValues.Clear();
+                    inputNames.Clear();
                 }
             }
         }

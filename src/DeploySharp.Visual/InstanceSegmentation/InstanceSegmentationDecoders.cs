@@ -31,7 +31,13 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Instance segmentation currently requires batch size one.", Schema.MasksOutputName);
+            if (context.Input.BatchSize > 1) return DecodeBatch(context);
+            return DecodeSingle(context);
+        }
+
+        private InstanceSegmentationResult DecodeSingle(VisualDecodeContext context)
+        {
+            if (context.Input.BatchSize != 1) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Instance segmentation row decoding requires batch size one.", Schema.MasksOutputName);
             if (context.Outputs.Count != 4) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Direct instance segmentation requires exactly four declared outputs.", Schema.MasksOutputName);
 
             InstanceCandidateBatch batch = InstanceSegmentationDecoding.ReadCandidates(context, Schema.Candidates, Options);
@@ -60,6 +66,46 @@ namespace JYPPX.DeploySharp.Visual
             }
 
             return InstanceSegmentationDecoding.CreateResult(instances, context, Options);
+        }
+
+        private InstanceSegmentationBatchResult DecodeBatch(VisualDecodeContext context)
+        {
+            if (context.Outputs.Count != 4) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Direct instance segmentation requires exactly four declared outputs.", Schema.MasksOutputName);
+            ITensor boxes = InstanceSegmentationDecoding.Required(context, Schema.Candidates.BoxesOutputName);
+            ITensor scores = InstanceSegmentationDecoding.Required(context, Schema.Candidates.ScoresOutputName);
+            ITensor classes = InstanceSegmentationDecoding.Required(context, Schema.Candidates.ClassesOutputName);
+            ITensor masks = InstanceSegmentationDecoding.Required(context, Schema.MasksOutputName);
+            int batch = InstanceSegmentationDecoding.RequireBatchVector(boxes, 3, 0, context, Schema.Candidates.BoxesOutputName);
+            if (batch != context.Input.BatchSize || boxes.Shape[2] != 4) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance boxes must match [B,N,4].", Schema.Candidates.BoxesOutputName, boxes.Shape.ToString());
+            int candidates = checked((int)boxes.Shape[1]);
+            if (candidates < 0 || candidates > Options.MaximumCandidates) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance candidate count exceeds its configured bound.", Schema.Candidates.BoxesOutputName, boxes.Shape.ToString());
+            InstanceSegmentationDecoding.RequireBatchShape(scores, batch, candidates, context, Schema.Candidates.ScoresOutputName);
+            InstanceSegmentationDecoding.RequireBatchShape(classes, batch, candidates, context, Schema.Candidates.ClassesOutputName);
+            TensorShape maskShape = masks.Shape;
+            bool masksNchw = maskShape.Rank == 4 && maskShape[0] == batch && maskShape[1] == candidates;
+            bool masksNhwc = maskShape.Rank == 5 && maskShape[0] == batch && maskShape[1] == candidates && maskShape[4] == 1;
+            if (!masksNchw && !masksNhwc) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Batched direct masks must match [B,N,H,W] or [B,N,H,W,1].", Schema.MasksOutputName, maskShape.ToString());
+            int height = checked((int)maskShape[2]);
+            int width = checked((int)maskShape[3]);
+            int maskStride = checked(height * width * (masksNhwc ? 1 : 1));
+            int candidateStride = checked(candidates * 4);
+            int vectorStride = candidates;
+            var results = new List<InstanceSegmentationResult>(batch);
+            for (int row = 0; row < batch; row++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                VisualInputFrame frame = context.Input.BatchFrames[row];
+                PreparedVisualInput rowInput = InstanceSegmentationDecoding.CreateRowInput(context, frame, row);
+                var rowOutputs = new InferenceOutputs(new[]
+                {
+                    new NamedTensor(Schema.Candidates.BoxesOutputName, InstanceSegmentationDecoding.SliceTensor(boxes, new TensorShape(1, candidates, 4), row, candidateStride, context, Schema.Candidates.BoxesOutputName)),
+                    new NamedTensor(Schema.Candidates.ScoresOutputName, InstanceSegmentationDecoding.SliceTensor(scores, new TensorShape(1, candidates), row, vectorStride, context, Schema.Candidates.ScoresOutputName)),
+                    new NamedTensor(Schema.Candidates.ClassesOutputName, InstanceSegmentationDecoding.SliceTensor(classes, new TensorShape(1, candidates), row, vectorStride, context, Schema.Candidates.ClassesOutputName)),
+                    new NamedTensor(Schema.MasksOutputName, InstanceSegmentationDecoding.SliceTensor(masks, masksNchw ? new TensorShape(1, candidates, height, width) : new TensorShape(1, candidates, height, width, 1), row, checked(candidates * maskStride), context, Schema.MasksOutputName))
+                });
+                results.Add(DecodeSingle(new VisualDecodeContext(rowInput, context.Profile, rowOutputs, context.CancellationToken)));
+            }
+            return new InstanceSegmentationBatchResult(results);
         }
 
         private DirectMaskDimensions ResolveDimensions(ITensor tensor, int candidates, VisualDecodeContext context)
@@ -112,7 +158,13 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Instance segmentation currently requires batch size one.", Schema.PrototypesOutputName);
+            if (context.Input.BatchSize > 1) return DecodeBatch(context);
+            return DecodeSingle(context);
+        }
+
+        private InstanceSegmentationResult DecodeSingle(VisualDecodeContext context)
+        {
+            if (context.Input.BatchSize != 1) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Prototype instance segmentation row decoding requires batch size one.", Schema.PrototypesOutputName);
             if (context.Outputs.Count != 5) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype instance segmentation requires exactly five declared outputs.", Schema.PrototypesOutputName);
 
             InstanceCandidateBatch batch = InstanceSegmentationDecoding.ReadCandidates(context, Schema.Candidates, Options);
@@ -148,19 +200,67 @@ namespace JYPPX.DeploySharp.Visual
             return InstanceSegmentationDecoding.CreateResult(instances, context, Options);
         }
 
+        private InstanceSegmentationBatchResult DecodeBatch(VisualDecodeContext context)
+        {
+            if (context.Outputs.Count != 5) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype instance segmentation requires exactly five declared outputs.", Schema.PrototypesOutputName);
+            ITensor boxes = InstanceSegmentationDecoding.Required(context, Schema.Candidates.BoxesOutputName);
+            ITensor scores = InstanceSegmentationDecoding.Required(context, Schema.Candidates.ScoresOutputName);
+            ITensor classes = InstanceSegmentationDecoding.Required(context, Schema.Candidates.ClassesOutputName);
+            ITensor prototypes = InstanceSegmentationDecoding.Required(context, Schema.PrototypesOutputName);
+            ITensor coefficients = InstanceSegmentationDecoding.Required(context, Schema.CoefficientsOutputName);
+            int batch = InstanceSegmentationDecoding.RequireBatchVector(boxes, 3, 0, context, Schema.Candidates.BoxesOutputName);
+            if (batch != context.Input.BatchSize || boxes.Shape[2] != 4) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance boxes must match [B,N,4].", Schema.Candidates.BoxesOutputName, boxes.Shape.ToString());
+            int candidates = checked((int)boxes.Shape[1]);
+            if (candidates < 0 || candidates > Options.MaximumCandidates) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance candidate count exceeds its configured bound.", Schema.Candidates.BoxesOutputName, boxes.Shape.ToString());
+            InstanceSegmentationDecoding.RequireBatchShape(scores, batch, candidates, context, Schema.Candidates.ScoresOutputName);
+            InstanceSegmentationDecoding.RequireBatchShape(classes, batch, candidates, context, Schema.Candidates.ClassesOutputName);
+            PrototypeDimensions dimensions = ResolvePrototypeBatchDimensions(prototypes, batch, context);
+            InstanceSegmentationDecoding.RequireCoefficientBatchShape(coefficients, batch, candidates, dimensions.Channels, context, Schema.CoefficientsOutputName);
+            var results = new List<InstanceSegmentationResult>(batch);
+            int candidateStride = checked(candidates * 4);
+            int vectorStride = candidates;
+            int coefficientStride = checked(candidates * dimensions.Channels);
+            int prototypeStride = checked(dimensions.Channels * dimensions.Width * dimensions.Height);
+            int prototypeRow = dimensions.Batch == 1 ? 0 : 1;
+            for (int row = 0; row < batch; row++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                VisualInputFrame frame = context.Input.BatchFrames[row];
+                PreparedVisualInput rowInput = InstanceSegmentationDecoding.CreateRowInput(context, frame, row);
+                var rowOutputs = new InferenceOutputs(new[]
+                {
+                    new NamedTensor(Schema.Candidates.BoxesOutputName, InstanceSegmentationDecoding.SliceTensor(boxes, new TensorShape(1, candidates, 4), row, candidateStride, context, Schema.Candidates.BoxesOutputName)),
+                    new NamedTensor(Schema.Candidates.ScoresOutputName, InstanceSegmentationDecoding.SliceTensor(scores, new TensorShape(1, candidates), row, vectorStride, context, Schema.Candidates.ScoresOutputName)),
+                    new NamedTensor(Schema.Candidates.ClassesOutputName, InstanceSegmentationDecoding.SliceTensor(classes, new TensorShape(1, candidates), row, vectorStride, context, Schema.Candidates.ClassesOutputName)),
+                    new NamedTensor(Schema.PrototypesOutputName, InstanceSegmentationDecoding.SliceTensor(prototypes, InstanceSegmentationDecoding.PrototypeRowShape(dimensions, Schema.PrototypeLayout), prototypeRow == 0 ? 0 : row, prototypeStride, context, Schema.PrototypesOutputName)),
+                    new NamedTensor(Schema.CoefficientsOutputName, InstanceSegmentationDecoding.SliceTensor(coefficients, new TensorShape(1, candidates, dimensions.Channels), row, coefficientStride, context, Schema.CoefficientsOutputName))
+                });
+                results.Add(DecodeSingle(new VisualDecodeContext(rowInput, context.Profile, rowOutputs, context.CancellationToken)));
+            }
+            return new InstanceSegmentationBatchResult(results);
+        }
+
         private PrototypeDimensions ResolvePrototypeDimensions(ITensor tensor, VisualDecodeContext context)
         {
             TensorShape shape = tensor.Shape;
-            if (shape.Rank != 4 || shape[0] != 1) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype masks must have rank four and batch one.", Schema.PrototypesOutputName, shape.ToString());
+            if (shape.Rank != 4 || shape[0] <= 0) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype masks must have rank four and a positive batch dimension.", Schema.PrototypesOutputName, shape.ToString());
             long channels = Schema.PrototypeLayout == InstanceMaskTensorLayout.Nchw ? shape[1] : shape[3];
             long height = Schema.PrototypeLayout == InstanceMaskTensorLayout.Nchw ? shape[2] : shape[1];
             long width = Schema.PrototypeLayout == InstanceMaskTensorLayout.Nchw ? shape[3] : shape[2];
             long expectedElements;
-            try { expectedElements = checked(checked(channels * height) * width); }
+            try { expectedElements = checked(checked(checked(shape[0] * channels) * height) * width); }
             catch (OverflowException exception) { throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype element count exceeds Int64 bounds.", Schema.PrototypesOutputName, shape.ToString(), exception); }
             if (channels <= 0 || height <= 0 || width <= 0 || tensor.Length != expectedElements) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype dimensions are empty or inconsistent.", Schema.PrototypesOutputName, shape.ToString());
-            try { return new PrototypeDimensions(checked((int)channels), checked((int)width), checked((int)height)); }
+            try { return new PrototypeDimensions(checked((int)shape[0]), checked((int)channels), checked((int)width), checked((int)height)); }
             catch (OverflowException exception) { throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype dimensions exceed Int32 bounds.", Schema.PrototypesOutputName, shape.ToString(), exception); }
+        }
+
+        private PrototypeDimensions ResolvePrototypeBatchDimensions(ITensor tensor, int batch, VisualDecodeContext context)
+        {
+            PrototypeDimensions dimensions = ResolvePrototypeDimensions(tensor, context);
+            if (dimensions.Batch != 1 && dimensions.Batch != batch) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.TensorInvalid, "Prototype batch must be one shared row or match the input batch.", Schema.PrototypesOutputName, tensor.Shape.ToString());
+            if (dimensions.Channels > Options.MaximumPrototypeChannels) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Prototype channel count exceeds the configured bound.", Schema.PrototypesOutputName, "channels=" + dimensions.Channels);
+            return dimensions;
         }
 
         private void ValidateCoefficients(ITensor tensor, int candidates, int channels, VisualDecodeContext context)
@@ -200,6 +300,7 @@ namespace JYPPX.DeploySharp.Visual
             for (int position = 0; position < combined.Length; position++) if (float.IsNaN(combined[position]) || float.IsInfinity(combined[position])) throw InstanceSegmentationDecoding.Failure(context, VisualErrorCodes.DecodeFailed, "Prototype linear combination produced a non-finite mask value.", Schema.PrototypesOutputName, "position=" + position);
             return combined;
         }
+
     }
 
     internal sealed class InstanceCandidateBatch
@@ -218,7 +319,8 @@ namespace JYPPX.DeploySharp.Visual
 
     internal readonly struct PrototypeDimensions
     {
-        public PrototypeDimensions(int channels, int width, int height) { Channels = channels; Width = width; Height = height; }
+        public PrototypeDimensions(int batch, int channels, int width, int height) { Batch = batch; Channels = channels; Width = width; Height = height; }
+        public int Batch { get; }
         public int Channels { get; }
         public int Width { get; }
         public int Height { get; }
@@ -270,6 +372,60 @@ namespace JYPPX.DeploySharp.Visual
 
             decoded.Sort(CompareCandidates);
             return new InstanceCandidateBatch(candidates, decoded);
+        }
+
+        public static int RequireBatchVector(ITensor tensor, int rank, int batchAxis, VisualDecodeContext context, string name)
+        {
+            TensorShape shape = tensor.Shape;
+            if (shape.Rank != rank || shape[batchAxis] <= 0 || tensor.Length <= 0) throw Failure(context, VisualErrorCodes.TensorInvalid, "A batched instance output has an invalid batch dimension.", name, shape.ToString());
+            return checked((int)shape[batchAxis]);
+        }
+
+        public static void RequireBatchShape(ITensor tensor, int batch, int candidates, VisualDecodeContext context, string name)
+        {
+            TensorShape shape = tensor.Shape;
+            if (shape.Rank != 2 || shape[0] != batch || shape[1] != candidates || tensor.Length != (long)batch * candidates) throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance vectors must match [B,N].", name, shape.ToString());
+        }
+
+        public static void RequireCoefficientBatchShape(ITensor tensor, int batch, int candidates, int channels, VisualDecodeContext context, string name)
+        {
+            TensorShape shape = tensor.Shape;
+            if (shape.Rank != 3 || shape[0] != batch || shape[1] != candidates || shape[2] != channels || tensor.Length != (long)batch * candidates * channels) throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance coefficients must match [B,N,C].", name, shape.ToString());
+        }
+
+        public static TensorShape PrototypeRowShape(PrototypeDimensions dimensions, InstanceMaskTensorLayout layout)
+            => layout == InstanceMaskTensorLayout.Nchw ? new TensorShape(1, dimensions.Channels, dimensions.Height, dimensions.Width) : new TensorShape(1, dimensions.Height, dimensions.Width, dimensions.Channels);
+
+        public static PreparedVisualInput CreateRowInput(VisualDecodeContext context, VisualInputFrame frame, int row)
+        {
+            TensorShape inputShape = context.Input.Tensor.Shape;
+            if (inputShape.Rank == 0 || inputShape[0] != context.Input.BatchSize) throw Failure(context, VisualErrorCodes.InputInvalid, "A batched instance input must expose its batch dimension.", context.Input.InputName, inputShape.ToString());
+            var dimensions = inputShape.ToArray();
+            dimensions[0] = 1;
+            long rowLength = 1;
+            for (int index = 0; index < dimensions.Length; index++) rowLength = checked(rowLength * dimensions[index]);
+            ITensor tensor = SliceTensor(context.Input.Tensor, new TensorShape(dimensions), row, checked((int)rowLength), context, context.Input.InputName);
+            return new PreparedVisualInput(context.Input.InputName, tensor, frame.SourceSize, frame.ModelSize, 1, context.Input.Layout, frame.Transform, context.Input.Preprocessing, frame.InputId, PreparedInputOwnership.Borrowed);
+        }
+
+        public static ITensor SliceTensor(ITensor tensor, TensorShape shape, int row, int rowLength, VisualDecodeContext context, string name)
+        {
+            int offset = checked(row * rowLength);
+            if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] floats)
+            {
+                if (offset < 0 || offset > floats.Length - rowLength) throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance output slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var values = new float[rowLength];
+                Array.Copy(floats, offset, values, 0, rowLength);
+                return new Tensor<float>(shape, values, TensorBufferOwnership.Transfer);
+            }
+            if (tensor.ElementType == TensorElementType.Float64 && tensor.Buffer is double[] doubles)
+            {
+                if (offset < 0 || offset > doubles.Length - rowLength) throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance output slice exceeds its tensor.", name, tensor.Shape.ToString());
+                var values = new float[rowLength];
+                for (int index = 0; index < rowLength; index++) values[index] = checked((float)doubles[offset + index]);
+                return new Tensor<float>(shape, values, TensorBufferOwnership.Transfer);
+            }
+            throw Failure(context, VisualErrorCodes.TensorInvalid, "Batched instance outputs require Float32 or Float64 tensors.", name, tensor.Shape.ToString());
         }
 
         public static List<VisualDetectionCandidate> ApplyNms(List<VisualDetectionCandidate> ordered, InstanceSegmentationDecoderOptions options, CancellationToken cancellationToken)
@@ -413,6 +569,29 @@ namespace JYPPX.DeploySharp.Visual
             CancellationToken cancellationToken,
             bool thresholdIsStrict = false)
         {
+            // RF-DETR emits the common raw-logit + bilinear-half-pixel contract.  Keep the
+            // general sampler below for every other profile, but use a branch-free inner loop
+            // for this hot path: it avoids four virtual-looking helper calls and repeated enum
+            // checks for every source pixel (segmentation decode can otherwise dominate latency).
+            if (valueKind == InstanceMaskValueKind.Logits && activation == InstanceMaskActivation.None
+                && interpolation == InstanceMaskInterpolationMode.BilinearHalfPixel
+                && thresholdOrder == InstanceMaskThresholdOrder.AfterResize
+                && cropSpace == InstanceMaskCropSpace.None && cropOrder == InstanceMaskCropOrder.AfterResize)
+            {
+                return RestoreBilinearHalfPixelLogits(grid, gridOffset, gridWidth, gridHeight, input, threshold, cancellationToken, thresholdIsStrict);
+            }
+
+            // YOLO prototype masks apply sigmoid and the model-space box crop on the small
+            // prototype grid before resizing. Materialize that grid once so source-image
+            // bilinear sampling does not repeat four crop checks and four Exp calls per pixel.
+            if (valueKind == InstanceMaskValueKind.Logits && activation == InstanceMaskActivation.Sigmoid
+                && interpolation == InstanceMaskInterpolationMode.BilinearHalfPixel
+                && thresholdOrder == InstanceMaskThresholdOrder.AfterResize
+                && cropSpace == InstanceMaskCropSpace.ModelInput && cropOrder == InstanceMaskCropOrder.BeforeResize)
+            {
+                return RestoreBilinearHalfPixelSigmoidCropBefore(grid, gridOffset, gridWidth, gridHeight, input, modelBox, threshold, cancellationToken, thresholdIsStrict);
+            }
+
             int sourceWidth = input.SourceSize.Width;
             int sourceHeight = input.SourceSize.Height;
             var result = new byte[checked(sourceWidth * sourceHeight)];
@@ -438,6 +617,165 @@ namespace JYPPX.DeploySharp.Visual
             }
 
             return new InstanceBinaryMask(sourceWidth, sourceHeight, result, InstanceMaskCoordinateSpace.SourceImage, 0, 0, foreground);
+        }
+
+        private static InstanceBinaryMask RestoreBilinearHalfPixelLogits(float[] grid, int gridOffset, int gridWidth, int gridHeight, PreparedVisualInput input, float threshold, CancellationToken cancellationToken, bool thresholdIsStrict)
+        {
+            int sourceWidth = input.SourceSize.Width;
+            int sourceHeight = input.SourceSize.Height;
+            int modelWidth = input.ModelSize.Width;
+            int modelHeight = input.ModelSize.Height;
+            float scaleX = input.Transform.ScaleX;
+            float scaleY = input.Transform.ScaleY;
+            float offsetX = input.Transform.OffsetX;
+            float offsetY = input.Transform.OffsetY;
+            var result = new byte[checked(sourceWidth * sourceHeight)];
+            int foreground = 0;
+            BilinearSample[] xSamples = VisualArrayPool<BilinearSample>.Rent(sourceWidth);
+            BilinearSample[] ySamples = VisualArrayPool<BilinearSample>.Rent(sourceHeight);
+            try
+            {
+                FillBilinearSamples(xSamples, sourceWidth, modelWidth, gridWidth, scaleX, offsetX, float.NegativeInfinity, float.PositiveInfinity);
+                FillBilinearSamples(ySamples, sourceHeight, modelHeight, gridHeight, scaleY, offsetY, float.NegativeInfinity, float.PositiveInfinity);
+                for (int sourceY = 0; sourceY < sourceHeight; sourceY++)
+                {
+                    if ((sourceY & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
+                    BilinearSample y = ySamples[sourceY];
+                    if (!y.Valid) continue;
+                    int row0 = gridOffset + (y.Lower * gridWidth);
+                    int row1 = gridOffset + (y.Upper * gridWidth);
+                    float inverseY = 1f - y.Weight;
+                    int destination = sourceY * sourceWidth;
+                    for (int sourceX = 0; sourceX < sourceWidth; sourceX++)
+                    {
+                        BilinearSample x = xSamples[sourceX];
+                        if (!x.Valid) continue;
+                        float inverseX = 1f - x.Weight;
+                        float top = grid[row0 + x.Lower] * inverseX + grid[row0 + x.Upper] * x.Weight;
+                        float bottom = grid[row1 + x.Lower] * inverseX + grid[row1 + x.Upper] * x.Weight;
+                        float sampled = top * inverseY + bottom * y.Weight;
+                        bool foregroundPixel = thresholdIsStrict ? sampled > threshold : sampled >= threshold;
+                        if (foregroundPixel)
+                        {
+                            result[destination + sourceX] = 1;
+                            foreground++;
+                        }
+                    }
+                }
+
+                return new InstanceBinaryMask(sourceWidth, sourceHeight, result, InstanceMaskCoordinateSpace.SourceImage, 0, 0, foreground);
+            }
+            finally
+            {
+                VisualArrayPool<BilinearSample>.Return(ySamples);
+                VisualArrayPool<BilinearSample>.Return(xSamples);
+            }
+        }
+
+        private static void FillBilinearSamples(BilinearSample[] result, int sourceLength, int modelLength, int gridLength, float scale, float offset, float minimum, float maximum)
+        {
+            for (int index = 0; index < sourceLength; index++)
+            {
+                float model = ((index + 0.5f) * scale) + offset;
+                if (model < 0 || model >= modelLength || model < minimum || model >= maximum)
+                {
+                    result[index] = default;
+                    continue;
+                }
+                float grid = (model * gridLength / modelLength) - 0.5f;
+                int lower = (int)Math.Floor(grid);
+                float weight = grid - lower;
+                int upper = lower + 1;
+                lower = Math.Min(gridLength - 1, Math.Max(0, lower));
+                upper = Math.Min(gridLength - 1, Math.Max(0, upper));
+                result[index] = new BilinearSample(true, lower, upper, weight);
+            }
+        }
+
+        private readonly struct BilinearSample
+        {
+            internal BilinearSample(bool valid, int lower, int upper, float weight) { Valid = valid; Lower = lower; Upper = upper; Weight = weight; }
+            internal bool Valid { get; }
+            internal int Lower { get; }
+            internal int Upper { get; }
+            internal float Weight { get; }
+        }
+
+        private static InstanceBinaryMask RestoreBilinearHalfPixelSigmoidCropBefore(float[] grid, int gridOffset, int gridWidth, int gridHeight, PreparedVisualInput input, RectangleF modelBox, float threshold, CancellationToken cancellationToken, bool thresholdIsStrict)
+        {
+            int sourceWidth = input.SourceSize.Width;
+            int sourceHeight = input.SourceSize.Height;
+            int modelWidth = input.ModelSize.Width;
+            int modelHeight = input.ModelSize.Height;
+            int activatedLength = checked(gridWidth * gridHeight);
+            float[] activated = VisualArrayPool<float>.Rent(activatedLength);
+            BilinearSample[] xSamples = VisualArrayPool<BilinearSample>.Rent(sourceWidth);
+            BilinearSample[] ySamples = VisualArrayPool<BilinearSample>.Rent(sourceHeight);
+            try
+            {
+                Array.Clear(activated, 0, activatedLength);
+                for (int gridY = 0; gridY < gridHeight; gridY++)
+                {
+                    if ((gridY & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
+                    float modelY = ((gridY + 0.5f) * modelHeight) / gridHeight;
+                    if (modelY < modelBox.Y || modelY >= modelBox.Bottom) continue;
+                    int row = gridY * gridWidth;
+                    for (int gridX = 0; gridX < gridWidth; gridX++)
+                    {
+                        float modelX = ((gridX + 0.5f) * modelWidth) / gridWidth;
+                        if (modelX < modelBox.X || modelX >= modelBox.Right) continue;
+                        float value = grid[gridOffset + row + gridX];
+                        if (value >= 0) activated[row + gridX] = 1f / (1f + (float)Math.Exp(-value));
+                        else
+                        {
+                            float exponential = (float)Math.Exp(value);
+                            activated[row + gridX] = exponential / (1f + exponential);
+                        }
+                    }
+                }
+
+                float scaleX = input.Transform.ScaleX;
+                float scaleY = input.Transform.ScaleY;
+                float offsetX = input.Transform.OffsetX;
+                float offsetY = input.Transform.OffsetY;
+                var result = new byte[checked(sourceWidth * sourceHeight)];
+                int foreground = 0;
+                FillBilinearSamples(xSamples, sourceWidth, modelWidth, gridWidth, scaleX, offsetX, modelBox.X, modelBox.Right);
+                FillBilinearSamples(ySamples, sourceHeight, modelHeight, gridHeight, scaleY, offsetY, modelBox.Y, modelBox.Bottom);
+                for (int sourceY = 0; sourceY < sourceHeight; sourceY++)
+                {
+                    if ((sourceY & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
+                    BilinearSample y = ySamples[sourceY];
+                    if (!y.Valid) continue;
+                    int row0 = y.Lower * gridWidth;
+                    int row1 = y.Upper * gridWidth;
+                    float inverseY = 1f - y.Weight;
+                    int destination = sourceY * sourceWidth;
+                    for (int sourceX = 0; sourceX < sourceWidth; sourceX++)
+                    {
+                        BilinearSample x = xSamples[sourceX];
+                        if (!x.Valid) continue;
+                        float inverseX = 1f - x.Weight;
+                        float top = activated[row0 + x.Lower] * inverseX + activated[row0 + x.Upper] * x.Weight;
+                        float bottom = activated[row1 + x.Lower] * inverseX + activated[row1 + x.Upper] * x.Weight;
+                        float sampled = top * inverseY + bottom * y.Weight;
+                        bool foregroundPixel = thresholdIsStrict ? sampled > threshold : sampled >= threshold;
+                        if (foregroundPixel)
+                        {
+                            result[destination + sourceX] = 1;
+                            foreground++;
+                        }
+                    }
+                }
+
+                return new InstanceBinaryMask(sourceWidth, sourceHeight, result, InstanceMaskCoordinateSpace.SourceImage, 0, 0, foreground);
+            }
+            finally
+            {
+                VisualArrayPool<BilinearSample>.Return(ySamples);
+                VisualArrayPool<BilinearSample>.Return(xSamples);
+                VisualArrayPool<float>.Return(activated);
+            }
         }
 
         private static float Sample(float[] grid, int offset, int width, int height, VisualSize modelSize, RectangleF modelBox, float modelX, float modelY, InstanceMaskValueKind kind, InstanceMaskActivation activation, InstanceMaskInterpolationMode interpolation, InstanceMaskThresholdOrder thresholdOrder, InstanceMaskCropSpace cropSpace, InstanceMaskCropOrder cropOrder, float threshold)

@@ -26,11 +26,36 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             catch (Exception exception) { throw new VisualException(VisualErrorCodes.AudioMalformed, "The WAV file could not be read.", exception, profileId: profile?.ProfileId, technicalDetails: path); }
         }
 
+#if NET8_0 || NET9_0 || NET10_0
+        /// <summary>Reads one WAV file and prepares the profile-bound Whisper log-Mel tensor. / 读取一个 WAV 文件并准备 Profile-bound Whisper log-Mel 张量。</summary>
+        /// <remarks>The extractor is supplied by the caller so its verified processor configuration and Mel workspace can be reused across requests. This method performs one WAV decode, one optional stereo mix, and one fixed `[1,80,3000]` extraction; it does not resample. / Extractor 由调用方提供，以便复用已校验的 Processor 配置和 Mel 工作区。本方法执行一次 WAV 解码、一次可选立体声混音和一次固定 `[1,80,3000]` 提取；不执行重采样。</remarks>
+        public PreparedWhisperInput CreateWhisperFromWavFile(string path, AudioUnderstandingProfile profile, WhisperLogMelExtractor extractor, string? sourceId = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("An audio path is required.", nameof(path));
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested(); byte[] bytes = File.ReadAllBytes(path); cancellationToken.ThrowIfCancellationRequested();
+                return CreateWhisperFromWavBytesCore(bytes, profile, extractor, sourceId ?? Path.GetFileName(path), cancellationToken);
+            }
+            catch (OperationCanceledException exception) { throw new VisualException(VisualErrorCodes.AudioCancelled, "Audio preparation was cancelled.", exception, profileId: profile?.ProfileId); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw new VisualException(VisualErrorCodes.AudioMalformed, "The WAV file could not be read.", exception, profileId: profile?.ProfileId, technicalDetails: path); }
+        }
+
+        /// <summary>Decodes one WAV byte array and prepares the profile-bound Whisper log-Mel tensor. / 解码一个 WAV 字节数组并准备 Profile-bound Whisper log-Mel 张量。</summary>
+        public PreparedWhisperInput CreateWhisperFromWavBytes(byte[] bytes, AudioUnderstandingProfile profile, WhisperLogMelExtractor extractor, string sourceId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            try { return CreateWhisperFromWavBytesCore(bytes, profile, extractor, sourceId, cancellationToken); }
+            catch (OperationCanceledException exception) { throw new VisualException(VisualErrorCodes.AudioCancelled, "Audio preparation was cancelled.", exception, profileId: profile?.ProfileId); }
+        }
+#endif
+
         /// <summary>Decodes one in-memory WAV byte array exactly once. / 严格一次解码内存 WAV 字节数组。</summary>
         public PreparedAudioInput CreateFromWavBytes(byte[] bytes, AudioUnderstandingProfile profile, string authorization, string sourceId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            try { return CreateFromWavBytesCore((byte[])bytes.Clone(), profile, authorization, sourceId, cancellationToken); }
+            try { return CreateFromWavBytesCore(bytes, profile, authorization, sourceId, cancellationToken); }
             catch (OperationCanceledException exception) { throw new VisualException(VisualErrorCodes.AudioCancelled, "Audio preparation was cancelled.", exception, profileId: profile?.ProfileId); }
         }
 
@@ -65,6 +90,37 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             WavData wav = DecodeWav(bytes, profile); cancellationToken.ThrowIfCancellationRequested(); watch.Stop();
             return Prepare(wav.Samples, bytes, wav.SampleRate, wav.Channels, wav.Encoding, profile, authorization, sourceId, cancellationToken, watch.Elapsed);
         }
+
+#if NET8_0 || NET9_0 || NET10_0
+        private static PreparedWhisperInput CreateWhisperFromWavBytesCore(byte[] bytes, AudioUnderstandingProfile profile, WhisperLogMelExtractor extractor, string sourceId, CancellationToken cancellationToken)
+        {
+            if (extractor == null) throw new ArgumentNullException(nameof(extractor));
+            var watch = Stopwatch.StartNew(); cancellationToken.ThrowIfCancellationRequested();
+            WavData wav = DecodeWav(bytes, profile); cancellationToken.ThrowIfCancellationRequested();
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (!profile.Executable || profile.Family != AudioUnderstandingFamily.Whisper || profile.Generation == null) throw AudioError(VisualErrorCodes.AudioCapabilityUnavailable, "This media adapter executes only an executable Whisper profile.", profile);
+            if (!string.Equals(extractor.ProcessorIdentity, profile.Processor.Identity, StringComparison.Ordinal) || !string.Equals(extractor.FeatureIdentity, profile.Processor.FeatureIdentity, StringComparison.Ordinal)) throw AudioError(VisualErrorCodes.AudioIdentityMismatch, "The Whisper log-Mel extractor does not match the profile processor contract.", profile);
+            AudioProcessorContract processor = profile.Processor;
+            if (!processor.Encodings.Contains(wav.Encoding)) throw AudioError(VisualErrorCodes.AudioMalformed, "PCM encoding is not accepted by the profile.", profile);
+            if (wav.SampleRate != processor.SampleRate) throw AudioError(VisualErrorCodes.AudioSampleRateMismatch, "The model requires native 16000 Hz audio; this adapter does not perform unverified resampling.", profile);
+            if (wav.Channels != 1 && wav.Channels != 2) throw AudioError(VisualErrorCodes.AudioChannelMismatch, "Only mono or interleaved stereo PCM is supported.", profile);
+            if (wav.Samples.Length % wav.Channels != 0) throw AudioError(VisualErrorCodes.AudioChannelMismatch, "PCM sample count and channel layout are inconsistent.", profile);
+            int frames = wav.Samples.Length / wav.Channels;
+            if (frames <= 0 || frames > processor.MaximumSamples) throw AudioError(VisualErrorCodes.AudioLimitExceeded, "Audio duration exceeds the profile capacity.", profile);
+            float[] mono = wav.Samples;
+            if (wav.Channels == 2)
+            {
+                mono = new float[frames];
+                for (int frame = 0; frame < frames; frame++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested(); float value = (wav.Samples[frame * 2] + wav.Samples[(frame * 2) + 1]) * 0.5f;
+                    if (float.IsNaN(value) || float.IsInfinity(value)) throw AudioError(VisualErrorCodes.AudioNonFinite, "PCM contains NaN or Infinity.", profile); mono[frame] = value;
+                }
+            }
+            string sourceSha = HashBytes(bytes); Tensor<float> features = extractor.Extract(mono, cancellationToken); string featureSha = HashFloats((float[])features.Buffer); watch.Stop();
+            return new PreparedWhisperInput(profile, "input_features", features, sourceId, sourceSha, featureSha, watch.Elapsed);
+        }
+#endif
 
         private static PreparedAudioInput Prepare(float[] interleaved, byte[] sourceBytes, int sampleRate, int channels, AudioPcmEncoding encoding, AudioUnderstandingProfile profile, string authorization, string sourceId, CancellationToken cancellationToken, TimeSpan decodeTime)
         {

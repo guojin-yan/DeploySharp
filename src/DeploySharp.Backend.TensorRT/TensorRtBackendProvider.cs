@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Models;
@@ -42,7 +43,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return Descriptor.Supports(request.RequiredCapabilities);
         }
 
-        /// <summary>Loads an external serialized engine into a caller-owned managed session. / 加载 TensorRT 引擎资源。</summary>
+        /// <summary>Loads an external serialized engine into a caller-owned managed session or independent session pool. / 加载 TensorRT 引擎资源，返回调用方持有的会话或彼此独立的会话池。</summary>
         public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
         {
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -64,16 +65,6 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 throw new BackendNotCompatibleException(artifact.ModelId, request.BackendId ?? BackendId);
             }
 
-            if (options.MaxConcurrency != 1)
-            {
-                throw new TensorRtBackendException(
-                    TensorRtErrorCodes.ConfigurationInvalid,
-                    "The managed TensorRT adapter owns one execution context and requires MaxConcurrency=1.",
-                    modelId: artifact.ModelId,
-                    operation: "configure",
-                    technicalDetails: "maxConcurrency=" + options.MaxConcurrency);
-            }
-
             if (options.EnableProfiling)
             {
                 throw new TensorRtBackendException(
@@ -84,6 +75,35 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
 
             byte[] serializedEngine = TensorRtModelArtifactValidator.ReadValidatedBytes(artifact, _options.MaximumEngineBytes);
+            if (options.MaxConcurrency == 1) return CreateSingleSession(artifact, serializedEngine);
+
+            var sessions = new List<TensorRtSession>(options.MaxConcurrency);
+            try
+            {
+                for (int index = 0; index < options.MaxConcurrency; index++) sessions.Add(CreateSingleSession(artifact, serializedEngine));
+                return new TensorRtSessionPool(sessions);
+            }
+            catch
+            {
+                foreach (TensorRtSession session in sessions) session.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>Disposes the provider; already-created sessions remain caller-owned. / 释放推理会话资源。</summary>
+        public void Dispose() => _disposed = true;
+
+        private static void DisposeAfterFailedLoad(params IDisposable?[] resources)
+        {
+            foreach (IDisposable? resource in resources)
+            {
+                try { resource?.Dispose(); }
+                catch { }
+            }
+        }
+
+        private TensorRtSession CreateSingleSession(ModelArtifact artifact, byte[] serializedEngine)
+        {
             TensorRtLogger? logger = null;
             TensorRtRuntime? runtime = null;
             TensorRtEngine? engine = null;
@@ -97,7 +117,16 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 engine = runtime.Deserialize(serializedEngine);
                 context = engine.CreateExecutionContext();
                 bindings = new TensorRtInferenceBindings(engine, context, _options.OptimizationProfile);
-                return new TensorRtSession(artifact, logger, runtime, engine, context, bindings, options.MaxConcurrency);
+                return new TensorRtSession(
+                    artifact,
+                    logger,
+                    runtime,
+                    engine,
+                    context,
+                    bindings,
+                    1,
+                    _options.CudaTargetArchitecture,
+                    _options.CacheImmutableHostInputsOnDevice);
             }
             catch (TensorRtBackendException)
             {
@@ -113,19 +142,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     exception,
                     artifact.ModelId,
                     operation: "load",
-                    technicalDetails: exception.GetType().FullName);
-            }
-        }
-
-        /// <summary>Disposes the provider; already-created sessions remain caller-owned. / 释放推理会话资源。</summary>
-        public void Dispose() => _disposed = true;
-
-        private static void DisposeAfterFailedLoad(params IDisposable?[] resources)
-        {
-            foreach (IDisposable? resource in resources)
-            {
-                try { resource?.Dispose(); }
-                catch { }
+                    technicalDetails: exception.GetType().FullName + ": " + exception.Message);
             }
         }
 

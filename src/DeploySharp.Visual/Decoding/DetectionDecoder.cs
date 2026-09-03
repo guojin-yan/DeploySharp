@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Results;
 using JYPPX.DeploySharp.Results.Vision;
@@ -129,31 +128,48 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection decoder currently requires batch size one.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName);
             ITensor tensor;
             try { tensor = context.Outputs.GetRequired(Schema.OutputName); }
             catch (KeyNotFoundException exception) { throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output tensor is missing.", exception, context.Profile.ProfileId, Schema.OutputName, modelId: context.Profile.ModelId); }
+            int batch;
             int candidates;
             int fields;
             if (tensor.Shape.Rank == 2)
             {
+                if (context.Input.BatchSize != 1) throw InvalidShape(context, tensor, "A batched detection input requires a [batch,candidates,fields] output.");
+                batch = 1;
                 candidates = checked((int)tensor.Shape[0]);
                 fields = checked((int)tensor.Shape[1]);
             }
-            else if (tensor.Shape.Rank == 3 && tensor.Shape[0] == 1)
+            else if (tensor.Shape.Rank == 3)
             {
+                batch = checked((int)tensor.Shape[0]);
                 candidates = checked((int)tensor.Shape[1]);
                 fields = checked((int)tensor.Shape[2]);
+                if (batch != context.Input.BatchSize) throw InvalidShape(context, tensor, "Detection output batch does not match the input batch.");
             }
-            else throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output shape must be [candidates,fields] or [1,candidates,fields].", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, technicalDetails: tensor.Shape.ToString());
+            else throw InvalidShape(context, tensor, "Detection output shape must be [candidates,fields] or [batch,candidates,fields].");
             if (candidates < 0 || fields < 4 || Schema.ClassScoreOffset + Schema.ClassCount > fields || (Schema.ObjectnessIndex >= fields)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output field layout is incompatible with its schema.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName);
-            if (tensor.Length != (long)candidates * fields) throw new VisualException(VisualErrorCodes.TensorInvalid, "Detection output element count is inconsistent with its shape.", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName);
+            if (tensor.Length != (long)batch * candidates * fields) throw InvalidShape(context, tensor, "Detection output element count is inconsistent with its shape.");
             float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
-            var decoded = new List<VisualDetectionCandidate>();
+            var results = new List<DetectionResult>(batch);
+            for (int batchIndex = 0; batchIndex < batch; batchIndex++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                results.Add(DecodeSingle(context, values, batchIndex, candidates, fields));
+            }
+            return batch == 1 ? results[0] : new DetectionBatchResult(results);
+        }
+
+        private DetectionResult DecodeSingle(VisualDecodeContext context, float[] values, int batchIndex, int candidates, int fields)
+        {
+            VisualInputFrame frame = context.Input.BatchFrames[batchIndex];
+            int batchOffset = checked(batchIndex * candidates * fields);
+            var decoded = new List<VisualDetectionCandidate>(Math.Min(candidates, Options.MaximumCandidates));
             for (int candidateIndex = 0; candidateIndex < candidates; candidateIndex++)
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
-                int offset = candidateIndex * fields;
+                int offset = checked(batchOffset + (candidateIndex * fields));
                 float objectness = 1;
                 if (Schema.ScoreMode == DetectionScoreMode.ObjectnessTimesClassScore)
                 {
@@ -173,19 +189,26 @@ namespace JYPPX.DeploySharp.Visual
                 float score = objectness * bestClassScore;
                 if (score < Options.ScoreThreshold) continue;
                 RectangleF modelBox;
-                try { modelBox = DetectionPostprocessing.DecodeModelBox(Schema.BoxFormat, Schema.NormalizedCoordinates, context.Input.ModelSize, values[offset], values[offset + 1], values[offset + 2], values[offset + 3]); }
+                try { modelBox = DetectionPostprocessing.DecodeModelBox(Schema.BoxFormat, Schema.NormalizedCoordinates, frame.ModelSize, values[offset], values[offset + 1], values[offset + 2], values[offset + 3]); }
                 catch (ArgumentOutOfRangeException exception) { throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection box has negative width or height.", exception, context.Profile.ProfileId, Schema.OutputName, modelId: context.Profile.ModelId); }
-                RectangleF sourceBox = context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
+                RectangleF sourceBox = frame.Transform.ClipToSource(frame.Transform.ToSource(modelBox));
                 if (sourceBox.Width <= 0 || sourceBox.Height <= 0) continue;
                 decoded.Add(new VisualDetectionCandidate(candidateIndex, bestClass, score, modelBox, sourceBox));
             }
 
-            List<VisualDetectionCandidate> ordered = decoded.OrderByDescending(value => value.Score).ThenBy(value => value.ClassIndex).ThenBy(value => value.SourceIndex).Take(Options.MaximumCandidates).ToList();
+            // Sort in place to avoid the iterator/temporary-list allocations from LINQ on
+            // dense YOLO/DETR outputs. The comparer preserves the documented deterministic
+            // score -> class -> source ordering exactly.
+            decoded.Sort(CompareOrdered);
+            if (decoded.Count > Options.MaximumCandidates) decoded.RemoveRange(Options.MaximumCandidates, decoded.Count - Options.MaximumCandidates);
+            List<VisualDetectionCandidate> ordered = decoded;
             List<VisualDetectionCandidate> kept = DetectionPostprocessing.Suppress(ordered, Options.IouThreshold, Options.NmsMode, Options.MaximumDetections, context.CancellationToken);
             var results = new List<Detection>(kept.Count);
             foreach (VisualDetectionCandidate candidate in kept) results.Add(new Detection(candidate.SourceBox, new LabelScore(candidate.ClassIndex, context.Profile.GetLabel(candidate.ClassIndex), candidate.Score)));
             return new DetectionResult(results);
         }
+
+        private VisualException InvalidShape(VisualDecodeContext context, ITensor tensor, string message) => new VisualException(VisualErrorCodes.TensorInvalid, message, profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, modelId: context.Profile.ModelId, technicalDetails: tensor.Shape.ToString());
 
         /// <summary>Calculates intersection over union for two half-open rectangles. / 计算两个半开区间矩形的交并比。</summary>
         public static float IntersectionOverUnion(RectangleF first, RectangleF second)
@@ -205,6 +228,14 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (value < 0 || value > 1) throw new VisualException(VisualErrorCodes.DecodeFailed, "Detection score must be in [0,1].", profileId: context.Profile.ProfileId, tensorName: Schema.OutputName, technicalDetails: "candidate=" + candidateIndex + ";field=" + field);
             return value;
+        }
+
+        private static int CompareOrdered(VisualDetectionCandidate left, VisualDetectionCandidate right)
+        {
+            int score = right.Score.CompareTo(left.Score);
+            if (score != 0) return score;
+            int classIndex = left.ClassIndex.CompareTo(right.ClassIndex);
+            return classIndex != 0 ? classIndex : left.SourceIndex.CompareTo(right.SourceIndex);
         }
 
     }

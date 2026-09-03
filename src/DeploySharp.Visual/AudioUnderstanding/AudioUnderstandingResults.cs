@@ -33,9 +33,9 @@ namespace JYPPX.DeploySharp.Visual
         private readonly IReadOnlyList<int> _frameTokenIds;
         private readonly IReadOnlyList<int> _collapsedTokenIds;
         private readonly IReadOnlyList<AudioCtcTokenSegment> _segments;
-        internal AudioCtcDecodedResult(string transcript, IList<int> frameTokenIds, IList<int> collapsedTokenIds, IList<AudioCtcTokenSegment> segments)
+        internal AudioCtcDecodedResult(string transcript, List<int> frameTokenIds, List<int> collapsedTokenIds, List<AudioCtcTokenSegment> segments)
         {
-            Transcript = transcript; _frameTokenIds = new ReadOnlyCollection<int>(new List<int>(frameTokenIds)); _collapsedTokenIds = new ReadOnlyCollection<int>(new List<int>(collapsedTokenIds)); _segments = new ReadOnlyCollection<AudioCtcTokenSegment>(new List<AudioCtcTokenSegment>(segments));
+            Transcript = transcript; _frameTokenIds = new ReadOnlyCollection<int>(frameTokenIds); _collapsedTokenIds = new ReadOnlyCollection<int>(collapsedTokenIds); _segments = new ReadOnlyCollection<AudioCtcTokenSegment>(segments);
         }
         /// <summary>Gets owned transcript text. / 获取自有转录文本。</summary>
         public string Transcript { get; }

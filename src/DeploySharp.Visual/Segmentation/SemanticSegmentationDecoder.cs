@@ -144,7 +144,6 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw Failure(context, VisualErrorCodes.TensorInvalid, "Semantic segmentation currently supports batch size one.");
             if (Options.GeneratePolygons) throw Failure(context, VisualErrorCodes.CapabilityUnavailable, "Semantic polygon extraction is unsupported because hole and multi-component semantics are not yet guaranteed.");
 
             ITensor tensor;
@@ -153,21 +152,34 @@ namespace JYPPX.DeploySharp.Visual
             TensorDimensions dimensions = ResolveDimensions(tensor, context);
             ValidateElementType(tensor, context);
             foreach (VisualLabel label in context.Profile.Labels) if (label.Index >= Schema.ClassCount) throw Failure(context, VisualErrorCodes.DecodeFailed, "A profile label index exceeds the segmentation class count.", technicalDetails: "labelIndex=" + label.Index);
-            VisualSize targetSize = GetTargetSize(context, dimensions);
-            EnsureBounded(dimensions, targetSize, tensor, context);
+            EnsureBounded(dimensions, tensor, context);
 
-            float[]? canonicalProbabilities = null;
-            ushort[] tensorMask = Schema.Kind == SegmentationOutputKind.LabelMap
-                ? DecodeLabelMap(tensor, dimensions, context)
-                : DecodeScores(tensor, dimensions, context, out canonicalProbabilities);
-            ushort[] resultValues = RestoreMask(tensorMask, dimensions.Width, dimensions.Height, targetSize, context);
-            if (Options.MinimumRegionPixels > 1) FilterSmallRegions(resultValues, targetSize.Width, targetSize.Height, context.CancellationToken);
-            var mask = new SemanticSegmentationMask(targetSize.Width, targetSize.Height, resultValues, true);
+            // Validate scores while each row is decoded so a true batch does not add a
+            // second full-tensor scan or copy. Integer label maps are read directly.
+            float[]? scoreValues = Schema.Kind == SegmentationOutputKind.LabelMap
+                ? null
+                : VisualTensorReader.ReadScoresForFusedValidation(tensor, context.Profile.ProfileId, Schema.OutputName);
+            var results = new List<SemanticSegmentationResult>(dimensions.Batch);
             IReadOnlyList<SemanticSegmentationClass> classes = CreateClasses(context.Profile);
-            IReadOnlyList<SegmentationClassStatistics> statistics = CreateStatistics(resultValues);
-            SegmentationRle? rle = Options.GenerateRle ? SegmentationRle.Encode(mask) : null;
-            SegmentationProbabilityMap? probabilityMap = canonicalProbabilities == null ? null : new SegmentationProbabilityMap(dimensions.Width, dimensions.Height, dimensions.Channels, canonicalProbabilities, true);
-            return new SemanticSegmentationResult(mask, classes, statistics, rle, probabilityMap);
+            for (int batchIndex = 0; batchIndex < dimensions.Batch; batchIndex++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                VisualInputFrame frame = context.Input.BatchFrames[batchIndex];
+                VisualSize targetSize = GetTargetSize(frame, dimensions);
+                float[]? canonicalProbabilities = null;
+                ushort[] tensorMask = Schema.Kind == SegmentationOutputKind.LabelMap
+                    ? DecodeLabelMap(tensor, dimensions, batchIndex, context)
+                    : DecodeScores(scoreValues!, dimensions, batchIndex, context, out canonicalProbabilities);
+                ushort[] resultValues = RestoreMask(tensorMask, dimensions.Width, dimensions.Height, targetSize, frame, context);
+                if (Options.MinimumRegionPixels > 1) FilterSmallRegions(resultValues, targetSize.Width, targetSize.Height, context.CancellationToken);
+                var mask = new SemanticSegmentationMask(targetSize.Width, targetSize.Height, resultValues, true);
+                IReadOnlyList<SegmentationClassStatistics> statistics = CreateStatistics(resultValues);
+                SegmentationRle? rle = Options.GenerateRle ? SegmentationRle.Encode(mask) : null;
+                SegmentationProbabilityMap? probabilityMap = canonicalProbabilities == null ? null : new SegmentationProbabilityMap(dimensions.Width, dimensions.Height, dimensions.Channels, canonicalProbabilities, true);
+                results.Add(new SemanticSegmentationResult(mask, classes, statistics, rle, probabilityMap));
+            }
+
+            return dimensions.Batch == 1 ? results[0] : new SemanticSegmentationBatchResult(results);
         }
 
         private TensorDimensions ResolveDimensions(ITensor tensor, VisualDecodeContext context)
@@ -207,7 +219,7 @@ namespace JYPPX.DeploySharp.Visual
                     throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation tensor layout is invalid.");
             }
 
-            if (batch != 1) throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation output batch dimension must be one.", technicalDetails: shape.ToString());
+            if (batch <= 0 || batch > int.MaxValue || batch != context.Input.BatchSize) throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation output batch dimension must match the prepared input batch.", technicalDetails: shape.ToString());
             if (height <= 0 || width <= 0 || height > int.MaxValue || width > int.MaxValue) throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation spatial dimensions are invalid.", technicalDetails: shape.ToString());
             if (Schema.Kind == SegmentationOutputKind.LabelMap)
             {
@@ -222,7 +234,7 @@ namespace JYPPX.DeploySharp.Visual
             try { expected = checked(batch * channels * height * width); }
             catch (OverflowException exception) { throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation tensor dimensions overflow the supported element count.", exception, shape.ToString()); }
             if (tensor.Length != expected) throw Failure(context, VisualErrorCodes.TensorInvalid, "The segmentation tensor element count is inconsistent.", technicalDetails: shape.ToString());
-            return new TensorDimensions(checked((int)width), checked((int)height), checked((int)channels));
+            return new TensorDimensions(checked((int)batch), checked((int)width), checked((int)height), checked((int)channels));
         }
 
         private void ValidateElementType(ITensor tensor, VisualDecodeContext context)
@@ -241,18 +253,23 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        private void EnsureBounded(TensorDimensions dimensions, VisualSize target, ITensor tensor, VisualDecodeContext context)
+        private void EnsureBounded(TensorDimensions dimensions, ITensor tensor, VisualDecodeContext context)
         {
             try
             {
                 long tensorPixels = checked((long)dimensions.Width * dimensions.Height);
-                long targetPixels = checked((long)target.Width * target.Height);
-                if (tensorPixels > int.MaxValue || targetPixels > int.MaxValue || tensor.Length > int.MaxValue) throw new OverflowException();
+                if (tensorPixels > int.MaxValue) throw new OverflowException();
                 long bytes = checked(tensor.Length * (Schema.Kind == SegmentationOutputKind.LabelMap ? 8L : 4L));
-                bytes = checked(bytes + (targetPixels * 2L));
                 bytes = checked(bytes + (Schema.ClassCount * 128L));
-                if (Options.GenerateRle) bytes = checked(bytes + (targetPixels * 48L));
-                if (Options.MinimumRegionPixels > 1) bytes = checked(bytes + (targetPixels * 5L));
+                for (int batchIndex = 0; batchIndex < dimensions.Batch; batchIndex++)
+                {
+                    VisualSize target = GetTargetSize(context.Input.BatchFrames[batchIndex], dimensions);
+                    long targetPixels = checked((long)target.Width * target.Height);
+                    if (targetPixels > int.MaxValue) throw new OverflowException();
+                    bytes = checked(bytes + (targetPixels * 2L));
+                    if (Options.GenerateRle) bytes = checked(bytes + (targetPixels * 48L));
+                    if (Options.MinimumRegionPixels > 1) bytes = checked(bytes + (targetPixels * 5L));
+                }
                 if (Options.PreserveProbabilityMap) bytes = checked(bytes + (tensor.Length * 4L));
                 if (bytes > Options.MaximumOutputBytes) throw Failure(context, VisualErrorCodes.DecodeFailed, "The estimated segmentation output exceeds the configured memory limit.", technicalDetails: "estimatedBytes=" + bytes + "; maximumBytes=" + Options.MaximumOutputBytes);
             }
@@ -262,43 +279,81 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        private ushort[] DecodeScores(ITensor tensor, TensorDimensions dimensions, VisualDecodeContext context, out float[]? canonicalProbabilities)
+        private ushort[] DecodeScores(float[] values, TensorDimensions dimensions, int batchIndex, VisualDecodeContext context, out float[]? canonicalProbabilities)
         {
-            float[] values = VisualTensorReader.ReadFiniteScores(tensor, context.Profile.ProfileId, Schema.OutputName);
             int pixels = checked(dimensions.Width * dimensions.Height);
             var result = new ushort[pixels];
-            canonicalProbabilities = Options.PreserveProbabilityMap ? new float[values.Length] : null;
+            int rowLength = checked(pixels * dimensions.Channels);
+            int batchOffset = checked(batchIndex * rowLength);
+            canonicalProbabilities = Options.PreserveProbabilityMap ? new float[rowLength] : null;
             float threshold = Options.BinaryThreshold ?? (Schema.Kind == SegmentationOutputKind.Logits ? 0f : 0.5f);
             int foreground = Schema.BackgroundClassIndex == 0 ? 1 : 0;
-            for (int pixel = 0; pixel < pixels; pixel++)
+            bool channelMajor = Schema.Layout == SegmentationTensorLayout.Nchw || Schema.Layout == SegmentationTensorLayout.Chw;
+            if (channelMajor)
             {
-                if ((pixel & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
-                int bestClass = 0;
-                float bestValue = float.NegativeInfinity;
-                for (int channel = 0; channel < dimensions.Channels; channel++)
+                // NCHW/CHW outputs store each class plane contiguously. Scanning a
+                // pixel across those planes avoids a division and layout branch for
+                // every channel of every pixel.
+                int plane = pixels;
+                for (int pixel = 0; pixel < pixels; pixel++)
                 {
-                    float value = values[GetTensorIndex(pixel, channel, dimensions)];
-                    if (Schema.Kind == SegmentationOutputKind.Probabilities && (value < 0 || value > 1)) throw Failure(context, VisualErrorCodes.DecodeFailed, "A segmentation probability must be in [0,1].", technicalDetails: "pixel=" + pixel + "; channel=" + channel);
-                    if (canonicalProbabilities != null) canonicalProbabilities[(pixel * dimensions.Channels) + channel] = value;
-                    if (value > bestValue) { bestValue = value; bestClass = channel; }
+                    if ((pixel & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    int bestClass = 0;
+                    float bestValue = float.NegativeInfinity;
+                    for (int channel = 0; channel < dimensions.Channels; channel++)
+                    {
+                        float value = values[batchOffset + (channel * plane) + pixel];
+                        ValidateScore(value, context, pixel, channel);
+                        if (canonicalProbabilities != null) canonicalProbabilities[(pixel * dimensions.Channels) + channel] = value;
+                        if (value > bestValue) { bestValue = value; bestClass = channel; }
+                    }
+                    result[pixel] = dimensions.Channels == 1
+                        ? (ushort)(bestValue >= threshold ? foreground : Schema.BackgroundClassIndex)
+                        : (ushort)bestClass;
                 }
-
-                result[pixel] = dimensions.Channels == 1
-                    ? (ushort)(bestValue >= threshold ? foreground : Schema.BackgroundClassIndex)
-                    : (ushort)bestClass;
+            }
+            else
+            {
+                // NHWC/HWC outputs are already pixel-interleaved, so the inner
+                // channel scan becomes a tight contiguous read.
+                int channels = dimensions.Channels;
+                for (int pixel = 0; pixel < pixels; pixel++)
+                {
+                    if ((pixel & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    int offset = pixel * channels;
+                    int bestClass = 0;
+                    float bestValue = float.NegativeInfinity;
+                    for (int channel = 0; channel < channels; channel++)
+                    {
+                        float value = values[batchOffset + offset + channel];
+                        ValidateScore(value, context, pixel, channel);
+                        if (canonicalProbabilities != null) canonicalProbabilities[offset + channel] = value;
+                        if (value > bestValue) { bestValue = value; bestClass = channel; }
+                    }
+                    result[pixel] = channels == 1
+                        ? (ushort)(bestValue >= threshold ? foreground : Schema.BackgroundClassIndex)
+                        : (ushort)bestClass;
+                }
             }
 
             return result;
         }
 
-        private ushort[] DecodeLabelMap(ITensor tensor, TensorDimensions dimensions, VisualDecodeContext context)
+        private void ValidateScore(float value, VisualDecodeContext context, int pixel, int channel)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) throw Failure(context, VisualErrorCodes.DecodeFailed, "Segmentation scores must be finite.", technicalDetails: "pixel=" + pixel + "; channel=" + channel);
+            if (Schema.Kind == SegmentationOutputKind.Probabilities && (value < 0 || value > 1)) throw Failure(context, VisualErrorCodes.DecodeFailed, "A segmentation probability must be in [0,1].", technicalDetails: "pixel=" + pixel + "; channel=" + channel);
+        }
+
+        private ushort[] DecodeLabelMap(ITensor tensor, TensorDimensions dimensions, int batchIndex, VisualDecodeContext context)
         {
             int length = checked(dimensions.Width * dimensions.Height);
+            int batchOffset = checked(batchIndex * length);
             var result = new ushort[length];
             for (int index = 0; index < length; index++)
             {
                 if ((index & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
-                ulong value = ReadUnsignedInteger(tensor, index, context);
+                ulong value = ReadUnsignedInteger(tensor, batchOffset + index, context);
                 if (value >= (ulong)Schema.ClassCount || value > ushort.MaxValue) throw Failure(context, VisualErrorCodes.DecodeFailed, "A label-map class index exceeds the configured class count.", technicalDetails: "index=" + index + "; value=" + value);
                 result[index] = (ushort)value;
             }
@@ -336,20 +391,12 @@ namespace JYPPX.DeploySharp.Visual
 
         private VisualException NegativeLabel(VisualDecodeContext context, int index) => Failure(context, VisualErrorCodes.DecodeFailed, "A label-map class index cannot be negative.", technicalDetails: "index=" + index);
 
-        private int GetTensorIndex(int pixel, int channel, TensorDimensions dimensions)
-        {
-            int y = pixel / dimensions.Width;
-            int x = pixel - (y * dimensions.Width);
-            if (Schema.Layout == SegmentationTensorLayout.Nchw || Schema.Layout == SegmentationTensorLayout.Chw) return ((channel * dimensions.Height) + y) * dimensions.Width + x;
-            return ((y * dimensions.Width) + x) * dimensions.Channels + channel;
-        }
-
-        private ushort[] RestoreMask(ushort[] tensorMask, int tensorWidth, int tensorHeight, VisualSize target, VisualDecodeContext context)
+        private ushort[] RestoreMask(ushort[] tensorMask, int tensorWidth, int tensorHeight, VisualSize target, VisualInputFrame frame, VisualDecodeContext context)
         {
             if (Options.OutputSizeMode == SegmentationOutputSizeMode.Tensor) return tensorMask;
-            ushort[] modelMask = tensorWidth == context.Input.ModelSize.Width && tensorHeight == context.Input.ModelSize.Height
+            ushort[] modelMask = tensorWidth == frame.ModelSize.Width && tensorHeight == frame.ModelSize.Height
                 ? tensorMask
-                : ResizeNearest(tensorMask, tensorWidth, tensorHeight, context.Input.ModelSize.Width, context.Input.ModelSize.Height, context.CancellationToken);
+                : ResizeNearest(tensorMask, tensorWidth, tensorHeight, frame.ModelSize.Width, frame.ModelSize.Height, context.CancellationToken);
             if (Options.OutputSizeMode == SegmentationOutputSizeMode.Model) return modelMask;
 
             var sourceMask = new ushort[checked(target.Width * target.Height)];
@@ -360,12 +407,12 @@ namespace JYPPX.DeploySharp.Visual
                 for (int x = 0; x < target.Width; x++)
                 {
                     // Pixel centers preserve nearest-neighbor semantics for resize, letterbox, crop, and explicit affine transforms. / 像素中心可为缩放、letterbox、裁剪及显式仿射变换保持最近邻语义。
-                    float modelX = ((x + 0.5f) * context.Input.Transform.ScaleX) + context.Input.Transform.OffsetX;
-                    float modelY = ((y + 0.5f) * context.Input.Transform.ScaleY) + context.Input.Transform.OffsetY;
+                    float modelX = ((x + 0.5f) * frame.Transform.ScaleX) + frame.Transform.OffsetX;
+                    float modelY = ((y + 0.5f) * frame.Transform.ScaleY) + frame.Transform.OffsetY;
                     int sourceX = (int)Math.Floor(modelX);
                     int sourceY = (int)Math.Floor(modelY);
-                    sourceMask[(y * target.Width) + x] = sourceX >= 0 && sourceX < context.Input.ModelSize.Width && sourceY >= 0 && sourceY < context.Input.ModelSize.Height
-                        ? modelMask[(sourceY * context.Input.ModelSize.Width) + sourceX]
+                    sourceMask[(y * target.Width) + x] = sourceX >= 0 && sourceX < frame.ModelSize.Width && sourceY >= 0 && sourceY < frame.ModelSize.Height
+                        ? modelMask[(sourceY * frame.ModelSize.Width) + sourceX]
                         : fill;
                 }
             }
@@ -469,10 +516,10 @@ namespace JYPPX.DeploySharp.Visual
             return new SegmentationColor((byte)red, (byte)green, (byte)blue);
         }
 
-        private VisualSize GetTargetSize(VisualDecodeContext context, TensorDimensions dimensions)
+        private VisualSize GetTargetSize(VisualInputFrame frame, TensorDimensions dimensions)
         {
-            if (Options.OutputSizeMode == SegmentationOutputSizeMode.Source) return context.Input.SourceSize;
-            if (Options.OutputSizeMode == SegmentationOutputSizeMode.Model) return context.Input.ModelSize;
+            if (Options.OutputSizeMode == SegmentationOutputSizeMode.Source) return frame.SourceSize;
+            if (Options.OutputSizeMode == SegmentationOutputSizeMode.Model) return frame.ModelSize;
             return new VisualSize(dimensions.Width, dimensions.Height);
         }
 
@@ -488,7 +535,8 @@ namespace JYPPX.DeploySharp.Visual
 
         private sealed class TensorDimensions
         {
-            public TensorDimensions(int width, int height, int channels) { Width = width; Height = height; Channels = channels; }
+            public TensorDimensions(int batch, int width, int height, int channels) { Batch = batch; Width = width; Height = height; Channels = channels; }
+            public int Batch { get; }
             public int Width { get; }
             public int Height { get; }
             public int Channels { get; }

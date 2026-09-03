@@ -93,7 +93,9 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
         /// <summary>Gets exact binary-map output name. / 获取精确二值图输出名称。</summary>
         public string MaskOutputName { get; }
 
-        /// <summary>Validates and decodes all four named outputs into an owned anomaly result. / 验证四个命名输出并解码为自有异常结果。</summary>
+        internal AnomalyDecoder CoreDecoder => _decoder;
+
+        /// <summary>Validates and decodes all four named outputs into an owned anomaly result or ordered batch result. / 验证四个命名输出并解码为自有异常结果或有序 Batch 结果。</summary>
         public object Decode(VisualDecodeContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
@@ -105,11 +107,33 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
                 new NamedTensor(ScoreOutputName, context.Outputs.GetRequired(ScoreOutputName)),
                 new NamedTensor(MapOutputName, context.Outputs.GetRequired(MapOutputName))
             });
-            return _decoder.DecodeAnomaly(new VisualDecodeContext(context.Input, context.Profile, reduced, context.CancellationToken));
+            return _decoder.DecodeAny(new VisualDecodeContext(context.Input, context.Profile, reduced, context.CancellationToken));
         }
 
         /// <summary>Decodes an anomaly result through the explicit anomaly contract. / 通过显式异常合同解码异常结果。</summary>
-        public AnomalyDetectionResult DecodeAnomaly(VisualDecodeContext context) => (AnomalyDetectionResult)Decode(context);
+        public AnomalyDetectionResult DecodeAnomaly(VisualDecodeContext context)
+        {
+            object decoded = Decode(context);
+            if (decoded is AnomalyDetectionResult result) return result;
+            throw new VisualException(VisualErrorCodes.AnomalyContractInvalid, "A batch anomaly response requires Decode or the batch result type.", profileId: context.Profile.ProfileId, modelId: context.Profile.ModelId);
+        }
+
+        internal AnomalyDetectionResult CreateCudaDecodedResult(
+            VisualDecodeContext context,
+            float imageScore,
+            int rawWidth,
+            int rawHeight,
+            float[] rawValues,
+            float[] restoredValues,
+            byte[] maskValues,
+            int anomalousPixelCount)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context.Outputs.Count != 4) throw Failure(context, "An Anomalib export must contain exactly pred_score, pred_label, anomaly_map, and pred_mask.");
+            ValidateAuxiliary(context, LabelOutputName, TensorElementType.Boolean);
+            ValidateAuxiliary(context, MaskOutputName, TensorElementType.Boolean);
+            return _decoder.CreateCudaDecodedResult(context, imageScore, rawWidth, rawHeight, rawValues, restoredValues, maskValues, anomalousPixelCount);
+        }
 
         private void ValidateAuxiliary(VisualDecodeContext context, string name, TensorElementType elementType)
         {
@@ -150,17 +174,18 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
     public static class AnomalibProfiles
     {
         /// <summary>Creates a PaDiM four-output profile. / 创建 PaDiM 四输出 Profile。</summary>
-        public static AnomalibProfile CreatePadim(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize))
-            => Create(modelId, AnomalibModelFamily.Padim, artifact, modelSize, new TensorShape(1, 1), new TensorShape(1, 1), new TensorShape(1, 1, -1, -1));
+        public static AnomalibProfile CreatePadim(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1)
+            => Create(modelId, AnomalibModelFamily.Padim, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1));
 
         /// <summary>Creates a PatchCore four-output profile. / 创建 PatchCore 四输出 Profile。</summary>
-        public static AnomalibProfile CreatePatchCore(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize))
-            => Create(modelId, AnomalibModelFamily.PatchCore, artifact, modelSize, new TensorShape(1), new TensorShape(1), new TensorShape(1, 1, -1, -1));
+        public static AnomalibProfile CreatePatchCore(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1)
+            => Create(modelId, AnomalibModelFamily.PatchCore, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1));
 
-        private static AnomalibProfile Create(ModelId modelId, AnomalibModelFamily family, AnomalibArtifactContract artifact, VisualSize modelSize, TensorShape scoreShape, TensorShape labelShape, TensorShape maskShape)
+        private static AnomalibProfile Create(ModelId modelId, AnomalibModelFamily family, AnomalibArtifactContract artifact, VisualSize modelSize, int maximumBatch, TensorShape scoreShape, TensorShape labelShape, TensorShape maskShape)
         {
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model ID is required.");
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             if (modelSize.Width <= 0 || modelSize.Height <= 0) modelSize = new VisualSize(256, 256);
             var decoder = new AnomalibExportDecoder();
             string id = "anomalib." + (family == AnomalibModelFamily.Padim ? "padim" : "patchcore") + "." + modelId.Value + ".opset" + artifact.Opset;
@@ -168,11 +193,11 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
             {
                 new VisualOutputBinding("pred_score", TensorElementType.Float32, scoreShape),
                 new VisualOutputBinding("pred_label", TensorElementType.Boolean, labelShape),
-                new VisualOutputBinding("anomaly_map", TensorElementType.Float32, new TensorShape(1, 1, -1, -1)),
+                new VisualOutputBinding("anomaly_map", TensorElementType.Float32, new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1)),
                 new VisualOutputBinding("pred_mask", TensorElementType.Boolean, maskShape)
             };
             var visual = new VisualModelProfile(id, modelId, VisualTaskId.AnomalyDetection, "anomalib/" + family + "/opset" + artifact.Opset, artifact.ModelFormat,
-                new VisualInputBinding("input", TensorElementType.Float32, new TensorShape(1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, 1), outputs, Array.Empty<VisualLabel>(), decoder);
+                new VisualInputBinding("input", TensorElementType.Float32, new TensorShape(maximumBatch > 1 ? -1 : 1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch), outputs, Array.Empty<VisualLabel>(), decoder);
             return new AnomalibProfile(family, artifact, visual);
         }
     }

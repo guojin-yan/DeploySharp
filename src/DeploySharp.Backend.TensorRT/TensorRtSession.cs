@@ -10,7 +10,7 @@ using JYPPX.CudaSharp;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
 {
-    internal sealed class TensorRtSession : IInferenceSession
+    internal sealed class TensorRtSession : ITensorRtDeviceInferenceSession, ISequenceArgMaxInferenceSession
     {
         private readonly object _lifetimeGate = new object();
         private readonly ModelArtifact _artifact;
@@ -22,7 +22,16 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private readonly CudaStream _stream;
         private readonly SemaphoreSlim _operationGate;
         private readonly CancellationTokenSource _disposeSource;
+        private readonly List<NamedTensor> _namedOutputScratch = new List<NamedTensor>();
+        private readonly string? _cudaTargetArchitecture;
+        private readonly bool _cacheImmutableHostInputsOnDevice;
+        private WeakReference<InferenceInputs>? _cachedHostInputs;
+        private TensorRtCudaCompiledKernel? _ctcTraceKernel;
+        private CudaMemory? _ctcClassIndices;
+        private CudaMemory? _ctcConfidences;
+        private CudaMemory? _ctcInvalidOffsets;
         private bool _disposed;
+        private readonly int _deviceOrdinal;
 
         public TensorRtSession(
             ModelArtifact artifact,
@@ -31,7 +40,9 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             TensorRtEngine engine,
             TensorRtExecutionContext context,
             TensorRtInferenceBindings bindings,
-            int maximumConcurrency)
+            int maximumConcurrency,
+            string? cudaTargetArchitecture,
+            bool cacheImmutableHostInputsOnDevice)
         {
             _artifact = artifact;
             _logger = logger;
@@ -41,42 +52,157 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             _bindings = bindings;
             Metadata = CreateMetadata(artifact, bindings.Report);
             _stream = new CudaStream();
+            _deviceOrdinal = ResolveStreamDeviceOrdinal(_stream);
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
             _disposeSource = new CancellationTokenSource();
+            _cudaTargetArchitecture = cudaTargetArchitecture;
+            _cacheImmutableHostInputsOnDevice = cacheImmutableHostInputsOnDevice;
         }
 
         public ModelMetadata Metadata { get; }
+
+        public int DeviceOrdinal => _deviceOrdinal;
+
+        public bool IsSequenceArgMaxSupported => _cudaTargetArchitecture != null;
+
+        public TensorRtDeviceInferenceExecution RunDevice(
+            IReadOnlyList<TensorRtDeviceTensor> inputs,
+            IReadOnlyList<TensorRtDeviceTensor> outputs,
+            CudaStream stream,
+            CancellationToken cancellationToken = default)
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+            if (outputs == null) throw new ArgumentNullException(nameof(outputs));
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            EnsureUsable();
+            bool entered = false;
+            bool enqueued = false;
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
+            {
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                _operationGate.Wait(operationToken);
+                entered = true;
+                EnsureUsable();
+                ValidateDeviceStream(stream);
+                InvalidateHostInputCache();
+                IReadOnlyList<TensorRtEngineTensorBinding> expectedInputs = _bindings.Report.GetInputs();
+                IReadOnlyList<TensorRtEngineTensorBinding> expectedOutputs = _bindings.Report.GetOutputs();
+                ValidateDeviceTensorCollection(inputs, expectedInputs, TensorRtIOMode.Input);
+                ValidateDeviceTensorCollection(outputs, expectedOutputs, TensorRtIOMode.Output);
+
+                foreach (TensorRtDeviceTensor input in inputs)
+                {
+                    TensorRtDims runtimeShape = ToTensorRtShape(input.Shape, input.Name);
+                    TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(input.Name);
+                    TensorRtBindingContract.ValidateInputShape(binding, runtimeShape, _artifact.ModelId);
+                    ValidateDeviceType(binding, input);
+                    if (binding.EngineShape.Values.Any(value => value < 0)) _bindings.SetInputShape(input.Name, runtimeShape);
+                    _bindings.UseDeviceBuffer(input.Name, input.Memory, runtimeShape);
+                }
+
+                foreach (TensorRtDeviceTensor output in outputs)
+                {
+                    TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(output.Name);
+                    ValidateDeviceType(binding, output);
+                    _bindings.UseDeviceBuffer(output.Name, output.Memory, ToTensorRtShape(output.Shape, output.Name));
+                }
+
+                TensorRtExecutionContextReadiness shapeReadiness = _bindings.GetReadiness(runShapeInference: true);
+                if (shapeReadiness.ShapeInferenceMissingTensorCount.GetValueOrDefault(0) != 0)
+                {
+                    throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT could not infer all dynamic output shapes from the supplied device inputs.", modelId: _artifact.ModelId, operation: "shape-inference", technicalDetails: shapeReadiness.ToString());
+                }
+
+                _bindings.BindAll();
+                TensorRtExecutionContextReadiness readiness = _bindings.GetReadiness(runShapeInference: true);
+                if (!readiness.IsReadyForEnqueue)
+                {
+                    throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT device bindings are not ready for enqueue.", modelId: _artifact.ModelId, operation: "bind", technicalDetails: readiness.ToString());
+                }
+
+                _bindings.EnqueueAsync(stream, synchronize: false, runShapeInference: false);
+                enqueued = true;
+                var resolvedOutputs = new List<TensorRtDeviceTensor>(outputs.Count);
+                foreach (TensorRtDeviceTensor output in outputs)
+                {
+                    TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(output.Name);
+                    TensorRtDims resolvedShape = ResolveOutputShapeAfterEnqueue(binding);
+                    resolvedOutputs.Add(new TensorRtDeviceTensor(output.Name, output.ElementType, ToCoreShape(resolvedShape), output.Memory));
+                }
+
+                entered = false;
+                return new TensorRtDeviceInferenceExecution(stream, resolvedOutputs, ReleaseDeviceOperation);
+            }
+            catch (TensorRtBackendException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT device inference was cancelled.", exception, _artifact.ModelId, operation: "device-run");
+            }
+            catch (Exception exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT device inference failed.", exception, _artifact.ModelId, operation: "device-run", technicalDetails: exception.GetType().FullName);
+            }
+            finally
+            {
+                if (entered)
+                {
+                    if (enqueued)
+                    {
+                        try { stream.Synchronize(); }
+                        catch { }
+                    }
+                    _operationGate.Release();
+                }
+                linked?.Dispose();
+            }
+        }
 
         public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken)
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             EnsureUsable();
             bool entered = false;
-            using (CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeSource.Token))
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            // Pooled callers pass the disposal token directly. Linking an
+            // identical token adds avoidable allocation to every enqueue.
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
             {
-                try
-                {
-                    _operationGate.Wait(linked.Token);
-                    entered = true;
-                    EnsureUsable();
-                    return RunCore(inputs, linked.Token);
-                }
-                catch (TensorRtBackendException)
-                {
-                    throw;
-                }
-                catch (OperationCanceledException exception)
-                {
-                    throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference was cancelled.", exception, _artifact.ModelId, operation: "run");
-                }
-                catch (Exception exception)
-                {
-                    throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference failed.", exception, _artifact.ModelId, operation: "run", technicalDetails: exception.GetType().FullName);
-                }
-                finally
-                {
-                    if (entered) _operationGate.Release();
-                }
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                _operationGate.Wait(operationToken);
+                entered = true;
+                EnsureUsable();
+                return RunCore(inputs, operationToken);
+            }
+            catch (TensorRtBackendException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference was cancelled.", exception, _artifact.ModelId, operation: "run");
+            }
+            catch (Exception exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference failed.", exception, _artifact.ModelId, operation: "run", technicalDetails: exception.GetType().FullName);
+            }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
             }
         }
 
@@ -84,6 +210,46 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         {
             // Host output materialization requires stream synchronization; expose the Core fallback without fabricating a worker task.
             return Task.FromResult(Run(inputs, cancellationToken));
+        }
+
+        public SequenceArgMaxResult RunSequenceArgMax(InferenceInputs inputs, SequenceArgMaxRequest request, CancellationToken cancellationToken)
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (!IsSequenceArgMaxSupported) throw new NotSupportedException("TensorRT CUDA sequence argmax requires an explicit CUDA target architecture.");
+            EnsureUsable();
+            bool entered = false;
+            CancellationToken operationToken = _disposeSource.Token;
+            CancellationTokenSource? linked = null;
+            if (cancellationToken.CanBeCanceled && cancellationToken != operationToken)
+            {
+                linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, operationToken);
+                operationToken = linked.Token;
+            }
+            try
+            {
+                _operationGate.Wait(operationToken);
+                entered = true;
+                EnsureUsable();
+                return RunSequenceArgMaxCore(inputs, request, operationToken);
+            }
+            catch (TensorRtBackendException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT sequence argmax inference was cancelled.", exception, _artifact.ModelId, operation: "sequence-argmax");
+            }
+            catch (Exception exception)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT sequence argmax inference failed.", exception, _artifact.ModelId, request.OutputName, operation: "sequence-argmax", technicalDetails: exception.GetType().FullName);
+            }
+            finally
+            {
+                if (entered) _operationGate.Release();
+                linked?.Dispose();
+            }
         }
 
         public void Dispose()
@@ -100,6 +266,11 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             {
                 for (; acquired < 1; acquired++) _operationGate.Wait();
                 Exception? disposeFailure = null;
+                DisposeResource(_ctcInvalidOffsets, ref disposeFailure);
+                DisposeResource(_ctcConfidences, ref disposeFailure);
+                DisposeResource(_ctcClassIndices, ref disposeFailure);
+                DisposeResource(_ctcTraceKernel, ref disposeFailure);
+                InvalidateHostInputCache();
                 DisposeResource(_bindings, ref disposeFailure);
                 DisposeResource(_stream, ref disposeFailure);
                 DisposeResource(_context, ref disposeFailure);
@@ -118,17 +289,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
 
         private InferenceOutputs RunCore(InferenceInputs inputs, CancellationToken cancellationToken)
         {
-            ValidateInputCollection(inputs);
-            foreach (NamedTensor input in inputs)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(input.Name);
-                EnsureMode(binding, TensorRtIOMode.Input, input.Name);
-                TensorRtDims runtimeShape = ToTensorRtShape(input.Tensor.Shape, input.Name);
-                TensorRtBindingContract.ValidateInputShape(binding, runtimeShape, _artifact.ModelId);
-                if (binding.EngineShape.Values.Any(value => value < 0)) _bindings.SetInputShape(input.Name, runtimeShape);
-                CopyInput(binding, input.Tensor, runtimeShape);
-            }
+            PrepareHostInputs(inputs, cancellationToken);
 
             TensorRtExecutionContextReadiness shapeReadiness = _bindings.GetReadiness(runShapeInference: true);
             if (shapeReadiness.ShapeInferenceMissingTensorCount.GetValueOrDefault(0) != 0)
@@ -156,15 +317,136 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
 
             _bindings.EnqueueAsync(_stream, synchronize: true, runShapeInference: false);
-            var namedOutputs = new List<NamedTensor>(outputs.Count);
-            foreach (TensorRtEngineTensorBinding output in outputs)
+            _namedOutputScratch.Clear();
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                TensorRtDims shape = ResolveOutputShapeAfterEnqueue(output);
-                namedOutputs.Add(new NamedTensor(output.Name, ReadOutput(output, shape)));
+                foreach (TensorRtEngineTensorBinding output in outputs)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    TensorRtDims shape = ResolveOutputShapeAfterEnqueue(output);
+                    _namedOutputScratch.Add(new NamedTensor(output.Name, ReadOutput(output, shape)));
+                }
+
+                // InferenceOutputs copies the ordered collection into its own immutable
+                // lookup, so the session-owned list can be cleared and reused on the
+                // next call without exposing mutable state to the caller.
+                return new InferenceOutputs(_namedOutputScratch);
+            }
+            finally { _namedOutputScratch.Clear(); }
+        }
+
+        private SequenceArgMaxResult RunSequenceArgMaxCore(InferenceInputs inputs, SequenceArgMaxRequest request, CancellationToken cancellationToken)
+        {
+            PrepareHostInputs(inputs, cancellationToken);
+
+            TensorRtExecutionContextReadiness shapeReadiness = _bindings.GetReadiness(runShapeInference: true);
+            if (shapeReadiness.ShapeInferenceMissingTensorCount.GetValueOrDefault(0) != 0)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT could not infer all dynamic output shapes for sequence argmax.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape-inference", technicalDetails: shapeReadiness.ToString());
             }
 
-            return new InferenceOutputs(namedOutputs);
+            IReadOnlyList<TensorRtEngineTensorBinding> outputs = _bindings.Report.GetOutputs();
+            TensorRtEngineTensorBinding? reducedOutput = outputs.FirstOrDefault(value => string.Equals(value.Name, request.OutputName, StringComparison.Ordinal));
+            if (reducedOutput == null) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "The requested sequence output is not present in the TensorRT engine.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-output");
+            if (reducedOutput.DataType != TensorRtDataType.Float) throw new TensorRtBackendException(TensorRtErrorCodes.ElementTypeUnsupported, "TensorRT sequence argmax currently requires a Float32 output.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-output-type", technicalDetails: reducedOutput.DataType.ToString());
+            foreach (TensorRtEngineTensorBinding output in outputs)
+            {
+                TensorRtDims runtimeShape = ResolveOutputShape(output, allowMaximumForDataDependent: true);
+                _bindings.AllocateDeviceBuffer(output.Name, runtimeShape, output.EstimateByteSize(runtimeShape));
+            }
+
+            EnsureCtcTraceKernel(cancellationToken);
+            _bindings.BindAll();
+            TensorRtExecutionContextReadiness readiness = _bindings.GetReadiness(runShapeInference: true);
+            if (!readiness.IsReadyForEnqueue)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT bindings are not ready for sequence argmax enqueue.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-bind", technicalDetails: readiness.ToString());
+            }
+
+            bool enqueued = false;
+            try
+            {
+                _bindings.EnqueueAsync(_stream, synchronize: false, runShapeInference: false);
+                enqueued = true;
+                TensorRtDims shape = ResolveOutputShapeAfterEnqueue(reducedOutput);
+                if (shape.Values.Length != 3) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax requires a rank-three output.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: shape.ToString());
+                int batch = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[0] : shape.Values[1];
+                int time = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[1] : shape.Values[0];
+                int classes = shape.Values[2];
+                if (batch <= 0 || batch > request.MaximumBatch) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax batch exceeds its configured bound.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "batch=" + batch);
+                if (time <= 0 || time > request.MaximumTime) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax time dimension exceeds its configured bound.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "time=" + time);
+                if (classes != request.ExpectedClasses) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax class dimension does not match the requested contract.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "classes=" + classes + ";expected=" + request.ExpectedClasses);
+
+                int traceLength = checked(batch * time);
+                EnsureDeviceMemory(ref _ctcClassIndices, checked(traceLength * sizeof(int)));
+                EnsureDeviceMemory(ref _ctcConfidences, checked(traceLength * sizeof(float)));
+                EnsureDeviceMemory(ref _ctcInvalidOffsets, checked(batch * sizeof(int)));
+                TensorRtInferenceBuffer logits = _bindings.Buffers[request.OutputName];
+                var logitsBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor(request.OutputName, TensorElementType.Float32, ToCoreShape(shape), TensorRtCudaBufferAccess.Read), logits.Memory);
+                var classBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.class-indices", TensorElementType.Int32, new TensorShape(batch, time), TensorRtCudaBufferAccess.Write), _ctcClassIndices!);
+                var confidenceBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.confidences", TensorElementType.Float32, new TensorShape(batch, time), TensorRtCudaBufferAccess.Write), _ctcConfidences!);
+                var invalidBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.invalid-offsets", TensorElementType.Int32, new TensorShape(batch), TensorRtCudaBufferAccess.Write), _ctcInvalidOffsets!);
+                using (TensorRtCudaKernelLaunch launch = TensorRtCudaOcrKernels.LaunchCtcTrace(
+                    _ctcTraceKernel!,
+                    _stream,
+                    logitsBuffer,
+                    classBuffer,
+                    confidenceBuffer,
+                    invalidBuffer,
+                    batch,
+                    time,
+                    classes,
+                    request.Layout == SequenceTensorLayout.TimeBatchClasses,
+                    request.ApplySoftmax,
+                    request.RequireUnitInterval))
+                {
+                    launch.Synchronize();
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                return new SequenceArgMaxResult(
+                    batch,
+                    time,
+                    classes,
+                    ReadInt32(_ctcClassIndices!, traceLength),
+                    _ctcConfidences!.ToSingleArray(traceLength),
+                    ReadInt32(_ctcInvalidOffsets!, batch));
+            }
+            catch
+            {
+                if (enqueued)
+                {
+                    try { _stream.Synchronize(); }
+                    catch { }
+                }
+                throw;
+            }
+        }
+
+        private void EnsureCtcTraceKernel(CancellationToken cancellationToken)
+        {
+            if (_ctcTraceKernel != null) return;
+            cancellationToken.ThrowIfCancellationRequested();
+            string architecture = _cudaTargetArchitecture ?? throw new NotSupportedException("A CUDA target architecture is required for sequence argmax.");
+            var options = new TensorRtCudaRtcCompileOptions(architecture, TensorRtCudaRtcArtifactKind.Ptx, useFastMath: false);
+            TensorRtCudaRtcArtifact artifact = TensorRtCudaRtcCompiler.Compile(TensorRtCudaOcrKernels.CtcTraceDefinition, options);
+            cancellationToken.ThrowIfCancellationRequested();
+            _ctcTraceKernel = TensorRtCudaCompiledKernel.Load(artifact, _deviceOrdinal);
+        }
+
+        private static void EnsureDeviceMemory(ref CudaMemory? memory, int requiredBytes)
+        {
+            if (requiredBytes <= 0) throw new ArgumentOutOfRangeException(nameof(requiredBytes));
+            if (memory != null && memory.SizeInBytes >= requiredBytes) return;
+            memory?.Dispose();
+            memory = new CudaMemory(requiredBytes);
+        }
+
+        private static int[] ReadInt32(CudaMemory memory, int count)
+        {
+            byte[] bytes = memory.ToArray(checked(count * sizeof(int)));
+            var values = new int[count];
+            Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            return values;
         }
 
         private void ValidateInputCollection(InferenceInputs inputs)
@@ -182,6 +464,41 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "The input collection contains an unknown tensor name.", modelId: _artifact.ModelId, tensorName: input.Name, operation: "validate-inputs");
                 }
             }
+        }
+
+        private void PrepareHostInputs(InferenceInputs inputs, CancellationToken cancellationToken)
+        {
+            ValidateInputCollection(inputs);
+            bool reuseDeviceCopy = false;
+            if (_cacheImmutableHostInputsOnDevice &&
+                _cachedHostInputs != null &&
+                _cachedHostInputs.TryGetTarget(out InferenceInputs? cachedInputs) &&
+                ReferenceEquals(cachedInputs, inputs))
+            {
+                reuseDeviceCopy = true;
+            }
+
+            if (!reuseDeviceCopy) InvalidateHostInputCache();
+            foreach (NamedTensor input in inputs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(input.Name);
+                EnsureMode(binding, TensorRtIOMode.Input, input.Name);
+                TensorRtDims runtimeShape = ToTensorRtShape(input.Tensor.Shape, input.Name);
+                TensorRtBindingContract.ValidateInputShape(binding, runtimeShape, _artifact.ModelId);
+                if (binding.EngineShape.Values.Any(value => value < 0)) _bindings.SetInputShape(input.Name, runtimeShape);
+                if (!reuseDeviceCopy) CopyInput(binding, input.Tensor, runtimeShape);
+            }
+
+            if (!reuseDeviceCopy && _cacheImmutableHostInputsOnDevice)
+            {
+                _cachedHostInputs = new WeakReference<InferenceInputs>(inputs);
+            }
+        }
+
+        private void InvalidateHostInputCache()
+        {
+            _cachedHostInputs = null;
         }
 
         private void CopyInput(TensorRtEngineTensorBinding binding, ITensor tensor, TensorRtDims runtimeShape)
@@ -209,14 +526,17 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             TensorRtInferenceBuffer buffer = _bindings.Buffers[binding.Name];
             TensorRtBindingContract.ValidateOutputBuffer(binding, shape, buffer.SizeInBytes, _artifact.ModelId);
             int bytesToRead = checked(binding.EstimateByteSize(shape));
-            byte[] bytes = buffer.Memory.ToArray(bytesToRead);
             if (binding.DataType == TensorRtDataType.Float)
             {
-                float[] values = new float[checked(bytes.Length / sizeof(float))];
-                Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+                // Use the typed bridge copy to materialize the managed tensor in
+                // one device-to-host transfer. The previous byte[] plus
+                // BlockCopy path performed two managed allocations/copies for
+                // every OCR crop.
+                float[] values = buffer.Memory.ToSingleArray(checked(bytesToRead / sizeof(float)));
                 return new Tensor<float>(ToCoreShape(shape), values, TensorBufferOwnership.Transfer);
             }
 
+            byte[] bytes = buffer.Memory.ToArray(bytesToRead);
             Array valuesArray = FromBytes(bytes, elementType);
             return CreateTensor(elementType, ToCoreShape(shape), valuesArray);
         }
@@ -235,6 +555,60 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
 
             return ResolveOutputShape(output, allowMaximumForDataDependent: false);
+        }
+
+        private void ValidateDeviceTensorCollection(
+            IReadOnlyList<TensorRtDeviceTensor> tensors,
+            IReadOnlyList<TensorRtEngineTensorBinding> expected,
+            TensorRtIOMode mode)
+        {
+            if (tensors.Count != expected.Count)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "The device tensor collection must contain every TensorRT binding exactly once.", modelId: _artifact.ModelId, operation: "validate-device-tensors", technicalDetails: "mode=" + mode + ";expected=" + expected.Count + ";actual=" + tensors.Count);
+            }
+
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (TensorRtDeviceTensor tensor in tensors)
+            {
+                if (tensor == null || !names.Add(tensor.Name))
+                {
+                    throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "The device tensor collection contains a null or duplicate tensor name.", modelId: _artifact.ModelId, operation: "validate-device-tensors");
+                }
+                TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(tensor.Name);
+                EnsureMode(binding, mode, tensor.Name);
+                if (tensor.DeviceOrdinal != _deviceOrdinal)
+                {
+                    throw new TensorRtBackendException(TensorRtErrorCodes.CudaContractInvalid, "Every device tensor must use the TensorRT context device.", modelId: _artifact.ModelId, tensorName: tensor.Name, operation: "validate-device-device", technicalDetails: "contextDevice=" + _deviceOrdinal + ";bufferDevice=" + tensor.DeviceOrdinal);
+                }
+            }
+
+            if (expected.Any(binding => !names.Contains(binding.Name)))
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "The device tensor collection is missing a TensorRT binding.", modelId: _artifact.ModelId, operation: "validate-device-tensors");
+            }
+        }
+
+        private static void ValidateDeviceType(TensorRtEngineTensorBinding binding, TensorRtDeviceTensor tensor)
+        {
+            TensorElementType expected = ToCoreElementType(binding.DataType);
+            if (expected == TensorElementType.Unknown || expected != tensor.ElementType)
+            {
+                throw UnsupportedType(tensor.Name, binding.DataType, tensor.ElementType);
+            }
+        }
+
+        private void ValidateDeviceStream(CudaStream stream)
+        {
+            int streamDevice = ResolveStreamDeviceOrdinal(stream);
+            if (streamDevice != _deviceOrdinal)
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.CudaContractInvalid, "The caller-owned CUDA stream must use the TensorRT context device.", modelId: _artifact.ModelId, operation: "validate-device-stream", technicalDetails: "contextDevice=" + _deviceOrdinal + ";streamDevice=" + streamDevice);
+            }
+        }
+
+        private void ReleaseDeviceOperation()
+        {
+            _operationGate.Release();
         }
 
         private TensorRtDims ResolveOutputShape(TensorRtEngineTensorBinding output, bool allowMaximumForDataDependent)
@@ -394,6 +768,15 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             };
         }
 
+        private static int ResolveStreamDeviceOrdinal(CudaStream stream)
+        {
+            try { return stream.DeviceOrdinal; }
+            catch (CudaException exception) when (exception.StatusCode == TensorRtSharp.Shared.Interop.BridgeStatusCode.NotSupported && exception.ErrorCategory == TensorRtSharp.Shared.Interop.BridgeErrorCategory.Cuda)
+            {
+                return CudaDevice.Current;
+            }
+        }
+
         private static ModelMetadata CreateMetadata(ModelArtifact artifact, TensorRtEngineBindingReport report)
         {
             var inputs = new List<TensorDescriptor>();
@@ -413,8 +796,9 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return new ModelMetadata(artifact.ModelId, "tensorrt-engine", inputs, outputs);
         }
 
-        private static void DisposeResource(IDisposable resource, ref Exception? firstFailure)
+        private static void DisposeResource(IDisposable? resource, ref Exception? firstFailure)
         {
+            if (resource == null) return;
             try { resource.Dispose(); }
             catch (Exception exception) when (firstFailure == null) { firstFailure = exception; }
             catch { }

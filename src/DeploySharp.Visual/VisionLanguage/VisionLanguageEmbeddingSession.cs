@@ -102,28 +102,41 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    input.EnsureUsable();
-                    VisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(VisionLanguageArtifactRole.ImageEncoder);
-                    ValidateInput(input, contract, Bundle.Profile.MaximumImageBatch, Bundle.Profile.ProfileId);
-                    var watch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous ? await _image.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), linked.Token).ConfigureAwait(false) : _image.Run(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), linked.Token);
-                    watch.Stop();
-                    float[] values = CopyEmbedding(outputs, contract, input.Tensor.Shape[0], Bundle.Profile.EmbeddingDimension, Bundle.Profile.ProfileId);
-                    string content = input.InputId ?? throw new VisualException(VisualErrorCodes.VisionLanguageIdentityMismatch, "Image encoding requires PreparedVisualInput.InputId to be the exact source SHA256.", profileId: Bundle.Profile.ProfileId);
-                    var result = new VisionLanguageImageEmbedding(new VisionLanguageEmbeddingIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, content, Bundle.Profile.EmbeddingDimension), input.Tensor.Shape[0] > int.MaxValue ? throw new VisualException(VisualErrorCodes.VisionLanguageLimitExceeded, "The image batch is too large.", profileId: Bundle.Profile.ProfileId) : (int)input.Tensor.Shape[0], values, watch.Elapsed);
-                    lock (_gate) { EnsureUsableLocked(); _imageCache = result; }
-                    return result;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw new VisualException(VisualErrorCodes.InferenceFailed, "The image encoder failed.", exception, Bundle.Profile.ProfileId); }
-                finally { if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose(); ExitOperation(); }
+                input.EnsureUsable();
+                VisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(VisionLanguageArtifactRole.ImageEncoder);
+                ValidateInput(input, contract, Bundle.Profile.MaximumImageBatch, Bundle.Profile.ProfileId);
+                var watch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous ? await _image.RunAsync(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), operationToken).ConfigureAwait(false) : _image.Run(InferenceInputs.Create(contract.Inputs[0].Name, input.Tensor), operationToken);
+                watch.Stop();
+                float[] values = CopyEmbedding(outputs, contract, input.Tensor.Shape[0], Bundle.Profile.EmbeddingDimension, Bundle.Profile.ProfileId);
+                string content = input.InputId ?? throw new VisualException(VisualErrorCodes.VisionLanguageIdentityMismatch, "Image encoding requires PreparedVisualInput.InputId to be the exact source SHA256.", profileId: Bundle.Profile.ProfileId);
+                var result = new VisionLanguageImageEmbedding(new VisionLanguageEmbeddingIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, content, Bundle.Profile.EmbeddingDimension), input.Tensor.Shape[0] > int.MaxValue ? throw new VisualException(VisualErrorCodes.VisionLanguageLimitExceeded, "The image batch is too large.", profileId: Bundle.Profile.ProfileId) : (int)input.Tensor.Shape[0], values, watch.Elapsed);
+                lock (_gate) { EnsureUsableLocked(); _imageCache = result; }
+                return result;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw new VisualException(VisualErrorCodes.InferenceFailed, "The image encoder failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                if (options.DisposeOwnedInputOnCompletion && input.Ownership == PreparedInputOwnership.Owned) input.Dispose();
+                ExitOperation();
             }
         }
 
@@ -131,28 +144,40 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (tokens == null) throw new ArgumentNullException(nameof(tokens));
             CancellationToken disposeToken = EnterOperation();
-            using (var timeout = options.Timeout.HasValue ? new CancellationTokenSource(options.Timeout.Value) : new CancellationTokenSource())
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, timeout.Token, disposeToken))
+            CancellationTokenSource? timeoutSource = null;
+            CancellationTokenSource? linked = null;
+            CancellationToken operationToken = disposeToken;
+            try
             {
-                try
+                if (options.Timeout.HasValue) timeoutSource = new CancellationTokenSource(options.Timeout.Value);
+                if (caller.CanBeCanceled || timeoutSource != null)
                 {
-                    VisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(VisionLanguageArtifactRole.TextEncoder);
-                    ValidateTokens(tokens, contract, Bundle.Profile);
-                    var tensors = new List<NamedTensor> { new NamedTensor(contract.Inputs[0].Name, new Tensor<long>(new TensorShape(tokens.BatchSize, tokens.SequenceLength), tokens.CopyInputIds(), TensorBufferOwnership.Transfer)) };
-                    if (Bundle.Profile.Tokenizer.AttentionMaskRequired) tensors.Add(new NamedTensor(contract.Inputs[1].Name, new Tensor<long>(new TensorShape(tokens.BatchSize, tokens.SequenceLength), tokens.CopyAttentionMask()!, TensorBufferOwnership.Transfer)));
-                    var watch = Stopwatch.StartNew();
-                    InferenceOutputs outputs = asynchronous ? await _text.RunAsync(new InferenceInputs(tensors), linked.Token).ConfigureAwait(false) : _text.Run(new InferenceInputs(tensors), linked.Token);
-                    watch.Stop();
-                    float[] values = CopyEmbedding(outputs, contract, tokens.BatchSize, Bundle.Profile.EmbeddingDimension, Bundle.Profile.ProfileId);
-                    var result = new VisionLanguageTextEmbedding(new VisionLanguageEmbeddingIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, tokens.ContentSha256, Bundle.Profile.EmbeddingDimension), tokens.Texts, values, watch.Elapsed);
-                    lock (_gate) { EnsureUsableLocked(); _textCache = result; }
-                    return result;
+                    linked = timeoutSource == null
+                        ? CancellationTokenSource.CreateLinkedTokenSource(caller, disposeToken)
+                        : CancellationTokenSource.CreateLinkedTokenSource(caller, timeoutSource.Token, disposeToken);
+                    operationToken = linked.Token;
                 }
-                catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
-                catch (DeploySharpException exception) when (linked.IsCancellationRequested) { throw MapCancellation(exception, caller); }
-                catch (VisualException) { throw; }
-                catch (Exception exception) { throw new VisualException(VisualErrorCodes.InferenceFailed, "The text encoder failed.", exception, Bundle.Profile.ProfileId); }
-                finally { ExitOperation(); }
+                VisionLanguageArtifactContract contract = Bundle.Profile.GetArtifact(VisionLanguageArtifactRole.TextEncoder);
+                ValidateTokens(tokens, contract, Bundle.Profile);
+                var tensors = new List<NamedTensor> { new NamedTensor(contract.Inputs[0].Name, new Tensor<long>(new TensorShape(tokens.BatchSize, tokens.SequenceLength), tokens.CopyInputIds(), TensorBufferOwnership.Transfer)) };
+                if (Bundle.Profile.Tokenizer.AttentionMaskRequired) tensors.Add(new NamedTensor(contract.Inputs[1].Name, new Tensor<long>(new TensorShape(tokens.BatchSize, tokens.SequenceLength), tokens.CopyAttentionMask()!, TensorBufferOwnership.Transfer)));
+                var watch = Stopwatch.StartNew();
+                InferenceOutputs outputs = asynchronous ? await _text.RunAsync(new InferenceInputs(tensors), operationToken).ConfigureAwait(false) : _text.Run(new InferenceInputs(tensors), operationToken);
+                watch.Stop();
+                float[] values = CopyEmbedding(outputs, contract, tokens.BatchSize, Bundle.Profile.EmbeddingDimension, Bundle.Profile.ProfileId);
+                var result = new VisionLanguageTextEmbedding(new VisionLanguageEmbeddingIdentity(Bundle.Profile.ProfileId, Bundle.Profile.ArtifactIdentity, tokens.ContentSha256, Bundle.Profile.EmbeddingDimension), tokens.Texts, values, watch.Elapsed);
+                lock (_gate) { EnsureUsableLocked(); _textCache = result; }
+                return result;
+            }
+            catch (OperationCanceledException exception) { throw MapCancellation(exception, caller); }
+            catch (DeploySharpException exception) when (operationToken.IsCancellationRequested) { throw MapCancellation(exception, caller); }
+            catch (VisualException) { throw; }
+            catch (Exception exception) { throw new VisualException(VisualErrorCodes.InferenceFailed, "The text encoder failed.", exception, Bundle.Profile.ProfileId); }
+            finally
+            {
+                linked?.Dispose();
+                timeoutSource?.Dispose();
+                ExitOperation();
             }
         }
 

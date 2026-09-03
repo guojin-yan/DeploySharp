@@ -80,14 +80,42 @@ namespace JYPPX.DeploySharp.Visual
                 "whisper-optimum-named-past-present-4x6x64-v1", 4, 6, 64);
             var source = SourceArtifact(AudioArtifactRole.SourceCheckpoint, "external/audio/whisper-tiny.en/source", "safetensors", "db59695928ded6043adaef491a53ef4e12da9611184d77c53baa691a60b958ad", 151060136, WhisperRevision, WhisperSource);
             var blocker = new AudioExecutionBlocker(
-                "stage28-whisper-three-graph-export-not-admitted",
-                "The official source checkpoint is acquired, but this stage has no verified Encoder, Decoder Prefill, and named Past/Present KV Decode export with per-token parity; no Whisper execution is claimed.",
+                "stage28-whisper-source-only-graph-bundle-pending",
+                "A local opset-17 Encoder, Decoder Prefill, named Past/Present KV Decode export, C# tokenizer, prompt construction, greedy generation session, and managed WAV log-Mel extractor pass parity on a licensed LibriSpeech fixture. This source-only profile intentionally contains no executable graph bindings; its public execution and catalog admission remain blocked until a traceable downloadable three-graph bundle is available.",
                 new[] { AudioArtifactRole.WhisperEncoder, AudioArtifactRole.WhisperDecoderPrefill, AudioArtifactRole.WhisperDecoderWithPast },
-                "Export the pinned source into three isolated graphs at opset 17, preserve forced no-timestamps token 50362 and 4x6x64 named KV, then compare every greedy token and stop condition before changing Executable.");
+                "Bind the exact three local ONNX artifacts to CreateWhisperTinyEnglishOnnx, reproduce the licensed LibriSpeech evidence with OpenCvAudioInputFactory.CreateWhisperFromWavFile and WhisperUnderstandingSession, and only then consider a separately reviewed downloadable bundle; do not infer executable roles from the source checkpoint.");
             return new AudioUnderstandingProfile(
                 "audio.whisper.tiny.en.source-contract", AudioUnderstandingFamily.Whisper, "openai/whisper-tiny.en", WhisperRevision, "Apache-2.0",
                 processor, null, new AudioTimestampContract("whisper-timestamp-token-0.02s-v1", AudioTimestampOwnership.WhisperTokens, 320, 16000),
                 NoSpeaker("whisper-no-speaker"), new[] { AudioUnderstandingTask.AutomaticSpeechRecognition }, new[] { source }, false, blocker, generation);
+        }
+
+        /// <summary>Creates the locally exported three-graph Whisper tiny.en ONNX profile after continuous parity verification. / 创建经过连续一致性验证的本地三图 Whisper tiny.en ONNX Profile。</summary>
+        /// <remarks>The returned profile binds only the graph contracts; callers still provide the three external files through <see cref="AudioUnderstandingBundle"/>. / 返回的 Profile 仅绑定图合同；调用方仍需通过 <see cref="AudioUnderstandingBundle"/> 提供三个外部文件。</remarks>
+        public static AudioUnderstandingProfile CreateWhisperTinyEnglishOnnx()
+        {
+            var processor = new AudioProcessorContract(
+                "openai-whisper-feature-extractor-tiny.en-87c7102",
+                "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666",
+                16000, 2, 480000,
+                new[] { AudioPcmEncoding.SignedInt16LittleEndian, AudioPcmEncoding.Float32LittleEndian },
+                AudioResamplingOwnership.Caller,
+                "arithmetic-stereo-mean-once-v1",
+                "whisper-log-mel-dynamic-range-v1",
+                false,
+                "whisper-log-mel-80-nfft400-hop160-frames3000-v1");
+            var generation = new AudioGenerationContract(
+                "whisper-tiny.en-greedy-no-timestamps-v1",
+                "5eb60cec1e77aeeb6869a2bb5a8e01a84c3fe5d072d75369343021fe6f5310d0",
+                "38744c19d5cede6ff4dab5079c6d6ddc02ca726960bbef208fb602ad5a030eab",
+                51864, 50257, 50256, 50256, 50362, 50363, null, null,
+                "en", "transcribe", 3000, 1500, 448,
+                "whisper-optimum-named-past-present-4x6x64-v1", 4, 6, 64);
+            return new AudioUnderstandingProfile(
+                "audio.whisper.tiny.en.onnx-three-graph", AudioUnderstandingFamily.Whisper, "openai/whisper-tiny.en", WhisperRevision, "Apache-2.0",
+                processor, null, new AudioTimestampContract("whisper-timestamp-token-0.02s-v1", AudioTimestampOwnership.WhisperTokens, 320, 16000),
+                NoSpeaker("whisper-no-speaker"), new[] { AudioUnderstandingTask.AutomaticSpeechRecognition },
+                WhisperOnnxArtifacts(generation), true, generation: generation);
         }
 
         /// <summary>Creates the source-only HuBERT representation contract and explicit missing-export blocker. / 创建仅源 HuBERT 表征合同及显式缺失导出 Blocker。</summary>
@@ -175,5 +203,50 @@ namespace JYPPX.DeploySharp.Visual
 
         private static IEnumerable<AudioTensorContract> CtcOutputs()
             => new[] { new AudioTensorContract("logits", TensorElementType.Float32, new TensorShape(1, -1, 32), 48000) };
+
+        private static IEnumerable<AudioArtifactContract> WhisperOnnxArtifacts(AudioGenerationContract generation)
+        {
+            const string revision = WhisperRevision;
+            const string source = WhisperSource;
+            const string exporter = "deploysharp-local-export_whisper.py;opset17-continuous-parity-verified";
+            const string license = "Apache-2.0; locally exported from the pinned checkpoint";
+            var encoder = new AudioArtifactContract(
+                AudioArtifactRole.WhisperEncoder, new ModelId("external/audio/whisper-tiny.en/encoder/onnx"), "onnx",
+                "6e0e951d8d047ddfe2cc7ba2e48bb6cbd2cec40c86e71da9f6068c4d1b369a32", 32886136, 17,
+                new[] { new AudioTensorContract("input_features", TensorElementType.Float32, new TensorShape(1, 80, generation.MaximumMelFrames), 240000) },
+                new[] { new AudioTensorContract("last_hidden_state", TensorElementType.Float32, new TensorShape(1, generation.MaximumEncoderFrames, 384), 576000) }, revision, exporter, license, source);
+            var prefillInputs = new List<AudioTensorContract>
+            {
+                new AudioTensorContract("input_ids", TensorElementType.Int64, new TensorShape(1, -1), generation.MaximumTokens),
+                new AudioTensorContract("encoder_hidden_states", TensorElementType.Float32, new TensorShape(1, generation.MaximumEncoderFrames, 384), 576000)
+            };
+            var prefillOutputs = new List<AudioTensorContract> { new AudioTensorContract("logits", TensorElementType.Float32, new TensorShape(1, -1, generation.VocabularySize), 23235072) };
+            for (int layer = 0; layer < generation.KvLayers; layer++)
+            {
+                prefillOutputs.Add(new AudioTensorContract(generation.Present(layer, true, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                prefillOutputs.Add(new AudioTensorContract(generation.Present(layer, true, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                prefillOutputs.Add(new AudioTensorContract(generation.Present(layer, false, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+                prefillOutputs.Add(new AudioTensorContract(generation.Present(layer, false, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+            }
+            var decodeInputs = new List<AudioTensorContract> { new AudioTensorContract("input_ids", TensorElementType.Int64, new TensorShape(1, 1), 1) };
+            var decodeOutputs = new List<AudioTensorContract> { new AudioTensorContract("logits", TensorElementType.Float32, new TensorShape(1, 1, generation.VocabularySize), generation.VocabularySize) };
+            for (int layer = 0; layer < generation.KvLayers; layer++)
+            {
+                decodeInputs.Add(new AudioTensorContract(generation.Past(layer, true, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                decodeInputs.Add(new AudioTensorContract(generation.Past(layer, true, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                decodeInputs.Add(new AudioTensorContract(generation.Past(layer, false, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+                decodeInputs.Add(new AudioTensorContract(generation.Past(layer, false, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+                decodeOutputs.Add(new AudioTensorContract(generation.Present(layer, true, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                decodeOutputs.Add(new AudioTensorContract(generation.Present(layer, true, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, -1, generation.KvHeadDimension), 172032));
+                decodeOutputs.Add(new AudioTensorContract(generation.Present(layer, false, true), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+                decodeOutputs.Add(new AudioTensorContract(generation.Present(layer, false, false), TensorElementType.Float32, new TensorShape(1, generation.KvHeads, generation.MaximumEncoderFrames, generation.KvHeadDimension), 576000));
+            }
+            return new[]
+            {
+                encoder,
+                new AudioArtifactContract(AudioArtifactRole.WhisperDecoderPrefill, new ModelId("external/audio/whisper-tiny.en/decoder-prefill/onnx"), "onnx", "2719910b3ad1b2d9266a7eae42ba57ecf4d0791efd2ead7a544a2453f0e7599b", 197981403, 17, prefillInputs, prefillOutputs, revision, exporter, license, source),
+                new AudioArtifactContract(AudioArtifactRole.WhisperDecoderWithPast, new ModelId("external/audio/whisper-tiny.en/decoder-with-past/onnx"), "onnx", "85644c602b815b9a58a1f96e92d9a99016a49049c4a4a71a0a1958f0add3938a", 193242328, 17, decodeInputs, decodeOutputs, revision, exporter, license, source)
+            };
+        }
     }
 }
