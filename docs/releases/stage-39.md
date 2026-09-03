@@ -1,9 +1,0 @@
-# Stage 39: TensorRT formal-admission input review / 阶段 39：TensorRT 正式准入输入复核
-
-Stage 39 remains **blocked** before TensorRT implementation. The cached `JYPPX.TensorRT.CSharp.API 4.0.0` nupkg is byte-identical to Stages 37/38: 15,230,357 bytes, 15 TFMs, 45 managed DLLs, repository commit `be2e507...`, matching SHA256/SHA512, unsigned `NU3004`, and no native/model/engine payload. / 阶段 39 在 TensorRT 实现前继续阻断；缓存包的大小、TFM、托管程序集、repository commit、内容哈希、未签名状态与无 native/model/engine payload 均未变化。
-
-Upstream HEAD `3107d2f...` now records an Owner-approved `Apache-2.0` policy, but the audited package is bound to the older `be2e507...` commit whose decision remains required. No rebuilt licensed nupkg, immutable `v4.0.0` tag/release, or release-bound lock/assets was supplied. All four blockers are retained; new and disappeared blocker counts are zero, so the retained JSON remains byte-identical. / 上游新 HEAD 已有 Owner approved 的 `Apache-2.0` policy，但已审计包绑定的旧提交仍为 required；没有重建的持许可证包、不可变 `v4.0.0` 正式身份或 release-bound lock/assets。四项 blocker 全部保留，新增/消失均为 0，retained JSON 未改写。
-
-TensorRT baseline, expected `-RequireAdmitted`/`NU3004` failures, and all eight negative scenarios behaved correctly. Stage 35 passes 9/82 plus five negative cases; Stage 36 passes 82/82 SourceLink/PDB/API plus seven negative cases; the solution passes 378/50/0. Inventory remains 69/56, exact Qwen and its bound hashes remain unchanged, catalog/upload/download counts remain zero, and NuGet vulnerability/deprecated reports are empty. / TensorRT 门禁、Stage 35/36、全解、inventory、Qwen 与依赖报告均保持预期边界。
-
-No TensorRT adapter/package/reference/API/TFM, native probe, engine/plan/cache key, GPU evidence, model change, dependency upgrade, commit, push, tag, signature, Release, upload, or Actions run was created. Detailed evidence is in [the Stage 39 review](../history/tensorrt-formal-admission-input-review-stage39.md). / 未创建任何 TensorRT 实现、native/GPU/engine 证据或发布写入；详见 Stage 39 复核文章。

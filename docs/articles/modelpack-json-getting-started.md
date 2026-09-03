@@ -1,14 +1,18 @@
-# ModelPack JSON quick start / ModelPack JSON 快速开始
+# ModelPack JSON 快速开始
 
-`JYPPX.DeploySharp.ModelPack.Json` validates a portable model manifest, serializes it deterministically, and loads a local package with integrity checks. It is format- and backend-neutral; install a backend package separately. / `JYPPX.DeploySharp.ModelPack.Json` 验证可移植模型清单、以确定性方式序列化，并在完整性检查下加载本地包。它不绑定模型格式和推理后端；后端包需要单独安装。
+`JYPPX.DeploySharp.ModelPack.Json` 用于描述可移动的模型工件，提供严格校验、确定性序列化和本地包加载。它不绑定 ONNX Runtime、OpenVINO、TensorRT 或 LLamaSharp；实际推理后端需要单独安装。
 
-```powershell
+## 安装
+
+~~~powershell
 dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0-alpha.1
-```
+~~~
 
-The minimum manifest contains `schemaVersion`, model identity, `exporter`, `source`, empty-or-populated `inputs` and `outputs`, and at least one `artifacts` entry. / 最小清单包含 `schemaVersion`、模型标识、`exporter`、`source`、可为空或有内容的 `inputs` 和 `outputs`，以及至少一个 `artifacts` 项。
+## 创建并校验清单
 
-```csharp
+清单至少需要 `schemaVersion`、模型标识、导出器、来源、输入和输出数组，以及一个或多个 `artifacts`。来源和许可证字段属于当前 Schema 的完整性元数据，不代表 ModelPack 会替应用下载或审核第三方内容。
+
+~~~csharp
 using JYPPX.DeploySharp.ModelPack.Json;
 
 var document = new ModelPackageDocument(
@@ -16,7 +20,8 @@ var document = new ModelPackageDocument(
     new ModelExporterDocument("torch.onnx", "2.3.0"),
     new ModelSourceDocument(
         "https://example.com/source", "https://example.com/project", "main",
-        "Example Org", null, "Apache-2.0", null, redistributionAllowed: true),
+        "Example Org", null, "Apache-2.0", null,
+        redistributionAllowed: true),
     generatedAt: DateTimeOffset.UtcNow,
     profileId: "image-classification",
     inputs: Array.Empty<ModelTensorSignatureDocument>(),
@@ -26,28 +31,39 @@ var document = new ModelPackageDocument(
         new ModelArtifactDocument(
             "onnx.cpu", "onnx", ModelArtifactLocationKind.File, "model.onnx",
             new[] { "onnxruntime" },
-            new[] { new ModelFileDocument("model.onnx", "<64 lowercase hex SHA256>", 1234, "application/onnx", ModelFileRole.Model) },
+            new[]
+            {
+                new ModelFileDocument(
+                    "model.onnx", "<64 lowercase hex SHA256>", 1234,
+                    "application/onnx", ModelFileRole.Model)
+            },
             opset: 17, portable: true)
     });
 
 ValidatedModelPackage manifest = ModelPackageValidator.Validate(document);
-File.WriteAllText("manifest.json", ModelPackageJsonSerializer.Serialize(manifest));
+File.WriteAllText(
+    "manifest.json",
+    ModelPackageJsonSerializer.Serialize(manifest));
 LocalModelPackage loaded = ModelPackageLoader.Load("manifest.json");
 var coreArtifacts = loaded.ToCoreArtifacts();
-```
+~~~
 
-Calculate the SHA256 and byte size from the exact bytes that will be distributed. `ModelPackageLoader` does not trust the manifest: it checks that each declared file exists beneath the manifest directory and that the declared size/hash match. / SHA256 和字节大小必须根据将要分发的精确字节计算。`ModelPackageLoader` 不信任清单：它会检查每个声明文件位于清单目录下且声明的大小/hash 匹配。
+SHA256 和字节大小必须根据将要分发的精确文件计算。`ModelPackageLoader` 不信任清单中的声明：它会检查每个文件位于清单目录下，并重新核对声明的大小和哈希。
 
-## Artifact layouts / 工件布局
+## 工件布局
 
-| Layout / 布局 | Example / 示例 | Rules / 规则 |
-|---|---|---|
-| Single file / 单文件 | ONNX, GGUF | `locationKind: "file"`; `entrypoint` must match one listed file. / `locationKind: "file"`；`entrypoint` 必须匹配一个已列出的文件。 |
-| Directory / 目录 | OpenVINO XML + BIN | `locationKind: "directory"`; every file must be below the directory entrypoint. / `locationKind: "directory"`；所有文件必须位于目录入口点下。 |
-| Multi-file / 多文件 | ONNX + external tensor data, tokenizer files | List every required file with a distinct normalized path. / 列出每个必需文件，并使用互不重复的规范化路径。 |
+| 布局 | 示例 | 要求 |
+| --- | --- | --- |
+| 单文件 | ONNX、GGUF | `locationKind: "file"`；`entrypoint` 必须等于清单中的一个文件。 |
+| 目录 | OpenVINO XML + BIN | `locationKind: "directory"`；列出的文件必须全部位于目录入口点下。 |
+| 多文件 | ONNX external data、Tokenizer | 每个必需文件都单独列出，并使用互不重复的规范化路径。 |
 
-`compatibleBackends` records capability matching only; it does not load or install a backend. `portable` documents whether the artifact is intended to move between compatible devices. / `compatibleBackends` 只记录能力匹配，不负责加载或安装后端。`portable` 说明工件是否设计为可在兼容设备间移动。
+`compatibleBackends` 只记录能力匹配，不会加载或安装后端。`portable` 说明工件是否设计为在兼容设备之间移动；TensorRT Engine 这类与设备和运行时绑定的文件通常不应标记为可移植。
 
-## Error handling / 错误处理
+## 加载错误
 
-Catch `ModelPackageValidationException` and inspect `Diagnostics`. Each diagnostic has a stable code, JSON path, artifact id, and package-relative file path where available. The original I/O or JSON exception is retained as `InnerException` and technical details are preserved for logs. / 捕获 `ModelPackageValidationException` 并检查 `Diagnostics`。每条诊断包含稳定代码、JSON 路径、工件标识以及可用时的包内相对文件路径。原始 I/O 或 JSON 异常保留在 `InnerException` 中，技术细节也会保留用于日志。
+捕获 `ModelPackageValidationException` 并查看 `Diagnostics`。每条诊断包含稳定代码、JSON 路径、工件标识和可用时的包内文件路径；原始 I/O 或 JSON 异常保留在 `InnerException` 中。
+
+严格读取器限制 UTF-8 大小、属性名大小写和重复属性，禁止注释与尾逗号，并诊断未知属性。确定性序列化使用固定属性顺序和扩展字典的序号排序，使同一份已校验文档能够产生相同文本。
+
+包内路径必须是正斜杠相对路径。根路径、UNC/盘符路径、`.`、`..`、控制字符、保留设备名及尾随点或空格都会被拒绝；规范化路径必须在整个包内全局唯一。

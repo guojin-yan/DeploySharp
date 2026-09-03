@@ -1,58 +1,46 @@
-# Local LLM quick start / 本地 LLM 快速开始
+# 本地 LLM 快速开始
 
-DeploySharp separates the stable LLM workflow from the LLamaSharp implementation and its native runtime. An application installs `JYPPX.DeploySharp.LLM`, `JYPPX.DeploySharp.Backend.LlamaSharp`, and exactly one native backend selected for its deployment. / DeploySharp 将稳定的 LLM 工作流、LLamaSharp 实现和原生运行时分离。应用程序需要安装 `JYPPX.DeploySharp.LLM`、`JYPPX.DeploySharp.Backend.LlamaSharp`，以及一个与部署环境匹配的原生后端。
+DeploySharp 将稳定的文本生成接口、LlamaSharp 适配器和原生运行时分开。应用安装 DeploySharp.LLM、DeploySharp.Backend.LlamaSharp，并根据部署设备选择一个 LlamaSharp 原生包。
 
-For repository integration evidence, an exact GGUF must first pass `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` with `DEPLOYSHARP_LLAMA_MODEL` and `DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST`. A local filename or valid GGUF header alone is not admission evidence. / 对仓库集成证据而言，精确 GGUF 必须先通过上述准入脚本；仅有本地文件名或有效 GGUF 文件头不能构成准入证据。
-
-```powershell
+~~~powershell
 dotnet add package JYPPX.DeploySharp.LLM --version 2.0.0-alpha.1
 dotnet add package JYPPX.DeploySharp.Backend.LlamaSharp --version 2.0.0-alpha.1
 dotnet add package LLamaSharp.Backend.Cpu --version 0.27.0
-```
+~~~
 
-The CPU package above is only an example. CUDA and Vulkan users must select the matching LLamaSharp package instead; do not install several native backends unless the LLamaSharp deployment guidance explicitly requires it. / 上述 CPU 包只是示例。CUDA 和 Vulkan 用户必须改选匹配的 LLamaSharp 包；除非 LLamaSharp 部署指南明确要求，否则不要同时安装多个原生后端。
+CUDA 和 Vulkan 应改为对应的 LlamaSharp 原生包，不要在同一应用中无目的地安装多个 native 后端。
 
-```csharp
-using JYPPX.DeploySharp.Backends.LlamaSharp;
-using JYPPX.DeploySharp.LLM;
-using JYPPX.DeploySharp.LLM.Registry;
-using JYPPX.DeploySharp.Models;
+## 文本生成与流式输出
 
+~~~csharp
 using var registry = new LanguageModelRegistry();
 registry.UseLlamaSharp(new LlamaSharpOptions(contextSize: 2048));
-
 var artifact = new ModelArtifact(
     new ModelId("local/chat-model"),
     "gguf",
-    @"D:\models\chat-model.gguf");
-
+    modelPath);
 using ILanguageModelSession session = registry.CreateSession(
     artifact,
     new LanguageModelRequest(
         LanguageModelCapabilities.TextGeneration |
         LanguageModelCapabilities.Streaming));
-
 var request = new TextGenerationRequest(
-    "Explain dependency injection in one sentence.",
+    "用一句话解释依赖注入。",
     new GenerationOptions(maxTokens: 64, temperature: 0.2f));
-
 await foreach (var chunk in session.StreamAsync(request))
 {
     Console.Write(chunk.Text);
 }
-```
+~~~
 
-Use `ChatHistory` with `session.Generate(...)`, `GenerateAsync(...)`, or `StreamAsync(...)` extension methods for structured chat. The default `PlainTextPromptFormatter` is intentionally model-neutral; replace `IPromptFormatter` with the exact template required by the selected GGUF model. / 使用 `ChatHistory` 配合 `session.Generate(...)`、`GenerateAsync(...)` 或 `StreamAsync(...)` 扩展方法可以执行结构化聊天。默认 `PlainTextPromptFormatter` 有意保持模型无关；请针对所选 GGUF 模型替换为准确的 `IPromptFormatter` 模板。
+聊天模型的 prompt template 属于模型元数据，应提供匹配的 IPromptFormatter。会话同时支持 Generate、GenerateAsync 和 StreamAsync；支持 Embeddings 的能力由 session.Metadata.Capabilities 报告，不支持时返回稳定诊断而不会伪造向量。
 
-## Embeddings / 文本嵌入
+## 并发、取消与内存
 
-The loaded session reports embedding support through `session.Metadata.Capabilities`. LLamaSharp 0.27.0 exposes a real embedding API, but an individual model may still reject embedding mode or a pooling configuration. DeploySharp then returns a stable `DS-LLM-4002` or another diagnostic error instead of a fabricated vector. / 已加载会话通过 `session.Metadata.Capabilities` 报告嵌入支持。LLamaSharp 0.27.0 提供真实嵌入 API，但具体模型仍可能拒绝嵌入模式或池化配置。此时 DeploySharp 返回稳定的 `DS-LLM-4002` 或其他诊断错误，不会伪造向量。
+一个 LlamaSharp session 持有模型权重和可变生成上下文，同一 session 内调用会串行执行。需要并发时创建有限数量的独立 session，并把重复的 native 内存计入容量规划。上下文长度、KV cache、batch 和 GPU layer 数量共同决定内存，建议先以 CPU 配置验证，再逐步启用卸载。
 
-```csharp
-if ((session.Metadata.Capabilities & LanguageModelCapabilities.Embeddings) != 0)
-{
-    var embedding = await session.EmbedAsync(
-        new TextEmbeddingRequest("DeploySharp", normalize: true));
-    Console.WriteLine(embedding.Dimensions);
-}
-```
+取消可能表现为 OperationCanceledException，或流式结果中的 Cancelled 终止原因，取决于取消发生的阶段。释放 session 前应等待活动调用结束；Dispose 可重复调用。
+
+## 模型与后端状态
+
+GGUF 文件必须由应用选择并放在本地，原生包的 RID、驱动和指令集也由应用负责。可下载的 Preview 模型见[官方模型目录](model-catalog.md)，具体后端状态见[模型支持指南](model-support.md)和[验证矩阵](../model-backend-verification-matrix.md)。

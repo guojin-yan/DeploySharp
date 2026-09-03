@@ -1,22 +1,62 @@
-# LLamaSharp native backend guide / LLamaSharp 原生后端指南
+# LlamaSharp 原生后端部署
 
-`JYPPX.DeploySharp.Backend.LlamaSharp` contains only the managed adapter and depends on the managed `LLamaSharp` 0.27.0 package. It never embeds CPU, CUDA, or Vulkan native binaries. The final application owns the native package, RID, driver, and redistribution decision. / `JYPPX.DeploySharp.Backend.LlamaSharp` 只包含托管适配器，并依赖托管 `LLamaSharp` 0.27.0 包。它绝不内置 CPU、CUDA 或 Vulkan 原生二进制文件。最终应用程序负责原生包、RID、驱动程序和再分发决策。
+`DeploySharp.Backend.LlamaSharp` 只提供托管适配层，不把 CPU、CUDA 或 Vulkan 的 native 二进制打进自己的包。原生后端必须由最终应用按操作系统、RID、GPU 驱动和 LlamaSharp 版本显式选择。这样可以避免 NuGet 恢复出互相冲突的 native 库，也便于把部署责任放在应用的发布目录。
 
-| Deployment / 部署 | Application package / 应用包 | Primary check / 首要检查 |
-|---|---|---|
-| CPU | `LLamaSharp.Backend.Cpu` 0.27.0 | OS/architecture RID and instruction-set support / OS、架构 RID 与指令集支持 |
-| NVIDIA CUDA 12 | `LLamaSharp.Backend.Cuda12` 0.27.0 | CUDA 12 driver/runtime compatibility / CUDA 12 驱动与运行时兼容性 |
-| Vulkan | `LLamaSharp.Backend.Vulkan` 0.27.0 | Vulkan loader and device driver / Vulkan 加载器与设备驱动 |
-
-Managed and native LLamaSharp versions must be tested as one set. The adapter was compiled against managed LLamaSharp 0.27.0; installing a different native release can cause missing entry points, ABI mismatches, or silent behavior changes. / LLamaSharp 托管版和原生版必须作为一个整体测试。本适配器针对托管 LLamaSharp 0.27.0 编译；安装不同版本的原生包可能导致入口点缺失、ABI 不匹配或静默行为变化。
-
-DeploySharp maps common loader failures to `DS-NATIVE-6001` while preserving the original exception in `InnerException` and `TechnicalDetails`. A malformed GGUF is reported as `DS-MODEL-2001`; a context overflow is `DS-LLM-4003`. / DeploySharp 将常见加载失败映射为 `DS-NATIVE-6001`，并在 `InnerException` 与 `TechnicalDetails` 中保留原始异常。损坏的 GGUF 报告为 `DS-MODEL-2001`，上下文溢出报告为 `DS-LLM-4003`。
-
-The environment variable `DEPLOYSHARP_LLAMA_MODEL` selects the exact model for the real integration test. Before loading it, `DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST` must identify an admitted ModelPack and `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` must pass. A missing model, incomplete evidence, or missing native runtime is reported as blocked/skipped/inconclusive, never as a pass. / 环境变量 `DEPLOYSHARP_LLAMA_MODEL` 为真实集成测试选择精确模型。加载前，`DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST` 必须指向已准入的 ModelPack，且 `eng/models/llm/Test-GgufAdmission.ps1 -RequireAdmitted` 必须通过。缺少模型、证据不完整或缺少原生运行时时，只能报告 blocked/skip/inconclusive，绝不能伪装成通过。
+## 安装托管包和一个原生后端
 
 ```powershell
-$env:DEPLOYSHARP_LLAMA_MODEL = 'E:\DeploySharp-Models\approved-model\model.gguf'
-$env:DEPLOYSHARP_LLAMA_ADMISSION_MANIFEST = 'E:\GitSpace\DeploySharp-V2.0\DeploySharp\eng\models\llm\manifests\approved-model.modelpack.json'
-powershell -NoProfile -ExecutionPolicy Bypass -File eng\models\llm\Test-GgufAdmission.ps1 -RequireAdmitted
-dotnet test tests\DeploySharp.Backend.LlamaSharp.Tests\DeploySharp.Backend.LlamaSharp.Tests.csproj -c Release
+dotnet add package JYPPX.DeploySharp.LLM --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.LlamaSharp --version 2.0.0-alpha.1
+dotnet add package LLamaSharp.Backend.Cpu --version 0.27.0
 ```
+
+NVIDIA CUDA 12 或 Vulkan 应将最后一个包替换为对应的 LlamaSharp native 包；同一个应用不应无目的地同时安装 CPU、CUDA 和 Vulkan 后端。当前适配器使用 LLamaSharp `0.27.0` 合同，升级原生包时必须重新编译并验证。
+
+## RID 和发布目录
+
+在目标设备上使用与进程架构一致的 RID 发布，例如 Windows x64：
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained false
+```
+
+检查发布目录中托管程序集、LlamaSharp native 文件和 CUDA/Vulkan 依赖是否来自同一架构。`Any CPU` 不能替代 native 架构检查；在 x86 进程中加载 x64 native 会直接失败。Linux、Windows 和 macOS 的驱动、loader 及安全策略由宿主系统负责。
+
+## 选择设备和资源参数
+
+```csharp
+using JYPPX.DeploySharp.Backends.LlamaSharp;
+
+var options = new LlamaSharpOptions(
+    device: "cuda",
+    gpuLayerCount: 24,
+    mainGpu: 0,
+    contextSize: 4096,
+    threads: 8,
+    batchThreads: 4,
+    batchSize: 512,
+    sequenceCount: 1,
+    useMemoryMap: true);
+
+registry.UseLlamaSharp(options);
+```
+
+`device` 支持 `auto`、`cpu`、`gpu`、`cuda` 和 `vulkan`。GPU 卸载层数、上下文长度、KV cache、batch 和序列数共同决定显存；应先用较小上下文和较少 GPU 层验证加载，再逐步提高。`useMemoryMap` 通常适合本地大模型，`useMemoryLock` 会增加系统内存压力，不应默认打开。
+
+## 并发与生命周期
+
+一个 LLamaSharp session 持有可变生成上下文，适配器要求单个 session 的调用串行。需要并发时创建有限数量的独立 session，每个 session 都会重新加载或持有 native 上下文；总内存必须按 session 数量规划。不要把同一个 session 放进无界 `Task.Run` 队列。
+
+释放顺序应为：停止新请求，等待活动生成结束，释放 session，最后释放 registry。取消可能在生成结果中表现为 `OperationCanceledException` 或取消终止原因；应用应把两者都视为正常取消路径，并记录原始诊断。
+
+## 常见故障
+
+| 现象 | 检查项 |
+| --- | --- |
+| 找不到 native 库 | 安装匹配的 `LLamaSharp.Backend.*`，检查发布目录和 RID |
+| CUDA 初始化失败 | 驱动、CUDA 主版本、GPU 架构和 native 包是否匹配 |
+| 模型加载失败 | GGUF 是否完整、模型架构和量化是否被 LLamaSharp 支持 |
+| 内存不足 | 降低上下文、batch、GPU layer 或独立 session 数量 |
+| 并发结果互相影响 | 每个请求使用独立 session，不共享生成上下文 |
+
+适配器会将 native 加载失败、损坏 GGUF 和上下文超限映射为稳定错误码，同时保留原始异常。详细模型选择和文本生成示例见[本地 LLM 快速开始](llm-getting-started.md)，版本边界见[LLamaSharp 兼容性](llamasharp-compatibility.md)。

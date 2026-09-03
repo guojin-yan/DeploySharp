@@ -11,10 +11,10 @@ Catalog selection and detector package verification; complete image inference re
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id yolo/v7/detect/base
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id yolo/v7/detect/base
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 
@@ -42,12 +42,14 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Local verification date: 2026-08-25; OpenCV follow-up: 2026-09-01. Results are generated from the exact official-catalog artifact identity and SHA-256.
 
 | Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| onnx.fp32 | ✓ | ✓ | ✗ | ✓ | — |
+| onnx.fp32 | ✓ | ✓ | ✓ | ✓ | — |
 
 `✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+
+OpenCV 5.0 cannot execute this artifact's graph-internal data-dependent NMS/Gather tail. The verified OpenCV contract instead binds raw head `onnx_node!/model/model.105/Concat_3` (`[1,25200,85]`) and runs DeploySharp managed decode/NMS. On `bus.jpg`, that path and ONNX Runtime's graph-internal end-to-end path both returned seven detections with the same classes and boxes at 0.001 precision; the maximum displayed score delta was approximately `0.000006`. This is an exact-artifact contract and is not inferred for other YOLOv7 exports.
 
 See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.

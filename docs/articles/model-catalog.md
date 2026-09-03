@@ -1,12 +1,10 @@
-# Official model catalog / 官方模型目录
+# 官方模型目录
 
-This table is generated from `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json`. Do not edit table rows by hand. / 本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 生成，请勿手工编辑表格行。
+本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 自动生成，请勿手工编辑表格行。
 
-The catalog currently contains 42 entries and every entry has `preview` status. Preview entries are public, downloadable, SHA-256-checked ModelFactory assets; they are not `AlgorithmVerified` and do not imply GA. Querying without `includePreview: true` intentionally excludes them. / 当前目录包含 42 条记录，且全部为 `preview`。Preview 是公开、可下载并完成 SHA-256 校验的 ModelFactory 资产；它们不是 `AlgorithmVerified`，也不代表 GA。不带 `includePreview: true` 的查询会按设计排除这些条目。
+当前目录包含 42 条 `preview` 记录。Preview 条目可以下载，并会在 ModelFactory 中按大小和 SHA-256 校验；查询时必须显式设置 `includePreview: true`。
 
-The first PP-OCRv5 algorithm-admission candidate is `paddleocr/ppocrv5/mobile-cls`. Its source/archive binding, exporter reproduction, immutable Preview Release, ONNX hash, fixed-image preprocessing, ORT/OpenVINO local golden, and independent Paddle Predictor output are recorded. `license-and-redistribution` remains open in `paddleocr-release-admission.json` because no attributable model/dictionary redistribution approval has been recorded, so it remains Preview. / 首个 PP-OCRv5 算法准入候选为 `paddleocr/ppocrv5/mobile-cls`。其来源/归档绑定、导出复现、不可变 Preview Release、ONNX 哈希、固定图像前处理、ORT/OpenVINO 本机 golden 和独立 Paddle Predictor 输出均已记录；因尚未记录可归属的模型/字典再分发批准，`paddleocr-release-admission.json` 中的 `license-and-redistribution` 仍为 open，因此继续保持 Preview。
-
-| ModelId | Algorithm / Task | Artifact | Format | Backend | Precision / Quantization | Portable | Release tag | Size | SHA256 | Download | Test input | License |
+| 模型 ID | 模型族 / 任务 | 工件 | 格式 | 后端 | 精度 / 量化 | 可移植 | Release 标签 | 大小 | SHA256 | 下载 | 测试输入 | 许可标识 |
 |---|---|---|---|---|---|---|---|---:|---|---|---|---|
 | anomalib/padim/mvtec-bottle | anomalib-seg / anomaly-detection | onnx.fp32 | onnx | onnxruntime<br>openvino | fp32 / none | True | models-20260817.vision.1 | 176641352 | bde19ca3086d3fa52bb3cbc2b9ea2d554ce1f10b4c8a8b38d7393bd54247ffff | [manifest](https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/anomalib-padim-mvtec-bottle.modelpack.json) | — | Apache-2.0 |
 | bria/rmbg-1.4 | bria-rmbg / foreground-matting | onnx.fp32 | onnx | onnxruntime<br>openvino | fp32 / none | True | models-20260817.vision.1 | 176153355 | 8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f | [manifest](https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.vision.1/bria-rmbg-1.4.modelpack.json) | — | LicenseRef-BRIA-RMBG-1.4 |
@@ -52,4 +50,4 @@ The first PP-OCRv5 algorithm-admission candidate is `paddleocr/ppocrv5/mobile-cl
 | yolo/v9/detect/s | yolov9 / object-detection | onnx.fp32 | onnx | onnxruntime<br>openvino | fp32 / none | True | models-20260817.yolo.1 | 29153318 | e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7 | [manifest](https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-detect-s.modelpack.json) | — | GPL-3.0-only |
 | yolo/v9/segment/c | yolov9 / instance-segmentation | onnx.fp32 | onnx | onnxruntime<br>openvino | fp32 / none | True | models-20260817.yolo.1 | 110001237 | 2cc4ea632009115d72f30841d7295d5ca064cc9697a2fb4efbea3ce41ac0a2a0 | [manifest](https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.yolo.1/yolo-v9-segment-c.modelpack.json) | — | GPL-3.0-only |
 
-The catalog lists only models actually published in an immutable GitHub Release with source, license, exact size, and SHA-256 metadata. Preview entries require an explicit `includePreview: true` query. / 目录仅列出已在不可变 GitHub Release 中实际发布，且带有来源、许可证、精确大小与 SHA-256 元数据的模型。预览条目须在查询中显式设置 `includePreview: true`。
+目录中的条目对应已经发布到 GitHub Release 的 ModelFactory 资产；下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。

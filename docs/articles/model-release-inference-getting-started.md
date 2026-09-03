@@ -1,38 +1,34 @@
-# Model Release Inference Quick Start / 模型 Release 推理快速开始
+# Release 模型推理快速开始
 
-This sample connects the published ModelFactory catalog to a real CPU inference call. The model is downloaded into the application-owned cache, checked against the catalog size/SHA256 and ModelPack manifest, then passed to the existing Visual and ONNX Runtime contracts. No model file is committed to Git. / 此示例将已发布 ModelFactory 目录连接到真实 CPU 推理调用。模型下载到应用自有缓存，并按目录中的大小/SHA256 和 ModelPack 清单校验，再交给现有 Visual 与 ONNX Runtime 合同执行。模型文件不会提交到 Git。
+本文演示如何把 ModelFactory 目录中的模型下载到应用缓存，再交给 DeploySharp 视觉和 ONNX Runtime 合同执行。适用于 `2.0.0-alpha.1` 的 Windows x64 Preview 工件；模型下载、校验和推理后端是三个独立步骤。
 
-## Prerequisites / 前置条件
+## 前置条件
 
-- .NET 8 SDK
-- Windows x64 for the checked OpenCV runtime package
-- A local input image
-- Network access on the first run; `--offline` works after the cache is complete
+- .NET 8 SDK；
+- 能访问目标 Release 的网络，或已有完整的离线缓存；
+- 与模型输入尺寸匹配的本地图片；
+- 应用自行部署的 ONNX Runtime、OpenCV 和其他 native runtime。
 
-The sample uses the existing `Microsoft.ML.OnnxRuntime` CPU runtime and `JYPPX.OpenCV.runtime.win-x64`. Native runtimes remain application-owned. / 示例使用现有 `Microsoft.ML.OnnxRuntime` CPU runtime 和 `JYPPX.OpenCV.runtime.win-x64`；native runtime 仍由应用所有。
+## 使用 Release 推理案例
 
-## BRIA RMBG / BRIA RMBG
+案例位于 `samples/06-models/release-inference`。以 BRIA RMBG 2.0 为例：
 
-```powershell
+~~~powershell
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
-dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg
-dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-1.4 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
-```
+~~~
 
-The command writes `deploysharp-alpha.pgm` by default. The output is a grayscale alpha mask with the source-image dimensions. `PGM` can be opened by common image tools or converted to PNG by the caller. The BRIA 2.0 Release evidence is verified at the inspected 1024x1024 contract; arbitrary dynamic sizes are not claimed. / 命令默认写出 `deploysharp-alpha.pgm`，它是与源图尺寸相同的灰度 Alpha 掩码。常见图像工具可以打开 `PGM`，调用方也可以将其转换为 PNG。BRIA 2.0 Release 证据在已检查的 1024x1024 合同上验证，不宣称任意动态尺寸。
+案例会将模型下载到应用缓存，校验 ModelPack、文件大小和 SHA256，然后执行背景 Alpha 推理，默认输出 `deploysharp-alpha.pgm`。RMBG 1.4 使用 `--model-id bria/rmbg-1.4`；PaDiM 使用 `anomalib/padim/mvtec-bottle`。
 
-## PaDiM / PaDiM
+## 离线复用
 
-```powershell
-dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id anomalib/padim/mvtec-bottle --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
-```
+首次在线运行成功后，可以指定应用自己的缓存目录并切换到离线模式：
 
-The command writes `deploysharp-anomaly-mask.pgm` by default and prints the image score, anomalous-pixel ratio, canonical result SHA256, and output path. The published PaDiM artifact is the MVTec AD `bottle` preview package. / 命令默认写出 `deploysharp-anomaly-mask.pgm`，并打印图像分数、异常像素比例、规范结果 SHA256 和输出路径。已发布 PaDiM 工件是 MVTec AD `bottle` Preview 包。
-
-## Cache and offline reuse / 缓存与离线复用
-
-Use `--cache <path>` to choose an application-owned cache. After a successful online run, repeat the same command with `--offline` to require the verified local package and prevent network fallback: / 使用 `--cache <path>` 指定应用自有缓存。在线运行成功后，加上 `--offline` 再次运行即可强制使用已校验本地包，禁止联网回退：
-
-```powershell
+~~~powershell
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image E:\Model\anomalib\Padim\images\your-image.jpg --cache D:\DeploySharpCache --offline
-```
+~~~
+
+`--offline` 会强制使用已完成并已验证的本地包；缺少文件、大小或 SHA256 不匹配时直接失败，不会静默联网下载。
+
+## 支持边界
+
+模型目录中的 `Preview` 条目需要显式打开 Preview 查询；目录中未出现的模型不能用相近名称替代。TensorRT Engine、Tokenizer、OpenVINO XML/BIN 和其他 sidecar 仍由应用按对应后端要求准备。具体模型与后端状态以[模型支持指南](model-support.md)、[官方模型目录](model-catalog.md)和[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。

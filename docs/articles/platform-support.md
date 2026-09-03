@@ -1,40 +1,51 @@
-# Platform and backend support / 平台与后端支持
+# 平台与后端支持
 
-This page is the detailed support statement for <code>2.0.0-alpha.1</code>. A check means the path has local Windows evidence; it is not a promise that every model works on every backend. / 本页是 <code>2.0.0-alpha.1</code> 的详细支持说明。通过表示已有 Windows 本机证据，不表示每个模型都能在每个后端运行。
+本文汇总 DeploySharp 2.0.0-alpha.1 的目标框架、操作系统和推理后端范围。这里的“可构建”仅表示托管程序集能够编译；只有完成真实模型推理验证的组合才算“已验证”。
 
-## Operating-system scope / 操作系统范围
+## 当前发布范围
 
-| Platform / 平台 | Alpha status / Alpha 状态 | Notes / 说明 |
+| 项目 | 当前状态 |
+| --- | --- |
+| Windows 10/11 x64 | Alpha 版本的主要开发与验证平台 |
+| Linux x64 | 可以构建，尚未纳入本版本完整运行验证 |
+| macOS x64 / ARM64 | 可以构建，尚未纳入本版本完整运行验证 |
+| Windows ARM64 | 尚未纳入本版本验证 |
+
+跨平台使用时，还需要确认所选后端的原生库、驱动和模型格式在目标设备上可用。
+
+## 目标框架
+
+| 包组 | 目标框架 |
+| --- | --- |
+| Core、ModelPack、ModelFactory | <code>netstandard2.0</code>、<code>net8.0</code>、<code>net10.0</code> |
+| Visual 与主要视觉适配器 | <code>net8.0</code>、<code>net10.0</code> |
+| 依赖特定原生运行时的后端 | 以对应 NuGet 包和本机原生库要求为准 |
+
+建议新项目优先使用 .NET 10；需要兼容现有应用时可选择 .NET 8。
+
+## 推理后端
+
+| 后端 | 主要设备 | 当前说明 |
 | --- | --- | --- |
-| Windows 10 x64 | Supported for this Alpha | Managed build, tests, samples, CPU backends, and local TensorRT GPU evidence |
-| Windows 11 x64 | Supported for this Alpha | Same source and package path as Windows 10 x64 |
-| Windows ARM64 | Deferred | No current release validation |
-| Linux x64/ARM64 | Deferred | Planned follow-up; not a release blocker |
-| macOS x64/ARM64 | Deferred | Planned follow-up; not a release blocker |
-| Android/iOS | Deferred | No mobile runtime statement in this Alpha |
-| NPU providers | Deferred | Provider-specific validation is not complete |
+| ONNX Runtime | CPU、CUDA | CPU 是通用路径；CUDA 需要匹配版本的 GPU Provider、CUDA、cuDNN 和驱动 |
+| OpenVINO | CPU，部分 Intel 设备 | 支持 ONNX 与 OpenVINO IR；设备名称由应用显式配置 |
+| OpenCV DNN | CPU，部分 OpenCV Target | 适合 OpenCV 可导入的 ONNX 图；动态 Shape 或未实现算子可能无法加载 |
+| TensorRT | NVIDIA GPU | 使用预构建 Engine；Engine 必须与 TensorRT、CUDA、精度和目标 GPU 兼容 |
+| LlamaSharp | CPU、CUDA、Vulkan 等原生后端 | 用于 GGUF 大语言模型，实际能力取决于随应用部署的原生后端包 |
 
-## Target-framework coverage / 目标框架
+同一个模型并不一定适用于所有后端。选择前请同时检查模型格式、动态输入、辅助输入、前后处理合同和运行时版本。
 
-| Package group / 包组 | Target frameworks / 目标框架 | Current evidence / 当前证据 |
-| --- | --- | --- |
-| Core, Visual | <code>net46</code>-<code>net481</code>, <code>netstandard2.0</code>, <code>netcoreapp3.1</code>, <code>net5.0</code>-<code>net10.0</code> | Windows build/test matrix |
-| ModelPack.Json, ModelFactory | <code>netstandard2.0</code>, <code>net8.0</code>, <code>net9.0</code>, <code>net10.0</code> | Windows build, package-only consumers, catalog checks |
-| LLM, Multimodal | <code>netstandard2.0</code>, <code>netcoreapp3.1</code>, <code>net5.0</code>-<code>net10.0</code> | Managed contracts and samples |
-| Backend.OnnxRuntime, Backend.LlamaSharp | Package-specific <code>netstandard2.0</code>/<code>net8.0</code> subsets | Windows managed and runtime checks |
-| Backend.OpenVINO, Backend.OpenCV, Visual.OpenCV | <code>net46</code>-<code>net481</code>, <code>netcoreapp3.1</code>, <code>net5.0</code>-<code>net10.0</code> | Windows x64 CPU paths |
-| Backend.TensorRT | <code>net8.0</code> | Windows TensorRT 11/CUDA 12.9 local GPU |
+## 如何判断是否可用
 
-Target-framework compatibility is a build boundary, not a security-support promise for end-of-life runtimes. / 目标框架兼容只表示可构建范围，不表示已经结束生命周期的运行时仍获得安全支持。
+- 查看[模型支持状态](model-support.md)，确认模型族已进入公开范围。
+- 查看[模型与后端验证矩阵](../model-backend-verification-matrix.md)，确认具体模型与后端组合的实测状态。
+- 查看[设备性能实测](device-performance-benchmarks.md)，了解已有设备上的延迟、吞吐和测试条件。
+- 未验证状态不等同于不可用；不支持状态表示当前合同、算子或运行时存在已知限制。
 
-## Backend status / 后端状态
+## 相关文档
 
-| Backend | Device/runtime | Alpha result |
-| --- | --- | --- |
-| ONNX Runtime | Windows x64 CPU, <code>Microsoft.ML.OnnxRuntime 1.28.0</code> | Named-tensor model execution verified |
-| OpenVINO | Windows x64 CPU, application-owned OpenVINO runtime | Named-tensor model execution verified |
-| OpenCV DNN | Windows x64 CPU | 25/38 tested ONNX artifacts pass; unsupported operators and dynamic contracts are recorded |
-| TensorRT | TensorRT 11, CUDA 12.9, RTX 3060 Laptop GPU | 37/38 tested ONNX artifacts pass; RMBG 2.0 dynamic-int8 is unsupported |
-| LLamaSharp | Windows CPU GGUF, application-selected native backend | Managed contract and Qwen GGUF path available |
-
-The [model/backend verification matrix](../model-backend-verification-matrix.md) is the source of truth for each model/backend cell.
+- [安装指南](installation.md)
+- [ONNX Runtime 入门](onnxruntime-getting-started.md)
+- [OpenVINO 入门](openvino-getting-started.md)
+- [OpenCV DNN 入门](visual-opencv-getting-started.md)
+- [TensorRT CUDA 视觉推理](tensorrt-cuda-visual.md)

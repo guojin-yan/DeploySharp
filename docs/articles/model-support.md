@@ -1,41 +1,56 @@
-# Model support / 模型支持
+# 模型支持指南
 
-DeploySharp <code>2.0.0-alpha.1</code> contains 42 official catalog entries and 43 artifact variants. Every entry has a dedicated reproducibility case under <code>samples/06-models/cases</code>. The catalog status is **Preview**: it means the ModelFactory entry can be selected and its ModelPack/download identity can be checked; it does not mean every backend supports it. / <code>2.0.0-alpha.1</code> 包含 42 个官方目录条目和 43 个工件变体。每个条目在 <code>samples/06-models/cases</code> 下都有独立复现案例。目录状态为 **Preview**：表示可以选择目录条目并校验 ModelPack/下载身份，不表示所有后端都支持。
+本页说明 DeploySharp 当前模型目录的公开边界。模型支持分为“已收录 Preview”“可执行但未收录”和“暂不支持”三类。`Preview` 表示已有可复现的 ModelPack 和发布身份，不代表所有后端、所有设备或算法精度均已完成验证。
 
-## Model families / 模型族
+## 状态定义
 
-| Family / 模型族 | Catalog entries / 条目 | Current task coverage / 当前任务覆盖 |
-| --- | ---: | --- |
-| YOLO v5-v13/v26 | 22 | Detection, classification, segmentation, pose, and OBB; exact backend cells are in the matrix |
-| DETR family | 8 | DEIMv2, PP-YOLOE, RF-DETR detection/segmentation, RT-DETR decoded/raw variants |
-| PP-OCRv5 | 6 | Mobile/server classification, detection, and recognition |
-| Anomalib / BRIA | 3 entries, 4 artifacts | PaDiM bottle anomaly; RMBG 1.4; RMBG 2.0 FP32 and dynamic-int8 variants |
-| Vision-language | 2 | CLIP image/text embedding; BLIP caption generation |
-| Segmentation | 1 | SAM v1 ViT-B promptable image segmentation |
-| Local LLM | 1 | Qwen2.5 0.5B Instruct Q4_K_M GGUF |
-
-## Complete catalog IDs / 完整目录 ID
-
-The current catalog IDs are listed below. The exact artifact, precision, size, SHA-256, Release tag, and backend result are maintained in the [verification matrix](../model-backend-verification-matrix.md). / 当前目录 ID 如下；精确工件、精度、大小、SHA-256、Release 标签和后端结果维护在[验证矩阵](../model-backend-verification-matrix.md)。
-
-### YOLO / YOLO
-
-<code>yolo/v5/detect/n</code>, <code>yolo/v5/segment/s</code>, <code>yolo/v6/detect/s</code>, <code>yolo/v7/detect/base</code>, <code>yolo/v8/classify/s</code>, <code>yolo/v8/detect/n</code>, <code>yolo/v8/obb/s</code>, <code>yolo/v8/pose/s</code>, <code>yolo/v8/segment/n</code>, <code>yolo/v9/detect/s</code>, <code>yolo/v9/segment/c</code>, <code>yolo/v10/detect/n</code>, <code>yolo/v11/detect/n</code>, <code>yolo/v11/obb/s</code>, <code>yolo/v11/pose/s</code>, <code>yolo/v11/segment/s</code>, <code>yolo/v12/detect/n</code>, <code>yolo/v13/detect/n</code>, <code>yolo/v26/detect/n</code>, <code>yolo/v26/obb/s</code>, <code>yolo/v26/pose/s</code>, <code>yolo/v26/segment/s</code>.
-
-### DETR and OCR / DETR 与 OCR
-
-<code>deim/v2/detect</code>, <code>pp-yoloe/plus-crn-l</code>, <code>rf-detr/detect</code>, <code>rf-detr/segment</code>, <code>rt-detr/r50vd-decoded-vector-ir</code>, <code>rt-detr/r50vd-decoded-vector-onnx</code>, <code>rt-detr/r50vd-raw-query</code>, <code>paddleocr/ppocrv5/mobile-cls</code>, <code>paddleocr/ppocrv5/mobile-det</code>, <code>paddleocr/ppocrv5/mobile-rec</code>, <code>paddleocr/ppocrv5/server-cls</code>, <code>paddleocr/ppocrv5/server-det</code>, <code>paddleocr/ppocrv5/server-rec</code>.
-
-### Vision, anomaly, and language / 视觉、异常与语言
-
-<code>anomalib/padim/mvtec-bottle</code>, <code>bria/rmbg-1.4</code>, <code>bria/rmbg-2.0</code> (<code>onnx.fp32</code> and <code>onnx.dynamic-int8</code>), <code>segmentation/sam-v1-vit-b</code>, <code>vision-language/clip-vit-b-32</code>, <code>generative-vision-language/blip-caption-base</code>, <code>llm/qwen2.5-0.5b-instruct-q4-k-m</code>.
-
-## Status symbols / 状态符号
-
-| Symbol / 符号 | Meaning / 含义 |
+| 状态 | 含义 |
 | --- | --- |
-| <code>✓</code> | Exact local artifact built/loaded and inference passed on that backend |
-| <code>✗</code> | Exact compatibility test ran and the backend is currently unsupported for that artifact |
-| <code>—</code> | No matching local artifact or not applicable to that backend |
+| `ContractVerified` | Profile、输入输出张量和确定性解码合同已通过测试。 |
+| `LocalBackendVerified` | 精确工件已在声明的本机后端和设备上完成真实推理。 |
+| `Preview` | ModelPack 具有固定版本、大小、SHA-256 和发布身份，可按目录规则获取。 |
+| `External` | 仅保留合同或外部工件记录，不属于可下载的官方目录。 |
+| `Planned` | 已有任务方向，但当前版本没有可交付的完整工件或流水线。 |
 
-Use the per-model case READMEs under <code>samples/06-models/cases</code> for commands and prerequisites. Use the [matrix](../model-backend-verification-matrix.md) for the complete 43-row artifact result table.
+## 已收录 Preview
+
+| 模型族 | 当前条目 | 主要任务 | 说明 |
+| --- | --- | --- |
+| YOLO | v5、v6、v7、v8、v9、v10、v11、v12、v13、v26 | 检测、分类、分割、姿态、OBB | 以目录中的精确 ONNX/Engine 工件为准。 |
+| DETR | DEIMv2、PP-YOLOE、RF-DETR、RT-DETR | 检测、实例分割 | 不同导出图的输入输出合同不同。 |
+| PaddleOCR | PP-OCRv5 mobile/server | 检测、识别、方向分类 | v4/v5/v6 流水线支持见专门教程和实测矩阵。 |
+| 异常与抠图 | PaDiM、BRIA RMBG 1.4/2.0 | 异常分数/掩码、前景 alpha | RMBG 2.0 的精度和后端按工件分别记录。 |
+| 视觉语言 | CLIP、BLIP Caption Base | 图文相似度、图像描述 | 仅完整的双图/生成工件可复现。 |
+| 可提示分割 | SAM v1 | 点、框、掩码提示 | SAM2/SAM3 不属于当前公开 Preview。 |
+| 本地 LLM | Qwen2.5 0.5B Instruct GGUF | 文本生成、流式、Embedding | 需要应用提供 LLamaSharp 原生运行时。 |
+
+精确模型 ID、下载入口、工件格式和发布版本见[官方模型目录](model-catalog.md)；每个模型与后端的真实验证结果见[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
+
+## 可执行但未收录
+
+以下路径具有部分合同或本机实验，但当前不作为官方可下载模型：
+
+- Wav2Vec2、Whisper tiny.en：有音频预处理或局部图执行证据，但完整可下载 Bundle 和发布边界尚未闭合；
+- Donut CORD-v2：单页 Encoder/Prefill/KV 路径已有局部执行证据，多页和 TensorRT 尚未收录；
+- LLaVA OneVision：单图 ORT/OpenVINO CPU 路径可执行，完整原生多模态包仍由应用提供；
+- YOLO-World、Grounding DINO、YOLOE：提示词/词表/完整导出工件尚未形成统一发布包；
+- SigLIP：本地双编码器合同存在，当前公开目录只收录 CLIP Preview。
+
+## 暂不支持的模型族
+
+以下条目不能因“已有接口”而推断为可用：
+
+- SAM2/SAM3 完整图像/视频记忆与跟踪流程；
+- BLIP VQA、BLIP-2、InstructBLIP 完整 Q-Former/投影/语言模型 Bundle；
+- Qwen2.5-VL、Phi Vision 完整视觉处理和 KV 推理 Bundle；
+- SigLIP 2 完整双编码器导出；
+- LayoutLMv3 任务头、Pix2Struct DocVQA 完整原生 Bundle；
+- HuBERT 下游任务头、pyannote 完整说话人分离 Bundle。
+
+这些模型只有在完整工件、输入输出合同、运行时验证和发布资产齐备后，才会加入公开目录。
+
+## 后端与性能
+
+同一模型在 ONNX Runtime、OpenVINO、OpenCV DNN 和 TensorRT 上的结果不能互相替代。TensorRT Engine 与 GPU、CUDA、TensorRT 版本和输入 profile 绑定；OpenCV DNN 的动态 shape、辅助输入和 importer 限制按工件记录。PaddleOCR 单图完整流水线的最佳 batch/并发组合和设备耗时见[设备性能实测](device-performance-benchmarks.md)。
+
+本页只表达模型支持状态，不承诺固定延迟、吞吐量或跨平台一致性。部署前请同时阅读[平台与后端支持](platform-support.md)、[安装指南](installation.md)和对应模型教程。

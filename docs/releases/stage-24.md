@@ -1,5 +1,0 @@
-# Stage 24: CLIP, SigLIP, and SigLIP 2 / 阶段 24：CLIP、SigLIP 与 SigLIP 2
-
-Stage 24 adds an artifact-bound dual-encoder API, owned image/text embeddings, canonical zero-shot classification, cross-modal retrieval, exact score semantics, two-session cache/lifecycle rules, OpenCV input preparation, ModelFactory bundle identity fields, three External manifests, and a package-only consumer. / 阶段 24 新增工件绑定双编码器 API、自有图文 Embedding、规范零样本分类、跨模态检索、精确评分语义、双 Session 缓存生命周期、OpenCV 输入、ModelFactory Bundle Identity、三份 External Manifest 与仅包 Consumer。
-
-Official CLIP ViT-B/32 and SigLIP base patch16-224 split ONNX graphs run on ORT/OpenVINO CPU and match retained official feature goldens. SigLIP 2 is an explicit source-contract blocker. Pillow/OpenCV bicubic divergence is measured and disclosed. Packages remain managed-only; models, tokenizers, images, Python, native runtimes, catalog, Release, Actions, and TensorRT are not added. / CLIP 与 SigLIP 双子图通过 ORT/OpenVINO CPU 并匹配官方 Feature Golden；SigLIP 2 明确阻断。Pillow/OpenCV Bicubic 差异已测量并公开。包仍为纯 Managed，不加入模型、Tokenizer、图片、Python、Native Runtime、catalog、Release、Actions 或 TensorRT。

@@ -1,7 +1,0 @@
-# Acquire CLIP, SigLIP, and SigLIP 2 / 获取 CLIP、SigLIP 与 SigLIP 2
-
-Use the exact revisions and hashes in `eng/models/vision-language/manifests`. Put each checkpoint, tokenizer, processor, split image/text graph, and golden under `E:\DeploySharp-Models\<model-name>`. Export image and text encoders separately with exact named ports; bind the tokenizer revision/SHA, pooling, projection, normalization, score scale/bias, language, and resolution to both artifacts. / 使用 Manifest 的精确 revision/hash，并将 checkpoint、Tokenizer、Processor、双子图和 Golden 集中放入模型名目录。两个工件必须绑定同一 Tokenizer、Pooling、Projection、Normalization 与 Score Identity。
-
-CLIP candidate classification uses scaled cosine logits followed by softmax across the requested candidates. SigLIP uses independent sigmoid pair scores with its learned scale and bias. Do not convert one scoring contract into the other. Run the official processor/model to retain pixel, image/text embedding, logit, and ordering goldens, then execute both ORT and OpenVINO by exact port name. / CLIP 与 SigLIP 的概率所有权不同，不得混用；需保存官方 Pixel/Embedding/Logit/排序 Golden 并执行双后端。
-
-The audited CLIP ViT-B/32 and SigLIP base directories are executable External bundles. SigLIP 2 has a pinned official checkpoint/tokenizer source but no verified complete native dual-encoder processor/export, so it remains a blocker. See `visual-vision-language.md` for the exact matrix and measured OpenCV/Pillow behavior. / 当前 CLIP 与 SigLIP 可执行，SigLIP 2 因缺完整 Native 双编码器导出保持 blocker。

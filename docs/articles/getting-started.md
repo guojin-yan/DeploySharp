@@ -1,20 +1,46 @@
-# Getting Started / 快速开始
+# 快速开始
 
-DeploySharp V2 uses explicit backend registration. Applications install Core, a domain package, and only the backend adapters they need. / DeploySharp V2 使用显式后端注册；应用安装 Core、所需领域包以及实际使用的后端适配器即可。
+DeploySharp V2 使用显式后端注册。应用按需安装 Core、领域包和后端适配器；模型文件与厂商原生运行时由应用自行管理。
 
-> The current alpha contains the Core contracts and a test-only fake backend. A runnable production-backend example will be added with the first backend package. / 当前 alpha 仅包含 Core 契约和测试专用 Fake Backend；首个后端包完成时会补充可运行的生产后端示例。
+当前 Alpha 提供 ONNX Runtime、OpenVINO、OpenCV DNN 和 TensorRT 适配器。请先查看[平台与后端支持](platform-support.md)及[模型支持指南](model-support.md)，再选择实际后端和模型工件。
+
+## 最小张量推理
 
 ```csharp
+using System.Threading;
 using JYPPX.DeploySharp;
+using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Registry;
+using JYPPX.DeploySharp.Tensors;
 
-using var runtime = new DeploySharpRuntimeBuilder()
-    .AddBackend(provider)
-    .Build();
+using var backends = new BackendRegistry();
+backends.UseOnnxRuntime();
 
-using var session = runtime.CreateSession(
-    new ModelArtifact(new ModelId("vision/example"), "onnx", "model.onnx"),
-    new BackendRequest(BackendCapabilities.TensorInference));
+var artifact = new ModelArtifact(
+    new ModelId("examples/classifier"),
+    "onnx",
+    "models/classifier.onnx",
+    preferredBackend: OnnxRuntimeBackendProvider.BackendId);
+
+using IInferenceSession session = backends.CreateSession(
+    artifact,
+    new BackendRequest(
+        BackendCapabilities.TensorInference,
+        OnnxRuntimeBackendProvider.BackendId,
+        "cpu"),
+    SessionOptions.Default);
+
+var input = new Tensor<float>(
+    new TensorShape(1, 3, 224, 224),
+    inputValues);
+
+InferenceOutputs outputs = session.Run(
+    InferenceInputs.Create("images", input),
+    CancellationToken.None);
+
+float[] scores = (float[])outputs.GetRequired("scores").Buffer;
+Console.WriteLine(scores.Length);
 ```
 
-The runtime owns registered backend providers and disposes them when the runtime is disposed. Sessions remain caller-owned. / Runtime 拥有已注册后端提供程序，并在自身释放时释放它们；推理会话仍由调用方负责释放。
+输入和输出名称、元素类型及形状必须与实际工件一致。`BackendRegistry` 管理已注册的 Provider；应用负责释放创建的 Session。视觉流程、批量调用和异步预取请继续阅读[使用教程](usage-tutorial.md)。

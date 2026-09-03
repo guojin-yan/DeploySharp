@@ -11,10 +11,10 @@ Published release inference; writes a source-space anomaly mask. The case stages
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/release-inference -- --model-id anomalib/padim/mvtec-bottle --image <image>
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id anomalib/padim/mvtec-bottle --image <image>
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 

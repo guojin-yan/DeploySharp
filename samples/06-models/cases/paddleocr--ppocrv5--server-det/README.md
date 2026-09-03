@@ -11,10 +11,10 @@ Catalog selection and OCR detection package verification. The case stages are: s
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id paddleocr/ppocrv5/server-det
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id paddleocr/ppocrv5/server-det
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 

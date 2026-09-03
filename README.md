@@ -4,9 +4,7 @@
   <img alt="DeploySharp - reproducible AI inference workflows for .NET" src="docs/images/readme/hero-light.svg" width="100%">
 </picture>
 
-<p align="center">
-  A modular .NET model deployment toolkit for reproducible vision, language, and multimodal inference across replaceable backends.
-</p>
+<p align="center">A modular .NET model deployment toolkit for reproducible vision, language, and multimodal inference across replaceable backends.</p>
 
 <p align="center">
   <a href="https://github.com/guojin-yan/DeploySharp/actions/workflows/ci.yml?query=branch%3ADeploySharpV2.0"><img src="https://github.com/guojin-yan/DeploySharp/actions/workflows/ci.yml/badge.svg?branch=DeploySharpV2.0" alt="Windows CI" /></a>
@@ -18,7 +16,7 @@
 
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX documentation" /></a>
-  <a href="docs/articles/release-2.0.0-alpha.1.md"><img src="https://img.shields.io/badge/release-2.0.0--alpha.1-f59e0b" alt="DeploySharp 2.0.0-alpha.1" /></a>
+  <a href="docs/releases/2.0.0-alpha.1.md"><img src="https://img.shields.io/badge/release-2.0.0--alpha.1-f59e0b" alt="DeploySharp 2.0.0-alpha.1" /></a>
   <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
 </p>
 
@@ -26,48 +24,37 @@
 
 # DeploySharp
 
-DeploySharp V2 provides explicit contracts for model artifacts, typed tensors, sessions, visual pipelines, language/multimodal workflows, ModelPack integrity, ModelFactory acquisition, and replaceable inference backends. Application code owns the model files and native runtimes; DeploySharp keeps backend selection and execution boundaries visible.
+DeploySharp V2 provides explicit contracts for model artifacts, typed tensors, sessions, visual pipelines, language/multimodal workflows, ModelPack integrity, ModelFactory acquisition, and replaceable inference backends. Applications own model files and native runtimes; DeploySharp keeps backend selection and execution boundaries visible.
 
 ## 📖 Introduction
-
-The project is designed around four practical boundaries:
 
 - **Stable application contracts:** model identity, typed tensors, named inputs/outputs, sessions, diagnostics, cancellation, and disposal.
 - **Complete inference workflows:** classification, detection, segmentation, pose, OBB, OCR, anomaly, promptable segmentation, vision-language, LLM, and multimodal paths.
 - **Explicit backend ownership:** ONNX Runtime, OpenVINO, OpenCV DNN, TensorRT/CUDA, and LLamaSharp adapters without silently installing every vendor runtime.
-- **Reproducible model delivery:** ModelPack manifests, artifact size/SHA-256 checks, immutable Release downloads, offline cache reuse, and one runnable case for every catalog model.
+- **Reproducible model delivery:** ModelPack manifests, artifact size/SHA-256 checks, immutable Release downloads, offline cache reuse, and a runnable model case.
 
 The V2 API is a clean redesign and does not provide V1 source, binary, configuration, or behavior compatibility.
 
 ## ✨ Release Highlights
 
 - Core, Visual, LLM, Multimodal, ModelPack, ModelFactory, five backend families, and seven grouped sample modules.
-- 42 Preview catalog entries, 43 artifact variants, and a generated model/backend verification matrix.
-- Windows x64 CPU verification for ONNX Runtime, OpenVINO, and OpenCV DNN; local TensorRT 11 + CUDA 12.9 evidence on an RTX 3060.
-- A repeatable cross-backend speed sample that reports warm latency, P50/P95, throughput, managed allocations, and environment metadata.
-- Bilingual API documentation and a DocFX site, with engineering/audit history separated from the user documentation path.
+- The model catalog, model/backend verification matrix, and named-device measurements are maintained as public documents.
+- Windows x64 verification for ONNX Runtime, OpenVINO, OpenCV DNN, and named TensorRT/CUDA environments.
+- Session pools, batching, asynchronous visual inference, sliding-window detection, and repeatable benchmark tooling.
 
 ## 📢 Latest Update: 2.0.0-alpha.1
 
-<code>2.0.0-alpha.1</code> is the first DeploySharp V2 engineering preview. It is currently a source-first Windows 10/11 x64 release while the public API and package surface settle.
-
-The complete first-release change list, verification snapshot, known boundaries, and reproduction commands are in the [2.0.0-alpha.1 release notes](docs/articles/release-2.0.0-alpha.1.md). Future releases will add one detailed version document and keep this page at summary level.
+<code>2.0.0-alpha.1</code> is the first DeploySharp V2 engineering preview, focused on source-first Windows 10/11 x64 reproduction while the public API and package surface settle. The complete scope and known boundaries are in the [release notes](docs/releases/2.0.0-alpha.1.md).
 
 ## 🚀 Get Started In 30 Seconds
 
-### 1. Install the packages
-
-The Alpha packages are produced locally as versioned Release candidates. When the package feed is available, install the Core layer and the backend you need at the same version; for source-first reproduction, use project references from this repository.
+Install the Core layer and the backend you need at the same version. Source-first reproduction can use project references from this repository.
 
 ~~~powershell
 dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
 dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ~~~
-
-Native runtime ownership remains explicit. OpenCV DNN and OpenVINO require the matching native runtime package for the target RID; TensorRT requires the user-installed TensorRT/CUDA/cuDNN stack.
-
-### 2. Write a few lines of C#
 
 Create a model artifact, register ONNX Runtime, create a named-tensor session, and run one typed input:
 
@@ -94,16 +81,12 @@ var request = new BackendRequest(
 using IInferenceSession session = backends.CreateSession(
     artifact, request, SessionOptions.Default);
 
-var input = new Tensor<float>(
-    new TensorShape(1, 3),
-    new[] { 0.1f, 0.2f, 0.7f });
-InferenceOutputs outputs = session.Run(
-    InferenceInputs.Create("images", input),
-    CancellationToken.None);
+var input = new Tensor<float>(new TensorShape(1, 3), new[] { 0.1f, 0.2f, 0.7f });
+InferenceOutputs outputs = session.Run(InferenceInputs.Create("images", input), CancellationToken.None);
 Console.WriteLine(outputs.Count);
 ~~~
 
-The complete code-first path, visual preparation, ModelFactory download flow, and model-specific examples are in the [usage tutorial](docs/articles/usage-tutorial.md) and [samples](samples/README.md).
+The code-first path, visual preparation, ModelFactory download flow, and model-specific examples are in the [usage tutorial](docs/articles/usage-tutorial.md) and [samples](samples/README.md).
 
 ## 📦 Package Layout
 
@@ -112,103 +95,89 @@ The complete code-first path, visual preparation, ModelFactory download flow, an
 | <code>JYPPX.DeploySharp.Core</code> | Models, tensors, sessions, results, diagnostics, backend registration | None |
 | <code>JYPPX.DeploySharp.Visual</code> | Visual profiles, preprocessing metadata, decoders, canonical results | None |
 | <code>JYPPX.DeploySharp.Visual.OpenCV</code> | OpenCV image loading and tensor preparation | Application selects OpenCV runtime |
+| <code>JYPPX.DeploySharp.Visual.TensorRT</code> | CUDA preprocessing and device-resident TensorRT visual pipelines | Application provides TensorRT, CUDA, bridge, and engine |
 | <code>JYPPX.DeploySharp.LLM</code> / <code>Multimodal</code> | Generation, chat, embeddings, ordered media, streaming | Application selects model runtime |
 | <code>JYPPX.DeploySharp.ModelPack.Json</code> / <code>ModelFactory</code> | Manifests, integrity validation, catalog downloads, offline cache | None; model files stay application-owned |
 | <code>JYPPX.DeploySharp.Backend.*</code> | ONNX Runtime, OpenVINO, OpenCV DNN, TensorRT, and LLamaSharp adapters | Backend-specific and explicit |
 
 ## 🌐 Public Packages And Release Assets
 
-The repository currently has no published DeploySharp package on nuget.org. The package IDs and the exact Alpha candidate version are kept visible so the first publication can be reproduced without changing application references.
+DeploySharp packages are not yet published to nuget.org. The exact package IDs and `2.0.0-alpha.1` candidate version remain visible here; each NuGet badge points to its real package page and will show the published version automatically after the first release.
 
-| Package | Version | NuGet.org | GitHub Packages | Purpose |
-| --- | --- | --- | --- | --- |
-| <code>JYPPX.DeploySharp.Core</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Core) | Not published | Core contracts and backend registration |
-| <code>JYPPX.DeploySharp.Visual</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Visual) | Not published | Visual profiles, preprocessing, and decoders |
-| <code>JYPPX.DeploySharp.Visual.OpenCV</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Visual.OpenCV) | Not published | OpenCV image preparation |
-| <code>JYPPX.DeploySharp.LLM</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.LLM) | Not published | LLM generation and embedding contracts |
-| <code>JYPPX.DeploySharp.Multimodal</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Multimodal) | Not published | Ordered multimodal orchestration |
-| <code>JYPPX.DeploySharp.ModelPack.Json</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.ModelPack.Json) | Not published | Model manifest and integrity validation |
-| <code>JYPPX.DeploySharp.ModelFactory</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.ModelFactory) | Not published | Catalog selection, downloads, cache, and offline reuse |
-| <code>JYPPX.DeploySharp.Backend.OnnxRuntime</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OnnxRuntime) | Not published | ONNX Runtime named-tensor adapter |
-| <code>JYPPX.DeploySharp.Backend.OpenVINO</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OpenVINO) | Not published | OpenVINO named-tensor adapter |
-| <code>JYPPX.DeploySharp.Backend.OpenCV</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.OpenCV) | Not published | OpenCV DNN adapter |
-| <code>JYPPX.DeploySharp.Backend.TensorRT</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.TensorRT) | Not published | TensorRT inference and ONNX-to-engine boundaries |
-| <code>JYPPX.DeploySharp.Backend.LlamaSharp</code> | <code>2.0.0-alpha.1</code> | Not published; [search](https://www.nuget.org/packages?q=JYPPX.DeploySharp.Backend.LlamaSharp) | Not published | LLamaSharp GGUF generation and embeddings |
+| Package | Candidate version | NuGet.org | Purpose |
+| --- | --- | --- | --- |
+| `JYPPX.DeploySharp.Core` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core) | Core contracts and backend registration |
+| `JYPPX.DeploySharp.Visual` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual) | Visual profiles, preprocessing, and decoders |
+| `JYPPX.DeploySharp.Visual.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV) | OpenCV image preparation |
+| `JYPPX.DeploySharp.Visual.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT) | CUDA preprocessing and TensorRT visual pipelines |
+| `JYPPX.DeploySharp.LLM` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.LLM.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM) | LLM generation and embedding contracts |
+| `JYPPX.DeploySharp.Multimodal` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Multimodal.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal) | Ordered multimodal orchestration |
+| `JYPPX.DeploySharp.ModelPack.Json` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelPack.Json.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json) | Model manifests and integrity validation |
+| `JYPPX.DeploySharp.ModelFactory` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelFactory.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory) | Catalog selection, download, cache, and offline reuse |
+| `JYPPX.DeploySharp.Backend.OnnxRuntime` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime) | ONNX Runtime named-tensor adapter |
+| `JYPPX.DeploySharp.Backend.OpenVINO` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenVINO.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO) | OpenVINO named-tensor adapter |
+| `JYPPX.DeploySharp.Backend.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV) | OpenCV DNN adapter |
+| `JYPPX.DeploySharp.Backend.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT) | TensorRT inference and ONNX-to-engine boundary |
+| `JYPPX.DeploySharp.Backend.LlamaSharp` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp) | LLamaSharp GGUF generation and embeddings |
 
-| Release channel | Current status | Assets |
+| Publication channel | Current status | Assets |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/) | DeploySharp package publication is pending | Future managed package feed |
-| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp package publication is pending | Future package mirror |
+| [NuGet.org](https://www.nuget.org/) | DeploySharp packages await their first publication | Public managed package feed |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp packages await their first publication | Package mirror |
 | [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | Used for model artifact delivery | Immutable ModelPack assets and verification metadata |
 
-### Application-owned runtime packages
+### Application-Owned Runtime Packages
 
-These are dependency/runtime packages used by the current Windows Alpha. They are not silently installed by the DeploySharp managed contracts:
+These are application dependencies/runtime packages used by the Windows Alpha. Referencing a DeploySharp managed package does not silently install them:
 
-| Package | Version | Role |
+| Package | NuGet | Purpose |
 | --- | --- | --- |
 | [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) | [![NuGet version](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) | ONNX Runtime CPU native execution |
 | [JYPPX.OpenCV.runtime.win-x64](https://www.nuget.org/packages/JYPPX.OpenCV.runtime.win-x64/) | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.OpenCV.runtime.win-x64.svg?label=version)](https://www.nuget.org/packages/JYPPX.OpenCV.runtime.win-x64/) | Windows x64 OpenCV native runtime |
 | [OpenVINO.runtime.win](https://www.nuget.org/packages/OpenVINO.runtime.win/) | [![NuGet version](https://img.shields.io/nuget/v/OpenVINO.runtime.win.svg?label=version)](https://www.nuget.org/packages/OpenVINO.runtime.win/) | Windows OpenVINO native runtime |
-| [JYPPX.TensorRT.CSharp.API](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.TensorRT.CSharp.API.svg?label=version)](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | Managed TensorRT/CUDA API; NVIDIA libraries remain user-installed |
+| [JYPPX.TensorRT.CSharp.API](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.TensorRT.CSharp.API.svg?label=version)](https://www.nuget.org/packages/JYPPX.TensorRT.CSharp.API/) | Managed TensorRT/CUDA API; NVIDIA libraries remain application-installed |
 | [LLamaSharp.Backend.Cpu](https://www.nuget.org/packages/LLamaSharp.Backend.Cpu/) | [![NuGet version](https://img.shields.io/nuget/v/LLamaSharp.Backend.Cpu.svg?label=version)](https://www.nuget.org/packages/LLamaSharp.Backend.Cpu/) | CPU native backend for LLamaSharp GGUF workflows |
 
-Native dependencies are never implied by the managed package table. See [installation and runtime ownership](docs/articles/installation.md) before selecting a deployment RID.
+The managed package tables do not mean native dependencies are installed automatically. See [installation and runtime ownership](docs/articles/installation.md) before selecting a deployment RID.
 
 ## 🖥️ Platforms And Frameworks
 
-| Platform | Build/package boundary | Inference verification | Native runtime/package |
-| --- | --- | --- | --- |
-| Windows 10 x64 | Supported for Alpha | ONNX Runtime, OpenVINO, OpenCV DNN CPU; local TensorRT GPU evidence | Verified Windows packages and local NVIDIA stack |
-| Windows 11 x64 | Supported for Alpha | Same code path as Windows 10 x64 | Matching Windows x64 runtime packages |
-| Windows ARM64 | Build scope only | Not tested | Deferred |
-| Linux x64/ARM64 | Managed source may build | Not tested in this Alpha | Deferred; install matching vendor runtime when enabled |
-| macOS x64/ARM64 | Managed source may build | Not tested in this Alpha | Deferred |
-| Android/iOS/NPU | No release claim | Not tested | Deferred |
+| Platform | Build/package boundary | Inference verification |
+| --- | --- | --- |
+| Windows 10 x64 | Alpha support | ONNX Runtime, OpenVINO, OpenCV DNN CPU; named TensorRT GPU evidence |
+| Windows 11 x64 | Alpha support | Same code path; named-device evidence is recorded separately |
+| Windows ARM64, Linux, macOS, mobile, NPU | No Alpha inference claim | Not yet verified for this release |
 
 The complete framework list and backend evidence are in [platform and backend support](docs/articles/platform-support.md). Build compatibility is not the same as inference verification.
 
 ## 🤖 Supported Models
 
-The first catalog contains 42 Preview entries and 43 artifact variants:
-
-| Family | Entries | Current scope |
-| --- | ---: | --- |
-| YOLO v5-v13/v26 | 22 | Detection, classification, segmentation, pose, and OBB |
-| DETR family | 8 | DEIMv2, PP-YOLOE, RF-DETR, and RT-DETR variants |
-| PP-OCRv5 | 6 | Mobile/server classification, detection, and recognition |
-| Anomalib / BRIA | 3 entries / 4 artifacts | PaDiM, RMBG 1.4, RMBG 2.0 fp32/dynamic-int8 |
-| Vision-language / segmentation / LLM | 4 | CLIP, BLIP, SAM, and Qwen GGUF |
-
-Use the [model support guide](docs/articles/model-support.md) for all catalog IDs and the [43-artifact model/backend matrix](docs/model-backend-verification-matrix.md) for each current cell.
+The catalog covers YOLO, DETR, PaddleOCR v4/v5/v6, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. Use the [model support guide](docs/articles/model-support.md) for catalog IDs and the [model/backend matrix](docs/model-backend-verification-matrix.md) for current backend cells.
 
 ## 🧪 Example Series
-
-Samples are organized by complete workflows rather than one sample per method:
 
 | Module | Demonstration |
 | --- | --- |
 | <code>01-core</code> | Backend-neutral model/tensor lifecycle |
-| <code>02-visual</code> | Visual profiles, preprocessing metadata, decoder ownership |
-| <code>03-backends</code> | OpenCV DNN native loading and named-tensor execution |
+| <code>02-visual</code> | Visual profiles, preprocessing metadata, asynchronous inference, and sliding-window detection |
+| <code>03-backends</code> | Native backend loading and named-tensor execution |
 | <code>04-multimodal</code> | Ordered media, streaming, cancellation, and cleanup |
 | <code>05-llm</code> | Conversation history and prompt formatting |
 | <code>06-models</code> | Catalog selection, model cases, Release download/inference |
 | <code>07-benchmarks</code> | Same-model backend/platform latency and throughput |
 
-See the [sample learning path](samples/README.md). The speed runner writes an optional JSON report and records unavailable native runtimes explicitly.
+See the [sample learning path](samples/README.md).
 
 ## 📚 Documentation
 
 | Resource | Link | Purpose |
 | --- | --- | --- |
-| Documentation index | [docs/index.md](docs/index.md) | DocFX entry point and bilingual guide index |
-| First release notes | [2.0.0-alpha.1](docs/articles/release-2.0.0-alpha.1.md) | Complete initial version snapshot |
+| Documentation index | [docs/index.md](docs/index.md) | Public DocFX entry point |
+| First release notes | [2.0.0-alpha.1](docs/releases/2.0.0-alpha.1.md) | Release scope and known boundaries |
 | Usage tutorial | [Usage tutorial](docs/articles/usage-tutorial.md) | Code-first tensor and visual workflows |
-| Platform/backend support | [Support table](docs/articles/platform-support.md) | Target frameworks and verification boundaries |
+| Platform/backend support | [Support table](docs/articles/platform-support.md) | Target framework and verification boundaries |
 | Model support | [Model guide](docs/articles/model-support.md) | Catalog IDs, families, and status semantics |
-| Performance benchmark | [Benchmark guide](docs/articles/performance-benchmarking.md) | Cross-backend and cross-platform methodology |
-| Engineering history | [History](docs/history/README.md) | Maintainer-only development records, separate from user guides |
+| Device measurements | [Named-device results](docs/articles/device-performance-benchmarks.md) | Reproducible environment and timing records |
 
 ## 🔨 Build From Source
 
@@ -217,8 +186,6 @@ dotnet restore DeploySharp.sln --locked-mode
 dotnet build DeploySharp.sln -c Release --no-restore
 dotnet test DeploySharp.sln -c Release --no-build --no-restore
 ~~~
-
-The current Windows validation uses the isolated cache documented in the release notes. The default global cache may contain a known upstream NU1403 mismatch for OpenVINO; this is a local package-cache issue, not a DeploySharp API failure.
 
 ## ⚖️ License
 

@@ -11,10 +11,10 @@ Catalog selection and detector package verification; complete image inference re
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id rt-detr/r50vd-raw-query
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id rt-detr/r50vd-raw-query
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 
@@ -42,12 +42,14 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Local verification date: 2026-08-25; OpenCV follow-up: 2026-09-01. Results are generated from the exact official-catalog artifact identity and SHA-256.
 
 | Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| onnx.fp32 | ✓ | ✓ | ✗ | ✓ | — |
+| onnx.fp32 | ✓ | ✓ | ✓ | ✓ | — |
 
 `✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+
+The OpenCV compatibility pass rewrites only proven scalar float constant `Expand` nodes to semantics-equivalent `ConstantOfShape` nodes. This avoids the non-finite broadcast output previously observed in this artifact's `full_like` subgraph. The complete Visual pipeline returned finite decoded results; a one-warm-up/three-iteration run measured `855.450 ms` steady total on the recorded development device.
 
 See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.

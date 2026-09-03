@@ -2,31 +2,22 @@
 uid: index
 ---
 
-# DeploySharp V2
+# DeploySharp V2 文档
 
-DeploySharp V2 is a modular .NET toolkit for deploying visual, language, and multimodal models through replaceable inference backends. / DeploySharp V2 是一套模块化 .NET 模型部署工具，通过可替换的推理后端部署视觉、大语言及多模态模型。
+DeploySharp V2 是面向 .NET 的模型部署工具。它通过显式后端、模型制品和运行时边界，提供视觉、语言与多模态推理能力。
 
-V2 is a clean API design and does not provide source, binary, configuration, or behavioral compatibility with V1. / V2 采用全新 API 设计，不提供与 V1 的源码、二进制、配置或行为兼容。
+当前 `2.0.0-alpha.1` 是 Windows x64 工程预览版。V2 为全新 API，不提供与 V1 的源码、二进制、配置或行为兼容。
 
-## Documentation / 文档
+## 常用入口
 
-- [Documentation guide / 文档指南](articles/index.md)
-- [2.0.0-alpha.1 release notes / 2.0.0-alpha.1 发布说明](articles/release-2.0.0-alpha.1.md)
-- [Platform and backend support / 平台与后端支持](articles/platform-support.md)
-- [Supported model guide / 模型支持指南](articles/model-support.md)
-- [Usage tutorial / 使用教程](articles/usage-tutorial.md)
-- [Inference performance benchmarking / 推理性能基准](articles/performance-benchmarking.md)
-- [Getting Started / 快速开始](articles/getting-started.md)
-- [Installation / 安装](articles/installation.md)
-- [Architecture / 架构](articles/architecture.md)
-- [Visual prepared-tensor quick start / Visual 已准备张量快速开始](articles/visual-getting-started.md)
-- [Visual coordinates and decoding / Visual 坐标与解码](articles/visual-coordinate-decoding.md)
-- [Visual lifecycle and compatibility / Visual 生命周期与兼容性](articles/visual-lifecycle-compatibility.md)
-- [API Reference / API 参考](api/index.md)
-- [ModelPack JSON quick start / ModelPack JSON 快速开始](articles/modelpack-json-getting-started.md)
-- [ModelFactory quick start / ModelFactory 快速开始](articles/modelfactory-getting-started.md)
-- [Model Release inference quick start / 模型 Release 推理快速开始](articles/model-release-inference-getting-started.md)
-- [Official model catalog / 官方模型目录](articles/model-catalog.md)
-- [Next model publication wave / 下一批模型发布波次](roadmap/model-publication-next-wave.md)
+| 目标 | 文档 |
+| --- | --- |
+| 安装并运行首个推理 | [快速开始](articles/getting-started.md) / [安装与运行时](articles/installation.md) |
+| 了解当前版本与平台范围 | [2.0.0-alpha.1 发布说明](releases/2.0.0-alpha.1.md) / [平台与后端支持](articles/platform-support.md) |
+| 选择模型与后端 | [模型支持状态](articles/model-support.md) / [模型与后端验证矩阵](model-backend-verification-matrix.md) |
+| 下载并校验模型 | [ModelFactory](articles/modelfactory-getting-started.md) / [ModelFactory CLI](articles/model-factory-cli.md) |
+| 构建视觉任务 | [视觉任务指南](articles/visual-getting-started.md) |
+| 复现性能测试 | [性能基准方法](articles/performance-benchmarking.md) / [设备性能实测](articles/device-performance-benchmarks.md) |
+| 查询公共 API | [API 参考](api/index.md) |
 
-The current `2.0.0-alpha.1` documentation describes the Core, Visual, LLM, ModelPack, ModelFactory, and LLamaSharp alpha modules. APIs may change before the first release candidate. / 当前 `2.0.0-alpha.1` 文档涵盖 Core、Visual、LLM、ModelPack、ModelFactory 与 LLamaSharp alpha 模块，公共 API 在首个候选版本前仍可能调整。
+完整的按任务导航见[使用指南](articles/index.md)。

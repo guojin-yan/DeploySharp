@@ -1,20 +1,20 @@
-# Qwen2.5 0.5B Instruct Q4_K_M alpha preview
+# Qwen2.5 0.5B Instruct Q4_K_M
 
-The first DeploySharp ModelFactory release asset is the Qwen2.5 0.5B Instruct Q4_K_M GGUF. It is distributed as an alpha preview for `LLamaSharp` consumers; native runtimes remain application-owned.
+这是 ModelFactory 中的 Alpha Preview GGUF 条目，面向 LlamaSharp CPU 后端。模型文件、ModelPack 清单和 tokenizer/config sidecar 由同一个 Release 资产提供，客户端下载后会按清单校验大小与 SHA-256。
 
-## Source and integrity
+## 使用方式
 
-- Upstream: `Qwen/Qwen2.5-0.5B-Instruct-GGUF`
-- Immutable upstream revision: `9217f5db79a29953eb74d5343926648285ec7e67`
-- Upstream license: `Apache-2.0`; the upstream `LICENSE` is included with the release assets.
-- Model file: `qwen2.5-0.5b-instruct-q4_k_m.gguf`
-- Size: `491400032` bytes
-- SHA-256: `74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db`
+安装 DeploySharp.LLM、DeploySharp.ModelFactory 和应用选择的 LlamaSharp CPU runtime，然后在 ModelFactory 查询中显式打开 includePreview。模型缓存由 ModelFactory 管理，原生运行时仍由应用负责部署。
 
-The ModelFactory catalog verifies the exact size and SHA-256 of every downloaded file before making the model available. The release also contains the ModelPack manifest, tokenizer/configuration sidecars, upstream license, and upstream GGUF README.
+~~~csharp
+ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
+ModelSelection selection = ModelCatalogQuery.Select(
+    catalog,
+    new ModelQuery(
+        modelId: "llm/qwen2.5-0.5b-instruct-q4-k-m",
+        backend: "llamasharp",
+        format: "gguf",
+        includePreview: true)).Single();
+~~~
 
-## Runtime
-
-Install `JYPPX.DeploySharp.Backend.LlamaSharp` and the application-owned `LLamaSharp.Backend.Cpu` runtime. Select this alpha-preview entry with `includePreview: true`; the ModelFactory client then downloads and verifies the complete bundle into its content-addressed cache.
-
-This record means the bundle has source, file-integrity, and local CPU runtime evidence. It does not claim universal quality or benchmark parity for every prompt, hardware target, or native runtime build.
+该条目只代表当前 GGUF Bundle 可被 ModelFactory 识别并在声明的 CPU 路径运行，不等于所有提示、硬件或原生后端都具有相同质量和速度。模型 ID、可下载状态和版本以[官方模型目录](model-catalog.md)为准。

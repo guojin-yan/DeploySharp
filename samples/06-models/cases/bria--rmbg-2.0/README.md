@@ -11,10 +11,10 @@ Published release inference; select fp32 or dynamic-int8 explicitly. The case st
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/release-inference -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 

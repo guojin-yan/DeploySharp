@@ -12,6 +12,8 @@ dotnet run --project samples/07-benchmarks/InferenceSpeedBenchmark/InferenceSpee
 
 Use <code>--backend onnxruntime</code>, <code>--backend opencv-dnn</code>, or <code>--backend openvino</code> to measure one backend. The sample returns a non-zero exit code only when every selected backend is unavailable. An unavailable native runtime is recorded as <code>status=unavailable</code> rather than as a zero or fabricated timing.
 
+Validate the command-line contract without native model loading with <code>pwsh -NoProfile -File eng/benchmarks/Test-InferenceSpeedBenchmark.ps1</code>. / 可使用 <code>pwsh -NoProfile -File eng/benchmarks/Test-InferenceSpeedBenchmark.ps1</code> 在不加载原生模型的情况下验证命令行参数合同。
+
 ## Measurement boundary / 测量边界
 
 - Session loading, OpenVINO compilation, native library loading, model download, preprocessing, and postprocessing are outside the timed loop.
@@ -19,4 +21,4 @@ Use <code>--backend onnxruntime</code>, <code>--backend opencv-dnn</code>, or <c
 - Compare reports only when model bytes, input shape, precision, build configuration, warmup, iteration count, thread settings, native runtime, driver, power mode, and machine state are recorded and held constant.
 - The project file currently names the Windows x64 OpenCV and OpenVINO runtime packages used by this Alpha. To measure another platform, replace those two application-owned runtime references with the matching package/RID for that machine before restoring; the backend contracts and benchmark code remain unchanged. The current <code>2.0.0-alpha.1</code> release publishes Windows x64 verification; other platforms are measurement hooks and remain unverified until a report is produced.
 
-See [Performance and model fidelity](../../../docs/articles/performance-and-model-fidelity.md), [platform support](../../../docs/articles/platform-support.md), and the [model/backend matrix](../../../docs/model-backend-verification-matrix.md) for release evidence rules and current status.
+See the [performance benchmarking guide](../../../docs/articles/performance-benchmarking.md), [platform support](../../../docs/articles/platform-support.md), and the [model/backend matrix](../../../docs/model-backend-verification-matrix.md) for the test method and current status.

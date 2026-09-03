@@ -1,141 +1,103 @@
-# User guide navigation / 用户指南导航
+# 使用指南
 
-- name: Start here / 从这里开始
+- name: 入门
   items:
-  - name: Documentation guide / 文档指南
+  - name: 文档导航
     href: index.md
-  - name: Getting started / 快速开始
+  - name: 快速开始
     href: getting-started.md
-  - name: Installation / 安装
+  - name: 安装与运行时
     href: installation.md
-  - name: Architecture / 架构
-    href: architecture.md
-  - name: Release and platform status / 发布与平台状态
-    href: release-platform-status.md
-  - name: 2.0.0-alpha.1 release notes / 2.0.0-alpha.1 发布说明
-    href: release-2.0.0-alpha.1.md
-  - name: Platform and backend support / 平台与后端支持
-    href: platform-support.md
-  - name: Usage tutorial / 使用教程
+  - name: 使用教程
     href: usage-tutorial.md
-  - name: Inference performance benchmarking / 推理性能基准
+  - name: 架构概览
+    href: architecture.md
+  - name: 发布与平台状态
+    href: release-platform-status.md
+  - name: 平台与后端支持
+    href: platform-support.md
+  - name: 性能基准方法
     href: performance-benchmarking.md
-  - name: Performance and model fidelity / 性能与模型保真
-    href: performance-and-model-fidelity.md
-  - name: V1 model capability migration / V1 模型能力迁移
+  - name: 设备性能实测
+    href: device-performance-benchmarks.md
+  - name: V1 模型能力迁移
     href: v1-model-migration.md
-  - name: Visual lifecycle and compatibility / Visual 生命周期与兼容性
-    href: visual-lifecycle-compatibility.md
-  - name: API changes in alpha.1 / alpha.1 API 变更
-    href: api-changes-alpha1.md
 
-- name: Visual workflows / 视觉流程
+- name: 视觉任务
   items:
-  - name: Prepared-tensor quick start / 已准备张量快速开始
+  - name: Visual 快速开始与生命周期
     href: visual-getting-started.md
-  - name: Coordinates, decoding, and NMS / 坐标、解码与 NMS
-    href: visual-coordinate-decoding.md
-  - name: Classification, detection, and YOLO / 分类、检测与 YOLO
+  - name: 异步帧流水线与滑动窗口
+    href: visual-async-and-sliding-window.md
+  - name: 分类、检测与 YOLO
     href: visual-yolo-detection.md
-  - name: YOLO multi-task / YOLO 多任务
+  - name: YOLO 多任务
     href: visual-yolo-multitask.md
-  - name: Portable detectors and RT-DETR / 便携检测器与 RT-DETR
+  - name: 通用检测器与 RT-DETR
     href: visual-portable-detectors.md
-  - name: Semantic segmentation / 语义分割
+  - name: 语义分割
     href: visual-semantic-segmentation.md
-  - name: Instance segmentation / 实例分割
+  - name: 实例分割
     href: visual-instance-segmentation.md
-  - name: Pose estimation / 姿态估计
+  - name: 姿态估计
     href: visual-pose-estimation.md
-  - name: Oriented-box detection / 旋转框检测
+  - name: 旋转框检测
     href: visual-oriented-detection.md
-  - name: OCR detection and recognition / OCR 检测与识别
+  - name: OCR 与方向校正
     href: visual-ocr.md
-  - name: OCR orientation and correction / OCR 方向与纠正
-    href: visual-ocr-orientation.md
-  - name: PaddleOCR three-model pipeline / PaddleOCR 三模型流水线
+  - name: PaddleOCR 三模型流水线
     href: visual-paddle-ocr3.md
-  - name: Anomaly detection / 异常检测
-    href: visual-anomaly-detection.md
-  - name: PaddleOCR, Anomalib, and RMBG / PaddleOCR、Anomalib 与 RMBG
+  - name: 异常检测与背景移除
     href: visual-ocr-anomaly-rmbg.md
-  - name: Segment Anything family / Segment Anything 模型族
+  - name: 提示分割与开放词汇
     href: visual-sam-family.md
-  - name: Open-vocabulary and Grounded-SAM / 开放词汇与 Grounded-SAM
-    href: visual-open-vocabulary.md
-  - name: CLIP and SigLIP / CLIP 与 SigLIP
+  - name: 视觉语言与图像生成
     href: visual-vision-language.md
-  - name: BLIP-family generation / BLIP 模型族生成
-    href: visual-generative-vision-language.md
-  - name: Native multimodal dialogue / 原生多模态对话
+  - name: 原生多模态与文档理解
     href: visual-native-multimodal.md
-  - name: Document intelligence / 文档智能
-    href: visual-document-understanding.md
-  - name: Audio speech / 音频语音
+  - name: 音频语音
     href: visual-audio-speech.md
-  - name: Multimodal and OpenCV DNN / 多模态与 OpenCV DNN
-    href: multimodal-opencv-dnn.md
-  - name: Visual.OpenCV quick start / Visual.OpenCV 快速开始
+  - name: Visual.OpenCV
     href: visual-opencv-getting-started.md
-  - name: Visual.OpenCV compatibility / Visual.OpenCV 兼容性
+
+- name: 后端
+  items:
+  - name: ONNX Runtime
+    href: onnxruntime-getting-started.md
+  - name: ONNX Runtime 兼容性
+    href: onnxruntime-compatibility.md
+  - name: OpenVINO
+    href: openvino-getting-started.md
+  - name: OpenVINO 兼容性
+    href: openvino-compatibility.md
+  - name: TensorRT CUDA 视觉流水线
+    href: tensorrt-cuda-visual.md
+  - name: TensorRT CUDA OCR
+    href: tensorrt-cuda-ocr.md
+  - name: 本地 LLM 与 LLamaSharp
+    href: llm-getting-started.md
+  - name: LLamaSharp 兼容性
+    href: llamasharp-compatibility.md
+  - name: LLamaSharp 原生后端
+    href: llamasharp-native-backends.md
+  - name: OpenCV DNN 兼容性
     href: visual-opencv-compatibility.md
 
-- name: Backend guides / 后端指南
+- name: 模型与复现
   items:
-  - name: ONNX Runtime quick start / ONNX Runtime 快速开始
-    href: onnxruntime-getting-started.md
-  - name: ONNX Runtime compatibility / ONNX Runtime 兼容性
-    href: onnxruntime-compatibility.md
-  - name: OpenVINO quick start / OpenVINO 快速开始
-    href: openvino-getting-started.md
-  - name: OpenVINO compatibility / OpenVINO 兼容性
-    href: openvino-compatibility.md
-  - name: Local LLM quick start / 本地 LLM 快速开始
-    href: llm-getting-started.md
-  - name: LLamaSharp native backends / LLamaSharp 原生后端
-    href: llamasharp-native-backends.md
-  - name: LLamaSharp compatibility and lifecycle / LLamaSharp 兼容性与生命周期
-    href: llamasharp-compatibility.md
-
-- name: Models and reproducibility / 模型与复现
-  items:
-  - name: Official model catalog / 官方模型目录
-    href: model-catalog.md
-  - name: Published vision model collection / 已发布视觉模型集合
-    href: models-vision-collection.md
-  - name: Supported model roadmap / 支持模型路线表
-    href: supported-models.md
-  - name: Supported model guide / 模型支持指南
+  - name: 模型支持状态
     href: model-support.md
-  - name: ModelFactory quick start / ModelFactory 快速开始
+  - name: 官方模型目录
+    href: model-catalog.md
+  - name: ModelFactory
     href: modelfactory-getting-started.md
-  - name: Model Release inference / 模型 Release 推理
-    href: model-release-inference-getting-started.md
-  - name: ModelFactory Release and cache security / ModelFactory Release 与缓存安全
-    href: modelfactory-release-cache-security.md
-  - name: ModelPack JSON quick start / ModelPack JSON 快速开始
+  - name: ModelFactory CLI
+    href: model-factory-cli.md
+  - name: ModelPack JSON
     href: modelpack-json-getting-started.md
-  - name: ModelPack JSON schema and security / ModelPack JSON Schema 与安全
+  - name: Release 模型推理
+    href: model-release-inference-getting-started.md
+  - name: ModelFactory 发布与缓存安全
+    href: modelfactory-release-cache-security.md
+  - name: ModelPack JSON Schema 与安全
     href: modelpack-json-schema-security.md
-  - name: Qwen2.5 GGUF preview / Qwen2.5 GGUF 预览
-    href: models-qwen2.5-0.5b-instruct-q4-k-m.md
-  - name: Acquire YOLO models / 获取 YOLO 模型
-    href: model-acquisition-yolo.md
-  - name: Acquire DETR and RT-DETR / 获取 DETR 与 RT-DETR
-    href: model-acquisition-detr-rtdetr.md
-  - name: Acquire OCR, anomaly, and RMBG / 获取 OCR、异常与 RMBG
-    href: model-acquisition-ocr-anomaly-rmbg.md
-  - name: Acquire SAM and Grounded-SAM / 获取 SAM 与 Grounded-SAM
-    href: model-acquisition-sam-grounded-sam.md
-  - name: Acquire CLIP and SigLIP / 获取 CLIP 与 SigLIP
-    href: model-acquisition-clip-siglip.md
-  - name: Acquire BLIP family / 获取 BLIP 模型族
-    href: model-acquisition-blip-family.md
-  - name: Acquire native multimodal models / 获取原生多模态模型
-    href: model-acquisition-native-multimodal.md
-  - name: Acquire document-understanding models / 获取文档理解模型
-    href: model-acquisition-document-understanding.md
-  - name: Acquire audio speech models / 获取音频语音模型
-    href: model-acquisition-audio-speech.md
-  - name: Acquire LLM GGUF / 获取 LLM GGUF
-    href: model-acquisition-llm-gguf.md

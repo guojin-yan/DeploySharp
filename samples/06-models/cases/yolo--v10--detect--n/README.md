@@ -11,10 +11,10 @@ Catalog selection and detector package verification; complete image inference re
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id yolo/v10/detect/n
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id yolo/v10/detect/n
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 

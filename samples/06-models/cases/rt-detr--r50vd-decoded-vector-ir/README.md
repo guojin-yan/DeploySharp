@@ -11,10 +11,10 @@ Catalog selection and OpenVINO IR package verification; use the OpenVINO backend
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id rt-detr/r50vd-decoded-vector-ir
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id rt-detr/r50vd-decoded-vector-ir
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 

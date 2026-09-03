@@ -1,7 +1,0 @@
-# Acquire OCR, anomaly, and RMBG models / 获取 OCR、异常与 RMBG 模型
-
-Use `eng/models/ocr-anomaly-rmbg/manifests` as the source of truth and one `E:\DeploySharp-Models\<model-name>` directory per model. PaddleOCR detection, orientation, and recognition are three separately versioned artifacts; copy the exact dictionary/config sidecars into the external model folder and hash them. Do not mix mobile/server graphs, legacy BGR classification, PP-LCNet RGB classification, four-class rotnet, or document orientation. / PaddleOCR 检测、方向和识别是三个独立工件；字典/配置需作为外部 Sidecar 一并哈希。不得混用 mobile/server、legacy/PP-LCNet、四类 rotnet 或文档方向合同。
-
-For Anomalib, record the training category, image transform, normalization, threshold, tiling, exporter, and the exact score/label/map/mask outputs. For BRIA RMBG, audit the model-specific license and processor before conversion; a Hugging Face filename is not a redistribution grant. Keep FP32 and quantized graphs in separate named directories. / Anomalib 必须记录训练类别、变换、阈值、tiling 和四输出；BRIA 必须先审核模型许可证与 Processor，FP32 与量化图分目录。
-
-Run the official predictor and DeploySharp on the same authorized input, then retain OCR text/order/geometry, anomaly map/mask/score, or alpha-pixel goldens beside the converted graph. Existing exact evidence and blockers are documented in `visual-ocr-anomaly-rmbg.md`, `visual-paddle-ocr3.md`, and the Stage 19/20 manifests. / 使用同一获授权输入保存官方与 DeploySharp 的字段/像素 Golden；现有证据见对应指南和 Manifest。

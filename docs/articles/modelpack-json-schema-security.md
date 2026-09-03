@@ -1,28 +1,38 @@
-# ModelPack JSON schema, provenance, and security / ModelPack JSON Schema、来源与安全
+# ModelPack JSON Schema 与路径安全
 
-## Schema and versioning / Schema 与版本
+本文补充 `JYPPX.DeploySharp.ModelPack.Json` 的 Schema 版本、严格读取和包内路径规则，适用于 `2.0.0-alpha.1`。创建清单的完整示例见[ModelPack JSON 快速开始](modelpack-json-getting-started.md)。
 
-The canonical Draft 2020-12 schema is embedded in the managed assembly and is available from `ModelPackageSchema.GetJson()`. The managed validator supports schema major `2`; newer minor versions are accepted by default only when no unknown critical property is present. A different major version is always rejected. / 规范 Draft 2020-12 Schema 以内嵌资源保存在托管程序集内，并可通过 `ModelPackageSchema.GetJson()` 获取。托管验证器支持 Schema 主版本 `2`；默认只有在没有未知关键属性时才接受更高次版本。不同主版本始终拒绝。
+## Schema 版本
 
-The JSON reader is strict: UTF-8 input is bounded, object property names are case-sensitive and unique, comments and trailing commas are disallowed, and unknown properties are diagnosed. Deterministic serialization uses the documented property order and ordinal sorting for extension dictionaries, so the same validated document produces the same text. / JSON 读取器是严格的：UTF-8 输入有大小上限，对象属性名区分大小写且必须唯一，禁止注释和尾逗号，并诊断未知属性。确定性序列化使用文档规定的属性顺序和序号排序扩展字典，因此同一个已验证文档产生相同文本。
+规范 Schema 为内嵌的 Draft 2020-12，可通过 `ModelPackageSchema.GetJson()` 获取。当前验证器支持 Schema 主版本 `2`；不同主版本直接拒绝，未知关键属性或超出限制的内容会返回诊断。读取器使用 UTF-8 大小上限，属性名区分大小写且不得重复，禁止注释和尾逗号。
 
-## Safe paths and links / 安全路径与链接
+确定性序列化使用固定属性顺序，并按序号排序扩展字典。同一份已校验的 `ModelPackageDocument` 在相同版本下会产生稳定文本，适合缓存、差异检查和发布前校验。
 
-Package paths are portable forward-slash paths. Empty segments, `.`, `..`, rooted/UNC/drive-qualified paths, control characters, reserved device names, and trailing dots or spaces are rejected. Normalized paths are unique across all artifacts, not only within one artifact. / 包内路径是可移植的正斜杠路径。空段、`.`、`..`、根路径/UNC/盘符路径、控制字符、保留设备名以及以点或空格结尾的路径都会被拒绝。规范化路径在所有工件之间全局唯一，而不只是单个工件内唯一。
+## 包内路径
 
-The loader treats the manifest directory as the package root. It rejects a root reparse point and walks every path component. On modern .NET it resolves link targets and requires them to remain within the root; on older targets it fails closed when a reparse point cannot be reliably resolved. / 加载器将清单目录作为包根。它拒绝根重解析点并遍历每个路径组件。在现代 .NET 上会解析链接目标并要求目标仍在根目录内；在无法可靠解析重解析点的旧目标上采取封闭失败。
+包内路径只能使用正斜杠的相对形式。以下内容会被拒绝：
 
-## Provenance and licenses / 来源与许可证
+- 空路径段、`.`、`..`、根路径、UNC 路径和盘符路径；
+- 控制字符、保留设备名、尾随点或空格；
+- 在不同工件中重复出现的规范化路径。
 
-`source.sourceUrl`, `source.revision`, and `source.author` are required. A manifest must provide an SPDX `licenseExpression` or a package-relative `licenseFile`; if a license file is declared it must be listed in an artifact. `redistributionAllowed` is explicit metadata for future publication workflows and does not override the upstream license. / `source.sourceUrl`、`source.revision` 和 `source.author` 是必需的。清单必须提供 SPDX `licenseExpression` 或包内相对 `licenseFile`；声明许可证文件时，该文件必须列在某个工件中。`redistributionAllowed` 是未来发布流程使用的显式元数据，不会覆盖上游许可证。
+加载器将清单所在目录作为包根，逐级检查每个路径组件。根目录重解析点、符号链接或其他重解析路径不能把读取范围带出包根；在无法可靠解析的目标框架上，加载器采取失败关闭策略。
 
-## Compatibility matrix / 兼容性矩阵
+## 来源元数据
 
-| Package asset / 包资产 | Directly built / 直接构建 | Consumer note / 使用说明 |
-|---|---|---|
-| `netstandard2.0` | .NET Framework 4.6.1–4.8.1, .NET Core 3.1, .NET 5–7 | Uses the portable System.Text.Json asset. / 使用可移植 System.Text.Json 资产。 |
-| `net8.0` | .NET 8 | Modern optimized asset. / 现代优化资产。 |
-| `net9.0` | .NET 9 | Modern optimized asset. / 现代优化资产。 |
-| `net10.0` | .NET 10 | Modern optimized asset. / 现代优化资产。 |
+当前 Schema 的 `source` 对象用于保存模型来源、修订、作者和许可证字段。若清单提供 `source`，`sourceUrl`、`revision`、`author` 和 `licenseExpression` 或 `licenseFile` 必须满足格式校验；`redistributionAllowed` 是显式布尔值。该元数据不会替代后端安装、模型格式检查或应用自己的发布流程。
 
-The package intentionally does not publish direct `net46`, `netcoreapp3.1`, or `net5.0`–`net7.0` assets because verified `System.Text.Json` 10.0.10 emits unsupported-TFM build warnings for those direct targets. / 由于已验证的 System.Text.Json 10.0.10 对这些直接目标产生不受支持 TFM 构建警告，本包有意不发布 `net46`、`netcoreapp3.1` 或 `net5.0`–`net7.0` 的直接资产。
+## 目标框架
+
+| 包资产 | 直接构建目标 |
+| --- | --- |
+| `netstandard2.0` | .NET Framework 4.6.1–4.8.1、.NET Core 3.1、.NET 5–7 |
+| `net8.0` | .NET 8 |
+| `net9.0` | .NET 9 |
+| `net10.0` | .NET 10 |
+
+包不单独发布 `net46`、`netcoreapp3.1` 或 `net5.0`–`net7.0` 资产；这些目标通过 `netstandard2.0` 兼容资产使用。最终应用仍需按目标框架和 RID 选择合适的 native 后端包。
+
+## 验证建议
+
+在把包交给推理后端前，先调用 `ModelPackageValidator.Validate`，再使用 `ModelPackageLoader.Load` 读取本地目录。校验失败时直接修复清单或文件，不要绕过诊断，也不要执行模型目录中携带的脚本。后端和模型状态以[模型支持指南](model-support.md)和[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。

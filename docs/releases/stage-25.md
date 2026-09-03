@@ -1,5 +1,0 @@
-# Stage 25: BLIP-family generation / 阶段 25：BLIP 模型族生成
-
-Stage 25 adds artifact-bound BLIP/BLIP-2/InstructBLIP Profiles, typed processor/tokenizer/generation contracts, a two-session image-state lifecycle, owned caption/VQA provenance results, full-prefix greedy generation, Pillow-compatible OpenCV preprocessing, ModelFactory generation identity fields, four External manifests, a package-only consumer, and an all-stage model inventory plus acquisition guides. / 阶段 25 新增工件绑定模型族 Profile、typed 组件合同、双 Session 图像状态、自有生成结果、完整前缀生成、Pillow-compatible OpenCV、ModelFactory Identity、四份 External Manifest、仅包 Consumer，以及全阶段模型清单与获取指南。
-
-Official BLIP base Caption runs on ORT/OpenVINO CPU and matches the official predictor's tokens/EOS/text on a real authorized image, with encoder/logit/pixel fidelity gates. BLIP VQA, BLIP-2, and InstructBLIP remain explicit blockers. Packages remain managed-only; models, checkpoints, vocabularies, configs, images, Python, native runtimes, catalog entries, Release assets, Actions, and TensorRT are not added. / 官方 BLIP Caption 已通过双 CPU 后端与官方 Token/EOS/文本及中间数值门控；其余路径保持 blocker。包仍为纯 Managed，不加入任何模型资产、目录、Release、Actions 或 TensorRT。

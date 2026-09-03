@@ -11,10 +11,10 @@ Catalog selection and multi-artifact prompt-segmentation package verification. T
 Run:
 
 ```powershell
-dotnet run --project samples/06-models/catalog-workflow -- --model-id segmentation/sam-v1-vit-b
+dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id segmentation/sam-v1-vit-b
 ```
 
-See samples/06-models/catalog-workflow for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
 
 ## Verification record
 
