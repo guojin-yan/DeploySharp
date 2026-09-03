@@ -30,7 +30,19 @@ namespace DeploySharp.ModelPack.Json.Tests
             {
                 ModelArtifactDocument artifact = blocker.Artifacts.Single(value => value.Extensions.ContainsKey("deploysharp.blocker"));
                 Assert.IsFalse(artifact.Portable);
-                Assert.AreEqual("official-source-contract-only", artifact.Extensions["deploysharp.validation-status"]);
+                // Whisper now carries local three-graph/C# real-WAV parity evidence while
+                // remaining a non-portable source-contract blocker. Keep the assertion
+                // explicit so the test tracks the stronger evidence without admitting it
+                // as a downloadable release asset.
+                string validationStatus = artifact.Extensions["deploysharp.validation-status"];
+                if (blocker.Family == "whisper")
+                {
+                    Assert.AreEqual("local-three-graph-export-csharp-session-real-wav-parity-verified-public-bundle-pending", validationStatus);
+                }
+                else
+                {
+                    Assert.AreEqual("official-source-contract-only", validationStatus);
+                }
                 Assert.IsTrue(artifact.Extensions["deploysharp.blocker"].Length > 40);
             }
         }

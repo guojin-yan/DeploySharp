@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JYPPX.DeploySharp.Visual;
@@ -38,6 +39,26 @@ namespace DeploySharp.Visual.OpenCV.Tests
             DocumentUnderstandingProfile profile = DocumentUnderstandingProfiles.CreateDonutCordV2Onnx(); var factory = new OpenCvDocumentUnderstandingInputFactory();
             using (var cancellation = new System.Threading.CancellationTokenSource()) { cancellation.Cancel(); Assert.AreEqual(OpenCvErrorCodes.Cancelled, Assert.ThrowsExactly<OpenCvVisualException>(() => factory.CreatePageFromFile(Fixture("rgb.png"), profile, cancellationToken: cancellation.Token)).ErrorCode); }
             Assert.AreEqual(VisualErrorCodes.DocumentUnderstandingLimitExceeded, Assert.ThrowsExactly<VisualException>(() => factory.CreatePageFromFile(Fixture("rgb.png"), profile, pageIndex: 1)).ErrorCode);
+        }
+
+        [TestMethod]
+        public void DonutFactoryCreatesBoundedIndependentPageBatchWithoutWeakeningProfileLimit()
+        {
+            DocumentUnderstandingProfile profile = DocumentUnderstandingProfiles.CreateDonutCordV2Onnx();
+            var factory = new OpenCvDocumentUnderstandingInputFactory();
+            var sources = new[] { OpenCvImageSource.FromFile(Fixture("rgb.png")), OpenCvImageSource.FromFile(Fixture("gray.png")) };
+
+            IReadOnlyList<PreparedDocument> documents = factory.CreatePageBatch(sources, profile, maximumPages: 2);
+            try
+            {
+                Assert.AreEqual(2, documents.Count);
+                Assert.IsTrue(documents.All(document => document.Pages.Count == 1 && document.Pages[0].PageIndex == 0));
+                Assert.AreEqual(VisualErrorCodes.DocumentUnderstandingLimitExceeded, Assert.ThrowsExactly<VisualException>(() => factory.CreatePageBatch(sources, profile, maximumPages: 1)).ErrorCode);
+            }
+            finally
+            {
+                foreach (PreparedDocument document in documents) document.Dispose();
+            }
         }
 
         private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, name);

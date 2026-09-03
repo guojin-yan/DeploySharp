@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using JYPPX.DeploySharp;
@@ -10,6 +12,7 @@ using JYPPX.DeploySharp.Tensors;
 using JYPPX.OpenCvSharp.Core;
 using JYPPX.OpenCvSharp.Dnn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Onnx;
 using DnnCv2 = JYPPX.OpenCvSharp.Dnn.Cv2;
 
 namespace DeploySharp.Backend.OpenCV.Tests;
@@ -18,7 +21,121 @@ namespace DeploySharp.Backend.OpenCV.Tests;
 public sealed class AdditionalOfficialModelProbeTests
 {
     [TestMethod]
-    public void OpenCvV1ContractRejectsCatalogAuxiliaryInputsAndBooleanOutputs()
+    [TestCategory("ExternalModels")]
+    public void DeimV2ShapeArithmeticUsesUniformInt64InputsAfterNormalization()
+    {
+        RequireExternal();
+        string path = Environment.GetEnvironmentVariable("DEPLOYSHARP_DEIMV2_MODEL") ?? @"E:\Model\DEIMv2\deimv2_dinov3_s_coco_dynamic.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local DEIMv2 model: " + path);
+
+        byte[] normalized = OpenCvDnnOnnxCompatibilityPasses.Normalize(File.ReadAllBytes(path), out bool changed);
+        Assert.IsTrue(changed, "The DEIMv2 graph should require OpenCV DNN compatibility normalization.");
+        ModelProto model = ModelProto.Parser.ParseFrom(normalized);
+        NodeProto div = model.Graph.Node.Single(node => node.Name == "/model/backbone/Div");
+        var producers = model.Graph.Node
+            .SelectMany(node => node.Output.Select(output => (Output: output, Node: node)))
+            .ToDictionary(pair => pair.Output, pair => pair.Node, StringComparer.Ordinal);
+
+        Assert.AreEqual(2, div.Input.Count);
+        foreach (string input in div.Input)
+        {
+            if (!producers.TryGetValue(input, out NodeProto? producer)) Assert.Fail("Missing normalized producer for " + input);
+            Assert.AreEqual("Cast", producer.OpType, "The DEIMv2 shape Div input should be explicitly normalized to Int64: " + input);
+            AttributeProto? target = producer.Attribute.SingleOrDefault(attribute => attribute.Name == "to");
+            Assert.IsNotNull(target);
+            Assert.AreEqual((long)TensorProto.Types.DataType.Int64, target.I);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void DeimV2ShapeComparisonInputsAreUniformAfterNormalization()
+    {
+        RequireExternal();
+        string path = Environment.GetEnvironmentVariable("DEPLOYSHARP_DEIMV2_MODEL") ?? @"E:\Model\DEIMv2\deimv2_dinov3_s_coco_dynamic.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local DEIMv2 model: " + path);
+        ModelProto model = ModelProto.Parser.ParseFrom(OpenCvDnnOnnxCompatibilityPasses.Normalize(File.ReadAllBytes(path), out _));
+        NodeProto equal = model.Graph.Node.Single(node => node.Name == "/model/backbone/dinov3/Equal");
+        var producers = model.Graph.Node.SelectMany(node => node.Output.Select(output => (Output: output, Node: node))).ToDictionary(pair => pair.Output, pair => pair.Node, StringComparer.Ordinal);
+        foreach (string input in equal.Input)
+        {
+            if (!producers.TryGetValue(input, out NodeProto? producer)) Assert.Fail("Missing producer for " + input);
+            Assert.AreEqual("Cast", producer.OpType, "The DEIMv2 Equal shape input should be explicitly normalized: " + input);
+            Assert.AreEqual((long)TensorProto.Types.DataType.Int32, producer.Attribute.Single(attribute => attribute.Name == "to").I);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void DeimV2EncoderEmptyShapeSliceIsRemovedFromReshapeSentinel()
+    {
+        RequireExternal();
+        string path = Environment.GetEnvironmentVariable("DEPLOYSHARP_DEIMV2_MODEL") ?? @"E:\Model\DEIMv2\deimv2_dinov3_s_coco_dynamic.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local DEIMv2 model: " + path);
+        ModelProto model = ModelProto.Parser.ParseFrom(OpenCvDnnOnnxCompatibilityPasses.Normalize(File.ReadAllBytes(path), out _));
+        Assert.IsFalse(model.Graph.Node.Any(node => node.Name == "/model/encoder/Slice_1"), "The empty shape Slice must be removed before OpenCV import.");
+        NodeProto concat = model.Graph.Node.Single(node => node.Name == "/model/encoder/Concat_4");
+        Assert.AreEqual("Identity", concat.OpType);
+        Assert.AreEqual("/model/encoder/Concat_4__deploysharp_i32_1", concat.Input.Single());
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void DeimV2FloatingGridFillsAvoidDynamicShapeImport()
+    {
+        RequireExternal();
+        string path = Environment.GetEnvironmentVariable("DEPLOYSHARP_DEIMV2_MODEL") ?? @"E:\Model\DEIMv2\deimv2_dinov3_s_coco_dynamic.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local DEIMv2 model: " + path);
+        ModelProto model = ModelProto.Parser.ParseFrom(OpenCvDnnOnnxCompatibilityPasses.Normalize(File.ReadAllBytes(path), out _));
+
+        foreach (string suffix in new[] { string.Empty, "_1", "_2" })
+        {
+            string shapeName = suffix switch { "" => "/model/decoder/Shape_12", "_1" => "/model/decoder/Shape_16", _ => "/model/decoder/Shape_20" };
+            NodeProto zeroLike = model.Graph.Node.Single(node => node.Name == shapeName);
+            Assert.AreEqual("Mul", zeroLike.OpType, shapeName + " should create a zero-like floating grid without importing a dynamic Shape.");
+            Assert.IsTrue(zeroLike.Input[1].EndsWith("__deploysharp_zero", StringComparison.Ordinal));
+            NodeProto fill = model.Graph.Node.Single(node => node.Name == "/model/decoder/ConstantOfShape" + suffix);
+            Assert.AreEqual("Add", fill.OpType);
+            Assert.AreEqual(2, fill.Input.Count);
+            Assert.IsTrue(fill.Input[1].EndsWith("__deploysharp_one", StringComparison.Ordinal));
+        }
+
+        Assert.AreEqual("Mul", model.Graph.Node.Single(node => node.Name == "/model/decoder/Mul").OpType);
+        Assert.AreEqual("Mul", model.Graph.Node.Single(node => node.Name == "/model/decoder/Mul_2").OpType);
+        Assert.AreEqual("Mul", model.Graph.Node.Single(node => node.Name == "/model/decoder/Mul_4").OpType);
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void DeimV2DynamicGraphFailsWithManagedImporterDiagnostic()
+    {
+        RequireExternal();
+        string path = Environment.GetEnvironmentVariable("DEPLOYSHARP_DEIMV2_MODEL") ?? @"E:\Model\DEIMv2\deimv2_dinov3_s_coco_dynamic.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local DEIMv2 model: " + path);
+        var modelId = new ModelId("external/deimv2-probe");
+        var contract = new OpenCvDnnModelContract(
+            modelId,
+            new[]
+            {
+                new TensorDescriptor("images", TensorElementType.Float32, new TensorShape(1, 3, 640, 640)),
+                new TensorDescriptor("orig_target_sizes", TensorElementType.Int64, new TensorShape(1, 2))
+            },
+            new[]
+            {
+                new TensorDescriptor("labels", TensorElementType.Int64, new TensorShape(1, 300)),
+                new TensorDescriptor("boxes", TensorElementType.Float32, new TensorShape(1, 300, 4)),
+                new TensorDescriptor("scores", TensorElementType.Float32, new TensorShape(1, 300))
+            },
+            new[] { "images" });
+        using var provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(contract, enableFusion: false, enableWinograd: false));
+        OpenCvDnnBackendException exception = Assert.ThrowsExactly<OpenCvDnnBackendException>(() => provider.CreateSession(new ModelArtifact(modelId, "onnx", path, ComputeSha256(path)), new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu"), SessionOptions.Default));
+        Assert.AreEqual(OpenCvDnnErrorCodes.ModelLoadFailed, exception.ErrorCode);
+        StringAssert.Contains(exception.Message, "specialize");
+        Console.WriteLine("OPENCV_DEIMV2_MANAGED_UNSUPPORTED model=" + path + ";sha256=" + ComputeSha256(path) + ";code=" + exception.ErrorCode);
+    }
+
+    [TestMethod]
+    public void OpenCvV1ContractRejectsCatalogAuxiliaryInputsAndAdmitsBooleanOutputs()
     {
         var image = new TensorDescriptor("images", TensorElementType.Float32, new TensorShape(1, 3, 640, 640));
         var output = new TensorDescriptor("output", TensorElementType.Float32, new TensorShape(1, 1));
@@ -35,10 +152,11 @@ public sealed class AdditionalOfficialModelProbeTests
             new ModelId("rt-detr/r50vd-decoded-vector-onnx"),
             new[] { image, new TensorDescriptor("im_shape", TensorElementType.Float32, new TensorShape(1, 2)) },
             new[] { output }));
-        Assert.ThrowsExactly<ArgumentException>(() => new OpenCvDnnModelContract(
+        OpenCvDnnModelContract booleanOutputContract = new OpenCvDnnModelContract(
             new ModelId("anomalib/padim/mvtec-bottle"),
             new[] { new TensorDescriptor("input", TensorElementType.Float32, new TensorShape(1, 3, 256, 256)) },
-            new[] { new TensorDescriptor("pred_mask", TensorElementType.Boolean, new TensorShape(1, 1, 256, 256)) }));
+            new[] { new TensorDescriptor("pred_mask", TensorElementType.Boolean, new TensorShape(1, 1, 256, 256)) });
+        Assert.AreEqual(TensorElementType.Boolean, booleanOutputContract.Outputs[0].ElementType);
     }
 
     [TestMethod]
@@ -50,6 +168,7 @@ public sealed class AdditionalOfficialModelProbeTests
         {
             new ProviderCase("yolo/v5/detect/n", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V5_MODEL") ?? @"E:\Model\yolo\yolov5\yolov5n.onnx", "1cad0ece41bc351e2e1a3bd9b244dc4219f1b7b4d322928f13b6e7d19a00ef9d", "output0", new TensorShape(1, 25200, 85)),
             new ProviderCase("yolo/v6/detect/s", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V6_MODEL") ?? @"E:\Model\yolo\yolov6s.onnx", "f6fddae83fb23ff02578d5b5e9f4eb9d68b5d8e7f469bb80edf4041681c757f6", "outputs", new TensorShape(1, 8400, 85)),
+            new ProviderCase("yolo/v7/detect/base", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V7_MODEL") ?? @"E:\Model\yolo\yolov7.onnx", "8ee07ed4aa95070ae1c9e7a37c2407c2aa065e989f887cb1193bcb117603c641", "onnx_node!/model/model.105/Concat_3", new TensorShape(1, 25200, 85)),
             new ProviderCase("yolo/v9/detect/s", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V9_MODEL") ?? @"E:\Model\yolo\yolov9s.onnx", "e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7", "output0", new TensorShape(1, 84, 8400)),
             new ProviderCase("yolo/v10/detect/n", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V10_MODEL") ?? @"E:\Model\yolo\yolov10\yolov10n.onnx", "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81", "output0", new TensorShape(1, 300, 6)),
             new ProviderCase("yolo/v11/detect/n", Environment.GetEnvironmentVariable("DEPLOYSHARP_YOLO_V11_MODEL") ?? @"E:\Model\yolo\yolov11\yolo11n.onnx", "7060132736a0e5856a8b91d68fd7558ac6daf8c5fb7cec46dbc9cb034f8409c3", "output0", new TensorShape(1, 84, 8400)),
@@ -152,7 +271,7 @@ public sealed class AdditionalOfficialModelProbeTests
             {
                 if (string.Equals(probe.ModelId, "yolo/v7/detect", StringComparison.Ordinal))
                 {
-                    Console.WriteLine("OPENCV_EXTERNAL_PROBE_UNSUPPORTED model=" + probe.ModelId + ";sha256=" + probe.Sha256 + ";reason=OpenCV 5.0 DNN GatherLayerImpl shape validation");
+                    Console.WriteLine("OPENCV_EXTERNAL_PROBE_UNSUPPORTED model=" + probe.ModelId + ";sha256=" + probe.Sha256 + ";reason=OpenCV 5.0 DNN GatherLayerImpl shape validation;error=" + exception.Message);
                 }
                 else
                 {
@@ -233,6 +352,57 @@ public sealed class AdditionalOfficialModelProbeTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
+    public void RtDetrRawQueryGraphUsesOpenCvCompatibilityPasses()
+    {
+        RequireExternal();
+        const string path = @"E:\Model\RT-DETR\RTDETR_cropping\rtdetr_r50vd_6x_coco.onnx";
+        if (!File.Exists(path)) Assert.Inconclusive("Missing local RT-DETR model: " + path);
+        byte[] source = File.ReadAllBytes(path);
+        byte[] normalized = OpenCvDnnOnnxCompatibilityPasses.Normalize(source, out bool changed);
+        ModelProto normalizedModel = ModelProto.Parser.ParseFrom(normalized);
+        NodeProto fullLike = normalizedModel.Graph.Node.Single(node => string.Equals(node.Name, "p2o.Expand.0", StringComparison.Ordinal));
+        Assert.AreEqual("ConstantOfShape", fullLike.OpType, "The scalar full-like Expand must avoid OpenCV's uninitialized broadcast output.");
+        using Net network = Net.ReadNetFromOnnx(normalized, DnnEngine.Classic);
+        Assert.IsFalse(network.Empty, "RT-DETR graph imported as an empty network.");
+        network.SetPreferableBackend(DnnBackend.OpenCV).SetPreferableTarget(DnnTarget.Cpu).EnableFusion(false).EnableWinograd(false);
+        using var image = new Mat(640, 640, MatType.CV_32FC3);
+        using Mat blob = DnnCv2.BlobFromImage(image, 1d, new Size(640, 640), new Scalar(0d), false, false, MatType.CV_32F);
+        network.SetInput(blob, "image", 1d, null);
+        string[] names = network.GetUnconnectedOutLayersNames();
+        Assert.IsTrue(names.Length > 0, "RT-DETR graph has no unconnected outputs.");
+        Mat[] outputs = network.Forward(names);
+        try
+        {
+            Assert.AreEqual(names.Length, outputs.Length);
+            foreach (Mat output in outputs)
+            {
+                Assert.IsTrue(output.HasData && output.ValueCount > 0, "RT-DETR returned an empty output.");
+                Assert.AreEqual("finite", InspectFinite(output, out _, out _, out int nonFinite), "RT-DETR returned non-finite values: " + nonFinite);
+            }
+            Console.WriteLine("OPENCV_RTDetr_COMPATIBILITY_OK changed=" + changed + ";outputs=" + string.Join(",", names) + ";elements=" + string.Join(",", Array.ConvertAll(outputs, output => output.ValueCount.ToString())));
+        }
+        finally { foreach (Mat output in outputs) output.Dispose(); }
+    }
+
+    private static string InspectFinite(Mat output, out float minimum, out float maximum, out int nonFinite)
+    {
+        minimum = float.PositiveInfinity;
+        maximum = float.NegativeInfinity;
+        nonFinite = 0;
+        if (output.Empty || !output.HasData || output.Depth != MatType.CV_32F || output.ValueCount > int.MaxValue) return "not-float32";
+        var values = new float[checked((int)output.ValueCount)];
+        Marshal.Copy(output.Data, values, 0, values.Length);
+        foreach (float value in values)
+        {
+            if (!float.IsFinite(value)) { nonFinite++; continue; }
+            if (value < minimum) minimum = value;
+            if (value > maximum) maximum = value;
+        }
+        return nonFinite == 0 ? "finite" : "nonfinite";
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
     public void SupportedNonYoloModelsUseDeploySharpOpenCvProvider()
     {
         RequireExternal();
@@ -240,7 +410,10 @@ public sealed class AdditionalOfficialModelProbeTests
         {
             new ImageProviderCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
             new ImageProviderCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
             new ImageProviderCase("paddleocr/ppocrv5/server-cls", @"E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx", "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx", "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx", "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
             new ImageProviderCase("bria/rmbg-1.4", @"E:\Model\RMBG\bria-rmbg-1.4.onnx", "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f", "input", 1024, 1024, "output", new TensorShape(1, 1, 1024, 1024))
         };
 

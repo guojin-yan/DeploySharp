@@ -99,6 +99,88 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DirectInstanceDecoderSupportsDynamicBatchWithIndependentSourceGeometry()
+        {
+            var schema = new DirectInstanceSegmentationOutputSchema(Candidates(), "masks", InstanceMaskTensorLayout.Nchw, InstanceMaskValueKind.Binary,
+                interpolation: InstanceMaskInterpolationMode.NearestNeighbor, thresholdOrder: InstanceMaskThresholdOrder.BeforeResize, cropSpace: InstanceMaskCropSpace.None);
+            var decoder = new DirectInstanceSegmentationDecoder(schema, new InstanceSegmentationDecoderOptions(scoreThreshold: .1f, generateRle: false, maximumCandidates: 2, maximumInstances: 2));
+            var profile = new VisualModelProfile(
+                "tests/direct-instance-batch.v1", new ModelId("tests/direct-instance-batch"), VisualTaskId.InstanceSegmentation, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 2, 2), VisualTensorLayout.Nchw, 1, 2),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(-1, 2, 4)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(-1, 2)),
+                    new VisualOutputBinding("classes", TensorElementType.Float32, new TensorShape(-1, 2)),
+                    new VisualOutputBinding("masks", TensorElementType.Float32, new TensorShape(-1, 2, 2, 2))
+                }, new[] { new VisualLabel(0, "alpha") }, decoder);
+            var first = new VisualSize(4, 4);
+            var model = new VisualSize(2, 2);
+            var firstTransform = ImageTransform.Resize(first, model);
+            var secondTransform = ImageTransform.Resize(model, model);
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24]), first, model, 2, VisualTensorLayout.Nchw, firstTransform,
+                batchFrames: new[] { new VisualInputFrame(first, model, firstTransform, "first"), new VisualInputFrame(model, model, secondTransform, "second") });
+            var boxes = new float[] { 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2 };
+            var scores = new[] { .9f, 0f, .8f, 0f };
+            var classes = new[] { 0f, 0f, 0f, 0f };
+            var masks = new float[16];
+            for (int index = 0; index < masks.Length; index++) masks[index] = 1f;
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("boxes", new Tensor<float>(new TensorShape(2, 2, 4), boxes)),
+                new NamedTensor("scores", new Tensor<float>(new TensorShape(2, 2), scores)),
+                new NamedTensor("classes", new Tensor<float>(new TensorShape(2, 2), classes)),
+                new NamedTensor("masks", new Tensor<float>(new TensorShape(2, 2, 2, 2), masks))
+            });
+            object decoded = decoder.Decode(new VisualDecodeContext(input, profile, outputs, CancellationToken.None));
+            var batch = (InstanceSegmentationBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(4, batch[0].SourceSize.Width);
+            Assert.AreEqual(2, batch[1].SourceSize.Width);
+            Assert.AreEqual(1, batch[0].Instances.Count);
+            Assert.AreEqual(1, batch[1].Instances.Count);
+        }
+
+        [TestMethod]
+        public void PrototypeInstanceDecoderSupportsSharedPrototypeDynamicBatch()
+        {
+            var schema = new PrototypeInstanceSegmentationOutputSchema(Candidates(), "prototypes", "coefficients", InstanceMaskTensorLayout.Nchw, cropSpace: InstanceMaskCropSpace.None);
+            var decoder = new PrototypeInstanceSegmentationDecoder(schema, new InstanceSegmentationDecoderOptions(scoreThreshold: .1f, generateRle: false, maximumCandidates: 2, maximumInstances: 2, maximumPrototypeChannels: 2));
+            var profile = new VisualModelProfile(
+                "tests/prototype-instance-batch.v1", new ModelId("tests/prototype-instance-batch"), VisualTaskId.InstanceSegmentation, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 2, 2), VisualTensorLayout.Nchw, 1, 2),
+                new[]
+                {
+                    new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(-1, 2, 4)),
+                    new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(-1, 2)),
+                    new VisualOutputBinding("classes", TensorElementType.Float32, new TensorShape(-1, 2)),
+                    new VisualOutputBinding("prototypes", TensorElementType.Float32, new TensorShape(1, 2, 2, 2)),
+                    new VisualOutputBinding("coefficients", TensorElementType.Float32, new TensorShape(-1, 2, 2))
+                }, new[] { new VisualLabel(0, "alpha") }, decoder);
+            var first = new VisualSize(4, 4);
+            var model = new VisualSize(2, 2);
+            var firstTransform = ImageTransform.Resize(first, model);
+            var secondTransform = ImageTransform.Resize(model, model);
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24]), first, model, 2, VisualTensorLayout.Nchw, firstTransform,
+                batchFrames: new[] { new VisualInputFrame(first, model, firstTransform, "first"), new VisualInputFrame(model, model, secondTransform, "second") });
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("boxes", new Tensor<float>(new TensorShape(2, 2, 4), new float[] { 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2 })),
+                new NamedTensor("scores", new Tensor<float>(new TensorShape(2, 2), new[] { .9f, 0f, .8f, 0f })),
+                new NamedTensor("classes", new Tensor<float>(new TensorShape(2, 2), new float[] { 0, 0, 0, 0 })),
+                new NamedTensor("prototypes", new Tensor<float>(new TensorShape(1, 2, 2, 2), new float[] { 10, 10, -10, -10, -10, -10, 10, 10 })),
+                new NamedTensor("coefficients", new Tensor<float>(new TensorShape(2, 2, 2), new float[] { 1, 0, 0, 0, 1, 0, 0, 0 }))
+            });
+            object decoded = decoder.Decode(new VisualDecodeContext(input, profile, outputs, CancellationToken.None));
+            var batch = (InstanceSegmentationBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(4, batch[0].SourceSize.Width);
+            Assert.AreEqual(2, batch[1].SourceSize.Width);
+            Assert.AreEqual(1, batch[0].Instances.Count);
+            Assert.AreEqual(1, batch[1].Instances.Count);
+        }
+
+        [TestMethod]
         public void PrototypeNchwAndNhwcUseExplicitLinearCombinationAndActivation()
         {
             RunPrototypeLayout(InstanceMaskTensorLayout.Nchw, false);

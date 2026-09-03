@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "status": "csharp-three-graph-real-wav-parity-verified",
+  "model": "openai/whisper-tiny.en",
+  "profileId": "audio.whisper.tiny.en.onnx-three-graph",
+  "backend": "onnxruntime-cpu",
+  "sourceAudio": {
+    "id": "LibriSpeech CC-BY-4.0 row 6930-75918-0000",
+    "path": "E:/DeploySharp-Models/wav2vec2-base-960h/dataset/6930-75918-0000.wav",
+    "sha256": "103c3f15eb3715ebc6243d142244128a3ac39b6bfae315baa6b8dc4a8be14aa8",
+    "license": "CC-BY-4.0",
+    "sampleRate": 16000,
+    "channels": 1,
+    "frames": 56080
+  },
+  "featureParity": {
+    "shape": [1, 80, 3000],
+    "csharpFeatureSha256": "1c57e9abe250f4cc4f9058b5fee9c45e40552b01a068f208189db495fae2c5fc",
+    "reference": "transformers WhisperFeatureExtractor from the same pinned checkpoint",
+    "maxAbsoluteError": 6.9141387939453125e-6,
+    "meanAbsoluteError": 8.972237175441933e-9,
+    "countAbove1e-5": 0,
+    "status": "passed"
+  },
+  "reference": {
+    "runtime": "HuggingFace Transformers 4.54.0 PyTorch CPU",
+    "tokenIdsWithoutExplicitEos": [34732, 4504, 284, 663, 1295, 31095, 262, 29804, 13],
+    "text": "Concord returned to its place amidst the tents."
+  },
+  "csharp": {
+    "runtime": "DeploySharp WhisperTokenizer + WhisperUnderstandingSession + ONNX Runtime CPU",
+    "tokenIdsWithExplicitEos": [34732, 4504, 284, 663, 1295, 31095, 262, 29804, 13, 50256],
+    "text": "Concord returned to its place amidst the tents.",
+    "preprocessMilliseconds": 159.446,
+    "encoderMilliseconds": 180.632,
+    "prefillMilliseconds": 28.263,
+    "decodeMillisecondsTotal": 114.651,
+    "totalMilliseconds": 574.068,
+    "status": "passed"
+  },
+  "reproduction": "Set DEPLOYSHARP_RUN_EXTERNAL_MODELS=1 and run dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj -c Release --filter FullyQualifiedName~Stage28WhisperWavExternalIntegrationTests.",
+  "admissionNote": "The licensed real WAV decode, managed log-Mel feature tensor, C# three-graph greedy generation, and normalized transcript match the pinned HuggingFace CPU reference. C# retains the explicit EOS token in its completion list. This verifies the local executable profile; the source-only profile and public catalog remain unchanged because the ONNX graphs are not downloadable release assets."
+}

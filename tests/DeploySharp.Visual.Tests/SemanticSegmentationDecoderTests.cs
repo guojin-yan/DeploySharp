@@ -190,6 +190,47 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DynamicBatchRestoresEachSegmentationRowWithItsOwnSourceGeometry()
+        {
+            var schema = new SegmentationOutputSchema("logits", SegmentationOutputKind.Logits, SegmentationTensorLayout.Nchw, 2);
+            var profile = new VisualModelProfile(
+                "tests/semantic-segmentation-batch.v1", new ModelId("tests/semantic-segmentation-batch"), VisualTaskId.SemanticSegmentation, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 1, 2), VisualTensorLayout.Nchw, 1, 2),
+                new[] { new VisualOutputBinding("logits", TensorElementType.Float32, new TensorShape(-1, 2, 1, 2)) },
+                new[] { new VisualLabel(0, "background"), new VisualLabel(1, "foreground") },
+                new SemanticSegmentationDecoder(schema, new SegmentationDecoderOptions(generateRle: false)));
+            var source1 = new VisualSize(2, 1);
+            var source2 = new VisualSize(4, 2);
+            var model = new VisualSize(2, 1);
+            var frames = new[]
+            {
+                new VisualInputFrame(source1, model, ImageTransform.Resize(source1, model), "one"),
+                new VisualInputFrame(source2, model, ImageTransform.Resize(source2, model), "two")
+            };
+            using var input = new PreparedVisualInput(
+                "images", new Tensor<float>(new TensorShape(2, 3, 1, 2), new float[12]),
+                source1, model, 2, VisualTensorLayout.Nchw, ImageTransform.Resize(source1, model), batchFrames: frames);
+            float[] logits =
+            {
+                2, 0, 0, 2,
+                0, 2, 2, 0
+            };
+            object decoded = profile.Decoder.Decode(new VisualDecodeContext(
+                input, profile, InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(2, 2, 1, 2), logits)), CancellationToken.None));
+
+            var batch = (SemanticSegmentationBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            CollectionAssert.AreEqual(new ushort[] { 0, 1 }, batch[0].Mask.ToArray());
+            Assert.AreEqual(4, batch[1].Mask.Width);
+            Assert.AreEqual(2, batch[1].Mask.Height);
+            CollectionAssert.AreEqual(new ushort[]
+            {
+                1, 1, 0, 0,
+                1, 1, 0, 0
+            }, batch[1].Mask.ToArray());
+        }
+
+        [TestMethod]
         public void InvalidValuesShapesCapabilitiesAndMemoryHaveStableDiagnostics()
         {
             var probabilitySchema = new SegmentationOutputSchema("mask", SegmentationOutputKind.Probabilities, SegmentationTensorLayout.Nchw, 2);

@@ -30,6 +30,19 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DonutSinglePageProfileRejectsAdditionalPagesBeforeSessionExecution()
+        {
+            using Fixture fixture = Fixture.Create(TimeSpan.Zero);
+            using PreparedDocument first = fixture.Document();
+            var secondInput = new PreparedVisualInput("pixel_values", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), new VisualSize(2, 2), new VisualSize(2, 2), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(2, 2), new VisualSize(2, 2)), inputId: new string('b', 64));
+            using var secondPage = new PreparedDocumentPage(fixture.Profile.ProfileId, 1, secondInput);
+
+            VisualException error = Assert.ThrowsExactly<VisualException>(() => new PreparedDocument(fixture.Profile, new[] { first.Pages[0], secondPage }));
+            Assert.AreEqual(VisualErrorCodes.DocumentUnderstandingLimitExceeded, error.ErrorCode);
+            Assert.IsTrue(error.Message.Contains("page capacity", StringComparison.OrdinalIgnoreCase));
+        }
+
+        [TestMethod]
         public void LayoutAndParserRejectInvalidGeometryAlignmentSyntaxAndLimitsWithoutRepair()
         {
             Assert.AreEqual(VisualErrorCodes.DocumentUnderstandingContractInvalid, Assert.ThrowsExactly<VisualException>(() => new DocumentNormalizedBox(0, 0, 0, 5)).ErrorCode);
@@ -74,6 +87,67 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(VisualErrorCodes.ObjectDisposed, Assert.ThrowsExactly<VisualException>(() => delayed.Session.Clear()).ErrorCode);
         }
 
+        [TestMethod]
+        public async Task PageBatchUsesIndependentChannelsPreservesOrderOwnershipAndCancellation()
+        {
+            using Fixture fixture = Fixture.Create(TimeSpan.FromMilliseconds(40));
+            using PreparedDocument first = fixture.Document('7');
+            using PreparedDocument second = fixture.Document('8');
+            using PreparedDocument third = fixture.Document('9');
+            var task = DocumentTaskRequest.StructuredExtraction(fixture.Profile.Schema.SchemaId);
+            var tokenizer = new FakeTokenizer(fixture.Profile);
+            using var batch = new DocumentUnderstandingPageBatchSession(
+                fixture.Registry,
+                fixture.Bundle,
+                new BackendRequest(BackendCapabilities.TensorInference, Backend, "cpu"),
+                maximumConcurrency: 2);
+
+            IReadOnlyList<DocumentUnderstandingResult> results = await batch.RunAsync(new[]
+            {
+                new DocumentPageInferenceRequest(first, task, tokenizer),
+                new DocumentPageInferenceRequest(second, task, tokenizer),
+                new DocumentPageInferenceRequest(third, task, tokenizer)
+            });
+
+            Assert.AreEqual(2, batch.MaximumConcurrency);
+            Assert.AreEqual(3, results.Count);
+            Assert.AreEqual(first.Pages[0].PageIdentity, results[0].DocumentState.PageIdentity);
+            Assert.AreEqual(second.Pages[0].PageIdentity, results[1].DocumentState.PageIdentity);
+            Assert.AreEqual(third.Pages[0].PageIdentity, results[2].DocumentState.PageIdentity);
+            Assert.AreEqual(2, fixture.Provider.MaximumActiveOperations);
+            first.EnsureUsable(); second.EnsureUsable(); third.EnsureUsable();
+
+            using (var cancellation = new CancellationTokenSource(10))
+            {
+                VisualException error = await Assert.ThrowsExactlyAsync<VisualException>(() => batch.RunAsync(new[] { new DocumentPageInferenceRequest(first, task, tokenizer) }, cancellationToken: cancellation.Token));
+                Assert.AreEqual(VisualErrorCodes.Cancelled, error.ErrorCode);
+            }
+
+            batch.Dispose();
+            VisualException disposed = Assert.ThrowsExactly<VisualException>(() => batch.Run(new[] { new DocumentPageInferenceRequest(first, task, tokenizer) }));
+            Assert.AreEqual(VisualErrorCodes.ObjectDisposed, disposed.ErrorCode);
+        }
+
+        [TestMethod]
+        public async Task PageBatchDefersOwnedInputDisposalUntilTheWholePageCompletes()
+        {
+            using Fixture fixture = Fixture.Create(TimeSpan.Zero);
+            PreparedDocument document = fixture.Document('a');
+            var task = DocumentTaskRequest.StructuredExtraction(fixture.Profile.Schema.SchemaId);
+            var tokenizer = new FakeTokenizer(fixture.Profile);
+            using var batch = new DocumentUnderstandingPageBatchSession(
+                fixture.Registry,
+                fixture.Bundle,
+                new BackendRequest(BackendCapabilities.TensorInference, Backend, "cpu"));
+
+            IReadOnlyList<DocumentUnderstandingResult> results = await batch.RunAsync(
+                new[] { new DocumentPageInferenceRequest(document, task, tokenizer) },
+                new VisualExecutionOptions(disposeOwnedInputOnCompletion: true));
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual(VisualErrorCodes.ObjectDisposed, Assert.ThrowsExactly<VisualException>(() => document.EnsureUsable()).ErrorCode);
+        }
+
         private static DocumentUnderstandingProfile Profile()
         {
             var kv = new DocumentKvCacheContract("fake-kv", 2, 1, 2, 3, 16);
@@ -107,17 +181,17 @@ namespace DeploySharp.Visual.Tests
 
         private sealed class Fixture : IDisposable
         {
-            private Fixture(DocumentUnderstandingProfile profile, Provider provider, BackendRegistry registry, DocumentUnderstandingSession session) { Profile = profile; Provider = provider; Registry = registry; Session = session; }
-            internal DocumentUnderstandingProfile Profile { get; } internal Provider Provider { get; } internal BackendRegistry Registry { get; } internal DocumentUnderstandingSession Session { get; }
+            private Fixture(DocumentUnderstandingProfile profile, Provider provider, BackendRegistry registry, DocumentUnderstandingBundle bundle, DocumentUnderstandingSession session) { Profile = profile; Provider = provider; Registry = registry; Bundle = bundle; Session = session; }
+            internal DocumentUnderstandingProfile Profile { get; } internal Provider Provider { get; } internal BackendRegistry Registry { get; } internal DocumentUnderstandingBundle Bundle { get; } internal DocumentUnderstandingSession Session { get; }
             internal static Fixture Create(TimeSpan delay)
             {
                 DocumentUnderstandingProfile profile = Profile(); var provider = new Provider(profile, delay); var registry = new BackendRegistry(); registry.Register(provider);
                 var bundle = new DocumentUnderstandingBundle(profile, profile.Artifacts.Select(value => new DocumentArtifactBinding(value.Role, profile.CreateArtifact(value.Role, value.Role + ".onnx", Backend))));
-                return new Fixture(profile, provider, registry, new DocumentUnderstandingSession(registry, bundle, new BackendRequest(BackendCapabilities.TensorInference, Backend, "cpu")));
+                return new Fixture(profile, provider, registry, bundle, new DocumentUnderstandingSession(registry, bundle, new BackendRequest(BackendCapabilities.TensorInference, Backend, "cpu")));
             }
-            internal PreparedDocument Document()
+            internal PreparedDocument Document(char inputIdentity = '9')
             {
-                var size = new VisualSize(2, 2); var input = new PreparedVisualInput("pixel_values", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size), inputId: new string('9', 64));
+                var size = new VisualSize(2, 2); var input = new PreparedVisualInput("pixel_values", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size), inputId: new string(inputIdentity, 64));
                 return new PreparedDocument(Profile, new[] { new PreparedDocumentPage(Profile.ProfileId, 0, input) });
             }
             public void Dispose() { Session.Dispose(); Registry.Dispose(); }
@@ -125,15 +199,22 @@ namespace DeploySharp.Visual.Tests
 
         private sealed class Provider : IBackendProvider
         {
-            private readonly DocumentUnderstandingProfile _profile; private readonly TimeSpan _delay; internal Provider(DocumentUnderstandingProfile profile, TimeSpan delay) { _profile = profile; _delay = delay; Descriptor = new BackendDescriptor(Backend, "Document fake", "1", BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes, new[] { "onnx" }); }
-            public BackendDescriptor Descriptor { get; } internal bool NaNLogits { get; set; }
+            private readonly DocumentUnderstandingProfile _profile; private readonly TimeSpan _delay; private int _activeOperations; private int _maximumActiveOperations; internal Provider(DocumentUnderstandingProfile profile, TimeSpan delay) { _profile = profile; _delay = delay; Descriptor = new BackendDescriptor(Backend, "Document fake", "1", BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes, new[] { "onnx" }); }
+            public BackendDescriptor Descriptor { get; } internal bool NaNLogits { get; set; } internal int MaximumActiveOperations => Volatile.Read(ref _maximumActiveOperations);
             public bool CanCreate(ModelArtifact artifact, BackendRequest request) => _profile.Artifacts.Any(value => value.ModelId == artifact.ModelId) && Descriptor.Supports(request.RequiredCapabilities);
             public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
             {
                 DocumentArtifactContract contract = _profile.Artifacts.Single(value => value.ModelId == artifact.ModelId); var metadata = new ModelMetadata(contract.ModelId, contract.Format, contract.Inputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)), contract.Outputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)));
-                return new FakeSession(metadata, inputs => Run(contract, inputs), _delay);
+                return new FakeSession(metadata, inputs => Run(contract, inputs), _delay, EnterOperation, ExitOperation);
             }
             public void Dispose() { }
+            private void EnterOperation()
+            {
+                int active = Interlocked.Increment(ref _activeOperations);
+                int maximum;
+                while (active > (maximum = Volatile.Read(ref _maximumActiveOperations)) && Interlocked.CompareExchange(ref _maximumActiveOperations, active, maximum) != maximum) { }
+            }
+            private void ExitOperation() { Interlocked.Decrement(ref _activeOperations); }
             private InferenceOutputs Run(DocumentArtifactContract contract, InferenceInputs inputs)
             {
                 if (contract.Role == DocumentArtifactRole.DocumentEncoder) return InferenceOutputs.Create("last_hidden_state", new Tensor<float>(new TensorShape(1, 3, 4), Enumerable.Repeat(.25f, 12).ToArray()));
@@ -150,9 +231,9 @@ namespace DeploySharp.Visual.Tests
         }
         private sealed class FakeSession : IInferenceSession
         {
-            private readonly Func<InferenceInputs, InferenceOutputs> _run; private readonly TimeSpan _delay; private bool _disposed; internal FakeSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> run, TimeSpan delay) { Metadata = metadata; _run = run; _delay = delay; }
+            private readonly Func<InferenceInputs, InferenceOutputs> _run; private readonly TimeSpan _delay; private readonly Action _enter; private readonly Action _exit; private bool _disposed; internal FakeSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> run, TimeSpan delay, Action enter, Action exit) { Metadata = metadata; _run = run; _delay = delay; _enter = enter; _exit = exit; }
             public ModelMetadata Metadata { get; } public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken) => RunAsync(inputs, cancellationToken).GetAwaiter().GetResult();
-            public async Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken) { if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); return _run(inputs); }
+            public async Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken) { if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); _enter(); try { if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); return _run(inputs); } finally { _exit(); } }
             public void Dispose() { _disposed = true; }
         }
     }

@@ -77,6 +77,40 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<VisualException>(() => profile.Decoder.Decode(new VisualDecodeContext(VisualTestData.DetectionInput(), profile, bad, CancellationToken.None)));
         }
 
+        [TestMethod]
+        public void DynamicBatchRestoresEachFrameGeometryAndSuppressesPerFrame()
+        {
+            var schema = new DetectionOutputSchema("boxes", DetectionBoxFormat.Xyxy, false, DetectionScoreMode.ClassScore, 2, 4);
+            var profile = new VisualModelProfile(
+                "tests/detection.dynamic.v1", VisualTestData.DetectionModelId, VisualTaskId.ObjectDetection, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 100, 100), VisualTensorLayout.Nchw, 1, 4),
+                new[] { new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(-1, -1, 6)) },
+                new[] { new VisualLabel(0, "cat"), new VisualLabel(1, "dog") }, new DetectionDecoder(schema));
+            var firstSource = new VisualSize(100, 100);
+            var secondSource = new VisualSize(200, 100);
+            var modelSize = new VisualSize(100, 100);
+            var frames = new[]
+            {
+                new VisualInputFrame(firstSource, modelSize, ImageTransform.Resize(firstSource, modelSize), "first"),
+                new VisualInputFrame(secondSource, modelSize, ImageTransform.Letterbox(secondSource, modelSize), "second")
+            };
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 3, 100, 100), new float[60000]), firstSource, modelSize, 2, VisualTensorLayout.Nchw, ImageTransform.Resize(firstSource, modelSize), batchFrames: frames);
+            var values = new[]
+            {
+                10f, 20f, 50f, 60f, .8f, .2f,
+                0f, 0f, 100f, 100f, .9f, .1f
+            };
+            var output = InferenceOutputs.Create("boxes", new Tensor<float>(new TensorShape(2, 1, 6), values));
+
+            var result = (DetectionBatchResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile, output, CancellationToken.None));
+
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(1, result[0].Detections.Count);
+            Assert.AreEqual(40f, result[0].Detections[0].Box.Width, .001f);
+            Assert.AreEqual(1, result[1].Detections.Count);
+            Assert.AreEqual(200f, result[1].Detections[0].Box.Width, .001f);
+        }
+
         private static DetectionResult Decode(DetectionOutputSchema schema, float[] values, VisualSize sourceSize, ImageTransform? transform, DetectionDecoderOptions? options = null)
         {
             int fields = schema.ClassScoreOffset + schema.ClassCount;

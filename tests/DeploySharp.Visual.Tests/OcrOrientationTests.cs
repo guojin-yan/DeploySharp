@@ -65,6 +65,35 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DynamicBatchDecodesEveryRowInInputOrder()
+        {
+            var decoder = new OcrOrientationDecoder(
+                new OcrOrientationSchema("orientation_scores", new TensorShape(-1, 4), TensorElementType.Float32, Mapping, OcrOrientationValueSemantics.Probability, applySoftmax: false, allowDynamicBatch: true),
+                new OcrOrientationDecoderOptions(.5f));
+            var size = new VisualSize(2, 2);
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 1, 2, 2), new float[8]), size, size, 2, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
+            var profile = new VisualModelProfile(
+                "tests/text-orientation.dynamic.v1", new ModelId("tests/text-orientation-dynamic"), VisualTaskId.TextOrientationClassification, "1", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 1, 2, 2), VisualTensorLayout.Nchw, 1, 2),
+                new[] { new VisualOutputBinding("orientation_scores", TensorElementType.Float32, new TensorShape(-1, 4)) },
+                Array.Empty<VisualLabel>(), decoder);
+            object decoded = decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("orientation_scores", new Tensor<float>(new TensorShape(2, 4), new[] { .8f, .1f, .05f, .05f, .05f, .05f, .1f, .8f })), CancellationToken.None));
+
+            var batch = (OcrOrientationBatchResult)decoded;
+            Assert.AreEqual(2, batch.Items.Count);
+            Assert.AreEqual(TextOrientation.Degrees0, batch.Items[0].AcceptedOrientation);
+            Assert.AreEqual(TextOrientation.Degrees180, batch.Items[1].AcceptedOrientation);
+
+            var bounded = new OcrOrientationDecoder(
+                new OcrOrientationSchema("orientation_scores", new TensorShape(-1, 4), TensorElementType.Float32, Mapping, OcrOrientationValueSemantics.Probability, applySoftmax: false, allowDynamicBatch: true),
+                new OcrOrientationDecoderOptions(.5f, maximumResultBytes: 31));
+            Assert.AreEqual(VisualErrorCodes.OcrOrientationLimitExceeded,
+                Assert.ThrowsExactly<VisualException>(() => bounded.Decode(new VisualDecodeContext(input, profile,
+                    InferenceOutputs.Create("orientation_scores", new Tensor<float>(new TensorShape(2, 4), new[] { .8f, .1f, .05f, .05f, .05f, .05f, .1f, .8f })), CancellationToken.None))).ErrorCode);
+        }
+
+        [TestMethod]
         public void DecoderRejectsNonFiniteInvalidProbabilityAndCancellation()
         {
             var decoder = Decoder(OcrOrientationValueSemantics.Probability);

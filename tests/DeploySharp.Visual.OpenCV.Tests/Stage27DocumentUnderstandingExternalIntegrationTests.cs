@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -42,6 +44,53 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Console.WriteLine("STAGE27_DOCUMENT_EVIDENCE imageSha=8612d04b70f430f3aef07fbbd5200e382dcc4152b344cc2eff9f735f05a257c8;ortFeatureSha=" + ort.State.FeatureSha256 + ";openVinoFeatureSha=" + openVino.State.FeatureSha256 + ";ortPreprocessMs=" + ort.Result.Timing.Preprocess.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";ortEncoderMs=" + ort.Result.Timing.Encode.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";ortPrefillMs=" + ort.Result.Timing.Prefill.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";ortDecodeMs=" + ort.Result.Timing.DecodeTotal.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";openVinoPreprocessMs=" + openVino.Result.Timing.Preprocess.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";openVinoEncoderMs=" + openVino.Result.Timing.Encode.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";openVinoPrefillMs=" + openVino.Result.Timing.Prefill.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";openVinoDecodeMs=" + openVino.Result.Timing.DecodeTotal.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";tokens=" + string.Join(",", OfficialCompletion));
         }
 
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDonutCordV2TwoPageBatchRunsOnIndependentOrtSessions()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_DOCUMENT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_DOCUMENT_RUN_EXTERNAL=1 to run the Stage 27 document page-batch gate.");
+            string root = Environment.GetEnvironmentVariable("DEPLOYSHARP_DOCUMENT_MODEL_ROOT") ?? @"E:\DeploySharp-Models\donut-base-finetuned-cord-v2";
+            string image = Path.Combine(root, "evidence", "cord-test-0", "document.png");
+            Require(image); Require(Path.Combine(root, "checkpoint", "sentencepiece.bpe.model"));
+            foreach (string name in new[] { "encoder_model.onnx", "decoder_model.onnx", "decoder_with_past_model.onnx" }) Require(Path.Combine(root, "onnx", name));
+
+            DocumentUnderstandingProfile profile = DocumentUnderstandingProfiles.CreateDonutCordV2Onnx();
+            BackendId backend = OnnxRuntimeBackendProvider.BackendId;
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var bundle = new DocumentUnderstandingBundle(profile, new[]
+            {
+                Bind(profile, DocumentArtifactRole.DocumentEncoder, Path.Combine(root, "onnx", "encoder_model.onnx"), backend),
+                Bind(profile, DocumentArtifactRole.DecoderPrefill, Path.Combine(root, "onnx", "decoder_model.onnx"), backend),
+                Bind(profile, DocumentArtifactRole.DecoderWithPast, Path.Combine(root, "onnx", "decoder_with_past_model.onnx"), backend)
+            });
+            var request = new BackendRequest(BackendCapabilities.TensorInference, backend, "cpu");
+            using var batch = new DocumentUnderstandingPageBatchSession(registry, bundle, request, maximumConcurrency: 2);
+            var tokenizer = new DonutDocumentTokenizer(Path.Combine(root, "checkpoint"), profile.Tokenizer);
+            using PreparedDocument first = CreateSinglePageDocument(image, profile);
+            using PreparedDocument second = CreateSinglePageDocument(image, profile);
+            DocumentTaskRequest task = DocumentTaskRequest.StructuredExtraction(profile.Schema.SchemaId);
+
+            Stopwatch watch = Stopwatch.StartNew();
+            IReadOnlyList<DocumentUnderstandingResult> results = batch.Run(new[]
+            {
+                new DocumentPageInferenceRequest(first, task, tokenizer),
+                new DocumentPageInferenceRequest(second, task, tokenizer)
+            });
+            watch.Stop();
+
+            Assert.AreEqual(2, results.Count);
+            foreach (DocumentUnderstandingResult result in results)
+            {
+                CollectionAssert.AreEqual(OfficialCompletion, result.Generation.TokenIds.ToArray());
+                Assert.AreEqual(ExpectedJson, result.StructuredOutput.Json);
+                Assert.AreEqual(DocumentParseStatus.Success, result.StructuredOutput.Status);
+            }
+            CollectionAssert.AreEqual(results[0].Generation.TokenIds.ToArray(), results[1].Generation.TokenIds.ToArray());
+            Assert.AreEqual(results[0].StructuredOutput.Json, results[1].StructuredOutput.Json);
+            Console.WriteLine("STAGE27_DOCUMENT_PAGE_BATCH_ORT pages=2;channels=" + batch.MaximumConcurrency.ToString(CultureInfo.InvariantCulture) + ";totalMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";tokens=" + OfficialCompletion.Length.ToString(CultureInfo.InvariantCulture) + ";text=" + results[0].Generation.Text);
+        }
+
         private static Evidence Run(string root, string image, bool openVino)
         {
             DocumentUnderstandingProfile profile = openVino ? DocumentUnderstandingProfiles.CreateDonutCordV2OpenVino() : DocumentUnderstandingProfiles.CreateDonutCordV2Onnx(); string directory = Path.Combine(root, openVino ? "openvino" : "onnx"); string extension = openVino ? ".xml" : ".onnx"; BackendId backend = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
@@ -51,6 +100,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var tokenizer = new DonutDocumentTokenizer(Path.Combine(root, "checkpoint"), profile.Tokenizer); using PreparedDocumentPage page = new OpenCvDocumentUnderstandingInputFactory().CreatePageFromFile(image, profile); using var document = new PreparedDocument(profile, new[] { page }); DocumentEncodedState state = session.SetDocument(document); DocumentUnderstandingResult result = session.Generate(DocumentTaskRequest.StructuredExtraction(profile.Schema.SchemaId), tokenizer); session.Clear(); Assert.AreEqual(VisualErrorCodes.DocumentUnderstandingStateInvalid, Assert.ThrowsExactly<VisualException>(() => session.Generate(DocumentTaskRequest.StructuredExtraction(profile.Schema.SchemaId), tokenizer)).ErrorCode); return new Evidence(state, result);
         }
         private static DocumentArtifactBinding Bind(DocumentUnderstandingProfile profile, DocumentArtifactRole role, string path, BackendId backend) => new DocumentArtifactBinding(role, profile.CreateArtifact(role, path, backend));
+        private static PreparedDocument CreateSinglePageDocument(string image, DocumentUnderstandingProfile profile)
+        {
+            PreparedDocumentPage page = new OpenCvDocumentUnderstandingInputFactory().CreatePageFromFile(image, profile);
+            return new PreparedDocument(profile, new[] { page });
+        }
         private static object EvidenceJson(Evidence evidence) => new { featureSha256 = evidence.State.FeatureSha256, kvSha256 = evidence.Result.KvState.Sha256, tokens = evidence.Result.Generation.TokenIds, rawText = evidence.Result.Generation.Text, parseStatus = evidence.Result.StructuredOutput.Status.ToString(), timingMilliseconds = new { preprocess = evidence.Result.Timing.Preprocess.TotalMilliseconds, encoder = evidence.Result.Timing.Encode.TotalMilliseconds, tokenize = evidence.Result.Timing.Tokenize.TotalMilliseconds, prefill = evidence.Result.Timing.Prefill.TotalMilliseconds, decodeSteps = evidence.Result.Timing.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), decodeTotal = evidence.Result.Timing.DecodeTotal.TotalMilliseconds, finalDecode = evidence.Result.Timing.FinalDecode.TotalMilliseconds, parse = evidence.Result.Timing.Parse.TotalMilliseconds } };
         private static void Require(string path) { if (!File.Exists(path) && !Directory.Exists(path)) Assert.Inconclusive("External Stage 27 asset is missing: " + path); }
         private sealed class Evidence { internal Evidence(DocumentEncodedState state, DocumentUnderstandingResult result) { State = state; Result = result; } internal DocumentEncodedState State { get; } internal DocumentUnderstandingResult Result { get; } }

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "status": "three-graph-export-parity-verified-runtime-pending",
+  "model": "openai/whisper-tiny.en",
+  "revision": "87c7102498dcde7456f24cfd30239ca606ed9063",
+  "exporter": "eng/models/audio-speech/scripts/export_whisper.py",
+  "opset": 17,
+  "graphs": {
+    "encoder": {
+      "file": "whisper-tiny.en-encoder.onnx",
+      "size": 32886136,
+      "sha256": "6e0e951d8d047ddfe2cc7ba2e48bb6cbd2cec40c86e71da9f6068c4d1b369a32",
+      "inputs": ["input_features"],
+      "outputs": ["last_hidden_state"]
+    },
+    "decoderPrefill": {
+      "file": "whisper-tiny.en-decoder-prefill.onnx",
+      "size": 197981403,
+      "sha256": "2719910b3ad1b2d9266a7eae42ba57ecf4d0791efd2ead7a544a2453f0e7599b",
+      "inputs": ["input_ids", "encoder_hidden_states"],
+      "outputs": ["logits", "present.<layer>.decoder.{key,value}", "present.<layer>.encoder.{key,value}"]
+    },
+    "decoderWithPast": {
+      "file": "whisper-tiny.en-decoder-with-past.onnx",
+      "size": 193242328,
+      "sha256": "85644c602b815b9a58a1f96e92d9a99016a49049c4a4a71a0a1958f0add3938a",
+      "inputs": ["input_ids", "past_key_values.<layer>.decoder.{key,value}", "past_key_values.<layer>.encoder.{key,value}"],
+      "outputs": ["logits", "present.<layer>.decoder.{key,value}", "present.<layer>.encoder.{key,value}"]
+    }
+  },
+  "parity": {
+    "provider": "onnxruntime-cpu",
+    "encoderMaxAbsoluteDifference": 0.0014629364,
+    "decoderPrefillMaxAbsoluteDifference": 0.0000300407,
+    "decoderWithPastMaxAbsoluteDifference": 0.0000400543,
+    "decoderWithPastCacheMaxAbsoluteDifference": 0.0000090599,
+    "greedyTokenParity": true,
+    "continuousDecodeSteps": 4,
+    "sampledPrefillNextToken": 685,
+    "sampledDecodeTokens": [22648, 60, 50256, 50256]
+  },
+  "environment": {
+    "os": "Windows 10 10.0.26200",
+    "python": "3.10.20",
+    "torch": "2.10.0+cpu",
+    "transformers": "5.3.0",
+    "onnx": "1.20.1",
+    "onnxruntime": "1.23.2",
+    "numpy": "2.2.6"
+  },
+  "admissionNote": "This export-only evidence records graph conversion and PyTorch parity. The graphs and source checkpoint remain outside Git and are not downloadable release assets; C# runtime and licensed real-WAV parity are recorded in the separate csharp evidence files."
+}

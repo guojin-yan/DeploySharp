@@ -43,6 +43,14 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void OfficialMobileDetectorDoesNotUpscaleSmallImages()
+        {
+            OpenCvPreprocessOptions options = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(new VisualSize(500, 500));
+
+            Assert.AreEqual(new VisualSize(512, 512), options.ModelSize);
+        }
+
+        [TestMethod]
         public void OfficialRecognitionAndOrientationUseArchiveNormalization()
         {
             OpenCvPreprocessOptions recognition = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceRecognitionOptions();

@@ -109,6 +109,26 @@ namespace DeploySharp.Backend.OpenVINO.Tests
         }
 
         [TestMethod]
+        public async Task IndependentSessionPoolPreservesResultsAcrossConcurrentCalls()
+        {
+            using IInferenceSession session = OpenVinoTestData.Open(OpenVinoTestData.OnnxArtifact("classification.onnx"), new SessionOptions(maxConcurrency: 2));
+            Task<float[]>[] calls = Enumerable.Range(0, 4)
+                .Select(_ => Task.Run(() => ((Tensor<float>)session.Run(OpenVinoTestData.ClassificationInputs(), CancellationToken.None).GetRequired("scores")).ToArray()))
+                .ToArray();
+            float[][] results = await Task.WhenAll(calls);
+            foreach (float[] actual in results) CollectionAssert.AreEqual(new[] { 1f, 2f, 3f }, actual);
+        }
+
+        [TestMethod]
+        public async Task AsyncPoolCallsPreserveResultsAcrossIndependentCompiledModels()
+        {
+            using IInferenceSession session = OpenVinoTestData.Open(OpenVinoTestData.OnnxArtifact("classification.onnx"), new SessionOptions(maxConcurrency: 2));
+            Task<InferenceOutputs>[] calls = Enumerable.Range(0, 4).Select(_ => session.RunAsync(OpenVinoTestData.ClassificationInputs(), CancellationToken.None)).ToArray();
+            InferenceOutputs[] results = await Task.WhenAll(calls);
+            foreach (InferenceOutputs result in results) CollectionAssert.AreEqual(new[] { 1f, 2f, 3f }, ((Tensor<float>)result.GetRequired("scores")).ToArray());
+        }
+
+        [TestMethod]
         public void UnsupportedDeviceAndDisposedProviderRemainDiagnosable()
         {
             using var provider = new OpenVinoBackendProvider();

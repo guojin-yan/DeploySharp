@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.OpenCV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,6 +46,20 @@ namespace DeploySharp.Visual.OpenCV.Tests
             AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWav2Vec2Base960hOnnx(); using PreparedAudioInput input = new OpenCvAudioInputFactory().CreateFromWavFile(wav, profile, "LibriSpeech CC-BY-4.0 row 6930-75918-0000", "openslr/librispeech_asr:clean/test:0"); float[] actual = (float[])input.Tensor.Buffer; byte[] bytes = File.ReadAllBytes(golden); var expected = new float[bytes.Length / sizeof(float)]; Buffer.BlockCopy(bytes, 0, expected, 0, bytes.Length); Assert.AreEqual(expected.Length, actual.Length);
             double maximum = 0, mean = 0; for (int index = 0; index < actual.Length; index++) { double difference = Math.Abs(actual[index] - expected[index]); maximum = Math.Max(maximum, difference); mean += difference; } mean /= actual.Length;
             Assert.IsTrue(maximum <= 0.0000005, "max=" + maximum + ";mean=" + mean); Assert.IsTrue(mean <= 0.00000002, "mean=" + mean); Assert.AreEqual("103c3f15eb3715ebc6243d142244128a3ac39b6bfae315baa6b8dc4a8be14aa8", input.Source.SourceSha256); Assert.AreEqual(56080, input.Tensor.Shape[1]);
+        }
+
+        [TestMethod]
+        public void WhisperWavPreparationMatchesDirectLogMelExtractionWhenCheckpointIsPresent()
+        {
+#if NET8_0 || NET9_0 || NET10_0
+            string checkpoint = Environment.GetEnvironmentVariable("DEPLOYSHARP_WHISPER_CHECKPOINT") ?? @"E:\DeploySharp-Models\whisper-tiny.en\checkpoint";
+            if (!Directory.Exists(checkpoint)) Assert.Inconclusive("The pinned Whisper checkpoint is not available: " + checkpoint);
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWhisperTinyEnglishOnnx(); var extractor = new WhisperLogMelExtractor(checkpoint, profile.Processor); var samples = new float[16000]; samples[4000] = 0.5f; byte[] wav = Wav(samples, 16000, 1, false);
+            using PreparedWhisperInput input = new OpenCvAudioInputFactory().CreateWhisperFromWavBytes(wav, profile, extractor, "unit-whisper-wav"); Tensor<float> expected = extractor.Extract(samples);
+            Assert.AreEqual(new TensorShape(1, 80, 3000), input.Tensor.Shape); CollectionAssert.AreEqual((float[])expected.Buffer, (float[])input.Tensor.Buffer); Assert.AreEqual(64, input.SourceSha256.Length); Assert.AreEqual(64, input.FeatureSha256.Length); Assert.IsTrue(input.PreprocessTime > TimeSpan.Zero); Console.WriteLine("STAGE28_WHISPER_WAV prepMs=" + input.PreprocessTime.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";shape=" + string.Join("x", input.Tensor.Shape.ToArray()));
+#else
+            Assert.Inconclusive("The managed Whisper WAV preparation requires net8.0 or later.");
+#endif
         }
 
         private static byte[] Wav(float[] values, int sampleRate, int channels, bool float32)

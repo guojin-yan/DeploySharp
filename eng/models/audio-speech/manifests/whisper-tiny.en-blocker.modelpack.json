@@ -4,10 +4,10 @@
   "name": "OpenAI Whisper tiny.en official source-contract blocker",
   "family": "whisper",
   "task": "automatic-speech-recognition",
-  "modelVersion": "whisper-tiny.en-87c7102-blocked",
-  "exporter": { "name": "none-complete-audited-three-graph-bundle", "version": "blocked", "sourceRevision": "87c7102498dcde7456f24cfd30239ca606ed9063" },
+  "modelVersion": "whisper-tiny.en-87c7102-real-wav-verified-public-bundle-pending",
+  "exporter": { "name": "deploysharp-local-export_whisper.py", "version": "opset17-csharp-session-real-wav-parity-verified-public-bundle-pending", "sourceRevision": "87c7102498dcde7456f24cfd30239ca606ed9063" },
   "source": { "sourceUrl": "https://huggingface.co/openai/whisper-tiny.en", "projectUrl": "https://github.com/openai/whisper", "revision": "87c7102498dcde7456f24cfd30239ca606ed9063", "author": "OpenAI", "licenseExpression": "Apache-2.0", "redistributionAllowed": false },
-  "generatedAt": "2026-08-10T00:00:00Z",
+  "generatedAt": "2026-08-31T00:00:00Z",
   "profileId": "audio.whisper.tiny.en.source-contract",
   "inputs": [{ "name": "input_features", "elementType": "float32", "shape": [1, 80, 3000] }, { "name": "input_ids", "elementType": "int64", "shape": [1, -1] }],
   "outputs": [{ "name": "last_hidden_state", "elementType": "float32", "shape": [1, 1500, 384] }, { "name": "logits", "elementType": "float32", "shape": [1, -1, 51864] }],
@@ -33,7 +33,7 @@
     ],
     "precision": "fp32", "quantization": "none", "portable": false,
     "extensions": {
-      "deploysharp.bundle-role": "official-source-contract", "deploysharp.bundle-version": "whisper-tiny.en-87c7102-blocked", "deploysharp.processor-id": "openai-whisper-feature-extractor-tiny.en-87c7102", "deploysharp.tokenizer-id": "openai-whisper-tiny.en-tokenizer-87c7102", "deploysharp.language": "en", "deploysharp.sample-rate": "16000", "deploysharp.timestamp-mode": "whisper-timestamp-token-0.02s", "deploysharp.speaker-mode": "none", "deploysharp.audio-feature-id": "whisper-log-mel-80-nfft400-hop160-frames3000-v1", "deploysharp.kv-cache-schema-id": "whisper-optimum-named-past-present-4x6x64-v1", "deploysharp.validation-status": "official-source-contract-only", "deploysharp.blocker": "No audited Whisper Encoder, Decoder Prefill and named Past/Present KV Decode export with per-token parity exists in this stage; no Whisper execution, Beam, sampling, translation, word timestamps or streaming is claimed."
+      "deploysharp.bundle-role": "official-source-contract", "deploysharp.bundle-version": "whisper-tiny.en-87c7102-real-wav-verified-public-bundle-pending", "deploysharp.processor-id": "openai-whisper-feature-extractor-tiny.en-87c7102", "deploysharp.tokenizer-id": "openai-whisper-tiny.en-tokenizer-87c7102", "deploysharp.language": "en", "deploysharp.sample-rate": "16000", "deploysharp.timestamp-mode": "whisper-timestamp-token-0.02s", "deploysharp.speaker-mode": "none", "deploysharp.audio-feature-id": "whisper-log-mel-80-nfft400-hop160-frames3000-v1", "deploysharp.kv-cache-schema-id": "whisper-optimum-named-past-present-4x6x64-v1", "deploysharp.validation-status": "local-three-graph-export-csharp-session-real-wav-parity-verified-public-bundle-pending", "deploysharp.local-export-script": "eng/models/audio-speech/scripts/export_whisper.py", "deploysharp.local-export-evidence": "E:/DeploySharp-Models/whisper-tiny.en/onnx-whisper-three-graph/export-evidence.json", "deploysharp.csharp-runtime-evidence": "eng/models/audio-speech/evidence/whisper-tiny.en-csharp-ort-parity-20260831.json", "deploysharp.real-wav-evidence": "eng/models/audio-speech/evidence/whisper-tiny.en-csharp-ort-librispeech-20260831.json", "deploysharp.blocker": "The local three-graph export, C# tokenizer, prompt construction, managed WAV log-Mel preparation, and greedy session pass parity on a licensed LibriSpeech fixture. The source-only profile has no executable graph bindings; no public executable catalog admission, Beam, sampling, translation, word timestamps or streaming is claimed until a traceable downloadable three-graph bundle is reviewed."
     }
   }],
   "extensions": { "deploysharp.algorithm-verified": "false", "deploysharp.uploaded": "false", "deploysharp.downloadable": "false", "deploysharp.redistribution-allowed": "false" }

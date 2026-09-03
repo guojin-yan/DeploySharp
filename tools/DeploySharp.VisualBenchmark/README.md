@@ -1,0 +1,29 @@
+# DeploySharp.VisualBenchmark
+
+Measures real visual deployment pipelines, separating OpenCV preprocessing, backend inference, managed decoding, small pipeline overhead, and managed allocations. Session construction is excluded; the source object and its identity are created once per case/backend. ONNX Runtime CPU/CUDA, OpenVINO CPU, OpenCV DNN CPU, TensorRT with CPU-prepared tensors, and TensorRT with fused CUDA preprocessing are supported. The runner uses production OpenCV defaults (Fusion and Winograd enabled); it must not be used to compare arbitrary backend settings unless the settings are recorded with the report.
+
+`--mode cold` (the default) decodes and prepares a fresh input for every warm-up/timed call, which represents end-to-end image-file latency. `--mode steady` prepares one input once and reuses it for every pipeline call, which isolates backend inference, postprocessing, and orchestration for applications that process an unchanged frame or keep a prepared-input pool. `--mode both` emits one row for each path. Steady rows report the one-time preparation in `preparation_setup_ms` and set per-call `preprocess_ms`/`preprocess_allocated_bytes` to zero.
+
+For TensorRT, an ONNX model path automatically resolves to the sibling `<model>.onnx.engine` file. Set `DEPLOYSHARP_TENSORRT_API` to `8`, `10`, or `11` when needed (default `11`) and set `DEPLOYSHARP_CUDA_ARCHITECTURE` such as `compute_75` to enable optional CUDA reductions. TensorRT steady mode also enables immutable prepared-input caching: repeated calls with the exact same `PreparedVisualInput` retain its device copy and skip repeated host-to-device upload. Cold mode still uploads every newly prepared image.
+
+Use `--backend tensorrt-cuda` to decode only to compact BGR bytes on the host, upload three `UInt8` channels, and fuse resize/letterbox, color conversion, and normalization in CUDA immediately before TensorRT on the same stream. Its steady mode reuses the decoded BGR frame but deliberately uploads it on every iteration, which represents a live decoded-frame stream rather than an unchanged pre-uploaded tensor. Existing `--backend tensorrt` remains the CPU-preprocessing compatibility and comparison path.
+
+`tensorrt-cuda` also enables admitted CUDA postprocessing for compatible single-channel maps and packed YOLO instance segmentation. Set `DEPLOYSHARP_TENSORRT_CUDA_POSTPROCESSING=0` to force the CPU decoder. Set `DEPLOYSHARP_TENSORRT_CUDA_VALIDATE_POSTPROCESSING=1` to run an untimed same-process CPU/GPU result comparison before the benchmark; map validation reports maximum/mean absolute pixel error, while instance segmentation validates retained metadata and requires zero differing mask pixels. Unsupported contracts automatically stay on CPU.
+
+The CSV contains mean, p50, and p95 columns for preprocessing, backend inference, postprocessing, orchestration, and total latency. Allocation columns are bytes allocated on the benchmark thread during one timed call; they are diagnostic rather than a complete native-memory measurement.
+
+Set `DEPLOYSHARP_BENCHMARK_RESULT_DETAILS=1` for a controlled correctness comparison. Detection rows then include every class, score, and source-space box in `result_summary`; leave it disabled for ordinary performance reports to keep CSV rows compact.
+
+For the exact admitted YOLOv7 artifact, `--backend opencv-dnn` binds the verified raw head `onnx_node!/model/model.105/Concat_3` and uses DeploySharp managed decode/NMS because OpenCV 5.0 cannot propagate the graph-internal data-dependent NMS/Gather output shape. Other backends retain the graph's end-to-end output. This selection is tied to the benchmark's recorded artifact SHA and is not a generic layer-name guess.
+
+For the remote Windows test host:
+
+```powershell
+dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind all --image E:\DeploySharp-Remote\data\image\bus.jpg --model-yolov8n E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8n.onnx --model-yolov8n-seg E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8n-seg.onnx --model-yolov8s-pose E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8s-pose.onnx --model-yolov8s-obb E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8s-obb.onnx --model-padim E:\DeploySharp-Remote\models\anomalib\Padim\model\padim.onnx --model-rmbg14 E:\DeploySharp-Remote\models\RMBG\bria-rmbg-1.4.onnx --backend all --mode both --warmup 3 --iterations 10 --output E:\DeploySharp-Remote\artifacts\visual-baseline.csv
+```
+
+Use `--backend onnxruntime-cuda` to request the official `Microsoft.ML.OnnxRuntime.Gpu.Windows` provider on CUDA device 0. An `unavailable` result records provider/device initialization failure (for example CUDA error 801) and never falls back to CPU. `opencv-dnn` rows marked `unsupported` were actually imported and run until OpenCV DNN rejected an unsupported ONNX operator or shape. They are not skipped measurements.
+
+For graphs whose dynamic Transformer shape path is not safely importable by OpenCV DNN 5.0 (currently DEIMv2, PP-YOLOE, and RF-DETR), the matrix runner reports `unsupported` before import so an aggregate run remains safe. The OpenCV provider preserves DEIMv2/RF-DETR source graphs and returns a managed `DS-OCV-8002` diagnostic instead of applying risky rewrites. Set `DEPLOYSHARP_OPENCV_ALLOW_NATIVE_CRASH_PROBES=1` only when running one isolated diagnostic process.
+
+Set `DEPLOYSHARP_OPENCV_ENABLE_FUSION=0` or `DEPLOYSHARP_OPENCV_ENABLE_WINOGRAD=0` only for a controlled OpenCV compatibility A/B run. Both optimizations remain enabled by default; reports produced with either override must record that configuration and must not be compared with default rows as if they used the same execution path.

@@ -64,6 +64,40 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void CompactBgrDecodeMatchesExistingUInt8HwcPath()
+        {
+            OpenCvBgrImage compact = new OpenCvBgrImageFactory().CreateFromFile(Fixture("rgb.png"), "compact");
+            var options = new OpenCvPreprocessOptions(
+                new VisualSize(compact.Width, compact.Height),
+                OpenCvResizeMode.Resize,
+                VisualColorOrder.Bgr,
+                layout: VisualTensorLayout.Hwc,
+                outputType: OpenCvOutputType.UInt8);
+            using PreparedVisualInput existing = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), "existing", options);
+
+            Assert.AreEqual(3, compact.Width);
+            Assert.AreEqual(2, compact.Height);
+            Assert.AreEqual(18, compact.ByteLength);
+            Assert.AreEqual("compact", compact.InputId);
+            CollectionAssert.AreEqual(((Tensor<byte>)existing.Tensor).ToArray(), compact.ToArray());
+        }
+
+        [TestMethod]
+        public void CompactBgrImageHonorsCopyAndTransferOwnership()
+        {
+            byte[] copiedSource = { 1, 2, 3 };
+            var copied = new OpenCvBgrImage(1, 1, copiedSource, TensorBufferOwnership.Copy);
+            copiedSource[0] = 9;
+            CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, copied.ToArray());
+
+            byte[] transferredSource = { 4, 5, 6 };
+            var transferred = new OpenCvBgrImage(1, 1, transferredSource, TensorBufferOwnership.Transfer);
+            Assert.AreSame(transferredSource, transferred.GetReadOnlyInteropBuffer());
+            transferredSource[0] = 7;
+            CollectionAssert.AreEqual(new byte[] { 7, 5, 6 }, transferred.ToArray());
+        }
+
+        [TestMethod]
         public void RgbInputProducesNchwFloatTensorAndResizeTransform()
         {
             var options = new OpenCvPreprocessOptions(new VisualSize(2, 2), means: new[] { 1f, 2f, 3f }, standardDeviations: new[] { 1f, 2f, 4f });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.ModelFactory;
 
@@ -26,6 +27,10 @@ namespace DeploySharp.ModelFactory.Cli
                 {
                     case "list":
                         return List(commandArgs);
+                    case "show":
+                        return Show(commandArgs);
+                    case "doctor":
+                        return Doctor(commandArgs);
                     case "install":
                         return await InstallAsync(commandArgs).ConfigureAwait(false);
                     default:
@@ -58,29 +63,182 @@ namespace DeploySharp.ModelFactory.Cli
 
         private static int List(string[] args)
         {
-            EnsureKnownOptions(args, "--preview");
+            EnsureKnownOptions(args, "--preview", "--json");
             bool includePreview = HasFlag(args, "--preview");
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
-            Console.WriteLine("catalog-revision=" + catalog.Document.CatalogRevision);
-            Console.WriteLine("model-id\tstatus\ttask\tartifact\tformat\tbackends");
+            var rows = new List<CatalogArtifactRow>();
             foreach (ModelCatalogEntry entry in catalog.Document.Entries.OrderBy(value => value.ModelId, StringComparer.Ordinal))
             {
                 if (!includePreview && entry.Status != ModelCatalogStatus.Supported) continue;
                 foreach (ModelCatalogArtifact artifact in entry.Artifacts.OrderBy(value => value.ArtifactId, StringComparer.Ordinal))
                 {
-                    Console.WriteLine(string.Join("\t", new[]
-                    {
-                        entry.ModelId ?? "",
+                    rows.Add(new CatalogArtifactRow(
+                        entry.ModelId,
                         entry.Status.ToString(),
-                        entry.Task ?? "",
-                        artifact.ArtifactId ?? "",
-                        artifact.Format ?? "",
-                        string.Join(",", artifact.CompatibleBackends)
-                    }));
+                        entry.Task,
+                        artifact.ArtifactId,
+                        artifact.Format,
+                        artifact.Precision,
+                        artifact.Quantization,
+                        artifact.CompatibleBackends));
                 }
+            }
+            if (HasFlag(args, "--json"))
+            {
+                WriteJson(new { catalogRevision = catalog.Document.CatalogRevision, preview = includePreview, entries = rows });
+                return 0;
+            }
+
+            Console.WriteLine("catalog-revision=" + catalog.Document.CatalogRevision);
+            Console.WriteLine("model-id\tstatus\ttask\tartifact\tformat\tbackends");
+            foreach (CatalogArtifactRow row in rows)
+            {
+                Console.WriteLine(string.Join("\t", new[]
+                {
+                    row.ModelId ?? "",
+                    row.Status ?? "",
+                    row.Task ?? "",
+                    row.Artifact ?? "",
+                    row.Format ?? "",
+                    string.Join(",", row.Backends)
+                }));
             }
 
             return 0;
+        }
+
+        private static int Show(string[] args)
+        {
+            EnsureKnownOptions(args, "--model-id", "--preview", "--json");
+            string modelId = RequireOption(args, "--model-id");
+            bool includePreview = HasFlag(args, "--preview");
+            ModelCatalogEntry entry = OfficialModelCatalog.Load().Document.Entries.FirstOrDefault(value => string.Equals(value.ModelId, modelId, StringComparison.OrdinalIgnoreCase))
+                ?? throw new ArgumentException("The requested model ID is not present in the official catalog: " + modelId);
+            if (entry.Status != ModelCatalogStatus.Supported && !includePreview)
+            {
+                throw new ArgumentException("The requested model is not Supported. Add --preview to inspect Preview or External entries.");
+            }
+
+            var payload = new
+            {
+                modelId = entry.ModelId,
+                name = entry.Name,
+                family = entry.Family,
+                task = entry.Task,
+                modelVersion = entry.ModelVersion,
+                status = entry.Status.ToString(),
+                description = entry.Description,
+                documentation = entry.DocumentationPath,
+                release = entry.Release == null ? null : new { entry.Release.Owner, entry.Release.Repository, entry.Release.Tag, entry.Release.Commit },
+                artifacts = entry.Artifacts.Select(artifact => new
+                {
+                    artifactId = artifact.ArtifactId,
+                    format = artifact.Format,
+                    artifact.Precision,
+                    artifact.Quantization,
+                    artifact.Portable,
+                    backends = artifact.CompatibleBackends,
+                    artifact.BundleRole,
+                    artifact.BundleVersion,
+                    capabilities = artifact.Capabilities,
+                    requiredAssetIds = artifact.RequiredAssetIds,
+                    assets = artifact.Assets.Select(asset => new
+                    {
+                        assetId = asset.AssetId,
+                        kind = asset.Kind.ToString(),
+                        asset.ReleaseTag,
+                        downloadUri = asset.DownloadUri?.ToString(),
+                        asset.RelativePath,
+                        asset.Size,
+                        asset.Sha256,
+                        asset.MediaType,
+                        asset.LicenseExpression
+                    })
+                })
+            };
+            if (HasFlag(args, "--json"))
+            {
+                WriteJson(payload);
+                return 0;
+            }
+
+            Console.WriteLine("model-id=" + payload.modelId);
+            Console.WriteLine("name=" + payload.name);
+            Console.WriteLine("status=" + payload.status + ";family=" + payload.family + ";task=" + payload.task + ";version=" + payload.modelVersion);
+            Console.WriteLine("documentation=" + payload.documentation);
+            foreach (var artifact in payload.artifacts)
+            {
+                Console.WriteLine("artifact=" + artifact.artifactId + ";format=" + artifact.format + ";precision=" + artifact.Precision + ";quantization=" + artifact.Quantization + ";backends=" + string.Join(",", artifact.backends));
+                foreach (var asset in artifact.assets) Console.WriteLine("  asset=" + asset.assetId + ";kind=" + asset.kind + ";path=" + asset.RelativePath + ";size=" + asset.Size + ";sha256=" + asset.Sha256);
+            }
+
+            return 0;
+        }
+
+        private static int Doctor(string[] args)
+        {
+            EnsureKnownOptions(args, "--cache", "--json");
+            string cacheRoot = ReadOption(args, "--cache") ?? GetDefaultCacheRoot();
+            ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
+            int previewCount = catalog.Document.Entries.Count(value => value.Status == ModelCatalogStatus.Preview);
+            var payload = new
+            {
+                status = "ok",
+                cliVersion = typeof(Program).Assembly.GetName().Version?.ToString(),
+                dotnet = Environment.Version.ToString(),
+                os = Environment.OSVersion.VersionString,
+                architecture = Environment.Is64BitProcess ? "x64" : "x86",
+                catalogRevision = catalog.Document.CatalogRevision,
+                catalogEntries = catalog.Document.Entries.Count,
+                previewEntries = previewCount,
+                cacheRoot,
+                cacheExists = Directory.Exists(cacheRoot),
+                note = "This command checks ModelFactory metadata only; backend native runtimes are application-owned."
+            };
+            if (HasFlag(args, "--json")) WriteJson(payload);
+            else
+            {
+                Console.WriteLine("status=" + payload.status);
+                Console.WriteLine("dotnet=" + payload.dotnet + ";os=" + payload.os + ";architecture=" + payload.architecture);
+                Console.WriteLine("catalog-revision=" + payload.catalogRevision + ";entries=" + payload.catalogEntries + ";preview=" + payload.previewEntries);
+                Console.WriteLine("cache=" + payload.cacheRoot + ";exists=" + payload.cacheExists);
+                Console.WriteLine(payload.note);
+            }
+
+            return 0;
+        }
+
+        private static void WriteJson(object value)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(value, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }));
+        }
+
+        private sealed class CatalogArtifactRow
+        {
+            public CatalogArtifactRow(string? modelId, string? status, string? task, string? artifact, string? format, string? precision, string? quantization, IReadOnlyList<string> backends)
+            {
+                ModelId = modelId;
+                Status = status;
+                Task = task;
+                Artifact = artifact;
+                Format = format;
+                Precision = precision;
+                Quantization = quantization;
+                Backends = backends;
+            }
+
+            public string? ModelId { get; }
+            public string? Status { get; }
+            public string? Task { get; }
+            public string? Artifact { get; }
+            public string? Format { get; }
+            public string? Precision { get; }
+            public string? Quantization { get; }
+            public IReadOnlyList<string> Backends { get; }
         }
 
         private static async Task<int> InstallAsync(string[] args)
@@ -237,13 +395,17 @@ namespace DeploySharp.ModelFactory.Cli
             Console.WriteLine("DeploySharp ModelFactory CLI");
             Console.WriteLine();
             Console.WriteLine("Commands:");
-            Console.WriteLine("  list [--preview]");
+            Console.WriteLine("  doctor [--cache <path>] [--json]");
+            Console.WriteLine("  list [--preview] [--json]");
+            Console.WriteLine("  show --model-id <id> [--preview] [--json]");
             Console.WriteLine("  install --model-id <id> [--backend <id>] [--format <format>] [--precision <id>] [--quantization <id>]");
             Console.WriteLine("          [--cache <path>] [--preview] [--offline]");
             Console.WriteLine("          [--timeout-minutes <number>] [--max-retries <number>]");
             Console.WriteLine();
             Console.WriteLine("Examples:");
+            Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- doctor --json");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- list --preview");
+            Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- show --model-id bria/rmbg-2.0 --preview");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id yolo/v8/detect/n --backend onnxruntime --format onnx --preview");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id bria/rmbg-2.0 --backend onnxruntime --format onnx --precision int8 --quantization dynamic --preview");
             Console.WriteLine("  dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id yolo/v8/detect/n --offline --cache D:\\DeploySharpCache");

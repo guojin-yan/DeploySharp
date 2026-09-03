@@ -33,7 +33,7 @@ foreach ($node in @($centralDocument.SelectNodes("//*[local-name()='PackageVersi
 $candidate = Get-Content -LiteralPath (Join-Path $repository 'eng\pack\release-candidate-packages.json') -Raw | ConvertFrom-Json
 $candidateIds = @($candidate.packages.packageId)
 $testedPlatform = @($matrix.platforms | Where-Object { $_.platformId -eq 'windows-x64-cpu' })
-if ($testedPlatform.Count -ne 1 -or [string]$testedPlatform[0].status -ne 'tested') { throw 'Windows x64 CPU must be the only current tested platform record.' }
+if ($testedPlatform.Count -ne 1 -or [string]$testedPlatform[0].status -ne 'tested') { throw 'Windows x64 CPU must have a tested platform record.' }
 Assert-ExactSet @($testedPlatform[0].claims.packageId) $candidateIds 'Windows x64 CPU package claims'
 
 $claimCount = 0

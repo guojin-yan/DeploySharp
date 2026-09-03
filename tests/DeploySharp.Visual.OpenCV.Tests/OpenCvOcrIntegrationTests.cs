@@ -100,6 +100,33 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void RecognitionTensorPoolReusesSequentialBuffersAndIsolatesActiveLeases()
+        {
+            var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            var input = new OpenCvOcrImageInputFactory().CreateFromFile(Fixture("ocr.png"), "images", detectorOptions);
+            TextCropRequest request = Request(TextOrientation.Degrees0, CropProfile());
+            float[] firstBuffer;
+            string firstDigest;
+            using (PreparedVisualInput first = input.PrepareRecognitionBatch("crops", new[] { request }, CancellationToken.None))
+            {
+                firstBuffer = (float[])first.Tensor.Buffer;
+                firstDigest = Sha256(firstBuffer);
+            }
+
+            PreparedVisualInput active = input.PrepareRecognitionBatch("crops", new[] { request }, CancellationToken.None);
+            Assert.AreSame(firstBuffer, active.Tensor.Buffer, "A disposed sequential batch should return its exact-sized tensor buffer to the image-local pool.");
+            Assert.AreEqual(firstDigest, Sha256((float[])active.Tensor.Buffer));
+            using (PreparedVisualInput concurrent = input.PrepareRecognitionBatch("crops", new[] { request }, CancellationToken.None))
+            {
+                Assert.AreNotSame(active.Tensor.Buffer, concurrent.Tensor.Buffer, "Simultaneously active batches must never share a writable tensor buffer.");
+                Assert.AreEqual(firstDigest, Sha256((float[])concurrent.Tensor.Buffer));
+            }
+
+            input.Dispose();
+            active.Dispose();
+        }
+
+        [TestMethod]
         public void DynamicOddWidthHandlesVerticalThinAndOutsideSourceCrops()
         {
             var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);

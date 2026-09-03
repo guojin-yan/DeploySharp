@@ -89,17 +89,17 @@ function Get-LocalStorage([string]$modelId) {
 }
 
 function Get-AcquisitionArticle([string]$modelId, [string]$manifestPath) {
-    if ($manifestPath -match '\\yolo\\') { return 'docs/articles/model-acquisition-yolo.md' }
-    if ($manifestPath -match '\\detr\\') { return 'docs/articles/model-acquisition-detr-rtdetr.md' }
-    if ($manifestPath -match '\\ocr-anomaly-rmbg\\') { return 'docs/articles/model-acquisition-ocr-anomaly-rmbg.md' }
-    if ($manifestPath -match '\\sam\\' -or $manifestPath -match '\\open-vocabulary\\') { return 'docs/articles/model-acquisition-sam-grounded-sam.md' }
-    if ($manifestPath -match '\\vision-language\\') { return 'docs/articles/model-acquisition-clip-siglip.md' }
-    if ($manifestPath -match '\\generative-vision-language\\') { return 'docs/articles/model-acquisition-blip-family.md' }
-    if ($manifestPath -match '\\native-multimodal\\') { return 'docs/articles/model-acquisition-native-multimodal.md' }
-    if ($manifestPath -match '\\document-understanding\\') { return 'docs/articles/model-acquisition-document-understanding.md' }
-    if ($manifestPath -match '\\audio-speech\\') { return 'docs/articles/model-acquisition-audio-speech.md' }
-    if ($manifestPath -match '\\llm\\') { return 'docs/articles/model-acquisition-llm-gguf.md' }
-    return 'docs/articles/development-model-inventory.md'
+    if ($manifestPath -match '\\yolo\\') { return 'docs/articles/visual-yolo-detection.md' }
+    if ($manifestPath -match '\\detr\\') { return 'docs/articles/visual-portable-detectors.md' }
+    if ($manifestPath -match '\\ocr-anomaly-rmbg\\') { return 'docs/articles/model-support.md' }
+    if ($manifestPath -match '\\sam\\' -or $manifestPath -match '\\open-vocabulary\\') { return 'docs/articles/visual-sam-family.md' }
+    if ($manifestPath -match '\\vision-language\\') { return 'docs/articles/visual-vision-language.md' }
+    if ($manifestPath -match '\\generative-vision-language\\') { return 'docs/articles/visual-vision-language.md' }
+    if ($manifestPath -match '\\native-multimodal\\') { return 'docs/articles/visual-native-multimodal.md' }
+    if ($manifestPath -match '\\document-understanding\\') { return 'docs/articles/visual-native-multimodal.md' }
+    if ($manifestPath -match '\\audio-speech\\') { return 'docs/articles/visual-audio-speech.md' }
+    if ($manifestPath -match '\\llm\\') { return 'docs/articles/llm-getting-started.md' }
+    return 'docs/articles/model-support.md'
 }
 
 function New-FixtureRow([int]$stage, [string]$id, [string]$family, [string]$task, [string[]]$artifacts, [string]$evidence) {
@@ -115,7 +115,7 @@ function New-FixtureRow([int]$stage, [string]$id, [string]$family, [string]$task
         localStorage = @([ordered]@{ kind = 'generated-on-demand'; path = 'eng\test-models' })
         modelFactory = [ordered]@{ state = 'fixture-only'; uploaded = $false; downloadable = $false; blocker = 'Synthetic contract fixtures are not official algorithm models or release assets.' }
         evidence = $evidence
-        acquisitionArticle = 'docs/articles/development-model-inventory.md'
+        acquisitionArticle = 'docs/articles/model-support.md'
     }
 }
 
@@ -132,7 +132,7 @@ $rows.Add([ordered]@{
     localStorage = @([ordered]@{ kind = 'caller-owned-environment'; path = 'DEPLOYSHARP_LLAMA_MODEL' })
     modelFactory = [ordered]@{ state = 'not-acquired'; uploaded = $false; downloadable = $false; blocker = 'No exact GGUF checkpoint, SHA256, or redistribution grant was supplied during Stage 2.' }
     evidence = 'Managed contract and gated native path only; the real-model test was skipped when the environment variable was absent.'
-    acquisitionArticle = 'docs/articles/development-model-inventory.md'
+    acquisitionArticle = 'docs/articles/model-support.md'
 })
 $rows.Add((New-FixtureRow 5 'fixtures/visual-fake-classification-detection' 'visual-fake' 'classification,detection' @('in-memory fake tensors') 'Fake backend contract evidence only.'))
 $rows.Add((New-FixtureRow 6 'fixtures/onnxruntime-core-suite' 'onnx-contract-fixtures' 'classification,detection,tensor-lifecycle' @('classification.onnx','detection.onnx','five dynamic/type/multi-io fixtures') 'Seven reproducible ONNX graphs; real ORT CPU contract evidence.'))
@@ -157,7 +157,7 @@ $rows.Add([ordered]@{
     localStorage = @([ordered]@{ kind = 'legacy-read-only'; path = 'E:\Model\yolo' })
     modelFactory = [ordered]@{ state = 'external-unpublished'; uploaded = $false; downloadable = $false; blocker = 'The local multitask rows lack a complete independent checkpoint/export/license redistribution chain.' }
     evidence = 'Stage 17 ORT/OpenVINO/OpenCV local execution matrix; exact files remain caller-owned.'
-    acquisitionArticle = 'docs/articles/model-acquisition-yolo.md'
+    acquisitionArticle = 'docs/articles/visual-yolo-detection.md'
 })
 
 $manifestRoot = Join-Path $RepositoryRoot 'eng\models'

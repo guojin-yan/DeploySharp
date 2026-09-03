@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0",
+  "status": "csharp-three-graph-wav-logmel-parity-verified-real-transcript-pending",
+  "model": "openai/whisper-tiny.en",
+  "profileId": "audio.whisper.tiny.en.onnx-three-graph",
+  "backend": "onnxruntime-cpu",
+  "test": "Stage28WhisperExternalIntegrationTests.LocalWhisperTinyEnglishThreeGraphGreedyParityRunsThroughCSharpSession",
+  "input": {
+    "kind": "deterministic-synthetic-log-mel",
+    "shape": [1, 80, 3000],
+    "values": "linspace(-1,1,240000)",
+    "promptTokenIds": [50257, 50362]
+  },
+  "result": {
+    "encoderOutputShape": [1, 1500, 384],
+    "generatedTokenIds": [685, 22648, 60, 50256],
+    "text": "[Music]",
+    "encoderMilliseconds": 170.614,
+    "prefillMilliseconds": 24.583,
+    "decodeMillisecondsTotal": 39.034,
+    "status": "passed"
+  },
+  "logMel": {
+    "input": "16000-sample mono float32 impulse at sample 4000",
+    "shape": [1, 80, 3000],
+    "managedMilliseconds": 151.059,
+    "reference": "transformers WhisperFeatureExtractor from the same pinned checkpoint",
+    "maxAbsoluteError": 2.980232238769531e-7,
+    "meanAbsoluteError": 1.0132789746153392e-10,
+    "countAbove1e-6": 0,
+    "status": "passed"
+  },
+  "graphs": {
+    "encoder": { "size": 32886136, "sha256": "6e0e951d8d047ddfe2cc7ba2e48bb6cbd2cec40c86e71da9f6068c4d1b369a32" },
+    "decoderPrefill": { "size": 197981403, "sha256": "2719910b3ad1b2d9266a7eae42ba57ecf4d0791efd2ead7a544a2453f0e7599b" },
+    "decoderWithPast": { "size": 193242328, "sha256": "85644c602b815b9a58a1f96e92d9a99016a49049c4a4a71a0a1958f0add3938a" }
+  },
+  "reproduction": "Set DEPLOYSHARP_RUN_EXTERNAL_MODELS=1 and run dotnet test tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj -c Release --filter FullyQualifiedName~Stage28WhisperExternalIntegrationTests.",
+  "environment": { "os": "Windows 10 10.0.26200", "targetFramework": "net10.0", "runtime": "ONNX Runtime CPU" },
+  "admissionNote": "This file records deterministic synthetic-feature C# parity. The licensed real-WAV end-to-end result is recorded separately in whisper-tiny.en-csharp-ort-librispeech-20260831.json. The source-only profile still has no executable graph bindings or downloadable public bundle."
+}

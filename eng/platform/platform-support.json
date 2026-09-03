@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "releaseVersion": "2.0.0-alpha.1",
-  "generatedAt": "2026-08-19T00:00:00Z",
+    "generatedAt": "2026-08-30T00:00:00Z",
   "supportLevels": [
     "BuildOnly",
     "ManagedTested",
@@ -19,7 +19,7 @@
           "level": "NativeSmoke",
           "scope": "Exact caller-owned Qwen GGUF CPU generation, streaming, cancellation, repeat, contention, dispose, and embedding evidence; not AlgorithmVerified.",
           "evidence": [
-            "docs/history/llm-gguf-stage31.md",
+            "docs/articles/llamasharp-compatibility.md",
             "tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj"
           ],
           "runtimeDependencies": [
@@ -44,9 +44,9 @@
         {
           "packageId": "JYPPX.DeploySharp.Backend.OpenCV",
           "level": "GoldenVerified",
-          "scope": "Windows x64 CPU OpenCV DNN preview for one static batch-one NCHW float32 ReduceMean ONNX contract.",
+          "scope": "Windows x64 CPU OpenCV DNN preview for named NCHW float32 image contracts with runtime batch/spatial specialization, numeric auxiliary tensors, guarded dynamic outputs, and compatibility rewrites for selected constant-input ONNX operators (including Reduce/TopK/Slice, axis normalization, default-attribute cleanup, and shape-only integer arithmetic).",
           "evidence": [
-            "docs/articles/multimodal-opencv-dnn.md",
+            "docs/articles/visual-opencv-compatibility.md",
             "tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj",
             "tests/assets/onnxruntime/classification.onnx"
           ],
@@ -169,9 +169,23 @@
     },
     {
       "platformId": "windows-x64-gpu",
-      "status": "planned",
-      "claims": [],
-      "blockers": ["authorized-gpu-runner-missing", "driver-cuda-tensorrt-identity-missing", "repeatable-golden-missing"]
+      "status": "tested",
+      "claims": [
+        {
+          "packageId": "JYPPX.DeploySharp.Backend.TensorRT",
+          "level": "NativeSmoke",
+          "scope": "Windows x64 TensorRT 11/CUDA 12.9 engine execution is covered by the compatibility matrix on the RTX 3060 Laptop host and by performance runs on RTX 2060 and RTX 5060 Ti hosts; results are model- and engine-specific and do not imply universal GPU compatibility.",
+          "evidence": [
+            "docs/articles/device-performance-benchmarks.md",
+            "docs/model-backend-verification-matrix.md",
+            "tests/DeploySharp.Backend.TensorRT.Tests/DeploySharp.Backend.TensorRT.Tests.csproj"
+          ],
+          "runtimeDependencies": [
+            { "id": "JYPPX.TensorRT.CSharp.API", "version": "4.0.0" }
+          ]
+        }
+      ],
+      "blockers": ["onnxruntime-cuda-not-verified-on-the-benchmark-host", "special-multimodal-tensorrt-profiles-not-admitted", "rmbg20-int8-engine-unsupported"]
     },
     {
       "platformId": "windows-npu",

@@ -1,5 +1,5 @@
 {
-  "snapshotDate": "2026-08-09",
+  "snapshotDate": "2026-08-31",
   "algorithmVerified": false,
   "officialCatalogAdmission": "empty",
   "redistributionAllowed": false,
@@ -32,7 +32,7 @@
       "variant": "model-base-vqa-capfilt-large",
       "task": "visual-question-answering",
       "status": "External-blocker",
-      "blocker": "Checkpoint SHA256 and complete question-encoder/generated-answer/answer-ranking ONNX and OpenVINO bundle were not acquired."
+      "blocker": "2026-08-31 local recheck found only vqa.yaml and the pinned official source checkout in the external warehouse; checkpoint SHA256 and complete question-encoder/generated-answer/answer-ranking ONNX and OpenVINO bundle were not acquired."
     },
     {
       "family": "blip2",

@@ -46,4 +46,12 @@ if ($verificationMissing.Count -gt 0) {
     throw ('Model cases without a completed release/manifest verification record: ' + ($verificationMissing -join ', '))
 }
 
+$invalidCommands = @($expected | Where-Object {
+    $readme = Get-Content -Raw -LiteralPath (Join-Path $CasesPath $_ 'README.md')
+    $readme -notmatch 'dotnet run --project samples/06-models/(catalog-workflow/ModelFactoryCatalogInspection\.csproj|release-inference/ModelReleaseInference\.csproj) -c Release -- --model-id'
+})
+if ($invalidCommands.Count -gt 0) {
+    throw ('Model cases without a runnable project-file command: ' + ($invalidCommands -join ', '))
+}
+
 Write-Output "DEPLOYSHARP_MODEL_SAMPLE_COVERAGE_OK entries=$($expected.Count) cases=$($actual.Count)"

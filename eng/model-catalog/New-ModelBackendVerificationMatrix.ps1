@@ -20,7 +20,7 @@ $verified = @{
     'yolo/v13/detect/n' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'yolo/v5/detect/n' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'yolo/v6/detect/s' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
-    'yolo/v7/detect/base' = @{ ort = '✓'; openvino = '✓'; opencv = '✗'; tensorrt = '✓' }
+    'yolo/v7/detect/base' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'yolo/v8/detect/n' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'yolo/v9/detect/s' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'yolo/v8/classify/s' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
@@ -41,7 +41,7 @@ $verified = @{
     'rf-detr/segment' = @{ ort = '✓'; openvino = '✗'; opencv = '✗'; tensorrt = '✓' }
     'rt-detr/r50vd-decoded-vector-ir' = @{ openvino = '✓' }
     'rt-detr/r50vd-decoded-vector-onnx' = @{ ort = '✓'; opencv = '✗'; tensorrt = '✓' }
-    'rt-detr/r50vd-raw-query' = @{ ort = '✓'; openvino = '✓'; opencv = '✗'; tensorrt = '✓' }
+    'rt-detr/r50vd-raw-query' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'paddleocr/ppocrv5/mobile-cls' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'paddleocr/ppocrv5/mobile-det' = @{ ort = '✓'; openvino = '✓'; opencv = '✓'; tensorrt = '✓' }
     'paddleocr/ppocrv5/mobile-rec' = @{ ort = '✓'; openvino = '✓'; opencv = '✗'; tensorrt = '✓' }
@@ -57,7 +57,7 @@ $verified = @{
 $lines = [System.Collections.Generic.List[string]]::new()
 $lines.Add('# 模型 × 后端本机验证矩阵')
 $lines.Add('')
-$lines.Add('验证日期：2026-08-25；机器：Windows x64、OpenCV 5.0 CPU、TensorRT 11.0 + CUDA 12.9 + NVIDIA RTX 3060 Laptop GPU。本表只记录官方 catalog 中与本机文件 SHA-256 完全匹配的模型工件。')
+$lines.Add('验证日期：2026-08-25 至 2026-09-01；机器：Windows x64、OpenCV 5.0 CPU、TensorRT 11.0 + CUDA 12.9 + NVIDIA RTX 3060 Laptop GPU。本表只记录官方 catalog 中与本机文件 SHA-256 完全匹配的模型工件。')
 $lines.Add('')
 $lines.Add('符号：`✓` = 构建/加载并实际推理通过；`✗` = 已进行精确兼容性验证但当前后端不能完成推理；`—` = 本机没有对应工件或该工件格式不适用于该后端。')
 $lines.Add('')
@@ -99,11 +99,11 @@ $lines.Add('- TensorRT：`OfficialModelIntegrationTests` 使用 TensorRT 11 buil
 $lines.Add('- RF-DETR OpenVINO 的 `✗` 来自真实执行时的 `Backend input metadata is incompatible with the visual profile`；这是当前适配器输入元数据校验问题，不是下载缺失。')
 $lines.Add('- OpenVINO 项目直接 `dotnet test --no-restore` 还会受到本机 NuGet lock 的 `NU1403` 内容哈希问题影响；本表使用已构建的测试 DLL 完成了上述 native CPU 执行。')
 $lines.Add('')
-$lines.Add('## OpenCV / TensorRT 失败原因')
+$lines.Add('## OpenCV / TensorRT 兼容性说明')
 $lines.Add('')
-$lines.Add('- OpenCV YOLOv7：OpenCV 5.0 `GatherLayerImpl` 输出形状校验失败。')
+$lines.Add('- OpenCV YOLOv7：OpenCV 5.0 的图内 NMS/Gather 尾部仍触发 `GatherLayerImpl` shape 校验；精确工件 Profile 显式绑定原始检测头 `[1,25200,85]` 并执行 DeploySharp 托管 NMS，完整流水线与 ONNX Runtime 结果一致，因此标记 `✓`。')
 $lines.Add('- OpenCV RF-DETR detect/segment：ONNX `Split` 的双输入形式不能由当前 OpenCV importer 转换。')
-$lines.Add('- OpenCV raw RT-DETR：多维 `Unsqueeze` 尚未实现；mobile-rec、server-det、server-rec 与 RMBG 2.0 FP32 则失败于动态 `Shape`。')
+$lines.Add('- OpenCV raw RT-DETR：兼容层将可证明的标量 float 常量 `Expand` 语义等价改写为 `ConstantOfShape` 后，完整流水线输出已全部有限并通过。')
 $lines.Add('- OpenCV RMBG 2.0 dynamic-int8：不支持 `DynamicQuantizeLinear`；DEIM、PP-YOLOE、decoded RT-DETR 需要非图像辅助输入，PaDiM 需要布尔输出，均超出 OpenCV DNN v1 的静态 float32 NCHW 合同。')
 $lines.Add('- TensorRT YOLOv7：输出为数据依赖的 `[-1,7]`，适配器使用 TensorRT 最大输出缓冲区上界并保留运行时 shape 通知；本机 bridge 未提供 shape 通知时返回安全的上界形状。')
 $lines.Add('- TensorRT PP-YOLOE：原始 PaddleDetection opset-11 图的 `Squeeze.3`/`Squeeze.5` 缺失 axes；builder 自动补充 Gather(axis=1) 后的 `axes=[1]`，不改变源 artifact SHA-256，随后完成 engine 构建和 CUDA enqueue。')

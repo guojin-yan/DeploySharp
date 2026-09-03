@@ -62,6 +62,24 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<OperationCanceledException>(() => profile.Decoder.Decode(new VisualDecodeContext(VisualTestData.ClassificationInput(), profile, output, source.Token)));
         }
 
+        [TestMethod]
+        public void DynamicBatchDecodesEveryClassificationRowInInputOrder()
+        {
+            var decoder = new ClassificationDecoder("scores", ClassificationScoreMode.Probabilities, topK: 2);
+            var profile = new VisualModelProfile(
+                "tests/classification.dynamic.v1", VisualTestData.ClassificationModelId, VisualTaskId.ImageClassification, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 2, 2), VisualTensorLayout.Nchw, 1, 4),
+                new[] { new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(-1, 3)) },
+                new[] { new VisualLabel(0, "zero"), new VisualLabel(1, "one"), new VisualLabel(2, "two") }, decoder);
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24]), new VisualSize(2, 2), new VisualSize(2, 2), 2, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(2, 2), new VisualSize(2, 2)), inputId: "classification-batch");
+            var output = InferenceOutputs.Create("scores", new Tensor<float>(new TensorShape(2, 3), new[] { .1f, .8f, .1f, .7f, .2f, .1f }));
+            var result = (ClassificationBatchResult)decoder.Decode(new VisualDecodeContext(input, profile, output, CancellationToken.None));
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual("one", result[0].TopPrediction!.Label);
+            Assert.AreEqual("zero", result[1].TopPrediction!.Label);
+            Assert.AreEqual("zero", result[0].Predictions[1].Label);
+        }
+
         private static ClassificationResult Decode(VisualModelProfile profile, float[] scores)
         {
             var output = InferenceOutputs.Create("scores", new Tensor<float>(new TensorShape(1, scores.Length), scores));

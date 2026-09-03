@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>DeploySharp.PaddleOcrBenchmark</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JYPPX.OpenCV.CSharp.API" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
+    <PackageReference Include="OpenVINO.runtime.win" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Visual/DeploySharp.Visual.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj" />
+  </ItemGroup>
+</Project>

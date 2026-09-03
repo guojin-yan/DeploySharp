@@ -38,6 +38,20 @@
           "MSTest.Analyzers": "4.3.3"
         }
       },
+      "OnnxSharp": {
+        "type": "Direct",
+        "requested": "[0.3.2, )",
+        "resolved": "0.3.2",
+        "contentHash": "zXoFIRPxxW1hUnte/o4am/cjSBWi2WC1aD7Ppc2LOFE3P/CURMWk2Ni6gY4x0fO9yT5oZTnntBI7KFIbmhpsKw==",
+        "dependencies": {
+          "Google.Protobuf": "3.29.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.29.3",
+        "contentHash": "t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw=="
+      },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
         "resolved": "2.23.0",

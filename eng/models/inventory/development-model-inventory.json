@@ -62,7 +62,7 @@
         "blocker": "No exact GGUF checkpoint, SHA256, or redistribution grant was supplied during Stage 2."
       },
       "evidence": "Managed contract and gated native path only; the real-model test was skipped when the environment variable was absent.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/visual-fake-classification-detection",
@@ -97,7 +97,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Fake backend contract evidence only.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/onnxruntime-core-suite",
@@ -142,7 +142,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Seven reproducible ONNX graphs; real ORT CPU contract evidence.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/openvino-core-suite",
@@ -182,7 +182,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real OpenVINO CPU IR contract evidence.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/opencv-classification-detection",
@@ -227,7 +227,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Reuses Stage 6 graphs through the real OpenCV adapter.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/semantic-segmentation",
@@ -282,7 +282,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real ORT/OpenVINO/OpenCV contract evidence; not AlgorithmVerified.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/pose",
@@ -332,7 +332,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real ORT/OpenVINO/OpenCV contract evidence; exact hashes remain in the Stage 10 diary.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/instance-segmentation",
@@ -382,7 +382,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real ORT/OpenVINO/OpenCV contract evidence; not an official algorithm export.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/oriented-detection",
@@ -432,7 +432,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real ORT/OpenVINO/OpenCV contract evidence; not an official algorithm export.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/ocr-detection-recognition",
@@ -497,7 +497,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real two-stage ORT/OpenVINO/OpenCV contract evidence.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/anomaly",
@@ -542,7 +542,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real ORT/OpenVINO/OpenCV contract evidence.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "fixtures/ocr-orientation",
@@ -587,7 +587,7 @@
         "blocker": "Synthetic contract fixtures are not official algorithm models or release assets."
       },
       "evidence": "Real four-direction ORT/OpenVINO/OpenCV contract evidence.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "yolo/v10/detect/n",
@@ -626,7 +626,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v10/detect/n",
@@ -675,7 +675,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v11/detect/n",
@@ -714,7 +714,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v11/detect/n",
@@ -763,7 +763,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v11/obb/s",
@@ -812,7 +812,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v11/pose/s",
@@ -861,7 +861,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v11/segment/s",
@@ -910,7 +910,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v12/detect/n",
@@ -959,7 +959,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v12/detect/n",
@@ -998,7 +998,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v13/detect/n",
@@ -1047,7 +1047,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v13/detect/n",
@@ -1086,7 +1086,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v26/detect/n",
@@ -1135,7 +1135,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v26/detect/n",
@@ -1174,7 +1174,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v26/obb/s",
@@ -1223,7 +1223,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v26/pose/s",
@@ -1272,7 +1272,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v26/segment/s",
@@ -1321,7 +1321,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v5/detect/n",
@@ -1360,7 +1360,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v5/detect/n",
@@ -1409,7 +1409,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v5/segment/s",
@@ -1458,7 +1458,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v6/detect/s",
@@ -1507,7 +1507,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v6/detect/s",
@@ -1546,7 +1546,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v7/detect/base",
@@ -1595,7 +1595,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v7/detect/base",
@@ -1634,7 +1634,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/classify/s",
@@ -1683,7 +1683,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/detect/n",
@@ -1738,7 +1738,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/detect/n",
@@ -1787,7 +1787,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/obb/s",
@@ -1836,7 +1836,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/pose/s",
@@ -1885,7 +1885,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v8/segment/n",
@@ -1934,7 +1934,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v9/detect/s",
@@ -1973,7 +1973,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v9/detect/s",
@@ -2022,7 +2022,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "yolo/v9/segment/c",
@@ -2071,7 +2071,7 @@
         "releaseTag": "models-20260817.yolo.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "ultralytics/yolo-multitask/local-matrix",
@@ -2100,7 +2100,7 @@
         "blocker": "The local multitask rows lack a complete independent checkpoint/export/license redistribution chain."
       },
       "evidence": "Stage 17 ORT/OpenVINO/OpenCV local execution matrix; exact files remain caller-owned.",
-      "acquisitionArticle": "docs/articles/model-acquisition-yolo.md"
+      "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
     },
     {
       "inventoryId": "deim/v2/detect",
@@ -2149,7 +2149,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "deim/v2/detect/external",
@@ -2188,7 +2188,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "pp-yoloe/plus-crn-l",
@@ -2237,7 +2237,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "pp-yoloe/plus-crn-l/external",
@@ -2276,7 +2276,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rf-detr/detect",
@@ -2325,7 +2325,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rf-detr/detect/external",
@@ -2364,7 +2364,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rf-detr/segment",
@@ -2413,7 +2413,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rf-detr/segment/external",
@@ -2452,7 +2452,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "anomalib/padim/external",
@@ -2491,7 +2491,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "anomalib/padim/mvtec-bottle",
@@ -2532,7 +2532,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "anomalib/patchcore/external",
@@ -2571,7 +2571,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "bria/rmbg-1.4",
@@ -2612,7 +2612,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "bria/rmbg-1.4/external",
@@ -2651,7 +2651,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "bria/rmbg-2.0",
@@ -2692,7 +2692,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "bria/rmbg-2.0",
@@ -2733,7 +2733,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "bria/rmbg-2.0/external",
@@ -2780,7 +2780,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-cls",
@@ -2829,7 +2829,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-det",
@@ -2878,7 +2878,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-det/external",
@@ -2917,7 +2917,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-rec",
@@ -2974,7 +2974,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-rec/external",
@@ -3021,7 +3021,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-cls",
@@ -3070,7 +3070,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-det",
@@ -3119,7 +3119,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-det/external",
@@ -3158,7 +3158,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-rec",
@@ -3215,7 +3215,7 @@
         "releaseTag": "models-20260818.ppocrv5.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-rec/external",
@@ -3262,7 +3262,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv4/legacy-cls/external",
@@ -3301,7 +3301,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/mobile-cls/external",
@@ -3340,7 +3340,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "paddleocr/ppocrv5/server-cls/external",
@@ -3379,7 +3379,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-ocr-anomaly-rmbg.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-decoded-vector-ir",
@@ -3436,7 +3436,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-decoded-vector-ir/external",
@@ -3483,7 +3483,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-decoded-vector-onnx",
@@ -3532,7 +3532,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-decoded-vector-onnx/external",
@@ -3571,7 +3571,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-raw-query",
@@ -3620,7 +3620,7 @@
         "releaseTag": "models-20260817.detr.2"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd-raw-query/external",
@@ -3659,7 +3659,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "rt-detr/r50vd/external",
@@ -3714,7 +3714,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-detr-rtdetr.md"
+      "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
     },
     {
       "inventoryId": "sam/v1/vit-b-image-prompt/external",
@@ -3761,7 +3761,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "sam2/2.1/hiera-tiny-image-prompt/external",
@@ -3828,7 +3828,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "sam3/image-prompt-four-graph/external",
@@ -3899,7 +3899,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "segmentation/sam-v1-vit-b",
@@ -3951,7 +3951,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "grounded-sam/yoloworldv2-person-bus-sam-v1-vit-b/external",
@@ -4018,7 +4018,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "grounding-dino/swint-ogc/external-blocker",
@@ -4057,7 +4057,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "yolo-world/v2/mmyolo-s/external-blocker",
@@ -4104,7 +4104,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "yolo-world/v2/ultralytics-person-bus/external",
@@ -4167,7 +4167,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "yoloe/v8s-seg/external-blocker",
@@ -4214,7 +4214,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-sam-grounded-sam.md"
+      "acquisitionArticle": "docs/articles/visual-sam-family.md"
     },
     {
       "inventoryId": "vision-language/clip-vit-b-32",
@@ -4303,7 +4303,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "vision-language/clip-vit-b-32/external",
@@ -4390,7 +4390,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-clip-siglip.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "vision-language/siglip-base-patch16-224/external",
@@ -4469,7 +4469,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-clip-siglip.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "vision-language/siglip2-base-patch16-224/external-blocker",
@@ -4516,7 +4516,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-clip-siglip.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "generative-vision-language/blip-caption-base",
@@ -4597,7 +4597,7 @@
         "releaseTag": "models-20260817.vision.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/development-model-inventory.md"
+      "acquisitionArticle": "docs/articles/model-support.md"
     },
     {
       "inventoryId": "generative-vision-language/blip-caption-base/external",
@@ -4716,7 +4716,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-blip-family.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "generative-vision-language/blip-vqa-base/external-blocker",
@@ -4755,7 +4755,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-blip-family.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "generative-vision-language/blip2-caption-opt2.7b/external-blocker",
@@ -4794,7 +4794,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-blip-family.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "generative-vision-language/instructblip-flant5xl/external-blocker",
@@ -4833,7 +4833,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-blip-family.md"
+      "acquisitionArticle": "docs/articles/visual-vision-language.md"
     },
     {
       "inventoryId": "native-multimodal/llava-onevision-qwen2-0.5b/external",
@@ -5016,7 +5016,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-native-multimodal.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "native-multimodal/phi-3.5-vision-instruct/external-blocker",
@@ -5095,7 +5095,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-native-multimodal.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "native-multimodal/qwen2.5-vl-3b-instruct/external-blocker",
@@ -5166,7 +5166,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-native-multimodal.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "document-understanding/donut-base-finetuned-cord-v2/external",
@@ -5525,7 +5525,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-document-understanding.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "document-understanding/layoutlmv3-base/external-blocker",
@@ -5612,7 +5612,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-document-understanding.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "document-understanding/pix2struct-docvqa-base/external-blocker",
@@ -5707,7 +5707,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-document-understanding.md"
+      "acquisitionArticle": "docs/articles/visual-native-multimodal.md"
     },
     {
       "inventoryId": "audio/hubert-base-ls960/external-blocker",
@@ -5770,7 +5770,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-audio-speech.md"
+      "acquisitionArticle": "docs/articles/visual-audio-speech.md"
     },
     {
       "inventoryId": "audio/pyannote-speaker-diarization-3.1/external-blocker",
@@ -5825,7 +5825,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-audio-speech.md"
+      "acquisitionArticle": "docs/articles/visual-audio-speech.md"
     },
     {
       "inventoryId": "audio/wav2vec2-base-960h/external",
@@ -6016,7 +6016,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-audio-speech.md"
+      "acquisitionArticle": "docs/articles/visual-audio-speech.md"
     },
     {
       "inventoryId": "audio/whisper-tiny.en/external-blocker",
@@ -6143,7 +6143,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-audio-speech.md"
+      "acquisitionArticle": "docs/articles/visual-audio-speech.md"
     },
     {
       "inventoryId": "llm/qwen2.5-0.5b-instruct-q4-k-m",
@@ -6219,7 +6219,7 @@
         "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-llm-gguf.md"
+      "acquisitionArticle": "docs/articles/llm-getting-started.md"
     },
     {
       "inventoryId": "llm/gguf/external-blocker",
@@ -6270,7 +6270,7 @@
         "blocker": "No exact authorized GGUF checkpoint, file size, SHA256, quantization, context length, tokenizer/chat-template identity, generation configuration, embedding evidence, or redistribution grant was supplied."
       },
       "evidence": "Stage 30 found no exact GGUF; the ModelPack retains hash-protected blocker audit evidence only.",
-      "acquisitionArticle": "docs/articles/model-acquisition-llm-gguf.md"
+      "acquisitionArticle": "docs/articles/llm-getting-started.md"
     },
     {
       "inventoryId": "llm/qwen2.5-0.5b-instruct-q4-k-m/external",
@@ -6353,7 +6353,7 @@
         "blocker": "The audited manifest explicitly sets redistributionAllowed:false; publication requires a separate artifact-license grant and immutable asset review."
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
-      "acquisitionArticle": "docs/articles/model-acquisition-llm-gguf.md"
+      "acquisitionArticle": "docs/articles/llm-getting-started.md"
     }
   ]
 }

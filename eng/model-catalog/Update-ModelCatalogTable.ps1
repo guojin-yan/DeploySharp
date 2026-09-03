@@ -7,16 +7,14 @@
 $ErrorActionPreference = 'Stop'
 $catalog = Get-Content -Raw -Encoding UTF8 -LiteralPath $CatalogPath | ConvertFrom-Json
 $lines = [System.Collections.Generic.List[string]]::new()
-$lines.Add('# Official model catalog / 官方模型目录')
+$lines.Add('# 官方模型目录')
 $lines.Add('')
-$lines.Add('This table is generated from `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json`. Do not edit table rows by hand. / 本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 生成，请勿手工编辑表格行。')
+$lines.Add('本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 自动生成，请勿手工编辑表格行。')
 $lines.Add('')
 $entryCount = @($catalog.entries).Count
-$lines.Add(('The catalog currently contains {0} entries and every entry has `preview` status. Preview entries are public, downloadable, SHA-256-checked ModelFactory assets; they are not `AlgorithmVerified` and do not imply GA. Querying without `includePreview: true` intentionally excludes them. / 当前目录包含 {0} 条记录，且全部为 `preview`。Preview 是公开、可下载并完成 SHA-256 校验的 ModelFactory 资产；它们不是 `AlgorithmVerified`，也不代表 GA。不带 `includePreview: true` 的查询会按设计排除这些条目。' -f $entryCount))
+$lines.Add(('当前目录包含 {0} 条 `preview` 记录。Preview 条目可以下载，并会在 ModelFactory 中按大小和 SHA-256 校验；查询时必须显式设置 `includePreview: true`。' -f $entryCount))
 $lines.Add('')
-$lines.Add('The first PP-OCRv5 algorithm-admission candidate is `paddleocr/ppocrv5/mobile-cls`. Its source/archive binding, exporter reproduction, immutable Preview Release, ONNX hash, fixed-image preprocessing, ORT/OpenVINO local golden, and independent Paddle Predictor output are recorded. `license-and-redistribution` remains open in `paddleocr-release-admission.json` because no attributable model/dictionary redistribution approval has been recorded, so it remains Preview. / 首个 PP-OCRv5 算法准入候选为 `paddleocr/ppocrv5/mobile-cls`。其来源/归档绑定、导出复现、不可变 Preview Release、ONNX 哈希、固定图像前处理、ORT/OpenVINO 本机 golden 和独立 Paddle Predictor 输出均已记录；因尚未记录可归属的模型/字典再分发批准，`paddleocr-release-admission.json` 中的 `license-and-redistribution` 仍为 open，因此继续保持 Preview。')
-$lines.Add('')
-$lines.Add('| ModelId | Algorithm / Task | Artifact | Format | Backend | Precision / Quantization | Portable | Release tag | Size | SHA256 | Download | Test input | License |')
+$lines.Add('| 模型 ID | 模型族 / 任务 | 工件 | 格式 | 后端 | 精度 / 量化 | 可移植 | Release 标签 | 大小 | SHA256 | 下载 | 测试输入 | 许可标识 |')
 $lines.Add('|---|---|---|---|---|---|---|---|---:|---|---|---|---|')
 
 $rows = 0
@@ -45,7 +43,7 @@ if ($rows -eq 0) {
 }
 
 $lines.Add('')
-$lines.Add('The catalog lists only models actually published in an immutable GitHub Release with source, license, exact size, and SHA-256 metadata. Preview entries require an explicit `includePreview: true` query. / 目录仅列出已在不可变 GitHub Release 中实际发布，且带有来源、许可证、精确大小与 SHA-256 元数据的模型。预览条目须在查询中显式设置 `includePreview: true`。')
+$lines.Add('目录中的条目对应已经发布到 GitHub Release 的 ModelFactory 资产；下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。')
 $content = ($lines -join "`n") + "`n"
 
 if ($Check) {

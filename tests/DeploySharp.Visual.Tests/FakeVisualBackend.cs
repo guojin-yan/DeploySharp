@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -25,7 +26,9 @@ namespace DeploySharp.Visual.Tests
         public string Format { get; }
         public TimeSpan Delay { get; set; }
         public Exception? Failure { get; set; }
+        public SequenceArgMaxResult? SequenceArgMaxResult { get; set; }
         public FakeVisualSession? LastSession { get; private set; }
+        public List<FakeVisualSession> CreatedSessions { get; } = new List<FakeVisualSession>();
         public int DisposeCount { get; private set; }
 
         public bool CanCreate(ModelArtifact artifact, BackendRequest request)
@@ -36,7 +39,8 @@ namespace DeploySharp.Visual.Tests
         public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(FakeVisualBackendProvider));
-            LastSession = new FakeVisualSession(_metadata, _outputFactory, () => Delay, () => Failure);
+            LastSession = new FakeVisualSession(_metadata, _outputFactory, () => Delay, () => Failure, () => SequenceArgMaxResult);
+            CreatedSessions.Add(LastSession);
             return LastSession;
         }
 
@@ -48,26 +52,30 @@ namespace DeploySharp.Visual.Tests
         }
     }
 
-    internal sealed class FakeVisualSession : IInferenceSession
+    internal sealed class FakeVisualSession : IInferenceSession, ISequenceArgMaxInferenceSession
     {
         private readonly Func<InferenceInputs, InferenceOutputs> _outputFactory;
         private readonly Func<TimeSpan> _delay;
         private readonly Func<Exception?> _failure;
+        private readonly Func<SequenceArgMaxResult?> _sequenceArgMaxResult;
         private int _active;
         private bool _disposed;
 
-        public FakeVisualSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> outputFactory, Func<TimeSpan> delay, Func<Exception?> failure)
+        public FakeVisualSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> outputFactory, Func<TimeSpan> delay, Func<Exception?> failure, Func<SequenceArgMaxResult?> sequenceArgMaxResult)
         {
             Metadata = metadata;
             _outputFactory = outputFactory;
             _delay = delay;
             _failure = failure;
+            _sequenceArgMaxResult = sequenceArgMaxResult;
         }
 
         public ModelMetadata Metadata { get; }
         public int RunCount { get; private set; }
         public int MaximumActive { get; private set; }
         public int DisposeCount { get; private set; }
+        public int SequenceArgMaxRunCount { get; private set; }
+        public bool IsSequenceArgMaxSupported => _sequenceArgMaxResult() != null;
 
         public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken)
         {
@@ -77,6 +85,24 @@ namespace DeploySharp.Visual.Tests
         public Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken)
         {
             return RunCoreAsync(inputs, cancellationToken);
+        }
+
+        public SequenceArgMaxResult RunSequenceArgMax(InferenceInputs inputs, SequenceArgMaxRequest request, CancellationToken cancellationToken)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(FakeVisualSession));
+            int active = Interlocked.Increment(ref _active);
+            if (active > MaximumActive) MaximumActive = active;
+            SequenceArgMaxRunCount++;
+            try
+            {
+                TimeSpan delay = _delay();
+                if (delay > TimeSpan.Zero && cancellationToken.WaitHandle.WaitOne(delay)) cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
+                Exception? failure = _failure();
+                if (failure != null) throw failure;
+                return _sequenceArgMaxResult() ?? throw new NotSupportedException();
+            }
+            finally { Interlocked.Decrement(ref _active); }
         }
 
         public void Dispose()

@@ -52,6 +52,63 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void ArtifactCanExplicitlyBindAnAlternatePhysicalYoloOutputContract()
+        {
+            YoloDetectionProfile profile = YoloDetectionProfiles.Create(
+                YoloDetectionFamily.YoloV7,
+                new ModelId("models/yolov7-opencv-raw"),
+                Sha,
+                YoloLabelSets.Coco80,
+                "0123456789abcdef",
+                "test-exporter",
+                new YoloDetectionProfileOptions(
+                    12,
+                    outputName: "onnx_node!/model/model.105/Concat_3",
+                    outputKind: YoloDetectionOutputKind.RawCandidateMajor));
+
+            Assert.AreEqual(YoloDetectionOutputKind.RawCandidateMajor, profile.Output.Kind);
+            Assert.AreEqual("onnx_node!/model/model.105/Concat_3", profile.Output.OutputName);
+            Assert.AreEqual("[1,-1,85]", profile.VisualProfile.Outputs[0].ShapePattern.ToString());
+        }
+
+        [TestMethod]
+        public void RawYoloProfileCanDecodeTrueDynamicBatchWithPerFrameTransforms()
+        {
+            YoloDetectionProfile profile = YoloDetectionProfiles.Create(
+                YoloDetectionFamily.YoloV8,
+                new ModelId("tests/yolo-dynamic"),
+                Sha,
+                new[] { "cat", "dog" },
+                "commit",
+                "test-exporter",
+                new YoloDetectionProfileOptions(12, new VisualSize(100, 100), outputKind: YoloDetectionOutputKind.RawCandidateMajor, maximumBatch: 2));
+            Assert.AreEqual("[-1,-1,7]", profile.VisualProfile.Outputs[0].ShapePattern.ToString());
+
+            var sourceOne = new VisualSize(100, 100);
+            var sourceTwo = new VisualSize(200, 100);
+            var model = new VisualSize(100, 100);
+            var frames = new[]
+            {
+                new VisualInputFrame(sourceOne, model, ImageTransform.Resize(sourceOne, model)),
+                new VisualInputFrame(sourceTwo, model, ImageTransform.Letterbox(sourceTwo, model))
+            };
+            using var input = new PreparedVisualInput("images", new Tensor<float>(new TensorShape(2, 3, 100, 100), new float[60000]), sourceOne, model, 2, VisualTensorLayout.Nchw, ImageTransform.Resize(sourceOne, model), batchFrames: frames);
+            var output = InferenceOutputs.Create("output0", new Tensor<float>(new TensorShape(2, 1, 7), new[]
+            {
+                50f, 50f, 40f, 20f, 1f, .9f, .1f,
+                50f, 50f, 100f, 100f, 1f, .1f, .9f
+            }));
+
+            var result = (DetectionBatchResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, output, CancellationToken.None));
+
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(0, result[0].Detections[0].Label.Index);
+            Assert.AreEqual(1, result[1].Detections[0].Label.Index);
+            Assert.AreEqual(40f, result[0].Detections[0].Box.Width, .001f);
+            Assert.AreEqual(200f, result[1].Detections[0].Box.Width, .001f);
+        }
+
+        [TestMethod]
         public void CandidateMajorRawHeadMultipliesObjectnessAndUsesBestClass()
         {
             var contract = new YoloDetectionOutputContract("output0", YoloDetectionOutputKind.RawCandidateMajor, 2);

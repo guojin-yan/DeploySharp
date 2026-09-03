@@ -1,5 +1,15 @@
 # DeploySharp ModelFactory CLI
 
+The read-only commands are useful for checking a checkout before a download:
+
+~~~powershell
+dotnet run --project tools\DeploySharp.ModelFactory.Cli -- doctor --json
+dotnet run --project tools\DeploySharp.ModelFactory.Cli -- list --preview --json
+dotnet run --project tools\DeploySharp.ModelFactory.Cli -- show --model-id bria/rmbg-2.0 --preview --json
+~~~
+
+Doctor reports local .NET and catalog metadata only. List emits one row per catalog artifact, and Show includes release assets, sizes, hashes, and sidecars. These inspection commands do not download model files or install native runtimes. Preview entries remain opt-in and require the --preview switch.
+
 This small source-built CLI exposes the audited ModelFactory workflow without requiring application code to construct `OfficialModelCatalog`, `ModelFactoryOptions`, or `ModelFactoryClient` manually. It is intentionally source-built with the repository so it always uses the catalog revision under test.
 
 ```powershell

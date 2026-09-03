@@ -1,5 +1,5 @@
 {
-  "snapshotDate": "2026-08-10",
+  "snapshotDate": "2026-08-31",
   "algorithmVerified": false,
   "officialCatalogAdmission": "empty",
   "redistributionAllowed": false,
@@ -36,10 +36,19 @@
     {
       "family": "whisper",
       "variant": "tiny.en",
-      "status": "External-source-contract-blocker",
+      "status": "External-csharp-three-graph-real-wav-parity-verified-source-only-public-bundle-pending",
       "task": "automatic-speech-recognition",
       "localPath": "E:\\DeploySharp-Models\\whisper-tiny.en",
-      "blocker": "The source checkpoint and processor are audited, but no complete Encoder, Decoder Prefill, and named Past/Present KV Decode ONNX/OpenVINO bundle with per-token parity was acquired."
+      "blocker": "The local opset-17 three-graph export, C# tokenizer, prompt construction, managed WAV log-Mel preparation, and greedy session pass parity on a licensed LibriSpeech fixture. The source-only profile has no executable graph bindings, and a traceable downloadable three-graph bundle is still required for public catalog admission.",
+      "localExportScript": "eng/models/audio-speech/scripts/export_whisper.py",
+      "localExportEvidence": "E:\\DeploySharp-Models\\whisper-tiny.en\\onnx-whisper-three-graph\\export-evidence.json",
+      "csharpRuntimeEvidence": "eng/models/audio-speech/evidence/whisper-tiny.en-csharp-ort-parity-20260831.json",
+      "realWavEvidence": "eng/models/audio-speech/evidence/whisper-tiny.en-csharp-ort-librispeech-20260831.json",
+      "localExportArtifacts": {
+        "encoder": { "size": 32886136, "sha256": "6e0e951d8d047ddfe2cc7ba2e48bb6cbd2cec40c86e71da9f6068c4d1b369a32" },
+        "decoderPrefill": { "size": 197981403, "sha256": "2719910b3ad1b2d9266a7eae42ba57ecf4d0791efd2ead7a544a2453f0e7599b" },
+        "decoderWithPast": { "size": 193242328, "sha256": "85644c602b815b9a58a1f96e92d9a99016a49049c4a4a71a0a1958f0add3938a" }
+      }
     },
     {
       "family": "hubert",

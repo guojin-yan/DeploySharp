@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OnnxRuntime.Internal;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
@@ -86,6 +87,24 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
         }
 
         [TestMethod]
+        public async Task MultipleConcurrencyCreatesIndependentOrtSessionsWithStableResults()
+        {
+            using IInferenceSession session = OnnxRuntimeTestData.Open("classification.onnx", new SessionOptions(maxConcurrency: 2));
+            Task<float[]>[] calls = Enumerable.Range(0, 4).Select(_ => Task.Run(() => (float[])session.Run(OnnxRuntimeTestData.ClassificationInputs(), CancellationToken.None).GetRequired("scores").Buffer)).ToArray();
+            float[][] results = await Task.WhenAll(calls);
+            foreach (float[] actual in results) CollectionAssert.AreEqual(new[] { 1f, 2f, 3f }, actual);
+        }
+
+        [TestMethod]
+        public async Task AsyncPoolCallsPreserveResultsAcrossIndependentOrtSessions()
+        {
+            using IInferenceSession session = OnnxRuntimeTestData.Open("classification.onnx", new SessionOptions(maxConcurrency: 2));
+            Task<InferenceOutputs>[] calls = Enumerable.Range(0, 4).Select(_ => session.RunAsync(OnnxRuntimeTestData.ClassificationInputs(), CancellationToken.None)).ToArray();
+            InferenceOutputs[] results = await Task.WhenAll(calls);
+            foreach (InferenceOutputs result in results) CollectionAssert.AreEqual(new[] { 1f, 2f, 3f }, (float[])result.GetRequired("scores").Buffer);
+        }
+
+        [TestMethod]
         public async Task DynamicMetadataMapsToMinusOneAndAsyncFallbackReturnsRuntimeShape()
         {
             using IInferenceSession session = OnnxRuntimeTestData.Open("dynamic-identity.onnx");
@@ -144,6 +163,27 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
             var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeTestData.BackendId, "cuda");
             OnnxRuntimeBackendException error = Assert.ThrowsExactly<OnnxRuntimeBackendException>(() => provider.CreateSession(OnnxRuntimeTestData.Artifact("classification.onnx"), request, SessionOptions.Default));
             Assert.AreEqual(OnnxRuntimeErrorCodes.ConfigurationInvalid, error.ErrorCode);
+        }
+
+        [TestMethod]
+        public void CudaExecutionProviderIsExplicitAndDeviceScoped()
+        {
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OnnxRuntimeOptions(cudaDeviceId: -1));
+            using var cudaProvider = new OnnxRuntimeBackendProvider(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cuda));
+            var artifact = OnnxRuntimeTestData.Artifact("classification.onnx");
+            Assert.IsTrue(cudaProvider.CanCreate(artifact, new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cuda")));
+            Assert.IsFalse(cudaProvider.CanCreate(artifact, new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu")));
+        }
+
+        [TestMethod]
+        public void CudaInitializationFailureMapsToExecutionProviderUnavailable()
+        {
+            Exception mapped = OnnxRuntimeExceptionMapper.Map(
+                new InvalidOperationException("CUDA failure 801 in cuda_execution_provider.cc while calling cudaSetDevice"),
+                OnnxRuntimeTestData.Artifact("classification.onnx"),
+                "load");
+            var error = (OnnxRuntimeBackendException)mapped;
+            Assert.AreEqual(OnnxRuntimeErrorCodes.ExecutionProviderUnavailable, error.ErrorCode);
         }
     }
 }

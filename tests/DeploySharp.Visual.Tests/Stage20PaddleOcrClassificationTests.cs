@@ -43,7 +43,10 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(new TensorShape(-1, 3, 48, 192), dynamicLegacy.VisualProfile.Input.ShapePattern);
             Assert.AreEqual(new TensorShape(-1, 2), dynamicLegacy.VisualProfile.Outputs[0].ShapePattern);
             Assert.AreEqual(1, dynamicLegacy.VisualProfile.Input.MaximumBatch);
-            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("tests/batch"), Artifact(), maximumBatch: 2));
+            PaddleOcrProfile dynamicBatch = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("tests/batch"), Artifact(), maximumBatch: 2, allowDynamicBatch: true);
+            Assert.AreEqual(2, dynamicBatch.VisualProfile.Input.MaximumBatch);
+            Assert.AreEqual(new TensorShape(-1, 3, 80, 160), dynamicBatch.VisualProfile.Input.ShapePattern);
+            Assert.ThrowsExactly<ArgumentException>(() => PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("tests/static-batch"), Artifact(), maximumBatch: 2));
         }
 
         [TestMethod]
@@ -173,7 +176,8 @@ namespace DeploySharp.Visual.Tests
                 OcrResult[] results = await Task.WhenAll(pipeline.RunAsync(firstInput), pipeline.RunAsync(secondInput));
                 Assert.AreEqual(2, results[0].Regions.Count);
                 Assert.AreEqual(2, results[1].Regions.Count);
-                Assert.AreEqual(2, classificationProvider.LastSession!.MaximumActive);
+                Assert.AreEqual(2, classificationProvider.CreatedSessions.Count);
+                Assert.IsTrue(classificationProvider.CreatedSessions.All(value => value.MaximumActive == 1));
             }
 
             pipeline.Dispose();

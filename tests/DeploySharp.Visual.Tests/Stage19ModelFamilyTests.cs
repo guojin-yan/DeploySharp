@@ -93,6 +93,28 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void PaddleDbDecoderAcceptsFloatingPointBoundaryNoise()
+        {
+            PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(
+                new ModelId("tests/paddle-det"), PaddleArtifact(11),
+                postprocess: new PaddleDbPostprocessOptions(.3f, .6f, 1.5f, minimumSide: 1, maximumCandidates: 8, maximumRegions: 8));
+            VisualModelProfile profile = family.VisualProfile;
+            var source = new VisualSize(8, 8);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[192]), source, source, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(source, source));
+            var map = new float[64];
+            for (int y = 2; y <= 5; y++) for (int x = 2; x <= 5; x++) map[(y * 8) + x] = 1.0000001f;
+            var result = (TextDetectionResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 8, 8), map)), CancellationToken.None));
+            Assert.AreEqual(1, result.Regions.Count);
+            Assert.IsTrue(result.Regions[0].Score <= 1f);
+
+            map[0] = float.NaN;
+            VisualException nonFinite = Assert.ThrowsExactly<VisualException>(() => profile.Decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 8, 8), map)), CancellationToken.None)));
+            Assert.AreEqual(VisualErrorCodes.DecodeFailed, nonFinite.ErrorCode);
+        }
+
+        [TestMethod]
         public void PaddleRecognitionConsumesProbabilityCtcBlankRepeatAndSpace()
         {
             PaddleOcrProfile family = PaddleOcrProfiles.CreateRecognition(new ModelId("tests/paddle-rec"), PaddleArtifact(7), new OcrCharacterSet("tests.ppocrv5", "1", "A "));
@@ -135,6 +157,36 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void AnomalibDynamicBatchDecodesEachMapWithItsOwnSourceGeometry()
+        {
+            AnomalibProfile family = AnomalibProfiles.CreatePadim(new ModelId("tests/padim-batch"), new AnomalibArtifactContract(14, Sha, "commit", "torch-2.7.1"), new VisualSize(2, 2), maximumBatch: 2);
+            VisualModelProfile profile = family.VisualProfile;
+            var firstSource = new VisualSize(4, 4);
+            var secondSource = new VisualSize(2, 2);
+            var firstTransform = ImageTransform.Resize(firstSource, new VisualSize(2, 2));
+            var secondTransform = ImageTransform.Resize(secondSource, new VisualSize(2, 2));
+            using var input = new PreparedVisualInput("input", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24]), firstSource, new VisualSize(2, 2), 2, VisualTensorLayout.Nchw, firstTransform,
+                batchFrames: new[] { new VisualInputFrame(firstSource, new VisualSize(2, 2), firstTransform, "first"), new VisualInputFrame(secondSource, new VisualSize(2, 2), secondTransform, "second") });
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("pred_score", new Tensor<float>(new TensorShape(2, 1), new[] { .75f, .25f })),
+                new NamedTensor("pred_label", new Tensor<bool>(new TensorShape(2, 1), new[] { true, false })),
+                new NamedTensor("anomaly_map", new Tensor<float>(new TensorShape(2, 1, 2, 2), new[] { 0f, .25f, .75f, 1f, 1f, .5f, .25f, 0f })),
+                new NamedTensor("pred_mask", new Tensor<bool>(new TensorShape(2, 1, 2, 2), new[] { false, false, true, true, true, false, false, false }))
+            });
+
+            object decoded = profile.Decoder.Decode(new VisualDecodeContext(input, profile, outputs, CancellationToken.None));
+            var batch = (AnomalyDetectionBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(.75f, batch[0].ImageScore, .0001f);
+            Assert.AreEqual(.25f, batch[1].ImageScore, .0001f);
+            Assert.AreEqual(4, batch[0].NormalizedMap.Width);
+            Assert.AreEqual(2, batch[1].NormalizedMap.Width);
+            Assert.AreEqual("second", input.BatchFrames[1].InputId);
+            Assert.AreEqual(-1L, profile.Input.ShapePattern[0]);
+        }
+
+        [TestMethod]
         public void BriaAlphaDecoderRestoresOwnsAndComposites()
         {
             BriaRmbgProfile family = BriaRmbgProfiles.CreateRmbg14(new ModelId("tests/rmbg-1.4"), new BriaRmbgProfileOptions(11, new VisualSize(2, 2), "input", "output", Sha, "2ceba5a5", "torch-2.1.0", "bria-rmbg-1.4"));
@@ -143,6 +195,7 @@ namespace DeploySharp.Visual.Tests
             using var input = new PreparedVisualInput("input", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
             float[] supplied = { 0f, .25f, .75f, 1f };
             var result = (BackgroundRemovalResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile, InferenceOutputs.Create("output", new Tensor<float>(new TensorShape(1, 1, 2, 2), supplied)), CancellationToken.None));
+            CollectionAssert.AreEqual(new[] { 0f, .25f, .75f, 1f }, supplied);
             supplied[3] = 0f;
             CollectionAssert.AreEqual(new[] { 0f, .25f, .75f, 1f }, result.Alpha.ToArray());
             Assert.AreEqual(64, result.Alpha.ComputeSha256().Length);
@@ -151,6 +204,58 @@ namespace DeploySharp.Visual.Tests
 
             InferenceOutputs invalid = InferenceOutputs.Create("output", new Tensor<float>(new TensorShape(1, 1, 2, 2), new[] { 0f, .25f, .75f, 1.1f }));
             Assert.AreEqual(VisualErrorCodes.DecodeFailed, Assert.ThrowsExactly<VisualException>(() => profile.Decoder.Decode(new VisualDecodeContext(input, profile, invalid, CancellationToken.None))).ErrorCode);
+        }
+
+        [TestMethod]
+        public void BriaAlphaDecoderSupportsDynamicImageBatch()
+        {
+            var options = new BriaRmbgProfileOptions(11, new VisualSize(2, 2), "input", "output", Sha, "2ceba5a5", "torch-2.1.0", "bria-rmbg-1.4", maximumBatch: 2);
+            BriaRmbgProfile family = BriaRmbgProfiles.CreateRmbg14(new ModelId("tests/rmbg-batch"), options);
+            VisualModelProfile profile = family.VisualProfile;
+            var firstSource = new VisualSize(4, 4);
+            var modelSize = new VisualSize(2, 2);
+            var firstTransform = ImageTransform.Resize(firstSource, modelSize);
+            var secondTransform = ImageTransform.Resize(modelSize, modelSize);
+            using var input = new PreparedVisualInput("input", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24]), firstSource, modelSize, 2, VisualTensorLayout.Nchw, firstTransform,
+                batchFrames: new[] { new VisualInputFrame(firstSource, modelSize, firstTransform, "first"), new VisualInputFrame(modelSize, modelSize, secondTransform, "second") });
+            var output = new float[] { 0f, .25f, .75f, 1f, 1f, .5f, .25f, 0f };
+            object decoded = profile.Decoder.Decode(new VisualDecodeContext(input, profile, InferenceOutputs.Create("output", new Tensor<float>(new TensorShape(2, 1, 2, 2), output)), CancellationToken.None));
+            var batch = (BackgroundRemovalBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(4, batch[0].Alpha.Width);
+            Assert.AreEqual(2, batch[1].Alpha.Width);
+            Assert.AreEqual("second", input.BatchFrames[1].InputId);
+            Assert.AreEqual(-1L, profile.Input.ShapePattern[0]);
+        }
+
+        [TestMethod]
+        public void AlphaDecoderConvertsFloat64LogitsWithoutOutOfRangeValues()
+        {
+            var decoder = new AlphaMattingDecoder(new AlphaOutputSchema("output", AlphaTensorLayout.Nchw, outputIsProbability: false));
+            var profile = new VisualModelProfile(
+                "tests/alpha-logits",
+                new ModelId("tests/alpha-logits"),
+                VisualTaskId.ForegroundMatting,
+                "1",
+                "onnx",
+                new VisualInputBinding("input", TensorElementType.Float32, new TensorShape(1, 3, 2, 2), VisualTensorLayout.Nchw),
+                new[] { new VisualOutputBinding("output", TensorElementType.Float64, new TensorShape(1, 1, 2, 2)) },
+                Array.Empty<VisualLabel>(),
+                decoder);
+            var size = new VisualSize(2, 2);
+            using var input = new PreparedVisualInput("input", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
+
+            var invalid = InferenceOutputs.Create("output", new Tensor<double>(new TensorShape(1, 1, 2, 2), new[] { double.NegativeInfinity, -2d, 0d, 2d }));
+            VisualException exception = Assert.ThrowsExactly<VisualException>(() => profile.Decoder.Decode(new VisualDecodeContext(input, profile, invalid, CancellationToken.None)));
+            Assert.AreEqual(VisualErrorCodes.DecodeFailed, exception.ErrorCode);
+
+            var outputs = InferenceOutputs.Create("output", new Tensor<double>(new TensorShape(1, 1, 2, 2), new[] { -2d, 0d, 2d, 4d }));
+            var result = (BackgroundRemovalResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile, outputs, CancellationToken.None));
+            float[] alpha = result.Alpha.ToArray();
+            Assert.AreEqual((float)(1d / (1d + Math.Exp(2d))), alpha[0], 0.000001f);
+            Assert.AreEqual(.5f, alpha[1], 0.000001f);
+            Assert.AreEqual((float)(1d / (1d + Math.Exp(-2d))), alpha[2], 0.000001f);
+            Assert.AreEqual((float)(1d / (1d + Math.Exp(-4d))), alpha[3], 0.000001f);
         }
 
         private static PaddleOcrArtifactContract PaddleArtifact(int opset)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -77,13 +78,13 @@ namespace DeploySharp.Backend.TensorRT.Tests
         }
 
         [TestMethod]
-        public void ConfigurationRejectsConcurrentContextAndProfilingBeforeNativeLoad()
+        public void ConfigurationAllowsIndependentChannelsAndRejectsProfilingBeforeNativeLoad()
         {
             using var provider = new TensorRtBackendProvider();
             ModelArtifact artifact = Artifact("missing.plan");
             BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, device: "cuda");
             TensorRtBackendException concurrency = Assert.ThrowsExactly<TensorRtBackendException>(() => provider.CreateSession(artifact, request, new SessionOptions(maxConcurrency: 2)));
-            Assert.AreEqual(TensorRtErrorCodes.ConfigurationInvalid, concurrency.ErrorCode);
+            Assert.AreNotEqual(TensorRtErrorCodes.ConfigurationInvalid, concurrency.ErrorCode, "MaxConcurrency is now implemented as independently-created TensorRT sessions; the missing artifact must be reported instead.");
             TensorRtBackendException profiling = Assert.ThrowsExactly<TensorRtBackendException>(() => provider.CreateSession(artifact, request, new SessionOptions(enableProfiling: true)));
             Assert.AreEqual(TensorRtErrorCodes.ConfigurationInvalid, profiling.ErrorCode);
         }
@@ -335,6 +336,16 @@ namespace DeploySharp.Backend.TensorRT.Tests
         }
 
         [TestMethod]
+        public void BackendOptionsRequireExplicitCudaArchitectureForOptionalReduction()
+        {
+            Assert.IsNull(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt11).CudaTargetArchitecture);
+            Assert.IsFalse(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt11).CacheImmutableHostInputsOnDevice);
+            Assert.AreEqual("compute_75", new TensorRtBackendOptions(TensorRtApiVersion.TensorRt11, cudaTargetArchitecture: " compute_75 ").CudaTargetArchitecture);
+            Assert.IsTrue(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt11, cacheImmutableHostInputsOnDevice: true).CacheImmutableHostInputsOnDevice);
+            Assert.ThrowsExactly<ArgumentException>(() => new TensorRtBackendOptions(cudaTargetArchitecture: "75"));
+        }
+
+        [TestMethod]
         public void CudaRtcArtifactIsCopiedAndRequiresExactHash()
         {
             byte[] code = Encoding.ASCII.GetBytes("ptx-bytes\0");
@@ -402,6 +413,46 @@ namespace DeploySharp.Backend.TensorRT.Tests
         }
 
         [TestMethod]
+        public void CudaOcrKernelDefinitionsExposeFusedStagesAndStableLaunchContracts()
+        {
+            Assert.AreEqual(TensorRtCudaKernelRole.Preprocessing, TensorRtCudaOcrKernels.NormalizeLetterboxDefinition.Role);
+            Assert.AreEqual("deploysharp_normalize_letterbox", TensorRtCudaOcrKernels.NormalizeLetterboxDefinition.KernelName);
+            Assert.AreEqual(TensorRtCudaKernelRole.Preprocessing, TensorRtCudaOcrKernels.HomographyDefinition.Role);
+            Assert.AreEqual("deploysharp_quad_to_homography", TensorRtCudaOcrKernels.HomographyDefinition.KernelName);
+            Assert.AreEqual("deploysharp_perspective_crop", TensorRtCudaOcrKernels.PerspectiveCropDefinition.KernelName);
+            Assert.AreEqual("deploysharp_perspective_crop_quad", TensorRtCudaOcrKernels.PerspectiveCropFromQuadrilateralDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaOcrKernels.PerspectiveCropFromQuadrilateralDefinition.Source.Contains("quadrilaterals", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.PerspectiveCropFromQuadrilateralDefinition.Source.Contains("__shared__ float homography[8]", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaOcrKernels.CtcDecodeDefinition.Role);
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcDecodeDefinition.Source.Contains("blankIndex", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcDecodeDefinition.Source.Contains("collapseRepeats", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcDecodeDefinition.Source.Contains("__shared__ float reductionValues[256]", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcDecodeDefinition.Source.Contains("int sequence = (int)blockIdx.x", StringComparison.Ordinal));
+            Assert.AreEqual("deploysharp_ctc_trace", TensorRtCudaOcrKernels.CtcTraceDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcTraceDefinition.Source.Contains("timeBatchClasses", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.CtcTraceDefinition.Source.Contains("invalidOffsets", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaOcrKernels.NormalizeLetterboxDefinition.Source.Contains("destination[pixels + index]", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Preprocessing, TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_normalize_bgr_nchw", TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("inverseScaleX", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("scale2", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_restore_single_channel_map", TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.Source.Contains("atomicAdd(positiveCount", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.Source.Contains("validateProbability", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.CombineYoloPrototypeMasksDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_combine_yolo_prototypes", TensorRtCudaVisualKernels.CombineYoloPrototypeMasksDefinition.KernelName);
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.RestoreYoloPrototypeMasksDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_restore_yolo_masks", TensorRtCudaVisualKernels.RestoreYoloPrototypeMasksDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaVisualKernels.CombineYoloPrototypeMasksDefinition.Source.Contains("const float* coefficients", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.RestoreYoloPrototypeMasksDefinition.Source.Contains("blockPositive", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_filter_yolo_candidates", TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.Source.Contains("selectedFlags[candidate]", StringComparison.Ordinal));
+        }
+
+
+        [TestMethod]
         public void CudaLaunchOptionsRequireExplicitNonZeroGridBlockAndSynchronization()
         {
             var options = new TensorRtCudaKernelLaunchOptions(
@@ -421,6 +472,33 @@ namespace DeploySharp.Backend.TensorRT.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TensorRtCudaKernelLaunchOptions(0, 256, TensorRtCudaSynchronizationMode.CallerManaged));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TensorRtCudaKernelLaunchOptions(1, 0, TensorRtCudaSynchronizationMode.CallerManaged));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TensorRtCudaKernelLaunchOptions(1, 1, (TensorRtCudaSynchronizationMode)99));
+        }
+
+        [TestMethod]
+        public void PreparedCudaLaunchFreezesArgumentsAndCachesIdentity()
+        {
+            var artifact = new TensorRtCudaRtcArtifact(
+                Encoding.ASCII.GetBytes("ptx\0"),
+                TensorRtCudaRtcArtifactKind.Ptx,
+                TensorRtCudaKernelRole.Preprocessing,
+                new string('a', 64),
+                new string('b', 64),
+                new string('c', 64),
+                "12.9",
+                "compute_86",
+                "pre.cu",
+                "pre");
+            using var kernel = TensorRtCudaCompiledKernel.CreateManagedTestDouble(artifact, 0);
+            var arguments = new List<TensorRtCudaKernelArgument> { TensorRtCudaKernelArgument.FromInt32(7) };
+            var options = new TensorRtCudaKernelLaunchOptions(1, 32, TensorRtCudaSynchronizationMode.CallerManaged);
+
+            TensorRtCudaPreparedLaunch prepared = kernel.PrepareLaunch(options, arguments);
+            arguments.Add(TensorRtCudaKernelArgument.FromInt32(9));
+
+            Assert.AreSame(kernel, prepared.Owner);
+            Assert.AreSame(options, prepared.Options);
+            Assert.HasCount(1, prepared.NativeArguments);
+            Assert.AreEqual(64, prepared.Identity.LaunchInputsSha256.Length);
         }
 
         [TestMethod]

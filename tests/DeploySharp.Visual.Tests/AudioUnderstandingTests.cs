@@ -23,10 +23,75 @@ namespace DeploySharp.Visual.Tests
             AudioUnderstandingProfile onnx = AudioUnderstandingProfiles.CreateWav2Vec2Base960hOnnx(); AudioUnderstandingProfile openVino = AudioUnderstandingProfiles.CreateWav2Vec2Base960hOpenVino();
             Assert.IsTrue(onnx.Executable); Assert.AreEqual(AudioUnderstandingFamily.Wav2Vec2, onnx.Family); Assert.AreEqual(16000, onnx.Processor.SampleRate); Assert.AreEqual(320, onnx.Timestamps.FrameStrideSamples); Assert.AreEqual(32, onnx.Tokenizer!.VocabularySize); Assert.AreEqual("input_values", onnx.GetArtifact(AudioArtifactRole.CtcEncoderHead).Inputs[0].Name); Assert.AreEqual("logits", onnx.GetArtifact(AudioArtifactRole.CtcEncoderHead).Outputs[0].Name);
             Assert.AreEqual("openvino-ir", openVino.GetArtifact(AudioArtifactRole.CtcEncoderHead).Format); Assert.AreEqual("b5f086a228f79416658ff7d4ac2ab897183e3719ba994453506b8aef408ec803", openVino.GetArtifact(AudioArtifactRole.CtcEncoderHead).SidecarSha256);
-            AudioUnderstandingProfile whisper = AudioUnderstandingProfiles.CreateWhisperTinyEnglishContract(); Assert.IsFalse(whisper.Executable); Assert.AreEqual(50362, whisper.Generation!.NoTimestampsTokenId); Assert.IsNull(whisper.Generation.LanguageTokenId); Assert.AreEqual(4, whisper.Generation.KvLayers); Assert.AreEqual(3, whisper.Blocker!.MissingRoles.Count);
+            AudioUnderstandingProfile whisper = AudioUnderstandingProfiles.CreateWhisperTinyEnglishContract(); Assert.IsFalse(whisper.Executable); Assert.AreEqual(50362, whisper.Generation!.NoTimestampsTokenId); Assert.IsNull(whisper.Generation.LanguageTokenId); Assert.AreEqual(4, whisper.Generation.KvLayers); Assert.AreEqual(3, whisper.Blocker!.MissingRoles.Count); Assert.AreEqual("stage28-whisper-source-only-graph-bundle-pending", whisper.Blocker.BlockerId); StringAssert.Contains(whisper.Blocker.Reproduction, "WhisperUnderstandingSession");
+            AudioUnderstandingProfile whisperOnnx = AudioUnderstandingProfiles.CreateWhisperTinyEnglishOnnx(); Assert.IsTrue(whisperOnnx.Executable); Assert.AreEqual(3, whisperOnnx.Artifacts.Count); Assert.AreEqual("input_features", whisperOnnx.GetArtifact(AudioArtifactRole.WhisperEncoder).Inputs[0].Name); Assert.AreEqual("present.3.encoder.value", whisperOnnx.GetArtifact(AudioArtifactRole.WhisperDecoderWithPast).Outputs[16].Name);
             AudioUnderstandingProfile hubert = AudioUnderstandingProfiles.CreateHubertBaseLs960Contract(); Assert.IsFalse(hubert.Executable); Assert.IsTrue(hubert.Tasks.Contains(AudioUnderstandingTask.SpeechRepresentation)); Assert.IsFalse(hubert.Tasks.Contains(AudioUnderstandingTask.AutomaticSpeechRecognition));
             AudioUnderstandingProfile pyannote = AudioUnderstandingProfiles.CreatePyannoteSpeakerDiarization31Contract(); Assert.IsFalse(pyannote.Executable); Assert.AreEqual(AudioSpeakerOwnership.ModelPipeline, pyannote.Speaker.Ownership); Assert.IsTrue(pyannote.Speaker.OwnsVad && pyannote.Speaker.OwnsEmbeddings && pyannote.Speaker.OwnsClustering && pyannote.Speaker.OwnsLabels);
             Assert.AreEqual(VisualErrorCodes.AudioCapabilityUnavailable, Assert.ThrowsExactly<VisualException>(() => new AudioUnderstandingBundle(whisper, Array.Empty<AudioArtifactBinding>())).ErrorCode);
+        }
+
+        [TestMethod]
+        public void WhisperTokenizerMatchesPinnedPromptAndRoundTripsEnglishTextWhenCheckpointIsPresent()
+        {
+#if NET8_0 || NET9_0 || NET10_0
+            string checkpoint = Environment.GetEnvironmentVariable("DEPLOYSHARP_WHISPER_CHECKPOINT") ?? @"E:\DeploySharp-Models\whisper-tiny.en\checkpoint";
+            if (!System.IO.Directory.Exists(checkpoint)) Assert.Inconclusive("The pinned Whisper checkpoint is not available: " + checkpoint);
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWhisperTinyEnglishContract();
+            WhisperTokenizer tokenizer = new WhisperTokenizer(checkpoint, profile.Generation!);
+            WhisperTokenSequence prompt = tokenizer.EncodePrompt(profile);
+            CollectionAssert.AreEqual(new long[] { 50257, 50362 }, prompt.TokenIds.ToArray());
+            IReadOnlyList<int> encoded = tokenizer.EncodeText("hello world");
+            Assert.AreEqual("hello world", tokenizer.DecodeText(encoded));
+            Assert.AreEqual(string.Empty, tokenizer.DecodeText(new[] { 50256, 50257, 50362, 50363 }));
+#else
+            Assert.Inconclusive("The managed Whisper tokenizer requires net8.0 or later.");
+#endif
+        }
+
+        [TestMethod]
+        public void PreparedWhisperInputEnforcesFeatureShapeAndFiniteValues()
+        {
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWhisperTinyEnglishOnnx();
+            using var input = new PreparedWhisperInput(profile, "input_features", new Tensor<float>(new TensorShape(1, 80, 3000), new float[240000], TensorBufferOwnership.Transfer), "unit-whisper", new string('1', 64), new string('2', 64), TimeSpan.Zero);
+            Assert.AreEqual("input_features", input.InputName); Assert.AreEqual(240000, input.Tensor.Length); Assert.IsFalse(input.IsDisposed);
+            Assert.AreEqual(VisualErrorCodes.AudioNonFinite, Assert.ThrowsExactly<VisualException>(() => new PreparedWhisperInput(profile, "input_features", new Tensor<float>(new TensorShape(1, 80, 3000), Enumerable.Repeat(float.NaN, 240000).ToArray(), TensorBufferOwnership.Transfer), "unit-whisper", new string('1', 64), new string('2', 64), TimeSpan.Zero)).ErrorCode);
+        }
+
+        [TestMethod]
+        public void WhisperLogMelExtractorProducesDeterministicFixedShapeFeaturesWhenCheckpointIsPresent()
+        {
+#if NET8_0 || NET9_0 || NET10_0
+            string checkpoint = Environment.GetEnvironmentVariable("DEPLOYSHARP_WHISPER_CHECKPOINT") ?? @"E:\DeploySharp-Models\whisper-tiny.en\checkpoint";
+            if (!System.IO.Directory.Exists(checkpoint)) Assert.Inconclusive("The pinned Whisper checkpoint is not available: " + checkpoint);
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWhisperTinyEnglishOnnx();
+            var extractor = new WhisperLogMelExtractor(checkpoint, profile.Processor);
+            var samples = new float[16000]; samples[4000] = 1f;
+            var watch = System.Diagnostics.Stopwatch.StartNew(); Tensor<float> first = extractor.Extract(samples); watch.Stop(); Tensor<float> second = extractor.Extract(samples);
+            Assert.AreEqual(new TensorShape(1, 80, 3000), first.Shape); Assert.AreEqual(240000, first.Length); CollectionAssert.AreEqual((float[])first.Buffer, (float[])second.Buffer); float[] values = (float[])first.Buffer; Assert.IsTrue(values.All(value => !float.IsNaN(value) && !float.IsInfinity(value))); Assert.AreEqual(-1.3922093f, values.Min(), 0.000001f); Assert.AreEqual(0.6077907f, values.Max(), 0.000001f); Assert.AreEqual(108025, Array.IndexOf(values, values.Max())); Console.WriteLine("STAGE28_WHISPER_LOGMEL_FIRST=" + string.Join(",", values.Take(12).Select(value => value.ToString("R", System.Globalization.CultureInfo.InvariantCulture)))); Console.WriteLine("STAGE28_WHISPER_LOGMEL ms=" + watch.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";shape=" + string.Join("x", first.Shape.ToArray()));
+#else
+            Assert.Inconclusive("The managed Whisper log-Mel extractor requires net8.0 or later.");
+#endif
+        }
+
+        [TestMethod]
+        public async Task WhisperLogMelExtractorIsDeterministicAcrossConcurrentCallsWhenCheckpointIsPresent()
+        {
+#if NET8_0 || NET9_0 || NET10_0
+            string checkpoint = Environment.GetEnvironmentVariable("DEPLOYSHARP_WHISPER_CHECKPOINT") ?? @"E:\DeploySharp-Models\whisper-tiny.en\checkpoint";
+            if (!System.IO.Directory.Exists(checkpoint)) Assert.Inconclusive("The pinned Whisper checkpoint is not available: " + checkpoint);
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWhisperTinyEnglishOnnx();
+            var extractor = new WhisperLogMelExtractor(checkpoint, profile.Processor);
+            var samples = new float[16000]; samples[4000] = 1f;
+            Tensor<float> baseline = extractor.Extract(samples);
+            Tensor<float>[] concurrent = await Task.WhenAll(
+                Task.Run(() => extractor.Extract(samples)),
+                Task.Run(() => extractor.Extract(samples)),
+                Task.Run(() => extractor.Extract(samples)),
+                Task.Run(() => extractor.Extract(samples)));
+            for (int index = 0; index < concurrent.Length; index++) CollectionAssert.AreEqual((float[])baseline.Buffer, (float[])concurrent[index].Buffer);
+#else
+            Assert.Inconclusive("The managed Whisper log-Mel extractor requires net8.0 or later.");
+#endif
         }
 
         [TestMethod]
@@ -40,6 +105,16 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual("CAET", result.Transcript); CollectionAssert.AreEqual(selected, result.FrameTokenIds.ToArray()); CollectionAssert.AreEqual(new[] { 19, 7, 5, 6 }, result.CollapsedTokenIds.ToArray()); Assert.AreEqual(4, result.Segments.Count); Assert.AreEqual(1, result.Segments[0].StartFrame); Assert.AreEqual(3, result.Segments[0].EndFrameExclusive); Assert.AreEqual(TimeSpan.FromSeconds(.02), result.Segments[0].Start); Assert.AreEqual(TimeSpan.FromSeconds(.06), result.Segments[0].End); Assert.IsTrue(result.Segments[0].MeanSelectedProbability > .99f); Assert.IsTrue(result.Segments[2].MeanSelectedProbability > .49f && result.Segments[2].MeanSelectedProbability < .51f);
             values[0] = float.NaN; Assert.AreEqual(VisualErrorCodes.AudioNonFinite, Assert.ThrowsExactly<VisualException>(() => decoder.Decode(new Tensor<float>(new TensorShape(1, selected.Length, 32), values))).ErrorCode);
             Assert.AreEqual(VisualErrorCodes.AudioCtcDecodeInvalid, Assert.ThrowsExactly<VisualException>(() => decoder.Decode(new Tensor<float>(new TensorShape(1, 1, 31), new float[31]))).ErrorCode);
+        }
+
+        [TestMethod]
+        public void CtcDecoderSkipsTimestampWorkWhenTimestampsAreDisabled()
+        {
+            AudioUnderstandingProfile profile = AudioUnderstandingProfiles.CreateWav2Vec2Base960hOnnx(); Wav2Vec2CtcVocabulary vocabulary = Vocabulary(profile.Tokenizer!); var decoder = new AudioCtcDecoder(vocabulary, profile.Timestamps);
+            int[] selected = { 0, 19, 19, 0, 7, 5, 6, 6, 0 }; float[] values = Enumerable.Repeat(-10f, selected.Length * 32).ToArray();
+            for (int frame = 0; frame < selected.Length; frame++) values[(frame * 32) + selected[frame]] = 10f;
+            AudioCtcDecodedResult result = decoder.Decode(new Tensor<float>(new TensorShape(1, selected.Length, 32), values), includeTokenTimestamps: false);
+            Assert.AreEqual("CAET", result.Transcript); CollectionAssert.AreEqual(new[] { 19, 7, 5, 6 }, result.CollapsedTokenIds.ToArray()); Assert.AreEqual(0, result.Segments.Count);
         }
 
         [TestMethod]

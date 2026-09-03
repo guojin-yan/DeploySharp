@@ -121,6 +121,10 @@ namespace DeploySharp.Visual.Tests
             Assert.IsTrue(result.Items[0].Tokens[2].IsCollapsedRepeat);
             Assert.IsTrue(result.Items[0].Tokens[0].IsBlank);
             Assert.AreEqual(0, result.Items[0].Tokens[7].ClassIndex);
+
+            values[0] = float.NaN;
+            VisualException invalid = Assert.ThrowsExactly<VisualException>(() => decoder.Decode(new VisualDecodeContext(input, profile, InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(1, 8, 4), values)), CancellationToken.None)));
+            Assert.AreEqual(VisualErrorCodes.DecodeFailed, invalid.ErrorCode);
         }
 
         [TestMethod]
@@ -144,6 +148,37 @@ namespace DeploySharp.Visual.Tests
 
             VisualModelProfile wrongProfile = RecognitionProfile(decoder, TensorElementType.Float64, 2, 3, 5, CtcTensorLayout.TimeBatchClasses);
             Assert.AreEqual(VisualErrorCodes.TensorInvalid, Assert.ThrowsExactly<VisualException>(() => decoder.Decode(new VisualDecodeContext(input, wrongProfile, InferenceOutputs.Create("logits", new Tensor<double>(new TensorShape(3, 2, 5), new double[30])), CancellationToken.None))).ErrorCode);
+        }
+
+        [TestMethod]
+        public void VisualPipelineUsesCompactSequenceArgMaxAndPreservesCtcTrace()
+        {
+            var characters = new OcrCharacterSet("tests.accelerated.charset", "1", "AB😀");
+            var decoder = new GreedyCtcDecoder(new CtcOutputSchema("logits", CtcTensorLayout.BatchTimeClasses), characters, new CtcDecoderOptions(blankIndex: 1, applySoftmax: false));
+            VisualModelProfile profile = RecognitionProfile(decoder, TensorElementType.Float32, 1, 8, 4);
+            var provider = new FakeVisualBackendProvider(VisualTestData.Metadata(profile, profile.Outputs[0].ShapePattern), _ => throw new AssertFailedException("The full output path must not run."));
+            provider.SequenceArgMaxResult = new SequenceArgMaxResult(
+                1,
+                8,
+                4,
+                new[] { 1, 0, 0, 1, 0, 2, 3, 0 },
+                new[] { .9f, .8f, .7f, .9f, .6f, .95f, .85f, .75f },
+                new[] { -1 });
+            using var registry = new BackendRegistry();
+            registry.Register(provider);
+            var profiles = new VisualProfileRegistry(); profiles.Register(profile); profiles.Freeze();
+            BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, provider.Descriptor.Id);
+            VisualProfileSelection selection = profiles.Select(new ModelArtifact(profile.ModelId, provider.Format, "accelerated.fake", preferredBackend: provider.Descriptor.Id), registry, request, profile.Task);
+            using var pipeline = new VisualPipeline(registry, selection, request);
+            using PreparedVisualInput input = RecognitionInput(1, 16);
+
+            TextRecognitionBatchResult result = pipeline.Run(input).GetValue<TextRecognitionBatchResult>();
+
+            Assert.AreEqual("AAB😀A", result.Items[0].Text);
+            Assert.AreEqual(8, result.Items[0].Tokens.Count);
+            Assert.IsTrue(result.Items[0].Tokens[2].IsCollapsedRepeat);
+            Assert.AreEqual(0, provider.LastSession!.RunCount);
+            Assert.AreEqual(1, provider.LastSession.SequenceArgMaxRunCount);
         }
 
         [TestMethod]
@@ -214,6 +249,59 @@ namespace DeploySharp.Visual.Tests
             fixture.DetectionProvider.Delay = TimeSpan.Zero;
             Assert.AreEqual(2, (await fixture.Pipeline.RunAsync(secondInput)).Regions.Count);
             Assert.AreEqual(1, fixture.DetectionProvider.LastSession!.MaximumActive);
+        }
+
+        [TestMethod]
+        public async Task OneImageDispatchesCompactRecognitionBatchesAcrossIndependentSessionsAndRestoresOrder()
+        {
+            var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .1f, maximumCandidates: 4, maximumRegions: 4));
+            VisualModelProfile detector = DetectionProfile(detectorDecoder, TensorElementType.Float32, 4, "fake-parallel-detector");
+            var recognizerDecoder = new GreedyCtcDecoder(new CtcOutputSchema("logits", CtcTensorLayout.BatchTimeClasses), new OcrCharacterSet("tests.parallel", "1", "ABC"), new CtcDecoderOptions(0, applySoftmax: false));
+            var recognizer = new VisualModelProfile("tests/text-recognition.parallel", new ModelId("tests/text-recognizer-parallel"), VisualTaskId.TextRecognition, "1", "fake-parallel-recognizer",
+                new VisualInputBinding("crops", TensorElementType.Float32, new TensorShape(-1, 3, 8, -1), VisualTensorLayout.Nchw, 1, 1),
+                new[] { new VisualOutputBinding("logits", TensorElementType.Float32, new TensorShape(-1, 6, 4)) }, Array.Empty<VisualLabel>(), recognizerDecoder);
+            var detectorProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(detector, detector.Outputs[0].ShapePattern), _ => ParallelDetectionOutputs(), "fake-parallel-detector", new BackendId("fake-parallel-detector"));
+            var recognizerProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(recognizer, recognizer.Outputs[0].ShapePattern), _ => SingleRecognitionOutputs(), "fake-parallel-recognizer", new BackendId("fake-parallel-recognizer"))
+            {
+                Delay = TimeSpan.FromMilliseconds(50),
+                SequenceArgMaxResult = new SequenceArgMaxResult(
+                    1,
+                    6,
+                    4,
+                    new[] { 0, 1, 1, 0, 2, 2 },
+                    new[] { .9f, .9f, .9f, .9f, .9f, .9f },
+                    new[] { -1 })
+            };
+            using var registry = new BackendRegistry();
+            registry.Register(detectorProvider);
+            registry.Register(recognizerProvider);
+            var profiles = new VisualProfileRegistry(); profiles.Register(detector); profiles.Register(recognizer); profiles.Freeze();
+            BackendRequest detectorRequest = new BackendRequest(BackendCapabilities.TensorInference, detectorProvider.Descriptor.Id);
+            BackendRequest recognizerRequest = new BackendRequest(BackendCapabilities.TensorInference, recognizerProvider.Descriptor.Id);
+            VisualProfileSelection detectorSelection = profiles.Select(new ModelArtifact(detector.ModelId, detectorProvider.Format, "parallel-detector.fake", preferredBackend: detectorProvider.Descriptor.Id), registry, detectorRequest, detector.Task);
+            VisualProfileSelection recognizerSelection = profiles.Select(new ModelArtifact(recognizer.ModelId, recognizerProvider.Format, "parallel-recognizer.fake", preferredBackend: recognizerProvider.Descriptor.Id), registry, recognizerRequest, recognizer.Task);
+            var crop = new TextCropProfile("tests.parallel.crop", 8, OcrRecognitionWidthMode.Dynamic, 8, 64, 8);
+            using var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop,
+                new OcrPipelineOptions(maximumRegions: 4, maximumRecognitionBatch: 1), new SessionOptions(1), new SessionOptions(2));
+            using var input = new FakeOcrImageInput();
+            var watch = Stopwatch.StartNew();
+
+            OcrResult result = await pipeline.RunAsync(input);
+
+            watch.Stop();
+            Assert.AreEqual(4, result.Regions.Count);
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 }, result.Regions.Select(value => value.Region.SourceIndex).ToArray());
+            Assert.IsTrue(result.Regions.All(value => value.Recognition.Text == "AB"));
+            Assert.AreEqual(2, recognizerProvider.CreatedSessions.Count);
+            CollectionAssert.AreEquivalent(new[] { 2, 2 }, recognizerProvider.CreatedSessions.Select(value => value.SequenceArgMaxRunCount).ToArray());
+            Assert.IsTrue(recognizerProvider.CreatedSessions.All(value => value.RunCount == 0));
+            Assert.IsTrue(recognizerProvider.CreatedSessions.All(value => value.MaximumActive == 1));
+            Assert.IsTrue(input.MaximumActivePreparedBatches <= 2, "Recognition preparation must be bounded by the two-session pool.");
+            Assert.IsNotNull(result.Timing.Details);
+            Assert.AreEqual(4, result.Timing.Details.RecognitionBatchCount);
+            Assert.IsTrue(result.Timing.Details.RecognitionPreparationWork > TimeSpan.Zero);
+            Assert.IsTrue(result.Timing.Details.RecognitionInferenceWork >= TimeSpan.FromMilliseconds(180), "Detailed inference is summed work across four overlapping batches.");
+            Assert.IsTrue(watch.Elapsed < TimeSpan.FromMilliseconds(180), "Two independent sessions should process four 50 ms batches in two waves.");
         }
 
         [TestMethod]
@@ -352,12 +440,31 @@ namespace DeploySharp.Visual.Tests
                 ("scores", new Tensor<float>(new TensorShape(1, 3), new[] { .95f, .8f, .9f })));
         }
 
+        private static InferenceOutputs ParallelDetectionOutputs()
+        {
+            return Outputs(
+                ("polygons", new Tensor<float>(new TensorShape(1, 4, 4, 2), new[]
+                {
+                    5f,5f, 25f,5f, 25f,15f, 5f,15f,
+                    30f,5f, 55f,5f, 55f,15f, 30f,15f,
+                    5f,30f, 35f,30f, 35f,40f, 5f,40f,
+                    45f,30f, 80f,30f, 80f,40f, 45f,40f
+                })),
+                ("scores", new Tensor<float>(new TensorShape(1, 4), new[] { .99f, .98f, .97f, .96f })));
+        }
+
         private static InferenceOutputs RecognitionOutputs()
         {
             float[] values = Probabilities(2, 6, 4,
                 0,1,1,0,2,2,
                 3,3,0,1,1,0);
             return InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(2, 6, 4), values));
+        }
+
+        private static InferenceOutputs SingleRecognitionOutputs()
+        {
+            float[] values = Probabilities(1, 6, 4, 0, 1, 1, 0, 2, 2);
+            return InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(1, 6, 4), values));
         }
 
         private static float[] Probabilities(int batch, int time, int classes, params int[] selected)
@@ -386,6 +493,8 @@ namespace DeploySharp.Visual.Tests
             public PreparedVisualInput DetectionInput { get; }
             public int LastBatchSize { get; private set; }
             public int DisposeCount { get; private set; }
+            public int MaximumActivePreparedBatches { get; private set; }
+            private int _activePreparedBatches;
             public PreparedVisualInput PrepareRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken)
             {
                 if (_disposed) throw new ObjectDisposedException(nameof(FakeOcrImageInput));
@@ -393,9 +502,23 @@ namespace DeploySharp.Visual.Tests
                 LastBatchSize = requests.Count;
                 int width = requests[0].TargetWidth;
                 var size = new VisualSize(width, requests[0].TargetHeight);
-                return new PreparedVisualInput(inputName, new Tensor<float>(new TensorShape(requests.Count, 3, size.Height, size.Width), new float[requests.Count * 3 * size.Height * size.Width]), size, size, requests.Count, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
+                int active = Interlocked.Increment(ref _activePreparedBatches);
+                MaximumActivePreparedBatches = Math.Max(MaximumActivePreparedBatches, active);
+                return new PreparedVisualInput(inputName, new Tensor<float>(new TensorShape(requests.Count, 3, size.Height, size.Width), new float[requests.Count * 3 * size.Height * size.Width]), size, size, requests.Count, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size), ownership: PreparedInputOwnership.Owned, ownedResource: new PreparedBatchLease(this));
             }
             public void Dispose() { if (_disposed) return; _disposed = true; DisposeCount++; DetectionInput.Dispose(); }
+            private sealed class PreparedBatchLease : IDisposable
+            {
+                private FakeOcrImageInput? _owner;
+                public PreparedBatchLease(FakeOcrImageInput owner) { _owner = owner; }
+                public void Dispose()
+                {
+                    FakeOcrImageInput? owner = _owner;
+                    if (owner == null) return;
+                    Interlocked.Decrement(ref owner._activePreparedBatches);
+                    _owner = null;
+                }
+            }
             private static PreparedVisualInput DetectionInputFactory()
             {
                 var size = new VisualSize(100, 100);

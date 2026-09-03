@@ -201,6 +201,35 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DirectAndHeatmapDecodersReturnIndependentDynamicBatchRows()
+        {
+            PoseTopology topology = Topology();
+            var directSchema = new DirectPoseOutputSchema("keypoints", 3, 3, boxesOutputName: "boxes", instanceScoresOutputName: "scores");
+            var direct = new DirectPoseDecoder(directSchema, topology, new PoseDecoderOptions(instanceScoreThreshold: 0, maximumCandidates: 1, maximumInstances: 1));
+            VisualModelProfile directProfile = new VisualModelProfile("tests/direct-pose-batch", new ModelId("tests/direct-pose-batch"), VisualTaskId.PoseEstimation, "1.0", "fake",
+                new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(-1, 3, 8, 8), VisualTensorLayout.Nchw, 1, 2),
+                new[] { new VisualOutputBinding("keypoints", TensorElementType.Float32, new TensorShape(-1, 1, 3, 3)), new VisualOutputBinding("boxes", TensorElementType.Float32, new TensorShape(-1, 1, 4)), new VisualOutputBinding("scores", TensorElementType.Float32, new TensorShape(-1, 1)) }, Array.Empty<VisualLabel>(), direct);
+            using var input = BatchInput(new[] { new VisualSize(8, 8), new VisualSize(16, 8) });
+            var directValues = new float[18];
+            for (int row = 0; row < 2; row++) for (int keypoint = 0; keypoint < 3; keypoint++) { int offset = row * 9 + keypoint * 3; directValues[offset] = 4; directValues[offset + 1] = 4; directValues[offset + 2] = .9f; }
+            var directOutputs = Outputs(("keypoints", new Tensor<float>(new TensorShape(2, 1, 3, 3), directValues)), ("boxes", new Tensor<float>(new TensorShape(2, 1, 4), new[] { 1f, 1f, 7f, 7f, 1f, 1f, 7f, 7f })), ("scores", new Tensor<float>(new TensorShape(2, 1), new[] { .9f, .8f })));
+            var directBatch = (PoseEstimationBatchResult)direct.Decode(new VisualDecodeContext(input, directProfile, directOutputs, CancellationToken.None));
+            Assert.AreEqual(2, directBatch.Count);
+            Assert.AreEqual(8, directBatch[0].SourceSize.Width);
+            Assert.AreEqual(16, directBatch[1].SourceSize.Width);
+
+            var heatmapSchema = new HeatmapPoseOutputSchema("heatmaps", 3, PoseHeatmapLayout.Nchw, PoseScoreKind.Raw, PoseGridMappingMode.AlignCorners);
+            var heatmap = new HeatmapPoseDecoder(heatmapSchema, topology, OneCandidateOptions(PoseBoundaryMode.MarkInvalid, keypointThreshold: -10));
+            VisualModelProfile heatmapProfile = HeatmapProfile(heatmap, new TensorShape(-1, 3, 2, 2));
+            var heatmapValues = new float[24];
+            for (int row = 0; row < 2; row++) for (int keypoint = 0; keypoint < 3; keypoint++) heatmapValues[row * 12 + keypoint * 4] = 1;
+            var heatmapBatch = (PoseEstimationBatchResult)heatmap.Decode(new VisualDecodeContext(input, heatmapProfile, Outputs(("heatmaps", new Tensor<float>(new TensorShape(2, 3, 2, 2), heatmapValues))), CancellationToken.None));
+            Assert.AreEqual(2, heatmapBatch.Count);
+            Assert.AreEqual(8, heatmapBatch[0].SourceSize.Width);
+            Assert.AreEqual(16, heatmapBatch[1].SourceSize.Width);
+        }
+
+        [TestMethod]
         public void OksUsesExplicitAreaSigmasVisibilityAndScore()
         {
             PoseTopology topology = Topology(withSigmas: true);
@@ -353,6 +382,13 @@ namespace DeploySharp.Visual.Tests
 
         private static PreparedVisualInput Input(VisualSize source, VisualSize model, ImageTransform transform)
             => new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1,3,model.Height,model.Width), new float[checked(3 * model.Height * model.Width)]), source, model, 1, VisualTensorLayout.Nchw, transform);
+
+        private static PreparedVisualInput BatchInput(IReadOnlyList<VisualSize> sources)
+        {
+            var frames = new List<VisualInputFrame>();
+            for (int index = 0; index < sources.Count; index++) frames.Add(new VisualInputFrame(sources[index], new VisualSize(8, 8), ImageTransform.Resize(sources[index], new VisualSize(8, 8))));
+            return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(sources.Count, 3, 8, 8), new float[sources.Count * 3 * 8 * 8]), sources[0], new VisualSize(8, 8), sources.Count, VisualTensorLayout.Nchw, frames[0].Transform, batchFrames: frames);
+        }
 
         private static PoseEstimationResult Decode(IVisualDecoder decoder, VisualModelProfile profile, PreparedVisualInput input, InferenceOutputs outputs)
             => (PoseEstimationResult)decoder.Decode(new VisualDecodeContext(input, profile, outputs, CancellationToken.None));
