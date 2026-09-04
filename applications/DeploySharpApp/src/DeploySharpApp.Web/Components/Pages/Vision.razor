@@ -3,6 +3,7 @@
 @using DeploySharpApp.Application
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
+@inject VisualTestImageCatalogService TestImageCatalog
 @inject WebActivityStore Activity
 <PageTitle>视觉推理 · DeploySharpApp</PageTitle>
 <style>
@@ -20,6 +21,7 @@
     .image-results figcaption { padding: 8px 10px; color: #778198; font-size: 10px; }
     .download-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
     .download-row progress { flex: 1; min-width: 0; }
+    .download-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-name { display: block; margin-top: 6px; color: #778198; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .catalog-loading { margin: 12px 0; color: #778198; font-size: 10px; }
     @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } }
@@ -41,6 +43,8 @@
         </label>
         @if (catalogLoading) { <p class="catalog-loading">正在读取 GitHub release 模型清单… @catalogProgress.ToString("P0")</p> }
         @if (!string.IsNullOrWhiteSpace(catalogError)) { <p class="hint">release 清单暂时不可用：@catalogError 仍可使用本地模型。</p> }
+        @if (testImageLoading) { <p class="catalog-loading">正在读取 test-assets.1 测试图像清单…</p> }
+        @if (!string.IsNullOrWhiteSpace(testImageError)) { <p class="hint">测试图像清单暂时不可用：@testImageError 仍可上传自己的图片。</p> }
         @if (selectedReleaseModel is not null)
         {
             <div class="download-row"><span class="muted">@(selectedReleaseModel.Cached ? "已缓存" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadSelectedAsync()" disabled="@downloading">@(downloading ? "下载中…" : "下载模型")</button></div>
@@ -48,7 +52,21 @@
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
         }
         <label>本地 ONNX 模型路径<input @bind="modelPath" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
-        <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将提示待补充的默认测试图" : imageFileName)</span></label>
+        <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
+        @if (testImages.Count > 0)
+        {
+            <label>Release 测试图像
+                <select @bind="selectedTestImageId">
+                    <option value="">@(selectedReleaseModel is null ? "仅使用本地上传图像" : "按模型任务自动匹配")</option>
+                    @foreach (VisualTestImage image in testImages) { <option value="@image.Id">@image.FileName · @string.Join(", ", image.Tasks)</option> }
+                </select>
+            </label>
+        }
+        @if (effectiveTestImage is not null && imagePath is null)
+        {
+            <div class="download-row"><span class="muted">默认图像：@effectiveTestImage.FileName · @(effectiveTestImage.Cached ? "本地缓存，运行前仍会校验" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadTestImageAsync()" disabled="@(downloadingImage || busy)">@(downloadingImage ? "下载中…" : "使用测试图像")</button></div>
+            @if (downloadingImage) { <progress value="@imageDownloadProgress" max="1"></progress> }
+        }
         <label>命名 Tensor JSON<textarea @bind="tensorJson" placeholder="无图像时例如 [1,2,3]；上传图片后自动生成图像张量"></textarea></label>
         <div class="two-col"><label>Tensor 名称<input @bind="tensorName" /></label><label>Tensor 形状<input @bind="tensorShape" /></label></div>
         <label>后端<select @bind="selectedBackend"><option value="deploysharp.backend.onnxruntime">ONNX Runtime</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
@@ -66,7 +84,7 @@
         }
         else
         {
-            <div class="dropzone"><div class="drop-icon">＋</div><strong>选择一张本地图片开始</strong><span>图片只上传到当前 Web 服务，不在浏览器加载 native DLL</span></div>
+            <div class="dropzone"><div class="drop-icon">＋</div><strong>上传图片或使用 release 默认测试图</strong><span>图片只上传到当前 Web 服务，不在浏览器加载 native DLL</span></div>
         }
         <div class="result-box @(busy ? "running" : "")"><pre>@result</pre></div>
         <div class="metric-row"><div class="metric"><small>预处理</small><strong>@Metric(preprocessMs)</strong></div><div class="metric"><small>推理</small><strong>@Metric(inferenceMs)</strong></div><div class="metric"><small>后处理</small><strong>@Metric(postprocessMs)</strong></div><div class="metric accent"><small>端到端</small><strong>@Metric(totalMs)</strong></div></div>
@@ -76,6 +94,7 @@
 </div>
 @code {
     private readonly List<VisualReleaseModel> releaseModels = new();
+    private readonly List<VisualTestImage> testImages = new();
     private string selectedBackend = "deploysharp.backend.onnxruntime";
     private string selectedModelId = "demo/yolo-v8-n";
     private string device = "cpu";
@@ -90,6 +109,7 @@
     private string runtimeMessage = "选择 release 模型或输入本地 ONNX 路径，然后上传图片。";
     private string errorCode = "None";
     private string imageFileName = string.Empty;
+    private string selectedTestImageId = string.Empty;
     private string? imagePath;
     private string? originalImageUrl;
     private string? resultImageUrl;
@@ -99,6 +119,10 @@
     private double catalogProgress;
     private bool downloading;
     private double downloadProgress;
+    private bool testImageLoading = true;
+    private string? testImageError;
+    private bool downloadingImage;
+    private double imageDownloadProgress;
     private bool busy;
     private bool runSucceeded;
     private double progress;
@@ -109,16 +133,19 @@
     private CancellationTokenSource? cts;
     private IReadOnlyList<RuntimeDiagnostic> diagnostics = Array.Empty<RuntimeDiagnostic>();
     private VisualReleaseModel? selectedReleaseModel => releaseModels.FirstOrDefault(model => string.Equals(model.Id, selectedModelId, StringComparison.OrdinalIgnoreCase));
+    private VisualTestImage? selectedTestImage => testImages.FirstOrDefault(image => string.Equals(image.Id, selectedTestImageId, StringComparison.OrdinalIgnoreCase));
+    private VisualTestImage? effectiveTestImage => selectedTestImage ?? (selectedReleaseModel is null ? null : TestImageCatalog.FindDefault(testImages, selectedReleaseModel.Task, selectedReleaseModel.DisplayName));
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            IReadOnlyList<VisualReleaseModel> models = await ReleaseCatalog.GetModelsAsync(new Progress<double>(value => { catalogProgress = value; InvokeAsync(StateHasChanged); }));
-            releaseModels.AddRange(models);
-        }
+        Task<IReadOnlyList<VisualReleaseModel>> modelsTask = ReleaseCatalog.GetModelsAsync(new Progress<double>(value => { catalogProgress = value; InvokeAsync(StateHasChanged); }));
+        Task<IReadOnlyList<VisualTestImage>> imagesTask = TestImageCatalog.GetImagesAsync();
+        try { releaseModels.AddRange(await modelsTask); }
         catch (Exception exception) { catalogError = exception.Message; }
         finally { catalogLoading = false; }
+        try { testImages.AddRange(await imagesTask); }
+        catch (Exception exception) { testImageError = exception.Message; }
+        finally { testImageLoading = false; }
     }
 
     private async Task HandleImageSelected(InputFileChangeEventArgs args)
@@ -131,12 +158,36 @@
         await using (Stream source = file.OpenReadStream(20 * 1024 * 1024))
         await using (var destination = new FileStream(imagePath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
         { await source.CopyToAsync(destination); }
-        byte[] bytes = await File.ReadAllBytesAsync(imagePath);
-        imageFileName = file.Name;
-        originalImageUrl = "data:" + (string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType) + ";base64," + Convert.ToBase64String(bytes);
+        await SetImagePreviewAsync(imagePath, file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType);
+        runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
+    }
+
+    private async Task DownloadTestImageAsync(VisualTestImage? image = null, CancellationToken cancellationToken = default)
+    {
+        image ??= effectiveTestImage;
+        if (image is null || downloadingImage) return;
+        downloadingImage = true; imageDownloadProgress = 0; runtimeMessage = "正在下载默认测试图像并校验 SHA256…";
+        try
+        {
+            VisualTestImageDownloadResult downloaded = await TestImageCatalog.DownloadAsync(image, new Progress<double>(value => { imageDownloadProgress = value; InvokeAsync(StateHasChanged); }), cancellationToken);
+            selectedTestImageId = downloaded.Image.Id;
+            await SetImagePreviewAsync(downloaded.Path, downloaded.Image.FileName, downloaded.Image.MediaType);
+            Activity.Add("test-image-download", "Downloaded and SHA256-verified " + downloaded.Image.FileName, "DSAPP-TEST-IMAGE-DOWNLOADED");
+            runtimeMessage = "默认测试图像已准备并通过 SHA256 校验。";
+        }
+        catch (OperationCanceledException) { runtimeMessage = "测试图像下载已取消。"; Activity.Add("test-image-download", runtimeMessage, "DSAPP-WEB-CANCELLED"); throw; }
+        catch (Exception exception) { runtimeMessage = "测试图像下载失败：" + exception.Message; Activity.Add("test-image-download", runtimeMessage, "DSAPP-TEST-IMAGE-DOWNLOAD-FAILED"); }
+        finally { downloadingImage = false; }
+    }
+
+    private async Task SetImagePreviewAsync(string path, string fileName, string mediaType)
+    {
+        byte[] bytes = await File.ReadAllBytesAsync(path);
+        imagePath = path;
+        imageFileName = fileName;
+        originalImageUrl = "data:" + mediaType + ";base64," + Convert.ToBase64String(bytes);
         resultImageUrl = null;
         resultImageCaption = "等待推理";
-        runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
     }
 
     private async Task DownloadSelectedAsync(CancellationToken cancellationToken = default)
@@ -176,7 +227,11 @@
                 }
                 if (imagePath is null && string.IsNullOrWhiteSpace(tensorJson))
                 {
-                    runtimeState = "ModelUnavailable"; runtimeMessage = "当前 release 尚未提供默认测试图片，请上传图片后运行。"; result = runtimeMessage; Activity.Add("run", runtimeMessage, "DSAPP-DEFAULT-IMAGE-PENDING"); return;
+                    await DownloadTestImageAsync(effectiveTestImage, cts.Token);
+                    if (imagePath is null)
+                    {
+                        runtimeState = "ModelUnavailable"; runtimeMessage = "当前模型没有可用的默认测试图像，请上传图片后运行。"; result = runtimeMessage; Activity.Add("run", runtimeMessage, "DSAPP-DEFAULT-IMAGE-UNAVAILABLE"); return;
+                    }
                 }
             }
             ModelTensorInput[]? tensors = BuildTensorInputs(selected);
