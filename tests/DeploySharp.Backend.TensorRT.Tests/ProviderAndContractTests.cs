@@ -37,6 +37,64 @@ namespace DeploySharp.Backend.TensorRT.Tests
         }
 
         [TestMethod]
+        public void BridgeManifestRequiresExactRuntimeIdentityAndSmokeTest()
+        {
+            const string bridgeHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            var probe = new TensorRtProbeResult(
+                TensorRtApiVersion.TensorRt10,
+                cudaVersion: "12.9.1",
+                cudnnVersion: "9.7.0",
+                tensorRtVersion: "10.13.3",
+                gpuComputeCapability: "8.6",
+                smokeTestPassed: true,
+                runtimeIdentifier: "win-x64",
+                processArchitecture: "x64");
+            var manifest = new TensorRtBridgeManifest(
+                "4.0.0",
+                TensorRtApiVersion.TensorRt10,
+                "12.9",
+                9,
+                "win-x64",
+                "x64",
+                new[] { "8.6" },
+                "jyppxtrtbridge.dll",
+                bridgeHash);
+
+            Assert.IsTrue(manifest.Matches(probe));
+            Assert.IsFalse(manifest.Matches(new TensorRtProbeResult(
+                TensorRtApiVersion.TensorRt10,
+                cudaVersion: "12.10.0",
+                cudnnVersion: "9.7.0",
+                tensorRtVersion: "10.13.3",
+                gpuComputeCapability: "8.6",
+                smokeTestPassed: true,
+                runtimeIdentifier: "win-x64",
+                processArchitecture: "x64")));
+            Assert.IsFalse(manifest.Matches(new TensorRtProbeResult(
+                TensorRtApiVersion.TensorRt10,
+                cudaVersion: "12.9.1",
+                cudnnVersion: "9.7.0",
+                tensorRtVersion: "10.13.3",
+                gpuComputeCapability: "8.6",
+                smokeTestPassed: false,
+                runtimeIdentifier: "win-x64",
+                processArchitecture: "x64")));
+            Assert.ThrowsExactly<ArgumentException>(() => new TensorRtBridgeManifest(
+                "4.0.0", TensorRtApiVersion.TensorRt10, "12.9", 9, "win-x64", "x64", new[] { "8.6" }, "bridge.dll", "not-a-sha"));
+        }
+
+        [TestMethod]
+        public void EngineCompatibilityRejectsEveryIdentityDrift()
+        {
+            string hash = new string('b', 64);
+            var expected = new TensorRtEngineCompatibility(hash, "10.0", "10.13.3", "12.9.1", "9.7.0", "551.76", "sm_86", "bridge-sha256:abc");
+            Assert.IsTrue(expected.Matches(new TensorRtEngineCompatibility(hash, "10.0", "10.13.3", "12.9.1", "9.7.0", "551.76", "sm_86", "bridge-sha256:abc")));
+            Assert.IsFalse(expected.Matches(new TensorRtEngineCompatibility(hash, "10.0", "10.13.3", "12.9.1", "9.7.0", "552.00", "sm_86", "bridge-sha256:abc")));
+            Assert.IsFalse(expected.Matches(new TensorRtEngineCompatibility(new string('c', 64), "10.0", "10.13.3", "12.9.1", "9.7.0", "551.76", "sm_86", "bridge-sha256:abc")));
+            Assert.ThrowsExactly<ArgumentException>(() => new TensorRtEngineCompatibility("bad", "10.0", "10.13.3", "12.9.1", "9.7.0", "551.76", "sm_86", "bridge-sha256:abc"));
+        }
+
+        [TestMethod]
         public void ProviderAcceptsOnlyExternalPlanAndCudaRequests()
         {
             using var provider = new TensorRtBackendProvider();

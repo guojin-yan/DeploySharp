@@ -93,12 +93,25 @@ The code-first path, visual preparation, ModelFactory download flow, and model-s
 | Package family | Contents | Native runtime ownership |
 | --- | --- | --- |
 | <code>JYPPX.DeploySharp.Core</code> | Models, tensors, sessions, results, diagnostics, backend registration | None |
+| <code>JYPPX.DeploySharp.Extensibility</code> | Plugin descriptors, runtime dependencies, options schemas, and native probes | None; host-owned probing |
 | <code>JYPPX.DeploySharp.Visual</code> | Visual profiles, preprocessing metadata, decoders, canonical results | None |
 | <code>JYPPX.DeploySharp.Visual.OpenCV</code> | OpenCV image loading and tensor preparation | Application selects OpenCV runtime |
 | <code>JYPPX.DeploySharp.Visual.TensorRT</code> | CUDA preprocessing and device-resident TensorRT visual pipelines | Application provides TensorRT, CUDA, bridge, and engine |
 | <code>JYPPX.DeploySharp.LLM</code> / <code>Multimodal</code> | Generation, chat, embeddings, ordered media, streaming | Application selects model runtime |
 | <code>JYPPX.DeploySharp.ModelPack.Json</code> / <code>ModelFactory</code> | Manifests, integrity validation, catalog downloads, offline cache | None; model files stay application-owned |
 | <code>JYPPX.DeploySharp.Backend.*</code> | ONNX Runtime, OpenVINO, OpenCV DNN, TensorRT, and LLamaSharp adapters | Backend-specific and explicit |
+
+### Recommended Package Combinations
+
+| Scenario | DeploySharp packages | Application-owned runtime |
+| --- | --- | --- |
+| ONNX Runtime visual inference | `Core` + `Visual` + `Visual.OpenCV` + `Backend.OnnxRuntime` | ONNX Runtime CPU/CUDA package and model files |
+| OpenVINO or OpenCV DNN visual inference | `Core` + `Visual` + `Visual.OpenCV` + the matching `Backend.*` | Matching OpenVINO/OpenCV native runtime |
+| TensorRT CUDA visual inference | `Core` + `Visual` + `Visual.TensorRT` + `Backend.TensorRT` | CUDA, cuDNN, TensorRT, bridge, and compatible Engine |
+| LLM or multimodal inference | `Core` + `LLM` or `Multimodal` + the selected backend | GGUF/model files and selected native runtime |
+| Model catalog/cache and plugin probing | `Core` + `ModelPack.Json` + `ModelFactory` and/or `Extensibility` | Application-owned catalog, cache, and probe host |
+
+See the [detailed package combination and installation guide](docs/articles/package-combinations.md) for commands, TFM/RID notes, and runtime ownership.
 
 ## 🌐 Public Packages And Release Assets
 
@@ -107,6 +120,7 @@ DeploySharp packages are not yet published to nuget.org. The exact package IDs a
 | Package | Candidate version | NuGet.org | Purpose |
 | --- | --- | --- | --- |
 | `JYPPX.DeploySharp.Core` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core) | Core contracts and backend registration |
+| `JYPPX.DeploySharp.Extensibility` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility) | Plugin descriptors, runtime probes, and options schemas |
 | `JYPPX.DeploySharp.Visual` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual) | Visual profiles, preprocessing, and decoders |
 | `JYPPX.DeploySharp.Visual.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV) | OpenCV image preparation |
 | `JYPPX.DeploySharp.Visual.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT) | CUDA preprocessing and TensorRT visual pipelines |

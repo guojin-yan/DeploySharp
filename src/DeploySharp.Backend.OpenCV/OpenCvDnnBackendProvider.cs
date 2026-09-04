@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Extensibility;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.OpenCvSharp;
@@ -24,7 +25,33 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
         public OpenCvDnnBackendProvider(OpenCvDnnOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            Descriptor = new BackendDescriptor(BackendId, "OpenCV DNN CPU", OpenCvSharpBuildInfo.PackageVersion, BackendCapabilities.TensorInference, new[] { "onnx" });
+            Descriptor = new BackendDescriptor(
+                BackendId,
+                "OpenCV DNN CPU",
+                OpenCvSharpBuildInfo.PackageVersion,
+                BackendCapabilities.TensorInference,
+                new[] { "onnx" },
+                description: "OpenCV 5 preview DNN adapter; the managed API and win-x64 native runtime are installed separately.",
+                iconKey: "opencv",
+                supportedTargetFrameworks: new[] { "net48", "net8.0", "net10.0" },
+                supportedRuntimeIdentifiers: new[] { "win-x64" },
+                supportedDevices: new[] { "cpu" },
+                providerPackageId: "JYPPX.OpenCV.CSharp.API",
+                providerPackageVersion: "5.0.0-preview.1",
+                preferredExecutionMode: BackendExecutionMode.InProcessOrWorker,
+                runtimeDependencies: new IBackendRuntimeDependency[]
+                {
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenCV.CSharp.API", "5.0.0-preview.1"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenCV.runtime.win-x64", "5.0.0-preview.1", "win-x64", downloadable: true, licenseExpression: "Apache-2.0")
+                },
+                nativeProbeId: "opencv-native",
+                optionsSchema: new BackendOptionsSchema("opencv-dnn.options.v1", new[]
+                {
+                    new BackendOptionDefinition("numthreads", BackendOptionValueType.Integer, "0", minimum: 0),
+                    new BackendOptionDefinition("enablefusion", BackendOptionValueType.Boolean, "true"),
+                    new BackendOptionDefinition("enablewinograd", BackendOptionValueType.Boolean, "true")
+                }),
+                healthCheckId: "opencv-native");
         }
 
         /// <summary>Gets backend identity and the intentionally synchronous CPU capability set. / 获取后端身份和有意保持同步的 CPU 能力集。</summary>

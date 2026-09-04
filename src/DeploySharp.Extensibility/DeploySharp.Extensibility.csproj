@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard2.0;net8.0;net10.0</TargetFrameworks>
+    <AssemblyName>JYPPX.DeploySharp.Extensibility</AssemblyName>
+    <RootNamespace>JYPPX.DeploySharp.Extensibility</RootNamespace>
+    <PackageId>JYPPX.DeploySharp.Extensibility</PackageId>
+    <Title>DeploySharp Extensibility Contracts</Title>
+    <Description>Manifest-driven backend plugin, runtime dependency, native probe, options schema, and structured diagnostic contracts for DeploySharp hosts.</Description>
+    <PackageTags>DeploySharp;Plugin;Backend;Runtime;Native;Probe;Extensibility;AI;CSharp</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
+    <DefineConstants>$(DefineConstants);DEPLOYSHARP_LEGACY_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+    <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

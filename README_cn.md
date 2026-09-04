@@ -92,12 +92,25 @@ Console.WriteLine(outputs.Count);
 | 包族 | 内容 | 原生运行时所有权 |
 | --- | --- | --- |
 | <code>JYPPX.DeploySharp.Core</code> | 模型、张量、Session、结果、诊断、后端注册 | 无 |
+| <code>JYPPX.DeploySharp.Extensibility</code> | 插件描述、运行时依赖、选项 Schema 和 native 探针 | 无，由宿主负责探测 |
 | <code>JYPPX.DeploySharp.Visual</code> | 视觉 Profile、预处理元数据、解码器、规范化结果 | 无 |
 | <code>JYPPX.DeploySharp.Visual.OpenCV</code> | OpenCV 图像读取和张量准备 | 应用选择 OpenCV runtime |
 | <code>JYPPX.DeploySharp.Visual.TensorRT</code> | CUDA 前处理与设备驻留 TensorRT 视觉流水线 | 应用提供 TensorRT、CUDA、bridge 和 engine |
 | <code>JYPPX.DeploySharp.LLM</code> / <code>Multimodal</code> | 生成、对话、Embedding、有序媒体、流式 | 应用选择模型运行时 |
 | <code>JYPPX.DeploySharp.ModelPack.Json</code> / <code>ModelFactory</code> | 清单、完整性校验、目录下载、离线缓存 | 无，模型文件由应用持有 |
 | <code>JYPPX.DeploySharp.Backend.*</code> | ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT、LLamaSharp 适配器 | 按后端显式选择 |
+
+### 🧩 推荐包组合
+
+| 场景 | DeploySharp 包 | 应用负责的运行时 |
+| --- | --- | --- |
+| ONNX Runtime 视觉推理 | `Core` + `Visual` + `Visual.OpenCV` + `Backend.OnnxRuntime` | ONNX Runtime CPU/CUDA 包和模型文件 |
+| OpenVINO 或 OpenCV DNN 视觉推理 | `Core` + `Visual` + `Visual.OpenCV` + 对应 `Backend.*` | 匹配的 OpenVINO/OpenCV 原生运行时 |
+| TensorRT CUDA 视觉推理 | `Core` + `Visual` + `Visual.TensorRT` + `Backend.TensorRT` | CUDA、cuDNN、TensorRT、bridge 和匹配 Engine |
+| LLM 或多模态推理 | `Core` + `LLM` 或 `Multimodal` + 对应后端 | GGUF/模型文件和所选原生运行时 |
+| 模型目录/缓存和插件探测 | `Core` + `ModelPack.Json` + `ModelFactory`，以及可选的 `Extensibility` | 应用负责目录、缓存和探测宿主 |
+
+详细命令、TFM/RID 注意事项和运行时所有权见[NuGet 包组合与安装指南](docs/articles/package-combinations.md)。
 
 ## 🌐 公共包与 Release 资产
 
@@ -106,6 +119,7 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 | 包 | 候选版本 | NuGet.org | 用途 |
 | --- | --- | --- | --- |
 | `JYPPX.DeploySharp.Core` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core) | Core 契约和后端注册 |
+| `JYPPX.DeploySharp.Extensibility` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility) | 插件描述、运行时探测和选项 Schema |
 | `JYPPX.DeploySharp.Visual` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual) | 视觉 Profile、预处理和解码器 |
 | `JYPPX.DeploySharp.Visual.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV) | OpenCV 图像准备 |
 | `JYPPX.DeploySharp.Visual.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT) | CUDA 前处理和 TensorRT 视觉流水线 |

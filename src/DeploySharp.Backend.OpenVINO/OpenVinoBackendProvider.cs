@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using JYPPX.DeploySharp.Backends.OpenVINO.Internal;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Extensibility;
 using JYPPX.DeploySharp.Models;
 using OpenVinoSharp;
 using CoreSessionOptions = JYPPX.DeploySharp.Models.SessionOptions;
@@ -27,7 +28,27 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 "OpenVINO",
                 "3.3.0",
                 BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes,
-                new[] { "onnx", "openvino-ir" });
+                new[] { "onnx", "openvino-ir" },
+                description: "OpenVINO C# API adapter using an application-owned runtime and device plug-ins.",
+                iconKey: "openvino",
+                supportedTargetFrameworks: new[] { "net48", "net8.0", "net10.0" },
+                supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64" },
+                supportedDevices: new[] { "CPU" },
+                providerPackageId: "JYPPX.OpenVINO.CSharp.API",
+                providerPackageVersion: "3.3.0",
+                preferredExecutionMode: BackendExecutionMode.InProcessOrWorker,
+                runtimeDependencies: new IBackendRuntimeDependency[]
+                {
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.0"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "OpenVINO.runtime.win", "2026.2.1", "win-x64", downloadable: true, licenseExpression: "Apache-2.0")
+                },
+                nativeProbeId: "openvino-native",
+                optionsSchema: new BackendOptionsSchema("openvino.options.v1", new[]
+                {
+                    new BackendOptionDefinition("device", BackendOptionValueType.Enum, "CPU", enumValues: new[] { "CPU" }),
+                    new BackendOptionDefinition("allowdynamicshapes", BackendOptionValueType.Boolean, "true")
+                }),
+                healthCheckId: "openvino-native");
         }
 
         /// <summary>Gets verified format and managed execution capabilities. / 获取已经验证的格式与托管执行能力。</summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Extensibility;
 using JYPPX.DeploySharp.Models;
 using JYPPX.TensorRtSharp;
 
@@ -25,7 +26,34 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 "TensorRT",
                 "4.0.0",
                 BackendCapabilities.TensorInference | BackendCapabilities.DynamicShapes,
-                new[] { "tensorrt-engine" });
+                new[] { "tensorrt-engine" },
+                description: "TensorRT managed adapter; CUDA, cuDNN, NVIDIA driver and the matching native bridge remain consumer-owned.",
+                iconKey: "tensorrt",
+                supportedTargetFrameworks: new[] { "net8.0" },
+                supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64" },
+                supportedDevices: new[] { "cuda" },
+                providerPackageId: "JYPPX.TensorRT.CSharp.API",
+                providerPackageVersion: "4.0.0",
+                preferredExecutionMode: BackendExecutionMode.Worker,
+                runtimeDependencies: new IBackendRuntimeDependency[]
+                {
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.TensorRT.CSharp.API", "4.0.0"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.Environment, environmentVariables: new[] { "JYPPX_CUDA_ROOT", "JYPPX_CUDNN_ROOT", "JYPPX_TENSORRT_ROOT", "JYPPX_NATIVE_BRIDGE_PATH", "DEPLOYSHARP_TENSORRT_API_VERSION" }, requiresUserSelectedRoot: true),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.CUDA, apiLine: "12", runtimeIdentifiers: new[] { "win-x64", "linux-x64" }, requiresUserSelectedRoot: true, environmentVariables: new[] { "JYPPX_CUDA_ROOT", "CUDA_PATH" }),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.CuDNN, runtimeIdentifiers: new[] { "win-x64", "linux-x64" }, requiresUserSelectedRoot: true, environmentVariables: new[] { "JYPPX_CUDNN_ROOT" }),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.TensorRT, apiLine: ((int)_options.ApiVersion).ToString(), runtimeIdentifiers: new[] { "win-x64", "linux-x64" }, requiresUserSelectedRoot: true, environmentVariables: new[] { "JYPPX_TENSORRT_ROOT" }),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.NVRTC, runtimeIdentifiers: new[] { "win-x64", "linux-x64" }, requiresUserSelectedRoot: true),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.Driver, runtimeIdentifiers: new[] { "win-x64", "linux-x64" }),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.Unknown, apiLine: "bridge", runtimeIdentifiers: new[] { "win-x64", "linux-x64" }, requiresUserSelectedRoot: true, environmentVariables: new[] { "JYPPX_NATIVE_BRIDGE_PATH" })
+                },
+                nativeProbeId: "tensorrt-native",
+                optionsSchema: new BackendOptionsSchema("tensorrt.options.v1", new[]
+                {
+                    new BackendOptionDefinition("apiversion", BackendOptionValueType.Enum, ((int)_options.ApiVersion).ToString(), enumValues: new[] { "8", "10", "11" }),
+                    new BackendOptionDefinition("optimizationprofile", BackendOptionValueType.Integer, _options.OptimizationProfile.ToString(), minimum: 0),
+                    new BackendOptionDefinition("cudatargetarchitecture", BackendOptionValueType.String, _options.CudaTargetArchitecture)
+                }),
+                healthCheckId: "tensorrt-native");
         }
 
         /// <summary>Gets the managed adapter descriptor. / 获取相关信息。</summary>

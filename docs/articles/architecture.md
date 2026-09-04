@@ -7,12 +7,14 @@ DeploySharp 将稳定契约、领域流程、托管后端适配器和厂商原�
 | 层 | 主要职责 |
 | --- | --- |
 | `JYPPX.DeploySharp.Core` | 模型身份、类型化张量、结果、错误、日志、Session 和后端注册。 |
+| `JYPPX.DeploySharp.Extensibility` | 插件描述、运行时依赖、选项 Schema、native 探测和结构化运行时状态。 |
 | `JYPPX.DeploySharp.Visual` | 视觉 Profile、已准备张量、可逆坐标变换和任务解码器。 |
 | `JYPPX.DeploySharp.Visual.OpenCV` | 使用 OpenCV 完成图像解码、缩放、裁剪和张量准备。 |
 | `JYPPX.DeploySharp.Visual.TensorRT` | 可选的 CUDA 前处理、设备常驻视觉推理和紧凑结果回传。 |
 | `JYPPX.DeploySharp.LLM` | 文本生成、流式输出和 Embedding 契约。 |
 | `JYPPX.DeploySharp.Multimodal` | 有序媒体、请求校验、流式结果和生命周期编排。 |
 | `JYPPX.DeploySharp.Backend.*` | ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT 和 LLamaSharp 托管适配器。 |
+| `JYPPX.DeploySharp.ModelPack.Json` / `ModelFactory` | 模型清单序列化、制品完整性、目录选择、下载和离线缓存；不进入 Core。 |
 | 应用运行时包 | 由最终应用选择的 CUDA、TensorRT、OpenVINO、OpenCV 或 LLamaSharp 原生文件。 |
 
 ## Session、池和批处理

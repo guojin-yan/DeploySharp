@@ -10,6 +10,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.6": {
@@ -35,6 +41,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.6.1": {
@@ -60,6 +72,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.6.2": {
@@ -85,6 +103,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.7": {
@@ -110,6 +134,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.7.1": {
@@ -135,6 +165,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.7.2": {
@@ -160,6 +196,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.8": {
@@ -185,6 +227,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETFramework,Version=v4.8.1": {
@@ -210,6 +258,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     "net10.0": {
@@ -235,6 +289,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     ".NETCoreApp,Version=v5.0": {
@@ -246,6 +306,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     "net6.0": {
@@ -257,6 +323,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     "net7.0": {
@@ -268,6 +340,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     "net8.0": {
@@ -293,6 +371,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     },
     "net9.0": {
@@ -318,6 +402,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     }
   }

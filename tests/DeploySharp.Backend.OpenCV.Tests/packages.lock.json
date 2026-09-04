@@ -125,11 +125,19 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )",
+          "OnnxSharp": "[0.3.2, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       },
       "JYPPX.OpenCV.CSharp.API": {
         "type": "CentralTransitive",

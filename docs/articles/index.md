@@ -16,6 +16,7 @@
 | 查询模型可用性 | [模型支持状态](model-support.md) | [模型与后端验证矩阵](../model-backend-verification-matrix.md) |
 | 复现性能数据 | [性能基准方法](performance-benchmarking.md) | [设备性能实测](device-performance-benchmarks.md) |
 | 设计批量与并发 | [Batch、Session 池与并发](batch-session-concurrency.md) | 对应视觉任务指南 |
+| 选择 NuGet 包组合 | [NuGet 包组合与安装指南](package-combinations.md) | 按任务和后端安装最小组合 |
 
 ## 阅读约定
 

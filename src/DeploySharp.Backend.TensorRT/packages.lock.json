@@ -24,6 +24,12 @@
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       }
     }
   }

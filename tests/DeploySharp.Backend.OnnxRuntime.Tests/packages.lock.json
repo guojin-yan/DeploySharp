@@ -124,11 +124,18 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "Microsoft.ML.OnnxRuntime.Managed": "[1.28.0, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       },
       "JYPPX.DeploySharp.ModelFactory": {
         "type": "Project",

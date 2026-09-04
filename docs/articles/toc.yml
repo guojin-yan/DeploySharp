@@ -12,6 +12,8 @@
     href: usage-tutorial.md
   - name: 架构概览
     href: architecture.md
+  - name: NuGet 包组合与安装指南
+    href: package-combinations.md
   - name: 平台与后端支持
     href: platform-support.md
   - name: Batch、Session 池与并发

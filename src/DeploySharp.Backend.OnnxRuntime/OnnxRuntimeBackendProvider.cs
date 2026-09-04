@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using JYPPX.DeploySharp.Backends.OnnxRuntime.Internal;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Extensibility;
 using JYPPX.DeploySharp.Models;
 using Microsoft.ML.OnnxRuntime;
 using CoreSessionOptions = JYPPX.DeploySharp.Models.SessionOptions;
@@ -21,7 +22,33 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         public OnnxRuntimeBackendProvider(OnnxRuntimeOptions? options = null)
         {
             _options = options ?? OnnxRuntimeOptions.Default;
-            Descriptor = new BackendDescriptor(BackendId, "ONNX Runtime", "1.28.0", BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes, new[] { "onnx" });
+            Descriptor = new BackendDescriptor(
+                BackendId,
+                "ONNX Runtime",
+                "1.28.0",
+                BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes,
+                new[] { "onnx" },
+                description: "ONNX Runtime managed adapter with explicit CPU or CUDA execution-provider selection.",
+                iconKey: "onnxruntime",
+                supportedTargetFrameworks: new[] { "netstandard2.0", "net8.0" },
+                supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" },
+                supportedDevices: new[] { "cpu", "cuda" },
+                providerPackageId: _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? "Microsoft.ML.OnnxRuntime.Gpu.Windows" : "Microsoft.ML.OnnxRuntime.Managed",
+                providerPackageVersion: "1.28.0",
+                preferredExecutionMode: _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? BackendExecutionMode.Worker : BackendExecutionMode.InProcessOrWorker,
+                runtimeDependencies: new IBackendRuntimeDependency[]
+                {
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Managed", "1.28.0"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime", "1.28.0", downloadable: true, licenseExpression: "MIT"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Gpu.Windows", "1.28.0", "win-x64", downloadable: true, licenseExpression: "MIT", condition: "executionProvider == cuda")
+                },
+                nativeProbeId: "onnxruntime-native",
+                optionsSchema: new BackendOptionsSchema("onnxruntime.options.v1", new[]
+                {
+                    new BackendOptionDefinition("executionprovider", BackendOptionValueType.Enum, "cpu", enumValues: new[] { "cpu", "cuda" }),
+                    new BackendOptionDefinition("cudadeviceid", BackendOptionValueType.Integer, "0", minimum: 0, visibleWhen: "executionProvider == cuda")
+                }),
+                healthCheckId: "onnxruntime-native");
         }
 
         /// <summary>Gets verified format and managed execution capabilities. / 获取已验证的格式与托管执行能力。</summary>

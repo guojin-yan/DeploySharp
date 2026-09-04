@@ -2,6 +2,7 @@ using System;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.LlamaSharp.Internal;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Extensibility;
 using JYPPX.DeploySharp.LLM;
 using JYPPX.DeploySharp.LLM.Prompt;
 using JYPPX.DeploySharp.Models;
@@ -31,7 +32,29 @@ namespace JYPPX.DeploySharp.Backends.LlamaSharp
                 "LLamaSharp",
                 "0.27.0",
                 BackendCapabilities.TextGeneration | BackendCapabilities.Embeddings | BackendCapabilities.AsynchronousExecution,
-                new[] { "gguf" });
+                new[] { "gguf" },
+                description: "LLamaSharp CPU/GPU adapter for local GGUF generation and embeddings.",
+                iconKey: "llamasharp",
+                supportedTargetFrameworks: new[] { "netstandard2.0", "net8.0" },
+                supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" },
+                supportedDevices: new[] { "cpu", "cuda" },
+                providerPackageId: "LLamaSharp.Backend.Cpu",
+                providerPackageVersion: "0.27.0",
+                preferredExecutionMode: BackendExecutionMode.InProcessOrWorker,
+                runtimeDependencies: new IBackendRuntimeDependency[]
+                {
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "LLamaSharp", "0.27.0"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "LLamaSharp.Backend.Cpu", "0.27.0", downloadable: true, licenseExpression: "MIT"),
+                    new NativeRuntimeRequirement(NativeRuntimeKind.LlamaSharpNative, runtimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" }, environmentVariables: new[] { "LLAMASHARP_BACKEND_PATH" })
+                },
+                nativeProbeId: "llamasharp-native",
+                optionsSchema: new BackendOptionsSchema("llamasharp.options.v1", new[]
+                {
+                    new BackendOptionDefinition("contextsize", BackendOptionValueType.Integer, "0", minimum: 0),
+                    new BackendOptionDefinition("gpulayercount", BackendOptionValueType.Integer, "0", minimum: 0),
+                    new BackendOptionDefinition("batchsize", BackendOptionValueType.Integer, "512", minimum: 1)
+                }),
+                healthCheckId: "llamasharp-native");
         }
 
         /// <summary>Gets the LLamaSharp backend descriptor and verified managed capabilities. / 获取 LLamaSharp 后端描述和已验证的托管能力。</summary>

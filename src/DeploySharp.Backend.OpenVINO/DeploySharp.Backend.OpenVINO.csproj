@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="..\DeploySharp.Extensibility\DeploySharp.Extensibility.csproj" />
     <PackageReference Include="JYPPX.OpenVINO.CSharp.API" />
   </ItemGroup>
 
