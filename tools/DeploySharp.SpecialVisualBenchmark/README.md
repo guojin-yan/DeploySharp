@@ -20,4 +20,6 @@ dotnet run --project tools/DeploySharp.SpecialVisualBenchmark/DeploySharp.Specia
   --iterations 10
 ~~~
 
+`--image` is optional. When omitted, the runner downloads and SHA-256 verifies `bus.jpg` from the dedicated `test-assets.1` Release, caching it under `%LOCALAPPDATA%\DeploySharp\TestImages`. `--sam-image` defaults to the same verified image and can be overridden independently.
+
 ONNX Runtime CPU/CUDA and OpenVINO execute the complete ONNX-bound pipelines. OpenCV DNN v1 is explicitly unsupported because text/prompt/decoder graphs require integer or non-image multi-input tensors. TensorRT and TensorRT CUDA are explicitly unsupported until the public multi-artifact profiles admit engine-format artifacts without weakening their audited identity contracts. Unsupported combinations are emitted as rows rather than omitted.

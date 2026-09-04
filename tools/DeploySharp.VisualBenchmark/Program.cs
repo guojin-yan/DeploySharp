@@ -45,7 +45,7 @@ internal static class Program
                 {
                     try
                     {
-                        BenchmarkCase item = BenchmarkCase.Create(kind, options.ModelPathFor(kind, backend), options.ImagePath, backend);
+                        BenchmarkCase item = BenchmarkCase.Create(kind, options.ModelPathFor(kind, backend), TestImageResolver.Resolve(options.ImagePath, kind), backend);
                         foreach (BenchmarkMode mode in options.Modes) rows.Add(Run(item, backend, mode, options));
                     }
                     catch (Exception exception)
@@ -76,7 +76,7 @@ internal static class Program
                 {
                     Kinds = options.Kinds,
                     Backends = options.Backends,
-                    ImagePath = options.ImagePath,
+                    ImagePath = string.IsNullOrWhiteSpace(options.ImagePath) ? "auto-by-task (test-assets.1)" : options.ImagePath,
                     ModelPaths = options.ModelPaths,
                     Warmup = options.Warmup,
                     Iterations = options.Iterations,
@@ -606,7 +606,8 @@ internal static class Program
 
     private static void PrintUsage()
     {
-        Console.WriteLine("Usage: dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind <catalog-kind|all> --image <path> [options]");
+        Console.WriteLine("Usage: dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind <catalog-kind|all> [--image <path>] [options]");
+        Console.WriteLine("When --image is omitted, the task default is downloaded from the DeploySharp test-assets.1 release and SHA-256 verified.");
         Console.WriteLine("  --model <path>                         Model path when exactly one kind is selected");
         Console.WriteLine("  --model-<kind> <path>                  Model path for a case when --kind all is used");
         Console.WriteLine("  --backend <all|onnxruntime|onnxruntime-cuda|openvino|opencv-dnn|tensorrt|tensorrt-cuda|comma-list>  Backend(s), default all");
@@ -980,8 +981,7 @@ internal static class Program
                 throw new ArgumentException("Unknown option: " + argument);
             }
             if (help) return new Options(Array.Empty<string>(), Array.Empty<string>(), string.Empty, null, models, warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), Array.Empty<BenchmarkMode>(), true);
-            if (string.IsNullOrWhiteSpace(image)) throw new ArgumentException("--image is required.");
-            return new Options(Select(kindsValue, AllKinds, "kind"), Select(backendsValue, AllBackends, "backend"), Path.GetFullPath(image), model == null ? null : Path.GetFullPath(model), models.ToDictionary(pair => pair.Key, pair => Path.GetFullPath(pair.Value), StringComparer.OrdinalIgnoreCase), warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), SelectModes(modeValue), false);
+            return new Options(Select(kindsValue, AllKinds, "kind"), Select(backendsValue, AllBackends, "backend"), string.IsNullOrWhiteSpace(image) ? string.Empty : Path.GetFullPath(image), model == null ? null : Path.GetFullPath(model), models.ToDictionary(pair => pair.Key, pair => Path.GetFullPath(pair.Value), StringComparer.OrdinalIgnoreCase), warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), SelectModes(modeValue), false);
         }
 
         private static IReadOnlyList<BenchmarkMode> SelectModes(string value)

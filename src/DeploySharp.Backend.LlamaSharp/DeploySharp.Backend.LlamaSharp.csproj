@@ -19,7 +19,6 @@
     <ProjectReference Include="..\DeploySharp.LLM\DeploySharp.LLM.csproj" />
     <ProjectReference Include="..\DeploySharp.Extensibility\DeploySharp.Extensibility.csproj" />
     <PackageReference Include="LLamaSharp" />
-    <PackageReference Include="LLamaSharp.Backend.Cpu" />
   </ItemGroup>
 
   <ItemGroup>

@@ -23,7 +23,7 @@ namespace JYPPX.DeploySharp.Extensibility
             _libraryNames = libraryNames ?? new Dictionary<NativeRuntimeKind, IReadOnlyList<string>>();
         }
 
-        /// <inheritdoc />
+        /// <summary>Probes the selected plugin requirements asynchronously. / 异步探测选定插件的运行时需求。</summary>
         public Task<BackendRuntimeStatus> ProbeAsync(BackendPluginDescriptor plugin, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));

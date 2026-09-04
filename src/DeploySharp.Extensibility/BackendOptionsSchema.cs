@@ -24,7 +24,7 @@ namespace JYPPX.DeploySharp.Extensibility
             Options = new ReadOnlyCollection<BackendOptionDefinition>(definitions);
         }
 
-        /// <inheritdoc />
+        /// <summary>Gets the stable schema identifier. / 获取稳定的 schema 标识。</summary>
         public string SchemaId { get; }
         /// <summary>Gets immutable option definitions in display order. / 获取按显示顺序排列的不可变参数定义。</summary>
         public IReadOnlyList<BackendOptionDefinition> Options { get; }

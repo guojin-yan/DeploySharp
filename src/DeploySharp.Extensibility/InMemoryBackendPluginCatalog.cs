@@ -23,13 +23,13 @@ namespace JYPPX.DeploySharp.Extensibility
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>Returns a defensive snapshot of installed plugins. / 返回已安装插件的防御性快照。</summary>
         public IReadOnlyList<BackendPluginDescriptor> GetInstalled()
         {
             lock (_sync) return new ReadOnlyCollection<BackendPluginDescriptor>(new List<BackendPluginDescriptor>(_plugins));
         }
 
-        /// <inheritdoc />
+        /// <summary>Completes a refresh without changing the in-memory catalog. / 完成刷新但不改变内存目录。</summary>
         /// <remarks>This in-memory implementation has no transport to refresh. / 此内存实现没有可刷新的传输层。</remarks>
         public Task RefreshAsync(CancellationToken cancellationToken = default(CancellationToken))
         {

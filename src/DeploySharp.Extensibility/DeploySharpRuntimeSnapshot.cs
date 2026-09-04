@@ -47,7 +47,7 @@ namespace JYPPX.DeploySharp.Extensibility
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>Retires this runtime generation and releases it after active leases finish. / 退役此运行时代，并在活动租约结束后释放。</summary>
         public void Dispose()
         {
             lock (_sync)
@@ -90,7 +90,7 @@ namespace JYPPX.DeploySharp.Extensibility
         /// <summary>Gets the leased runtime. / 获取租约中的运行时。</summary>
         public DeploySharpRuntime Runtime => (_snapshot ?? throw new ObjectDisposedException(nameof(DeploySharpRuntimeLease))).Runtime;
 
-        /// <inheritdoc />
+        /// <summary>Releases this runtime lease. / 释放此运行时租约。</summary>
         public void Dispose()
         {
             Interlocked.Exchange(ref _snapshot, null)?.ReleaseLease();

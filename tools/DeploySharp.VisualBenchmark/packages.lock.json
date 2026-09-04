@@ -37,6 +37,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "Microsoft.ML.OnnxRuntime.Managed": "[1.28.0, )"
         }
       },
@@ -44,6 +45,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )",
           "OnnxSharp": "[0.3.2, )"
         }
@@ -52,6 +54,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "JYPPX.OpenVINO.CSharp.API": "[3.3.0, )"
         }
       },
@@ -59,12 +62,19 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "JYPPX.TensorRT.CSharp.API": "[4.0.0, )",
           "OnnxSharp": "[0.3.2, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       },
       "JYPPX.DeploySharp.Visual": {
         "type": "Project",
@@ -132,29 +142,6 @@
         "dependencies": {
           "Google.Protobuf": "3.29.3"
         }
-      }
-    },
-    "net10.0/win-x64": {
-      "JYPPX.OpenCV.runtime.win-x64": {
-        "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "2I4TcBgId4eo1bZbaMZwJ0KYsiQOJVnBwFoTnN5xanqpUi8DO1aVXGW2Koe0uH1B/l7g1FHARsabaVQum4IH4g=="
-      },
-      "Microsoft.ML.OnnxRuntime.Gpu.Windows": {
-        "type": "Direct",
-        "requested": "[1.28.0, )",
-        "resolved": "1.28.0",
-        "contentHash": "jGq5uGVjnbwrvzqLd7CqW53GXEzfWJY1cVKeIc/gqmeRDEAQaShQPLrmMi4zMhtIIvmHTErzDVKDWWmibAPgmQ==",
-        "dependencies": {
-          "Microsoft.ML.OnnxRuntime.Managed": "1.28.0"
-        }
-      },
-      "OpenVINO.runtime.win": {
-        "type": "Direct",
-        "requested": "[2026.2.1, )",
-        "resolved": "2026.2.1",
-        "contentHash": "PcijWITG5Ph/pCfS15vgRriDX6x3lpQ1xliRCkuvcDRQ+o2yX7qXGH+CdYtC+wgkCvAaJZSuqIfw2CMSz/w8vw=="
       }
     }
   }

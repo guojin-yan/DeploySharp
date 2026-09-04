@@ -55,8 +55,9 @@ internal static class Program
 
     private static int RunFullPipeline(string root, IReadOnlyList<ModelCase> models, string output, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int stageConcurrency, int batchSize, int tensorRtBatchSize, int intraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio, bool autoTune)
     {
-        string requestedImage = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_IMAGE") ?? @"E:\Data\ocr\demo\_1.jpg";
-        string imagePath = ResolveImagePath(requestedImage);
+        string? configuredImage = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_IMAGE");
+        string requestedImage = configuredImage ?? @"E:\Data\ocr\demo\_1.jpg";
+        string imagePath = TestImageResolver.Resolve(requestedImage, configuredImage == null);
         HashSet<string> selectedBackends = new HashSet<string>((Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_BACKENDS") ?? "onnxruntime,openvino,opencv-dnn,onnxruntime-cuda,tensorrt").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         HashSet<string> selectedVersions = new HashSet<string>((Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VERSIONS") ?? "v4,v5,v6").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         Console.WriteLine("PADDLEOCR_FULL_IMAGE requested=" + requestedImage + ";used=" + imagePath);
@@ -162,13 +163,6 @@ internal static class Program
         int[] values = raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(value => int.Parse(value, NumberStyles.Integer, Invariant)).Distinct().ToArray();
         if (values.Length == 0 || values.Any(value => value <= 0)) throw new ArgumentOutOfRangeException(name, "Values must be positive integers.");
         return values;
-    }
-
-    private static string ResolveImagePath(string requested)
-    {
-        if (File.Exists(requested)) return Path.GetFullPath(requested);
-        string fallback = requested.Replace("\\demo\\_1.jpg", "\\demo_1.jpg", StringComparison.OrdinalIgnoreCase);
-        return File.Exists(fallback) ? Path.GetFullPath(fallback) : Path.GetFullPath(requested);
     }
 
     private static FullResultRow RunFullBackend(string version, string backend, string device, ModelCase detector, ModelCase recognizer, ModelCase? classifier, string imagePath, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int stageConcurrency, int batchSize, int tensorRtBatchSize, int intraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio)

@@ -38,6 +38,7 @@ dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspe
 06-models/release-inference is the real published-model path. ModelFactory downloads the versioned Release ModelPack, verifies size/SHA256, Visual prepares the image, ONNX Runtime runs CPU inference, and the task decoder writes an inspectable PGM mask. It has independent cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
 
 ```powershell
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4 --image <image>
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id anomalib/padim/mvtec-bottle --image <image>

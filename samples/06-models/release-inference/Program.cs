@@ -28,6 +28,7 @@ internal static class Program
                 return 0;
             }
 
+            options.ResolveDefaultImage();
             if (!File.Exists(options.ImagePath)) throw new FileNotFoundException("The input image does not exist.", options.ImagePath);
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             var factoryOptions = new ModelFactoryOptions(options.CacheRoot, offline: options.Offline, requestTimeout: TimeSpan.FromMinutes(10), maximumRetries: 3);
@@ -169,10 +170,16 @@ internal static class Program
         public string Precision { get; private set; } = "fp32";
         public string Quantization { get; private set; } = "none";
         public string ImagePath { get; private set; } = string.Empty;
+        public bool ImageWasImplicit { get; private set; }
         public string? OutputPath { get; private set; }
         public string CacheRoot { get; private set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharp", "ModelFactory");
         public bool Offline { get; private set; }
         public bool ShowHelp { get; private set; }
+
+        public void ResolveDefaultImage()
+        {
+            ImagePath = TestImageResolver.Resolve(ImagePath, ImageWasImplicit, Offline);
+        }
 
         public static Options Parse(IReadOnlyList<string> args)
         {
@@ -192,23 +199,24 @@ internal static class Program
                     case "--model-id": options.ModelId = argument; break;
                     case "--precision": options.Precision = argument; break;
                     case "--quantization": options.Quantization = argument; break;
-                    case "--image": options.ImagePath = Path.GetFullPath(argument); break;
+                    case "--image": options.ImagePath = Path.GetFullPath(argument); options.ImageWasImplicit = false; break;
                     case "--output": options.OutputPath = Path.GetFullPath(argument); break;
                     case "--cache": options.CacheRoot = Path.GetFullPath(argument); break;
                     default: throw new ArgumentException("Unknown option: " + name);
                 }
             }
-            if (!options.ShowHelp && string.IsNullOrWhiteSpace(options.ImagePath)) throw new ArgumentException("--image <path> is required.");
+            if (!options.ShowHelp && string.IsNullOrWhiteSpace(options.ImagePath)) options.ImageWasImplicit = true;
             return options;
         }
 
         public static void PrintUsage()
         {
             Console.WriteLine("DeploySharp Model Release Inference sample");
-            Console.WriteLine("dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none --image <image>");
+            Console.WriteLine("dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none [--image <image>]");
             Console.WriteLine("dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>");
             Console.WriteLine("dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id anomalib/padim/mvtec-bottle --image <image>");
-            Console.WriteLine("Options: --image <path> --model-id <id> --precision <id> --quantization <id> --cache <path> --output <path> --offline");
+            Console.WriteLine("Options: [--image <path>] --model-id <id> --precision <id> --quantization <id> --cache <path> --output <path> --offline");
+            Console.WriteLine("When --image is omitted, bus.jpg is downloaded from the DeploySharp test-assets.1 release and SHA-256 verified.");
         }
     }
 }

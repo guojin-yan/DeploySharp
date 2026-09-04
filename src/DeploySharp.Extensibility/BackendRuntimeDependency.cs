@@ -62,7 +62,7 @@ namespace JYPPX.DeploySharp.Extensibility
         public IReadOnlyList<string> EnvironmentVariables { get; }
         /// <summary>Gets whether the user must choose a root directory. / 获取是否必须由用户选择根目录。</summary>
         public bool RequiresUserSelectedRoot { get; }
-        /// <inheritdoc />
+        /// <summary>Gets the deterministic dependency identity. / 获取确定性的依赖标识。</summary>
         public string Identity { get; }
 
         private string BuildIdentity()

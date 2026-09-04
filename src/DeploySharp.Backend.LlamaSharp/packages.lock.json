@@ -19,12 +19,6 @@
           "System.Text.Json": "10.0.5"
         }
       },
-      "LLamaSharp.Backend.Cpu": {
-        "type": "Direct",
-        "requested": "[0.27.0, )",
-        "resolved": "0.27.0",
-        "contentHash": "fZOfnsWKx/kaOqCMSkZ2w5ww++/YGq56T8PWst0KjtmXQBthNAuE11HIaxMK5TBD0EWqoCxqlC8oVCOssF4+MQ=="
-      },
       "NETStandard.Library": {
         "type": "Direct",
         "requested": "[2.0.3, )",
@@ -253,12 +247,6 @@
           "System.Linq.AsyncEnumerable": "10.0.2",
           "System.Numerics.Tensors": "10.0.5"
         }
-      },
-      "LLamaSharp.Backend.Cpu": {
-        "type": "Direct",
-        "requested": "[0.27.0, )",
-        "resolved": "0.27.0",
-        "contentHash": "fZOfnsWKx/kaOqCMSkZ2w5ww++/YGq56T8PWst0KjtmXQBthNAuE11HIaxMK5TBD0EWqoCxqlC8oVCOssF4+MQ=="
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Transitive",

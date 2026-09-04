@@ -20,13 +20,13 @@ namespace JYPPX.DeploySharp.Extensibility
             _current = initial ?? throw new ArgumentNullException(nameof(initial));
         }
 
-        /// <inheritdoc />
+        /// <summary>Gets the current runtime snapshot. / 获取当前运行时快照。</summary>
         public DeploySharpRuntimeSnapshot Current
         {
             get { lock (_sync) { ThrowIfDisposed(); return _current; } }
         }
 
-        /// <inheritdoc />
+        /// <summary>Builds an unregistered runtime snapshot from a composition. / 根据运行时组合构建未注册的运行时快照。</summary>
         public Task<DeploySharpRuntimeSnapshot> BuildAsync(RuntimeComposition composition, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (composition == null) throw new ArgumentNullException(nameof(composition));
@@ -69,7 +69,7 @@ namespace JYPPX.DeploySharp.Extensibility
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>Atomically swaps the current snapshot and retires the previous generation. / 原子切换当前快照并退役上一代。</summary>
         public Task SwapAsync(DeploySharpRuntimeSnapshot next, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (next == null) throw new ArgumentNullException(nameof(next));
@@ -84,7 +84,7 @@ namespace JYPPX.DeploySharp.Extensibility
             return Task.CompletedTask;
         }
 
-        /// <inheritdoc />
+        /// <summary>Retires the current runtime snapshot and releases this provider. / 退役当前运行时快照并释放此提供程序。</summary>
         public void Dispose()
         {
             lock (_sync)

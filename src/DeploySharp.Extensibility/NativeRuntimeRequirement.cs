@@ -42,7 +42,7 @@ namespace JYPPX.DeploySharp.Extensibility
         public bool RequiresUserSelectedRoot { get; }
         /// <summary>Gets environment variables used to locate the runtime. / 获取用于定位运行时的环境变量。</summary>
         public IReadOnlyList<string> EnvironmentVariables { get; }
-        /// <inheritdoc />
+        /// <summary>Gets the deterministic native requirement identity. / 获取确定性的原生需求标识。</summary>
         public string Identity { get; }
 
         private static string ValidateText(string value, string parameterName)

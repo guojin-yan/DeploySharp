@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyName>JYPPX.DeploySharp.Visual.TensorRT</AssemblyName>
     <RootNamespace>JYPPX.DeploySharp.Visual.TensorRT</RootNamespace>
     <PackageId>JYPPX.DeploySharp.Visual.TensorRT</PackageId>
@@ -20,6 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

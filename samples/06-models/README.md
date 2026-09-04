@@ -5,8 +5,11 @@ This module is split into two complete workflows:
 - catalog-workflow: loads the official catalog, selects every artifact with explicit backend/format/precision/quantization filters, and prints a model/task/artifact matrix. Pass --model-id to run one model case.
 - release-inference: downloads and verifies a published ModelPack through ModelFactory, creates the Visual profile, prepares an image with OpenCV, runs ONNX Runtime CPU inference, decodes the result, and writes a PGM mask. It currently provides independent runnable cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
 
+When `--image` is omitted, release-inference downloads and verifies the default `bus.jpg` from the dedicated `test-assets.1` Release. Pass `--image <image>` to use a custom input.
+
 ```powershell
 dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id yolo/v8/detect/n
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-2.0 --precision int8 --quantization dynamic --image <image>
 ```
 

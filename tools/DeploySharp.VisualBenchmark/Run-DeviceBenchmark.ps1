@@ -199,16 +199,19 @@ if ($tensorRtRequested -and -not $SkipTensorRtBuild -and -not [string]::IsNullOr
     }
 }
 
+$visualImagePath = Join-Path $bundleRoot 'data\bus.jpg'
 $arguments = @(
     '--kind', $Kind,
     '--backend', $Backend,
     '--mode', $Mode,
     '--warmup', $Warmup,
     '--iterations', $Iterations,
-    '--image', (Join-Path $bundleRoot 'data\bus.jpg'),
     '--output', $csvPath,
     '--json-output', $jsonPath
 )
+if (Test-Path -LiteralPath $visualImagePath -PathType Leaf) {
+    $arguments = @('--kind', $Kind, '--backend', $Backend, '--mode', $Mode, '--warmup', $Warmup, '--iterations', $Iterations, '--image', $visualImagePath, '--output', $csvPath, '--json-output', $jsonPath)
+}
 foreach ($entry in $modelPaths.GetEnumerator()) {
     $arguments += "--model-$($entry.Key)"
     $arguments += $entry.Value
@@ -297,7 +300,9 @@ try {
     $specialTool = Join-Path $bundleRoot 'tools\special-visual\DeploySharp.SpecialVisualBenchmark.dll'
     if (-not $SkipSpecialVisual -and (Test-Path -LiteralPath $specialTool)) {
         Write-Host 'Running CLIP, SAM, and BLIP complete multi-artifact pipelines.'
-        & $privateDotnet $specialTool --kind all --backend $Backend --model-root (Join-Path $bundleRoot 'models\special') --image (Join-Path $bundleRoot 'data\bus.jpg') --warmup $Warmup --iterations $Iterations --output $specialCsvPath
+        $specialArguments = @('--kind', 'all', '--backend', $Backend, '--model-root', (Join-Path $bundleRoot 'models\special'), '--warmup', $Warmup, '--iterations', $Iterations, '--output', $specialCsvPath)
+        if (Test-Path -LiteralPath $visualImagePath -PathType Leaf) { $specialArguments = @('--kind', 'all', '--backend', $Backend, '--model-root', (Join-Path $bundleRoot 'models\special'), '--image', $visualImagePath, '--warmup', $Warmup, '--iterations', $Iterations, '--output', $specialCsvPath) }
+        & $privateDotnet $specialTool @specialArguments
         $specialVisualExitCode = $LASTEXITCODE
     }
     elseif (-not $SkipSpecialVisual) {
@@ -342,7 +347,8 @@ try {
             }
             $env:DOTNET_ROLL_FORWARD = 'Major'
             $env:DEPLOYSHARP_PADDLEOCR_ROOT = $ocrModelRoot
-            $env:DEPLOYSHARP_PADDLEOCR_IMAGE = $ocrImage
+            if (Test-Path -LiteralPath $ocrImage -PathType Leaf) { $env:DEPLOYSHARP_PADDLEOCR_IMAGE = $ocrImage }
+            else { Remove-Item Env:DEPLOYSHARP_PADDLEOCR_IMAGE -ErrorAction SilentlyContinue }
             $env:DEPLOYSHARP_PADDLEOCR_BACKENDS = $selectedOcrBackends -join ','
             $env:DEPLOYSHARP_PADDLEOCR_WARMUP = $OcrWarmup.ToString([Globalization.CultureInfo]::InvariantCulture)
             $env:DEPLOYSHARP_PADDLEOCR_ITERATIONS = $OcrIterations.ToString([Globalization.CultureInfo]::InvariantCulture)

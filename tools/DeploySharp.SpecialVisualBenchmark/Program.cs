@@ -246,7 +246,11 @@ internal static class Program
     private static string Detail(Exception exception) => exception.GetType().Name + ": " + exception.Message.Replace('\r', ' ').Replace('\n', ' ');
     private static string Device(string backend) => backend == "openvino" ? "CPU" : backend.Contains("cuda", StringComparison.Ordinal) || backend == "tensorrt" ? "cuda" : "cpu";
 
-    private static void PrintUsage() => Console.WriteLine("Usage: DeploySharp.SpecialVisualBenchmark --model-root <path> --image <path> [--sam-image <path>] [--kind all|clip,sam,blip] [--backend all|list] [--warmup N] [--iterations N] [--output path]");
+    private static void PrintUsage()
+    {
+        Console.WriteLine("Usage: DeploySharp.SpecialVisualBenchmark --model-root <path> [--image <path>] [--sam-image <path>] [--kind all|clip,sam,blip] [--backend all|list] [--warmup N] [--iterations N] [--output path]");
+        Console.WriteLine("When --image is omitted, bus.jpg is downloaded from the DeploySharp test-assets.1 release and SHA-256 verified.");
+    }
 
     private readonly record struct Measurement(double Preprocess, double PrimaryInference, double SecondaryInference, double Postprocess, double Total, string Fingerprint, double TotalP50, double TotalP95)
     {
@@ -303,9 +307,11 @@ internal static class Program
                 if (value == "--kind") kinds = Next(); else if (value == "--backend") backends = Next(); else if (value == "--model-root") modelRoot = Next(); else if (value == "--image") image = Next(); else if (value == "--sam-image") samImage = Next(); else if (value == "--warmup") warmup = int.Parse(Next(), Invariant); else if (value == "--iterations") iterations = int.Parse(Next(), Invariant); else if (value == "--output") output = Next(); else throw new ArgumentException("Unknown option: " + value);
             }
             if (help) return new Options(Array.Empty<string>(), Array.Empty<string>(), "", "", "", warmup, iterations, output, true);
-            if (string.IsNullOrWhiteSpace(modelRoot) || string.IsNullOrWhiteSpace(image)) throw new ArgumentException("--model-root and --image are required.");
+            if (string.IsNullOrWhiteSpace(modelRoot)) throw new ArgumentException("--model-root is required.");
             if (warmup < 0 || iterations <= 0) throw new ArgumentOutOfRangeException(nameof(iterations));
-            return new Options(Select(kinds, AllKinds), Select(backends, AllBackends), Path.GetFullPath(modelRoot), Path.GetFullPath(image), Path.GetFullPath(samImage ?? image), warmup, iterations, Path.GetFullPath(output), false);
+            string resolvedImage = TestImageResolver.Resolve(image);
+            string resolvedSamImage = string.IsNullOrWhiteSpace(samImage) ? resolvedImage : Path.GetFullPath(samImage);
+            return new Options(Select(kinds, AllKinds), Select(backends, AllBackends), Path.GetFullPath(modelRoot), resolvedImage, resolvedSamImage, warmup, iterations, Path.GetFullPath(output), false);
         }
 
         private static IReadOnlyList<string> Select(string value, IReadOnlyList<string> allowed)

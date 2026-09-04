@@ -12,6 +12,8 @@ powershell -ExecutionPolicy Bypass -File .\Run-DeviceBenchmark.ps1
 
 The default run tests all single-model visual cases on all six backend paths in both cold and steady modes, then runs CLIP/SAM/BLIP and the complete PaddleOCR v4/v5/v6 pipelines. PaddleOCR emits one row per version/variant/backend after automatically selecting the fastest stable combination from batch sizes 1/2/4/8/16 and independently-created inference-channel counts 1/2/4. Each candidate must be internally deterministic and the formal rerun must exactly reproduce the selected candidate. It does not emit isolated det/cls/rec timing rows. When a GPU backend is selected, the wrapper also attempts to lock the selected GPU's graphics and memory clocks to the maximum supported values. The lock stays within the driver-reported range and is reset after the run. A shorter smoke test is:
 
+The wrapper prefers the packaged fixed images under `data\`. If an image is absent, it leaves the image option unset so the runner downloads and SHA-256 verifies the matching asset from the `test-assets.1` Release, caching it under `%LOCALAPPDATA%\DeploySharp\TestImages`.
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Run-DeviceBenchmark.ps1 -Backend onnxruntime,openvino,opencv-dnn -Kind yolov8n -Mode steady -Warmup 1 -Iterations 3
 ```
