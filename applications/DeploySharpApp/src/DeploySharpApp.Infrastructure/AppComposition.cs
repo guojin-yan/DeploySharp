@@ -20,7 +20,7 @@ namespace DeploySharpApp.Infrastructure
             else foreach (var manifest in DefaultManifests.Create()) manifests.Add(manifest);
             IModelRunner runner;
 #if NET10_0_OR_GREATER
-            runner = new EngineModelRunner(new DeploySharpEngine(), new FakeModelRunner());
+            runner = new EngineModelRunner(new DeploySharpEngine(), new FakeModelRunner(), new BackendHostWorkerClient());
 #else
             runner = new LegacyHostModelRunner(new FakeModelRunner());
 #endif

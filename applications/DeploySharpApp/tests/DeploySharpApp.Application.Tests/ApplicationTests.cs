@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DeploySharpApp.Application;
+using DeploySharpApp.BackendHost.Protocol;
 using DeploySharpApp.Contracts;
+using DeploySharpApp.Engine;
 using DeploySharpApp.Infrastructure;
 
 namespace DeploySharpApp.Application.Tests
@@ -54,6 +56,69 @@ namespace DeploySharpApp.Application.Tests
             Assert.IsFalse(result.Succeeded);
             Assert.AreEqual(AppErrorCode.ModelUnavailable, result.ErrorCode);
             Assert.AreEqual(ModelRunMode.RealOnnxRuntime, result.RunMode);
+        }
+
+        [TestMethod]
+        public async Task MissingWorkerHostReturnsStructuredWorkerRequired()
+        {
+            var missingHost = Path.Combine(Path.GetTempPath(), "deploysharp-worker-" + Guid.NewGuid().ToString("N"), "BackendHost.dll");
+            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", prompt: "hello");
+            ModelRunResult result = await new BackendHostWorkerClient(missingHost).RunAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            Assert.AreEqual("DSAPP-WORKER-HOST-NOT-CONFIGURED", result.Diagnostics.Single().Code);
+        }
+
+        [TestMethod]
+        public async Task ReachableWorkerReportsMissingNativeAdapterWithoutFakeResult()
+        {
+            string hostPath = LocateBackendHost();
+            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", prompt: "hello");
+            ModelRunResult result = await new BackendHostWorkerClient(hostPath).RunAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
+            Assert.AreEqual("DSAPP-WORKER-ADAPTER-UNAVAILABLE", result.Diagnostics.Single().Code);
+        }
+
+        [TestMethod]
+        public async Task WorkerBackendIsRoutedToWorkerClient()
+        {
+            var worker = new StubWorkerClient();
+            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+            ModelRunResult result = await runner.RunAsync(new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", prompt: "hello"), null, CancellationToken.None);
+            Assert.IsTrue(worker.RunCalled);
+            Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
+        }
+
+        private sealed class ThrowingEngine : IDeploySharpEngine
+        {
+            public Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken) => throw new AssertFailedException("Worker request was incorrectly sent to the in-process engine.");
+        }
+
+        private sealed class StubWorkerClient : IBackendHostWorkerClient
+        {
+            public bool RunCalled { get; private set; }
+            public Task<WorkerResponse> SendAsync(WorkerRequest request, TimeSpan timeout, CancellationToken cancellationToken) => Task.FromResult(new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "stub"));
+            public Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
+            {
+                RunCalled = true;
+                return Task.FromResult(new ModelRunResult(false, AppErrorCode.WorkerRequired, "stub worker", diagnostics: new[] { new RuntimeDiagnostic("DSAPP-TEST-WORKER", DiagnosticSeverity.Information, "stub") }, runMode: ModelRunMode.Worker));
+            }
+            public Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken) => Task.FromResult(new BenchmarkReport(request, false, "stub worker"));
+        }
+
+        private static string LocateBackendHost()
+        {
+            DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
+            while (directory != null)
+            {
+                string candidate = Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "DeploySharpApp.BackendHost.dll");
+                if (File.Exists(candidate)) return candidate;
+                directory = directory.Parent;
+            }
+            Assert.Fail("The built BackendHost DLL could not be located.");
+            return string.Empty;
         }
     }
 }

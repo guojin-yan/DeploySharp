@@ -1,4 +1,7 @@
 @page "/llm"
+@using DeploySharpApp.Application
+@using DeploySharpApp.Contracts
+@inject DeploySharpAppService Service
 @inject WebActivityStore Activity
 <PageTitle>LLM / Embedding · DeploySharpApp</PageTitle>
 <div class="section-head"><div><span class="eyebrow">LANGUAGE LAB</span><h3>LLM / Embedding</h3></div><span class="status-tag purple-tag">LLamaSharp · Worker</span></div>
@@ -10,7 +13,17 @@
     private async Task SendAsync()
     {
         if (busy || string.IsNullOrWhiteSpace(prompt)) return;
-        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true; await Task.Delay(120); messages.Add(new(false, "WorkerRequired：LLamaSharp Worker 尚未接入，已保留本次请求但未执行推理。")); Activity.Add("llm", "LLamaSharp request requires BackendHost Worker", "DSAPP-WORKER-REQUIRED"); busy = false;
+        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true;
+        try
+        {
+            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelFormat: "gguf", options: new Dictionary<string, string> { ["executionMode"] = "worker" });
+            ModelRunResult output = await Service.RunAsync(request, cancellationToken: CancellationToken.None);
+            string assistantText = output.Succeeded ? output.Output ?? output.Message : output.Message;
+            if (output.Diagnostics.Count > 0) assistantText += "\n诊断：" + string.Join("；", output.Diagnostics.Select(diagnostic => diagnostic.Code + " - " + diagnostic.Message));
+            messages.Add(new(false, assistantText));
+            Activity.Add("llm", output.Message, output.Diagnostics.FirstOrDefault()?.Code);
+        }
+        finally { busy = false; }
     }
     private sealed record ChatMessage(bool IsUser, string Text);
 }

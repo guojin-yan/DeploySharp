@@ -10,6 +10,7 @@
     <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
     <ProjectReference Include="..\DeploySharpApp.Plugin.Abstractions\DeploySharpApp.Plugin.Abstractions.csproj" />
     <ProjectReference Include="..\DeploySharpApp.Application\DeploySharpApp.Application.csproj" />
+    <ProjectReference Include="..\DeploySharpApp.BackendHost.Protocol\DeploySharpApp.BackendHost.Protocol.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <ProjectReference Include="..\DeploySharpApp.Engine\DeploySharpApp.Engine.csproj" />
