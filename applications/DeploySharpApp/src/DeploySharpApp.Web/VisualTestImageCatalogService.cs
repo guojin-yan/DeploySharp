@@ -63,17 +63,19 @@ public sealed class VisualTestImageCatalogService
             using HttpResponseMessage response = await _http.GetAsync(image.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            await using var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true);
-            byte[] buffer = new byte[128 * 1024];
-            long completed = 0;
-            int read;
-            while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0)
+            await using (var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
             {
-                await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-                completed += read;
-                progress?.Report(image.SizeBytes <= 0 ? 0 : Math.Min(1, completed / (double)image.SizeBytes));
+                byte[] buffer = new byte[128 * 1024];
+                long completed = 0;
+                int read;
+                while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0)
+                {
+                    await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                    completed += read;
+                    progress?.Report(image.SizeBytes <= 0 ? 0 : Math.Min(1, completed / (double)image.SizeBytes));
+                }
+                await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
-            await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
             if (!await VerifySha256Async(temporaryPath, image.Sha256, cancellationToken).ConfigureAwait(false))
                 throw new InvalidDataException("SHA256 mismatch for test image " + image.FileName + ".");
             File.Move(temporaryPath, targetPath, overwrite: true);

@@ -67,16 +67,18 @@ public sealed class VisualReleaseCatalogService
                 using HttpResponseMessage response = await _http.GetAsync(file.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                await using var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true);
-                byte[] buffer = new byte[128 * 1024];
-                int read;
-                while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0)
+                await using (var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
                 {
-                    await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-                    completed += read;
-                    progress?.Report(total == 0 ? 0 : Math.Min(1, completed / (double)total));
+                    byte[] buffer = new byte[128 * 1024];
+                    int read;
+                    while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0)
+                    {
+                        await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                        completed += read;
+                        progress?.Report(total == 0 ? 0 : Math.Min(1, completed / (double)total));
+                    }
+                    await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
                 }
-                await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
                 if (!await VerifySha256Async(temporaryPath, file.Sha256, cancellationToken).ConfigureAwait(false))
                     throw new InvalidDataException("SHA256 mismatch for release asset " + file.AssetName + ".");
                 File.Move(temporaryPath, targetPath, overwrite: true);
@@ -167,7 +169,21 @@ public sealed class VisualReleaseCatalogService
             ? backendElements.EnumerateArray().Select(item => item.GetString() ?? string.Empty).Where(value => value.Length > 0).Select(value => "deploysharp.backend." + value).ToArray()
             : new[] { "deploysharp.backend.onnxruntime" };
         string license = root.TryGetProperty("source", out JsonElement source) ? String(source, "licenseExpression") ?? "Unknown" : "Unknown";
-        return new VisualReleaseModel(modelId, modelId, name, task, format, size, backends, license, String(root, "modelVersion") ?? "release", pack.Name, inputs, modelFiles, false);
+        string precision = String(artifact, "precision") ?? "unspecified";
+        string quantization = String(artifact, "quantization") ?? "none";
+        string preprocessing = Extension(artifact, "deploysharp.preprocessing-version") ?? "not declared";
+        string postprocessing = Extension(artifact, "deploysharp.postprocessing-version") ?? Extension(artifact, "deploysharp.postprocessing-contract") ?? "raw tensor output";
+        string validation = Extension(artifact, "deploysharp.validation-status") ?? "not declared";
+        int? opset = artifact.TryGetProperty("opset", out JsonElement opsetElement) && opsetElement.TryGetInt32(out int parsedOpset) ? parsedOpset : null;
+        return new VisualReleaseModel(modelId, modelId, name, task, format, size, backends, license, String(root, "modelVersion") ?? "release", pack.Name, inputs, modelFiles, false)
+        {
+            Precision = precision,
+            Quantization = quantization,
+            Opset = opset,
+            Preprocessing = preprocessing,
+            Postprocessing = postprocessing,
+            ValidationStatus = validation
+        };
     }
 
     private bool IsCached(VisualReleaseModel model)
@@ -180,6 +196,10 @@ public sealed class VisualReleaseCatalogService
     private static string SafeFileName(string value) => Path.GetFileName(value.Replace('\\', '/'));
     private static string Slug(string value) => string.Concat(value.Select(character => char.IsLetterOrDigit(character) || character is '-' or '_' or '.' ? character : '-')).Trim('-');
     private static string? String(JsonElement element, string property) => element.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+    private static string? Extension(JsonElement element, string property)
+    {
+        return element.TryGetProperty("extensions", out JsonElement extensions) ? String(extensions, property) : null;
+    }
     private static string FormatSize(long bytes) => bytes >= 1024 * 1024 * 1024 ? (bytes / 1024d / 1024d / 1024d).ToString("F1") + " GB" : (bytes / 1024d / 1024d).ToString("F1") + " MB";
 
     private static Dictionary<string, string> ParseHashes(string content)
@@ -241,6 +261,12 @@ public sealed record VisualReleaseModel(
     bool Cached)
 {
     public VisualReleaseFile PrimaryFile => Files.First(file => file.IsPrimaryModel);
+    public string Precision { get; init; } = "unspecified";
+    public string Quantization { get; init; } = "none";
+    public int? Opset { get; init; }
+    public string Preprocessing { get; init; } = "not declared";
+    public string Postprocessing { get; init; } = "raw tensor output";
+    public string ValidationStatus { get; init; } = "not declared";
     public AppModelInfo ToAppModelInfo() => new(Id, DisplayName, Task, Format, Size, RecommendedBackends, License, Cached, location: null, sha256: PrimaryFile.Sha256, externalArtifact: true);
 }
 

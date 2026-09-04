@@ -7,7 +7,7 @@
 @inject WebActivityStore Activity
 <PageTitle>视觉推理 · DeploySharpApp</PageTitle>
 <style>
-    .workbench { align-items: start; }
+    .workbench { align-items: start; grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); }
     .config, .canvas-panel { min-width: 0; }
     .two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .two-col > label { min-width: 0; }
@@ -24,15 +24,41 @@
     .download-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-name { display: block; margin-top: 6px; color: #778198; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .catalog-loading { margin: 12px 0; color: #778198; font-size: 10px; }
-    @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } }
+    .settings-group { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 3px; }
+    .settings-group summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--ink); font-size: 12px; font-weight: 800; padding: 10px 0 2px; }
+    .settings-group summary::-webkit-details-marker { display: none; }
+    .settings-group summary::after { content: '+'; color: #9aa5bb; font-size: 16px; font-weight: 400; }
+    .settings-group[open] summary::after { content: '−'; }
+    .settings-group summary span { color: #7e8ba5; font-size: 10px; font-weight: 500; margin-left: auto; text-align: right; }
+    .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 8px; }
+    .check-label { display: flex !important; align-items: center; gap: 7px; color: #748098; font-size: 11px; font-weight: 700; }
+    .config input[type="checkbox"] { width: 15px; height: 15px; margin: 7px 0 0; accent-color: var(--blue); }
+    .config .check-label input[type="checkbox"] { margin-top: 7px; }
+    .model-evidence { margin-top: 12px; border: 1px solid #e5eaf6; border-radius: 10px; padding: 11px; background: #fbfcff; }
+    .model-evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .model-evidence-grid div { min-width: 0; }
+    .model-evidence-grid small { display: block; color: #9aa5bb; font-size: 9px; text-transform: uppercase; letter-spacing: .4px; }
+    .model-evidence-grid b, .model-evidence-grid span { display: block; color: #44516f; font-size: 10px; line-height: 1.45; margin-top: 3px; overflow-wrap: anywhere; }
+    .source-badge { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 5px 8px; border-radius: 7px; background: #f0f3fb; color: #5b6b8e; font-size: 10px; font-weight: 700; }
+    .source-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #8290ad; }
+    .source-badge.real::before { background: #23a477; }
+    .reset-row { display: flex; gap: 8px; align-items: center; margin-top: 13px; }
+    .reset-row .hint { margin: 0; }
+    .evidence-head { margin-top: 19px; }
+    @@media(max-width:1180px) { .workbench { grid-template-columns: 1fr; } }
+    @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } .model-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media(max-width:430px) { .settings-grid, .three-col, .model-evidence-grid { grid-template-columns: 1fr; } }
 </style>
-<div class="section-head"><div><span class="eyebrow">VISION WORKBENCH</span><h3>视觉推理</h3></div><span class="status-tag">@(selectedReleaseModel?.Format.Equals("onnx", StringComparison.OrdinalIgnoreCase) == false ? "待接入 · " + selectedReleaseModel.Format : "ONNX Runtime · CPU")</span></div>
+<div class="section-head"><div><span class="eyebrow">VISION WORKBENCH</span><h3>视觉推理</h3></div><span class="status-tag">@(selectedReleaseModel is null ? "Demo / 本地模型" : selectedReleaseModel.Format.Equals("onnx", StringComparison.OrdinalIgnoreCase) ? "ONNX Runtime · CPU" : "待接入 · " + selectedReleaseModel.Format)</span></div>
 <div class="workbench">
     <section class="panel config">
         <div class="panel-head"><div><span class="eyebrow">01 · CONFIGURE</span><h3>配置一次运行</h3></div></div>
+        <span class="source-badge @(selectedReleaseModel is null ? "" : "real")">@parameterModeLabel</span>
         <label>模型 Artifact
-            <select @bind="selectedModelId">
+            <select value="@selectedModelId" @onchange="HandleModelChanged">
                 <option value="demo/yolo-v8-n">Demo · YOLOv8 Nano</option>
+                <option value="local/onnx">本地 ONNX · 自定义模型</option>
                 @if (releaseModels.Count > 0)
                 {
                     <optgroup label="DeploySharp Visual Models · @VisualReleaseCatalogService.ReleaseTag">
@@ -50,13 +76,14 @@
             <div class="download-row"><span class="muted">@(selectedReleaseModel.Cached ? "已缓存" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadSelectedAsync()" disabled="@downloading">@(downloading ? "下载中…" : "下载模型")</button></div>
             @if (downloading) { <progress value="@downloadProgress" max="1"></progress> }
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
+            <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@(selectedReleaseModel.Inputs.Count == 0 ? "未声明" : string.Join("; ", selectedReleaseModel.Inputs.Select(input => input.Name + " " + string.Join("×", input.Shape))))</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
         }
         <label>本地 ONNX 模型路径<input @bind="modelPath" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
         <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
         @if (testImages.Count > 0)
         {
             <label>Release 测试图像
-                <select @bind="selectedTestImageId">
+                <select value="@selectedTestImageId" @onchange="HandleTestImageChanged">
                     <option value="">@(selectedReleaseModel is null ? "仅使用本地上传图像" : "按模型任务自动匹配")</option>
                     @foreach (VisualTestImage image in testImages) { <option value="@image.Id">@image.FileName · @string.Join(", ", image.Tasks)</option> }
                 </select>
@@ -67,13 +94,27 @@
             <div class="download-row"><span class="muted">默认图像：@effectiveTestImage.FileName · @(effectiveTestImage.Cached ? "本地缓存，运行前仍会校验" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadTestImageAsync()" disabled="@(downloadingImage || busy)">@(downloadingImage ? "下载中…" : "使用测试图像")</button></div>
             @if (downloadingImage) { <progress value="@imageDownloadProgress" max="1"></progress> }
         }
-        <label>命名 Tensor JSON<textarea @bind="tensorJson" placeholder="无图像时例如 [1,2,3]；上传图片后自动生成图像张量"></textarea></label>
-        <div class="two-col"><label>Tensor 名称<input @bind="tensorName" /></label><label>Tensor 形状<input @bind="tensorShape" /></label></div>
-        <label>后端<select @bind="selectedBackend"><option value="deploysharp.backend.onnxruntime">ONNX Runtime</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
-        <div class="two-col"><label>设备<select @bind="device"><option>cpu</option><option>cuda</option></select></label><label>并发<select @bind="maxConcurrency"><option>1</option><option>2</option><option>4</option></select></label></div>
+        <details class="settings-group" open><summary>输入与预处理 <span>真实影响图像张量</span></summary>
+            <label>命名 Tensor JSON<textarea @bind="tensorJson" placeholder="无图像时例如 [1,2,3]；上传图片后自动生成图像张量"></textarea></label>
+            <div class="two-col"><label>Tensor 名称<input @bind="tensorName" @bind:after="MarkCustomParameters" /></label><label>Tensor 形状<input @bind="tensorShape" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="settings-grid"><label>缩放模式<select @bind="resizeMode" @bind:after="MarkCustomParameters"><option value="stretch">Stretch · 拉伸</option><option value="pad">Pad · 等比填充</option><option value="crop">Crop · 居中裁剪</option></select></label><label>颜色顺序<select @bind="colorOrder" @bind:after="MarkCustomParameters"><option value="rgb">RGB</option><option value="bgr">BGR</option></select></label></div>
+            <div class="settings-grid"><label>像素缩放<input type="number" step="any" @bind="imageScale" @bind:after="MarkCustomParameters" /></label><label>填充像素<input type="number" min="0" max="255" step="1" @bind="padValue" @bind:after="MarkCustomParameters" /></label></div>
+            <span class="muted">通道均值</span><div class="three-col"><label>R<input type="number" step="any" @bind="meanR" @bind:after="MarkCustomParameters" /></label><label>G<input type="number" step="any" @bind="meanG" @bind:after="MarkCustomParameters" /></label><label>B<input type="number" step="any" @bind="meanB" @bind:after="MarkCustomParameters" /></label></div>
+            <span class="muted">通道标准差（必须大于 0）</span><div class="three-col"><label>R<input type="number" step="any" min="0.000001" @bind="stdR" @bind:after="MarkCustomParameters" /></label><label>G<input type="number" step="any" min="0.000001" @bind="stdG" @bind:after="MarkCustomParameters" /></label><label>B<input type="number" step="any" min="0.000001" @bind="stdB" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="reset-row"><button class="ghost small" @onclick="ApplyCommonDefaults">恢复通用默认</button><button class="ghost small" @onclick="ApplyModelDefaults" disabled="@(selectedReleaseModel is null)">使用模型推荐值</button></div>
+        </details>
+        <details class="settings-group"><summary>运行与性能 <span>ONNX Runtime CPU · 点击展开</span></summary>
+            <label>后端<select @bind="selectedBackend" @bind:after="MarkCustomParameters"><option value="deploysharp.backend.onnxruntime">ONNX Runtime</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
+            <div class="two-col"><label>设备<select @bind="device" @bind:after="MarkCustomParameters"><option value="cpu">CPU · 进程内</option><option value="cuda">CUDA · 当前不可用</option></select></label><label>最大并发<input type="number" min="1" max="64" step="1" @bind="maxConcurrency" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="two-col"><label>算子内线程<input type="number" min="0" max="256" step="1" @bind="intraOpThreads" @bind:after="MarkCustomParameters" /></label><label>算子间线程<input type="number" min="0" max="256" step="1" @bind="interOpThreads" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="settings-grid"><label>图优化<select @bind="graphOptimization" @bind:after="MarkCustomParameters"><option>Disabled</option><option>Basic</option><option>Extended</option><option>All</option></select></label><label>执行模式<select @bind="executionMode" @bind:after="MarkCustomParameters"><option>Sequential</option><option>Parallel</option></select></label></div>
+            <div class="settings-grid"><label>原生日志<select @bind="logSeverity" @bind:after="MarkCustomParameters"><option>Verbose</option><option>Information</option><option>Warning</option><option>Error</option><option>Fatal</option></select></label><label>超时（秒）<input type="number" min="1" max="3600" step="1" @bind="timeoutSeconds" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="settings-grid"><label>原生日志 ID<input @bind="logId" @bind:after="MarkCustomParameters" placeholder="可选，便于筛选日志" /></label><label>Profiling 输出前缀<input @bind="profilingOutputPathPrefix" @bind:after="MarkCustomParameters" placeholder="启用 profiling 时可选" /></label></div>
+            <div class="settings-grid"><label class="check-label"><input type="checkbox" @bind="enableMemoryPattern" @bind:after="MarkCustomParameters" />启用 Memory Pattern</label><label class="check-label"><input type="checkbox" @bind="enableCpuMemoryArena" @bind:after="MarkCustomParameters" />启用 CPU Memory Arena</label><label class="check-label"><input type="checkbox" @bind="enableProfiling" @bind:after="MarkCustomParameters" />启用 Core Profiling</label></div>
+        </details>
         <button class="primary wide" disabled="@busy" @onclick="RunAsync">@(busy ? "运行中…" : "运行推理 →")</button>
         <button class="ghost wide" disabled="@(!busy)" @onclick="Cancel">取消当前运行</button>
-        <div class="hint">真实推理会校验模型路径、图片尺寸、命名输入、native runtime 和 ABI；没有图片且未提供 tensor 时不会伪造测试输入。</div>
+        <div class="hint">真实推理会校验模型路径、图片尺寸、命名输入、native runtime 和 ABI；没有图片且未提供 tensor 时不会伪造测试输入。CUDA 请求会明确返回不可用，不会回退到 CPU。</div>
         <progress value="@progress" max="1"></progress>
     </section>
     <section class="panel canvas-panel">
@@ -99,6 +140,28 @@
     private string selectedModelId = "demo/yolo-v8-n";
     private string device = "cpu";
     private string maxConcurrency = "1";
+    private string intraOpThreads = "0";
+    private string interOpThreads = "0";
+    private string graphOptimization = "All";
+    private string executionMode = "Sequential";
+    private string logSeverity = "Warning";
+    private string timeoutSeconds = "600";
+    private string logId = string.Empty;
+    private string profilingOutputPathPrefix = string.Empty;
+    private bool enableMemoryPattern = true;
+    private bool enableCpuMemoryArena = true;
+    private bool enableProfiling;
+    private string resizeMode = "stretch";
+    private string colorOrder = "rgb";
+    private string imageScale = "0.0039215686";
+    private string meanR = "0";
+    private string meanG = "0";
+    private string meanB = "0";
+    private string stdR = "1";
+    private string stdG = "1";
+    private string stdB = "1";
+    private string padValue = "0";
+    private bool usingRecommendedParameters;
     private string modelPath = string.Empty;
     private string tensorJson = string.Empty;
     private string tensorName = "images";
@@ -122,6 +185,7 @@
     private bool testImageLoading = true;
     private string? testImageError;
     private bool downloadingImage;
+    private bool imageFromRelease;
     private double imageDownloadProgress;
     private bool busy;
     private bool runSucceeded;
@@ -132,6 +196,9 @@
     private double totalMs;
     private CancellationTokenSource? cts;
     private IReadOnlyList<RuntimeDiagnostic> diagnostics = Array.Empty<RuntimeDiagnostic>();
+    private string parameterModeLabel => selectedReleaseModel is null
+        ? "通用默认 · 可编辑"
+        : usingRecommendedParameters ? "模型推荐 · 可编辑" : "自定义覆盖 · 可编辑";
     private VisualReleaseModel? selectedReleaseModel => releaseModels.FirstOrDefault(model => string.Equals(model.Id, selectedModelId, StringComparison.OrdinalIgnoreCase));
     private VisualTestImage? selectedTestImage => testImages.FirstOrDefault(image => string.Equals(image.Id, selectedTestImageId, StringComparison.OrdinalIgnoreCase));
     private VisualTestImage? effectiveTestImage => selectedTestImage ?? (selectedReleaseModel is null ? null : TestImageCatalog.FindDefault(testImages, selectedReleaseModel.Task, selectedReleaseModel.DisplayName));
@@ -142,10 +209,96 @@
         Task<IReadOnlyList<VisualTestImage>> imagesTask = TestImageCatalog.GetImagesAsync();
         try { releaseModels.AddRange(await modelsTask); }
         catch (Exception exception) { catalogError = exception.Message; }
-        finally { catalogLoading = false; }
+        finally { catalogLoading = false; ApplyModelDefaults(); }
         try { testImages.AddRange(await imagesTask); }
         catch (Exception exception) { testImageError = exception.Message; }
         finally { testImageLoading = false; }
+    }
+
+    private void HandleModelChanged(ChangeEventArgs args)
+    {
+        selectedModelId = args.Value?.ToString() ?? "demo/yolo-v8-n";
+        if (imageFromRelease) ClearImagePreview();
+        selectedTestImageId = string.Empty;
+        ApplyModelDefaults();
+    }
+
+    private void HandleTestImageChanged(ChangeEventArgs args)
+    {
+        selectedTestImageId = args.Value?.ToString() ?? string.Empty;
+        ClearImagePreview();
+    }
+
+    private void ApplyCommonDefaults()
+    {
+        tensorName = "images";
+        tensorShape = "1,3,640,640";
+        resizeMode = "stretch";
+        colorOrder = "rgb";
+        imageScale = "0.0039215686";
+        meanR = meanG = meanB = "0";
+        stdR = stdG = stdB = "1";
+        padValue = "0";
+        maxConcurrency = "1";
+        intraOpThreads = interOpThreads = "0";
+        graphOptimization = "All";
+        executionMode = "Sequential";
+        logSeverity = "Warning";
+        timeoutSeconds = "600";
+        logId = string.Empty;
+        profilingOutputPathPrefix = string.Empty;
+        enableMemoryPattern = true;
+        enableCpuMemoryArena = true;
+        enableProfiling = false;
+        usingRecommendedParameters = false;
+    }
+
+    private void ApplyModelDefaults()
+    {
+        ApplyCommonDefaults();
+        VisualReleaseModel? model = selectedReleaseModel;
+        if (model is null)
+        {
+            modelPath = string.Empty;
+            return;
+        }
+
+        VisualModelInput? image = model.Inputs.FirstOrDefault(IsImageInput);
+        if (image is not null)
+        {
+            tensorName = image.Name;
+            tensorShape = string.Join(',', ResolveShape(image.Shape, model.Task));
+        }
+
+        string preprocessing = model.Preprocessing.ToLowerInvariant();
+        resizeMode = preprocessing.Contains("letterbox", StringComparison.Ordinal) || preprocessing.Contains("longest-side", StringComparison.Ordinal) ? "pad" : preprocessing.Contains("crop", StringComparison.Ordinal) || preprocessing.Contains("shortest-edge", StringComparison.Ordinal) ? "crop" : "stretch";
+        colorOrder = preprocessing.Contains("bgr", StringComparison.Ordinal) ? "bgr" : "rgb";
+        if (preprocessing.Contains("half-range", StringComparison.Ordinal))
+        {
+            imageScale = "0.0078431373";
+            meanR = meanG = meanB = "1";
+        }
+        else if (preprocessing.Contains("mean05", StringComparison.Ordinal))
+        {
+            imageScale = "0.0039215686";
+            meanR = meanG = meanB = "0.5";
+        }
+        else if (preprocessing.Contains("sam-v1", StringComparison.Ordinal) && preprocessing.Contains("mean-std", StringComparison.Ordinal))
+        {
+            imageScale = "1";
+            meanR = "123.675"; meanG = "116.28"; meanB = "103.53";
+            stdR = "58.395"; stdG = "57.12"; stdB = "57.375";
+        }
+        else if (preprocessing.Contains("imagenet", StringComparison.Ordinal))
+        {
+            imageScale = "0.0039215686";
+            meanR = "0.485"; meanG = "0.456"; meanB = "0.406";
+            stdR = "0.229"; stdG = "0.224"; stdB = "0.225";
+        }
+
+        string cachedPath = ReleaseCatalog.GetCachedPrimaryPath(model);
+        modelPath = model.Cached && File.Exists(cachedPath) ? cachedPath : string.Empty;
+        usingRecommendedParameters = true;
     }
 
     private async Task HandleImageSelected(InputFileChangeEventArgs args)
@@ -158,6 +311,8 @@
         await using (Stream source = file.OpenReadStream(20 * 1024 * 1024))
         await using (var destination = new FileStream(imagePath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
         { await source.CopyToAsync(destination); }
+        selectedTestImageId = string.Empty;
+        imageFromRelease = false;
         await SetImagePreviewAsync(imagePath, file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType);
         runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
     }
@@ -172,6 +327,7 @@
             VisualTestImageDownloadResult downloaded = await TestImageCatalog.DownloadAsync(image, new Progress<double>(value => { imageDownloadProgress = value; InvokeAsync(StateHasChanged); }), cancellationToken);
             selectedTestImageId = downloaded.Image.Id;
             await SetImagePreviewAsync(downloaded.Path, downloaded.Image.FileName, downloaded.Image.MediaType);
+            imageFromRelease = true;
             Activity.Add("test-image-download", "Downloaded and SHA256-verified " + downloaded.Image.FileName, "DSAPP-TEST-IMAGE-DOWNLOADED");
             runtimeMessage = "默认测试图像已准备并通过 SHA256 校验。";
         }
@@ -188,6 +344,16 @@
         originalImageUrl = "data:" + mediaType + ";base64," + Convert.ToBase64String(bytes);
         resultImageUrl = null;
         resultImageCaption = "等待推理";
+    }
+
+    private void ClearImagePreview()
+    {
+        imagePath = null;
+        imageFileName = string.Empty;
+        originalImageUrl = null;
+        resultImageUrl = null;
+        resultImageCaption = "等待推理";
+        imageFromRelease = false;
     }
 
     private async Task DownloadSelectedAsync(CancellationToken cancellationToken = default)
@@ -235,8 +401,32 @@
                 }
             }
             ModelTensorInput[]? tensors = BuildTensorInputs(selected);
-            var options = new Dictionary<string, string> { ["maxConcurrency"] = maxConcurrency };
-            var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? "onnx"), modelSha256: selected?.PrimaryFile.Sha256, tensorInputs: tensors, options: options);
+            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["executionProvider"] = "cpu",
+                ["maxConcurrency"] = maxConcurrency,
+                ["intraOpThreads"] = intraOpThreads,
+                ["interOpThreads"] = interOpThreads,
+                ["graphOptimization"] = graphOptimization,
+                ["executionMode"] = executionMode,
+                ["enableMemoryPattern"] = enableMemoryPattern.ToString(),
+                ["enableCpuMemoryArena"] = enableCpuMemoryArena.ToString(),
+                ["logSeverity"] = logSeverity,
+                ["logId"] = logId,
+                ["profilingOutputPathPrefix"] = profilingOutputPathPrefix,
+                ["enableProfiling"] = enableProfiling.ToString(),
+                ["imageResizeMode"] = resizeMode,
+                ["imageColorOrder"] = colorOrder,
+                ["imageScale"] = imageScale,
+                ["imageMeanR"] = meanR,
+                ["imageMeanG"] = meanG,
+                ["imageMeanB"] = meanB,
+                ["imageStdR"] = stdR,
+                ["imageStdG"] = stdG,
+                ["imageStdB"] = stdB,
+                ["imagePadValue"] = padValue
+            };
+            var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? "onnx"), modelSha256: selected?.PrimaryFile.Sha256, tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
             if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl); resultImageCaption = "原图叠加运行状态；模型原始输出见下方 JSON"; }
@@ -274,6 +464,13 @@
     private static bool IsImageInput(VisualModelInput input) => input.Shape.Count == 4 && (input.Shape[1] is 1 or 3 or 4) && (input.ElementType.Equals("float32", StringComparison.OrdinalIgnoreCase) || input.ElementType.Equals("float", StringComparison.OrdinalIgnoreCase));
     private static long[] ResolveShape(IReadOnlyList<long> shape, string? task) { long fallback = task?.Contains("matting", StringComparison.OrdinalIgnoreCase) == true ? 1024 : 640; return shape.Select((value, index) => value > 0 ? value : index == 0 ? 1 : index == 1 ? 3 : fallback).ToArray(); }
     private long[] ParseShape() => tensorShape.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+    private TimeSpan ParseTimeout()
+    {
+        if (!int.TryParse(timeoutSeconds, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int seconds) || seconds is < 1 or > 3600)
+            throw new FormatException("超时必须是 1 到 3600 秒之间的整数。");
+        return TimeSpan.FromSeconds(seconds);
+    }
+    private void MarkCustomParameters() => usingRecommendedParameters = false;
     private void ReplaceModel(VisualReleaseModel model) { int index = releaseModels.FindIndex(item => string.Equals(item.Id, model.Id, StringComparison.OrdinalIgnoreCase)); if (index >= 0) releaseModels[index] = model; }
     private void Cancel() { cts?.Cancel(); Activity.Add("run", "Cancellation requested", "DSAPP-WEB-CANCEL-REQUESTED"); }
     private static long[] ParseShape(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
