@@ -1,6 +1,7 @@
 @page "/models"
 @using DeploySharpApp.Contracts
 @inject DeploySharpAppService Service
+@inject VisualReleaseCatalogService ReleaseCatalog
 <PageTitle>模型与后端 · DeploySharpApp</PageTitle>
 <div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="Refresh">刷新目录 ↻</button></div>
 <div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
@@ -10,7 +11,9 @@
 }
 else if (tab == CatalogTab.Models)
 {
-    <div class="plugin-grid">@foreach (var model in Service.Models) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo gray">M</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "本地文件")</span><span>@string.Join(", ", model.RecommendedBackends)</span></div></article> }</div>
+    @if (releaseLoading) { <p class="hint">正在读取 GitHub release 模型清单…</p> }
+    @if (!string.IsNullOrWhiteSpace(releaseError)) { <p class="hint">release 清单暂时不可用：@releaseError</p> }
+    <div class="plugin-grid">@foreach (var model in Service.Models) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo gray">M</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "本地文件")</span><span>@string.Join(", ", model.RecommendedBackends)</span></div></article> }@foreach (VisualReleaseModel model in releaseModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo">ON</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "首次运行下载")</span><span>@model.PrimaryFile.Sha256[..Math.Min(10, model.PrimaryFile.Sha256.Length)]…</span></div></article> }</div>
 }
 else
 {
@@ -18,6 +21,15 @@ else
 }
 @code {
     private CatalogTab tab = CatalogTab.Backends;
+    private readonly List<VisualReleaseModel> releaseModels = new();
+    private bool releaseLoading = true;
+    private string? releaseError;
+    protected override async Task OnInitializedAsync()
+    {
+        try { releaseModels.AddRange(await ReleaseCatalog.GetModelsAsync()); }
+        catch (Exception exception) { releaseError = exception.Message; }
+        finally { releaseLoading = false; }
+    }
     private void Refresh() => Service.RefreshCatalog();
     private static string Logo(AppBackendInfo backend) => backend.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase) ? "ON" : backend.Id.Contains("opencv", StringComparison.OrdinalIgnoreCase) ? "CV" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) ? "OV" : backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "Q" : backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "TRT" : "＋";
     private static string LogoClass(AppBackendInfo backend) => backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "purple" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) || backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "orange" : "";

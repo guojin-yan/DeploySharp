@@ -88,6 +88,28 @@ public sealed class EngineTests
         CollectionAssert.AreEqual(new[] { 1f, 2f, 3f }, values.EnumerateArray().Select(item => item.GetSingle()).ToArray());
     }
 
+    [TestMethod]
+    public async Task ImageInputIsDecodedIntoTheRequestedTensor()
+    {
+        string imagePath = Path.Combine(Path.GetTempPath(), "deploysharp-app-test-" + Guid.NewGuid().ToString("N") + ".png");
+        await File.WriteAllBytesAsync(imagePath, Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="));
+        try
+        {
+            var request = new ModelRunRequest(
+                AppOperationKind.Vision,
+                "tests/image-input",
+                "deploysharp.backend.onnxruntime",
+                inputPath: imagePath,
+                modelPath: Fixture(),
+                modelFormat: "onnx",
+                tensorInputs: new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, imageInput: true) });
+            ModelRunResult result = await new DeploySharpEngine(new FixedRuntimeProbe(AvailableStatus())).RunAsync(request, null, CancellationToken.None);
+            if (result.ErrorCode == AppErrorCode.NativeDependencyMissing || result.ErrorCode == AppErrorCode.BackendUnavailable) Assert.Inconclusive(result.Message);
+            Assert.IsTrue(result.Succeeded, result.Message);
+        }
+        finally { File.Delete(imagePath); }
+    }
+
     private static ModelRunRequest Request(string path)
     {
         return new ModelRunRequest(AppOperationKind.Vision, "tests/classification", "deploysharp.backend.onnxruntime", modelPath: path, modelFormat: "onnx", tensorInputs: Inputs());

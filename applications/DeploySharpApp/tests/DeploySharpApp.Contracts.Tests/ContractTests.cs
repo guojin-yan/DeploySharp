@@ -37,5 +37,14 @@ namespace DeploySharpApp.Contracts.Tests
             Assert.AreEqual("onnx", request.ModelFormat);
             Assert.AreEqual("images", request.TensorInputs[0].Name);
         }
+
+        [TestMethod]
+        public void ImageTensorInputCanDeferValuesToTheImagePath()
+        {
+            var tensor = new ModelTensorInput("images", "float32", new long[] { 1, 3, 224, 224 }, imageInput: true);
+            Assert.IsTrue(tensor.ImageInput);
+            Assert.IsNull(tensor.ValuesJson);
+            Assert.IsNull(tensor.ValuesFilePath);
+        }
     }
 }

@@ -92,7 +92,7 @@ namespace DeploySharpApp.Contracts
 
     public sealed class ModelTensorInput
     {
-        public ModelTensorInput(string name, string elementType, IEnumerable<long> shape, string? valuesJson = null, string? valuesFilePath = null)
+        public ModelTensorInput(string name, string elementType, IEnumerable<long> shape, string? valuesJson = null, string? valuesFilePath = null, bool imageInput = false)
         {
             Name = ContractGuard.Text(name, nameof(name));
             ElementType = ContractGuard.Id(elementType, nameof(elementType)).ToLowerInvariant();
@@ -106,13 +106,19 @@ namespace DeploySharpApp.Contracts
             Shape = new ReadOnlyCollection<long>(dimensions);
             ValuesJson = ContractGuard.Optional(valuesJson);
             ValuesFilePath = ContractGuard.Optional(valuesFilePath);
-            if ((ValuesJson == null) == (ValuesFilePath == null)) throw new ArgumentException("Exactly one tensor value source is required.");
+            ImageInput = imageInput;
+            if (imageInput)
+            {
+                if (ValuesJson != null || ValuesFilePath != null) throw new ArgumentException("An image tensor input cannot also specify a value source.");
+            }
+            else if ((ValuesJson == null) == (ValuesFilePath == null)) throw new ArgumentException("Exactly one tensor value source is required.");
         }
         public string Name { get; }
         public string ElementType { get; }
         public IReadOnlyList<long> Shape { get; }
         public string? ValuesJson { get; }
         public string? ValuesFilePath { get; }
+        public bool ImageInput { get; }
     }
 
     public sealed class ModelRunRequest
