@@ -1,0 +1,16 @@
+@page "/llm"
+@inject WebActivityStore Activity
+<PageTitle>LLM / Embedding · DeploySharpApp</PageTitle>
+<div class="section-head"><div><span class="eyebrow">LANGUAGE LAB</span><h3>LLM / Embedding</h3></div><span class="status-tag purple-tag">LLamaSharp · Worker</span></div>
+<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题"></textarea><button class="primary" @onclick="SendAsync" disabled="@busy">@(busy ? "发送中…" : "发送 ↑")</button></div></section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><div class="info-line"><span>上下文长度</span><b>2,048</b></div><div class="info-line"><span>线程数</span><b>Worker</b></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">当前 Worker 推理协议仍在建设中。页面会保留请求语义并明确显示 WorkerRequired，不伪造模型回复。</div></section></div>
+@code {
+    private string prompt = string.Empty;
+    private bool busy;
+    private readonly List<ChatMessage> messages = new() { new(false, "LLamaSharp 运行需要 BackendHost Worker。网页不会在浏览器加载 GGUF native runtime。") };
+    private async Task SendAsync()
+    {
+        if (busy || string.IsNullOrWhiteSpace(prompt)) return;
+        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true; await Task.Delay(120); messages.Add(new(false, "WorkerRequired：LLamaSharp Worker 尚未接入，已保留本次请求但未执行推理。")); Activity.Add("llm", "LLamaSharp request requires BackendHost Worker", "DSAPP-WORKER-REQUIRED"); busy = false;
+    }
+    private sealed record ChatMessage(bool IsUser, string Text);
+}

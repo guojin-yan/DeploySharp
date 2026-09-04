@@ -1,2 +1,9 @@
-﻿@page "/logs"
-<PageTitle>运行日志 · DeploySharpApp</PageTitle><h1>运行日志</h1><div class="panel log"><span class="state available">最近一次运行 · 仅本机</span><pre>[doctor] manifest catalog loaded\n[doctor] native runtimes are probed before activation\n[run] browser never loads native DLL\n[run] structured result and diagnostics are ready</pre></div>
+@page "/logs"
+@inject WebActivityStore Activity
+<PageTitle>运行日志 · DeploySharpApp</PageTitle>
+<div class="section-head"><div><span class="eyebrow">DIAGNOSTICS</span><h3>运行日志</h3></div><button class="ghost small" @onclick="Clear">清空本机日志</button></div>
+<div class="panel log-panel"><div class="log-toolbar"><span class="status-tag">最近一次运行 · 仅本机</span><span class="muted">已脱敏 · 不上传模型和输入</span></div><pre>@LogText</pre></div>
+@code {
+    private string LogText => Activity.Entries.Count == 0 ? "[doctor] manifest catalog loaded\n[doctor] native runtimes are probed before activation\n[doctor] browser never loads native DLL" : string.Join(Environment.NewLine, Activity.Entries.Select(item => $"[{item.Timestamp:HH:mm:ss} {item.Category}] {item.Message}{(item.Code == null ? string.Empty : " · " + item.Code)}"));
+    private void Clear() => Activity.Clear();
+}

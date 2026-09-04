@@ -1,0 +1,21 @@
+@page "/multimodal"
+@inject WebActivityStore Activity
+<PageTitle>多模态工作流 · DeploySharpApp</PageTitle>
+<div class="section-head"><div><span class="eyebrow">MULTIMODAL FLOW</span><h3>多模态工作流</h3></div><span class="status-tag orange-tag">有序媒体 · 可取消</span></div>
+<section class="panel pipeline-panel"><div class="pipeline"><div class="pipe-node done"><b>1</b><strong>图像</strong><small>已准备</small></div><div class="pipe-line done"></div><div class="pipe-node done"><b>2</b><strong>文本提示</strong><small>已校验</small></div><div class="pipe-line active"></div><div class="pipe-node active"><b>3</b><strong>视觉语言</strong><small>@(running ? "运行中" : "等待运行")</small></div><div class="pipe-line"></div><div class="pipe-node"><b>4</b><strong>结构化结果</strong><small>未生成</small></div></div><div class="multi-body"><div class="media-preview"><div class="fake-image"><span>IMAGE</span></div><div class="media-meta"><strong>本地媒体输入</strong><small>浏览器上传入口将在 Worker 文件流接入后启用</small></div></div><div class="prompt-box"><label>提示词<textarea @bind="prompt"></textarea></label><div class="prompt-foot"><span>输出 schema：vision-language-1</span><button class="primary" @onclick="RunAsync" disabled="@running">@(running ? "等待 Worker…" : "开始工作流 →")</button><button class="ghost" @onclick="Cancel" disabled="@(!running)">取消</button></div><p class="hint">当前阶段只完成工作流状态和取消语义；真实视觉语言推理需要 Worker。</p></div></div></section>
+@code {
+    private string prompt = "请描述图像中的主要物体，并以 JSON 返回名称和大致位置。";
+    private bool running;
+    private CancellationTokenSource? cts;
+    private async Task RunAsync()
+    {
+        if (running) return;
+        running = true;
+        cts = new CancellationTokenSource();
+        Activity.Add("multimodal", "Multimodal workflow requires BackendHost Worker", "DSAPP-WORKER-REQUIRED");
+        try { await Task.Delay(250, cts.Token); }
+        catch (OperationCanceledException) { Activity.Add("multimodal", "Multimodal workflow cancelled", "DSAPP-WEB-CANCELLED"); }
+        finally { running = false; cts.Dispose(); cts = null; }
+    }
+    private void Cancel() => cts?.Cancel();
+}

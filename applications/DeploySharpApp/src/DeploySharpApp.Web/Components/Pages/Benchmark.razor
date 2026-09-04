@@ -1,5 +1,28 @@
-﻿@page "/benchmark"
+@page "/benchmark"
 @using DeploySharpApp.Contracts
 @inject DeploySharpAppService Service
-<PageTitle>性能基准 · DeploySharpApp</PageTitle><h1>性能基准</h1><div class="panel"><h2>固定 fixture · batch 1</h2><p>加载、预处理和后处理不计入循环；缺少 CUDA/TensorRT 时报告 unavailable。</p><button class="primary" @onclick="RunBenchmarkAsync" disabled="@busy">@(busy ? "测试中…" : "新建基准")</button><progress value="@progress" max="1"></progress><pre>@report</pre></div>
-@code { private bool busy; private double progress; private string report = "等待基准。"; private async Task RunBenchmarkAsync() { busy = true; progress = 0; try { var request = new BenchmarkRequest("demo/yolo-v8-n", "deploysharp.backend.onnxruntime"); var value = new Progress<double>(v => { progress = v; InvokeAsync(StateHasChanged); }); var result = await Service.BenchmarkAsync(request, value, CancellationToken.None); report = result.Message + $"\nP50 {result.P50Ms:F2} ms · P95 {result.P95Ms:F2} ms · 吞吐 {result.Throughput:F1}/s"; } finally { busy = false; } } }
+@inject WebActivityStore Activity
+<PageTitle>性能基准 · DeploySharpApp</PageTitle>
+<div class="section-head"><div><span class="eyebrow">PERFORMANCE LAB</span><h3>性能基准</h3></div><button class="primary small" @onclick="RunBenchmarkAsync" disabled="@busy">@(busy ? "测试中…" : "新建基准")</button></div>
+<div class="benchmark-hero panel"><div><span class="eyebrow">FIXTURE</span><h3>固定分类输入 · batch 1</h3><p>加载、预处理和后处理不计入循环；缺少 CUDA/TensorRT 时报告 unavailable。</p></div><div class="bench-summary"><div><small>Warmup</small><strong>3</strong></div><div><small>Iterations</small><strong>20</strong></div><div><small>报告</small><strong class="good">@reportState</strong></div></div></div>
+<div class="panel table-panel"><div class="panel-head"><div><span class="eyebrow">LATEST REPORT</span><h3>后端对比</h3></div><span class="muted">@lastRun</span></div><table><thead><tr><th>后端</th><th>状态</th><th>P50 延迟</th><th>P95 延迟</th><th>吞吐</th><th>执行模式</th></tr></thead><tbody>@foreach (var backend in Service.Backends) { var latest = reports.TryGetValue(backend.Id, out var value) ? value : null; <tr><td><b>@backend.DisplayName</b><small>@backend.Version</small></td><td><span class="table-status @(latest?.Available == true ? "ok" : "pending")">@(latest?.Available == true ? "已完成" : backend.State.ToString())</span></td><td>@(latest?.Available == true ? latest.P50Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.P95Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.Throughput.ToString("F1") + "/s" : "—")</td><td>@(latest?.ExecutionMode ?? backend.ExecutionMode.ToString())</td></tr> }</tbody></table><progress value="@progress" max="1"></progress><p class="hint">@message</p></div>
+@code {
+    private readonly Dictionary<string, BenchmarkReport> reports = new(StringComparer.OrdinalIgnoreCase);
+    private bool busy;
+    private double progress;
+    private string reportState = "等待运行";
+    private string lastRun = "尚未执行";
+    private string message = "基准固定输入与迭代次数，真实 native 后端不可用时不生成伪造数字。";
+    private async Task RunBenchmarkAsync()
+    {
+        if (busy) return;
+        busy = true; progress = 0; reportState = "运行中"; message = "正在执行可复核基准…";
+        try
+        {
+            var request = new BenchmarkRequest("demo/yolo-v8-n", "deploysharp.backend.onnxruntime");
+            var report = await Service.BenchmarkAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), CancellationToken.None);
+            reports[request.BackendId] = report; reportState = report.Available ? "可复核" : "不可用"; message = report.Message; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message);
+        }
+        finally { busy = false; }
+    }
+}

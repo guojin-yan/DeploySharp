@@ -1,5 +1,21 @@
-﻿@inherits LayoutComponentBase
-<div class="shell">
-    <aside><div class="brand"><span class="mark">DS</span><span><b>DeploySharp</b><small>App Experience</small></span></div><div class="runtime">● Windows · x64 · localhost</div><nav><a href="/">体验首页</a><a href="/vision">视觉推理</a><a href="/models">模型与后端</a><a href="/benchmark">性能基准</a><a href="/logs">运行日志</a></nav><small class="foot">浏览器只负责交互；native runtime 只在服务器/Worker 运行。</small></aside>
-    <main>@Body</main>
+@inherits LayoutComponentBase
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand"><div class="brand-mark">DS</div><div><strong>DeploySharp</strong><span>App Experience</span></div></div>
+        <div class="runtime-pill"><span class="pulse"></span><div><b>本机运行环境</b><small>Windows · x64 · Web Server</small></div></div>
+        <nav>
+            <NavLink href="/" Match="NavLinkMatch.All" class="nav-item"><span>⌂</span>体验首页</NavLink>
+            <NavLink href="/vision" class="nav-item"><span>◈</span>视觉推理</NavLink>
+            <NavLink href="/llm" class="nav-item"><span>✦</span>LLM / Embedding</NavLink>
+            <NavLink href="/multimodal" class="nav-item"><span>▧</span>多模态工作流</NavLink>
+            <NavLink href="/benchmark" class="nav-item"><span>⌁</span>性能基准</NavLink>
+            <NavLink href="/models" class="nav-item"><span>◫</span>模型与后端</NavLink>
+            <NavLink href="/logs" class="nav-item"><span>≡</span>运行日志</NavLink>
+        </nav>
+        <div class="sidebar-foot"><span class="version">DeploySharpApp 0.1</span><span>离线可审阅 · 原生运行时仅在服务器/Worker 执行</span></div>
+    </aside>
+    <main class="main">
+        <header class="topbar"><div><span class="eyebrow">LOCAL AI PLAYGROUND</span><h1>在本地体验 DeploySharp 的全部能力</h1></div><div class="top-actions"><span class="status-tag">Server-side interactive</span></div></header>
+        @Body
+    </main>
 </div>
