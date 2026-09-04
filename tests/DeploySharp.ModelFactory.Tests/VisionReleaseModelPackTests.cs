@@ -35,7 +35,7 @@ namespace DeploySharp.ModelFactory.Tests
         public void OfficialVisionEntriesShareOneImmutableRelease()
         {
             const string releaseTag = "models-20260903.visual.1";
-            const string releaseCommit = "3c868b0bf7234ebb8af30034716cb37519cb53e0";
+            const string releaseCommit = "0f64d0a79b421ca5a1be024b930980ab8ae84277";
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
                 .Where(entry => entry.Release?.Tag == releaseTag

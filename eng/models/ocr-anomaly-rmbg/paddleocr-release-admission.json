@@ -183,7 +183,7 @@
     "release": {
       "repository": "guojin-yan/DeploySharp",
       "tag": "models-20260903.visual.1",
-      "commit": "3c868b0bf7234ebb8af30034716cb37519cb53e0",
+      "commit": "0f64d0a79b421ca5a1be024b930980ab8ae84277",
       "manifestFile": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
       "manifestAssetName": "mobile-cls.modelpack.json",
       "manifestSize": 3086,
