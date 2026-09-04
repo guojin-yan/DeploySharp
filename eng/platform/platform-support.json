@@ -90,6 +90,13 @@
           "runtimeDependencies": []
         },
         {
+          "packageId": "JYPPX.DeploySharp.Extensibility",
+          "level": "ManagedTested",
+          "scope": "Plugin descriptors, runtime dependency metadata, options schemas, native probes, and diagnostic contracts; native execution remains host-owned.",
+          "evidence": ["tests/DeploySharp.Extensibility.Tests/DeploySharp.Extensibility.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
           "packageId": "JYPPX.DeploySharp.LLM",
           "level": "ManagedTested",
           "scope": "Language-model contracts, prompt formatting, registry, and lifecycle behavior without bundled native runtime.",
@@ -138,6 +145,13 @@
           "level": "ManagedTested",
           "scope": "Visual preprocessing-independent profiles, pipelines, decoders, geometry, and typed result contracts.",
           "evidence": ["tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj"],
+          "runtimeDependencies": []
+        },
+        {
+          "packageId": "JYPPX.DeploySharp.Visual.TensorRT",
+          "level": "ManagedTested",
+          "scope": "Managed CUDA visual pipeline contracts and scheduling without a universal native TensorRT execution claim; native GPU evidence is recorded under windows-x64-gpu.",
+          "evidence": ["tests/DeploySharp.Visual.TensorRT.Tests/DeploySharp.Visual.TensorRT.Tests.csproj"],
           "runtimeDependencies": []
         }
       ],

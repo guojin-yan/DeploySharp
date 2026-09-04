@@ -140,6 +140,10 @@ DeploySharp packages are not yet published to nuget.org. The exact package IDs a
 | [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp packages await their first publication | Package mirror |
 | [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | Used for model artifact delivery | Immutable ModelPack assets and verification metadata |
 
+### Default Test Images
+
+Examples and benchmark tools use the dedicated [`test-assets.1` release](https://github.com/guojin-yan/DeploySharp/releases/tag/test-assets.1) when no local image is supplied. The task defaults are `bus.jpg` for detection/segmentation, `demo_7.jpg` for classification, `demo_9.jpg` for pose, `plane.png` for oriented detection, and `ocr-demo_1.jpg` for PaddleOCR. Files are SHA-256 verified and cached under `%LOCALAPPDATA%\DeploySharp\TestImages`; the full mapping and maintenance commands are in the [default test images guide](docs/articles/test-images.md).
+
 ### Application-Owned Runtime Packages
 
 These are application dependencies/runtime packages used by the Windows Alpha. Referencing a DeploySharp managed package does not silently install them:

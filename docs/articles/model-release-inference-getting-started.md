@@ -1,6 +1,6 @@
 # Release 模型推理快速开始
 
-本文演示如何把 ModelFactory 目录中的模型下载到应用缓存，再交给 DeploySharp 视觉和 ONNX Runtime 合同执行。适用于 `2.0.0-alpha.1` 的 Windows x64 Preview 工件；模型下载、校验和推理后端是三个独立步骤。
+本文演示如何把 ModelFactory 目录中的模型下载到应用缓存，再交给 DeploySharp 视觉和 ONNX Runtime 合同执行。适用于 `2.0.0-alpha.1` 的 Windows x64 Preview 工件；模型下载、校验和推理后端是三个独立步骤。未指定 `--image` 时，案例会从[默认测试图片 Release](test-images.md) 下载并校验 `bus.jpg`。
 
 ## 前置条件
 
@@ -14,6 +14,7 @@
 案例位于 `samples/06-models/release-inference`。以 BRIA RMBG 2.0 为例：
 
 ~~~powershell
+dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -- --model-id bria/rmbg-2.0 --precision fp32 --quantization none --image E:\Model\anomalib\Padim\images\your-image.jpg
 ~~~
 

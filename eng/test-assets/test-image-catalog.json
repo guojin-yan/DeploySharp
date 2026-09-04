@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "repository": "guojin-yan/DeploySharp",
+    "tag": "test-assets.1",
+    "baseUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1"
+  },
+  "assets": [
+    {
+      "id": "visual-bus",
+      "fileName": "bus.jpg",
+      "mediaType": "image/jpeg",
+      "sizeBytes": 487438,
+      "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+      "tasks": ["detection", "segmentation", "anomaly", "background-removal", "visual-language", "promptable-segmentation"]
+    },
+    {
+      "id": "visual-classification",
+      "fileName": "demo_7.jpg",
+      "mediaType": "image/jpeg",
+      "sizeBytes": 180609,
+      "sha256": "839511d6f6e7688d319b01d6977fc2cc642cb91e8fae4a2e0562c1322d894bf2",
+      "tasks": ["classification"]
+    },
+    {
+      "id": "visual-pose",
+      "fileName": "demo_9.jpg",
+      "mediaType": "image/jpeg",
+      "sizeBytes": 43079,
+      "sha256": "68bbb631ebb95e3c9ff5c82bcf8baf445d938771501014440541bf4dbc71c1b6",
+      "tasks": ["pose"]
+    },
+    {
+      "id": "visual-oriented-detection",
+      "fileName": "plane.png",
+      "mediaType": "image/png",
+      "sizeBytes": 3084846,
+      "sha256": "dde925501ff0f2bddb7e28198fdd0586620f7a7ef587412717f666b7ea6584c9",
+      "tasks": ["oriented-detection"]
+    },
+    {
+      "id": "ocr-demo",
+      "fileName": "ocr-demo_1.jpg",
+      "mediaType": "image/jpeg",
+      "sizeBytes": 89877,
+      "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "tasks": ["ocr"]
+    }
+  ],
+  "defaults": {
+    "detection": "bus.jpg",
+    "segmentation": "bus.jpg",
+    "classification": "demo_7.jpg",
+    "pose": "demo_9.jpg",
+    "oriented-detection": "plane.png",
+    "anomaly": "bus.jpg",
+    "background-removal": "bus.jpg",
+    "visual-language": "bus.jpg",
+    "promptable-segmentation": "bus.jpg",
+    "ocr": "ocr-demo_1.jpg"
+  }
+}

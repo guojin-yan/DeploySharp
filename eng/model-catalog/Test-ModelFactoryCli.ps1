@@ -52,6 +52,10 @@ try {
     $previewOutput = @(& dotnet run --project $project -c Release --no-build --no-restore -- show --model-id bria/rmbg-2.0 2>&1)
     if ($LASTEXITCODE -eq 0) { throw 'show unexpectedly allowed a Preview model without --preview.' }
 
+    # The non-zero code above is the expected policy rejection. Clear it so
+    # the validator itself returns success to CI and local release scripts.
+    $global:LASTEXITCODE = 0
+
     Write-Output ('DEPLOYSHARP_MODELFACTORY_CLI_OK artifactRows={0} artifacts={1} checks=4' -f $catalog.entries.Count, $details.artifacts.Count)
 }
 finally {

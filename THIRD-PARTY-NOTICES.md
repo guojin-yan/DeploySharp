@@ -10,6 +10,7 @@ This file covers third-party software used to build or run the current `2.0.0-al
 | LLamaSharp / LLamaSharp.Backend.Cpu | 0.27.0 | MIT managed/native bridge packages selected by the consumer; native assets remain consumer-owned. Source: [LLamaSharp](https://github.com/SciSharp/LLamaSharp). |
 | Microsoft.Bcl.AsyncInterfaces | 10.0.10 central version (transitive package metadata may resolve a compatible asset) | MIT; compatibility dependency. Source: [dotnet/runtime](https://github.com/dotnet/runtime). |
 | Microsoft.ML.OnnxRuntime.Managed / Microsoft.ML.OnnxRuntime | 1.28.0 | Microsoft ONNX Runtime license/notice applies; native provider/runtime selection remains consumer-owned. Source: [onnxruntime](https://github.com/microsoft/onnxruntime). |
+| Microsoft.ML.OnnxRuntime.Gpu.Windows | 1.28.0 | Microsoft ONNX Runtime CUDA provider package; CUDA, cuDNN, NVIDIA driver and native runtime selection remains consumer-owned. Source: [onnxruntime](https://github.com/microsoft/onnxruntime). |
 | Microsoft.ML.Tokenizers | 2.0.0 | MIT. Source: [dotnet/machinelearning](https://github.com/dotnet/machinelearning). |
 | OnnxSharp | 0.3.2 | MIT; ONNX format parsing/manipulation dependency used by the TensorRT adapter. Source: [OnnxSharp](https://github.com/nietras/OnnxSharp). |
 | System.Text.Json | 10.0.10 central version | MIT. Source: [dotnet/runtime](https://github.com/dotnet/runtime). |

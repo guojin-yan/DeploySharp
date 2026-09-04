@@ -6,7 +6,7 @@ DeploySharp 2.0 是新的包结构和 API 设计，不提供 V1 的源码、二�
 
 | V1 使用场景 | V2 入口 | 说明 |
 | --- | --- | --- |
-| YOLO 分类、检测、分割、姿态、旋转框 | `DeploySharp.Visual` 的 YOLO Profile | 根据实际导出布局选择相应 Profile；标签、输入尺寸和输出名属于模型合同。 |
+| YOLO 分类、检测、分割、姿态、旋转框 | `DeploySharp.Visual` 的 YOLO Profile | 根据实际导出布局选择相应 Profile；标签、输入尺寸和输出名属于模型合同。检测模型见 [YOLO 检测](visual-yolo-detection.md)。 |
 | DEIM、RF-DETR、RT-DETR、PP-YOLOE | `PortableDetectorProfiles` | 使用对应的便携检测器 Profile；多输入和原始 query 输出必须显式配置。 |
 | PaddleOCR | `PaddleOcrPipeline` | 检测、方向分类、识别以完整流水线组织，可配置 batch 和会话池。 |
 | PaDiM、PatchCore 等异常检测 | 异常检测 Profile | 输入尺寸、阈值、输出布局必须与模型导出保持一致。 |

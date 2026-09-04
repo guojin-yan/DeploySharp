@@ -82,8 +82,15 @@ if ($null -ne $seedCache) {
         $destinationIdRoot = Join-Path $cache $identity[0]
         New-Item -ItemType Directory -Path $destinationIdRoot -Force | Out-Null
         Copy-Item -LiteralPath $sourceVersionRoot -Destination $destinationIdRoot -Recurse
-        $sourcePackages = @(Get-ChildItem -LiteralPath $sourceVersionRoot -Filter '*.nupkg' -File)
-        if ($sourcePackages.Count -ne 1) { throw "Offline seed package must contain exactly one nupkg: $($identity[0])/$($identity[1])" }
+        # NuGet's global cache can retain a case-variant duplicate of the
+        # package file. Prefer the canonical id.version filename so a valid
+        # cache is not rejected merely because that duplicate is present.
+        $canonicalName = "$($identity[0]).$($identity[1]).nupkg"
+        $sourcePackages = @(Get-ChildItem -LiteralPath $sourceVersionRoot -Filter '*.nupkg' -File |
+            Where-Object { $_.Name -ieq $canonicalName })
+        if ($sourcePackages.Count -ne 1) {
+            throw "Offline seed package is missing its canonical nupkg: $($identity[0])/$($identity[1])"
+        }
         Copy-Item -LiteralPath $sourcePackages[0].FullName -Destination $offlineSource
     }
 }

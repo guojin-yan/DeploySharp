@@ -139,6 +139,10 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 | [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp 包待首次发布 | 包镜像 |
 | [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 版本化 ModelPack 资产和验证元数据 |
 
+### 🖼️ 默认测试图片
+
+示例和基准工具未指定本地图片时，会使用独立的 [`test-assets.1` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/test-assets.1)。默认映射为：检测/分割使用 `bus.jpg`，分类使用 `demo_7.jpg`，关键点使用 `demo_9.jpg`，旋转框使用 `plane.png`，PaddleOCR 使用 `ocr-demo_1.jpg`。工具会校验 SHA-256，并缓存到 `%LOCALAPPDATA%\DeploySharp\TestImages`；完整映射和追加方法见[默认测试图片指南](docs/articles/test-images.md)。
+
 ### 应用负责的运行时包
 
 以下是 Windows Alpha 使用的应用依赖/运行时包，不会因引用 DeploySharp 托管包而被静默安装：

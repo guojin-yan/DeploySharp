@@ -14,6 +14,8 @@ $lines.Add('')
 $entryCount = @($catalog.entries).Count
 $lines.Add(('当前目录包含 {0} 条 `preview` 记录。Preview 条目可以下载，并会在 ModelFactory 中按大小和 SHA-256 校验；查询时必须显式设置 `includePreview: true`。' -f $entryCount))
 $lines.Add('')
+$lines.Add('模型资产按模型族放在长期维护的 GitHub Release 集合中：视觉模型使用 [`models-visual.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-visual.1)，语言模型使用 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1)。后续兼容模型直接追加到对应 Release，并在 Release notes 中按上传日期记录；只有发生不兼容的资产合同变化时才提升集合版本号。')
+$lines.Add('')
 $lines.Add('| 模型 ID | 模型族 / 任务 | 工件 | 格式 | 后端 | 精度 / 量化 | 可移植 | Release 标签 | 大小 | SHA256 | 下载 | 测试输入 | 许可标识 |')
 $lines.Add('|---|---|---|---|---|---|---|---|---:|---|---|---|---|')
 

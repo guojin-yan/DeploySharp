@@ -22,6 +22,8 @@
     href: performance-benchmarking.md
   - name: 设备性能实测
     href: device-performance-benchmarks.md
+  - name: 默认测试图片
+    href: test-images.md
   - name: V1 模型能力迁移
     href: v1-model-migration.md
 

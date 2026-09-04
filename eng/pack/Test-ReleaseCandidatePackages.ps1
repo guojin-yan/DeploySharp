@@ -201,7 +201,13 @@ $readmeHash = (Get-FileHash -LiteralPath (Join-Path $repository 'README.md') -Al
 $iconHash = (Get-FileHash -LiteralPath (Join-Path $repository 'nuget\logo.jpg') -Algorithm SHA256).Hash.ToLowerInvariant()
 $head = (& git -C $repository rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve repository HEAD.' }
-$dirty = @(& git -C $repository status --porcelain --untracked-files=all).Count -ne 0
+# `applications/` is a separately managed workspace and is intentionally not
+# part of the DeploySharp release candidate. Keep it out of the repository
+# cleanliness gate without hiding any other tracked or untracked changes.
+$dirtyEntries = @(& git -C $repository status --porcelain --untracked-files=all | Where-Object {
+    [string]$_ -notmatch '^.{2}\s+applications(?:[\\/]|$)'
+})
+$dirty = $dirtyEntries.Count -ne 0
 $results = @{}
 $semanticMatches = 0
 $rawMatches = 0
@@ -365,12 +371,14 @@ foreach ($packageId in $results.Keys) {
         $group = Convert-ToNuspecFramework $tfm
         $reachable = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         $queue = [Collections.Generic.Queue[string]]::new()
-        foreach ($dependency in @($result.Dependencies[$group] | Where-Object { $results.ContainsKey($_) })) { $queue.Enqueue($dependency) }
+        $directDependencies = if ($result.Dependencies.ContainsKey($group)) { @($result.Dependencies[$group]) } else { @() }
+        foreach ($dependency in @($directDependencies | Where-Object { $null -ne $_ -and $results.ContainsKey($_) })) { $queue.Enqueue($dependency) }
         while ($queue.Count -gt 0) {
             $dependency = $queue.Dequeue()
             if (-not $reachable.Add($dependency)) { continue }
             $dependencyResult = $results[$dependency]
-            foreach ($child in @($dependencyResult.Dependencies[$group] | Where-Object { $results.ContainsKey($_) })) { $queue.Enqueue($child) }
+            $childDependencies = if ($dependencyResult.Dependencies.ContainsKey($group)) { @($dependencyResult.Dependencies[$group]) } else { @() }
+            foreach ($child in @($childDependencies | Where-Object { $null -ne $_ -and $results.ContainsKey($_) })) { $queue.Enqueue($child) }
         }
         foreach ($reference in @($result.References[$tfm] | Where-Object { $_ -like 'JYPPX.DeploySharp.*' -and $_ -ne $result.Definition.assemblyName })) {
             if (-not $reachable.Contains($reference)) { throw "$packageId/$tfm references internal assembly '$reference' outside its nuspec dependency closure." }

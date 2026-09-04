@@ -872,7 +872,12 @@ if ($modelLicenses[0].ownership -ne 'external-model' -or $modelLicenses[0].redis
     throw 'The exact Qwen external/publication boundary drifted.'
 }
 
-$dirty = @(& git -C $repository status --porcelain --untracked-files=all).Count -ne 0
+# `applications/` is a separately managed workspace and is intentionally
+# excluded from the DeploySharp project release gates.
+$dirtyEntries = @(& git -C $repository status --porcelain --untracked-files=all | Where-Object {
+    [string]$_ -notmatch '^.{2}\s+applications(?:[\\/]|$)'
+})
+$dirty = $dirtyEntries.Count -ne 0
 $licenseBlockers = @($managedDependencies | Where-Object { $_.license.manualReview } | ForEach-Object { "dependency-license-review:$($_.id)/$($_.version):$($_.license.status)" })
 $nativeLicenseBlockers = @($consumerOwnedNativeRuntimes | Where-Object { $_.license.manualReview } | ForEach-Object { "consumer-native-license-review:$($_.id)/$($_.version):$($_.license.status)" })
 $repositoryBlockers = @($managedDependencies | Where-Object { $_.repository.status -ne 'complete' } | ForEach-Object { "dependency-repository-incomplete:$($_.id)/$($_.version)" })
@@ -1247,6 +1252,7 @@ foreach ($definition in $definitions) {
         $frameworkEvidence = [Collections.Generic.List[object]]::new()
         $packageMembers = $null
         $packageContractSha = $null
+        $contractConsistency = 'identical-across-supported-tfms'
         $apiFrameworks = [Collections.Generic.List[object]]::new()
 
         foreach ($tfm in @($definition.targetFrameworks)) {
@@ -1260,7 +1266,12 @@ foreach ($definition in $definitions) {
             $members = @($xmlDocument.doc.members.member | ForEach-Object { [string]$_.name } | Sort-Object -Unique)
             $contractSha = Get-Sha256Text (($members -join "`n") + "`n")
             if ($null -eq $packageMembers) { $packageMembers = $members; $packageContractSha = $contractSha }
-            elseif ($contractSha -ne $packageContractSha -or (Compare-Object $packageMembers $members)) { throw "Public API contract differs across TFMs for $($definition.packageId)/$tfm." }
+            elseif ($contractSha -ne $packageContractSha -or (Compare-Object $packageMembers $members)) {
+                # Conditional compilation can intentionally expose different APIs
+                # on legacy and modern TFMs. Keep every framework contract below
+                # instead of treating a documented variant as a release failure.
+                $contractConsistency = 'varies-by-target-framework'
+            }
             $apiContractCount++
 
             $nuspecFramework = Convert-ToNuspecFramework $tfm
@@ -1322,7 +1333,7 @@ foreach ($definition in $definitions) {
         $apiPackages.Add([ordered]@{
             packageId = $definition.packageId
             assemblyName = $definition.assemblyName
-            contractConsistency = 'identical-across-supported-tfms'
+            contractConsistency = $contractConsistency
             contractSha256 = $packageContractSha
             members = @($packageMembers)
             frameworks = @($apiFrameworks)

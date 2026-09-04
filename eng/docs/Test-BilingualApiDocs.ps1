@@ -12,6 +12,13 @@ foreach ($inputPath in $DocumentationFile) {
     [xml] $document = Get-Content -Raw -Encoding UTF8 -LiteralPath $resolvedPath
 
     foreach ($member in $document.doc.members.member) {
+        # The compiler keeps `<inheritdoc />` as a marker instead of expanding
+        # the interface/base-member text. DocFX resolves that marker later, so
+        # validate the inherited contract at its declaring member and do not
+        # mistake the marker itself for missing bilingual documentation.
+        if ($null -ne $member.SelectSingleNode('inheritdoc')) {
+            continue
+        }
         $content = $member.InnerText
         if ($content -notmatch '[A-Za-z]') {
             $failures.Add("$($member.name): missing English documentation")
