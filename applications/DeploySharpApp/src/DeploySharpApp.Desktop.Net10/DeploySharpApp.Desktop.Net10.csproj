@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <AssemblyName>DeploySharpApp.Desktop.Net10</AssemblyName>
+    <RootNamespace>DeploySharpApp.Desktop.Net10</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
+    <ProjectReference Include="..\DeploySharpApp.Application\DeploySharpApp.Application.csproj" />
+    <ProjectReference Include="..\DeploySharpApp.Infrastructure\DeploySharpApp.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

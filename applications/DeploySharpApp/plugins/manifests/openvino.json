@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "deploysharp.backend.openvino",
+  "displayName": "OpenVINO",
+  "description": "OpenVINO adapter with CPU/iGPU/NPU device probing.",
+  "version": "3.3.0",
+  "packageId": "JYPPX.DeploySharp.Backend.OpenVINO",
+  "targetFrameworks": [ "net48", "net8.0", "net10.0" ],
+  "runtimeIdentifiers": [ "win-x64" ],
+  "execution": "inprocess-or-worker",
+  "capabilities": [ "tensor-inference" ],
+  "formats": [ "onnx", "ir" ],
+  "providerPackageId": "JYPPX.OpenVINO.CSharp.API",
+  "providerPackageVersion": "3.3.0",
+  "runtimeDependencies": [ { "kind": "native-package", "packageId": "OpenVINO.runtime.win", "version": "2026.2.1", "rid": "win-x64", "downloadable": true, "license": "Apache-2.0" } ],
+  "nativeRequirements": [ { "kind": "openvino", "rootSelection": "package-or-user", "environmentVariables": [ "DEPLOYSHARP_OPENVINO_ROOT" ] } ],
+  "optionsSchema": { "device": { "type": "enum", "default": "CPU", "values": [ "CPU", "GPU", "NPU" ] } },
+  "probeId": "openvino.default",
+  "license": "Apache-2.0"
+}

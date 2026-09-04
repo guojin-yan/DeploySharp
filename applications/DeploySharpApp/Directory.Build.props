@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <UseDeploySharpProjectReferences>true</UseDeploySharpProjectReferences>
+    <DeploySharpSourceRoot>$(MSBuildThisFileDirectory)..\..\src\</DeploySharpSourceRoot>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ApplicationVersion>2.0.0-alpha.1</ApplicationVersion>
+  </PropertyGroup>
+
+  <!-- Consumer projects add only the DeploySharp references they need. Keeping this switch central
+       prevents a net48 host from accidentally pulling a modern backend or native runtime. -->
+  <ItemGroup Condition="'$(UseDeploySharpProjectReferences)' != 'true'">
+    <!-- Future DeploySharp NuGet PackageReferences belong here, scoped by consuming project. -->
+  </ItemGroup>
+</Project>

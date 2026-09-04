@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "deploysharp.backend.llamasharp",
+  "displayName": "LLamaSharp",
+  "description": "GGUF text generation and embedding through an isolated Worker.",
+  "version": "0.27.0",
+  "packageId": "JYPPX.DeploySharp.Backend.LlamaSharp",
+  "targetFrameworks": [ "netstandard2.0", "net8.0", "net10.0" ],
+  "runtimeIdentifiers": [ "win-x64" ],
+  "execution": "worker",
+  "capabilities": [ "text-generation", "embedding" ],
+  "formats": [ "gguf" ],
+  "providerPackageId": "LLamaSharp",
+  "providerPackageVersion": "0.27.0",
+  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "LLamaSharp.Backend.Cpu", "version": "0.27.0", "rid": "win-x64", "downloadable": true, "license": "MIT" } ],
+  "nativeRequirements": [ { "kind": "llamasharp-native", "rootSelection": "package-or-user", "environmentVariables": [ "DEPLOYSHARP_LLAMASHARP_ROOT" ] } ],
+  "optionsSchema": { "contextLength": { "type": "integer", "default": 2048, "minimum": 128 }, "threads": { "type": "integer", "default": 8, "minimum": 1 } },
+  "probeId": "llamasharp.default",
+  "license": "MIT"
+}

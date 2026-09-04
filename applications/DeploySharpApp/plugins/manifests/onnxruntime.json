@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "deploysharp.backend.onnxruntime",
+  "displayName": "ONNX Runtime",
+  "description": "CPU/CUDA ONNX Runtime adapter with explicit provider diagnostics.",
+  "version": "1.28.0",
+  "packageId": "JYPPX.DeploySharp.Backend.OnnxRuntime",
+  "targetFrameworks": [ "netstandard2.0", "net8.0", "net10.0" ],
+  "runtimeIdentifiers": [ "win-x64" ],
+  "execution": "inprocess-or-worker",
+  "capabilities": [ "tensor-inference", "dynamic-shapes" ],
+  "formats": [ "onnx" ],
+  "providerPackageId": "Microsoft.ML.OnnxRuntime.Managed",
+  "providerPackageVersion": "1.28.0",
+  "runtimeDependencies": [
+    { "kind": "managed-package", "packageId": "Microsoft.ML.OnnxRuntime.Managed", "version": "1.28.0", "downloadable": true, "license": "MIT" },
+    { "kind": "native-package", "packageId": "Microsoft.ML.OnnxRuntime", "version": "1.28.0", "rid": "win-x64", "downloadable": true, "condition": "device == cpu", "license": "MIT" },
+    { "kind": "execution-provider", "packageId": "Microsoft.ML.OnnxRuntime.Gpu.Windows", "version": "1.28.0", "rid": "win-x64", "downloadable": true, "condition": "device == cuda", "license": "MIT" }
+  ],
+  "nativeRequirements": [ { "kind": "onnxruntime-native", "rootSelection": "package-or-user", "environmentVariables": [ "DEPLOYSHARP_ONNXRUNTIME_NATIVE_PATH", "DEPLOYSHARP_ORT_ROOT" ], "minimumVersion": "1.28.0" } ],
+  "optionsSchema": { "executionProvider": { "type": "enum", "default": "cpu", "values": [ "cpu", "cuda" ] }, "cudaDeviceId": { "type": "integer", "default": 0, "minimum": 0, "visibleWhen": "executionProvider == cuda" } },
+  "probeId": "onnxruntime.default",
+  "license": "MIT"
+}

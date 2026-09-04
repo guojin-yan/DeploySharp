@@ -1,0 +1,5 @@
+﻿@page "/benchmark"
+@using DeploySharpApp.Contracts
+@inject DeploySharpAppService Service
+<PageTitle>性能基准 · DeploySharpApp</PageTitle><h1>性能基准</h1><div class="panel"><h2>固定 fixture · batch 1</h2><p>加载、预处理和后处理不计入循环；缺少 CUDA/TensorRT 时报告 unavailable。</p><button class="primary" @onclick="RunBenchmarkAsync" disabled="@busy">@(busy ? "测试中…" : "新建基准")</button><progress value="@progress" max="1"></progress><pre>@report</pre></div>
+@code { private bool busy; private double progress; private string report = "等待基准。"; private async Task RunBenchmarkAsync() { busy = true; progress = 0; try { var request = new BenchmarkRequest("demo/yolo-v8-n", "deploysharp.backend.onnxruntime"); var value = new Progress<double>(v => { progress = v; InvokeAsync(StateHasChanged); }); var result = await Service.BenchmarkAsync(request, value, CancellationToken.None); report = result.Message + $"\nP50 {result.P50Ms:F2} ms · P95 {result.P95Ms:F2} ms · 吞吐 {result.Throughput:F1}/s"; } finally { busy = false; } } }

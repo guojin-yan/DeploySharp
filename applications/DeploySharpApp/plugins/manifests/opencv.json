@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "deploysharp.backend.opencv",
+  "displayName": "OpenCV DNN",
+  "description": "OpenCV DNN adapter; the preview native runtime is installed separately.",
+  "version": "5.0.0-preview.1",
+  "packageId": "JYPPX.DeploySharp.Backend.OpenCV",
+  "targetFrameworks": [ "net48", "net8.0", "net10.0" ],
+  "runtimeIdentifiers": [ "win-x64" ],
+  "execution": "inprocess-or-worker",
+  "capabilities": [ "tensor-inference" ],
+  "formats": [ "onnx" ],
+  "providerPackageId": "JYPPX.OpenCV.CSharp.API",
+  "providerPackageVersion": "5.0.0-preview.1",
+  "runtimeDependencies": [ { "kind": "native-package", "packageId": "JYPPX.OpenCV.runtime.win-x64", "version": "5.0.0-preview.1", "rid": "win-x64", "downloadable": true, "license": "Apache-2.0" } ],
+  "nativeRequirements": [ { "kind": "opencv", "rootSelection": "package-or-user", "environmentVariables": [ "DEPLOYSHARP_OPENCV_ROOT" ] } ],
+  "optionsSchema": { "threads": { "type": "integer", "default": 1, "minimum": 1, "maximum": 64 } },
+  "probeId": "opencv.default",
+  "license": "Apache-2.0"
+}

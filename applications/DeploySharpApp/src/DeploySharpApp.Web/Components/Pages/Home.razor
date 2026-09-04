@@ -1,0 +1,7 @@
+﻿@page "/"
+@inject DeploySharpAppService Service
+<PageTitle>体验首页 · DeploySharpApp</PageTitle>
+<section class="hero"><span class="eyebrow">LOCAL AI PLAYGROUND</span><h1>在本地体验 DeploySharp 的能力</h1><p>统一体验视觉、语言、多模态和性能基准。后端与模型按 manifest 发现，结果、耗时和诊断证据集中呈现。</p><a class="primary" href="/vision">开始视觉推理 →</a></section>
+<div class="section-head"><h2>后端状态</h2><a href="/models">管理 →</a></div>
+<div class="cards">@foreach (var backend in Service.Backends) { <article class="card"><div><h3>@backend.DisplayName</h3><p>@backend.Version · @backend.ExecutionMode</p></div><span class="state @backend.State.ToString().ToLowerInvariant()">@backend.State</span><small>@(backend.Detail ?? "等待探测")</small></article> }</div>
+<div class="section-head"><h2>三步完成一次运行</h2></div><div class="steps"><div><b>01</b><span>选择模型<br /><small>官方目录或本地文件</small></span></div><div><b>02</b><span>选择后端<br /><small>自动显示兼容性</small></span></div><div><b>03</b><span>查看证据<br /><small>结果、耗时、日志一次看全</small></span></div></div>

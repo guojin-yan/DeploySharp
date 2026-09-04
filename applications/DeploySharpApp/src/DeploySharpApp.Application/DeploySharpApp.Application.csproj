@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>DeploySharpApp.Application</AssemblyName>
+    <RootNamespace>DeploySharpApp.Application</RootNamespace>
+    <PackageId>DeploySharpApp.Application</PackageId>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
+    <ProjectReference Include="..\DeploySharpApp.Plugin.Abstractions\DeploySharpApp.Plugin.Abstractions.csproj" />
+  </ItemGroup>
+</Project>
