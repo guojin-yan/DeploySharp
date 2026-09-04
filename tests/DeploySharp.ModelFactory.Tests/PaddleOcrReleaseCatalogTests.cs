@@ -22,7 +22,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(20, entries.Sum(entry => entry.Artifacts.Single().Assets.Count));
             Assert.IsTrue(entries.All(entry => entry.Status == ModelCatalogStatus.Preview));
             Assert.IsTrue(entries.All(entry => entry.Source!.RedistributionAllowed));
-            Assert.IsTrue(entries.All(entry => entry.Release!.Commit == "0f64d0a79b421ca5a1be024b930980ab8ae84277"));
+            Assert.IsTrue(entries.All(entry => entry.Release!.Commit == "1ac899174a7b8848559139750c5ce06768cc0a0a"));
 
             foreach (ModelCatalogEntry entry in entries)
             {

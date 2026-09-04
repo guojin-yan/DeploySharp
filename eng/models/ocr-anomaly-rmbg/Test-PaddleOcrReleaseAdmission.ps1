@@ -110,7 +110,7 @@ if ($algorithmCandidate.catalogModelId -ne 'paddleocr/ppocrv5/mobile-cls' -or $a
     throw 'The selected PaddleOCR algorithm candidate identity drifted.'
 }
 $release = $algorithmCandidate.release
-if ($release.repository -ne 'guojin-yan/DeploySharp' -or $release.tag -ne 'models-20260903.visual.1' -or $release.commit -ne '0f64d0a79b421ca5a1be024b930980ab8ae84277') {
+if ($release.repository -ne 'guojin-yan/DeploySharp' -or $release.tag -ne 'models-20260903.visual.1' -or $release.commit -ne '1ac899174a7b8848559139750c5ce06768cc0a0a') {
     throw 'The selected PaddleOCR Release identity drifted.'
 }
 
