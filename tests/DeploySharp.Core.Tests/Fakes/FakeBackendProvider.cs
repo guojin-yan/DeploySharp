@@ -39,6 +39,8 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
 
         public bool SynchronousAsyncFallback { get; set; }
 
+        public Action? RunStarted { get; set; }
+
         public bool CanCreate(ModelArtifact artifact, BackendRequest request)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(FakeBackendProvider));
@@ -52,7 +54,7 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(FakeBackendProvider));
             CreatedSessionCount++;
-            var session = new FakeInferenceSession(Descriptor.Id, artifact, () => RunDelay, () => SynchronousAsyncFallback);
+            var session = new FakeInferenceSession(Descriptor.Id, artifact, () => RunDelay, () => SynchronousAsyncFallback, () => RunStarted?.Invoke());
             CreatedSessions.Add(session);
             CreatedSessionOptions.Add(options);
             return session;
@@ -68,13 +70,15 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
     {
         private readonly Func<TimeSpan> _runDelay;
         private readonly Func<bool> _synchronousAsyncFallback;
+        private readonly Action _runStarted;
         private int _runCount;
 
-        public FakeInferenceSession(BackendId backendId, ModelArtifact artifact, Func<TimeSpan>? runDelay = null, Func<bool>? synchronousAsyncFallback = null)
+        public FakeInferenceSession(BackendId backendId, ModelArtifact artifact, Func<TimeSpan>? runDelay = null, Func<bool>? synchronousAsyncFallback = null, Action? runStarted = null)
         {
             BackendId = backendId;
             _runDelay = runDelay ?? (() => TimeSpan.Zero);
             _synchronousAsyncFallback = synchronousAsyncFallback ?? (() => false);
+            _runStarted = runStarted ?? (() => { });
             Metadata = new ModelMetadata(
                 artifact.ModelId,
                 artifact.Format,
@@ -95,6 +99,7 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
             if (IsDisposed) throw new ObjectDisposedException(nameof(FakeInferenceSession));
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             cancellationToken.ThrowIfCancellationRequested();
+            _runStarted();
             Interlocked.Increment(ref _runCount);
             TimeSpan delay = _runDelay();
             if (delay > TimeSpan.Zero) Thread.Sleep(delay);
@@ -116,6 +121,7 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(FakeInferenceSession));
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+            _runStarted();
             Interlocked.Increment(ref _runCount);
             TimeSpan delay = _runDelay();
             if (delay > TimeSpan.Zero) await Task.Delay(delay, cancellationToken).ConfigureAwait(false);

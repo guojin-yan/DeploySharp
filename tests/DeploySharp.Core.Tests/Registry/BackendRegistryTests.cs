@@ -110,12 +110,20 @@ namespace JYPPX.DeploySharp.Core.Tests.Registry
             using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().AddBackend(provider).Build();
             using IInferenceSession session = runtime.CreateSession(CreateArtifact("onnx"), new BackendRequest(BackendCapabilities.TensorInference), new SessionOptions(2));
             var inputs = InferenceInputs.Create("input", new Tensor<float>(new TensorShape(1), new[] { 1f }));
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using var bothStarted = new CountdownEvent(2);
+            using var release = new ManualResetEventSlim(false);
+            provider.RunStarted = () =>
+            {
+                bothStarted.Signal();
+                release.Wait(TimeSpan.FromSeconds(2));
+            };
 
-            await Task.WhenAll(session.RunAsync(inputs, CancellationToken.None), session.RunAsync(inputs, CancellationToken.None));
+            Task all = Task.WhenAll(session.RunAsync(inputs, CancellationToken.None), session.RunAsync(inputs, CancellationToken.None));
+            bool overlapped = bothStarted.Wait(TimeSpan.FromSeconds(2));
+            release.Set();
+            await all;
 
-            watch.Stop();
-            Assert.IsTrue(watch.Elapsed < TimeSpan.FromMilliseconds(150), "Independent sessions should not serialize a synchronous async fallback.");
+            Assert.IsTrue(overlapped, "Independent sessions should enter the backend concurrently for a synchronous async fallback.");
             CollectionAssert.AreEquivalent(new[] { 1, 1 }, provider.CreatedSessions.Select(value => value.RunCount).ToArray());
         }
 
