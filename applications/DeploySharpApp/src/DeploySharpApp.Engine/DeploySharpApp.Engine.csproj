@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>DeploySharpApp.Engine</AssemblyName>
+    <RootNamespace>DeploySharpApp.Engine</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
+    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Extensibility\DeploySharp.Extensibility.csproj" />
+    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <!-- The application, rather than the backend library, opts in to the official CPU native runtime. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="SixLabors.ImageSharp" />
+  </ItemGroup>
+</Project>
