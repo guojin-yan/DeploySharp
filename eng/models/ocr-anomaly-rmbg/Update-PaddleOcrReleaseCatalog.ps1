@@ -4,7 +4,7 @@ param(
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string]$ReleaseCommit,
     [string]$CatalogPath = 'src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json',
-    [string]$Tag = 'models-20260818.ppocrv5.1',
+    [string]$Tag = 'models-20260903.visual.1',
     [switch]$Check
 )
 
@@ -21,7 +21,9 @@ $dictionarySha256 = 'd1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf834
 $dictionarySize = 74012L
 
 $catalog = Get-Content -Raw -LiteralPath $catalogFile | ConvertFrom-Json
-$manifests = @(Get-ChildItem -LiteralPath $manifestDirectory -Filter '*.modelpack.json' -File | Sort-Object Name)
+$manifests = @(Get-ChildItem -LiteralPath $manifestDirectory -Filter '*.modelpack.json' -File |
+    Where-Object { $_.Name -match '^(mobile|server)-(cls|det|rec)\.modelpack\.json$' } |
+    Sort-Object Name)
 if ($manifests.Count -ne 6) { throw "Expected six PP-OCRv5 release manifests, found $($manifests.Count)." }
 
 function Get-AssetKind([string]$role) {
@@ -116,12 +118,13 @@ foreach ($manifestFile in $manifests) {
 $knownIds = @{}
 foreach ($entry in $generated) { $knownIds[[string]$entry.modelId] = $true }
 $retained = @($catalog.entries | Where-Object { -not $knownIds.ContainsKey([string]$_.modelId) })
+$entries = @(@($retained) + @($generated) | Sort-Object { [string]$_.modelId })
 $document = [ordered]@{
     schemaVersion = [string]$catalog.schemaVersion
-    generatedAt = '2026-08-18T00:00:00Z'
+    generatedAt = '2026-09-03T00:00:00Z'
     catalogRevision = $Tag
     sourceRepository = [string]$catalog.sourceRepository
-    entries = @($retained) + @($generated)
+    entries = $entries
 }
 $content = ($document | ConvertTo-Json -Depth 40) + [Environment]::NewLine
 

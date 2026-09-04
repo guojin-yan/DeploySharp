@@ -14,7 +14,7 @@ namespace DeploySharp.ModelFactory.Tests
         public void BundledCatalogSelectsThePublishedQwenPreview()
         {
             ValidatedModelCatalog catalog = LoadOfficialCatalog();
-            Assert.AreEqual("models-20260818.ppocrv5.1", catalog.CatalogRevision);
+            Assert.AreEqual("models-20260903.visual.1", catalog.CatalogRevision);
             Assert.AreEqual(42, catalog.Document.Entries.Count);
 
             ModelCatalogEntry entry = catalog.Document.Entries.Single(value => value.ModelId == "llm/qwen2.5-0.5b-instruct-q4-k-m");

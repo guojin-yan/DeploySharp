@@ -34,11 +34,20 @@ namespace DeploySharp.ModelFactory.Tests
         [TestMethod]
         public void OfficialVisionEntriesShareOneImmutableRelease()
         {
-            const string releaseTag = "models-20260817.vision.1";
-            const string releaseCommit = "93947165a7d6bd474b4acfc30b18ca38e4dd468c";
+            const string releaseTag = "models-20260903.visual.1";
+            const string releaseCommit = "3c868b0bf7234ebb8af30034716cb37519cb53e0";
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
-                .Where(entry => entry.Release?.Tag == releaseTag)
+                .Where(entry => entry.Release?.Tag == releaseTag
+                    && new[]
+                    {
+                        "vision-language/clip-vit-b-32",
+                        "segmentation/sam-v1-vit-b",
+                        "generative-vision-language/blip-caption-base",
+                        "anomalib/padim/mvtec-bottle",
+                        "bria/rmbg-1.4",
+                        "bria/rmbg-2.0"
+                    }.Contains(entry.ModelId, StringComparer.Ordinal))
                 .ToArray();
 
             Assert.AreEqual(6, entries.Length);

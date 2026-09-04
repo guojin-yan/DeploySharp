@@ -9,16 +9,13 @@
       "E:\\Data"
     ],
     "officialCatalogAdmission": "current-bundled-preview",
-    "officialCatalogRevision": "models-20260818.ppocrv5.1",
+    "officialCatalogRevision": "models-20260903.visual.1",
     "officialCatalogEntries": 42,
     "officialCatalogDownloadableEntries": 42,
     "officialCatalogAssetCount": 142,
     "officialCatalogReleaseTags": [
-      "models-20260817.detr.2",
       "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-      "models-20260817.vision.1",
-      "models-20260817.yolo.1",
-      "models-20260818.ppocrv5.1"
+      "models-20260903.visual.1"
     ],
     "releaseAssetsWritten": true,
     "actionsInvoked": false,
@@ -671,8 +668,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -759,8 +756,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -808,8 +805,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -857,8 +854,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -906,8 +903,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -955,8 +952,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1043,8 +1040,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1131,8 +1128,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1219,8 +1216,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1268,8 +1265,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1317,8 +1314,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1405,8 +1402,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1454,8 +1451,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1503,8 +1500,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1591,8 +1588,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1679,8 +1676,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1783,8 +1780,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1832,8 +1829,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1881,8 +1878,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -1930,8 +1927,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -2018,8 +2015,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -2067,8 +2064,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.yolo.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-yolo-detection.md"
@@ -2145,8 +2142,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -2233,8 +2230,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -2321,8 +2318,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -2409,8 +2406,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -2528,8 +2525,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2608,8 +2605,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2688,8 +2685,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2729,8 +2726,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2825,8 +2822,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2874,8 +2871,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -2970,8 +2967,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -3066,8 +3063,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -3115,8 +3112,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -3211,8 +3208,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260818.ppocrv5.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -3432,8 +3429,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -3528,8 +3525,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -3616,8 +3613,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.detr.2"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/visual-portable-detectors.md"
@@ -3947,8 +3944,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -4299,8 +4296,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -4593,8 +4590,8 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
-        "releaseTag": "models-20260817.vision.1"
+        "catalogRevision": "models-20260903.visual.1",
+        "releaseTag": "models-20260903.visual.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",
       "acquisitionArticle": "docs/articles/model-support.md"
@@ -6215,7 +6212,7 @@
         "uploaded": true,
         "downloadable": true,
         "blocker": "Published Preview ModelFactory entry; AlgorithmVerified and GA remain separate gates.",
-        "catalogRevision": "models-20260818.ppocrv5.1",
+        "catalogRevision": "models-20260903.visual.1",
         "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1"
       },
       "evidence": "The ModelPack manifest is the exact size/SHA/provenance/backend-evidence source of truth.",

@@ -35,7 +35,7 @@ function Add-ExpectedAsset {
     $Expected[$name] = $record
 }
 
-foreach ($tag in @('models-20260817.yolo.1', 'models-20260817.detr.2')) {
+foreach ($tag in @('models-20260903.visual.1', 'models-20260903.visual.1')) {
     $entries = @($catalog.entries | Where-Object { $_.release.tag -eq $tag })
     if ($entries.Count -eq 0) { throw "The official catalog contains no entries for release '$tag'." }
 

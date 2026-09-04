@@ -14,6 +14,8 @@ $ErrorActionPreference = 'Stop'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\..')
 $planPath = Join-Path $PSScriptRoot 'detector-release-assets.json'
 $plan = Get-Content -Raw -LiteralPath $planPath | ConvertFrom-Json
+$releaseTags = @($plan.collections | ForEach-Object { [string]$_.tag } | Sort-Object -Unique)
+if ($releaseTags.Count -ne 1) { throw "Detector release plan must use one consolidated release tag." }
 $catalogFile = Join-Path $repositoryRoot $CatalogPath
 $catalog = Get-Content -Raw -LiteralPath $catalogFile | ConvertFrom-Json
 
@@ -111,12 +113,13 @@ foreach ($planEntry in $plan.models) {
     })
 }
 
+$entries = @(@($retained) + @($generated) | Sort-Object { [string]$_.modelId })
 $document = [ordered]@{
     schemaVersion = [string]$catalog.schemaVersion
-    generatedAt = [string]$catalog.generatedAt
-    catalogRevision = 'models-20260817.detectors.2'
+    generatedAt = ([DateTimeOffset]$catalog.generatedAt).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+    catalogRevision = $releaseTags[0]
     sourceRepository = [string]$catalog.sourceRepository
-    entries = @($retained) + @($generated)
+    entries = $entries
 }
 $content = ($document | ConvertTo-Json -Depth 40) + [Environment]::NewLine
 

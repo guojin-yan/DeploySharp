@@ -9,17 +9,22 @@ namespace DeploySharp.ModelFactory.Tests
     public sealed class DetectorReleaseCatalogTests
     {
         [TestMethod]
-        [DataRow("models-20260817.yolo.1", "571e6a7d9f72fb94caba9003238a5c1d7ff3a0e1", 22, 66)]
-        [DataRow("models-20260817.detr.2", "99ba3b49b6e74e70a352e67807f866d3abbbaf1c", 7, 22)]
-        public void OfficialDetectorEntriesUseSharedImmutableReleaseAssets(string tag, string releaseCommit, int expectedEntries, int expectedAssets)
+        public void OfficialDetectorEntriesUseSharedImmutableReleaseAssets()
         {
+            const string tag = "models-20260903.visual.1";
+            const string releaseCommit = "3c868b0bf7234ebb8af30034716cb37519cb53e0";
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
-                .Where(entry => entry.Release?.Tag == tag)
+                .Where(entry => entry.Release?.Tag == tag
+                    && (entry.ModelId!.StartsWith("yolo/", StringComparison.Ordinal)
+                        || entry.ModelId.StartsWith("deim/", StringComparison.Ordinal)
+                        || entry.ModelId.StartsWith("pp-yoloe/", StringComparison.Ordinal)
+                        || entry.ModelId.StartsWith("rf-detr/", StringComparison.Ordinal)
+                        || entry.ModelId.StartsWith("rt-detr/", StringComparison.Ordinal)))
                 .ToArray();
 
-            Assert.AreEqual(expectedEntries, entries.Length);
-            Assert.AreEqual(expectedAssets, entries.Sum(entry => entry.Artifacts.Single().Assets.Count));
+            Assert.AreEqual(29, entries.Length);
+            Assert.AreEqual(88, entries.Sum(entry => entry.Artifacts.Single().Assets.Count));
             Assert.IsTrue(entries.All(entry => entry.Status == ModelCatalogStatus.Preview));
             Assert.IsTrue(entries.All(entry => entry.Source!.RedistributionAllowed));
             Assert.IsTrue(entries.All(entry => entry.Release!.Commit == releaseCommit));

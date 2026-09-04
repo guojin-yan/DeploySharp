@@ -19,7 +19,7 @@ See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for 
 ## Verification record
 
 Audit date: 2026-08-24
-Catalog revision: models-20260818.ppocrv5.1
+Catalog revision: models-20260903.visual.1
 
 Reproduce the release and ModelPack checks from the repository root:
 

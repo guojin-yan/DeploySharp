@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Repository = 'guojin-yan/DeploySharp',
-    [string]$Tag = 'models-20260818.ppocrv5.1',
+    [string]$Tag = 'models-20260903.visual.1',
     [string]$DestinationDirectory = '',
     [switch]$SkipDownload
 )

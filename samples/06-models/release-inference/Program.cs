@@ -15,7 +15,7 @@ using JYPPX.DeploySharp.Visual.OpenCV;
 
 internal static class Program
 {
-    private const string ReleaseTag = "models-20260817.vision.1";
+    private const string ReleaseTag = "models-20260903.visual.1";
 
     private static async Task<int> Main(string[] args)
     {

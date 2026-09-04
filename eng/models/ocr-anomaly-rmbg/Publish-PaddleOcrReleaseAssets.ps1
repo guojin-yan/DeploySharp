@@ -3,7 +3,7 @@ param(
     [string]$ModelRoot = 'E:\Model\ocr\ppocrv5',
     [string]$ServerClassificationModel = 'E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx',
     [string]$OutputRoot = 'artifacts',
-    [string]$Tag = 'models-20260818.ppocrv5.1',
+    [string]$Tag = 'models-20260903.visual.1',
     [string]$Repository = 'guojin-yan/DeploySharp',
     [switch]$Check
 )

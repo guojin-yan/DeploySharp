@@ -93,7 +93,7 @@
   "extensions": {
     "deploysharp.publication-status": "alpha-preview",
     "deploysharp.downloadable": "true",
-    "deploysharp.release-tag": "models-20260818.ppocrv5.1",
+    "deploysharp.release-tag": "models-20260903.visual.1",
     "deploysharp.release-repository": "guojin-yan/DeploySharp"
   }
 }

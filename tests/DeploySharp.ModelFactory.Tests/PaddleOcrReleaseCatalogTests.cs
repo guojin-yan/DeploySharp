@@ -13,15 +13,16 @@ namespace DeploySharp.ModelFactory.Tests
         {
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
-                .Where(entry => entry.Release?.Tag == "models-20260818.ppocrv5.1")
+                .Where(entry => entry.Release?.Tag == "models-20260903.visual.1"
+                    && entry.ModelId!.StartsWith("paddleocr/ppocrv5/", StringComparison.Ordinal))
                 .ToArray();
 
-            Assert.AreEqual("models-20260818.ppocrv5.1", catalog.CatalogRevision);
+            Assert.AreEqual("models-20260903.visual.1", catalog.CatalogRevision);
             Assert.AreEqual(6, entries.Length);
             Assert.AreEqual(20, entries.Sum(entry => entry.Artifacts.Single().Assets.Count));
             Assert.IsTrue(entries.All(entry => entry.Status == ModelCatalogStatus.Preview));
             Assert.IsTrue(entries.All(entry => entry.Source!.RedistributionAllowed));
-            Assert.IsTrue(entries.All(entry => entry.Release!.Commit == "15dcd290c1b4daad1f3e2a14a900b6918d80f14b"));
+            Assert.IsTrue(entries.All(entry => entry.Release!.Commit == "3c868b0bf7234ebb8af30034716cb37519cb53e0"));
 
             foreach (ModelCatalogEntry entry in entries)
             {

@@ -182,18 +182,18 @@
     "profileId": "paddle-ocr-cls.paddleocr/ppocrv5/mobile-cls.opset7",
     "release": {
       "repository": "guojin-yan/DeploySharp",
-      "tag": "models-20260818.ppocrv5.1",
-      "commit": "15dcd290c1b4daad1f3e2a14a900b6918d80f14b",
+      "tag": "models-20260903.visual.1",
+      "commit": "3c868b0bf7234ebb8af30034716cb37519cb53e0",
       "manifestFile": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
       "manifestAssetName": "mobile-cls.modelpack.json",
-      "manifestSize": 3087,
-      "manifestSha256": "e0c3aff19f2f4d011d32fa97bc99b23629bda824ebe3e43013bf729eddb60717",
+      "manifestSize": 3086,
+      "manifestSha256": "47846cb09d57a9d3ab408f3ee0d242dca0bfdcd21b862c63fc2ab22ea490a6a6",
       "modelAssetName": "ppocrv5-mobile-cls.model.onnx",
       "modelSize": 1018940,
       "modelSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
       "checksumAssetName": "SHA256SUMS",
-      "checksumSize": 1299,
-      "checksumSha256": "8d713c3501f43ca96c52a6d5572ce90b8e9b4925295bc25f1667f1179adad1be"
+      "checksumSize": 10360,
+      "checksumSha256": "dfc52c6cdaeafb9fae4f93a2b263442bb843b1ae169cdf085ea8dd0a728a4840"
     },
     "contract": {
       "inputName": "x",

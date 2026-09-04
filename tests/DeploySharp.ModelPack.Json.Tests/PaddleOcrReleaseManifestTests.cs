@@ -29,7 +29,7 @@ namespace DeploySharp.ModelPack.Json.Tests
                 Assert.AreEqual("bundle/source/licenses/paddleocr.LICENSE.txt", document.Source.LicenseFile);
                 Assert.AreEqual("alpha-preview", document.Extensions["deploysharp.publication-status"]);
                 Assert.AreEqual("true", document.Extensions["deploysharp.downloadable"]);
-                Assert.AreEqual("models-20260818.ppocrv5.1", document.Extensions["deploysharp.release-tag"]);
+                Assert.AreEqual("models-20260903.visual.1", document.Extensions["deploysharp.release-tag"]);
 
                 ModelArtifactDocument artifact = document.Artifacts.Single();
                 Assert.AreEqual(ModelArtifactLocationKind.Directory, artifact.LocationKind);
