@@ -14,7 +14,7 @@ The cases directory contains one case folder for every current official catalog 
 
 ## Verification / 验证
 
-Every model case README contains a generated verification record. The audit checks the immutable catalog selection, GitHub Release asset presence, asset size/SHA256 metadata, downloaded ModelPack manifest SHA256, model/artifact identity, and declared artifact file integrity. It also records the runtime-evidence, preprocessing, postprocessing, and golden-evidence fields published by each ModelPack.
+Every model case README contains a generated verification record. The audit checks the versioned catalog selection, GitHub Release asset presence, asset size/SHA256 metadata, downloaded ModelPack manifest SHA256, model/artifact identity, and declared artifact file integrity. It also records the runtime-evidence, preprocessing, postprocessing, and golden-evidence fields published by each ModelPack.
 
 The model-by-backend execution results are consolidated in the [model/backend verification matrix](../../docs/model-backend-verification-matrix.md), including the exact OpenCV DNN and TensorRT reproduction commands and recorded compatibility failures.
 

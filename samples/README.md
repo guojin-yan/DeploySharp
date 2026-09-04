@@ -28,14 +28,14 @@ dotnet run --project samples/07-benchmarks/InferenceSpeedBenchmark/InferenceSpee
 
 06-models/catalog-workflow walks every official catalog entry and every artifact variant. It selects a compatible backend with explicit format, precision, and quantization filters, verifies the selected artifact identity, and prints the task/artifact matrix without downloading large files. A single model can be inspected with --model-id.
 
-For an application-independent catalog workflow, the source-built ModelFactory CLI provides the same selection surface plus JSON inspection: doctor checks the local catalog, list enumerates artifacts, show prints immutable release assets, and install downloads and verifies a selected ModelPack. See the [CLI README](../tools/DeploySharp.ModelFactory.Cli/README.md).
+For an application-independent catalog workflow, the source-built ModelFactory CLI provides the same selection surface plus JSON inspection: doctor checks the local catalog, list enumerates artifacts, show prints versioned release assets, and install downloads and verifies a selected ModelPack. See the [CLI README](../tools/DeploySharp.ModelFactory.Cli/README.md).
 
 ```powershell
 dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release
 dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id bria/rmbg-2.0
 ```
 
-06-models/release-inference is the real published-model path. ModelFactory downloads the immutable Release ModelPack, verifies size/SHA256, Visual prepares the image, ONNX Runtime runs CPU inference, and the task decoder writes an inspectable PGM mask. It has independent cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
+06-models/release-inference is the real published-model path. ModelFactory downloads the versioned Release ModelPack, verifies size/SHA256, Visual prepares the image, ONNX Runtime runs CPU inference, and the task decoder writes an inspectable PGM mask. It has independent cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
 
 ```powershell
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4 --image <image>

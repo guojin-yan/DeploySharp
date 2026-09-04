@@ -4,19 +4,19 @@
   "collections": [
     {
       "id": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "assetRoot": "yolo"
     },
     {
       "id": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "assetRoot": "detr"
     }
   ],
   "models": [
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v11/detect/n",
       "manifestFile": "yolo/releases/yolo-v11-detect-n.modelpack.json",
       "localPath": "yolo\\yolov11\\yolo11n.onnx",
@@ -25,7 +25,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v12/detect/n",
       "manifestFile": "yolo/releases/yolo-v12-detect-n.modelpack.json",
       "localPath": "yolo\\yolov12\\yolo12n.onnx",
@@ -34,7 +34,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v26/detect/n",
       "manifestFile": "yolo/releases/yolo-v26-detect-n.modelpack.json",
       "localPath": "yolo\\yolov26\\yolo26n.onnx",
@@ -43,7 +43,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v10/detect/n",
       "manifestFile": "yolo/releases/yolo-v10-detect-n.modelpack.json",
       "localPath": "yolo\\yolov10\\yolov10n.onnx",
@@ -52,7 +52,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v13/detect/n",
       "manifestFile": "yolo/releases/yolo-v13-detect-n.modelpack.json",
       "localPath": "yolo\\yolov13n.onnx",
@@ -61,7 +61,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v5/detect/n",
       "manifestFile": "yolo/releases/yolo-v5-detect-n.modelpack.json",
       "localPath": "yolo\\yolov5\\yolov5n.onnx",
@@ -70,7 +70,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v6/detect/s",
       "manifestFile": "yolo/releases/yolo-v6-detect-s.modelpack.json",
       "localPath": "yolo\\yolov6s.onnx",
@@ -79,7 +79,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v7/detect/base",
       "manifestFile": "yolo/releases/yolo-v7-detect-base.modelpack.json",
       "localPath": "yolo\\yolov7.onnx",
@@ -88,7 +88,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v8/detect/n",
       "manifestFile": "yolo/releases/yolo-v8-detect-n.modelpack.json",
       "localPath": "yolo\\yolov8\\yolov8n.onnx",
@@ -97,7 +97,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v9/detect/s",
       "manifestFile": "yolo/releases/yolo-v9-detect-s.modelpack.json",
       "localPath": "yolo\\yolov9s.onnx",
@@ -106,7 +106,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v8/classify/s",
       "manifestFile": "yolo/releases/yolo-v8-classify-s.modelpack.json",
       "localPath": "yolo\\yolov8\\yolov8s-cls.onnx",
@@ -115,7 +115,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v5/segment/s",
       "manifestFile": "yolo/releases/yolo-v5-segment-s.modelpack.json",
       "localPath": "yolo\\yolov5\\yolov5s-seg.onnx",
@@ -124,7 +124,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v8/segment/n",
       "manifestFile": "yolo/releases/yolo-v8-segment-n.modelpack.json",
       "localPath": "yolo\\yolov8\\yolov8n-seg.onnx",
@@ -133,7 +133,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v9/segment/c",
       "manifestFile": "yolo/releases/yolo-v9-segment-c.modelpack.json",
       "localPath": "yolo\\yolov9-c-seg.onnx",
@@ -142,7 +142,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v11/segment/s",
       "manifestFile": "yolo/releases/yolo-v11-segment-s.modelpack.json",
       "localPath": "yolo\\yolov11\\yolo11s-seg.onnx",
@@ -151,7 +151,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v26/segment/s",
       "manifestFile": "yolo/releases/yolo-v26-segment-s.modelpack.json",
       "localPath": "yolo\\yolov26\\yolo26s-seg.onnx",
@@ -160,7 +160,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v8/pose/s",
       "manifestFile": "yolo/releases/yolo-v8-pose-s.modelpack.json",
       "localPath": "yolo\\yolov8\\yolov8s-pose.onnx",
@@ -169,7 +169,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v11/pose/s",
       "manifestFile": "yolo/releases/yolo-v11-pose-s.modelpack.json",
       "localPath": "yolo\\yolov11\\yolo11s-pose.onnx",
@@ -178,7 +178,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v26/pose/s",
       "manifestFile": "yolo/releases/yolo-v26-pose-s.modelpack.json",
       "localPath": "yolo\\yolov26\\yolo26s-pose.onnx",
@@ -187,7 +187,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v8/obb/s",
       "manifestFile": "yolo/releases/yolo-v8-obb-s.modelpack.json",
       "localPath": "yolo\\yolov8\\yolov8s-obb.onnx",
@@ -196,7 +196,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v11/obb/s",
       "manifestFile": "yolo/releases/yolo-v11-obb-s.modelpack.json",
       "localPath": "yolo\\yolov11\\yolo11s-obb.onnx",
@@ -205,7 +205,7 @@
     },
     {
       "collection": "yolo",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "yolo/v26/obb/s",
       "manifestFile": "yolo/releases/yolo-v26-obb-s.modelpack.json",
       "localPath": "yolo\\yolov26\\yolo26s-obb.onnx",
@@ -214,7 +214,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "deim/v2/detect",
       "manifestFile": "detr/releases/deim-v2-detect.modelpack.json",
       "localPath": "DEIMv2\\DEIMv2.onnx",
@@ -223,7 +223,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "pp-yoloe/plus-crn-l",
       "manifestFile": "detr/releases/pp-yoloe-plus-crn-l.modelpack.json",
       "localPath": "ppyoloe\\ppyoloe_plus_crn_l_80e_coco.onnx",
@@ -232,7 +232,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "rf-detr/detect",
       "manifestFile": "detr/releases/rf-detr-detect.modelpack.json",
       "localPath": "rf-detr\\rf-detr.onnx",
@@ -241,7 +241,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "rf-detr/segment",
       "manifestFile": "detr/releases/rf-detr-segment.modelpack.json",
       "localPath": "rf-detr\\rf-detr-seg.onnx",
@@ -250,7 +250,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "rt-detr/r50vd-decoded-vector-ir",
       "manifestFile": "detr/releases/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
       "localPath": "RT-DETR\\RTDETR\\rtdetr_r50vd_6x_coco_quant.xml",
@@ -259,7 +259,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "rt-detr/r50vd-decoded-vector-onnx",
       "manifestFile": "detr/releases/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
       "localPath": "RT-DETR\\RTDETR\\rtdetr_r50vd_6x_coco_quant.onnx",
@@ -268,7 +268,7 @@
     },
     {
       "collection": "detr",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "modelId": "rt-detr/r50vd-raw-query",
       "manifestFile": "detr/releases/rt-detr-r50vd-raw-query.modelpack.json",
       "localPath": "RT-DETR\\RTDETR_cropping\\rtdetr_r50vd_6x_coco.onnx",

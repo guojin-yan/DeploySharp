@@ -48,7 +48,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(candidate.ModelId, algorithmCandidate.GetProperty("catalogModelId").GetString());
             Assert.AreEqual(candidate.Release!.Tag, algorithmCandidate.GetProperty("release").GetProperty("tag").GetString());
             Assert.AreEqual(candidate.Release.Commit, algorithmCandidate.GetProperty("release").GetProperty("commit").GetString());
-            Assert.AreEqual("47846cb09d57a9d3ab408f3ee0d242dca0bfdcd21b862c63fc2ab22ea490a6a6", algorithmCandidate.GetProperty("release").GetProperty("manifestSha256").GetString());
+            Assert.AreEqual("5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96", algorithmCandidate.GetProperty("release").GetProperty("manifestSha256").GetString());
 
             JsonElement contract = algorithmCandidate.GetProperty("contract");
             CollectionAssert.AreEqual(new[] { 1, 3, 80, 160 }, contract.GetProperty("inputShape").EnumerateArray().Select(value => value.GetInt32()).ToArray());

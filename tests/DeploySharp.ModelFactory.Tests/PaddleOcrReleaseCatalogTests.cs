@@ -13,11 +13,11 @@ namespace DeploySharp.ModelFactory.Tests
         {
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries
-                .Where(entry => entry.Release?.Tag == "models-20260903.visual.1"
+                .Where(entry => entry.Release?.Tag == "models-visual.1"
                     && entry.ModelId!.StartsWith("paddleocr/ppocrv5/", StringComparison.Ordinal))
                 .ToArray();
 
-            Assert.AreEqual("models-20260903.visual.1", catalog.CatalogRevision);
+            Assert.AreEqual("models-visual.1", catalog.CatalogRevision);
             Assert.AreEqual(6, entries.Length);
             Assert.AreEqual(20, entries.Sum(entry => entry.Artifacts.Single().Assets.Count));
             Assert.IsTrue(entries.All(entry => entry.Status == ModelCatalogStatus.Preview));

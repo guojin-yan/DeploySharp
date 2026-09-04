@@ -16,7 +16,7 @@ using JYPPX.DeploySharp.ModelPack.Json;
 
 namespace JYPPX.DeploySharp.ModelFactory
 {
-    /// <summary>Implements catalog selection, immutable Release downloads, content-addressed caching, and offline reuse. / 实现目录选择、不可变 Release 下载、内容寻址缓存和离线复用。</summary>
+    /// <summary>Implements catalog selection, versioned Release downloads, content-addressed caching, and offline reuse. / 实现目录选择、版本化 Release 下载、内容寻址缓存和离线复用。</summary>
     public sealed class ModelFactoryClient : IModelFactory
     {
         private const string RootMarker = ".deploysharp-model-factory-root";
@@ -32,7 +32,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         private readonly string _managedRoot;
         private bool _disposed;
 
-        /// <summary>Initializes a ModelFactory client. A supplied HttpClient remains application-owned and must disable automatic redirects for immutable Release assets. / 初始化 ModelFactory 客户端；传入的 HttpClient 仍由应用所有，且对不可变 Release 资产必须禁用自动重定向。</summary>
+        /// <summary>Initializes a ModelFactory client. A supplied HttpClient remains application-owned and must disable automatic redirects for versioned Release assets. / 初始化 ModelFactory 客户端；传入的 HttpClient 仍由应用所有，且对版本化 Release 资产必须禁用自动重定向。</summary>
         public ModelFactoryClient(ValidatedModelCatalog catalog, ModelFactoryOptions options, HttpClient? httpClient = null)
         {
             Catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));

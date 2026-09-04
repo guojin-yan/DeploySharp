@@ -11,7 +11,7 @@ namespace DeploySharp.ModelFactory.Tests
         [TestMethod]
         public void OfficialDetectorEntriesUseSharedImmutableReleaseAssets()
         {
-            const string tag = "models-20260903.visual.1";
+            const string tag = "models-visual.1";
             const string releaseCommit = "1ac899174a7b8848559139750c5ce06768cc0a0a";
             ValidatedModelCatalog catalog = OfficialModelCatalog.Load();
             ModelCatalogEntry[] entries = catalog.Document.Entries

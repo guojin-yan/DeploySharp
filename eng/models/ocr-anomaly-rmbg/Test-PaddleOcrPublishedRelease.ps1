@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Repository = 'guojin-yan/DeploySharp',
-    [string]$Tag = 'models-20260903.visual.1',
+    [string]$Tag = 'models-visual.1',
     [string]$DestinationDirectory = '',
     [switch]$SkipDownload
 )
@@ -17,10 +17,37 @@ $headers = @{ Accept = 'application/vnd.github+json'; 'User-Agent' = 'DeployShar
 $apiUri = 'https://api.github.com/repos/' + $Repository + '/releases/tags/' + [Uri]::EscapeDataString($Tag)
 $release = (Invoke-WebRequest -UseBasicParsing -Headers $headers -Uri $apiUri).Content | ConvertFrom-Json
 if ([string]$release.tag_name -ne $Tag -or [bool]$release.draft -or -not [bool]$release.prerelease) { throw "Public release state is not the expected prerelease: $Tag" }
-$assets = @($release.assets | Where-Object { $_.state -eq 'uploaded' })
-if ($assets.Count -ne 15) { throw "Expected 15 uploaded public release assets, found $($assets.Count)." }
+function Get-ReleaseAssets {
+    param([long]$ReleaseId)
+    $items = @()
+    for ($page = 1; $true; $page++) {
+        $pageResponse = Invoke-RestMethod -Headers $headers -Uri ('https://api.github.com/repos/' + $Repository.Trim('/') + '/releases/' + $ReleaseId + '/assets?per_page=100&page=' + $page)
+        $pageItems = if ($pageResponse -is [Array]) { [object[]]$pageResponse } else { @($pageResponse) }
+        if ($pageItems.Count -eq 0) { break }
+        foreach ($pageItem in $pageItems) { $items += $pageItem }
+        if ($pageItems.Count -lt 100) { break }
+    }
+    # Emit each asset as an individual pipeline item.  Returning the array as a
+    # single object makes a subsequent Where-Object see the array itself and
+    # silently filters every asset out when a release has more than one page.
+    return $items
+}
+$allAssets = @(Get-ReleaseAssets -ReleaseId ([long]$release.id))
+$allAssets = @($allAssets | Where-Object { $_.state -eq 'uploaded' })
+$expectedNames = @(
+    'mobile-cls.modelpack.json', 'mobile-det.modelpack.json', 'mobile-rec.modelpack.json',
+    'server-cls.modelpack.json', 'server-det.modelpack.json', 'server-rec.modelpack.json',
+    'ppocrv5-mobile-cls.model.onnx', 'ppocrv5-mobile-det.model.onnx', 'ppocrv5-mobile-rec.model.onnx',
+    'ppocrv5-server-cls.model.onnx', 'ppocrv5-server-det.model.onnx', 'ppocrv5-server-rec.model.onnx',
+    'ppocrv5_dict.txt', 'SHA256SUMS'
+)
+$assetsByName = @{}
+foreach ($asset in $allAssets) { $assetsByName[[string]$asset.name] = $asset }
+$missingNames = @($expectedNames | Where-Object { -not $assetsByName.ContainsKey($_) })
+if ($missingNames.Count -gt 0) { throw "Public release is missing PaddleOCR assets: $($missingNames -join ', ')." }
+$assets = @($expectedNames | ForEach-Object { $assetsByName[$_] })
 
-$checksumAsset = $assets | Where-Object name -eq 'SHA256SUMS' | Select-Object -First 1
+$checksumAsset = $assetsByName['SHA256SUMS']
 if ($null -eq $checksumAsset) { throw 'Public release is missing SHA256SUMS.' }
 $checksumPath = Join-Path $DestinationDirectory 'SHA256SUMS'
 if (-not $SkipDownload -or -not (Test-Path -LiteralPath $checksumPath -PathType Leaf)) {
@@ -35,7 +62,9 @@ foreach ($line in ($checksumText -split "`r?`n")) {
     if ($line -notmatch '^([0-9a-fA-F]{64})\s+\*?(.+)$') { throw "Invalid SHA256SUMS line: $line" }
     $checksums[$matches[2].Trim()] = $matches[1].ToLowerInvariant()
 }
-if ($checksums.Count -ne 14) { throw "Expected 14 checksums beside SHA256SUMS, found $($checksums.Count)." }
+foreach ($name in ($expectedNames | Where-Object { $_ -ne 'SHA256SUMS' })) {
+    if (-not $checksums.ContainsKey($name)) { throw "SHA256SUMS does not contain $name." }
+}
 
 $downloaded = 0
 foreach ($asset in $assets | Where-Object name -ne 'SHA256SUMS') {
@@ -57,4 +86,4 @@ foreach ($manifestName in @('mobile-det.modelpack.json','server-det.modelpack.js
     if ([string]$manifest.extensions.'deploysharp.release-tag' -ne $Tag -or -not [bool]$manifest.source.redistributionAllowed) { throw "Published manifest admission mismatch: $manifestName" }
 }
 
-Write-Output "DEPLOYSHARP_PADDLE_OCR_PUBLISHED_RELEASE_OK tag=$Tag assets=$($assets.Count) downloaded=$downloaded directory=$DestinationDirectory"
+Write-Output "DEPLOYSHARP_PADDLE_OCR_PUBLISHED_RELEASE_OK tag=$Tag paddleOcrAssets=$($assets.Count) releaseAssets=$($allAssets.Count) downloaded=$downloaded directory=$DestinationDirectory"

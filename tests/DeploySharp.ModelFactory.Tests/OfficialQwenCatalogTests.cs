@@ -14,7 +14,7 @@ namespace DeploySharp.ModelFactory.Tests
         public void BundledCatalogSelectsThePublishedQwenPreview()
         {
             ValidatedModelCatalog catalog = LoadOfficialCatalog();
-            Assert.AreEqual("models-20260903.visual.1", catalog.CatalogRevision);
+            Assert.AreEqual("models-visual.1", catalog.CatalogRevision);
             Assert.AreEqual(42, catalog.Document.Entries.Count);
 
             ModelCatalogEntry entry = catalog.Document.Entries.Single(value => value.ModelId == "llm/qwen2.5-0.5b-instruct-q4-k-m");
@@ -22,7 +22,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual(ModelCatalogStatus.Preview, entry.Status);
             Assert.IsTrue(entry.Source!.RedistributionAllowed);
             Assert.AreEqual("Apache-2.0", entry.Source.LicenseExpression);
-            Assert.AreEqual("models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1", entry.Release!.Tag);
+            Assert.AreEqual("models-llm.1", entry.Release!.Tag);
             Assert.AreEqual("d8c4ffaed3684d120f80dec832c74a1a83e562a5", entry.Release.Commit);
 
             ModelCatalogArtifact artifact = entry.Artifacts.Single();

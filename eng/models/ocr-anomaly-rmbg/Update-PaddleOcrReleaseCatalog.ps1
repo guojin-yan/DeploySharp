@@ -4,7 +4,7 @@ param(
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string]$ReleaseCommit,
     [string]$CatalogPath = 'src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json',
-    [string]$Tag = 'models-20260903.visual.1',
+    [string]$Tag = 'models-visual.1',
     [switch]$Check
 )
 

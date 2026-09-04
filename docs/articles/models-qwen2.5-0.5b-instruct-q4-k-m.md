@@ -1,6 +1,6 @@
 # Qwen2.5 0.5B Instruct Q4_K_M
 
-这是 ModelFactory 中的 Alpha Preview GGUF 条目，面向 LlamaSharp CPU 后端。模型文件、ModelPack 清单和 tokenizer/config sidecar 由同一个 Release 资产提供，客户端下载后会按清单校验大小与 SHA-256。
+这是 ModelFactory 中的 Alpha Preview GGUF 条目，面向 LlamaSharp CPU 后端。模型文件、ModelPack 清单和 tokenizer/config sidecar 由 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1) 语言模型 Release 集合提供；后续兼容语言模型会继续追加到该集合并在 Release notes 中记录上传日期。客户端下载后会按清单校验大小与 SHA-256。
 
 ## 使用方式
 

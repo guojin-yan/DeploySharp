@@ -31,7 +31,7 @@ DeploySharp V2 provides explicit contracts for model artifacts, typed tensors, s
 - **Stable application contracts:** model identity, typed tensors, named inputs/outputs, sessions, diagnostics, cancellation, and disposal.
 - **Complete inference workflows:** classification, detection, segmentation, pose, OBB, OCR, anomaly, promptable segmentation, vision-language, LLM, and multimodal paths.
 - **Explicit backend ownership:** ONNX Runtime, OpenVINO, OpenCV DNN, TensorRT/CUDA, and LLamaSharp adapters without silently installing every vendor runtime.
-- **Reproducible model delivery:** ModelPack manifests, artifact size/SHA-256 checks, immutable Release downloads, offline cache reuse, and a runnable model case.
+- **Reproducible model delivery:** ModelPack manifests, artifact size/SHA-256 checks, versioned Release downloads, offline cache reuse, and a runnable model case.
 
 The V2 API is a clean redesign and does not provide V1 source, binary, configuration, or behavior compatibility.
 

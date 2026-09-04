@@ -31,7 +31,7 @@ DeploySharp V2 为模型工件、类型化张量、Session、视觉流程、语�
 - **稳定的应用契约：**模型身份、类型化张量、命名输入/输出、Session、诊断、取消和释放。
 - **完整推理工作流：**分类、检测、分割、姿态、OBB、OCR、异常、提示分割、视觉语言、LLM 和多模态路径。
 - **显式后端所有权：**ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT/CUDA 和 LLamaSharp 适配器，不会静默安装全部厂商运行时。
-- **可复现模型交付：**ModelPack 清单、工件大小/SHA-256 校验、不可变 Release 下载、离线缓存复用，以及可运行的模型案例。
+- **可复现模型交付：**ModelPack 清单、工件大小/SHA-256 校验、版本化 Release 下载、离线缓存复用，以及可运行的模型案例。
 
 V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为兼容。
 
@@ -123,7 +123,7 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 | --- | --- | --- |
 | [NuGet.org](https://www.nuget.org/) | DeploySharp 包待首次发布 | 公共托管包源 |
 | [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp 包待首次发布 | 包镜像 |
-| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 不可变 ModelPack 资产和验证元数据 |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 版本化 ModelPack 资产和验证元数据 |
 
 ### 应用负责的运行时包
 

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://guojin-yan.github.io/DeploySharp/schemas/deploysharp-model-catalog-1.0.schema.json",
   "title": "DeploySharp Model Catalog 1.0",
-  "description": "Audited model and test-asset references owned by immutable GitHub Releases.",
+  "description": "Audited model and test-asset references owned by versioned GitHub Release collections.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "generatedAt", "catalogRevision", "sourceRepository", "entries"],
@@ -37,7 +37,7 @@
       "properties": {
         "owner": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
         "repository": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
-        "tag": { "type": "string", "pattern": "^models-[0-9]{8}\\.[A-Za-z0-9][A-Za-z0-9._-]*$" },
+        "tag": { "type": "string", "pattern": "^models-[A-Za-z0-9][A-Za-z0-9._-]*\\.[A-Za-z0-9][A-Za-z0-9._-]*$" },
         "commit": { "type": "string", "minLength": 1, "maxLength": 4096 }
       }
     },
@@ -47,7 +47,7 @@
       "properties": {
         "assetId": { "$ref": "#/$defs/identifier" },
         "kind": { "type": "string", "enum": ["manifest", "model", "testInput", "testExpected", "license", "other"] },
-        "releaseTag": { "type": "string", "pattern": "^models-[0-9]{8}\\.[A-Za-z0-9][A-Za-z0-9._-]*$" },
+        "releaseTag": { "type": "string", "pattern": "^models-[A-Za-z0-9][A-Za-z0-9._-]*\\.[A-Za-z0-9][A-Za-z0-9._-]*$" },
         "downloadUrl": { "type": "string", "format": "uri", "pattern": "^https://github\\.com/.+/releases/download/.+/.+" },
         "relativePath": { "$ref": "#/$defs/relativePath" },
         "size": { "type": "integer", "minimum": 0 },

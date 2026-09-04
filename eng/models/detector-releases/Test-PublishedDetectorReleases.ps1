@@ -35,7 +35,22 @@ function Add-ExpectedAsset {
     $Expected[$name] = $record
 }
 
-foreach ($tag in @('models-20260903.visual.1', 'models-20260903.visual.1')) {
+function Get-ReleaseAssets {
+    param([long]$ReleaseId)
+    $items = @()
+    for ($page = 1; $true; $page++) {
+        $pageResponse = Invoke-RestMethod -Headers $headers -Uri ('https://api.github.com/repos/' + $Repository.Trim('/') + '/releases/' + $ReleaseId + '/assets?per_page=100&page=' + $page)
+        $pageItems = if ($pageResponse -is [Array]) { [object[]]$pageResponse } else { @($pageResponse) }
+        if ($pageItems.Count -eq 0) { break }
+        foreach ($pageItem in $pageItems) { $items += $pageItem }
+        if ($pageItems.Count -lt 100) { break }
+    }
+    # Emit each asset as an individual pipeline item so callers can enumerate
+    # releases with more than GitHub's default first page of assets.
+    return $items
+}
+
+foreach ($tag in @('models-visual.1')) {
     $entries = @($catalog.entries | Where-Object { $_.release.tag -eq $tag })
     if ($entries.Count -eq 0) { throw "The official catalog contains no entries for release '$tag'." }
 
@@ -54,7 +69,7 @@ foreach ($tag in @('models-20260903.visual.1', 'models-20260903.visual.1')) {
     }
 
     $remote = @{}
-    foreach ($asset in @($release.assets)) {
+    foreach ($asset in @(Get-ReleaseAssets -ReleaseId ([long]$release.id))) {
         if ($remote.ContainsKey([string]$asset.name)) { throw "Release '$tag' has duplicate asset name '$($asset.name)'." }
         $remote[[string]$asset.name] = $asset
     }

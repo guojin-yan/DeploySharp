@@ -176,7 +176,7 @@ foreach ($candidate in Get-ChildItem -LiteralPath $yoloCandidates -Filter '*.mod
     $fileName = ([string]$old.modelId).Replace('/', '-') + '.modelpack.json'
     $json = ($manifest | ConvertTo-Json -Depth 30) + [Environment]::NewLine
     $expected[(Join-Path $yoloReleases $fileName)] = $json
-    $planEntries.Add([ordered]@{ collection = 'yolo'; tag = 'models-20260903.visual.1'; modelId = $old.modelId; manifestFile = 'yolo/releases/' + $fileName; localPath = $detectionPaths[$old.modelId]; licenseSlug = $licenseSlug; licenseExpression = $license.Expression })
+    $planEntries.Add([ordered]@{ collection = 'yolo'; tag = 'models-visual.1'; modelId = $old.modelId; manifestFile = 'yolo/releases/' + $fileName; localPath = $detectionPaths[$old.modelId]; licenseSlug = $licenseSlug; licenseExpression = $license.Expression })
 }
 
 $multi = @(
@@ -244,7 +244,7 @@ foreach ($item in $multi) {
     $fileName = $item.Id.Replace('/','-') + '.modelpack.json'
     $json = ($manifest | ConvertTo-Json -Depth 30) + [Environment]::NewLine
     $expected[(Join-Path $yoloReleases $fileName)] = $json
-    $planEntries.Add([ordered]@{ collection='yolo'; tag='models-20260903.visual.1'; modelId=$item.Id; manifestFile='yolo/releases/' + $fileName; localPath=$item.Path; licenseSlug=$item.License; licenseExpression=$license.Expression })
+    $planEntries.Add([ordered]@{ collection='yolo'; tag='models-visual.1'; modelId=$item.Id; manifestFile='yolo/releases/' + $fileName; localPath=$item.Path; licenseSlug=$item.License; licenseExpression=$license.Expression })
 }
 
 $detrMap = @{
@@ -278,7 +278,7 @@ foreach ($candidate in Get-ChildItem -LiteralPath $detrCandidates -Filter '*.mod
     $fileName = $id.Replace('/','-') + '.modelpack.json'
     $json = ($manifest | ConvertTo-Json -Depth 30) + [Environment]::NewLine
     $expected[(Join-Path $detrReleases $fileName)] = $json
-    $planEntries.Add([ordered]@{ collection='detr'; tag='models-20260903.visual.1'; modelId=$id; manifestFile='detr/releases/' + $fileName; localPath=$map.Path; licenseSlug=$map.License; licenseExpression=$license.Expression })
+    $planEntries.Add([ordered]@{ collection='detr'; tag='models-visual.1'; modelId=$id; manifestFile='detr/releases/' + $fileName; localPath=$map.Path; licenseSlug=$map.License; licenseExpression=$license.Expression })
 }
 
 if ($Check) {
@@ -289,5 +289,5 @@ if ($Check) {
     [IO.Directory]::CreateDirectory($yoloReleases) | Out-Null
     [IO.Directory]::CreateDirectory($detrReleases) | Out-Null
     foreach ($item in $expected.GetEnumerator()) { [IO.File]::WriteAllText($item.Key, $item.Value, [Text.UTF8Encoding]::new($false)) }
-    [IO.File]::WriteAllText($planPath, (([ordered]@{ schemaVersion='1.0'; generatedAt=$generatedAt; collections=@([ordered]@{id='yolo';tag='models-20260903.visual.1';assetRoot='yolo'},[ordered]@{id='detr';tag='models-20260903.visual.1';assetRoot='detr'}); models=$planEntries } | ConvertTo-Json -Depth 20) + [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText($planPath, (([ordered]@{ schemaVersion='1.0'; generatedAt=$generatedAt; collections=@([ordered]@{id='yolo';tag='models-visual.1';assetRoot='yolo'},[ordered]@{id='detr';tag='models-visual.1';assetRoot='detr'}); models=$planEntries } | ConvertTo-Json -Depth 20) + [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
 }

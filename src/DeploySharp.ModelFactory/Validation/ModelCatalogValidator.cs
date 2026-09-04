@@ -7,10 +7,12 @@ using JYPPX.DeploySharp.ModelPack.Json;
 
 namespace JYPPX.DeploySharp.ModelFactory
 {
-    /// <summary>Validates catalog structure, provenance, immutable Release URLs, and model admission rules. / 验证目录结构、来源、不可变 Release URL 和模型准入规则。</summary>
+    /// <summary>Validates catalog structure, provenance, versioned Release URLs, and model admission rules. / 验证目录结构、来源、版本化 Release URL 和模型准入规则。</summary>
     public static class ModelCatalogValidator
     {
-        private static readonly Regex ReleaseTagPattern = new Regex("^models-[0-9]{8}\\.[A-Za-z0-9][A-Za-z0-9._-]*$", RegexOptions.CultureInvariant);
+        // Release collections may be maintained over time (for example models-visual.1 or models-llm.1).
+        // Keep a required namespace/version suffix while rejecting floating aliases such as "latest".
+        private static readonly Regex ReleaseTagPattern = new Regex("^models-[A-Za-z0-9][A-Za-z0-9._-]*\\.[A-Za-z0-9][A-Za-z0-9._-]*$", RegexOptions.CultureInvariant);
 
         /// <summary>Validates and normalizes a catalog document. / 验证并规范化目录文档。</summary>
         public static ValidatedModelCatalog Validate(ModelCatalogDocument document, ModelCatalogValidationOptions? options = null)
@@ -231,7 +233,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         {
             if (release == null)
             {
-                if (status != ModelCatalogStatus.External) Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Supported and Preview entries require immutable Release metadata.", path);
+                if (status != ModelCatalogStatus.External) Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Supported and Preview entries require versioned Release metadata.", path);
                 return;
             }
 
@@ -239,7 +241,7 @@ namespace JYPPX.DeploySharp.ModelFactory
             RequiredPlain(release.Repository, path + ".repository", diagnostics);
             if (!string.IsNullOrWhiteSpace(release.Owner) && !IsGitHubSegment(release.Owner!)) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "GitHub owner contains unsupported characters.", path + ".owner");
             if (!string.IsNullOrWhiteSpace(release.Repository) && !IsGitHubSegment(release.Repository!)) Add(diagnostics, ModelFactoryDiagnosticCodes.CatalogInvalid, "GitHub repository contains unsupported characters.", path + ".repository");
-            if (string.IsNullOrWhiteSpace(release.Tag) || !ReleaseTagPattern.IsMatch(release.Tag) || string.Equals(release.Tag, "latest", StringComparison.OrdinalIgnoreCase)) Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Release tag must match an immutable models-YYYYMMDD.revision form.", path + ".tag");
+            if (string.IsNullOrWhiteSpace(release.Tag) || !ReleaseTagPattern.IsMatch(release.Tag) || string.Equals(release.Tag, "latest", StringComparison.OrdinalIgnoreCase)) Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Release tag must match a models-collection.revision form and must not be a floating alias.", path + ".tag");
             RequiredPlain(release.Commit, path + ".commit", diagnostics);
         }
 
@@ -280,7 +282,7 @@ namespace JYPPX.DeploySharp.ModelFactory
             string actual = Uri.UnescapeDataString(value.AbsolutePath);
             if (!actual.StartsWith(expectedPrefix, StringComparison.Ordinal) || actual.Substring(expectedPrefix.Length).Length == 0)
             {
-                Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Asset URL does not point to the recorded immutable GitHub Release tag.", path, modelId: modelId, artifactId: artifactId, assetId: assetId, uri: value);
+                Add(diagnostics, ModelFactoryDiagnosticCodes.MutableReleaseTag, "Asset URL does not point to the recorded versioned GitHub Release tag.", path, modelId: modelId, artifactId: artifactId, assetId: assetId, uri: value);
             }
 
             return value;

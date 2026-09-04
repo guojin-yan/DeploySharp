@@ -3,10 +3,11 @@
 Model ID: llm/qwen2.5-0.5b-instruct-q4-k-m
 Task: language-generation-and-embedding
 Artifact variants: qwen2.5-0.5b-instruct.q4-k-m.gguf
+Release: [models-llm.1](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1) (maintained language-model collection)
 
 ## Complete case workflow
 
-Catalog selection and GGUF package verification; pair with the LLM prompt workflow for generation. The case stages are: select the immutable catalog entry, verify the ModelPack and asset identities, prepare the declared input, create the compatible backend session, decode the task result, and write an owned output.
+Catalog selection and GGUF package verification; pair with the LLM prompt workflow for generation. The case stages are: select the versioned catalog entry, verify the ModelPack and asset identities, prepare the declared input, create the compatible backend session, decode the task result, and write an owned output.
 
 Run:
 
@@ -19,7 +20,7 @@ See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for 
 ## Verification record
 
 Audit date: 2026-08-24
-Catalog revision: models-20260903.visual.1
+Catalog revision: models-llm.1
 
 Reproduce the release and ModelPack checks from the repository root:
 
@@ -29,7 +30,7 @@ pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -ModelId 'l
 
 | Check | Result | Details |
 | --- | --- | --- |
-| Official catalog selection | PASS | Exact model ID and artifact filters were selected from the immutable catalog. |
+| Official catalog selection | PASS | Exact model ID and artifact filters were selected from the versioned catalog. |
 | GitHub Release asset metadata | PASS | Every declared asset is uploaded and its size/SHA256 matches the catalog. |
 | ModelPack manifest download | PASS | Manifest HTTP download, byte size, SHA256, model ID, artifact ID, and declared file size/SHA256 identities passed. |
 | Full asset download and SHA256 | NOT RUN | Add -DownloadAssets for a local full-payload download; release metadata and the manifest were checked in this audit. |

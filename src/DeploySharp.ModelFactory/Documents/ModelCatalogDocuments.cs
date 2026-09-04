@@ -33,7 +33,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         Other = 5
     }
 
-    /// <summary>Describes the immutable GitHub Release that owns an entry. / 描述拥有目录条目的不可变 GitHub Release。</summary>
+    /// <summary>Describes the versioned GitHub Release collection that owns an entry. / 描述拥有目录条目的版本化 GitHub Release 集合。</summary>
     public sealed class ModelCatalogRelease
     {
         /// <summary>Initializes release provenance. / 初始化 Release 来源信息。</summary>
@@ -49,7 +49,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         public string? Owner { get; }
         /// <summary>Gets the GitHub repository name. / 获取 GitHub 仓库名称。</summary>
         public string? Repository { get; }
-        /// <summary>Gets the immutable release tag. / 获取不可变 Release 标签。</summary>
+        /// <summary>Gets the maintained release collection tag. / 获取维护中的 Release 集合标签。</summary>
         public string? Tag { get; }
         /// <summary>Gets the commit recorded when the release was created. / 获取创建 Release 时记录的提交。</summary>
         public string? Commit { get; }
@@ -111,9 +111,9 @@ namespace JYPPX.DeploySharp.ModelFactory
         public string? AssetId { get; }
         /// <summary>Gets the asset purpose. / 获取资产用途。</summary>
         public ModelCatalogAssetKind Kind { get; }
-        /// <summary>Gets the immutable release tag. / 获取不可变 Release 标签。</summary>
+        /// <summary>Gets the maintained release collection tag. / 获取维护中的 Release 集合标签。</summary>
         public string? ReleaseTag { get; }
-        /// <summary>Gets the immutable release download URI. / 获取不可变 Release 下载 URI。</summary>
+        /// <summary>Gets the versioned release download URI. / 获取版本化 Release 下载 URI。</summary>
         public Uri? DownloadUri { get; }
         /// <summary>Gets the safe path used inside a materialized package or cache entry. / 获取在物化模型包或缓存条目中使用的安全路径。</summary>
         public string? RelativePath { get; }
@@ -393,7 +393,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         public string? Description { get; }
         /// <summary>Gets source and license metadata. / 获取来源和许可证元数据。</summary>
         public ModelSourceDocument? Source { get; }
-        /// <summary>Gets immutable Release provenance. / 获取不可变 Release 来源。</summary>
+        /// <summary>Gets versioned Release provenance. / 获取版本化 Release 来源。</summary>
         public ModelCatalogRelease? Release { get; }
         /// <summary>Gets backend-specific artifacts. / 获取后端特定工件。</summary>
         public IReadOnlyList<ModelCatalogArtifact> Artifacts => _artifacts;

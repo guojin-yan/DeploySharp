@@ -822,7 +822,7 @@ if (@($officialModelIds | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Cou
 }
 $officialQwen = @($officialEntries | Where-Object { $_.modelId -eq 'llm/qwen2.5-0.5b-instruct-q4-k-m' })
 if ($officialQwen.Count -ne 1) { throw 'The published Qwen alpha-preview catalog entry is missing.' }
-if ([string]$officialQwen[0].status -ne 'preview' -or -not [bool]$officialQwen[0].source.redistributionAllowed -or [string]$officialQwen[0].source.licenseExpression -ne 'Apache-2.0' -or [string]$officialQwen[0].release.tag -ne 'models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1' -or [string]$officialQwen[0].release.commit -ne 'd8c4ffaed3684d120f80dec832c74a1a83e562a5') {
+if ([string]$officialQwen[0].status -ne 'preview' -or -not [bool]$officialQwen[0].source.redistributionAllowed -or [string]$officialQwen[0].source.licenseExpression -ne 'Apache-2.0' -or [string]$officialQwen[0].release.tag -ne 'models-llm.1' -or [string]$officialQwen[0].release.commit -ne 'd8c4ffaed3684d120f80dec832c74a1a83e562a5') {
     throw 'The published Qwen alpha-preview catalog provenance drifted.'
 }
 $officialQwenAssets = @($officialQwen[0].artifacts[0].assets)

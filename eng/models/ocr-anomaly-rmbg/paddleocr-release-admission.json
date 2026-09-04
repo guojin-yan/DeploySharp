@@ -182,18 +182,18 @@
     "profileId": "paddle-ocr-cls.paddleocr/ppocrv5/mobile-cls.opset7",
     "release": {
       "repository": "guojin-yan/DeploySharp",
-      "tag": "models-20260903.visual.1",
+      "tag": "models-visual.1",
       "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a",
       "manifestFile": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
       "manifestAssetName": "mobile-cls.modelpack.json",
-      "manifestSize": 3086,
-      "manifestSha256": "47846cb09d57a9d3ab408f3ee0d242dca0bfdcd21b862c63fc2ab22ea490a6a6",
+      "manifestSize": 3077,
+      "manifestSha256": "5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96",
       "modelAssetName": "ppocrv5-mobile-cls.model.onnx",
       "modelSize": 1018940,
       "modelSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
       "checksumAssetName": "SHA256SUMS",
-      "checksumSize": 10360,
-      "checksumSha256": "dfc52c6cdaeafb9fae4f93a2b263442bb843b1ae169cdf085ea8dd0a728a4840"
+      "checksumSize": 10253,
+      "checksumSha256": "72e4a8a01bfdf92c9c78cf83cf2d74ac69721b325c1b80d09796d3a06cb42bc2"
     },
     "contract": {
       "inputName": "x",

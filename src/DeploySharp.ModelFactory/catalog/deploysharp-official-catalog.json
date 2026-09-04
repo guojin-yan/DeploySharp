@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "generatedAt": "2026-09-03T00:00:00Z",
-  "catalogRevision": "models-20260903.visual.1",
+  "catalogRevision": "models-visual.1",
   "sourceRepository": "https://github.com/guojin-yan/DeploySharp",
   "entries": [
     {
@@ -23,7 +23,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -47,8 +47,8 @@
             {
               "assetId": "anomalib-padim-mvtec-bottle-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/anomalib-padim-mvtec-bottle.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/anomalib-padim-mvtec-bottle.modelpack.json",
               "relativePath": "anomalib-padim-mvtec-bottle.modelpack.json",
               "size": 2628,
               "sha256": "e142230ac55154726307dbb35e9b0689a2fa020431f526148bc485a65fe92083",
@@ -58,8 +58,8 @@
             {
               "assetId": "anomalib-padim-mvtec-bottle-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/padim.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/padim.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 176641352,
               "sha256": "bde19ca3086d3fa52bb3cbc2b9ea2d554ce1f10b4c8a8b38d7393bd54247ffff",
@@ -97,7 +97,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -121,8 +121,8 @@
             {
               "assetId": "bria-rmbg-1-4-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/bria-rmbg-1.4.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/bria-rmbg-1.4.modelpack.json",
               "relativePath": "bria-rmbg-1.4.modelpack.json",
               "size": 2286,
               "sha256": "58f386fd91061e46c927d4950cc1d54a95665d7d98b225cbaf7b3fd9da038cf8",
@@ -132,8 +132,8 @@
             {
               "assetId": "bria-rmbg-1-4-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/bria-rmbg-1.4.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/bria-rmbg-1.4.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 176153355,
               "sha256": "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f",
@@ -171,7 +171,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -195,8 +195,8 @@
             {
               "assetId": "bria-rmbg-2-0-fp32-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/bria-rmbg-2.0-fp32.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/bria-rmbg-2.0-fp32.modelpack.json",
               "relativePath": "bria-rmbg-2.0-fp32.modelpack.json",
               "size": 2310,
               "sha256": "d681dbe4edf956b68fc5defef0e859d9a6a6eff57bbb1e75e0ea838bfc1c6366",
@@ -206,8 +206,8 @@
             {
               "assetId": "bria-rmbg-2-0-fp32-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/RMBG-2.0.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/RMBG-2.0.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 1024331469,
               "sha256": "5b486f08200f513f460da46dd701db5fbb47d79b4be4b708a19444bcd4e79958",
@@ -242,8 +242,8 @@
             {
               "assetId": "bria-rmbg-2-0-int8-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/bria-rmbg-2.0-int8.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/bria-rmbg-2.0-int8.modelpack.json",
               "relativePath": "bria-rmbg-2.0-int8.modelpack.json",
               "size": 2318,
               "sha256": "605424d830361d0fdf4fc73ebbcea1c29fe4aecc8e02aaf62e66ebc564d51f60",
@@ -253,8 +253,8 @@
             {
               "assetId": "bria-rmbg-2-0-int8-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/RMBG-2.0_quantized.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/RMBG-2.0_quantized.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 366087549,
               "sha256": "fcea23951a378f92634834888896cc1eec54655366ae6e949282646ce17c5420",
@@ -293,7 +293,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -316,8 +316,8 @@
             {
               "assetId": "deim-v2-detect-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/deim-v2-detect.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/deim-v2-detect.modelpack.json",
               "relativePath": "deim-v2-detect.modelpack.json",
               "size": 2952,
               "sha256": "4884f4dfce415f3ec97e36f55163b49ef56b9f8cfbf8fc19b1388d70e35dd146",
@@ -327,8 +327,8 @@
             {
               "assetId": "deim-v2-detect-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/deim-v2-detect.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/deim-v2-detect.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 40030960,
               "sha256": "08a6a9052c83ccd356e91f8839dfe7b2e686639b577feb7f0b7b204f7f2969cc",
@@ -338,8 +338,8 @@
             {
               "assetId": "deim-v2-detect-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-deimv2.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-deimv2.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-deimv2.txt",
               "size": 11564,
               "sha256": "f25a3c7b894c50f203813bc72183a22124c89c27b15d420b92e4621ca4b0f9cf",
@@ -378,7 +378,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -402,8 +402,8 @@
             {
               "assetId": "blip-caption-base-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.modelpack.json",
               "relativePath": "blip-caption-base.modelpack.json",
               "size": 4057,
               "sha256": "05ed0fce3e214507f60ff5c35d86980b09706755ccbe562af89da4c45164b72e",
@@ -413,8 +413,8 @@
             {
               "assetId": "blip-caption-base-vision-encoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.vision-encoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.vision-encoder.onnx",
               "relativePath": "blip-caption-base/vision-encoder.onnx",
               "size": 344502972,
               "sha256": "304b912cc437706e2fd34a54cfde1d156134a08a437bc7f46a29d2ea7fa759ef",
@@ -424,8 +424,8 @@
             {
               "assetId": "blip-caption-base-language-decoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.language-decoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.language-decoder.onnx",
               "relativePath": "blip-caption-base/language-decoder.onnx",
               "size": 645794706,
               "sha256": "56fcfa494c561f630b36bdf8ef62adc0597b559588995a73b56bdbab5604e686",
@@ -435,8 +435,8 @@
             {
               "assetId": "blip-caption-base-vocab.txt",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.vocab.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.vocab.txt",
               "relativePath": "blip-caption-base/vocab.txt",
               "size": 231508,
               "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
@@ -446,8 +446,8 @@
             {
               "assetId": "blip-caption-base-generation-config.json",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.generation-config.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.generation-config.json",
               "relativePath": "blip-caption-base/generation-config.json",
               "size": 258,
               "sha256": "640f3443087a7ba7cf4e6819ca9c69379669b8556acc5c178cd0e121b2d74519",
@@ -457,8 +457,8 @@
             {
               "assetId": "blip-caption-base-processor-contract.json",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.processor-contract.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.processor-contract.json",
               "relativePath": "blip-caption-base/processor-contract.json",
               "size": 356,
               "sha256": "76aa309c203810ad36f1ce32132dde5dc3b9c89675a19c2933df36d7085c751c",
@@ -468,8 +468,8 @@
             {
               "assetId": "blip-caption-base-license.txt",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/blip-caption-base.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/blip-caption-base.LICENSE.txt",
               "relativePath": "blip-caption-base/LICENSE.txt",
               "size": 1482,
               "sha256": "7d5df2d28b2bf297ecec0b51eb23f6d8d0c39338dae8d92f6d61d9441f77b856",
@@ -516,7 +516,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
+        "tag": "models-llm.1",
         "commit": "d8c4ffaed3684d120f80dec832c74a1a83e562a5"
       },
       "artifacts": [
@@ -548,8 +548,8 @@
             {
               "assetId": "qwen-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
               "relativePath": "qwen2.5-0.5b-instruct-q4-k-m.modelpack.json",
               "size": 4345,
               "sha256": "9de42e490ca9d9a1c99248bbd03c096a5503552a121f80509fc9fb022f924c3f",
@@ -559,8 +559,8 @@
             {
               "assetId": "qwen-model",
               "kind": "model",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4_k_m.gguf",
               "relativePath": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
               "size": 491400032,
               "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
@@ -570,8 +570,8 @@
             {
               "assetId": "qwen-config",
               "kind": "other",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.config.json",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.config.json",
               "relativePath": "source/config.json",
               "size": 659,
               "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
@@ -581,8 +581,8 @@
             {
               "assetId": "qwen-generation-config",
               "kind": "other",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.generation-config.json",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.generation-config.json",
               "relativePath": "source/generation_config.json",
               "size": 242,
               "sha256": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6",
@@ -592,8 +592,8 @@
             {
               "assetId": "qwen-tokenizer-config",
               "kind": "other",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.tokenizer-config.json",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.tokenizer-config.json",
               "relativePath": "source/tokenizer_config.json",
               "size": 7305,
               "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
@@ -603,8 +603,8 @@
             {
               "assetId": "qwen-license",
               "kind": "license",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.LICENSE",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.LICENSE",
               "relativePath": "source/LICENSE",
               "size": 11343,
               "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
@@ -614,8 +614,8 @@
             {
               "assetId": "qwen-source-readme",
               "kind": "other",
-              "releaseTag": "models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260817.qwen2.5-0.5b-instruct-q4-k-m.1/qwen2.5-0.5b-instruct-q4-k-m.README.gguf.md",
+              "releaseTag": "models-llm.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-llm.1/qwen2.5-0.5b-instruct-q4-k-m.README.gguf.md",
               "relativePath": "source/README.gguf.md",
               "size": 4856,
               "sha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999",
@@ -654,7 +654,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -681,19 +681,19 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-cls-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/mobile-cls.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-cls.modelpack.json",
               "relativePath": "mobile-cls.modelpack.json",
-              "size": 3086,
-              "sha256": "47846cb09d57a9d3ab408f3ee0d242dca0bfdcd21b862c63fc2ab22ea490a6a6",
+              "size": 3077,
+              "sha256": "5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-mobile-cls-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-mobile-cls.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-cls.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 1018940,
               "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
@@ -703,8 +703,8 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-cls-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -743,7 +743,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -770,19 +770,19 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-det-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/mobile-det.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-det.modelpack.json",
               "relativePath": "mobile-det.modelpack.json",
-              "size": 3073,
-              "sha256": "db00686a39615fadaecb7545ec418a7134467f24d6a656bbf1c813b23002f300",
+              "size": 3064,
+              "sha256": "21397cbb7207f61d10a332436319a5d3ebb4cd396de27fea20a1815e83435473",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-mobile-det-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-mobile-det.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-det.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 4826518,
               "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
@@ -792,8 +792,8 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-det-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -832,7 +832,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -860,19 +860,19 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-rec-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/mobile-rec.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-rec.modelpack.json",
               "relativePath": "mobile-rec.modelpack.json",
-              "size": 3333,
-              "sha256": "3d5cc4db83e68e5cb674481236506cbf57928c8f05d3f4e45e559349a692a4d1",
+              "size": 3324,
+              "sha256": "37838a112cbcd75c9945d52e51def6260f0a26a40fa4af80dc7d605de92b99d3",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-mobile-rec-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-mobile-rec.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-rec.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 16560873,
               "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
@@ -882,8 +882,8 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-rec-dictionary",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5_dict.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5_dict.txt",
               "relativePath": "bundle/ppocrv5_dict.txt",
               "size": 74012,
               "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
@@ -893,8 +893,8 @@
             {
               "assetId": "paddleocr-ppocrv5-mobile-rec-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -933,7 +933,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -960,19 +960,19 @@
             {
               "assetId": "paddleocr-ppocrv5-server-cls-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/server-cls.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-cls.modelpack.json",
               "relativePath": "server-cls.modelpack.json",
-              "size": 3085,
-              "sha256": "1e2eb57a7762ae7290e7cbde10d52f578794ef20aaeaefbacea63108a660a7b9",
+              "size": 3076,
+              "sha256": "4292c3e01f62426252ad516a3e3897b6c3a5bc51dd3fc77d4593bb6be6cedd85",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-server-cls-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-server-cls.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-cls.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 6777308,
               "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f",
@@ -982,8 +982,8 @@
             {
               "assetId": "paddleocr-ppocrv5-server-cls-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -1022,7 +1022,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1049,19 +1049,19 @@
             {
               "assetId": "paddleocr-ppocrv5-server-det-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/server-det.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-det.modelpack.json",
               "relativePath": "server-det.modelpack.json",
-              "size": 3081,
-              "sha256": "23626dfd5b58a09a9da3be4d5d60b9321519f549b26f53477e88a886403cdf60",
+              "size": 3072,
+              "sha256": "4442be563e57a9cda3f0ce2d4a974199dd7cf51af41194d45170cbf4914d9cb0",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-server-det-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-server-det.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-det.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 88116836,
               "sha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839",
@@ -1071,8 +1071,8 @@
             {
               "assetId": "paddleocr-ppocrv5-server-det-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -1111,7 +1111,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1139,19 +1139,19 @@
             {
               "assetId": "paddleocr-ppocrv5-server-rec-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/server-rec.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-rec.modelpack.json",
               "relativePath": "server-rec.modelpack.json",
-              "size": 3335,
-              "sha256": "b140131e230c96ac3d2e42b4aac20bd4beaad8697b746264608f128ba7047b70",
+              "size": 3326,
+              "sha256": "492032ce76d98fbd8e33f78bf83cc983bb933696d56c23a4b4b58ff62ab7d571",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
             {
               "assetId": "paddleocr-ppocrv5-server-rec-model",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5-server-rec.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-rec.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 84502992,
               "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7",
@@ -1161,8 +1161,8 @@
             {
               "assetId": "paddleocr-ppocrv5-server-rec-dictionary",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/ppocrv5_dict.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5_dict.txt",
               "relativePath": "bundle/ppocrv5_dict.txt",
               "size": 74012,
               "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
@@ -1172,8 +1172,8 @@
             {
               "assetId": "paddleocr-ppocrv5-server-rec-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/paddleocr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -1212,7 +1212,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1235,8 +1235,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/pp-yoloe-plus-crn-l.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/pp-yoloe-plus-crn-l.modelpack.json",
               "relativePath": "pp-yoloe-plus-crn-l.modelpack.json",
               "size": 2908,
               "sha256": "f183037ac9b182588d43f2717250ac59aef0516be7a20a382a667572e203cd0b",
@@ -1246,8 +1246,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/pp-yoloe-plus-crn-l.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/pp-yoloe-plus-crn-l.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 209181410,
               "sha256": "68866d9841e41f6637d4a1c13db6c70a42c9f0367c79870b0a8a9e9df32b8504",
@@ -1257,8 +1257,8 @@
             {
               "assetId": "pp-yoloe-plus-crn-l-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1297,7 +1297,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1321,8 +1321,8 @@
             {
               "assetId": "rf-detr-detect-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rf-detr-detect.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rf-detr-detect.modelpack.json",
               "relativePath": "rf-detr-detect.modelpack.json",
               "size": 2830,
               "sha256": "84ab000d492faf8825a3d3e142246790d415e5eddd93235fdc0b916bc2fd2641",
@@ -1332,8 +1332,8 @@
             {
               "assetId": "rf-detr-detect-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rf-detr-detect.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rf-detr-detect.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 121321053,
               "sha256": "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769",
@@ -1343,8 +1343,8 @@
             {
               "assetId": "rf-detr-detect-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-rf-detr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-rf-detr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
               "size": 11345,
               "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
@@ -1383,7 +1383,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1407,8 +1407,8 @@
             {
               "assetId": "rf-detr-segment-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rf-detr-segment.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rf-detr-segment.modelpack.json",
               "relativePath": "rf-detr-segment.modelpack.json",
               "size": 2990,
               "sha256": "2a92fbbf85a3d8a9ab4cc6a108fae07b85535ef7962bd333c91c2540f65652f1",
@@ -1418,8 +1418,8 @@
             {
               "assetId": "rf-detr-segment-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rf-detr-segment.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rf-detr-segment.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 131311092,
               "sha256": "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35",
@@ -1429,8 +1429,8 @@
             {
               "assetId": "rf-detr-segment-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-rf-detr.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-rf-detr.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-rf-detr.txt",
               "size": 11345,
               "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
@@ -1469,7 +1469,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1492,8 +1492,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-decoded-vector-ir.modelpack.json",
               "relativePath": "rt-detr-r50vd-decoded-vector-ir.modelpack.json",
               "size": 3933,
               "sha256": "e8c8e83ccb7ed319513631c0dba15ef747b1fd2f3b3e28b408ad1ef07542a339",
@@ -1503,8 +1503,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-model-xml",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-decoded-vector-ir.model.xml",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-decoded-vector-ir.model.xml",
               "relativePath": "bundle/model.xml",
               "size": 1556096,
               "sha256": "9d49703964c07567de7f00bda85bae1760da322e2b0655bfae110f2c222c778d",
@@ -1514,8 +1514,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-model-bin",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-decoded-vector-ir.model.bin",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-decoded-vector-ir.model.bin",
               "relativePath": "bundle/model.bin",
               "size": 85633634,
               "sha256": "c4f2ea6021314c23d691e5d6911da0804191202d049f3927cfa242f181600455",
@@ -1525,8 +1525,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-ir-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1565,7 +1565,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1588,8 +1588,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
               "relativePath": "rt-detr-r50vd-decoded-vector-onnx.modelpack.json",
               "size": 3652,
               "sha256": "cb4b08335b7dbde2ab4057d7021f673e201579b1c0e7b697e42d5b7aeb1fe128",
@@ -1599,8 +1599,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-decoded-vector-onnx.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-decoded-vector-onnx.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 169228279,
               "sha256": "a0477cb6cb33f431eae72438cd9a38fa80c46bca9b8d397a4ece49a9ee4353db",
@@ -1610,8 +1610,8 @@
             {
               "assetId": "rt-detr-r50vd-decoded-vector-onnx-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1650,7 +1650,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1674,8 +1674,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-raw-query.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-raw-query.modelpack.json",
               "relativePath": "rt-detr-r50vd-raw-query.modelpack.json",
               "size": 3674,
               "sha256": "de79485c4bc141c0ffb73d12aeaf88805e3c1bca417c6ae1e1fcd89c729921db",
@@ -1685,8 +1685,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/rt-detr-r50vd-raw-query.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/rt-detr-r50vd-raw-query.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 169218784,
               "sha256": "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad",
@@ -1696,8 +1696,8 @@
             {
               "assetId": "rt-detr-r50vd-raw-query-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/detr.apache-paddledetection.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/detr.apache-paddledetection.LICENSE.txt",
               "relativePath": "bundle/source/licenses/apache-paddledetection.txt",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1736,7 +1736,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1763,8 +1763,8 @@
             {
               "assetId": "sam-v1-vit-b-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/sam-v1-vit-b.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/sam-v1-vit-b.modelpack.json",
               "relativePath": "sam-v1-vit-b.modelpack.json",
               "size": 3426,
               "sha256": "b924955b0fa18480994e8e78d851590153fa416efb27e5aa55d7a9282c81a6aa",
@@ -1774,8 +1774,8 @@
             {
               "assetId": "sam-v1-vit-b-image-encoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/sam-v1-vit-b.image-encoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/sam-v1-vit-b.image-encoder.onnx",
               "relativePath": "sam-v1-vit-b/image-encoder.onnx",
               "size": 359210513,
               "sha256": "95ea8873d6dbbf1226bf124f56930c1652c09c19f84c032b3721979699a21c3a",
@@ -1785,8 +1785,8 @@
             {
               "assetId": "sam-v1-vit-b-prompt-mask-decoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/sam-v1-vit-b.prompt-mask-decoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/sam-v1-vit-b.prompt-mask-decoder.onnx",
               "relativePath": "sam-v1-vit-b/prompt-mask-decoder.onnx",
               "size": 16496903,
               "sha256": "b520bc95e049862bde768b959c124d6c2a53436df81bf9c5e8689f6e406ba21a",
@@ -1796,8 +1796,8 @@
             {
               "assetId": "sam-v1-vit-b-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/sam-v1-vit-b.LICENSE",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/sam-v1-vit-b.LICENSE",
               "relativePath": "sam-v1-vit-b/LICENSE",
               "size": 11357,
               "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1837,7 +1837,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -1863,8 +1863,8 @@
             {
               "assetId": "clip-vit-b-32-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.modelpack.json",
               "relativePath": "clip-vit-b-32.modelpack.json",
               "size": 3832,
               "sha256": "9836885b0c76ee36b58b16b68fb68d5e704c5e852abfe0ebe836d1faa4a74c37",
@@ -1874,8 +1874,8 @@
             {
               "assetId": "clip-vit-b-32-image-encoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.image-encoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.image-encoder.onnx",
               "relativePath": "clip/image-encoder.onnx",
               "size": 351593168,
               "sha256": "51e6e8f7c1d0f43c9434751d55238bba6cd6fde02865a4839683f82928e30963",
@@ -1885,8 +1885,8 @@
             {
               "assetId": "clip-vit-b-32-text-encoder.onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.text-encoder.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.text-encoder.onnx",
               "relativePath": "clip/text-encoder.onnx",
               "size": 253943687,
               "sha256": "e167dd8f5510fb1bf6cdf6458f0582e69f27abacd123fe660b93ca90db4be3a8",
@@ -1896,8 +1896,8 @@
             {
               "assetId": "clip-vit-b-32-preprocessor-config.json",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.preprocessor_config.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.preprocessor_config.json",
               "relativePath": "clip/preprocessor_config.json",
               "size": 316,
               "sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd",
@@ -1907,8 +1907,8 @@
             {
               "assetId": "clip-vit-b-32-tokenizer.json",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.tokenizer.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.tokenizer.json",
               "relativePath": "clip/tokenizer.json",
               "size": 2224041,
               "sha256": "b556ac8c99757ffb677208af34bc8c6721572114111a6e0aaf5fa69ff0b8d842",
@@ -1918,8 +1918,8 @@
             {
               "assetId": "clip-vit-b-32-vocab.json",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.vocab.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.vocab.json",
               "relativePath": "clip/vocab.json",
               "size": 862328,
               "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363",
@@ -1929,8 +1929,8 @@
             {
               "assetId": "clip-vit-b-32-merges.txt",
               "kind": "other",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.merges.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.merges.txt",
               "relativePath": "clip/merges.txt",
               "size": 524657,
               "sha256": "f526393189112391ce6f9795d4695f704121ce452c3aad1f5335cc41337eba85",
@@ -1940,8 +1940,8 @@
             {
               "assetId": "clip-vit-b-32-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/clip-vit-b-32.LICENSE",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.LICENSE",
               "relativePath": "clip/LICENSE",
               "size": 1064,
               "sha256": "987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db",
@@ -1985,7 +1985,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2009,8 +2009,8 @@
             {
               "assetId": "yolo-v10-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v10-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v10-detect-n.modelpack.json",
               "relativePath": "yolo-v10-detect-n.modelpack.json",
               "size": 2898,
               "sha256": "376ca22a04c8427030b58697e8331f09e29c50a3c69509faebf599e5ca8905fb",
@@ -2020,8 +2020,8 @@
             {
               "assetId": "yolo-v10-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v10-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v10-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 9454100,
               "sha256": "908f513fda6e38eeb4230d53d1fcea1d7e068b8cec4b7bbd4e818f704320ca81",
@@ -2031,8 +2031,8 @@
             {
               "assetId": "yolo-v10-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2071,7 +2071,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2095,8 +2095,8 @@
             {
               "assetId": "yolo-v11-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-detect-n.modelpack.json",
               "relativePath": "yolo-v11-detect-n.modelpack.json",
               "size": 2923,
               "sha256": "384c21f1e785bd77b5b25cdcbe54cca62195b37346e96f33a849fd3671f0fbb6",
@@ -2106,8 +2106,8 @@
             {
               "assetId": "yolo-v11-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 10720330,
               "sha256": "7060132736a0e5856a8b91d68fd7558ac6daf8c5fb7cec46dbc9cb034f8409c3",
@@ -2117,8 +2117,8 @@
             {
               "assetId": "yolo-v11-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2157,7 +2157,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2181,8 +2181,8 @@
             {
               "assetId": "yolo-v11-obb-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-obb-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-obb-s.modelpack.json",
               "relativePath": "yolo-v11-obb-s.modelpack.json",
               "size": 2523,
               "sha256": "04872268b036546e413012acce8ee402f7f21ecad800f80de3b6ad848e99daa1",
@@ -2192,8 +2192,8 @@
             {
               "assetId": "yolo-v11-obb-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-obb-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-obb-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 39172187,
               "sha256": "50ae0e11b742007fcd297408382be94a25c884093d63dce00ead62f37ea2cad0",
@@ -2203,8 +2203,8 @@
             {
               "assetId": "yolo-v11-obb-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2243,7 +2243,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2267,8 +2267,8 @@
             {
               "assetId": "yolo-v11-pose-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-pose-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-pose-s.modelpack.json",
               "relativePath": "yolo-v11-pose-s.modelpack.json",
               "size": 2496,
               "sha256": "b41b95f71a47099ca66356ee5f4eba9d0e7a5e8b83293f4f5eced7e88669a0d1",
@@ -2278,8 +2278,8 @@
             {
               "assetId": "yolo-v11-pose-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-pose-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-pose-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 39942660,
               "sha256": "5b8d5bce3dff5ac176ea922faf14705fa46fa3b0d3a4b7974b765c355806bae5",
@@ -2289,8 +2289,8 @@
             {
               "assetId": "yolo-v11-pose-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2329,7 +2329,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2353,8 +2353,8 @@
             {
               "assetId": "yolo-v11-segment-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-segment-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-segment-s.modelpack.json",
               "relativePath": "yolo-v11-segment-s.modelpack.json",
               "size": 2518,
               "sha256": "eae86634745e7dd6af5f818ede8a640497c8cb81069727c7f3139a7ce655e2d4",
@@ -2364,8 +2364,8 @@
             {
               "assetId": "yolo-v11-segment-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v11-segment-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v11-segment-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 40657020,
               "sha256": "0707f946915fcdfdbc5438d1f45ca446e70d388805e422ac849996240880fe48",
@@ -2375,8 +2375,8 @@
             {
               "assetId": "yolo-v11-segment-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2415,7 +2415,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2439,8 +2439,8 @@
             {
               "assetId": "yolo-v12-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v12-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v12-detect-n.modelpack.json",
               "relativePath": "yolo-v12-detect-n.modelpack.json",
               "size": 2919,
               "sha256": "706d5b67ab240ede4db53866af0c8d8f24b16a4bf925b9c7f5e5f2e1ed29012d",
@@ -2450,8 +2450,8 @@
             {
               "assetId": "yolo-v12-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v12-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v12-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 10671234,
               "sha256": "9a99a764c60423ffaef870bf22687c66da284c6b2ad7f249605ced9c8a2a3e80",
@@ -2461,8 +2461,8 @@
             {
               "assetId": "yolo-v12-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2501,7 +2501,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2525,8 +2525,8 @@
             {
               "assetId": "yolo-v13-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v13-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v13-detect-n.modelpack.json",
               "relativePath": "yolo-v13-detect-n.modelpack.json",
               "size": 2909,
               "sha256": "81a75dd3dc8c5ac7d8d5c3ef5cc3c2720480380e0cadddaa0101cca61470b21e",
@@ -2536,8 +2536,8 @@
             {
               "assetId": "yolo-v13-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v13-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v13-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 10310579,
               "sha256": "a589a4e351e9f9be6712ba4d6831cfbcc16b7ac58d6498c02a8386eca828cf80",
@@ -2547,8 +2547,8 @@
             {
               "assetId": "yolo-v13-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-yolov12-13.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-yolov12-13.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-yolov12-13.txt",
               "size": 34523,
               "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
@@ -2587,7 +2587,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2611,8 +2611,8 @@
             {
               "assetId": "yolo-v26-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-detect-n.modelpack.json",
               "relativePath": "yolo-v26-detect-n.modelpack.json",
               "size": 2911,
               "sha256": "fc32549e457c19257ba65b6ae9977ccf57afeaf3beec15d67b868d2801b698e7",
@@ -2622,8 +2622,8 @@
             {
               "assetId": "yolo-v26-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 9941955,
               "sha256": "bd169d41c0c04abe18bc1ea6220ff295cf77a38c165071b1acc76ee6ef0c10c4",
@@ -2633,8 +2633,8 @@
             {
               "assetId": "yolo-v26-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2673,7 +2673,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2697,8 +2697,8 @@
             {
               "assetId": "yolo-v26-obb-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-obb-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-obb-s.modelpack.json",
               "relativePath": "yolo-v26-obb-s.modelpack.json",
               "size": 2512,
               "sha256": "94c07b9fbfa59e88f53724dd96ff22987321d91596fc72648156f68a2b592f72",
@@ -2708,8 +2708,8 @@
             {
               "assetId": "yolo-v26-obb-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-obb-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-obb-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 39438174,
               "sha256": "bbc7c924dcac9e94888ef706f7aa5648cbc38f5fbd4c8a360401ebee7be955df",
@@ -2719,8 +2719,8 @@
             {
               "assetId": "yolo-v26-obb-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2759,7 +2759,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2783,8 +2783,8 @@
             {
               "assetId": "yolo-v26-pose-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-pose-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-pose-s.modelpack.json",
               "relativePath": "yolo-v26-pose-s.modelpack.json",
               "size": 2497,
               "sha256": "02af0f89d05d85c21bbf28228a4e980144097079413f7dea5292b197d9e2be4f",
@@ -2794,8 +2794,8 @@
             {
               "assetId": "yolo-v26-pose-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-pose-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-pose-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 41859220,
               "sha256": "55c609d18dc635b54a91c8f038d29138a421a4f8e700f645c78779fe6080ddcc",
@@ -2805,8 +2805,8 @@
             {
               "assetId": "yolo-v26-pose-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2845,7 +2845,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2869,8 +2869,8 @@
             {
               "assetId": "yolo-v26-segment-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-segment-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-segment-s.modelpack.json",
               "relativePath": "yolo-v26-segment-s.modelpack.json",
               "size": 2521,
               "sha256": "1fda518d8c3b65b1912a8863519e00db826eb5ab675c28f1d66f42d6613ba7c9",
@@ -2880,8 +2880,8 @@
             {
               "assetId": "yolo-v26-segment-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v26-segment-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-segment-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 41912261,
               "sha256": "79682f271d30833adfe97c97572cd85d348eb1636be8d5b13009ae48e51dbd6f",
@@ -2891,8 +2891,8 @@
             {
               "assetId": "yolo-v26-segment-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -2931,7 +2931,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -2955,8 +2955,8 @@
             {
               "assetId": "yolo-v5-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v5-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v5-detect-n.modelpack.json",
               "relativePath": "yolo-v5-detect-n.modelpack.json",
               "size": 2920,
               "sha256": "691ab048fad2ccc5d82b418f2efc03d560dba141a20d92f2c28030c46bd1c820",
@@ -2966,8 +2966,8 @@
             {
               "assetId": "yolo-v5-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v5-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v5-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 7903142,
               "sha256": "1cad0ece41bc351e2e1a3bd9b244dc4219f1b7b4d322928f13b6e7d19a00ef9d",
@@ -2977,8 +2977,8 @@
             {
               "assetId": "yolo-v5-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3017,7 +3017,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3041,8 +3041,8 @@
             {
               "assetId": "yolo-v5-segment-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v5-segment-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v5-segment-s.modelpack.json",
               "relativePath": "yolo-v5-segment-s.modelpack.json",
               "size": 2534,
               "sha256": "e469304eb84802b9327fd613c07d38728fbc7fbe301c61246ac9c1aa5697297a",
@@ -3052,8 +3052,8 @@
             {
               "assetId": "yolo-v5-segment-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v5-segment-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v5-segment-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 30897895,
               "sha256": "ab44adf19119521f4764966a48f76fbac9125d22f5db776589bf049b49267576",
@@ -3063,8 +3063,8 @@
             {
               "assetId": "yolo-v5-segment-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.gpl-yolo-family.LICENSE.txt",
               "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
               "size": 35149,
               "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -3103,7 +3103,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3127,8 +3127,8 @@
             {
               "assetId": "yolo-v6-detect-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v6-detect-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v6-detect-s.modelpack.json",
               "relativePath": "yolo-v6-detect-s.modelpack.json",
               "size": 2910,
               "sha256": "ffd5cf0388152cb86bafdfe81b9f2f9efce3cc7233db4bfc185349458bf2a396",
@@ -3138,8 +3138,8 @@
             {
               "assetId": "yolo-v6-detect-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v6-detect-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v6-detect-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 69046664,
               "sha256": "f6fddae83fb23ff02578d5b5e9f4eb9d68b5d8e7f469bb80edf4041681c757f6",
@@ -3149,8 +3149,8 @@
             {
               "assetId": "yolo-v6-detect-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.gpl-yolo-family.LICENSE.txt",
               "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
               "size": 35149,
               "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -3189,7 +3189,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3213,8 +3213,8 @@
             {
               "assetId": "yolo-v7-detect-base-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v7-detect-base.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v7-detect-base.modelpack.json",
               "relativePath": "yolo-v7-detect-base.modelpack.json",
               "size": 2910,
               "sha256": "5c0496cbaca9267855502e99bec731e88718debf752c390c8ca4bce82b381eee",
@@ -3224,8 +3224,8 @@
             {
               "assetId": "yolo-v7-detect-base-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v7-detect-base.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v7-detect-base.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 147764877,
               "sha256": "8ee07ed4aa95070ae1c9e7a37c2407c2aa065e989f887cb1193bcb117603c641",
@@ -3235,8 +3235,8 @@
             {
               "assetId": "yolo-v7-detect-base-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.gpl-yolo-family.LICENSE.txt",
               "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
               "size": 35149,
               "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -3275,7 +3275,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3299,8 +3299,8 @@
             {
               "assetId": "yolo-v8-classify-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-classify-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-classify-s.modelpack.json",
               "relativePath": "yolo-v8-classify-s.modelpack.json",
               "size": 2513,
               "sha256": "87c33cd8d2391712b2a51135b2f94cd343d8a740a961df6080e057b2b460c2c5",
@@ -3310,8 +3310,8 @@
             {
               "assetId": "yolo-v8-classify-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-classify-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-classify-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 25460947,
               "sha256": "6d7265a72c1a9006e4faaf8ada744fbf72c32d53e6def3be05c125407adfdcee",
@@ -3321,8 +3321,8 @@
             {
               "assetId": "yolo-v8-classify-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3361,7 +3361,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3385,8 +3385,8 @@
             {
               "assetId": "yolo-v8-detect-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-detect-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-detect-n.modelpack.json",
               "relativePath": "yolo-v8-detect-n.modelpack.json",
               "size": 2920,
               "sha256": "4b6cb5a3eb5888edfd612af1706640a8ef3b25364489a79856a1d24ba2d217d1",
@@ -3396,8 +3396,8 @@
             {
               "assetId": "yolo-v8-detect-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-detect-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-detect-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 12836453,
               "sha256": "50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4",
@@ -3407,8 +3407,8 @@
             {
               "assetId": "yolo-v8-detect-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3447,7 +3447,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3471,8 +3471,8 @@
             {
               "assetId": "yolo-v8-obb-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-obb-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-obb-s.modelpack.json",
               "relativePath": "yolo-v8-obb-s.modelpack.json",
               "size": 2519,
               "sha256": "34d9f8ed43c97bc5333ab7bd69d6e5103c23f038e9baa1aa765ddb84be35ee5d",
@@ -3482,8 +3482,8 @@
             {
               "assetId": "yolo-v8-obb-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-obb-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-obb-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 45980835,
               "sha256": "2bbf67f4cbab45e18779f9a0b602a71cd9f266cb8d34f8df5bd3e8ab4bdcb981",
@@ -3493,8 +3493,8 @@
             {
               "assetId": "yolo-v8-obb-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3533,7 +3533,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3557,8 +3557,8 @@
             {
               "assetId": "yolo-v8-pose-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-pose-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-pose-s.modelpack.json",
               "relativePath": "yolo-v8-pose-s.modelpack.json",
               "size": 2492,
               "sha256": "3a6ca12d5eb4f627c35225b291f5abdb5eaab771e0be887c8d39031c6d007ffa",
@@ -3568,8 +3568,8 @@
             {
               "assetId": "yolo-v8-pose-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-pose-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-pose-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 46787174,
               "sha256": "253504de521c91115afba4dcee4c77d23a7a0a87b8f8101b170d6cae4f9c302b",
@@ -3579,8 +3579,8 @@
             {
               "assetId": "yolo-v8-pose-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3619,7 +3619,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3643,8 +3643,8 @@
             {
               "assetId": "yolo-v8-segment-n-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-segment-n.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-segment-n.modelpack.json",
               "relativePath": "yolo-v8-segment-n.modelpack.json",
               "size": 2518,
               "sha256": "87b59579fe7de87632c90dfd19e27dc90d5fb51fcea4af588fc3a49c52835a42",
@@ -3654,8 +3654,8 @@
             {
               "assetId": "yolo-v8-segment-n-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v8-segment-n.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-segment-n.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 13821992,
               "sha256": "986ba70310322ad2d5aec429c4a07d27d3a1c1f5a4eb8f9127ae7c2d358be5c2",
@@ -3665,8 +3665,8 @@
             {
               "assetId": "yolo-v8-segment-n-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.agpl-ultralytics.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.agpl-ultralytics.LICENSE.txt",
               "relativePath": "bundle/source/licenses/agpl-ultralytics.txt",
               "size": 34523,
               "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
@@ -3705,7 +3705,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3729,8 +3729,8 @@
             {
               "assetId": "yolo-v9-detect-s-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v9-detect-s.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v9-detect-s.modelpack.json",
               "relativePath": "yolo-v9-detect-s.modelpack.json",
               "size": 2905,
               "sha256": "56cc4c3345840f6cef088ff97ea7a65b80b871a1848c82ef4efcebf5f5472c3d",
@@ -3740,8 +3740,8 @@
             {
               "assetId": "yolo-v9-detect-s-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v9-detect-s.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v9-detect-s.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 29153318,
               "sha256": "e985aab9f5031b5e34e1846b1ed9535de23e77b792c70680010979eb5d98f6c7",
@@ -3751,8 +3751,8 @@
             {
               "assetId": "yolo-v9-detect-s-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.gpl-yolo-family.LICENSE.txt",
               "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
               "size": 35149,
               "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -3791,7 +3791,7 @@
       "release": {
         "owner": "guojin-yan",
         "repository": "DeploySharp",
-        "tag": "models-20260903.visual.1",
+        "tag": "models-visual.1",
         "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a"
       },
       "artifacts": [
@@ -3815,8 +3815,8 @@
             {
               "assetId": "yolo-v9-segment-c-modelpack",
               "kind": "manifest",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v9-segment-c.modelpack.json",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v9-segment-c.modelpack.json",
               "relativePath": "yolo-v9-segment-c.modelpack.json",
               "size": 2514,
               "sha256": "621b23e7f1a9e31c48abbce4609d01d9762e2fcd2d968e14788df94c4d2e4482",
@@ -3826,8 +3826,8 @@
             {
               "assetId": "yolo-v9-segment-c-model-onnx",
               "kind": "model",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo-v9-segment-c.model.onnx",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v9-segment-c.model.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 110001237,
               "sha256": "2cc4ea632009115d72f30841d7295d5ca064cc9697a2fb4efbea3ce41ac0a2a0",
@@ -3837,8 +3837,8 @@
             {
               "assetId": "yolo-v9-segment-c-license",
               "kind": "license",
-              "releaseTag": "models-20260903.visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-20260903.visual.1/yolo.gpl-yolo-family.LICENSE.txt",
+              "releaseTag": "models-visual.1",
+              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo.gpl-yolo-family.LICENSE.txt",
               "relativePath": "bundle/source/licenses/gpl-yolo-family.txt",
               "size": 35149,
               "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
