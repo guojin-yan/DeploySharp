@@ -46,6 +46,15 @@
     .reset-row { display: flex; gap: 8px; align-items: center; margin-top: 13px; }
     .reset-row .hint { margin: 0; }
     .evidence-head { margin-top: 19px; }
+    .readiness-panel { margin: 18px 0 12px; padding: 11px; border: 1px solid #e5eaf6; border-radius: 9px; background: #fbfcff; }
+    .readiness-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink); font-size: 11px; }
+    .readiness-head .status-tag { flex: 0 0 auto; }
+    .readiness-list { display: grid; gap: 7px; margin-top: 10px; }
+    .readiness-item { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 7px; align-items: start; color: #65728b; font-size: 10px; line-height: 1.45; }
+    .readiness-item::before { content: '✓'; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #e6f7ef; color: #198a63; font-size: 10px; font-weight: 800; }
+    .readiness-item.attention::before { content: '!'; background: #fff3dc; color: #bd7414; }
+    .readiness-item.blocked::before { content: '!'; background: #fde9e8; color: #c34b4b; }
+    .readiness-item b { color: #44516f; margin-right: 5px; }
     @@media(max-width:1180px) { .workbench { grid-template-columns: 1fr; } }
     @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } .model-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @@media(max-width:430px) { .settings-grid, .three-col, .model-evidence-grid { grid-template-columns: 1fr; } }
@@ -78,7 +87,7 @@
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
             <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@(selectedReleaseModel.Inputs.Count == 0 ? "未声明" : string.Join("; ", selectedReleaseModel.Inputs.Select(input => input.Name + " " + string.Join("×", input.Shape))))</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
         }
-        <label>本地 ONNX 模型路径<input @bind="modelPath" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
+        <label>本地 ONNX 模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
         <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
         @if (testImages.Count > 0)
         {
@@ -95,7 +104,7 @@
             @if (downloadingImage) { <progress value="@imageDownloadProgress" max="1"></progress> }
         }
         <details class="settings-group" open><summary>输入与预处理 <span>真实影响图像张量</span></summary>
-            <label>命名 Tensor JSON<textarea @bind="tensorJson" placeholder="无图像时例如 [1,2,3]；上传图片后自动生成图像张量"></textarea></label>
+            <label>命名 Tensor JSON<textarea @bind="tensorJson" @bind:after="MarkCustomParameters" placeholder="无图像时例如 [1,2,3]；上传图片后自动生成图像张量"></textarea></label>
             <div class="two-col"><label>Tensor 名称<input @bind="tensorName" @bind:after="MarkCustomParameters" /></label><label>Tensor 形状<input @bind="tensorShape" @bind:after="MarkCustomParameters" /></label></div>
             <div class="settings-grid"><label>缩放模式<select @bind="resizeMode" @bind:after="MarkCustomParameters"><option value="stretch">Stretch · 拉伸</option><option value="pad">Pad · 等比填充</option><option value="crop">Crop · 居中裁剪</option></select></label><label>颜色顺序<select @bind="colorOrder" @bind:after="MarkCustomParameters"><option value="rgb">RGB</option><option value="bgr">BGR</option></select></label></div>
             <div class="settings-grid"><label>像素缩放<input type="number" step="any" @bind="imageScale" @bind:after="MarkCustomParameters" /></label><label>填充像素<input type="number" min="0" max="255" step="1" @bind="padValue" @bind:after="MarkCustomParameters" /></label></div>
@@ -112,6 +121,10 @@
             <div class="settings-grid"><label>原生日志 ID<input @bind="logId" @bind:after="MarkCustomParameters" placeholder="可选，便于筛选日志" /></label><label>Profiling 输出前缀<input @bind="profilingOutputPathPrefix" @bind:after="MarkCustomParameters" placeholder="启用 profiling 时可选" /></label></div>
             <div class="settings-grid"><label class="check-label"><input type="checkbox" @bind="enableMemoryPattern" @bind:after="MarkCustomParameters" />启用 Memory Pattern</label><label class="check-label"><input type="checkbox" @bind="enableCpuMemoryArena" @bind:after="MarkCustomParameters" />启用 CPU Memory Arena</label><label class="check-label"><input type="checkbox" @bind="enableProfiling" @bind:after="MarkCustomParameters" />启用 Core Profiling</label></div>
         </details>
+        <div class="readiness-panel">
+            <div class="readiness-head"><b>运行前检查</b><span class="status-tag @(readinessChecks.All(check => check.Ready) ? "" : "orange-tag")">@readinessHeadline</span></div>
+            <div class="readiness-list">@foreach (ReadinessCheck check in readinessChecks) { <div class="readiness-item @(check.Ready ? check.Attention ? "attention" : "" : "blocked")"><span><b>@check.Label</b>@check.Detail</span></div> }</div>
+        </div>
         <button class="primary wide" disabled="@busy" @onclick="RunAsync">@(busy ? "运行中…" : "运行推理 →")</button>
         <button class="ghost wide" disabled="@(!busy)" @onclick="Cancel">取消当前运行</button>
         <div class="hint">真实推理会校验模型路径、图片尺寸、命名输入、native runtime 和 ABI；没有图片且未提供 tensor 时不会伪造测试输入。CUDA 请求会明确返回不可用，不会回退到 CPU。</div>
@@ -202,6 +215,8 @@
     private VisualReleaseModel? selectedReleaseModel => releaseModels.FirstOrDefault(model => string.Equals(model.Id, selectedModelId, StringComparison.OrdinalIgnoreCase));
     private VisualTestImage? selectedTestImage => testImages.FirstOrDefault(image => string.Equals(image.Id, selectedTestImageId, StringComparison.OrdinalIgnoreCase));
     private VisualTestImage? effectiveTestImage => selectedTestImage ?? (selectedReleaseModel is null ? null : TestImageCatalog.FindDefault(testImages, selectedReleaseModel.Task, selectedReleaseModel.DisplayName));
+    private IReadOnlyList<ReadinessCheck> readinessChecks => BuildReadinessChecks();
+    private string readinessHeadline => readinessChecks.All(check => check.Ready) ? (readinessChecks.Any(check => check.Attention) ? "可运行 · 有待处理项" : "可运行") : "需要处理";
 
     protected override async Task OnInitializedAsync()
     {
@@ -300,6 +315,60 @@
         modelPath = model.Cached && File.Exists(cachedPath) ? cachedPath : string.Empty;
         usingRecommendedParameters = true;
     }
+
+    private IReadOnlyList<ReadinessCheck> BuildReadinessChecks()
+    {
+        VisualReleaseModel? model = selectedReleaseModel;
+        bool isDemo = string.Equals(selectedModelId, "demo/yolo-v8-n", StringComparison.OrdinalIgnoreCase);
+        bool isOnnx = string.Equals(selectedBackend, "deploysharp.backend.onnxruntime", StringComparison.OrdinalIgnoreCase);
+        var checks = new List<ReadinessCheck>();
+
+        if (isDemo)
+            checks.Add(new ReadinessCheck(true, "模型", "Demo 使用 FakeModelRunner；成功结果不代表真实 ONNX 推理。", true));
+        else if (model is not null && !string.Equals(model.Format, "onnx", StringComparison.OrdinalIgnoreCase))
+            checks.Add(new ReadinessCheck(false, "模型", "当前 Engine 只接入 ONNX 格式，目录元数据不会伪装成已支持。"));
+        else if (!string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath))
+            checks.Add(new ReadinessCheck(true, "模型", "模型文件已定位：" + modelPath));
+        else if (model is not null)
+            checks.Add(new ReadinessCheck(true, "模型", "首次运行会下载并校验 release 模型。", true));
+        else if (string.IsNullOrWhiteSpace(modelPath))
+            checks.Add(new ReadinessCheck(false, "模型", "请填写存在的本地 .onnx 路径。"));
+        else
+            checks.Add(new ReadinessCheck(false, "模型", "找不到指定模型文件：" + modelPath));
+
+        if (imagePath is not null && File.Exists(imagePath))
+            checks.Add(new ReadinessCheck(true, "输入", "真实图像已准备：" + imageFileName));
+        else if (!string.IsNullOrWhiteSpace(tensorJson) && !string.IsNullOrWhiteSpace(modelPath))
+            checks.Add(new ReadinessCheck(true, "输入", "将使用命名 Tensor JSON；形状和数值在运行时校验。"));
+        else if (model is not null && effectiveTestImage is not null)
+            checks.Add(new ReadinessCheck(true, "输入", "未上传图片，运行前会下载并校验默认测试图像 " + effectiveTestImage.FileName + "。", true));
+        else if (isDemo)
+            checks.Add(new ReadinessCheck(true, "输入", "Demo 不要求真实图像输入。", true));
+        else
+            checks.Add(new ReadinessCheck(false, "输入", "请上传图像，或同时提供模型路径和 Tensor JSON。"));
+
+        if (!isOnnx)
+            checks.Add(new ReadinessCheck(false, "后端", "当前页面的真实 Engine 只支持 ONNX Runtime。"));
+        else if (string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
+            checks.Add(new ReadinessCheck(false, "设备", "CUDA 当前明确不可用，需由 Worker 承载；不会回退到 CPU。"));
+        else
+            checks.Add(new ReadinessCheck(true, "设备", "ONNX Runtime CPU 进程内执行，运行时仍会进行 native preflight。"));
+
+        checks.Add(new ReadinessCheck(IsShapeValid(), "张量形状", IsShapeValid() ? "当前为 " + tensorShape + "。" : "形状必须是逗号分隔的正整数，例如 1,3,640,640。"));
+        checks.Add(new ReadinessCheck(IsTimeoutValid(), "超时", IsTimeoutValid() ? "超时范围为 1 到 3600 秒。" : "超时必须是 1 到 3600 秒之间的整数。"));
+        return checks;
+    }
+
+    private bool IsShapeValid()
+    {
+        try { return ParseShape().Length > 0 && ParseShape().All(value => value > 0); }
+        catch (FormatException) { return false; }
+        catch (OverflowException) { return false; }
+    }
+
+    private bool IsTimeoutValid() => int.TryParse(timeoutSeconds, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int seconds) && seconds is >= 1 and <= 3600;
+
+    private sealed record ReadinessCheck(bool Ready, string Label, string Detail, bool Attention = false);
 
     private async Task HandleImageSelected(InputFileChangeEventArgs args)
     {

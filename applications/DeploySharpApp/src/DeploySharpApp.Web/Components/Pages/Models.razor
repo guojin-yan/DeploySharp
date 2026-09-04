@@ -3,6 +3,14 @@
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
 <PageTitle>模型与后端 · DeploySharpApp</PageTitle>
+<style>
+    .catalog-toolbar { display: grid; grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1fr) auto auto; gap: 10px; align-items: end; margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcff; }
+    .catalog-toolbar label { color: #748098; font-size: 10px; font-weight: 800; }
+    .catalog-toolbar input, .catalog-toolbar select { display: block; width: 100%; min-width: 0; margin-top: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; }
+    .catalog-toolbar .count { align-self: center; color: #778198; font-size: 10px; white-space: nowrap; }
+    @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } }
+    @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
+</style>
 <div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="Refresh">刷新目录 ↻</button></div>
 <div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
 @if (tab == CatalogTab.Backends)
@@ -13,7 +21,20 @@ else if (tab == CatalogTab.Models)
 {
     @if (releaseLoading) { <p class="hint">正在读取 GitHub release 模型清单…</p> }
     @if (!string.IsNullOrWhiteSpace(releaseError)) { <p class="hint">release 清单暂时不可用：@releaseError</p> }
-    <div class="plugin-grid">@foreach (var model in Service.Models) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo gray">M</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "本地文件")</span><span>@string.Join(", ", model.RecommendedBackends)</span></div></article> }@foreach (VisualReleaseModel model in releaseModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo">ON</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="model-card-meta">精度 @model.Precision · 量化 @model.Quantization · opset @(model.Opset?.ToString() ?? "未声明")<br />预处理：@model.Preprocessing<br />验证：@model.ValidationStatus</div><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "首次运行下载")</span><span>@model.PrimaryFile.Sha256[..Math.Min(10, model.PrimaryFile.Sha256.Length)]…</span></div></article> }</div>
+    <div class="catalog-toolbar">
+        <label>搜索模型<input @bind="modelSearch" placeholder="名称、ID、任务或格式" /></label>
+        <label>任务<select @bind="taskFilter"><option value="">全部任务</option>@foreach (string task in ReleaseTasks) { <option value="@task">@task</option> }</select></label>
+        <span class="count">显示 @FilteredCount / @TotalCount 个模型</span>
+        <button class="ghost small" @onclick="ClearFilters" disabled="@(string.IsNullOrWhiteSpace(modelSearch) && string.IsNullOrWhiteSpace(taskFilter))">清除筛选</button>
+    </div>
+    @if (FilteredCount == 0)
+    {
+        <div class="dropzone"><strong>没有匹配的模型</strong><span>试试清除筛选，或按任务、格式搜索。</span></div>
+    }
+    else
+    {
+        <div class="plugin-grid">@foreach (var model in FilteredBuiltinModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo gray">M</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "本地文件")</span><span>@string.Join(", ", model.RecommendedBackends)</span></div></article> }@foreach (VisualReleaseModel model in FilteredReleaseModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo">ON</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="model-card-meta">精度 @model.Precision · 量化 @model.Quantization · opset @(model.Opset?.ToString() ?? "未声明")<br />预处理：@model.Preprocessing<br />验证：@model.ValidationStatus</div><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "首次运行下载")</span><span>@model.PrimaryFile.Sha256[..Math.Min(10, model.PrimaryFile.Sha256.Length)]…</span></div></article> }</div>
+    }
 }
 else
 {
@@ -24,6 +45,13 @@ else
     private readonly List<VisualReleaseModel> releaseModels = new();
     private bool releaseLoading = true;
     private string? releaseError;
+    private string modelSearch = string.Empty;
+    private string taskFilter = string.Empty;
+    private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
+    private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
+    private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
+    private int FilteredCount => FilteredBuiltinModels.Count() + FilteredReleaseModels.Count();
+    private int TotalCount => Service.Models.Count() + releaseModels.Count;
     protected override async Task OnInitializedAsync()
     {
         try { releaseModels.AddRange(await ReleaseCatalog.GetModelsAsync()); }
@@ -31,6 +59,13 @@ else
         finally { releaseLoading = false; }
     }
     private void Refresh() => Service.RefreshCatalog();
+    private void ClearFilters() { modelSearch = string.Empty; taskFilter = string.Empty; }
+    private bool Matches(string displayName, string id, string task, string format)
+    {
+        if (!string.IsNullOrWhiteSpace(taskFilter) && !string.Equals(task, taskFilter, StringComparison.OrdinalIgnoreCase)) return false;
+        if (string.IsNullOrWhiteSpace(modelSearch)) return true;
+        return string.Join(' ', displayName, id, task, format).Contains(modelSearch.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
     private static string Logo(AppBackendInfo backend) => backend.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase) ? "ON" : backend.Id.Contains("opencv", StringComparison.OrdinalIgnoreCase) ? "CV" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) ? "OV" : backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "Q" : backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "TRT" : "＋";
     private static string LogoClass(AppBackendInfo backend) => backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "purple" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) || backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "orange" : "";
     private enum CatalogTab { Backends, Models, Runtime }
