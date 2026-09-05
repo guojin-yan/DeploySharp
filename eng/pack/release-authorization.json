@@ -2,11 +2,11 @@
   "schemaVersion": "1.0",
   "packageVersion": "2.0.0-alpha.1",
   "publication": {
-    "status": "not-authorized",
+    "status": "authorized",
     "channel": "nuget.org",
-    "approver": null,
-    "approvedAt": null,
-    "evidenceReference": null,
+    "approver": "Guojin Yan <guojin_yjs@cumt.edu.cn>",
+    "approvedAt": "2026-09-05T10:50:08+08:00",
+    "evidenceReference": "user-authorization: DeploySharp 2.0.0-alpha.1 NuGet.org preview only; GitHub Release and GitHub Packages reserved for GA",
     "requiredEvidence": "An attributable release-owner approval that identifies the package version, NuGet channel, and publication scope."
   },
   "packageSigning": {
