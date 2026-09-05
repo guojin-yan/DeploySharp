@@ -204,6 +204,40 @@ namespace DeploySharpApp.Application.Tests
             }
         }
 
+        [TestMethod]
+        public async Task WorkerTimeoutReturnsTimedOutDiagnostic()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            using Process process = StartBackendHost();
+            try
+            {
+                await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Handshake, "timeout-handshake", payload: new Dictionary<string, string> { ["protocolVersion"] = WorkerProtocol.ProtocolVersion.ToString() }));
+                WorkerResponse handshake = await ReadResponseAsync(process, "timeout-handshake", TimeSpan.FromSeconds(10));
+                Assert.IsTrue(handshake.Succeeded);
+
+                var tensor = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]") };
+                var payload = new Dictionary<string, string>
+                {
+                    ["modelPath"] = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"),
+                    ["modelFormat"] = "onnx",
+                    ["device"] = "cpu",
+                    ["timeoutMs"] = "1",
+                    ["tensorInputsJson"] = JsonSerializer.Serialize(tensor)
+                };
+                await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Inference, "timeout-inference", "deploysharp.backend.openvino", "tests/timeout", payload));
+                WorkerResponse response = await ReadResponseAsync(process, "timeout-inference", TimeSpan.FromSeconds(10), WorkerResponseKind.Error);
+                if (response.Payload.TryGetValue("diagnosticCode", out string? code) && code == "DSAPP-WORKER-NATIVE-PREFLIGHT")
+                    Assert.Inconclusive("Native Worker runtime is unavailable: " + response.Message);
+                Assert.AreEqual("DSAPP-WORKER-TIMED-OUT", response.Payload["diagnosticCode"]);
+                Assert.AreEqual(AppRuntimeState.Unavailable.ToString(), response.Payload["state"]);
+            }
+            finally
+            {
+                try { await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Shutdown, "timeout-shutdown")); } catch (Exception) { }
+                try { if (!process.HasExited) process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
+            }
+        }
+
         private static Process StartBackendHost()
         {
             var process = new Process

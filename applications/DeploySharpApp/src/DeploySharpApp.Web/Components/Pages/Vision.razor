@@ -1,6 +1,8 @@
 @page "/vision"
+@implements IDisposable
 @using DeploySharpApp.Contracts
 @using DeploySharpApp.Application
+@using System.Security.Cryptography
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
 @inject VisualTestImageCatalogService TestImageCatalog
@@ -87,7 +89,16 @@
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
             <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@TensorContract(selectedReleaseModel.Inputs)</b></div><div><small>输出契约</small><b>@TensorContract(selectedReleaseModel.Outputs)</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
         }
-        <label>本地 ONNX 模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
+        <label>本地模型文件
+            <InputFile OnChange="HandleModelSelected" accept=".onnx,.engine,.plan" disabled="@modelUploading" />
+            <span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "可上传 .onnx；TensorRT 仅接受 .engine/.plan" : modelFileName)</span>
+        </label>
+        @if (modelUploading)
+        {
+            <div class="download-row"><span class="muted">正在上传并计算 SHA256…</span><progress value="@modelUploadProgress" max="1"></progress></div>
+        }
+        @if (!string.IsNullOrWhiteSpace(uploadedModelSha256)) { <p class="hint">本地模型 SHA256：@uploadedModelSha256</p> }
+        <label>本地模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="也可填写 Web 服务可访问的 .onnx/.engine 路径" /></label>
         <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
         @if (testImages.Count > 0)
         {
@@ -184,6 +195,11 @@
     private string padValue = "0";
     private bool usingRecommendedParameters;
     private string modelPath = string.Empty;
+    private string? uploadedModelPath;
+    private string modelFileName = string.Empty;
+    private string uploadedModelSha256 = string.Empty;
+    private bool modelUploading;
+    private double modelUploadProgress;
     private string tensorJson = string.Empty;
     private string tensorName = "images";
     private string tensorShape = "1,3,640,640";
@@ -290,7 +306,7 @@
         VisualReleaseModel? model = selectedReleaseModel;
         if (model is null)
         {
-            modelPath = string.Empty;
+            modelPath = string.Equals(selectedModelId, "local/onnx", StringComparison.OrdinalIgnoreCase) ? uploadedModelPath ?? string.Empty : string.Empty;
             return;
         }
 
@@ -339,13 +355,20 @@
         VisualReleaseModel? model = selectedReleaseModel;
         bool isDemo = string.Equals(selectedModelId, "demo/yolo-v8-n", StringComparison.OrdinalIgnoreCase);
         bool isOnnxRuntime = IsBackend("onnxruntime");
-        bool supportedVisionBackend = isOnnxRuntime || IsBackend("opencv") || IsBackend("openvino");
+        bool isTensorRt = IsBackend("tensorrt");
+        bool tensorRtArtifact = string.Equals(model?.Format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)
+            || (model is null && string.Equals(InferModelFormat(modelPath), "tensorrt-engine", StringComparison.OrdinalIgnoreCase));
+        bool supportedVisionBackend = isOnnxRuntime || IsBackend("opencv") || IsBackend("openvino") || isTensorRt && tensorRtArtifact;
         var checks = new List<ReadinessCheck>();
 
-        if (isDemo)
+        if (modelUploading)
+            checks.Add(new ReadinessCheck(false, "模型", "本地模型仍在上传和校验，请等待完成。"));
+        else if (isDemo)
             checks.Add(new ReadinessCheck(true, "模型", "Demo 使用 FakeModelRunner；成功结果不代表真实 ONNX 推理。", true));
         else if (model is not null && !string.Equals(model.Format, "onnx", StringComparison.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "模型", "当前 Engine 只接入 ONNX 格式，目录元数据不会伪装成已支持。"));
+        else if (model is null && !string.IsNullOrWhiteSpace(modelPath) && !IsLocalModelFormatCompatible(InferModelFormat(modelPath), isTensorRt))
+            checks.Add(new ReadinessCheck(false, "模型", isTensorRt ? "TensorRT 需要 .engine/.plan 设备绑定制品。" : "当前后端只接受 .onnx；TensorRT .engine/.plan 必须选择 TensorRT。"));
         else if (!string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath))
             checks.Add(new ReadinessCheck(true, "模型", "模型文件已定位：" + modelPath));
         else if (model is not null)
@@ -369,11 +392,13 @@
         if (isDemo && !isOnnxRuntime)
             checks.Add(new ReadinessCheck(false, "后端", "Demo/Fake operation 只用于 ONNX Runtime 入口；请选择真实模型后再使用 Worker 后端。"));
         else if (!supportedVisionBackend)
-            checks.Add(new ReadinessCheck(false, "后端", "该后端不能直接运行当前 ONNX artifact；TensorRT 只接受设备绑定的 tensorrt-engine。"));
+            checks.Add(new ReadinessCheck(false, "后端", isTensorRt ? "TensorRT 只接受设备绑定的 .engine/.plan 制品；不会从 ONNX 隐式构建。" : "该后端不能直接运行当前模型格式；请选择兼容后端。"));
         else if (model is not null && !model.RecommendedBackends.Contains(selectedBackend, StringComparer.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "后端", "modelpack 未声明与 " + selectedBackend + " 兼容，不会强行执行。"));
         else if (IsBackend("opencv") && (string.IsNullOrWhiteSpace(outputTensorNames) || string.IsNullOrWhiteSpace(outputTensorShapesJson) || string.IsNullOrWhiteSpace(outputTensorElementTypesJson)))
             checks.Add(new ReadinessCheck(false, "输出合同", "OpenCV DNN 需要精确输出名称、形状和元素类型；Release 模型会自动填充，本地模型需手动填写。"));
+        else if (isTensorRt && !string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
+            checks.Add(new ReadinessCheck(false, "设备", "TensorRT engine 必须使用 CUDA；CPU 不会加载设备绑定制品。"));
         else if (string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "设备", "当前选择不具备已验证的 CUDA provider；不会回退到 CPU。"));
         else if (IsWorkerVisionBackend)
@@ -411,6 +436,68 @@
         imageFromRelease = false;
         await SetImagePreviewAsync(imagePath, file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType);
         runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
+    }
+
+    private async Task HandleModelSelected(InputFileChangeEventArgs args)
+    {
+        IBrowserFile file = args.File;
+        string extension = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (extension is not ".onnx" and not ".engine" and not ".plan")
+        {
+            runtimeMessage = "视觉页只接受 .onnx；TensorRT 设备制品使用 .engine 或 .plan。";
+            return;
+        }
+        const long maxModelUploadBytes = 4L * 1024 * 1024 * 1024;
+        if (file.Size <= 0 || file.Size > maxModelUploadBytes)
+        {
+            runtimeMessage = "模型文件必须大于 0 且不超过 4 GB。";
+            return;
+        }
+
+        modelUploading = true;
+        modelUploadProgress = 0;
+        string directory = Path.Combine(Path.GetTempPath(), "DeploySharpApp", "models");
+        Directory.CreateDirectory(directory);
+        string targetPath = Path.Combine(directory, Guid.NewGuid().ToString("N") + extension);
+        try
+        {
+            using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            await using Stream source = file.OpenReadStream(maxModelUploadBytes);
+            await using var destination = new FileStream(targetPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true);
+            byte[] buffer = new byte[128 * 1024];
+            long completed = 0;
+            int read;
+            while ((read = await source.ReadAsync(buffer.AsMemory())) != 0)
+            {
+                await destination.WriteAsync(buffer.AsMemory(0, read));
+                hash.AppendData(buffer, 0, read);
+                completed += read;
+                modelUploadProgress = Math.Min(1, completed / (double)file.Size);
+                await InvokeAsync(StateHasChanged);
+            }
+            await destination.FlushAsync();
+            string previous = uploadedModelPath ?? string.Empty;
+            uploadedModelPath = targetPath;
+            modelPath = targetPath;
+            modelFileName = Path.GetFileName(file.Name);
+            uploadedModelSha256 = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            selectedModelId = "local/onnx";
+            selectedTestImageId = string.Empty;
+            usingRecommendedParameters = false;
+            if (!string.IsNullOrWhiteSpace(previous) && !string.Equals(previous, targetPath, StringComparison.OrdinalIgnoreCase) && File.Exists(previous)) File.Delete(previous);
+            runtimeMessage = "本地模型已上传并通过 SHA256 计算，可以继续配置后端。";
+            Activity.Add("model-upload", "Uploaded local model " + modelFileName, "DSAPP-LOCAL-MODEL-UPLOADED");
+        }
+        catch (Exception exception)
+        {
+            if (File.Exists(targetPath)) File.Delete(targetPath);
+            runtimeMessage = "本地模型上传失败：" + exception.Message;
+            Activity.Add("model-upload", runtimeMessage, "DSAPP-LOCAL-MODEL-UPLOAD-FAILED");
+        }
+        finally
+        {
+            modelUploading = false;
+        }
     }
 
     private async Task DownloadTestImageAsync(VisualTestImage? image = null, CancellationToken cancellationToken = default)
@@ -532,7 +619,7 @@
                 if (!string.IsNullOrWhiteSpace(outputTensorShapesJson)) options["outputTensorShapesJson"] = outputTensorShapesJson;
                 if (!string.IsNullOrWhiteSpace(outputTensorElementTypesJson)) options["outputTensorElementTypesJson"] = outputTensorElementTypesJson;
             }
-            var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? "onnx"), modelSha256: selected?.PrimaryFile.Sha256, tensorInputs: tensors, options: options, timeout: ParseTimeout());
+            var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? InferModelFormat(modelPath)), modelSha256: selected?.PrimaryFile.Sha256 ?? (string.IsNullOrWhiteSpace(uploadedModelSha256) ? null : uploadedModelSha256), tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
             if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl); resultImageCaption = "原图叠加运行状态；模型原始输出见下方 JSON"; }
@@ -592,6 +679,12 @@
     private void Cancel() { cts?.Cancel(); Activity.Add("run", "Cancellation requested", "DSAPP-WEB-CANCEL-REQUESTED"); }
     private static long[] ParseShape(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
     private bool IsBackend(string token) => selectedBackend.Contains(token, StringComparison.OrdinalIgnoreCase);
+    private static string InferModelFormat(string path)
+    {
+        string extension = Path.GetExtension(path).ToLowerInvariant();
+        return extension is ".engine" or ".plan" ? "tensorrt-engine" : extension.TrimStart('.');
+    }
+    private static bool IsLocalModelFormatCompatible(string format, bool tensorRt) => tensorRt ? string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase) : string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase);
     private static string TensorContract(IReadOnlyList<VisualModelInput> tensors) => tensors.Count == 0 ? "未声明" : string.Join("; ", tensors.Select(tensor => tensor.Name + " " + tensor.ElementType + " " + string.Join("×", tensor.Shape)));
     private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F2") + " ms";
     private static string BuildResultImage(ModelRunResult output, string originalImage)
@@ -599,5 +692,15 @@
         string text = System.Security.SecurityElement.Escape(output.RunMode + " · " + output.ErrorCode) ?? "result";
         string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"420\"><rect width=\"640\" height=\"420\" fill=\"#eef1f7\"/><image href=\"" + originalImage + "\" x=\"20\" y=\"20\" width=\"600\" height=\"330\" preserveAspectRatio=\"xMidYMid meet\"/><rect x=\"20\" y=\"350\" width=\"600\" height=\"50\" fill=\"#24345f\"/><text x=\"40\" y=\"382\" fill=\"white\" font-family=\"Segoe UI\" font-size=\"18\">" + text + " · 原始输出见 JSON</text></svg>";
         return "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
+    }
+
+    public void Dispose()
+    {
+        cts?.Cancel();
+        if (!string.IsNullOrWhiteSpace(uploadedModelPath) && File.Exists(uploadedModelPath))
+        {
+            try { File.Delete(uploadedModelPath); } catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
 }

@@ -51,9 +51,9 @@ while (true)
                 response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "A native Worker operation is already active.", new Dictionary<string, string> { ["diagnosticCode"] = "DSAPP-WORKER-BUSY", ["activeRequestId"] = activeRequestId ?? string.Empty });
                 break;
             }
-            activeCancellation = CreateOperationCancellation(request.Payload);
+            activeCancellation = new CancellationTokenSource();
             activeRequestId = request.RequestId;
-            activeTask = ExecuteInferenceAsync(request, activeCancellation.Token);
+            activeTask = ExecuteInferenceAsync(request, activeCancellation);
             continue;
         case WorkerMessageKind.Benchmark:
             WorkerProbeResult benchmarkProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
@@ -89,16 +89,39 @@ activeCancellation?.Cancel();
 if (activeTask != null) await Task.WhenAny(activeTask, Task.Delay(250));
 activeCancellation?.Dispose();
 
-async Task ExecuteInferenceAsync(WorkerRequest request, CancellationToken cancellationToken)
+async Task ExecuteInferenceAsync(WorkerRequest request, CancellationTokenSource operationCancellation)
 {
     WorkerResponse response;
+    using var timeoutCancellation = new CancellationTokenSource();
     try
     {
+        // Native provider/session construction can be synchronous; keep stdin responsive for cancel/timeout messages.
+        await Task.Yield();
         WorkerProbeResult inferenceProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
         await WriteResponseAsync(Progress(request.RequestId, 0.35, "dispatch", "Worker request accepted."));
         if (inferenceProbe.Payload.TryGetValue("preflightState", out string? preflightState) && string.Equals(preflightState, AppRuntimeState.Available.ToString(), StringComparison.OrdinalIgnoreCase))
         {
-            response = await WorkerInferenceAdapter.RunAsync(request, value => WriteResponseAsync(Progress(request.RequestId, value, "inference", "Native Worker inference progress.")).GetAwaiter().GetResult(), cancellationToken);
+            Task<WorkerResponse> inferenceTask = Task.Run(() => WorkerInferenceAdapter.RunAsync(request, value => WriteResponseAsync(Progress(request.RequestId, value, "inference", "Native Worker inference progress.")).GetAwaiter().GetResult(), operationCancellation.Token));
+            Task timeoutTask = CreateTimeoutTask(request.Payload, timeoutCancellation.Token);
+            if (timeoutTask != Task.CompletedTask)
+            {
+                Task completed = await Task.WhenAny(inferenceTask, timeoutTask);
+                if (completed == timeoutTask)
+                {
+                    operationCancellation.Cancel();
+                    try { await Task.WhenAny(inferenceTask, Task.Delay(250)); } catch (OperationCanceledException) { }
+                    response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "Native Worker inference timed out.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = "DSAPP-WORKER-TIMED-OUT", ["execution"] = "worker" });
+                }
+                else
+                {
+                    timeoutCancellation.Cancel();
+                    response = await inferenceTask;
+                }
+            }
+            else
+            {
+                response = await inferenceTask;
+            }
         }
         else
         {
@@ -123,12 +146,11 @@ async Task WriteResponseAsync(WorkerResponse response)
 static WorkerResponse Progress(string requestId, double value, string stage, string message)
     => new(WorkerResponseKind.Progress, requestId, true, message, new Dictionary<string, string> { ["value"] = value.ToString(CultureInfo.InvariantCulture), ["stage"] = stage });
 
-static CancellationTokenSource CreateOperationCancellation(IReadOnlyDictionary<string, string> payload)
+static Task CreateTimeoutTask(IReadOnlyDictionary<string, string> payload, CancellationToken cancellationToken)
 {
-    var cancellation = new CancellationTokenSource();
     if (payload.TryGetValue("timeoutMs", out string? value) && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double milliseconds) && milliseconds > 0 && milliseconds <= int.MaxValue)
-        cancellation.CancelAfter(TimeSpan.FromMilliseconds(milliseconds));
-    return cancellation;
+        return Task.Delay(TimeSpan.FromMilliseconds(milliseconds), cancellationToken);
+    return Task.CompletedTask;
 }
 
 static IReadOnlyDictionary<string, string> WithLogLevel(IReadOnlyDictionary<string, string> payload)
