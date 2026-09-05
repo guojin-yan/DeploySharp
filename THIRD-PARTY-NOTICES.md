@@ -14,7 +14,7 @@ This file covers third-party software used to build or run the current `2.0.0-al
 | Microsoft.ML.Tokenizers | 2.0.0 | MIT. Source: [dotnet/machinelearning](https://github.com/dotnet/machinelearning). |
 | OnnxSharp | 0.3.2 | MIT; ONNX format parsing/manipulation dependency used by the TensorRT adapter. Source: [OnnxSharp](https://github.com/nietras/OnnxSharp). |
 | System.Text.Json | 10.0.10 central version | MIT. Source: [dotnet/runtime](https://github.com/dotnet/runtime). |
-| JYPPX.OpenVINO.CSharp.API / OpenVINO.runtime.win | 3.3.0 / 2026.2.1 | Upstream package/runtime license and notices apply; DeploySharp does not redistribute the native runtime in its managed packages. Source: [OpenVINO-CSharp-API](https://github.com/guojin-yan/OpenVINO-CSharp-API). |
+| JYPPX.OpenVINO.CSharp.API / OpenVINO.runtime.win | 3.3.1 / 2026.2.1 | Upstream package/runtime license and notices apply; DeploySharp does not redistribute the native runtime in its managed packages. Source: [OpenVINO-CSharp-API](https://github.com/guojin-yan/OpenVINO-CSharp-API). |
 | JYPPX.TensorRT.CSharp.API | 4.0.0 central dependency; exact admitted public package is reviewed in ADR 0034 | The exact managed package declares Apache-2.0; TensorRT/CUDA/cuDNN/NVIDIA driver and native bridge licenses remain consumer-owned and are not asserted here. Source: [TensorRT-CSharp-API](https://github.com/guojin-yan/TensorRT-CSharp-API). |
 | JYPPX.OpenCV.CSharp.API / JYPPX.OpenCV.runtime.win-x64 | 5.0.0-preview.1 | Upstream preview package declares Apache-2.0; native runtime remains consumer-owned. Source: [OpenCV-CSharp-API](https://github.com/guojin-yan/OpenCV-CSharp-API). |
 

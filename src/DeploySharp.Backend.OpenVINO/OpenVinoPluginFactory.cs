@@ -26,7 +26,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                     formats: backend.SupportedFormats,
                     runtimeDependencies: new[]
                     {
-                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.0"),
+                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.1"),
                         new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "OpenVINO.runtime.win", "2026.2.1", "win-x64", downloadable: true, licenseExpression: "Apache-2.0")
                     },
                     nativeRequirements: new[]

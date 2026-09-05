@@ -33,8 +33,8 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
         public static OvTensor CreateInput(ModelArtifact artifact, string name, ITensor tensor, TensorDescriptor descriptor)
         {
             ValidateRuntimeTensor(artifact, name, tensor, descriptor);
-            // Managed API 3.3.0 cannot allocate a writable rank-zero Tensor, so fail before native allocation. / Managed API 3.3.0 无法分配可写的零秩 Tensor，因此在原生分配前稳定失败。
-            if (tensor.Shape.Rank == 0) throw new OpenVinoBackendException(OpenVinoErrorCodes.TensorInvalid, "Scalar tensor inputs are not supported by JYPPX.OpenVINO.CSharp.API 3.3.0.", modelId: artifact.ModelId, tensorName: name, operation: "bind-input", technicalDetails: "rank=0;managed-api=3.3.0");
+            // Managed API 3.3.1 cannot allocate a writable rank-zero Tensor, so fail before native allocation. / Managed API 3.3.1 无法分配可写的零秩 Tensor，因此在原生分配前稳定失败。
+            if (tensor.Shape.Rank == 0) throw new OpenVinoBackendException(OpenVinoErrorCodes.TensorInvalid, "Scalar tensor inputs are not supported by JYPPX.OpenVINO.CSharp.API 3.3.1.", modelId: artifact.ModelId, tensorName: name, operation: "bind-input", technicalDetails: "rank=0;managed-api=3.3.1");
             var shape = new Shape(tensor.Shape.ToArray());
             try
             {

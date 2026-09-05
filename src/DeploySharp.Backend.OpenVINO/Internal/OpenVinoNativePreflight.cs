@@ -25,7 +25,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
                 {
                     throw new OpenVinoBackendException(
                         DeploySharpErrorCodes.NativeRuntimeUnavailable,
-                        "The loaded OpenVINO native runtime is incompatible. Install an OpenVINO 2026.2.x runtime package that matches JYPPX.OpenVINO.CSharp.API 3.3.0.",
+                        "The loaded OpenVINO native runtime is incompatible. Install an OpenVINO 2026.2.x runtime package that matches JYPPX.OpenVINO.CSharp.API 3.3.1.",
                         modelId: artifact.ModelId,
                         operation: "native-preflight",
                         technicalDetails: "required=" + RequiredVersionPrefix + ";loaded=" + build);
