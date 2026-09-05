@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DeploySharpApp.BackendHost;
 using DeploySharpApp.BackendHost.Protocol;
 using DeploySharpApp.Contracts;
 
@@ -24,20 +25,23 @@ while (true)
             response = new WorkerResponse(WorkerResponseKind.Handshake, request.RequestId, protocolCompatible, protocolCompatible ? "DeploySharpApp BackendHost ready" : "Worker protocol version mismatch.", new Dictionary<string, string> { ["protocolVersion"] = WorkerProtocol.ProtocolVersion.ToString(), ["execution"] = "worker", ["host"] = "DeploySharpApp.BackendHost" });
             break;
         case WorkerMessageKind.Capability:
-            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters are loaded only when installed in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.llamasharp,deploysharp.backend.tensorrt", ["inference"] = "adapter-required" });
+            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "adapter-required", ["probe"] = "filesystem-preflight" });
             break;
         case WorkerMessageKind.Probe:
-            response = new WorkerResponse(WorkerResponseKind.Probe, request.RequestId, false, "No native backend is loaded by BackendHost; install the selected adapter before probing.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["reason"] = "native adapter not installed", ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = "DSAPP-WORKER-ADAPTER-UNAVAILABLE" });
+            WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
+            response = new WorkerResponse(WorkerResponseKind.Probe, request.RequestId, probe.Succeeded, probe.Message, probe.Payload);
             break;
         case WorkerMessageKind.Inference:
+            WorkerProbeResult inferenceProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
             Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Progress, request.RequestId, true, "Worker request accepted.", new Dictionary<string, string> { ["value"] = "0.35", ["stage"] = "dispatch" })));
-            Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, "No native adapter was selected for this Worker operation.", new Dictionary<string, string> { ["level"] = "Warning", ["diagnosticCode"] = "DSAPP-WORKER-ADAPTER-UNAVAILABLE" })));
-            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The BackendHost Worker is reachable, but the selected native backend adapter is not installed.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = "DSAPP-WORKER-ADAPTER-UNAVAILABLE", ["action"] = "Install and probe the backend adapter in this Worker environment." });
+            Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, inferenceProbe.Message, WithLogLevel(inferenceProbe.Payload))));
+            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend adapter cannot execute this request. " + inferenceProbe.Message, inferenceProbe.Payload);
             break;
         case WorkerMessageKind.Benchmark:
+            WorkerProbeResult benchmarkProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
             Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Progress, request.RequestId, true, "Benchmark request accepted.", new Dictionary<string, string> { ["value"] = "0.35", ["stage"] = "dispatch" })));
-            Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, "Benchmark adapter is not installed in this Worker.", new Dictionary<string, string> { ["level"] = "Warning", ["diagnosticCode"] = "DSAPP-WORKER-BENCHMARK-UNAVAILABLE" })));
-            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The BackendHost Worker is reachable, but the selected native backend adapter is not installed.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = "DSAPP-WORKER-ADAPTER-UNAVAILABLE", ["action"] = "Install and probe the backend adapter in this Worker environment." });
+            Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, benchmarkProbe.Message, WithLogLevel(benchmarkProbe.Payload))));
+            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend adapter cannot benchmark this request. " + benchmarkProbe.Message, benchmarkProbe.Payload);
             break;
         case WorkerMessageKind.Cancel:
             response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "No matching Worker operation is active.", new Dictionary<string, string> { ["diagnosticCode"] = "DSAPP-WORKER-NO-ACTIVE-OPERATION" });
@@ -50,4 +54,10 @@ while (true)
             break;
     }
     Console.WriteLine(WorkerProtocol.SerializeResponse(response));
+}
+
+static IReadOnlyDictionary<string, string> WithLogLevel(IReadOnlyDictionary<string, string> payload)
+{
+    var result = new Dictionary<string, string>(payload, StringComparer.Ordinal) { ["level"] = "Warning" };
+    return result;
 }

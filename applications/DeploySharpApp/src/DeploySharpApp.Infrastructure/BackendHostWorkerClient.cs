@@ -302,9 +302,35 @@ namespace DeploySharpApp.Infrastructure
         {
             if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
                 return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: streamDiagnostics, runMode: ModelRunMode.Worker);
+            if (response.Payload.TryGetValue("state", out string? stateText) && Enum.TryParse(stateText, true, out AppRuntimeState state))
+            {
+                AppErrorCode code = state == AppRuntimeState.MissingNative ? AppErrorCode.NativeDependencyMissing : AppErrorCode.BackendUnavailable;
+                ModelRunResult structuredFailure = WorkerRuntimeFailure(request, response, state, code);
+                return streamDiagnostics.Count == 0 ? structuredFailure : WithAdditionalDiagnostics(structuredFailure, streamDiagnostics);
+            }
             bool adapterMissing = response.Message?.IndexOf("adapter", StringComparison.OrdinalIgnoreCase) >= 0 || response.Message?.IndexOf("minimal", StringComparison.OrdinalIgnoreCase) >= 0;
             ModelRunResult failure = Failure(request, adapterMissing ? AppErrorCode.WorkerRequired : AppErrorCode.WorkerFailed, response.Message ?? "Worker backend did not return a result.", adapterMissing ? "DSAPP-WORKER-ADAPTER-UNAVAILABLE" : "DSAPP-WORKER-RESPONSE-FAILED", response.Message, hostUnavailable: false);
             return streamDiagnostics.Count == 0 ? failure : WithAdditionalDiagnostics(failure, streamDiagnostics);
+        }
+
+        private static ModelRunResult WorkerRuntimeFailure(ModelRunRequest request, WorkerResponse response, AppRuntimeState state, AppErrorCode code)
+        {
+            string message = response.Message ?? "Worker backend runtime is unavailable.";
+            string diagnosticCode = response.Payload.TryGetValue("diagnosticCode", out string? value) && !string.IsNullOrWhiteSpace(value) ? value : "DSAPP-WORKER-RUNTIME-UNAVAILABLE";
+            string[] missingItems = response.Payload.TryGetValue("missingItems", out string? missing) && !string.IsNullOrWhiteSpace(missing) ? missing.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : Array.Empty<string>();
+            var diagnostic = new RuntimeDiagnostic(diagnosticCode, DiagnosticSeverity.Warning, message, request.BackendId, request.ModelId, response.Payload);
+            var status = new BackendRuntimeStatus(
+                request.BackendId,
+                state,
+                message,
+                loadedPath: Value(response.Payload, "loadedPath"),
+                rid: Value(response.Payload, "runtimeIdentifier"),
+                processArchitecture: Value(response.Payload, "processArchitecture"),
+                missingItems: missingItems,
+                suggestedAction: Value(response.Payload, "suggestedAction"),
+                details: response.Payload,
+                diagnostics: new[] { diagnostic });
+            return new ModelRunResult(false, code, message, diagnostics: new[] { diagnostic }, runMode: ModelRunMode.Worker, runtimeStatus: status);
         }
 
         private static ModelRunResult WithAdditionalDiagnostics(ModelRunResult result, IEnumerable<RuntimeDiagnostic> additional)
@@ -330,6 +356,8 @@ namespace DeploySharpApp.Infrastructure
         }
 
         private static double ParseDouble(IReadOnlyDictionary<string, string> payload, string key) => payload.TryGetValue(key, out string? value) && double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double result) ? result : 0;
+
+        private static string? Value(IReadOnlyDictionary<string, string> payload, string key) => payload.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : null;
 
         private static async Task<WorkerResponse?> WaitForResponseAsync(Task<WorkerResponse?> responseTask, TimeSpan timeout, CancellationToken cancellationToken)
         {

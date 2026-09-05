@@ -10,5 +10,13 @@
     <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
     <ProjectReference Include="..\DeploySharpApp.Plugin.Abstractions\DeploySharpApp.Plugin.Abstractions.csproj" />
     <ProjectReference Include="..\DeploySharpApp.BackendHost.Protocol\DeploySharpApp.BackendHost.Protocol.csproj" />
+    <!-- Native-capable adapters are referenced by the isolated net10 Worker only. The web and net48 hosts do not load them. -->
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Backend.LlamaSharp\DeploySharp.Backend.LlamaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Backend.OpenCV\DeploySharp.Backend.OpenCV.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Backend.OpenVINO\DeploySharp.Backend.OpenVINO.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Backend.TensorRT\DeploySharp.Backend.TensorRT.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Core\DeploySharp.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.Extensibility\DeploySharp.Extensibility.csproj" />
+    <ProjectReference Include="..\..\..\..\src\DeploySharp.LLM\DeploySharp.LLM.csproj" />
   </ItemGroup>
 </Project>

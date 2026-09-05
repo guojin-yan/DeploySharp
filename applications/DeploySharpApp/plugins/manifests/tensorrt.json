@@ -9,16 +9,17 @@
   "runtimeIdentifiers": [ "win-x64" ],
   "execution": "worker",
   "capabilities": [ "tensor-inference" ],
-  "formats": [ "onnx", "engine" ],
+  "formats": [ "tensorrt-engine" ],
   "providerPackageId": "JYPPX.TensorRT.CSharp.API",
   "providerPackageVersion": "4.0.0",
-  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "JYPPX.TensorRT.CSharp.API", "version": "4.0.0", "downloadable": true, "license": "Apache-2.0" } ],
+  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "JYPPX.TensorRT.CSharp.API", "version": "4.0.0", "downloadable": true, "license": "Apache-2.0" }, { "kind": "environment", "downloadable": false, "license": "Apache-2.0" } ],
   "nativeRequirements": [
     { "kind": "cuda", "rootSelection": "user", "environmentVariables": [ "JYPPX_CUDA_ROOT", "CUDA_PATH" ], "minimumVersion": "12.0" },
     { "kind": "cudnn", "rootSelection": "user", "environmentVariables": [ "JYPPX_CUDNN_ROOT" ], "minimumVersion": "9" },
     { "kind": "tensorrt", "rootSelection": "user", "environmentVariables": [ "JYPPX_TENSORRT_ROOT" ], "apiLines": [ "8", "10", "11" ] },
+    { "kind": "nvrtc", "rootSelection": "user", "environmentVariables": [ "JYPPX_CUDA_ROOT", "CUDA_PATH" ] },
     { "kind": "bridge", "rootSelection": "package-or-user", "environmentVariables": [ "JYPPX_NATIVE_BRIDGE_PATH" ] },
-    { "kind": "driver", "rootSelection": "system" }
+    { "kind": "driver", "rootSelection": "system-or-user", "environmentVariables": [ "JYPPX_CUDA_ROOT" ] }
   ],
   "optionsSchema": { "apiLine": { "type": "enum", "default": "11", "values": [ "8", "10", "11" ] }, "engineCache": { "type": "path", "required": true } },
   "probeId": "tensorrt.default",

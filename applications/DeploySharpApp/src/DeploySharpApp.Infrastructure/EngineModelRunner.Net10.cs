@@ -22,7 +22,9 @@ public sealed class EngineModelRunner : IModelRunner
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
         bool workerBackend = request.BackendId.IndexOf("tensorrt", StringComparison.OrdinalIgnoreCase) >= 0
-            || request.BackendId.IndexOf("llamasharp", StringComparison.OrdinalIgnoreCase) >= 0;
+            || request.BackendId.IndexOf("llamasharp", StringComparison.OrdinalIgnoreCase) >= 0
+            || request.BackendId.IndexOf("opencv", StringComparison.OrdinalIgnoreCase) >= 0
+            || request.BackendId.IndexOf("openvino", StringComparison.OrdinalIgnoreCase) >= 0;
         bool explicitCuda = string.Equals(request.Device, "cuda", StringComparison.OrdinalIgnoreCase);
         bool demo = request.ModelId.StartsWith("demo/", StringComparison.OrdinalIgnoreCase)
             && string.IsNullOrWhiteSpace(request.ModelPath)
@@ -38,7 +40,9 @@ public sealed class EngineModelRunner : IModelRunner
     public Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         bool workerBackend = request.BackendId.IndexOf("tensorrt", StringComparison.OrdinalIgnoreCase) >= 0
-            || request.BackendId.IndexOf("llamasharp", StringComparison.OrdinalIgnoreCase) >= 0;
+            || request.BackendId.IndexOf("llamasharp", StringComparison.OrdinalIgnoreCase) >= 0
+            || request.BackendId.IndexOf("opencv", StringComparison.OrdinalIgnoreCase) >= 0
+            || request.BackendId.IndexOf("openvino", StringComparison.OrdinalIgnoreCase) >= 0;
         return workerBackend ? _worker.BenchmarkAsync(request, progress, cancellationToken) : _demoFallback.BenchmarkAsync(request, progress, cancellationToken);
     }
 }

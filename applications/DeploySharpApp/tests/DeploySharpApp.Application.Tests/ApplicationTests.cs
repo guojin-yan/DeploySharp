@@ -71,26 +71,49 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
-        public async Task ReachableWorkerReportsMissingNativeAdapterWithoutFakeResult()
+        public async Task ReachableWorkerReportsNativeStatusWithoutFakeResult()
         {
             string hostPath = LocateBackendHost();
             var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", prompt: "hello");
             var values = new List<double>();
             ModelRunResult result = await new BackendHostWorkerClient(hostPath).RunAsync(request, new Progress<double>(value => values.Add(value)), CancellationToken.None);
             Assert.IsFalse(result.Succeeded);
-            Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
-            Assert.IsTrue(result.Diagnostics.Any(diagnostic => diagnostic.Code == "DSAPP-WORKER-ADAPTER-UNAVAILABLE"));
+            Assert.IsTrue(result.ErrorCode == AppErrorCode.NativeDependencyMissing || result.ErrorCode == AppErrorCode.BackendUnavailable);
+            Assert.IsNotNull(result.RuntimeStatus);
+            Assert.IsTrue(result.Diagnostics.Any(diagnostic => diagnostic.Code == "DSAPP-WORKER-NATIVE-MISSING" || diagnostic.Code == "DSAPP-WORKER-ABI-SMOKE-PENDING"));
             Assert.IsTrue(values.Any(value => value >= 0.35), "Worker progress events should be forwarded to the application progress reporter.");
         }
 
         [TestMethod]
-        public async Task WorkerBackendIsRoutedToWorkerClient()
+        public async Task WorkerCapabilityAndNativeProbesCoverFourBackends()
         {
-            var worker = new StubWorkerClient();
-            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
-            ModelRunResult result = await runner.RunAsync(new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", prompt: "hello"), null, CancellationToken.None);
-            Assert.IsTrue(worker.RunCalled);
-            Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
+            var client = new BackendHostWorkerClient(LocateBackendHost());
+            WorkerResponse capability = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Capability, "capability-test"), TimeSpan.FromSeconds(10), CancellationToken.None);
+            Assert.IsTrue(capability.Succeeded);
+            string backendList = capability.Payload["backends"];
+            foreach (string backendId in new[] { "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
+            {
+                StringAssert.Contains(backendList, backendId);
+                WorkerResponse probe = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Probe, "probe-" + backendId.Replace('.', '-'), backendId), TimeSpan.FromSeconds(10), CancellationToken.None);
+                Assert.AreEqual(WorkerResponseKind.Probe, probe.Kind, backendId);
+                Assert.IsFalse(probe.Succeeded, "Filesystem discovery alone must not report an executable backend. " + backendId);
+                Assert.AreEqual(backendId, probe.Payload["backendId"]);
+                Assert.IsTrue(probe.Payload.ContainsKey("probedPaths"));
+                Assert.IsTrue(probe.Payload.ContainsKey("diagnosticCode"));
+            }
+        }
+
+        [TestMethod]
+        public async Task NativeBackendsAreRoutedToWorkerClient()
+        {
+            foreach (string backendId in new[] { "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
+            {
+                var worker = new StubWorkerClient();
+                var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+                ModelRunResult result = await runner.RunAsync(new ModelRunRequest(AppOperationKind.Vision, "tests/native-backend", backendId, prompt: "hello"), null, CancellationToken.None);
+                Assert.IsTrue(worker.RunCalled, backendId);
+                Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode, backendId);
+            }
         }
 
         private sealed class ThrowingEngine : IDeploySharpEngine
