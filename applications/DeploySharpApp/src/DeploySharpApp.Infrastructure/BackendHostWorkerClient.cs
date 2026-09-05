@@ -38,26 +38,15 @@ namespace DeploySharpApp.Infrastructure
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
-            ProcessStartInfo startInfo = CreateStartInfo() ?? throw new WorkerHostUnavailableException(ResolveHostPath());
-            using var process = new Process { StartInfo = startInfo };
-            if (!process.Start()) throw new InvalidOperationException("BackendHost process could not be started.");
+            using Process process = StartProcess();
 
             try
             {
                 await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, request, cancellationToken).ConfigureAwait(false);
-                Task<WorkerResponse?> responseTask = WorkerProtocol.ReadResponseAsync(process.StandardOutput, cancellationToken);
-                WorkerResponse? response = await WaitForResponseAsync(responseTask, timeout, cancellationToken).ConfigureAwait(false);
+                WorkerResponse? response = await ReadTerminalResponseAsync(process, request.RequestId, timeout, progress: null, diagnostics: null, cancellationToken).ConfigureAwait(false);
                 if (response == null) throw new EndOfStreamException("BackendHost closed stdout before returning a response.");
 
-                if (request.Kind != WorkerMessageKind.Shutdown)
-                {
-                    using var shutdownTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-                    try
-                    {
-                        await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Shutdown, "shutdown-" + request.RequestId), shutdownTimeout.Token).ConfigureAwait(false);
-                    }
-                    catch (Exception) { }
-                }
+                await SendShutdownAsync(process, request.RequestId).ConfigureAwait(false);
                 return response;
             }
             finally
@@ -70,24 +59,30 @@ namespace DeploySharpApp.Infrastructure
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             string requestId = "run-" + Guid.NewGuid().ToString("N");
+            Process? process = null;
+            var streamDiagnostics = new List<RuntimeDiagnostic>();
+            DateTime deadline = DateTime.UtcNow + request.Timeout;
             try
             {
+                process = StartProcess();
                 progress?.Report(0.05);
-                WorkerResponse handshake = await SendAsync(CreateHandshake(requestId, request.BackendId), request.Timeout, cancellationToken).ConfigureAwait(false);
+                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 if (!IsSuccessfulHandshake(handshake))
                     return Failure(request, AppErrorCode.WorkerRequired, "BackendHost Worker 未通过握手，未执行 native 推理。", "DSAPP-WORKER-HANDSHAKE-FAILED", handshake.Message, hostUnavailable: false);
 
                 progress?.Report(0.2);
-                WorkerResponse response = await SendAsync(CreateInference(request, requestId), request.Timeout, cancellationToken).ConfigureAwait(false);
+                WorkerResponse response = await ReadRequestResponseAsync(process, CreateInference(request, requestId), requestId, Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
-                return MapRunResponse(request, response);
+                return MapRunResponse(request, response, streamDiagnostics);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                await SendCancelAsync(process, requestId).ConfigureAwait(false);
                 return Failure(request, AppErrorCode.Cancelled, "Worker 操作已取消。", "DSAPP-WORKER-CANCELLED", null, hostUnavailable: false);
             }
             catch (TimeoutException exception)
             {
+                await SendCancelAsync(process, requestId).ConfigureAwait(false);
                 return Failure(request, AppErrorCode.TimedOut, "Worker 操作超时，进程已终止。", "DSAPP-WORKER-TIMED-OUT", exception.Message, hostUnavailable: false);
             }
             catch (WorkerHostUnavailableException exception)
@@ -98,16 +93,29 @@ namespace DeploySharpApp.Infrastructure
             {
                 return Failure(request, AppErrorCode.WorkerFailed, "BackendHost Worker 启动或通信失败。", "DSAPP-WORKER-FAILED", exception.Message, hostUnavailable: false);
             }
+            finally
+            {
+                if (process != null)
+                {
+                    await SendShutdownAsync(process, requestId).ConfigureAwait(false);
+                    Kill(process);
+                    process.Dispose();
+                }
+            }
         }
 
         public async Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             string requestId = "bench-" + Guid.NewGuid().ToString("N");
+            Process? process = null;
+            var streamDiagnostics = new List<RuntimeDiagnostic>();
+            DateTime deadline = DateTime.UtcNow + TimeSpan.FromMinutes(5);
             try
             {
+                process = StartProcess();
                 progress?.Report(0.05);
-                WorkerResponse handshake = await SendAsync(CreateHandshake(requestId, request.BackendId), TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
+                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 if (!IsSuccessfulHandshake(handshake)) return BenchmarkFailure(request, "BackendHost Worker 未通过握手。", "DSAPP-WORKER-HANDSHAKE-FAILED", handshake.Message);
                 progress?.Report(0.2);
                 var payload = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -116,16 +124,112 @@ namespace DeploySharpApp.Infrastructure
                     ["iterations"] = request.Iterations.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["device"] = request.Device
                 };
-                WorkerResponse response = await SendAsync(new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
+                WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
-                return response.Succeeded && response.Kind == WorkerResponseKind.Result
-                    ? new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString())
-                    : BenchmarkFailure(request, response.Message ?? "Worker backend 尚未提供 benchmark adapter。", "DSAPP-WORKER-BENCHMARK-UNAVAILABLE", response.Message);
+                if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
+                    return new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString(), streamDiagnostics);
+                BenchmarkReport failure = BenchmarkFailure(request, response.Message ?? "Worker backend 尚未提供 benchmark adapter。", "DSAPP-WORKER-BENCHMARK-UNAVAILABLE", response.Message);
+                return streamDiagnostics.Count == 0 ? failure : new BenchmarkReport(request, false, failure.Message, executionMode: failure.ExecutionMode, diagnostics: streamDiagnostics.Concat(failure.Diagnostics));
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return BenchmarkFailure(request, "Worker benchmark 已取消。", "DSAPP-WORKER-CANCELLED", null); }
-            catch (TimeoutException exception) { return BenchmarkFailure(request, "Worker benchmark 超时。", "DSAPP-WORKER-TIMED-OUT", exception.Message); }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { await SendCancelAsync(process, requestId).ConfigureAwait(false); return BenchmarkFailure(request, "Worker benchmark 已取消。", "DSAPP-WORKER-CANCELLED", null); }
+            catch (TimeoutException exception) { await SendCancelAsync(process, requestId).ConfigureAwait(false); return BenchmarkFailure(request, "Worker benchmark 超时。", "DSAPP-WORKER-TIMED-OUT", exception.Message); }
             catch (WorkerHostUnavailableException exception) { return BenchmarkFailure(request, "未配置可启动的 BackendHost Worker。", "DSAPP-WORKER-HOST-NOT-CONFIGURED", exception.Message); }
             catch (Exception exception) { return BenchmarkFailure(request, "BackendHost Worker benchmark 通信失败。", "DSAPP-WORKER-FAILED", exception.Message); }
+            finally
+            {
+                if (process != null)
+                {
+                    await SendShutdownAsync(process, requestId).ConfigureAwait(false);
+                    Kill(process);
+                    process.Dispose();
+                }
+            }
+        }
+
+        private Process StartProcess()
+        {
+            ProcessStartInfo startInfo = CreateStartInfo() ?? throw new WorkerHostUnavailableException(ResolveHostPath());
+            var process = new Process { StartInfo = startInfo };
+            if (!process.Start())
+            {
+                process.Dispose();
+                throw new InvalidOperationException("BackendHost process could not be started.");
+            }
+            return process;
+        }
+
+        private static async Task<WorkerResponse> ReadRequestResponseAsync(Process process, WorkerRequest request, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, List<RuntimeDiagnostic> diagnostics, CancellationToken cancellationToken)
+        {
+            await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, request, cancellationToken).ConfigureAwait(false);
+            WorkerResponse? response = await ReadTerminalResponseAsync(process, expectedRequestId, timeout, progress, diagnostics, cancellationToken).ConfigureAwait(false);
+            if (response == null) throw new EndOfStreamException("BackendHost closed stdout before returning a response.");
+            return response;
+        }
+
+        private static async Task<WorkerResponse?> ReadTerminalResponseAsync(Process process, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, List<RuntimeDiagnostic>? diagnostics, CancellationToken cancellationToken)
+        {
+            DateTime deadline = DateTime.UtcNow + timeout;
+            while (true)
+            {
+                TimeSpan remaining = deadline - DateTime.UtcNow;
+                if (remaining <= TimeSpan.Zero) throw new TimeoutException("BackendHost response timed out.");
+                WorkerResponse? response = await WaitForResponseAsync(WorkerProtocol.ReadResponseAsync(process.StandardOutput, cancellationToken), remaining, cancellationToken).ConfigureAwait(false);
+                if (response == null) return null;
+                if (!string.Equals(response.RequestId, expectedRequestId, StringComparison.Ordinal))
+                {
+                    diagnostics?.Add(new RuntimeDiagnostic("DSAPP-WORKER-CORRELATION-MISMATCH", DiagnosticSeverity.Warning, "Worker returned a response for an unexpected request id.", details: new Dictionary<string, string> { ["expected"] = expectedRequestId, ["actual"] = response.RequestId }));
+                    continue;
+                }
+                if (response.Kind == WorkerResponseKind.Progress)
+                {
+                    if (TryGetProgress(response, out double value)) progress?.Report(Math.Max(0, Math.Min(1, value)));
+                    continue;
+                }
+                if (response.Kind == WorkerResponseKind.Log)
+                {
+                    diagnostics?.Add(CreateLogDiagnostic(response));
+                    continue;
+                }
+                return response;
+            }
+        }
+
+        private static async Task SendShutdownAsync(Process process, string requestId)
+        {
+            if (process.HasExited) return;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            try { await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Shutdown, "shutdown-" + requestId), timeout.Token).ConfigureAwait(false); }
+            catch (Exception) { }
+        }
+
+        private static async Task SendCancelAsync(Process? process, string requestId)
+        {
+            if (process == null || process.HasExited) return;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
+            try { await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Cancel, "cancel-" + requestId), timeout.Token).ConfigureAwait(false); }
+            catch (Exception) { }
+        }
+
+        private static TimeSpan Remaining(DateTime deadline)
+        {
+            TimeSpan remaining = deadline - DateTime.UtcNow;
+            return remaining <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : remaining;
+        }
+
+        private static bool TryGetProgress(WorkerResponse response, out double value)
+        {
+            value = 0;
+            string? text = response.Payload.TryGetValue("value", out string? valueText) ? valueText : response.Payload.TryGetValue("progress", out string? progressText) ? progressText : null;
+            return text != null && double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value);
+        }
+
+        private static RuntimeDiagnostic CreateLogDiagnostic(WorkerResponse response)
+        {
+            string severityText = response.Payload.TryGetValue("level", out string? level) ? level : "Information";
+            DiagnosticSeverity severity = severityText.Equals("error", StringComparison.OrdinalIgnoreCase) ? DiagnosticSeverity.Error : severityText.Equals("warning", StringComparison.OrdinalIgnoreCase) ? DiagnosticSeverity.Warning : DiagnosticSeverity.Information;
+            string message = response.Message ?? (response.Payload.TryGetValue("message", out string? payloadMessage) ? payloadMessage : "Worker log event.");
+            string code = response.Payload.TryGetValue("diagnosticCode", out string? diagnosticCode) && !string.IsNullOrWhiteSpace(diagnosticCode) ? diagnosticCode : "DSAPP-WORKER-LOG";
+            return new RuntimeDiagnostic(code, severity, message, details: response.Payload);
         }
 
         private ProcessStartInfo? CreateStartInfo()
@@ -194,12 +298,19 @@ namespace DeploySharpApp.Infrastructure
 
         private static bool IsSuccessfulHandshake(WorkerResponse response) => response.Kind == WorkerResponseKind.Handshake && response.Succeeded;
 
-        private static ModelRunResult MapRunResponse(ModelRunRequest request, WorkerResponse response)
+        private static ModelRunResult MapRunResponse(ModelRunRequest request, WorkerResponse response, IReadOnlyList<RuntimeDiagnostic> streamDiagnostics)
         {
             if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
-                return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: Array.Empty<RuntimeDiagnostic>(), runMode: ModelRunMode.Worker);
+                return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: streamDiagnostics, runMode: ModelRunMode.Worker);
             bool adapterMissing = response.Message?.IndexOf("adapter", StringComparison.OrdinalIgnoreCase) >= 0 || response.Message?.IndexOf("minimal", StringComparison.OrdinalIgnoreCase) >= 0;
-            return Failure(request, adapterMissing ? AppErrorCode.WorkerRequired : AppErrorCode.WorkerFailed, response.Message ?? "Worker backend did not return a result.", adapterMissing ? "DSAPP-WORKER-ADAPTER-UNAVAILABLE" : "DSAPP-WORKER-RESPONSE-FAILED", response.Message, hostUnavailable: false);
+            ModelRunResult failure = Failure(request, adapterMissing ? AppErrorCode.WorkerRequired : AppErrorCode.WorkerFailed, response.Message ?? "Worker backend did not return a result.", adapterMissing ? "DSAPP-WORKER-ADAPTER-UNAVAILABLE" : "DSAPP-WORKER-RESPONSE-FAILED", response.Message, hostUnavailable: false);
+            return streamDiagnostics.Count == 0 ? failure : WithAdditionalDiagnostics(failure, streamDiagnostics);
+        }
+
+        private static ModelRunResult WithAdditionalDiagnostics(ModelRunResult result, IEnumerable<RuntimeDiagnostic> additional)
+        {
+            RuntimeDiagnostic[] diagnostics = result.Diagnostics.Concat(additional).ToArray();
+            return new ModelRunResult(result.Succeeded, result.ErrorCode, result.Message, result.Output, result.PreprocessMs, result.InferenceMs, result.PostprocessMs, result.CorrelationId, diagnostics, result.RunMode, result.RuntimeStatus);
         }
 
         private static ModelRunResult Failure(ModelRunRequest request, AppErrorCode code, string message, string diagnosticCode, string? technicalDetail, bool hostUnavailable)

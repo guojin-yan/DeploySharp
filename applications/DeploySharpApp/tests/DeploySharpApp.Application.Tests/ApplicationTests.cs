@@ -75,10 +75,12 @@ namespace DeploySharpApp.Application.Tests
         {
             string hostPath = LocateBackendHost();
             var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", prompt: "hello");
-            ModelRunResult result = await new BackendHostWorkerClient(hostPath).RunAsync(request, null, CancellationToken.None);
+            var values = new List<double>();
+            ModelRunResult result = await new BackendHostWorkerClient(hostPath).RunAsync(request, new Progress<double>(value => values.Add(value)), CancellationToken.None);
             Assert.IsFalse(result.Succeeded);
             Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode);
-            Assert.AreEqual("DSAPP-WORKER-ADAPTER-UNAVAILABLE", result.Diagnostics.Single().Code);
+            Assert.IsTrue(result.Diagnostics.Any(diagnostic => diagnostic.Code == "DSAPP-WORKER-ADAPTER-UNAVAILABLE"));
+            Assert.IsTrue(values.Any(value => value >= 0.35), "Worker progress events should be forwarded to the application progress reporter.");
         }
 
         [TestMethod]

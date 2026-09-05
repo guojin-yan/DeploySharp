@@ -4,26 +4,36 @@
 @inject DeploySharpAppService Service
 @inject WebActivityStore Activity
 <PageTitle>LLM / Embedding · DeploySharpApp</PageTitle>
+<style>
+    .composer-actions { display: flex; gap: 7px; align-items: stretch; }
+    .composer-actions .ghost { color: var(--muted); background: #f3f5fa; border-color: var(--line); }
+    .worker-progress { display: flex; align-items: center; gap: 9px; padding: 0 13px 12px; color: var(--muted); font-size: 10px; }
+    .worker-progress progress { flex: 1; min-width: 0; }
+</style>
 <div class="section-head"><div><span class="eyebrow">LANGUAGE LAB</span><h3>LLM / Embedding</h3></div><span class="status-tag purple-tag">LLamaSharp · Worker</span></div>
-<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题"></textarea><button class="primary" @onclick="SendAsync" disabled="@busy">@(busy ? "发送中…" : "发送 ↑")</button></div></section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><div class="info-line"><span>上下文长度</span><b>2,048</b></div><div class="info-line"><span>线程数</span><b>Worker</b></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">当前 Worker 推理协议仍在建设中。页面会保留请求语义并明确显示 WorkerRequired，不伪造模型回复。</div></section></div>
+<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题" disabled="@busy"></textarea><div class="composer-actions"><button class="primary" @onclick="SendAsync" disabled="@busy">@(busy ? "发送中…" : "发送 ↑")</button>@if (busy) { <button class="ghost small" @onclick="Cancel">取消</button> }</div></div>@if (busy || progress > 0) { <div class="worker-progress"><progress value="@progress" max="1"></progress><span>Worker @progress.ToString("P0")</span></div> }</section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><div class="info-line"><span>上下文长度</span><b>2,048</b></div><div class="info-line"><span>线程数</span><b>Worker</b></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">Worker 会隔离 native runtime；当前未安装 LLamaSharp adapter 时会返回 WorkerRequired 和诊断，不生成伪造回复。</div></section></div>
 @code {
     private string prompt = string.Empty;
     private bool busy;
+    private double progress;
+    private CancellationTokenSource? cancellation;
     private readonly List<ChatMessage> messages = new() { new(false, "LLamaSharp 运行需要 BackendHost Worker。网页不会在浏览器加载 GGUF native runtime。") };
     private async Task SendAsync()
     {
         if (busy || string.IsNullOrWhiteSpace(prompt)) return;
-        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true;
+        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true; progress = 0;
+        cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(2));
         try
         {
             var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelFormat: "gguf", options: new Dictionary<string, string> { ["executionMode"] = "worker" });
-            ModelRunResult output = await Service.RunAsync(request, cancellationToken: CancellationToken.None);
+            ModelRunResult output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
             string assistantText = output.Succeeded ? output.Output ?? output.Message : output.Message;
             if (output.Diagnostics.Count > 0) assistantText += "\n诊断：" + string.Join("；", output.Diagnostics.Select(diagnostic => diagnostic.Code + " - " + diagnostic.Message));
             messages.Add(new(false, assistantText));
             Activity.Add("llm", output.Message, output.Diagnostics.FirstOrDefault()?.Code);
         }
-        finally { busy = false; }
+        finally { cancellation.Dispose(); cancellation = null; busy = false; progress = 0; }
     }
+    private void Cancel() => cancellation?.Cancel();
     private sealed record ChatMessage(bool IsUser, string Text);
 }
