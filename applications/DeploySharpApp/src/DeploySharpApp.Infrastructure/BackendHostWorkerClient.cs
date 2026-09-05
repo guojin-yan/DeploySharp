@@ -124,11 +124,20 @@ namespace DeploySharpApp.Infrastructure
                     ["iterations"] = request.Iterations.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["device"] = request.Device
                 };
+                Add(payload, "modelPath", request.ModelPath);
+                Add(payload, "modelFormat", request.ModelFormat);
+                Add(payload, "modelSha256", request.ModelSha256);
+                Add(payload, "inputPath", request.InputPath);
+                payload["tensorInputsJson"] = JsonSerializer.Serialize(request.TensorInputs);
+                payload["optionsJson"] = JsonSerializer.Serialize(request.Options);
+                foreach (KeyValuePair<string, string> option in request.Options)
+                    if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
                 WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
                 if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
                     return new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString(), streamDiagnostics);
-                BenchmarkReport failure = BenchmarkFailure(request, response.Message ?? "Worker backend 尚未提供 benchmark adapter。", "DSAPP-WORKER-BENCHMARK-UNAVAILABLE", response.Message);
+                string responseCode = response.Payload.TryGetValue("diagnosticCode", out string? workerCode) && !string.IsNullOrWhiteSpace(workerCode) ? workerCode : "DSAPP-WORKER-BENCHMARK-UNAVAILABLE";
+                BenchmarkReport failure = BenchmarkFailure(request, response.Message ?? "Worker backend 尚未提供 benchmark adapter。", responseCode, response.Message, response.Payload);
                 return streamDiagnostics.Count == 0 ? failure : new BenchmarkReport(request, false, failure.Message, executionMode: failure.ExecutionMode, diagnostics: streamDiagnostics.Concat(failure.Diagnostics));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { await SendCancelAsync(process, requestId).ConfigureAwait(false); return BenchmarkFailure(request, "Worker benchmark 已取消。", "DSAPP-WORKER-CANCELLED", null); }
@@ -374,10 +383,12 @@ namespace DeploySharpApp.Infrastructure
             return new ModelRunResult(false, code, message, diagnostics: new[] { diagnostic }, runMode: ModelRunMode.Worker, runtimeStatus: status);
         }
 
-        private static BenchmarkReport BenchmarkFailure(BenchmarkRequest request, string message, string code, string? detail)
+        private static BenchmarkReport BenchmarkFailure(BenchmarkRequest request, string message, string code, string? detail, IReadOnlyDictionary<string, string>? details = null)
         {
-            var details = string.IsNullOrWhiteSpace(detail) ? null : new Dictionary<string, string> { ["technicalDetail"] = detail! };
-            var diagnostic = new RuntimeDiagnostic(code, DiagnosticSeverity.Warning, message, request.BackendId, request.ModelId, details);
+            var diagnosticDetails = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (details != null) foreach (KeyValuePair<string, string> pair in details) diagnosticDetails[pair.Key] = pair.Value;
+            if (!string.IsNullOrWhiteSpace(detail)) diagnosticDetails["technicalDetail"] = detail!;
+            var diagnostic = new RuntimeDiagnostic(code, DiagnosticSeverity.Warning, message, request.BackendId, request.ModelId, diagnosticDetails);
             return new BenchmarkReport(request, false, message, executionMode: AppExecutionMode.Worker.ToString(), diagnostics: new[] { diagnostic });
         }
 

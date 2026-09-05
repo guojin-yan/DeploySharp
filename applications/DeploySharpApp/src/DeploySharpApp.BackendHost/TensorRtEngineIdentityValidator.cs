@@ -1,0 +1,150 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using JYPPX.DeploySharp.Backends.TensorRT;
+
+namespace DeploySharpApp.BackendHost;
+
+internal sealed class TensorRtValidationResult
+{
+    public TensorRtValidationResult(bool succeeded, string code, string message, IReadOnlyDictionary<string, string> details)
+    {
+        Succeeded = succeeded;
+        Code = code;
+        Message = message;
+        Details = details;
+    }
+
+    public bool Succeeded { get; }
+    public string Code { get; }
+    public string Message { get; }
+    public IReadOnlyDictionary<string, string> Details { get; }
+}
+
+internal static class TensorRtEngineIdentityValidator
+{
+    public static TensorRtValidationResult Validate(string enginePath, IReadOnlyDictionary<string, string> payload)
+    {
+        var details = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["enginePath"] = enginePath,
+            ["runtimeIdentifier"] = System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier,
+            ["processArchitecture"] = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString()
+        };
+        string? cudaRoot = First(payload, "cudaRoot", "JYPPX_CUDA_ROOT", "CUDA_PATH");
+        string? cudnnRoot = First(payload, "cudnnRoot", "JYPPX_CUDNN_ROOT");
+        string? tensorRtRoot = First(payload, "tensorRtRoot", "JYPPX_TENSORRT_ROOT");
+        string? bridgePath = First(payload, "bridgePath", "JYPPX_NATIVE_BRIDGE_PATH");
+        bool rootsValid = CheckRoot(details, "cuda", cudaRoot, "cudart64_*.dll", "libcudart.so")
+            && CheckRoot(details, "cudnn", cudnnRoot, "cudnn*.dll", "libcudnn.so")
+            && CheckRoot(details, "tensorrt", tensorRtRoot, "nvinfer*.dll", "libnvinfer.so");
+        if (!string.IsNullOrWhiteSpace(bridgePath))
+        {
+            string fullBridge = Path.GetFullPath(bridgePath!);
+            details["bridgePath"] = fullBridge;
+            if (!File.Exists(fullBridge)) rootsValid = false;
+        }
+        else rootsValid = false;
+        string? driver = FindDriverLibrary();
+        details["driverPath"] = driver ?? string.Empty;
+        if (driver == null) rootsValid = false;
+        string? gpu = FindGpuIdentity();
+        details["gpuIdentity"] = gpu ?? string.Empty;
+        if (gpu == null) rootsValid = false;
+        if (!rootsValid)
+            return Failure("DSAPP-TENSORRT-NATIVE-MATCH-FAILED", "TensorRT requires verified CUDA, cuDNN, TensorRT, bridge, driver and GPU assets from explicit paths.", details);
+
+        string? identityPath = First(payload, "engineIdentityPath");
+        if (string.IsNullOrWhiteSpace(identityPath))
+            return Failure("DSAPP-TENSORRT-ENGINE-IDENTITY-REQUIRED", "The device-bound TensorRT engine identity sidecar is required before loading an external engine.", details);
+        identityPath = Path.GetFullPath(identityPath!);
+        details["engineIdentityPath"] = identityPath;
+        if (!File.Exists(identityPath)) return Failure("DSAPP-TENSORRT-ENGINE-IDENTITY-MISSING", "The TensorRT engine identity sidecar does not exist.", details);
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(identityPath));
+            var actual = ReadIdentity(document.RootElement);
+            var expected = new TensorRtEngineCompatibility(
+                Required(actual, "onnxSha256"), Required(actual, "engineSerializationVersion"), Required(actual, "tensorRtVersion"),
+                Required(actual, "cudaVersion"), Required(actual, "cudnnVersion"), Required(actual, "driverVersion"),
+                Required(actual, "gpuCompatibility"), Required(actual, "bridgeIdentity"));
+            foreach (string key in new[] { "onnxSha256", "engineSerializationVersion", "tensorRtVersion", "cudaVersion", "cudnnVersion", "driverVersion", "gpuCompatibility", "bridgeIdentity" })
+                details["engine." + key] = actual[key];
+            foreach (string key in new[] { "onnxSha256", "engineSerializationVersion", "tensorRtVersion", "cudaVersion", "cudnnVersion", "driverVersion", "gpuCompatibility", "bridgeIdentity" })
+            {
+                if (payload.TryGetValue("expected." + key, out string? wanted) && !string.Equals(wanted, actual[key], StringComparison.OrdinalIgnoreCase))
+                    return Failure("DSAPP-TENSORRT-ENGINE-IDENTITY-MISMATCH", "The TensorRT engine identity does not match the requested runtime or device.", details);
+            }
+            details["engineIdentity"] = expected.OnnxSha256 + "/" + expected.TensorRtVersion + "/" + expected.GpuCompatibility;
+            return new TensorRtValidationResult(true, "DSAPP-TENSORRT-NATIVE-MATCH-PASSED", "TensorRT native and device-bound engine identity validation passed.", details);
+        }
+        catch (Exception exception) when (exception is JsonException || exception is IOException || exception is ArgumentException)
+        {
+            details["identityError"] = exception.Message;
+            return Failure("DSAPP-TENSORRT-ENGINE-IDENTITY-INVALID", "The TensorRT engine identity sidecar is invalid.", details);
+        }
+    }
+
+    private static Dictionary<string, string> ReadIdentity(JsonElement root)
+    {
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (string key in new[] { "onnxSha256", "engineSerializationVersion", "tensorRtVersion", "cudaVersion", "cudnnVersion", "driverVersion", "gpuCompatibility", "bridgeIdentity" })
+            if (root.TryGetProperty(key, out JsonElement value) && value.ValueKind == JsonValueKind.String) values[key] = value.GetString() ?? string.Empty;
+        return values;
+    }
+
+    private static string Required(IReadOnlyDictionary<string, string> values, string key) => values.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : throw new ArgumentException("Missing identity field: " + key);
+
+    private static bool CheckRoot(Dictionary<string, string> details, string name, string? root, params string[] patterns)
+    {
+        if (string.IsNullOrWhiteSpace(root)) { details[name + "Root"] = string.Empty; details[name + "Library"] = string.Empty; return false; }
+        string fullRoot = Path.GetFullPath(root!);
+        details[name + "Root"] = fullRoot;
+        if (!Directory.Exists(fullRoot)) { details[name + "Library"] = string.Empty; return false; }
+        string? match = patterns.SelectMany(pattern => Directory.EnumerateFiles(fullRoot, pattern, SearchOption.AllDirectories)).FirstOrDefault();
+        details[name + "Library"] = match ?? string.Empty;
+        return match != null;
+    }
+
+    private static string? FindDriverLibrary()
+    {
+        string[] candidates = OperatingSystem.IsWindows()
+            ? new[] { Path.Combine(Environment.SystemDirectory, "nvcuda.dll") }
+            : new[] { "/usr/lib/x86_64-linux-gnu/libcuda.so.1", "/usr/lib/wsl/lib/libcuda.so.1" };
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    private static string? FindGpuIdentity()
+    {
+        string[] candidates = OperatingSystem.IsWindows()
+            ? new[] { @"C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe", @"C:\Windows\System32\nvidia-smi.exe" }
+            : new[] { "/usr/bin/nvidia-smi", "/usr/local/bin/nvidia-smi" };
+        string? executable = candidates.FirstOrDefault(File.Exists);
+        if (executable == null) return null;
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo { FileName = executable, Arguments = "--query-gpu=name,compute_cap --format=csv,noheader", UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true });
+            if (process == null || !process.WaitForExit(3000)) return null;
+            string output = process.StandardOutput.ReadToEnd().Trim();
+            return string.IsNullOrWhiteSpace(output) ? null : output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
+        }
+        catch { return null; }
+    }
+
+    private static string? First(IReadOnlyDictionary<string, string> payload, params string[] keys)
+    {
+        foreach (string key in keys)
+        {
+            if (payload.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value)) return value.Trim();
+            string? environment = Environment.GetEnvironmentVariable(key);
+            if (!string.IsNullOrWhiteSpace(environment)) return environment.Trim();
+        }
+        return null;
+    }
+
+    private static TensorRtValidationResult Failure(string code, string message, IReadOnlyDictionary<string, string> details)
+        => new(false, code, message, details);
+}

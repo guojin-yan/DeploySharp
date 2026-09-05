@@ -129,7 +129,22 @@ internal static class WorkerInferenceAdapter
     private static async Task<WorkerResponse> RunCoreTensorAsync(WorkerRequest request, string modelPath, IBackendProvider provider, Action<double>? reportProgress, CancellationToken cancellationToken)
     {
         string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
-        if (provider is TensorRtBackendProvider && !string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT Worker requires a modelFormat of tensorrt-engine; ONNX-to-engine build is not implicit.", AppRuntimeState.Unsupported, format);
+        if (provider is TensorRtBackendProvider)
+        {
+            if (!string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT Worker requires a modelFormat of tensorrt-engine; ONNX-to-engine build is not implicit.", AppRuntimeState.Unsupported, format);
+            TensorRtValidationResult validation = TensorRtEngineIdentityValidator.Validate(modelPath, request.Payload);
+            if (!validation.Succeeded)
+            {
+                var payload = new Dictionary<string, string>(validation.Details, StringComparer.Ordinal)
+                {
+                    ["state"] = AppRuntimeState.Unavailable.ToString(),
+                    ["backendId"] = request.BackendId ?? "tensorrt",
+                    ["diagnosticCode"] = validation.Code,
+                    ["execution"] = "worker"
+                };
+                return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, validation.Message, payload);
+            }
+        }
         if (provider is OpenVinoBackendProvider && !string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase) && !string.Equals(format, "openvino-ir", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenVINO Worker requires a modelFormat of onnx or openvino-ir.", AppRuntimeState.Unsupported, format);
         IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
         if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "Native tensor Worker inference requires named tensor inputs.", AppRuntimeState.Unsupported);

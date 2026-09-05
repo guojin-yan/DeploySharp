@@ -107,6 +107,22 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task NativeBenchmarkWorkerRejectsMissingModelWithoutFakeNumbers()
+        {
+            var client = new BackendHostWorkerClient(LocateBackendHost());
+            BenchmarkReport report = await client.BenchmarkAsync(
+                new BenchmarkRequest("tests/missing-benchmark", "deploysharp.backend.openvino", warmup: 0, iterations: 1, modelPath: Path.Combine(Path.GetTempPath(), "deploysharp-missing-benchmark.onnx")),
+                null,
+                CancellationToken.None);
+            Assert.IsFalse(report.Available);
+            Assert.AreNotEqual(0, report.Diagnostics.Count);
+            StringAssert.StartsWith(report.Diagnostics[0].Code, "DSAPP-WORKER-");
+            Assert.AreEqual(0, report.P50Ms);
+            Assert.AreEqual(0, report.P95Ms);
+            Assert.AreEqual(0, report.Throughput);
+        }
+
+        [TestMethod]
         public async Task NativeBackendsAreRoutedToWorkerClient()
         {
             foreach (string backendId in new[] { "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })

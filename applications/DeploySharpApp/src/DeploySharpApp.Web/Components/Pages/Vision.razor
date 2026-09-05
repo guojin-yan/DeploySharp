@@ -6,6 +6,8 @@
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
 @inject VisualTestImageCatalogService TestImageCatalog
+@inject ModelFactoryCatalogService FactoryCatalog
+@inject ModelFactoryRuntimeService FactoryRuntime
 @inject WebActivityStore Activity
 <PageTitle>视觉推理 · DeploySharpApp</PageTitle>
 <style>
@@ -78,6 +80,16 @@
                 }
             </select>
         </label>
+        @if (FactoryCatalog.Items.Count > 0)
+        {
+            <label>ModelFactory 已校验目录
+                <select value="@selectedFactoryModelId" @onchange="HandleFactoryModelChanged"><option value="">选择目录模型并物化到服务器</option>@foreach (var item in FactoryCatalog.Items) { <option value="@item.Id">@item.Name · @item.Task</option> }</select>
+            </label>
+            @if (!string.IsNullOrWhiteSpace(selectedFactoryModelId)) { <div class="download-row"><span class="muted">ModelPack 会先校验 manifest、SHA256 和缓存</span><button class="ghost small" @onclick="MaterializeFactoryModelAsync" disabled="@(factoryMaterializing || busy)">@(factoryMaterializing ? "物化中…" : "物化并用于运行")</button></div> }
+            @if (factoryMaterializing) { <progress value="@factoryProgress" max="1"></progress> }
+            @if (factoryMaterialization is not null) { <p class="hint">已接入 ModelPack：@factoryMaterialization.Format · @factoryMaterialization.ModelPath</p> }
+            @if (!string.IsNullOrWhiteSpace(factoryError)) { <p class="hint">ModelFactory：@factoryError</p> }
+        }
         @if (catalogLoading) { <p class="catalog-loading">正在读取 GitHub release 模型清单… @catalogProgress.ToString("P0")</p> }
         @if (!string.IsNullOrWhiteSpace(catalogError)) { <p class="hint">release 清单暂时不可用：@catalogError 仍可使用本地模型。</p> }
         @if (testImageLoading) { <p class="catalog-loading">正在读取 test-assets.1 测试图像清单…</p> }
@@ -170,6 +182,7 @@
     private readonly List<VisualTestImage> testImages = new();
     private string selectedBackend = "deploysharp.backend.onnxruntime";
     private string selectedModelId = "demo/yolo-v8-n";
+    private string selectedFactoryModelId = string.Empty;
     private string device = "cpu";
     private string maxConcurrency = "1";
     private string intraOpThreads = "0";
@@ -229,6 +242,10 @@
     private bool imageFromRelease;
     private double imageDownloadProgress;
     private bool busy;
+    private bool factoryMaterializing;
+    private double factoryProgress;
+    private string? factoryError;
+    private ModelFactoryMaterialization? factoryMaterialization;
     private bool runSucceeded;
     private double progress;
     private double preprocessMs;
@@ -266,6 +283,36 @@
         if (imageFromRelease) ClearImagePreview();
         selectedTestImageId = string.Empty;
         ApplyModelDefaults();
+    }
+
+    private void HandleFactoryModelChanged(ChangeEventArgs args)
+    {
+        selectedFactoryModelId = args.Value?.ToString() ?? string.Empty;
+        factoryError = null;
+    }
+
+    private async Task MaterializeFactoryModelAsync()
+    {
+        if (string.IsNullOrWhiteSpace(selectedFactoryModelId) || factoryMaterializing) return;
+        factoryMaterializing = true; factoryProgress = 0; factoryError = null; factoryMaterialization = null;
+        try
+        {
+            var progress = new Progress<JYPPX.DeploySharp.ModelFactory.ModelDownloadProgress>(value =>
+            {
+                factoryProgress = value.TotalBytes > 0 ? Math.Clamp((double)value.ReceivedBytes / value.TotalBytes, 0, 1) : value.Stage == JYPPX.DeploySharp.ModelFactory.ModelDownloadStage.Completed ? 1 : factoryProgress;
+                InvokeAsync(StateHasChanged);
+            });
+            factoryMaterialization = await FactoryRuntime.MaterializeAsync(selectedFactoryModelId, progress);
+            modelPath = factoryMaterialization.ModelPath;
+            uploadedModelPath = null;
+            uploadedModelSha256 = factoryMaterialization.Sha256 ?? string.Empty;
+            modelFileName = Path.GetFileName(modelPath);
+            selectedModelId = "factory/" + selectedFactoryModelId;
+            factoryProgress = 1;
+            usingRecommendedParameters = false;
+        }
+        catch (Exception exception) { factoryError = exception.Message; }
+        finally { factoryMaterializing = false; }
     }
 
     private void HandleTestImageChanged(ChangeEventArgs args)
@@ -646,7 +693,7 @@
             var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? InferModelFormat(modelPath)), modelSha256: selected?.PrimaryFile.Sha256 ?? (string.IsNullOrWhiteSpace(uploadedModelSha256) ? null : uploadedModelSha256), tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
-            if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl); resultImageCaption = "原图叠加运行状态；模型原始输出见下方 JSON"; }
+            if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl, selectedReleaseModel?.Task); resultImageCaption = "原图叠加通用后处理；模型原始输出见下方 JSON"; }
             Activity.Add("run", output.Message, output.Diagnostics.FirstOrDefault()?.Code);
         }
         catch (OperationCanceledException) { runMode = "Cancelled"; runtimeState = "Unavailable"; errorCode = "Cancelled"; runtimeMessage = "操作已取消。"; result = runtimeMessage; Activity.Add("run", runtimeMessage, "DSAPP-WEB-CANCELLED"); }
@@ -711,12 +758,7 @@
     private static bool IsLocalModelFormatCompatible(string format, bool tensorRt) => tensorRt ? string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase) : string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase);
     private static string TensorContract(IReadOnlyList<VisualModelInput> tensors) => tensors.Count == 0 ? "未声明" : string.Join("; ", tensors.Select(tensor => tensor.Name + " " + tensor.ElementType + " " + string.Join("×", tensor.Shape)));
     private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F2") + " ms";
-    private static string BuildResultImage(ModelRunResult output, string originalImage)
-    {
-        string text = System.Security.SecurityElement.Escape(output.RunMode + " · " + output.ErrorCode) ?? "result";
-        string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"420\"><rect width=\"640\" height=\"420\" fill=\"#eef1f7\"/><image href=\"" + originalImage + "\" x=\"20\" y=\"20\" width=\"600\" height=\"330\" preserveAspectRatio=\"xMidYMid meet\"/><rect x=\"20\" y=\"350\" width=\"600\" height=\"50\" fill=\"#24345f\"/><text x=\"40\" y=\"382\" fill=\"white\" font-family=\"Segoe UI\" font-size=\"18\">" + text + " · 原始输出见 JSON</text></svg>";
-        return "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
-    }
+    private static string BuildResultImage(ModelRunResult output, string originalImage, string? task) => VisionResultRenderer.Render(originalImage, output.Output, task);
 
     public void Dispose()
     {

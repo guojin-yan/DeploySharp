@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using DeploySharpApp.BackendHost;
 using DeploySharpApp.BackendHost.Protocol;
 using DeploySharpApp.Contracts;
@@ -42,7 +43,7 @@ while (true)
             response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "native-adapter", ["cancel"] = "active-operation", ["probe"] = "filesystem-preflight" });
             break;
         case WorkerMessageKind.Probe:
-            WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
+            WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId, request.Payload);
             response = new WorkerResponse(WorkerResponseKind.Probe, request.RequestId, probe.Succeeded, probe.Message, probe.Payload);
             break;
         case WorkerMessageKind.Inference:
@@ -56,11 +57,15 @@ while (true)
             activeTask = ExecuteInferenceAsync(request, activeCancellation);
             continue;
         case WorkerMessageKind.Benchmark:
-            WorkerProbeResult benchmarkProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
-            await WriteResponseAsync(Progress(request.RequestId, 0.35, "dispatch", "Benchmark request accepted."));
-            await WriteResponseAsync(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, benchmarkProbe.Message, WithLogLevel(benchmarkProbe.Payload)));
-            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend adapter cannot benchmark this request. " + benchmarkProbe.Message, benchmarkProbe.Payload);
-            break;
+            if (activeTask != null)
+            {
+                response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "A native Worker operation is already active.", new Dictionary<string, string> { ["diagnosticCode"] = "DSAPP-WORKER-BUSY", ["activeRequestId"] = activeRequestId ?? string.Empty });
+                break;
+            }
+            activeCancellation = new CancellationTokenSource();
+            activeRequestId = request.RequestId;
+            activeTask = ExecuteBenchmarkAsync(request, activeCancellation);
+            continue;
         case WorkerMessageKind.Cancel:
             if (activeTask != null && activeCancellation != null)
             {
@@ -134,6 +139,103 @@ async Task ExecuteInferenceAsync(WorkerRequest request, CancellationTokenSource 
         response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The Worker operation failed outside the backend adapter.", new Dictionary<string, string> { ["state"] = AppRuntimeState.ProbeFailed.ToString(), ["diagnosticCode"] = "DSAPP-WORKER-OPERATION-FAILED", ["technicalDetail"] = exception.ToString() });
     }
     await WriteResponseAsync(response);
+}
+
+async Task ExecuteBenchmarkAsync(WorkerRequest request, CancellationTokenSource operationCancellation)
+{
+    WorkerResponse response;
+    using var timeoutCancellation = new CancellationTokenSource();
+    using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(operationCancellation.Token, timeoutCancellation.Token);
+    try
+    {
+        await Task.Yield();
+        WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
+        await WriteResponseAsync(Progress(request.RequestId, 0.3, "dispatch", "Native benchmark request accepted."));
+        if (!probe.Payload.TryGetValue("preflightState", out string? preflightState) || !string.Equals(preflightState, AppRuntimeState.Available.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            await WriteResponseAsync(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, probe.Message, WithLogLevel(probe.Payload)));
+            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend is unavailable for benchmark. " + probe.Message, probe.Payload);
+        }
+        else
+        {
+            int warmup = ParsePositiveInt(request.Payload, "warmup", 3, allowZero: true);
+            int iterations = ParsePositiveInt(request.Payload, "iterations", 20, allowZero: false);
+            if (warmup > 1000 || iterations > 10000) throw new ArgumentOutOfRangeException("iterations", "Worker benchmark limits warmup to 1000 and iterations to 10000.");
+            Task timeoutTask = CreateTimeoutTask(request.Payload, timeoutCancellation.Token);
+            if (timeoutTask != Task.CompletedTask)
+            {
+                _ = timeoutTask.ContinueWith(_ => operationCancellation.Cancel(), TaskScheduler.Default);
+            }
+            for (int index = 0; index < warmup; index++)
+            {
+                linkedCancellation.Token.ThrowIfCancellationRequested();
+                WorkerResponse warmupResponse = await RunBenchmarkIterationAsync(request, linkedCancellation.Token).ConfigureAwait(false);
+                if (!warmupResponse.Succeeded) { response = warmupResponse; await WriteResponseAsync(response); return; }
+            }
+
+            var samples = new List<double>(iterations);
+            string? lastOutput = null;
+            for (int index = 0; index < iterations; index++)
+            {
+                linkedCancellation.Token.ThrowIfCancellationRequested();
+                Stopwatch timer = Stopwatch.StartNew();
+                WorkerResponse iteration = await RunBenchmarkIterationAsync(request, linkedCancellation.Token).ConfigureAwait(false);
+                timer.Stop();
+                if (!iteration.Succeeded) { response = iteration; await WriteResponseAsync(response); return; }
+                samples.Add(timer.Elapsed.TotalMilliseconds);
+                if (iteration.Payload.TryGetValue("output", out string? output)) lastOutput = output;
+                await WriteResponseAsync(Progress(request.RequestId, 0.35 + ((index + 1d) / iterations * 0.6), "benchmark", "Native benchmark iteration " + (index + 1).ToString(CultureInfo.InvariantCulture) + "/" + iterations.ToString(CultureInfo.InvariantCulture) + "."));
+            }
+            samples.Sort();
+            double p50 = Percentile(samples, 0.50);
+            double p95 = Percentile(samples, 0.95);
+            var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["backendId"] = request.BackendId ?? string.Empty,
+                ["device"] = request.Payload.TryGetValue("device", out string? device) ? device : "cpu",
+                ["execution"] = "worker",
+                ["warmup"] = warmup.ToString(CultureInfo.InvariantCulture),
+                ["iterations"] = iterations.ToString(CultureInfo.InvariantCulture),
+                ["p50Ms"] = p50.ToString(CultureInfo.InvariantCulture),
+                ["p95Ms"] = p95.ToString(CultureInfo.InvariantCulture),
+                ["throughput"] = (1000d / (samples.Average())).ToString(CultureInfo.InvariantCulture)
+            };
+            if (lastOutput != null) payload["output"] = lastOutput;
+            response = new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "Native benchmark completed in the Worker; timings are measured around real adapter execution.", payload);
+        }
+    }
+    catch (OperationCanceledException)
+    {
+        response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "Native Worker benchmark was cancelled or timed out.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = operationCancellation.IsCancellationRequested ? "DSAPP-WORKER-CANCELLED" : "DSAPP-WORKER-TIMED-OUT", ["execution"] = "worker" });
+    }
+    catch (Exception exception)
+    {
+        response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "Native Worker benchmark failed before producing a report.", new Dictionary<string, string> { ["state"] = AppRuntimeState.Unavailable.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = "DSAPP-WORKER-BENCHMARK-FAILED", ["technicalDetail"] = exception.GetType().FullName + ": " + exception.Message, ["execution"] = "worker" });
+    }
+    await WriteResponseAsync(response);
+}
+
+static async Task<WorkerResponse> RunBenchmarkIterationAsync(WorkerRequest request, CancellationToken cancellationToken)
+{
+    return await WorkerInferenceAdapter.RunAsync(request, null, cancellationToken).ConfigureAwait(false);
+}
+
+static int ParsePositiveInt(IReadOnlyDictionary<string, string> payload, string key, int fallback, bool allowZero)
+{
+    if (!payload.TryGetValue(key, out string? value) || string.IsNullOrWhiteSpace(value)) return fallback;
+    int result = int.Parse(value, CultureInfo.InvariantCulture);
+    if (result < 0 || (!allowZero && result == 0)) throw new ArgumentOutOfRangeException(key);
+    return result;
+}
+
+static double Percentile(IReadOnlyList<double> values, double percentile)
+{
+    if (values.Count == 0) return 0;
+    double position = (values.Count - 1) * percentile;
+    int lower = (int)Math.Floor(position);
+    int upper = (int)Math.Ceiling(position);
+    if (lower == upper) return values[lower];
+    return values[lower] + ((values[upper] - values[lower]) * (position - lower));
 }
 
 async Task WriteResponseAsync(WorkerResponse response)

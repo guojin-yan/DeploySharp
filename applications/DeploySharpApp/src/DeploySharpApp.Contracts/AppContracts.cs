@@ -164,13 +164,19 @@ namespace DeploySharpApp.Contracts
 
     public sealed class BenchmarkRequest
     {
-        public BenchmarkRequest(string modelId, string backendId, int warmup = 3, int iterations = 20, string device = "cpu")
-        { ModelId = ContractGuard.Id(modelId, nameof(modelId)); BackendId = ContractGuard.Id(backendId, nameof(backendId)); Device = ContractGuard.Text(device, nameof(device)); if (warmup < 0) throw new ArgumentOutOfRangeException(nameof(warmup)); if (iterations <= 0) throw new ArgumentOutOfRangeException(nameof(iterations)); Warmup = warmup; Iterations = iterations; }
+        public BenchmarkRequest(string modelId, string backendId, int warmup = 3, int iterations = 20, string device = "cpu", string? modelPath = null, string? modelFormat = null, string? modelSha256 = null, string? inputPath = null, IEnumerable<ModelTensorInput>? tensorInputs = null, IReadOnlyDictionary<string, string>? options = null)
+        { ModelId = ContractGuard.Id(modelId, nameof(modelId)); BackendId = ContractGuard.Id(backendId, nameof(backendId)); Device = ContractGuard.Text(device, nameof(device)); if (warmup < 0) throw new ArgumentOutOfRangeException(nameof(warmup)); if (iterations <= 0) throw new ArgumentOutOfRangeException(nameof(iterations)); Warmup = warmup; Iterations = iterations; ModelPath = ContractGuard.Optional(modelPath); ModelFormat = ContractGuard.Optional(modelFormat)?.ToLowerInvariant(); ModelSha256 = ContractGuard.Optional(modelSha256); InputPath = ContractGuard.Optional(inputPath); TensorInputs = ContractGuard.List(tensorInputs); Options = ContractGuard.Dictionary(options); }
         public string ModelId { get; }
         public string BackendId { get; }
         public string Device { get; }
         public int Warmup { get; }
         public int Iterations { get; }
+        public string? ModelPath { get; }
+        public string? ModelFormat { get; }
+        public string? ModelSha256 { get; }
+        public string? InputPath { get; }
+        public IReadOnlyList<ModelTensorInput> TensorInputs { get; }
+        public IReadOnlyDictionary<string, string> Options { get; }
     }
 
     public sealed class BenchmarkReport

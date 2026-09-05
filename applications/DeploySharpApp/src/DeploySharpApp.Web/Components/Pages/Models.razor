@@ -2,6 +2,7 @@
 @using DeploySharpApp.Contracts
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
+@inject ModelFactoryRuntimeService FactoryRuntime
 <PageTitle>模型与后端 · DeploySharpApp</PageTitle>
 <style>
     .catalog-toolbar { display: grid; grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1fr) auto auto; gap: 10px; align-items: end; margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcff; }
@@ -13,6 +14,8 @@
     .factory-card .model-card-meta { min-height: 74px; color: #778198; font-size: 10px; line-height: 1.7; }
     .artifact-line { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 9px; color: #65728b; font-size: 10px; line-height: 1.55; }
     .artifact-line strong { color: #44516f; }
+    .factory-action { margin-top: 10px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .factory-result { padding: 8px 10px; border-left: 3px solid #4d7cff; background: #f4f7ff; color: #52617e; font-size: 10px; line-height: 1.55; }
     @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } }
     @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
 </style>
@@ -55,7 +58,7 @@ else if (tab == CatalogTab.Factory)
             <article class="plugin-card factory-card"><div class="plugin-card-head"><div class="plugin-logo gray">MF</div><div><h4>@item.Name</h4><small>@item.Id</small></div></div><p>@item.Task · @item.Family · v@item.Version</p><div class="model-card-meta">状态：@item.Status · 许可证：@item.License<br />@item.Description</div>@foreach (ModelFactoryArtifactItem artifact in item.Artifacts)
             {
                 <div class="artifact-line"><strong>@artifact.Id</strong> · @artifact.Format · @artifact.Precision · @artifact.Quantization<br />后端：@string.Join(", ", artifact.CompatibleBackends.DefaultIfEmpty("未声明")) · @(artifact.Portable ? "可移植" : "设备绑定") · 资产 @artifact.AssetCount · 测试输入 @artifact.TestInputCount</div>
-            }<div class="plugin-foot"><span>条目测试输入 @item.TestInputCount</span><span class="table-status pending">未物化</span></div></article>
+            }<div class="factory-action"><button class="ghost small" @onclick="() => Materialize(item.Id)" disabled="@(materializingId is not null)">物化并校验</button>@if (materializingId == item.Id) { <span class="hint">@((int)(materializeProgress * 100))% · 正在校验 Release 资产</span> }</div><div class="plugin-foot"><span>条目测试输入 @item.TestInputCount</span><span class="table-status @(materializedId == item.Id ? "ok" : "pending")">@(materializedId == item.Id ? "已物化" : "未物化")</span></div>@if (materializedId == item.Id && materialization is not null) { <div class="factory-result">已验证 @materialization.Format：<br />@materialization.ModelPath</div> }@if (materializeError is not null && materializingId == item.Id) { <div class="factory-result">物化失败：@materializeError</div> }</article>
         }</div>
     }
 }
@@ -74,6 +77,11 @@ else
     private IReadOnlyList<ModelFactoryCatalogItem> FactoryItems { get; set; } = Array.Empty<ModelFactoryCatalogItem>();
     private string FactoryRevision => FactoryCatalog.Catalog.Document.CatalogRevision ?? "unknown";
     private string? factoryError;
+    private string? materializingId;
+    private string? materializedId;
+    private string? materializeError;
+    private double materializeProgress;
+    private ModelFactoryMaterialization? materialization;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
@@ -88,6 +96,18 @@ else
         catch (Exception exception) { factoryError = exception.Message; }
     }
     private void Refresh() => Service.RefreshCatalog();
+    private async Task Materialize(string modelId)
+    {
+        materializingId = modelId; materializedId = null; materializeError = null; materialization = null; materializeProgress = 0;
+        try
+        {
+            var progress = new Progress<JYPPX.DeploySharp.ModelFactory.ModelDownloadProgress>(value => { materializeProgress = value.TotalBytes > 0 ? Math.Clamp((double)value.ReceivedBytes / value.TotalBytes, 0, 1) : value.Stage == JYPPX.DeploySharp.ModelFactory.ModelDownloadStage.Completed ? 1 : materializeProgress; InvokeAsync(StateHasChanged); });
+            materialization = await FactoryRuntime.MaterializeAsync(modelId, progress);
+            materializedId = modelId; materializeProgress = 1;
+        }
+        catch (Exception exception) { materializeError = exception.Message; }
+        finally { materializingId = null; }
+    }
     private void ClearFilters() { modelSearch = string.Empty; taskFilter = string.Empty; }
     private bool Matches(string displayName, string id, string task, string format)
     {

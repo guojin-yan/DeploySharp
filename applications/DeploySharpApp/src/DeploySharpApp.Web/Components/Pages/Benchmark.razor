@@ -3,8 +3,9 @@
 @inject DeploySharpAppService Service
 @inject WebActivityStore Activity
 <PageTitle>性能基准 · DeploySharpApp</PageTitle>
+<style>.bench-config { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(220px, 1.2fr); gap: 10px; margin-top: 12px; }.bench-config label { color: #748098; font-size: 10px; font-weight: 800; }.bench-config input, .bench-config select { display: block; width: 100%; margin-top: 6px; padding: 9px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; } @@media(max-width:700px) { .bench-config { grid-template-columns: 1fr; } }</style>
 <div class="section-head"><div><span class="eyebrow">PERFORMANCE LAB</span><h3>性能基准</h3></div><button class="primary small" @onclick="RunBenchmarkAsync" disabled="@busy">@(busy ? "测试中…" : "新建基准")</button></div>
-<div class="benchmark-hero panel"><div><span class="eyebrow">FIXTURE</span><h3>固定分类输入 · batch 1</h3><p>加载、预处理和后处理不计入循环；缺少 CUDA/TensorRT 时报告 unavailable。</p></div><div class="bench-summary"><div><small>Warmup</small><strong>3</strong></div><div><small>Iterations</small><strong>20</strong></div><div><small>报告</small><strong class="good">@reportState</strong></div></div></div>
+<div class="benchmark-hero panel"><div><span class="eyebrow">NATIVE BENCHMARK</span><h3>真实适配器基准</h3><p>加载、预处理和后处理不计入循环；Demo 只在明确选择 Demo 模式时使用，native 后端缺资源会报告 unavailable。</p><div class="bench-config"><label>后端<select @bind="selectedBackend"><option value="deploysharp.backend.onnxruntime">ONNX Runtime · Demo/CPU</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · Worker</option> }</select></label><label>模型路径<input @bind="modelPath" placeholder="native benchmark 必填；.onnx/.gguf/.engine" /></label></div></div><div class="bench-summary"><div><small>Warmup</small><strong>3</strong></div><div><small>Iterations</small><strong>20</strong></div><div><small>报告</small><strong class="good">@reportState</strong></div></div></div>
 <div class="panel table-panel"><div class="panel-head"><div><span class="eyebrow">LATEST REPORT</span><h3>后端对比</h3></div><span class="muted">@lastRun</span></div><table><thead><tr><th>后端</th><th>状态</th><th>P50 延迟</th><th>P95 延迟</th><th>吞吐</th><th>执行模式</th></tr></thead><tbody>@foreach (var backend in Service.Backends) { var latest = reports.TryGetValue(backend.Id, out var value) ? value : null; <tr><td><b>@backend.DisplayName</b><small>@backend.Version</small></td><td><span class="table-status @(latest?.Available == true ? "ok" : "pending")">@(latest?.Available == true ? "已完成" : backend.State.ToString())</span></td><td>@(latest?.Available == true ? latest.P50Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.P95Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.Throughput.ToString("F1") + "/s" : "—")</td><td>@(latest?.ExecutionMode ?? backend.ExecutionMode.ToString())</td></tr> }</tbody></table><progress value="@progress" max="1"></progress><p class="hint">@message</p></div>
 @code {
     private readonly Dictionary<string, BenchmarkReport> reports = new(StringComparer.OrdinalIgnoreCase);
@@ -13,16 +14,20 @@
     private string reportState = "等待运行";
     private string lastRun = "尚未执行";
     private string message = "基准固定输入与迭代次数，真实 native 后端不可用时不生成伪造数字。";
+    private string selectedBackend = "deploysharp.backend.onnxruntime";
+    private string modelPath = string.Empty;
     private async Task RunBenchmarkAsync()
     {
         if (busy) return;
         busy = true; progress = 0; reportState = "运行中"; message = "正在执行可复核基准…";
         try
         {
-            var request = new BenchmarkRequest("demo/yolo-v8-n", "deploysharp.backend.onnxruntime");
+            bool demo = selectedBackend.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(modelPath);
+            var request = new BenchmarkRequest(demo ? "demo/yolo-v8-n" : "web/benchmark", selectedBackend, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : InferFormat(modelPath));
             var report = await Service.BenchmarkAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), CancellationToken.None);
             reports[request.BackendId] = report; reportState = report.Available ? "可复核" : "不可用"; message = report.Message; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message);
         }
         finally { busy = false; }
     }
+    private static string InferFormat(string path) => Path.GetExtension(path).Equals(".gguf", StringComparison.OrdinalIgnoreCase) ? "gguf" : Path.GetExtension(path).Equals(".engine", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".plan", StringComparison.OrdinalIgnoreCase) ? "tensorrt-engine" : Path.GetExtension(path).TrimStart('.');
 }
