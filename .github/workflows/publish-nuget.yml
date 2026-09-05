@@ -1,0 +1,112 @@
+name: publish-nuget
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_version:
+        description: 'NuGet package version (alpha preview only)'
+        required: true
+        default: '2.0.0-alpha.1'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuget-publish-${{ inputs.package_version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore solution
+        run: dotnet restore DeploySharp.sln --locked-mode
+
+      - name: Run Release tests
+        run: dotnet test DeploySharp.sln -c Release --no-restore --verbosity minimal
+
+      - name: Build release packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          $baseline = Get-Content ./eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json
+          if ([string]$baseline.packageVersion -ne '${{ inputs.package_version }}') { throw 'Release package baseline version mismatch.' }
+          foreach ($definition in @($baseline.packages)) {
+            dotnet pack $definition.projectPath -c Release --no-restore -o $output
+            if ($LASTEXITCODE -ne 0) { throw "Pack failed: $($definition.packageId)." }
+          }
+          $nupkg = @(Get-ChildItem -LiteralPath $output -Filter '*.nupkg' | Where-Object Name -notlike '*.symbols.nupkg')
+          $snupkg = @(Get-ChildItem -LiteralPath $output -Filter '*.snupkg')
+          if ($nupkg.Count -ne 14 -or $snupkg.Count -ne 14) { throw "Expected 14 nupkg and 14 snupkg files; found $($nupkg.Count) and $($snupkg.Count)." }
+          "DEPLOYSHARP_PACKAGE_COUNT nupkg=$($nupkg.Count) snupkg=$($snupkg.Count)" | Write-Host
+
+      - name: Verify package reproducibility
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          $comparison = Join-Path $env:RUNNER_TEMP 'deploysharp-package-repro'
+          ./eng/pack/Invoke-ReleasePackageReproducibility.ps1 -PackageDirectory $output -ComparisonPackageDirectory $comparison -RepositoryRoot (Get-Location)
+
+      - name: Validate release candidate packages
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          ./eng/pack/Test-ReleaseCandidatePackages.ps1 -PackageDirectory $output -RepositoryRoot (Get-Location)
+
+      - name: Validate release evidence and authorization
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          ./eng/pack/Test-ReleaseEvidence.ps1 -PackageDirectory $output -RepositoryRoot (Get-Location) -RequireReleaseEligible
+          ./eng/pack/Test-ReleaseAuthorization.ps1 -RequireReleaseEligible
+
+      - name: Upload NuGet packages
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) { throw 'NUGET_API_KEY repository secret is missing.' }
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          $packages = @(Get-ChildItem -LiteralPath $output -Filter '*.nupkg' | Where-Object Name -notlike '*.symbols.nupkg' | Sort-Object Name)
+          foreach ($package in $packages) {
+            dotnet nuget push $package.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 300
+            if ($LASTEXITCODE -ne 0) { throw "NuGet package push failed: $($package.Name)." }
+          }
+          "DEPLOYSHARP_NUGET_PACKAGES_PUSHED count=$($packages.Count)" | Write-Host
+
+      - name: Upload NuGet symbol packages
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          $symbols = @(Get-ChildItem -LiteralPath $output -Filter '*.snupkg' | Sort-Object Name)
+          foreach ($symbol in $symbols) {
+            dotnet nuget push $symbol.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 300
+            if ($LASTEXITCODE -ne 0) { throw "NuGet symbol package push failed: $($symbol.Name)." }
+          }
+          "DEPLOYSHARP_NUGET_SYMBOLS_PUSHED count=$($symbols.Count)" | Write-Host
+
+      - name: Upload package artifacts for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploysharp-nuget-${{ inputs.package_version }}
+          path: ${{ runner.temp }}/deploysharp-packages
+          retention-days: 14
