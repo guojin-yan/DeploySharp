@@ -154,15 +154,8 @@ public sealed class VisualReleaseCatalogService
             modelFiles.Add(new VisualReleaseFile(asset!.Name, asset.DownloadUrl, asset.Size, sha, relativePath, modelFiles.Count == 0));
         }
         if (modelFiles.Count == 0) return null;
-        var inputs = new List<VisualModelInput>();
-        if (root.TryGetProperty("inputs", out JsonElement inputElements))
-        {
-            foreach (JsonElement input in inputElements.EnumerateArray())
-            {
-                if (String(input, "name") is not string inputName || String(input, "elementType") is not string elementType || !input.TryGetProperty("shape", out JsonElement shape)) continue;
-                inputs.Add(new VisualModelInput(inputName, elementType, shape.EnumerateArray().Select(item => item.GetInt64()).ToArray()));
-            }
-        }
+        IReadOnlyList<VisualModelInput> inputs = ParseTensorContract(root, "inputs");
+        IReadOnlyList<VisualModelInput> outputs = ParseTensorContract(root, "outputs");
         string format = String(artifact, "format") ?? "onnx";
         string size = FormatSize(modelFiles.Sum(file => file.Size));
         string[] backends = artifact.TryGetProperty("compatibleBackends", out JsonElement backendElements)
@@ -175,7 +168,7 @@ public sealed class VisualReleaseCatalogService
         string postprocessing = Extension(artifact, "deploysharp.postprocessing-version") ?? Extension(artifact, "deploysharp.postprocessing-contract") ?? "raw tensor output";
         string validation = Extension(artifact, "deploysharp.validation-status") ?? "not declared";
         int? opset = artifact.TryGetProperty("opset", out JsonElement opsetElement) && opsetElement.TryGetInt32(out int parsedOpset) ? parsedOpset : null;
-        return new VisualReleaseModel(modelId, modelId, name, task, format, size, backends, license, String(root, "modelVersion") ?? "release", pack.Name, inputs, modelFiles, false)
+        return new VisualReleaseModel(modelId, modelId, name, task, format, size, backends, license, String(root, "modelVersion") ?? "release", pack.Name, inputs, outputs, modelFiles, false)
         {
             Precision = precision,
             Quantization = quantization,
@@ -199,6 +192,17 @@ public sealed class VisualReleaseCatalogService
     private static string? Extension(JsonElement element, string property)
     {
         return element.TryGetProperty("extensions", out JsonElement extensions) ? String(extensions, property) : null;
+    }
+    private static IReadOnlyList<VisualModelInput> ParseTensorContract(JsonElement root, string property)
+    {
+        var tensors = new List<VisualModelInput>();
+        if (!root.TryGetProperty(property, out JsonElement elements) || elements.ValueKind != JsonValueKind.Array) return tensors;
+        foreach (JsonElement element in elements.EnumerateArray())
+        {
+            if (String(element, "name") is not string name || String(element, "elementType") is not string elementType || !element.TryGetProperty("shape", out JsonElement shape) || shape.ValueKind != JsonValueKind.Array) continue;
+            tensors.Add(new VisualModelInput(name, elementType, shape.EnumerateArray().Select(item => item.GetInt64()).ToArray()));
+        }
+        return tensors;
     }
     private static string FormatSize(long bytes) => bytes >= 1024 * 1024 * 1024 ? (bytes / 1024d / 1024d / 1024d).ToString("F1") + " GB" : (bytes / 1024d / 1024d).ToString("F1") + " MB";
 
@@ -257,6 +261,7 @@ public sealed record VisualReleaseModel(
     string Version,
     string ReleaseAssetName,
     IReadOnlyList<VisualModelInput> Inputs,
+    IReadOnlyList<VisualModelInput> Outputs,
     IReadOnlyList<VisualReleaseFile> Files,
     bool Cached)
 {

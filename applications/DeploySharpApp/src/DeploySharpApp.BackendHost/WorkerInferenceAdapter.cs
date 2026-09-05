@@ -19,6 +19,9 @@ using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Tensors;
 using DeploySharpApp.Contracts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace DeploySharpApp.BackendHost;
 
@@ -57,6 +60,10 @@ internal static class WorkerInferenceAdapter
         catch (DeploySharpException exception)
         {
             return Error(request, exception.ErrorCode, exception.Message, AppRuntimeState.Unavailable, exception.TechnicalDetails);
+        }
+        catch (Exception exception) when (exception is ArgumentException || exception is FormatException || exception is JsonException || exception is IOException || exception is UnauthorizedAccessException || exception is OverflowException)
+        {
+            return Error(request, "DSAPP-WORKER-INPUT-INVALID", "The native Worker input or backend options are invalid.", AppRuntimeState.Unsupported, exception.Message);
         }
         catch (Exception exception)
         {
@@ -107,7 +114,6 @@ internal static class WorkerInferenceAdapter
         if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenCV DNN Worker requires a modelFormat of onnx.", AppRuntimeState.Unsupported, format);
         IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
         if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "OpenCV DNN Worker requires named tensor inputs.", AppRuntimeState.Unsupported);
-        if (inputs.Any(input => input.ImageInput)) return Error(request, "DSAPP-WORKER-IMAGE-PREPROCESSING-REQUIRED", "Native Worker adapters require preprocessed named tensor values; image inputs must be converted by the application before dispatch.", AppRuntimeState.Unavailable);
         string[] outputNames = (Value(request.Payload, "outputTensorNames") ?? string.Empty).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(value => value.Trim()).Where(value => value.Length > 0).ToArray();
         if (outputNames.Length == 0) return Error(request, "DSAPP-WORKER-OPENCV-OUTPUT-CONTRACT-REQUIRED", "OpenCV DNN requires outputTensorNames and outputTensorShapesJson in backend options because its model contract is explicit.", AppRuntimeState.Unsupported);
         var outputShapes = JsonSerializer.Deserialize<Dictionary<string, long[]>>(Value(request.Payload, "outputTensorShapesJson") ?? "{}", JsonOptions) ?? new Dictionary<string, long[]>();
@@ -115,7 +121,7 @@ internal static class WorkerInferenceAdapter
         var modelId = new ModelId(request.ModelId ?? "worker/opencv");
         var inputDescriptors = inputs.Select(input => new TensorDescriptor(input.Name, ToElementType(input.ElementType), new TensorShape(input.Shape))).ToArray();
         var outputDescriptors = outputNames.Select(name => new TensorDescriptor(name, ToElementType(outputTypes.TryGetValue(name, out string? type) ? type : "float32"), new TensorShape(outputShapes.TryGetValue(name, out long[]? shape) ? shape : new[] { -1L }))).ToArray();
-        var contract = new OpenCvDnnModelContract(modelId, inputDescriptors, outputDescriptors);
+        var contract = new OpenCvDnnModelContract(modelId, inputDescriptors, outputDescriptors, inputs.Where(IsImageTensorInput).Select(input => input.Name));
         using var provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(contract, numThreads: GetNullableInt(request.Payload, "numThreads")));
         return await RunSessionAsync(request, modelPath, "onnx", OpenCvDnnBackendProvider.BackendId, provider, inputs, reportProgress, cancellationToken).ConfigureAwait(false);
     }
@@ -127,7 +133,6 @@ internal static class WorkerInferenceAdapter
         if (provider is OpenVinoBackendProvider && !string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase) && !string.Equals(format, "openvino-ir", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenVINO Worker requires a modelFormat of onnx or openvino-ir.", AppRuntimeState.Unsupported, format);
         IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
         if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "Native tensor Worker inference requires named tensor inputs.", AppRuntimeState.Unsupported);
-        if (inputs.Any(input => input.ImageInput)) return Error(request, "DSAPP-WORKER-IMAGE-PREPROCESSING-REQUIRED", "Native Worker adapters require preprocessed named tensor values; image inputs must be converted by the application before dispatch.", AppRuntimeState.Unavailable);
         BackendId backendId = provider.Descriptor.Id;
         using (provider)
             return await RunSessionAsync(request, modelPath, format, backendId, provider, inputs, reportProgress, cancellationToken).ConfigureAwait(false);
@@ -138,29 +143,96 @@ internal static class WorkerInferenceAdapter
         var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/model"), format, modelPath, Value(request.Payload, "modelSha256"), backendId);
         var backendRequest = new BackendRequest(BackendCapabilities.TensorInference, backendId, Value(request.Payload, "device"));
         using IInferenceSession session = provider.CreateSession(artifact, backendRequest, new SessionOptions(GetInt(request.Payload, "maxConcurrency", 1), GetBool(request.Payload, "enableProfiling", false)));
+        Stopwatch preprocess = Stopwatch.StartNew();
+        InferenceInputs inferenceInputs = await CreateInferenceInputsAsync(request, inputs, cancellationToken).ConfigureAwait(false);
+        preprocess.Stop();
         reportProgress?.Invoke(0.65);
-        InferenceInputs inferenceInputs = new InferenceInputs(inputs.Select(ToNamedTensor));
         Stopwatch stopwatch = Stopwatch.StartNew();
         InferenceOutputs outputs = await session.RunAsync(inferenceInputs, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
         reportProgress?.Invoke(0.95);
+        Stopwatch postprocess = Stopwatch.StartNew();
         string outputJson = JsonSerializer.Serialize(outputs.Select(item => new WorkerTensorOutput(item.Name, item.Tensor.ElementType.ToString(), item.Tensor.Shape.ToArray(), item.Tensor.Buffer)).ToArray(), JsonOptions);
+        postprocess.Stop();
         var payload = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["output"] = outputJson,
             ["backendId"] = backendId.Value,
             ["device"] = Value(request.Payload, "device") ?? "cpu",
             ["execution"] = "worker",
-            ["inferenceMs"] = stopwatch.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
+            ["preprocessMs"] = preprocess.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["inferenceMs"] = stopwatch.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["postprocessMs"] = postprocess.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
         };
         return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, backendId.Value + " inference completed in the Worker.", payload);
     }
 
-    private static NamedTensor ToNamedTensor(WorkerTensorInput input)
+    private static async Task<InferenceInputs> CreateInferenceInputsAsync(WorkerRequest request, IReadOnlyList<WorkerTensorInput> inputs, CancellationToken cancellationToken)
     {
-        TensorShape shape = new TensorShape(input.Shape);
-        string json = input.ValuesJson ?? File.ReadAllText(Path.GetFullPath(input.ValuesFilePath!));
-        return new NamedTensor(input.Name, ToTensor(input.ElementType, shape, json));
+        var tensors = new List<NamedTensor>(inputs.Count);
+        foreach (WorkerTensorInput input in inputs)
+        {
+            ITensor tensor = input.ImageInput
+                ? await CreateImageTensorAsync(request, input, cancellationToken).ConfigureAwait(false)
+                : ToTensor(input.ElementType, new TensorShape(input.Shape), input.ValuesJson ?? File.ReadAllText(Path.GetFullPath(input.ValuesFilePath!)));
+            tensors.Add(new NamedTensor(input.Name, tensor));
+        }
+        return new InferenceInputs(tensors);
+    }
+
+    private static async Task<ITensor> CreateImageTensorAsync(WorkerRequest request, WorkerTensorInput input, CancellationToken cancellationToken)
+    {
+        if (!string.Equals(input.ElementType, "float32", StringComparison.OrdinalIgnoreCase) && !string.Equals(input.ElementType, "float", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Image tensor inputs must use float32.");
+        var shape = new TensorShape(input.Shape);
+        if (shape.Rank != 4 || shape[0] != 1 || (shape[1] != 1 && shape[1] != 3 && shape[1] != 4) || shape[2] <= 0 || shape[3] <= 0)
+            throw new ArgumentException("Image tensor shape must be [1,1|3|4,height,width] with positive spatial dimensions.");
+        string imagePath = Path.GetFullPath(Value(request.Payload, "inputPath") ?? throw new ArgumentException("An inputPath is required for image tensor input."));
+        if (!File.Exists(imagePath)) throw new FileNotFoundException("The Worker image input does not exist.", imagePath);
+
+        int channels = checked((int)shape[1]);
+        int height = checked((int)shape[2]);
+        int width = checked((int)shape[3]);
+        ResizeMode resizeMode = (Value(request.Payload, "imageResizeMode") ?? "stretch").ToLowerInvariant() switch
+        {
+            "stretch" => ResizeMode.Stretch,
+            "pad" => ResizeMode.Pad,
+            "crop" => ResizeMode.Crop,
+            _ => throw new ArgumentException("imageResizeMode must be 'stretch', 'pad', or 'crop'.")
+        };
+        string colorOrder = (Value(request.Payload, "imageColorOrder") ?? "rgb").ToLowerInvariant();
+        if (colorOrder != "rgb" && colorOrder != "bgr") throw new ArgumentException("imageColorOrder must be 'rgb' or 'bgr'.");
+        float scale = GetFloat(request.Payload, "imageScale", 1f / 255f);
+        float meanRed = GetFloat(request.Payload, "imageMeanR", 0f);
+        float meanGreen = GetFloat(request.Payload, "imageMeanG", 0f);
+        float meanBlue = GetFloat(request.Payload, "imageMeanB", 0f);
+        float stdRed = GetPositiveFloat(request.Payload, "imageStdR", 1f);
+        float stdGreen = GetPositiveFloat(request.Payload, "imageStdG", 1f);
+        float stdBlue = GetPositiveFloat(request.Payload, "imageStdB", 1f);
+        int padValue = GetInt(request.Payload, "imagePadValue", 0);
+        if (padValue is < 0 or > 255) throw new ArgumentOutOfRangeException("imagePadValue", "imagePadValue must be between 0 and 255.");
+
+        using Image<Rgb24> image = await Image.LoadAsync<Rgb24>(imagePath, cancellationToken).ConfigureAwait(false);
+        image.Mutate(context => context.Resize(new ResizeOptions { Size = new Size(width, height), Mode = resizeMode, PadColor = Color.FromRgb((byte)padValue, (byte)padValue, (byte)padValue) }));
+        var values = new float[checked(channels * height * width)];
+        for (int y = 0; y < height; y++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            for (int x = 0; x < width; x++)
+            {
+                Rgb24 pixel = image[x, y];
+                int offset = y * width + x;
+                float red = ((pixel.R * scale) - meanRed) / stdRed;
+                float green = ((pixel.G * scale) - meanGreen) / stdGreen;
+                float blue = ((pixel.B * scale) - meanBlue) / stdBlue;
+                if (colorOrder == "bgr") (red, blue) = (blue, red);
+                values[offset] = channels == 1 ? (red + green + blue) / 3f : red;
+                if (channels > 1) values[height * width + offset] = green;
+                if (channels > 2) values[2 * height * width + offset] = blue;
+                if (channels > 3) values[3 * height * width + offset] = 1f;
+            }
+        }
+        return new Tensor<float>(shape, values, TensorBufferOwnership.Transfer);
     }
 
     private static ITensor ToTensor(string elementType, TensorShape shape, string json)
@@ -183,6 +255,11 @@ internal static class WorkerInferenceAdapter
         return JsonSerializer.Deserialize<List<WorkerTensorInput>>(Value(payload, "tensorInputsJson") ?? "[]", JsonOptions) ?? new List<WorkerTensorInput>();
     }
 
+    private static bool IsImageTensorInput(WorkerTensorInput input)
+    {
+        return input.ImageInput || input.Shape.Length == 4 && input.Shape[0] > 0 && (input.Shape[1] == 1 || input.Shape[1] == 3 || input.Shape[1] == 4) && input.Shape[2] > 0 && input.Shape[3] > 0 && (string.Equals(input.ElementType, "float32", StringComparison.OrdinalIgnoreCase) || string.Equals(input.ElementType, "float", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static LlamaSharpOptions ParseLlamaOptions(IReadOnlyDictionary<string, string> payload) => new LlamaSharpOptions(GetNullableUInt(payload, "contextSize"), GetInt(payload, "gpuLayerCount", 0), GetInt(payload, "mainGpu", 0), GetNullableInt(payload, "threads"), GetNullableInt(payload, "batchThreads"), (uint)GetInt(payload, "batchSize", 512), (uint)GetInt(payload, "sequenceCount", 1), GetBool(payload, "useMemoryMap", true), GetBool(payload, "useMemoryLock", false), LlamaEmbeddingPooling.Mean, Value(payload, "device") ?? "cpu");
 
     private static OpenVinoOptions ParseOpenVinoOptions(IReadOnlyDictionary<string, string> payload) => new OpenVinoOptions(Value(payload, "device") ?? "CPU", ParseEnum(Value(payload, "performanceHint"), OpenVinoPerformanceHint.Default), GetNullableInt(payload, "streams"), GetNullableInt(payload, "inferenceThreads"), Value(payload, "cacheDirectory"), GetBool(payload, "enableProfiling", false), GetNullableInt(payload, "requestCount"), null, GetBool(payload, "allowDynamicShapes", true));
@@ -197,6 +274,7 @@ internal static class WorkerInferenceAdapter
     private static long GetLong(IReadOnlyDictionary<string, string> payload, string key, long fallback) => Value(payload, key) == null ? fallback : long.Parse(Value(payload, key)!, CultureInfo.InvariantCulture);
     private static double GetDouble(IReadOnlyDictionary<string, string> payload, string key, double fallback) => Value(payload, key) == null ? fallback : double.Parse(Value(payload, key)!, CultureInfo.InvariantCulture);
     private static float GetFloat(IReadOnlyDictionary<string, string> payload, string key, float fallback) => Value(payload, key) == null ? fallback : float.Parse(Value(payload, key)!, CultureInfo.InvariantCulture);
+    private static float GetPositiveFloat(IReadOnlyDictionary<string, string> payload, string key, float fallback) { float value = GetFloat(payload, key, fallback); if (!float.IsFinite(value) || value <= 0) throw new ArgumentOutOfRangeException(key, key + " must be a positive finite number."); return value; }
     private static int? GetNullableInt(IReadOnlyDictionary<string, string> payload, string key) => Value(payload, key) == null ? null : int.Parse(Value(payload, key)!, CultureInfo.InvariantCulture);
     private static uint? GetNullableUInt(IReadOnlyDictionary<string, string> payload, string key) => Value(payload, key) == null ? null : uint.Parse(Value(payload, key)!, CultureInfo.InvariantCulture);
     private static bool GetBool(IReadOnlyDictionary<string, string> payload, string key, bool fallback) => Value(payload, key) == null ? fallback : bool.Parse(Value(payload, key)!);

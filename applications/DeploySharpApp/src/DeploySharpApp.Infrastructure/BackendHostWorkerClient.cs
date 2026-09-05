@@ -318,9 +318,7 @@ namespace DeploySharpApp.Infrastructure
             if (response.Payload.TryGetValue("state", out string? stateText) && Enum.TryParse(stateText, true, out AppRuntimeState state))
             {
                 string diagnosticCode = response.Payload.TryGetValue("diagnosticCode", out string? workerCode) ? workerCode : string.Empty;
-                AppErrorCode code = diagnosticCode.StartsWith("DSAPP-WORKER-MODEL", StringComparison.OrdinalIgnoreCase)
-                    ? AppErrorCode.ModelUnavailable
-                    : state == AppRuntimeState.MissingNative ? AppErrorCode.NativeDependencyMissing : AppErrorCode.BackendUnavailable;
+                AppErrorCode code = MapWorkerErrorCode(diagnosticCode, state);
                 ModelRunResult structuredFailure = WorkerRuntimeFailure(request, response, state, code);
                 return streamDiagnostics.Count == 0 ? structuredFailure : WithAdditionalDiagnostics(structuredFailure, streamDiagnostics);
             }
@@ -347,6 +345,18 @@ namespace DeploySharpApp.Infrastructure
                 details: response.Payload,
                 diagnostics: new[] { diagnostic });
             return new ModelRunResult(false, code, message, diagnostics: new[] { diagnostic }, runMode: ModelRunMode.Worker, runtimeStatus: status);
+        }
+
+        private static AppErrorCode MapWorkerErrorCode(string diagnosticCode, AppRuntimeState state)
+        {
+            if (diagnosticCode.StartsWith("DSAPP-WORKER-MODEL", StringComparison.OrdinalIgnoreCase)) return AppErrorCode.ModelUnavailable;
+            if (diagnosticCode.IndexOf("CANCEL", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.Cancelled;
+            if (diagnosticCode.IndexOf("TIMED-OUT", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.TimedOut;
+            if (diagnosticCode.StartsWith("DSAPP-WORKER-INPUT", StringComparison.OrdinalIgnoreCase)
+                || diagnosticCode.StartsWith("DSAPP-WORKER-TENSOR", StringComparison.OrdinalIgnoreCase)
+                || diagnosticCode.StartsWith("DSAPP-WORKER-PROMPT", StringComparison.OrdinalIgnoreCase)
+                || diagnosticCode.StartsWith("DSAPP-WORKER-OPENCV-OUTPUT", StringComparison.OrdinalIgnoreCase)) return AppErrorCode.InvalidRequest;
+            return state == AppRuntimeState.MissingNative ? AppErrorCode.NativeDependencyMissing : AppErrorCode.BackendUnavailable;
         }
 
         private static ModelRunResult WithAdditionalDiagnostics(ModelRunResult result, IEnumerable<RuntimeDiagnostic> additional)

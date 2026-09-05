@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DeploySharpApp.Application;
 using DeploySharpApp.BackendHost.Protocol;
@@ -138,6 +139,100 @@ namespace DeploySharpApp.Application.Tests
             };
             ModelRunResult result = await RunTensorWorkerAsync("deploysharp.backend.opencv", options);
             AssertWorkerValues(result, new[] { 1f, 2f, 3f });
+        }
+
+        [TestMethod]
+        public async Task OpenVinoWorkerPreprocessesRealImageInput()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            string imagePath = Path.Combine(Path.GetTempPath(), "deploysharp-worker-image-" + Guid.NewGuid().ToString("N") + ".png");
+            await File.WriteAllBytesAsync(imagePath, Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="));
+            try
+            {
+                var inputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, imageInput: true) };
+                var options = new Dictionary<string, string> { ["imageResizeMode"] = "stretch", ["imageColorOrder"] = "rgb", ["imageScale"] = "0.0039215686" };
+                var request = new ModelRunRequest(AppOperationKind.Vision, "tests/classification-image", "deploysharp.backend.openvino", inputPath: imagePath, modelPath: Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"), modelFormat: "onnx", tensorInputs: inputs, options: options);
+                ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+                if (result.ErrorCode == AppErrorCode.NativeDependencyMissing) Assert.Inconclusive(result.Message);
+                Assert.IsTrue(result.Succeeded, result.Message);
+                Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+                Assert.IsTrue(result.PreprocessMs > 0);
+                using JsonDocument output = JsonDocument.Parse(result.Output!);
+                Assert.AreEqual(3, output.RootElement[0].GetProperty("values").GetArrayLength());
+            }
+            finally { File.Delete(imagePath); }
+        }
+
+        [TestMethod]
+        public async Task WorkerCancelTargetsActiveInferenceOperation()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            string imagePath = Path.Combine(Path.GetTempPath(), "deploysharp-worker-cancel-" + Guid.NewGuid().ToString("N") + ".png");
+            await File.WriteAllBytesAsync(imagePath, Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="));
+            using Process process = StartBackendHost();
+            try
+            {
+                await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Handshake, "cancel-handshake", payload: new Dictionary<string, string> { ["protocolVersion"] = WorkerProtocol.ProtocolVersion.ToString() }));
+                WorkerResponse handshake = await ReadResponseAsync(process, "cancel-handshake", TimeSpan.FromSeconds(10));
+                Assert.IsTrue(handshake.Succeeded);
+
+                var tensor = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2048, 2048 }, imageInput: true) };
+                var payload = new Dictionary<string, string>
+                {
+                    ["modelPath"] = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"),
+                    ["modelFormat"] = "onnx",
+                    ["inputPath"] = imagePath,
+                    ["device"] = "cpu",
+                    ["timeoutMs"] = "30000",
+                    ["tensorInputsJson"] = JsonSerializer.Serialize(tensor)
+                };
+                await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Inference, "active-inference", "deploysharp.backend.openvino", "tests/cancel", payload));
+                WorkerResponse accepted = await ReadResponseAsync(process, "active-inference", TimeSpan.FromSeconds(10), WorkerResponseKind.Progress);
+                Assert.AreEqual("dispatch", accepted.Payload["stage"]);
+
+                await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Cancel, "cancel-active"));
+                WorkerResponse cancelled = await ReadResponseAsync(process, "cancel-active", TimeSpan.FromSeconds(10));
+                Assert.IsTrue(cancelled.Succeeded);
+                Assert.AreEqual("DSAPP-WORKER-CANCEL-REQUESTED", cancelled.Payload["diagnosticCode"]);
+                Assert.AreEqual("active-inference", cancelled.Payload["activeRequestId"]);
+            }
+            finally
+            {
+                try { await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, new WorkerRequest(WorkerMessageKind.Shutdown, "cancel-shutdown")); } catch (Exception) { }
+                if (!process.HasExited) process.Kill(entireProcessTree: true);
+                File.Delete(imagePath);
+            }
+        }
+
+        private static Process StartBackendHost()
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo("dotnet", "\"" + LocateBackendHost() + "\"")
+                {
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
+            Assert.IsTrue(process.Start());
+            return process;
+        }
+
+        private static async Task<WorkerResponse> ReadResponseAsync(Process process, string requestId, TimeSpan timeout, WorkerResponseKind? kind = null)
+        {
+            using var cancellation = new CancellationTokenSource(timeout);
+            while (true)
+            {
+                string? line = await process.StandardOutput.ReadLineAsync(cancellation.Token);
+                if (line == null) throw new EndOfStreamException("BackendHost closed stdout before returning " + requestId + ".");
+                WorkerResponse response;
+                try { response = WorkerProtocol.DeserializeResponse(line); }
+                catch (FormatException) { continue; }
+                if (string.Equals(response.RequestId, requestId, StringComparison.Ordinal) && (!kind.HasValue || response.Kind == kind.Value)) return response;
+            }
         }
 
         private static async Task<ModelRunResult> RunTensorWorkerAsync(string backendId, IReadOnlyDictionary<string, string>? options = null)

@@ -22,5 +22,6 @@
     <PackageReference Include="LLamaSharp.Backend.Cpu" />
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" RuntimeIdentifier="win-x64" />
     <PackageReference Include="OpenVINO.runtime.win" RuntimeIdentifier="win-x64" />
+    <PackageReference Include="SixLabors.ImageSharp" />
   </ItemGroup>
 </Project>

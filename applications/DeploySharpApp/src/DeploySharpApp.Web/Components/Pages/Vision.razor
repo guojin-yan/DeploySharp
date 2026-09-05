@@ -10,7 +10,7 @@
     .workbench { align-items: start; grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); }
     .config, .canvas-panel { min-width: 0; }
     .two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    .two-col > label { min-width: 0; }
+    .two-col > label { min-width: 0; overflow: hidden; }
     .config input:not([type="file"]) { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fafbfe; color: var(--ink); font: inherit; font-size: 11px; margin-top: 7px; outline: none; }
     .canvas-panel { overflow: hidden; }
     .result-box { height: 190px; min-height: 190px; overflow: hidden; }
@@ -57,9 +57,9 @@
     .readiness-item b { color: #44516f; margin-right: 5px; }
     @@media(max-width:1180px) { .workbench { grid-template-columns: 1fr; } }
     @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } .model-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @@media(max-width:430px) { .settings-grid, .three-col, .model-evidence-grid { grid-template-columns: 1fr; } }
+    @@media(max-width:430px) { .two-col, .settings-grid, .three-col, .model-evidence-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
-<div class="section-head"><div><span class="eyebrow">VISION WORKBENCH</span><h3>视觉推理</h3></div><span class="status-tag">@(selectedReleaseModel is null ? "Demo / 本地模型" : selectedReleaseModel.Format.Equals("onnx", StringComparison.OrdinalIgnoreCase) ? "ONNX Runtime · CPU" : "待接入 · " + selectedReleaseModel.Format)</span></div>
+<div class="section-head"><div><span class="eyebrow">VISION WORKBENCH</span><h3>视觉推理</h3></div><span class="status-tag">@backendExecutionLabel</span></div>
 <div class="workbench">
     <section class="panel config">
         <div class="panel-head"><div><span class="eyebrow">01 · CONFIGURE</span><h3>配置一次运行</h3></div></div>
@@ -85,7 +85,7 @@
             <div class="download-row"><span class="muted">@(selectedReleaseModel.Cached ? "已缓存" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadSelectedAsync()" disabled="@downloading">@(downloading ? "下载中…" : "下载模型")</button></div>
             @if (downloading) { <progress value="@downloadProgress" max="1"></progress> }
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
-            <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@(selectedReleaseModel.Inputs.Count == 0 ? "未声明" : string.Join("; ", selectedReleaseModel.Inputs.Select(input => input.Name + " " + string.Join("×", input.Shape))))</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
+            <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@TensorContract(selectedReleaseModel.Inputs)</b></div><div><small>输出契约</small><b>@TensorContract(selectedReleaseModel.Outputs)</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
         }
         <label>本地 ONNX 模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="release 模型会自动填充；也可输入自有 .onnx" /></label>
         <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
@@ -112,9 +112,17 @@
             <span class="muted">通道标准差（必须大于 0）</span><div class="three-col"><label>R<input type="number" step="any" min="0.000001" @bind="stdR" @bind:after="MarkCustomParameters" /></label><label>G<input type="number" step="any" min="0.000001" @bind="stdG" @bind:after="MarkCustomParameters" /></label><label>B<input type="number" step="any" min="0.000001" @bind="stdB" @bind:after="MarkCustomParameters" /></label></div>
             <div class="reset-row"><button class="ghost small" @onclick="ApplyCommonDefaults">恢复通用默认</button><button class="ghost small" @onclick="ApplyModelDefaults" disabled="@(selectedReleaseModel is null)">使用模型推荐值</button></div>
         </details>
-        <details class="settings-group"><summary>运行与性能 <span>ONNX Runtime CPU · 点击展开</span></summary>
-            <label>后端<select @bind="selectedBackend" @bind:after="MarkCustomParameters"><option value="deploysharp.backend.onnxruntime">ONNX Runtime</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
-            <div class="two-col"><label>设备<select @bind="device" @bind:after="MarkCustomParameters"><option value="cpu">CPU · 进程内</option><option value="cuda">CUDA · 当前不可用</option></select></label><label>最大并发<input type="number" min="1" max="64" step="1" @bind="maxConcurrency" @bind:after="MarkCustomParameters" /></label></div>
+        @if (IsBackend("opencv"))
+        {
+            <details class="settings-group" open><summary>OpenCV 输出合同 <span>本地模型必须填写</span></summary>
+                <label>输出 Tensor 名称<input @bind="outputTensorNames" @bind:after="MarkCustomParameters" placeholder="例如 scores,boxes" /></label>
+                <label>输出形状 JSON<textarea @bind="outputTensorShapesJson" @bind:after="MarkCustomParameters" placeholder='例如 {"scores":[1,1000]}'></textarea></label>
+                <label>输出类型 JSON<textarea @bind="outputTensorElementTypesJson" @bind:after="MarkCustomParameters" placeholder='例如 {"scores":"float32"}'></textarea></label>
+            </details>
+        }
+        <details class="settings-group"><summary>运行与性能 <span>@backendExecutionLabel · 点击展开</span></summary>
+            <label>后端<select @bind="selectedBackend" @bind:after="HandleBackendChanged">@foreach (var backend in Service.Backends.Where(item => (item.Capabilities & AppBackendCapability.Vision) != 0)) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
+            <div class="two-col"><label>设备<select @bind="device" @bind:after="MarkCustomParameters"><option value="cpu">@(IsWorkerVisionBackend ? "CPU · Worker" : "CPU · 进程内")</option><option value="cuda">CUDA · 需匹配 Worker</option></select></label><label>最大并发<input type="number" min="1" max="64" step="1" @bind="maxConcurrency" @bind:after="MarkCustomParameters" /></label></div>
             <div class="two-col"><label>算子内线程<input type="number" min="0" max="256" step="1" @bind="intraOpThreads" @bind:after="MarkCustomParameters" /></label><label>算子间线程<input type="number" min="0" max="256" step="1" @bind="interOpThreads" @bind:after="MarkCustomParameters" /></label></div>
             <div class="settings-grid"><label>图优化<select @bind="graphOptimization" @bind:after="MarkCustomParameters"><option>Disabled</option><option>Basic</option><option>Extended</option><option>All</option></select></label><label>执行模式<select @bind="executionMode" @bind:after="MarkCustomParameters"><option>Sequential</option><option>Parallel</option></select></label></div>
             <div class="settings-grid"><label>原生日志<select @bind="logSeverity" @bind:after="MarkCustomParameters"><option>Verbose</option><option>Information</option><option>Warning</option><option>Error</option><option>Fatal</option></select></label><label>超时（秒）<input type="number" min="1" max="3600" step="1" @bind="timeoutSeconds" @bind:after="MarkCustomParameters" /></label></div>
@@ -125,7 +133,7 @@
             <div class="readiness-head"><b>运行前检查</b><span class="status-tag @(readinessChecks.All(check => check.Ready) ? "" : "orange-tag")">@readinessHeadline</span></div>
             <div class="readiness-list">@foreach (ReadinessCheck check in readinessChecks) { <div class="readiness-item @(check.Ready ? check.Attention ? "attention" : "" : "blocked")"><span><b>@check.Label</b>@check.Detail</span></div> }</div>
         </div>
-        <button class="primary wide" disabled="@busy" @onclick="RunAsync">@(busy ? "运行中…" : "运行推理 →")</button>
+        <button class="primary wide" disabled="@(busy || !readinessChecks.All(check => check.Ready))" @onclick="RunAsync">@(busy ? "运行中…" : "运行推理 →")</button>
         <button class="ghost wide" disabled="@(!busy)" @onclick="Cancel">取消当前运行</button>
         <div class="hint">真实推理会校验模型路径、图片尺寸、命名输入、native runtime 和 ABI；没有图片且未提供 tensor 时不会伪造测试输入。CUDA 请求会明确返回不可用，不会回退到 CPU。</div>
         <progress value="@progress" max="1"></progress>
@@ -179,6 +187,9 @@
     private string tensorJson = string.Empty;
     private string tensorName = "images";
     private string tensorShape = "1,3,640,640";
+    private string outputTensorNames = string.Empty;
+    private string outputTensorShapesJson = string.Empty;
+    private string outputTensorElementTypesJson = string.Empty;
     private string result = "运行后将在此显示可视化结果。";
     private string runMode = "尚未运行";
     private string runtimeState = "Unavailable";
@@ -217,6 +228,8 @@
     private VisualTestImage? effectiveTestImage => selectedTestImage ?? (selectedReleaseModel is null ? null : TestImageCatalog.FindDefault(testImages, selectedReleaseModel.Task, selectedReleaseModel.DisplayName));
     private IReadOnlyList<ReadinessCheck> readinessChecks => BuildReadinessChecks();
     private string readinessHeadline => readinessChecks.All(check => check.Ready) ? (readinessChecks.Any(check => check.Attention) ? "可运行 · 有待处理项" : "可运行") : "需要处理";
+    private bool IsWorkerVisionBackend => IsBackend("opencv") || IsBackend("openvino") || IsBackend("tensorrt");
+    private string backendExecutionLabel => IsBackend("onnxruntime") ? "ONNX Runtime · CPU 进程内" : IsBackend("opencv") ? "OpenCV DNN · CPU Worker" : IsBackend("openvino") ? "OpenVINO · CPU Worker" : IsBackend("tensorrt") ? "TensorRT · CUDA Worker" : "后端待确认";
 
     protected override async Task OnInitializedAsync()
     {
@@ -248,6 +261,9 @@
     {
         tensorName = "images";
         tensorShape = "1,3,640,640";
+        outputTensorNames = string.Empty;
+        outputTensorShapesJson = string.Empty;
+        outputTensorElementTypesJson = string.Empty;
         resizeMode = "stretch";
         colorOrder = "rgb";
         imageScale = "0.0039215686";
@@ -277,6 +293,8 @@
             modelPath = string.Empty;
             return;
         }
+
+        ApplyOutputContract(model);
 
         VisualModelInput? image = model.Inputs.FirstOrDefault(IsImageInput);
         if (image is not null)
@@ -320,7 +338,8 @@
     {
         VisualReleaseModel? model = selectedReleaseModel;
         bool isDemo = string.Equals(selectedModelId, "demo/yolo-v8-n", StringComparison.OrdinalIgnoreCase);
-        bool isOnnx = string.Equals(selectedBackend, "deploysharp.backend.onnxruntime", StringComparison.OrdinalIgnoreCase);
+        bool isOnnxRuntime = IsBackend("onnxruntime");
+        bool supportedVisionBackend = isOnnxRuntime || IsBackend("opencv") || IsBackend("openvino");
         var checks = new List<ReadinessCheck>();
 
         if (isDemo)
@@ -347,10 +366,18 @@
         else
             checks.Add(new ReadinessCheck(false, "输入", "请上传图像，或同时提供模型路径和 Tensor JSON。"));
 
-        if (!isOnnx)
-            checks.Add(new ReadinessCheck(false, "后端", "当前页面的真实 Engine 只支持 ONNX Runtime。"));
+        if (isDemo && !isOnnxRuntime)
+            checks.Add(new ReadinessCheck(false, "后端", "Demo/Fake operation 只用于 ONNX Runtime 入口；请选择真实模型后再使用 Worker 后端。"));
+        else if (!supportedVisionBackend)
+            checks.Add(new ReadinessCheck(false, "后端", "该后端不能直接运行当前 ONNX artifact；TensorRT 只接受设备绑定的 tensorrt-engine。"));
+        else if (model is not null && !model.RecommendedBackends.Contains(selectedBackend, StringComparer.OrdinalIgnoreCase))
+            checks.Add(new ReadinessCheck(false, "后端", "modelpack 未声明与 " + selectedBackend + " 兼容，不会强行执行。"));
+        else if (IsBackend("opencv") && (string.IsNullOrWhiteSpace(outputTensorNames) || string.IsNullOrWhiteSpace(outputTensorShapesJson) || string.IsNullOrWhiteSpace(outputTensorElementTypesJson)))
+            checks.Add(new ReadinessCheck(false, "输出合同", "OpenCV DNN 需要精确输出名称、形状和元素类型；Release 模型会自动填充，本地模型需手动填写。"));
         else if (string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
-            checks.Add(new ReadinessCheck(false, "设备", "CUDA 当前明确不可用，需由 Worker 承载；不会回退到 CPU。"));
+            checks.Add(new ReadinessCheck(false, "设备", "当前选择不具备已验证的 CUDA provider；不会回退到 CPU。"));
+        else if (IsWorkerVisionBackend)
+            checks.Add(new ReadinessCheck(true, "设备", "将在 net10 Worker 中执行，native runtime 会先探测再加载。"));
         else
             checks.Add(new ReadinessCheck(true, "设备", "ONNX Runtime CPU 进程内执行，运行时仍会进行 native preflight。"));
 
@@ -445,6 +472,10 @@
     private async Task RunAsync()
     {
         if (busy) return;
+        if (!readinessChecks.All(check => check.Ready))
+        {
+            runtimeState = "InvalidRequest"; errorCode = "InvalidRequest"; runtimeMessage = "请先处理运行前检查中的阻断项。"; result = runtimeMessage; return;
+        }
         busy = true; progress = 0; runSucceeded = false; diagnostics = Array.Empty<RuntimeDiagnostic>();
         cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         Activity.Add("run", "Operation started: vision.detect");
@@ -495,6 +526,12 @@
                 ["imageStdB"] = stdB,
                 ["imagePadValue"] = padValue
             };
+            if (IsBackend("opencv"))
+            {
+                if (!string.IsNullOrWhiteSpace(outputTensorNames)) options["outputTensorNames"] = outputTensorNames;
+                if (!string.IsNullOrWhiteSpace(outputTensorShapesJson)) options["outputTensorShapesJson"] = outputTensorShapesJson;
+                if (!string.IsNullOrWhiteSpace(outputTensorElementTypesJson)) options["outputTensorElementTypesJson"] = outputTensorElementTypesJson;
+            }
             var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? "onnx"), modelSha256: selected?.PrimaryFile.Sha256, tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
@@ -540,9 +577,22 @@
         return TimeSpan.FromSeconds(seconds);
     }
     private void MarkCustomParameters() => usingRecommendedParameters = false;
+    private void HandleBackendChanged()
+    {
+        usingRecommendedParameters = false;
+        if (selectedReleaseModel is VisualReleaseModel model) ApplyOutputContract(model);
+    }
+    private void ApplyOutputContract(VisualReleaseModel model)
+    {
+        outputTensorNames = string.Join(',', model.Outputs.Select(output => output.Name));
+        outputTensorShapesJson = System.Text.Json.JsonSerializer.Serialize(model.Outputs.ToDictionary(output => output.Name, output => output.Shape));
+        outputTensorElementTypesJson = System.Text.Json.JsonSerializer.Serialize(model.Outputs.ToDictionary(output => output.Name, output => output.ElementType));
+    }
     private void ReplaceModel(VisualReleaseModel model) { int index = releaseModels.FindIndex(item => string.Equals(item.Id, model.Id, StringComparison.OrdinalIgnoreCase)); if (index >= 0) releaseModels[index] = model; }
     private void Cancel() { cts?.Cancel(); Activity.Add("run", "Cancellation requested", "DSAPP-WEB-CANCEL-REQUESTED"); }
     private static long[] ParseShape(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+    private bool IsBackend(string token) => selectedBackend.Contains(token, StringComparison.OrdinalIgnoreCase);
+    private static string TensorContract(IReadOnlyList<VisualModelInput> tensors) => tensors.Count == 0 ? "未声明" : string.Join("; ", tensors.Select(tensor => tensor.Name + " " + tensor.ElementType + " " + string.Join("×", tensor.Shape)));
     private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F2") + " ms";
     private static string BuildResultImage(ModelRunResult output, string originalImage)
     {
