@@ -27,7 +27,7 @@ internal static class BackendRuntimeProbeCatalog
         try
         {
             if (Contains(backendId, "llamasharp"))
-                return Run(backendId, new LlamaSharpPluginFactory().Descriptor, new LlamaSharpRuntimeProbe(), LlamaEnvironmentVariables);
+                return Run(backendId, new LlamaSharpPluginFactory().Descriptor, new LlamaSharpRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), LlamaEnvironmentVariables);
             if (Contains(backendId, "opencv"))
             {
                 var contract = new OpenCvDnnModelContract(
@@ -35,12 +35,12 @@ internal static class BackendRuntimeProbeCatalog
                     new[] { new TensorDescriptor("input", TensorElementType.Float32, new TensorShape(1, 3, 224, 224)) },
                     new[] { new TensorDescriptor("output", TensorElementType.Float32, new TensorShape(1)) });
                 var factory = new OpenCvDnnPluginFactory(new OpenCvDnnOptions(contract));
-                return Run(backendId, factory.Descriptor, new OpenCvRuntimeProbe(), OpenCvEnvironmentVariables);
+                return Run(backendId, factory.Descriptor, new OpenCvRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), OpenCvEnvironmentVariables);
             }
             if (Contains(backendId, "openvino"))
-                return Run(backendId, new OpenVinoPluginFactory().Descriptor, new OpenVinoRuntimeProbe(), OpenVinoEnvironmentVariables);
+                return Run(backendId, new OpenVinoPluginFactory().Descriptor, new OpenVinoRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), OpenVinoEnvironmentVariables);
             if (Contains(backendId, "tensorrt"))
-                return Run(backendId, new TensorRtPluginFactory().Descriptor, new TensorRtRuntimeProbe(), TensorRtEnvironmentVariables);
+                return Run(backendId, new TensorRtPluginFactory().Descriptor, new TensorRtRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), TensorRtEnvironmentVariables);
 
             return WorkerProbeResult.Failed(backendId, "DSAPP-WORKER-BACKEND-UNKNOWN", "Worker does not have a native probe for the requested backend.");
         }
@@ -53,10 +53,12 @@ internal static class BackendRuntimeProbeCatalog
     private static WorkerProbeResult Run(string appBackendId, BackendPluginDescriptor descriptor, IBackendRuntimeProbe probe, IReadOnlyList<string> environmentVariables)
     {
         descriptor = MakeWorkerCompatible(descriptor);
-        BackendRuntimeStatus status = probe.ProbeAsync(descriptor).GetAwaiter().GetResult();
+        BackendRuntimeStatus status = probe.ProbeAsync(descriptor, default).GetAwaiter().GetResult();
+        status = NormalizePlatformStatus(descriptor, status);
+        status = AugmentPackagedNativeStatus(descriptor, status);
         string missingItems = string.Join(",", status.MissingItems.Select(MapMissingItem));
         string probedPaths = string.Join(";", ProbeRoots(environmentVariables)
-            .Concat(status.Details.Where(pair => pair.Key.EndsWith(".root", StringComparison.OrdinalIgnoreCase)).Select(pair => pair.Value))
+            .Concat(status.Details.Where(pair => pair.Key.EndsWith(".root", StringComparison.OrdinalIgnoreCase) || pair.Key.EndsWith(".packaged", StringComparison.OrdinalIgnoreCase)).Select(pair => pair.Value))
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Distinct(StringComparer.OrdinalIgnoreCase));
         var payload = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -87,6 +89,70 @@ internal static class BackendRuntimeProbeCatalog
                 ? "Native files were found, but ABI smoke test and inference adapter execution are still required."
                 : "The Worker native preflight did not report an executable runtime.";
         return new WorkerProbeResult(success, message, payload);
+    }
+
+    private static BackendRuntimeStatus NormalizePlatformStatus(BackendPluginDescriptor descriptor, BackendRuntimeStatus status)
+    {
+        if (status.LoadedPath == null || IsCompatiblePath(status.LoadedPath, status.RuntimeIdentifier)) return status;
+        var details = new Dictionary<string, string>(status.Details, StringComparer.Ordinal);
+        foreach (string key in details.Keys.Where(key => key.EndsWith(".root", StringComparison.OrdinalIgnoreCase)).ToArray())
+        {
+            if (!IsCompatiblePath(details[key], status.RuntimeIdentifier)) details.Remove(key);
+        }
+        var missing = descriptor.NativeRequirements.Select(requirement => "native." + requirement.Kind.ToString().ToLowerInvariant()).ToArray();
+        return new BackendRuntimeStatus(BackendRuntimeState.MissingNative, runtimeIdentifier: status.RuntimeIdentifier, processArchitecture: status.ProcessArchitecture, missingItems: missing, suggestedAction: "Install the native assets matching the Worker RID " + status.RuntimeIdentifier + ".", details: details, diagnostics: status.Diagnostics);
+    }
+
+    private static bool IsCompatiblePath(string path, string? rid)
+    {
+        if (string.Equals(rid, "win-x64", StringComparison.OrdinalIgnoreCase))
+            return path.IndexOf("runtimes\\win-x64\\", StringComparison.OrdinalIgnoreCase) >= 0 || path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) && path.IndexOf("linux", StringComparison.OrdinalIgnoreCase) < 0;
+        if (string.Equals(rid, "linux-x64", StringComparison.OrdinalIgnoreCase)) return path.IndexOf("linux-x64", StringComparison.OrdinalIgnoreCase) >= 0 || path.EndsWith(".so", StringComparison.OrdinalIgnoreCase);
+        return true;
+    }
+
+    private static BackendRuntimeStatus AugmentPackagedNativeStatus(BackendPluginDescriptor descriptor, BackendRuntimeStatus status)
+    {
+        if (status.State != BackendRuntimeState.MissingNative || status.MissingItems.Count == 0) return status;
+        var details = new Dictionary<string, string>(status.Details, StringComparer.Ordinal);
+        var missing = new List<string>();
+        string? loadedPath = status.LoadedPath;
+        for (int index = 0; index < descriptor.NativeRequirements.Count; index++)
+        {
+            NativeRuntimeRequirement requirement = descriptor.NativeRequirements[index];
+            string key = "native." + requirement.Kind.ToString().ToLowerInvariant();
+            if (!status.MissingItems.Contains(key, StringComparer.Ordinal)) continue;
+            string? packagedPath = FindPackagedNative(descriptor.PluginId, requirement.Kind);
+            if (packagedPath == null) missing.Add(key);
+            else
+            {
+                details[key + ".packaged"] = packagedPath;
+                loadedPath ??= packagedPath;
+            }
+        }
+        if (missing.Count > 0) return status;
+        details["probeSource"] = "worker-output-package";
+        return new BackendRuntimeStatus(BackendRuntimeState.Available, loadedPath, status.Version, status.AbiApiLine, status.RuntimeIdentifier, status.ProcessArchitecture, status.Device, missingItems: Array.Empty<string>(), suggestedAction: null, details: details, diagnostics: status.Diagnostics);
+    }
+
+    private static string? FindPackagedNative(string pluginId, NativeRuntimeKind kind)
+    {
+        string rid = "win-x64";
+        string nativeRoot = Path.Combine(AppContext.BaseDirectory, "runtimes", rid, "native");
+        if (!Directory.Exists(nativeRoot)) return null;
+        string[] names = kind switch
+        {
+            NativeRuntimeKind.LlamaSharpNative => new[] { "llama.dll", "ggml.dll" },
+            NativeRuntimeKind.OpenCV => new[] { "JYPPX.OpenCV.Native.dll", "opencv_core500.dll", "opencv_dnn500.dll" },
+            NativeRuntimeKind.OpenVINO => new[] { "openvino_c.dll", "openvino.dll" },
+            _ => Array.Empty<string>()
+        };
+        foreach (string name in names)
+        {
+            string? match = Directory.EnumerateFiles(nativeRoot, name, SearchOption.AllDirectories).FirstOrDefault();
+            if (match != null) return Path.GetFullPath(match);
+        }
+        return null;
     }
 
     private static BackendPluginDescriptor MakeWorkerCompatible(BackendPluginDescriptor descriptor)

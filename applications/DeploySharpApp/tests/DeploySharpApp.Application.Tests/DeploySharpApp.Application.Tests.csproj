@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
-  <ItemGroup><ProjectReference Include="..\..\src\DeploySharpApp.Application\DeploySharpApp.Application.csproj" /><ProjectReference Include="..\..\src\DeploySharpApp.Infrastructure\DeploySharpApp.Infrastructure.csproj" /><PackageReference Include="Microsoft.NET.Test.Sdk" /><PackageReference Include="MSTest.TestAdapter" /><PackageReference Include="MSTest.TestFramework" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\src\DeploySharpApp.Application\DeploySharpApp.Application.csproj" /><ProjectReference Include="..\..\src\DeploySharpApp.Infrastructure\DeploySharpApp.Infrastructure.csproj" /><ProjectReference Include="..\..\src\DeploySharpApp.BackendHost\DeploySharpApp.BackendHost.csproj" ReferenceOutputAssembly="false" /><PackageReference Include="Microsoft.NET.Test.Sdk" /><PackageReference Include="MSTest.TestAdapter" /><PackageReference Include="MSTest.TestFramework" /></ItemGroup>
+  <ItemGroup><Content Include="..\..\..\..\tests\assets\onnxruntime\classification.onnx" Link="fixtures\classification.onnx" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>

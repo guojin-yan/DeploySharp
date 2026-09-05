@@ -34,8 +34,16 @@ while (true)
         case WorkerMessageKind.Inference:
             WorkerProbeResult inferenceProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
             Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Progress, request.RequestId, true, "Worker request accepted.", new Dictionary<string, string> { ["value"] = "0.35", ["stage"] = "dispatch" })));
-            Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, inferenceProbe.Message, WithLogLevel(inferenceProbe.Payload))));
-            response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend adapter cannot execute this request. " + inferenceProbe.Message, inferenceProbe.Payload);
+            if (inferenceProbe.Payload.TryGetValue("preflightState", out string? preflightState) && string.Equals(preflightState, AppRuntimeState.Available.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                WorkerResponse execution = await WorkerInferenceAdapter.RunAsync(request, value => Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Progress, request.RequestId, true, "Native Worker inference progress.", new Dictionary<string, string> { ["value"] = value.ToString(System.Globalization.CultureInfo.InvariantCulture), ["stage"] = "inference" }))), CancellationToken.None);
+                response = execution;
+            }
+            else
+            {
+                Console.WriteLine(WorkerProtocol.SerializeResponse(new WorkerResponse(WorkerResponseKind.Log, request.RequestId, true, inferenceProbe.Message, WithLogLevel(inferenceProbe.Payload))));
+                response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "The selected native backend adapter cannot execute this request. " + inferenceProbe.Message, inferenceProbe.Payload);
+            }
             break;
         case WorkerMessageKind.Benchmark:
             WorkerProbeResult benchmarkProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);

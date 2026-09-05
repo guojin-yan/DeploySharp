@@ -173,7 +173,16 @@ namespace DeploySharpApp.Infrastructure
             {
                 TimeSpan remaining = deadline - DateTime.UtcNow;
                 if (remaining <= TimeSpan.Zero) throw new TimeoutException("BackendHost response timed out.");
-                WorkerResponse? response = await WaitForResponseAsync(WorkerProtocol.ReadResponseAsync(process.StandardOutput, cancellationToken), remaining, cancellationToken).ConfigureAwait(false);
+                WorkerResponse? response;
+                try
+                {
+                    response = await WaitForResponseAsync(WorkerProtocol.ReadResponseAsync(process.StandardOutput, cancellationToken), remaining, cancellationToken).ConfigureAwait(false);
+                }
+                catch (FormatException exception)
+                {
+                    diagnostics?.Add(new RuntimeDiagnostic("DSAPP-WORKER-NONPROTOCOL-OUTPUT", DiagnosticSeverity.Information, "Worker native runtime wrote a non-protocol line to stdout; the client ignored it and continued reading.", details: new Dictionary<string, string> { ["technicalDetail"] = exception.Message }));
+                    continue;
+                }
                 if (response == null) return null;
                 if (!string.Equals(response.RequestId, expectedRequestId, StringComparison.Ordinal))
                 {
@@ -290,6 +299,10 @@ namespace DeploySharpApp.Infrastructure
                 ["optionsJson"] = JsonSerializer.Serialize(request.Options),
                 ["tensorInputsJson"] = JsonSerializer.Serialize(request.TensorInputs)
             };
+            foreach (KeyValuePair<string, string> option in request.Options)
+            {
+                if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
+            }
             Add(payload, "inputPath", request.InputPath); Add(payload, "prompt", request.Prompt); Add(payload, "modelPath", request.ModelPath); Add(payload, "modelFormat", request.ModelFormat); Add(payload, "modelSha256", request.ModelSha256);
             return new WorkerRequest(WorkerMessageKind.Inference, requestId, request.BackendId, request.ModelId, payload);
         }
@@ -304,7 +317,10 @@ namespace DeploySharpApp.Infrastructure
                 return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: streamDiagnostics, runMode: ModelRunMode.Worker);
             if (response.Payload.TryGetValue("state", out string? stateText) && Enum.TryParse(stateText, true, out AppRuntimeState state))
             {
-                AppErrorCode code = state == AppRuntimeState.MissingNative ? AppErrorCode.NativeDependencyMissing : AppErrorCode.BackendUnavailable;
+                string diagnosticCode = response.Payload.TryGetValue("diagnosticCode", out string? workerCode) ? workerCode : string.Empty;
+                AppErrorCode code = diagnosticCode.StartsWith("DSAPP-WORKER-MODEL", StringComparison.OrdinalIgnoreCase)
+                    ? AppErrorCode.ModelUnavailable
+                    : state == AppRuntimeState.MissingNative ? AppErrorCode.NativeDependencyMissing : AppErrorCode.BackendUnavailable;
                 ModelRunResult structuredFailure = WorkerRuntimeFailure(request, response, state, code);
                 return streamDiagnostics.Count == 0 ? structuredFailure : WithAdditionalDiagnostics(structuredFailure, streamDiagnostics);
             }

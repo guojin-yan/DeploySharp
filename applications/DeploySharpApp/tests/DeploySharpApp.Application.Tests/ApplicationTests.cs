@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DeploySharpApp.Application;
 using DeploySharpApp.BackendHost.Protocol;
@@ -74,13 +75,14 @@ namespace DeploySharpApp.Application.Tests
         public async Task ReachableWorkerReportsNativeStatusWithoutFakeResult()
         {
             string hostPath = LocateBackendHost();
-            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", prompt: "hello");
+            string modelPath = Path.Combine(Path.GetTempPath(), "deploysharp-app-missing-" + Guid.NewGuid().ToString("N") + ".gguf");
+            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", modelFormat: "gguf", modelPath: modelPath, prompt: "hello");
             var values = new List<double>();
             ModelRunResult result = await new BackendHostWorkerClient(hostPath).RunAsync(request, new Progress<double>(value => values.Add(value)), CancellationToken.None);
             Assert.IsFalse(result.Succeeded);
-            Assert.IsTrue(result.ErrorCode == AppErrorCode.NativeDependencyMissing || result.ErrorCode == AppErrorCode.BackendUnavailable);
+            Assert.AreEqual(AppErrorCode.ModelUnavailable, result.ErrorCode);
             Assert.IsNotNull(result.RuntimeStatus);
-            Assert.IsTrue(result.Diagnostics.Any(diagnostic => diagnostic.Code == "DSAPP-WORKER-NATIVE-MISSING" || diagnostic.Code == "DSAPP-WORKER-ABI-SMOKE-PENDING"));
+            Assert.IsTrue(result.Diagnostics.Any(diagnostic => diagnostic.Code == "DSAPP-WORKER-MODEL-NOT-FOUND"));
             Assert.IsTrue(values.Any(value => value >= 0.35), "Worker progress events should be forwarded to the application progress reporter.");
         }
 
@@ -114,6 +116,46 @@ namespace DeploySharpApp.Application.Tests
                 Assert.IsTrue(worker.RunCalled, backendId);
                 Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode, backendId);
             }
+        }
+
+        [TestMethod]
+        public async Task OpenVinoWorkerExecutesNamedTensorInference()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            ModelRunResult result = await RunTensorWorkerAsync("deploysharp.backend.openvino");
+            AssertWorkerValues(result, new[] { 1f, 2f, 3f });
+        }
+
+        [TestMethod]
+        public async Task OpenCvWorkerExecutesNamedTensorInferenceWithExplicitContract()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenCV runtime.");
+            var options = new Dictionary<string, string>
+            {
+                ["outputTensorNames"] = "scores",
+                ["outputTensorShapesJson"] = "{\"scores\":[1,3]}",
+                ["outputTensorElementTypesJson"] = "{\"scores\":\"float32\"}"
+            };
+            ModelRunResult result = await RunTensorWorkerAsync("deploysharp.backend.opencv", options);
+            AssertWorkerValues(result, new[] { 1f, 2f, 3f });
+        }
+
+        private static async Task<ModelRunResult> RunTensorWorkerAsync(string backendId, IReadOnlyDictionary<string, string>? options = null)
+        {
+            var inputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]") };
+            var request = new ModelRunRequest(AppOperationKind.Vision, "tests/classification", backendId, modelPath: Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"), modelFormat: "onnx", tensorInputs: inputs, options: options);
+            return await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+        }
+
+        private static void AssertWorkerValues(ModelRunResult result, float[] expected)
+        {
+            if (result.ErrorCode == AppErrorCode.NativeDependencyMissing || result.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-ABI-SMOKE-PENDING"))
+                Assert.Inconclusive("Native Worker runtime is unavailable: " + result.Message);
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message + " " + string.Join(", ", item.Details.Select(pair => pair.Key + "=" + pair.Value)))));
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            using JsonDocument output = JsonDocument.Parse(result.Output!);
+            float[] actual = output.RootElement[0].GetProperty("values").EnumerateArray().Select(item => item.GetSingle()).ToArray();
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         private sealed class ThrowingEngine : IDeploySharpEngine
