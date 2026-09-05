@@ -8,11 +8,16 @@
     .catalog-toolbar label { color: #748098; font-size: 10px; font-weight: 800; }
     .catalog-toolbar input, .catalog-toolbar select { display: block; width: 100%; min-width: 0; margin-top: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; }
     .catalog-toolbar .count { align-self: center; color: #778198; font-size: 10px; white-space: nowrap; }
+    .factory-summary { display: flex; flex-wrap: wrap; gap: 9px 18px; margin: 16px 0; padding: 12px; border: 1px solid #e5eaf6; border-radius: 9px; background: #fbfcff; color: #778198; font-size: 10px; }
+    .factory-summary b { color: #44516f; }
+    .factory-card .model-card-meta { min-height: 74px; color: #778198; font-size: 10px; line-height: 1.7; }
+    .artifact-line { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 9px; color: #65728b; font-size: 10px; line-height: 1.55; }
+    .artifact-line strong { color: #44516f; }
     @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } }
     @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
 </style>
 <div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="Refresh">刷新目录 ↻</button></div>
-<div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
+<div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Factory ? "active" : "")" @onclick="() => tab = CatalogTab.Factory">官方 ModelFactory</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
 @if (tab == CatalogTab.Backends)
 {
     <div class="plugin-grid">@foreach (var backend in Service.Backends) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div></article> }</div>
@@ -36,17 +41,39 @@ else if (tab == CatalogTab.Models)
         <div class="plugin-grid">@foreach (var model in FilteredBuiltinModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo gray">M</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "本地文件")</span><span>@string.Join(", ", model.RecommendedBackends)</span></div></article> }@foreach (VisualReleaseModel model in FilteredReleaseModels) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo">ON</div><div><h4>@model.DisplayName</h4><small>@model.Id</small></div></div><p>@model.Task · @model.Format · @model.Size</p><div class="model-card-meta">精度 @model.Precision · 量化 @model.Quantization · opset @(model.Opset?.ToString() ?? "未声明")<br />预处理：@model.Preprocessing<br />验证：@model.ValidationStatus</div><div class="plugin-foot"><span>@(model.Cached ? "已缓存" : "首次运行下载")</span><span>@model.PrimaryFile.Sha256[..Math.Min(10, model.PrimaryFile.Sha256.Length)]…</span></div></article> }</div>
     }
 }
+else if (tab == CatalogTab.Factory)
+{
+    @if (factoryError is not null)
+    {
+        <div class="panel"><strong>官方目录暂不可用</strong><p class="hint">@factoryError</p></div>
+    }
+    else
+    {
+        <div class="factory-summary"><span>目录修订 <b>@FactoryRevision</b></span><span>模型条目 <b>@FactoryItems.Count</b></span><span>说明：目录已通过主库校验，资产仍需按 Release 和缓存策略物化</span></div>
+        <div class="plugin-grid">@foreach (ModelFactoryCatalogItem item in FactoryItems)
+        {
+            <article class="plugin-card factory-card"><div class="plugin-card-head"><div class="plugin-logo gray">MF</div><div><h4>@item.Name</h4><small>@item.Id</small></div></div><p>@item.Task · @item.Family · v@item.Version</p><div class="model-card-meta">状态：@item.Status · 许可证：@item.License<br />@item.Description</div>@foreach (ModelFactoryArtifactItem artifact in item.Artifacts)
+            {
+                <div class="artifact-line"><strong>@artifact.Id</strong> · @artifact.Format · @artifact.Precision · @artifact.Quantization<br />后端：@string.Join(", ", artifact.CompatibleBackends.DefaultIfEmpty("未声明")) · @(artifact.Portable ? "可移植" : "设备绑定") · 资产 @artifact.AssetCount · 测试输入 @artifact.TestInputCount</div>
+            }<div class="plugin-foot"><span>条目测试输入 @item.TestInputCount</span><span class="table-status pending">未物化</span></div></article>
+        }</div>
+    }
+}
 else
 {
     <div class="panel table-panel"><table><thead><tr><th>后端</th><th>状态</th><th>RID / 架构</th><th>加载路径</th><th>建议动作</th></tr></thead><tbody>@foreach (var status in Service.RuntimeStatuses) { <tr><td><b>@status.BackendId</b></td><td><span class="table-status @(status.State == AppRuntimeState.Available ? "ok" : "pending")">@status.State</span></td><td>@status.Rid / @status.ProcessArchitecture</td><td>@(status.LoadedPath ?? "未加载")</td><td>@(status.SuggestedAction ?? "无")</td></tr> }</tbody></table></div>
 }
 @code {
     private CatalogTab tab = CatalogTab.Backends;
+    [Inject] private ModelFactoryCatalogService FactoryCatalog { get; set; } = null!;
     private readonly List<VisualReleaseModel> releaseModels = new();
     private bool releaseLoading = true;
     private string? releaseError;
     private string modelSearch = string.Empty;
     private string taskFilter = string.Empty;
+    private IReadOnlyList<ModelFactoryCatalogItem> FactoryItems { get; set; } = Array.Empty<ModelFactoryCatalogItem>();
+    private string FactoryRevision => FactoryCatalog.Catalog.Document.CatalogRevision ?? "unknown";
+    private string? factoryError;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
@@ -57,6 +84,8 @@ else
         try { releaseModels.AddRange(await ReleaseCatalog.GetModelsAsync()); }
         catch (Exception exception) { releaseError = exception.Message; }
         finally { releaseLoading = false; }
+        try { FactoryItems = FactoryCatalog.Items; }
+        catch (Exception exception) { factoryError = exception.Message; }
     }
     private void Refresh() => Service.RefreshCatalog();
     private void ClearFilters() { modelSearch = string.Empty; taskFilter = string.Empty; }
@@ -68,5 +97,5 @@ else
     }
     private static string Logo(AppBackendInfo backend) => backend.Id.Contains("onnx", StringComparison.OrdinalIgnoreCase) ? "ON" : backend.Id.Contains("opencv", StringComparison.OrdinalIgnoreCase) ? "CV" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) ? "OV" : backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "Q" : backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "TRT" : "＋";
     private static string LogoClass(AppBackendInfo backend) => backend.Id.Contains("llama", StringComparison.OrdinalIgnoreCase) ? "purple" : backend.Id.Contains("openvino", StringComparison.OrdinalIgnoreCase) || backend.Id.Contains("tensorrt", StringComparison.OrdinalIgnoreCase) ? "orange" : "";
-    private enum CatalogTab { Backends, Models, Runtime }
+    private enum CatalogTab { Backends, Models, Factory, Runtime }
 }

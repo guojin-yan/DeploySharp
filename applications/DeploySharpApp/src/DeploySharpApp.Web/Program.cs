@@ -7,6 +7,7 @@ builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("DEPLOYSHARPAPP_URL")
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHttpClient<VisualReleaseCatalogService>(client => client.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<VisualTestImageCatalogService>(client => client.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddSingleton<ModelFactoryCatalogService>();
 builder.Services.AddScoped<DeploySharpAppService>(_ => AppComposition.CreateService());
 builder.Services.AddSingleton<WebActivityStore>();
 var app = builder.Build();
