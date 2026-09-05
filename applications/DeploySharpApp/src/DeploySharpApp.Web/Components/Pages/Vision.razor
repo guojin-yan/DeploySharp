@@ -214,6 +214,7 @@
     private string imageFileName = string.Empty;
     private string selectedTestImageId = string.Empty;
     private string? imagePath;
+    private string? ownedImagePath;
     private string? originalImageUrl;
     private string? resultImageUrl;
     private string resultImageCaption = "等待推理";
@@ -426,16 +427,28 @@
     {
         IBrowserFile file = args.File;
         if (file.Size > 20 * 1024 * 1024) { runtimeMessage = "图片不能超过 20 MB。"; return; }
+        DeleteOwnedImage();
         string directory = Path.Combine(Path.GetTempPath(), "DeploySharpApp", "images");
         Directory.CreateDirectory(directory);
         imagePath = Path.Combine(directory, Guid.NewGuid().ToString("N") + Path.GetExtension(file.Name));
-        await using (Stream source = file.OpenReadStream(20 * 1024 * 1024))
-        await using (var destination = new FileStream(imagePath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
-        { await source.CopyToAsync(destination); }
-        selectedTestImageId = string.Empty;
-        imageFromRelease = false;
-        await SetImagePreviewAsync(imagePath, file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType);
-        runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
+        ownedImagePath = imagePath;
+        try
+        {
+            await using (Stream source = file.OpenReadStream(20 * 1024 * 1024))
+            await using (var destination = new FileStream(imagePath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
+            { await source.CopyToAsync(destination); }
+            selectedTestImageId = string.Empty;
+            imageFromRelease = false;
+            await SetImagePreviewAsync(imagePath, file.Name, string.IsNullOrWhiteSpace(file.ContentType) ? "image/*" : file.ContentType);
+            runtimeMessage = "图片已上传到 Web 服务，运行时将生成真实图像张量。";
+        }
+        catch (Exception exception)
+        {
+            DeleteOwnedImage();
+            imagePath = null;
+            runtimeMessage = "图片上传失败：" + exception.Message;
+            Activity.Add("image-upload", runtimeMessage, "DSAPP-IMAGE-UPLOAD-FAILED");
+        }
     }
 
     private async Task HandleModelSelected(InputFileChangeEventArgs args)
@@ -531,12 +544,23 @@
 
     private void ClearImagePreview()
     {
+        DeleteOwnedImage();
         imagePath = null;
         imageFileName = string.Empty;
         originalImageUrl = null;
         resultImageUrl = null;
         resultImageCaption = "等待推理";
         imageFromRelease = false;
+    }
+
+    private void DeleteOwnedImage()
+    {
+        if (!string.IsNullOrWhiteSpace(ownedImagePath) && File.Exists(ownedImagePath))
+        {
+            try { File.Delete(ownedImagePath); } catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+        ownedImagePath = null;
     }
 
     private async Task DownloadSelectedAsync(CancellationToken cancellationToken = default)
@@ -697,6 +721,7 @@
     public void Dispose()
     {
         cts?.Cancel();
+        DeleteOwnedImage();
         if (!string.IsNullOrWhiteSpace(uploadedModelPath) && File.Exists(uploadedModelPath))
         {
             try { File.Delete(uploadedModelPath); } catch (IOException) { }

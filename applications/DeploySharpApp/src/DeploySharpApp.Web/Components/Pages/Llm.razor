@@ -1,6 +1,9 @@
 @page "/llm"
+@implements IDisposable
 @using DeploySharpApp.Application
 @using DeploySharpApp.Contracts
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Security.Cryptography
 @inject DeploySharpAppService Service
 @inject WebActivityStore Activity
 <PageTitle>LLM / Embedding · DeploySharpApp</PageTitle>
@@ -9,15 +12,75 @@
     .composer-actions .ghost { color: var(--muted); background: #f3f5fa; border-color: var(--line); }
     .worker-progress { display: flex; align-items: center; gap: 9px; padding: 0 13px 12px; color: var(--muted); font-size: 10px; }
     .worker-progress progress { flex: 1; min-width: 0; }
+    .side-info label { display: block; margin: 17px 0 0; color: #748098; font-size: 11px; font-weight: 700; }
+    .side-info input:not([type="file"]) { width: 100%; min-width: 0; margin-top: 7px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: #fafbfe; color: var(--ink); font: inherit; font-size: 11px; outline: none; }
+    .side-info input[type="number"] { width: 100%; }
+    .llm-settings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 9px; }
+    .file-name { display: block; margin-top: 6px; color: #778198; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upload-progress { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #778198; font-size: 10px; }
+    .upload-progress progress { flex: 1; min-width: 0; }
+    .model-hash { margin-top: 7px; color: #9aa4b6; font-size: 9px; overflow-wrap: anywhere; }
+    @@media(max-width:430px) { .llm-settings { grid-template-columns: minmax(0, 1fr); } }
 </style>
 <div class="section-head"><div><span class="eyebrow">LANGUAGE LAB</span><h3>LLM / Embedding</h3></div><span class="status-tag purple-tag">LLamaSharp · Worker</span></div>
-<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题" disabled="@busy"></textarea><div class="composer-actions"><button class="primary" @onclick="SendAsync" disabled="@busy">@(busy ? "发送中…" : "发送 ↑")</button>@if (busy) { <button class="ghost small" @onclick="Cancel">取消</button> }</div></div>@if (busy || progress > 0) { <div class="worker-progress"><progress value="@progress" max="1"></progress><span>Worker @progress.ToString("P0")</span></div> }</section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><div class="info-line"><span>上下文长度</span><b>2,048</b></div><div class="info-line"><span>线程数</span><b>Worker</b></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">Worker 会隔离 native runtime；当前未安装 LLamaSharp adapter 时会返回 WorkerRequired 和诊断，不生成伪造回复。</div></section></div>
+<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题" disabled="@busy"></textarea><div class="composer-actions"><button class="primary" @onclick="SendAsync" disabled="@(busy || !CanSend)">@(busy ? "发送中…" : "发送 ↑")</button>@if (busy) { <button class="ghost small" @onclick="Cancel">取消</button> }</div></div>@if (busy || progress > 0) { <div class="worker-progress"><progress value="@progress" max="1"></progress><span>Worker @progress.ToString("P0")</span></div> }</section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><label>本地 GGUF 模型<InputFile OnChange="HandleModelSelected" accept=".gguf" disabled="@modelUploading" /><span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "首次使用请上传 .gguf 模型" : modelFileName)</span></label>@if (modelUploading) { <div class="upload-progress"><span>上传并校验</span><progress value="@modelUploadProgress" max="1"></progress></div> }@if (!string.IsNullOrWhiteSpace(modelSha256)) { <div class="model-hash">SHA256：@modelSha256</div> }<label>模型路径<input @bind="modelPath" placeholder="Web 服务可访问的 GGUF 路径" /></label><div class="llm-settings"><label>上下文长度<input type="number" min="256" max="131072" step="256" @bind="contextSize" /></label><label>最大生成 token<input type="number" min="1" max="32768" step="1" @bind="maxTokens" /></label><label>Temperature<input type="number" min="0" max="5" step="0.05" @bind="temperature" /></label><label>Top P<input type="number" min="0" max="1" step="0.01" @bind="topP" /></label><label>Top K<input type="number" min="0" max="1000" step="1" @bind="topK" /></label><label>CPU 线程<input type="number" min="0" max="256" step="1" @bind="threads" /></label><label>GPU layers<input type="number" min="0" max="999" step="1" @bind="gpuLayerCount" /></label><label>Batch size<input type="number" min="1" max="4096" step="1" @bind="batchSize" /></label></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">Worker 会隔离 native runtime。必须先提供 GGUF 文件；CPU provider 可运行，GPU layers 只有安装并验证匹配的 GPU provider 后才会生效。</div></section></div>
 @code {
     private string prompt = string.Empty;
     private bool busy;
     private double progress;
     private CancellationTokenSource? cancellation;
-    private readonly List<ChatMessage> messages = new() { new(false, "LLamaSharp 运行需要 BackendHost Worker。网页不会在浏览器加载 GGUF native runtime。") };
+    private string modelPath = string.Empty;
+    private string modelFileName = string.Empty;
+    private string modelSha256 = string.Empty;
+    private string? uploadedModelPath;
+    private bool modelUploading;
+    private double modelUploadProgress;
+    private int contextSize = 2048;
+    private int maxTokens = 256;
+    private float temperature = 0.8f;
+    private float topP = 0.95f;
+    private int topK = 40;
+    private int threads;
+    private int gpuLayerCount;
+    private int batchSize = 512;
+    private bool CanSend => !string.IsNullOrWhiteSpace(prompt) && !string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath);
+    private readonly List<ChatMessage> messages = new() { new(false, "请上传 GGUF 模型后开始对话。网页不会在浏览器加载 native runtime，实际生成将在 BackendHost Worker 中执行。") };
+
+    private async Task HandleModelSelected(InputFileChangeEventArgs args)
+    {
+        IBrowserFile file = args.File;
+        if (!string.Equals(Path.GetExtension(file.Name), ".gguf", StringComparison.OrdinalIgnoreCase)) { messages.Add(new(false, "模型文件必须是 .gguf 格式。")); return; }
+        const long maximumBytes = 8L * 1024 * 1024 * 1024;
+        if (file.Size <= 0 || file.Size > maximumBytes) { messages.Add(new(false, "GGUF 文件必须大于 0 且不超过 8 GB。")); return; }
+        modelUploading = true; modelUploadProgress = 0;
+        string directory = Path.Combine(Path.GetTempPath(), "DeploySharpApp", "llm-models");
+        Directory.CreateDirectory(directory);
+        string targetPath = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".gguf");
+        try
+        {
+            using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            await using Stream source = file.OpenReadStream(maximumBytes);
+            await using var destination = new FileStream(targetPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true);
+            byte[] buffer = new byte[128 * 1024]; long completed = 0; int read;
+            while ((read = await source.ReadAsync(buffer.AsMemory())) != 0)
+            {
+                await destination.WriteAsync(buffer.AsMemory(0, read)); hash.AppendData(buffer, 0, read); completed += read;
+                modelUploadProgress = Math.Min(1, completed / (double)file.Size); await InvokeAsync(StateHasChanged);
+            }
+            await destination.FlushAsync();
+            DeleteUploadedModel(); uploadedModelPath = targetPath; modelPath = targetPath; modelFileName = Path.GetFileName(file.Name); modelSha256 = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            messages.Add(new(false, "GGUF 模型已上传并通过 SHA256 计算，可以开始 Worker 对话。"));
+            Activity.Add("llm-model-upload", "Uploaded local GGUF model " + modelFileName, "DSAPP-LLM-MODEL-UPLOADED");
+        }
+        catch (Exception exception) { if (File.Exists(targetPath)) File.Delete(targetPath); messages.Add(new(false, "GGUF 模型上传失败：" + exception.Message)); Activity.Add("llm-model-upload", exception.Message, "DSAPP-LLM-MODEL-UPLOAD-FAILED"); }
+        finally { modelUploading = false; }
+    }
+
+    private void DeleteUploadedModel()
+    {
+        if (!string.IsNullOrWhiteSpace(uploadedModelPath) && File.Exists(uploadedModelPath)) { try { File.Delete(uploadedModelPath); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+        uploadedModelPath = null;
+    }
     private async Task SendAsync()
     {
         if (busy || string.IsNullOrWhiteSpace(prompt)) return;
@@ -25,7 +88,9 @@
         cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(2));
         try
         {
-            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "demo/qwen-0.5b", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelFormat: "gguf", options: new Dictionary<string, string> { ["executionMode"] = "worker" });
+            var options = new Dictionary<string, string> { ["executionMode"] = "worker", ["contextSize"] = contextSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["maxTokens"] = maxTokens.ToString(System.Globalization.CultureInfo.InvariantCulture), ["temperature"] = temperature.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topP"] = topP.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topK"] = topK.ToString(System.Globalization.CultureInfo.InvariantCulture), ["batchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["gpuLayerCount"] = gpuLayerCount.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            if (threads > 0) options["threads"] = threads.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "local/gguf", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelPath: modelPath, modelFormat: "gguf", modelSha256: string.IsNullOrWhiteSpace(modelSha256) ? null : modelSha256, options: options);
             ModelRunResult output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
             string assistantText = output.Succeeded ? output.Output ?? output.Message : output.Message;
             if (output.Diagnostics.Count > 0) assistantText += "\n诊断：" + string.Join("；", output.Diagnostics.Select(diagnostic => diagnostic.Code + " - " + diagnostic.Message));
@@ -35,5 +100,6 @@
         finally { cancellation.Dispose(); cancellation = null; busy = false; progress = 0; }
     }
     private void Cancel() => cancellation?.Cancel();
+    public void Dispose() { cancellation?.Cancel(); cancellation?.Dispose(); DeleteUploadedModel(); }
     private sealed record ChatMessage(bool IsUser, string Text);
 }
