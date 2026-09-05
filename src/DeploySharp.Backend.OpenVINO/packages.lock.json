@@ -4,9 +4,9 @@
     ".NETCoreApp,Version=v3.1": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -21,9 +21,9 @@
     ".NETFramework,Version=v4.6": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0",
           "System.ValueTuple": "4.5.0"
@@ -66,9 +66,9 @@
     ".NETFramework,Version=v4.6.1": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0",
           "System.ValueTuple": "4.5.0"
@@ -111,9 +111,9 @@
     ".NETFramework,Version=v4.6.2": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0",
           "System.ValueTuple": "4.5.0"
@@ -156,9 +156,9 @@
     ".NETFramework,Version=v4.7": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0",
           "System.ValueTuple": "4.5.0"
@@ -201,9 +201,9 @@
     ".NETFramework,Version=v4.7.1": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0",
           "System.ValueTuple": "4.5.0"
@@ -246,9 +246,9 @@
     ".NETFramework,Version=v4.7.2": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Buffers": "4.5.1",
           "System.Memory": "4.5.5",
@@ -313,9 +313,9 @@
     ".NETFramework,Version=v4.8": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Buffers": "4.5.1",
           "System.Memory": "4.5.5",
@@ -380,9 +380,9 @@
     ".NETFramework,Version=v4.8.1": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg==",
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw==",
         "dependencies": {
           "System.Buffers": "4.5.1",
           "System.Memory": "4.5.5",
@@ -447,9 +447,9 @@
     "net10.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -464,9 +464,9 @@
     ".NETCoreApp,Version=v5.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -481,9 +481,9 @@
     "net6.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -498,9 +498,9 @@
     "net7.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -515,9 +515,9 @@
     "net8.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -532,9 +532,9 @@
     "net9.0": {
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"

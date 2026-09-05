@@ -43,6 +43,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "Microsoft.ML.OnnxRuntime.Managed": "[1.28.0, )"
         }
       },
@@ -50,26 +51,36 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )",
+          "OnnxSharp": "[0.3.2, )"
         }
       },
       "JYPPX.DeploySharp.Backend.OpenVINO": {
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenVINO.CSharp.API": "[3.3.0, )"
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenVINO.CSharp.API": "[3.3.1, )"
         }
       },
       "JYPPX.DeploySharp.Backend.TensorRT": {
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "JYPPX.TensorRT.CSharp.API": "[4.0.0, )",
           "OnnxSharp": "[0.3.2, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
+      },
+      "JYPPX.DeploySharp.Extensibility": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
+        }
       },
       "JYPPX.DeploySharp.Visual": {
         "type": "Project",
@@ -87,9 +98,9 @@
       },
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "CentralTransitive",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "JYPPX.TensorRT.CSharp.API": {
         "type": "CentralTransitive",

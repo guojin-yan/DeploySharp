@@ -60,7 +60,7 @@
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
           "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenVINO.CSharp.API": "[3.3.0, )"
+          "JYPPX.OpenVINO.CSharp.API": "[3.3.1, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
@@ -80,9 +80,9 @@
       },
       "JYPPX.OpenVINO.CSharp.API": {
         "type": "CentralTransitive",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "aAiKwd7O+HE3Qq6O3dyq819KktSl/F9J7cNenxVgo8XDozh7fgyCnDAsSXOKARD0Np9wLjCHHexUIhv6PUKHWg=="
+        "requested": "[3.3.1, )",
+        "resolved": "3.3.1",
+        "contentHash": "OzAtSANdpjjcAGSMwxRaes8XSr43x6AJWolTxOdIumZusjoslU5XLoKO4Sfu02WPbT62z8v3uZF4op34N2gGGw=="
       },
       "Microsoft.ML.OnnxRuntime.Managed": {
         "type": "CentralTransitive",

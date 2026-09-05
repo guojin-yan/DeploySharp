@@ -22,7 +22,7 @@
     "Microsoft.ML.OnnxRuntime.Managed": "1.28.0",
     "Microsoft.ML.OnnxRuntime.Gpu.Windows": "1.28.0",
     "Microsoft.ML.Tokenizers": "2.0.0",
-    "JYPPX.OpenVINO.CSharp.API": "3.3.0",
+    "JYPPX.OpenVINO.CSharp.API": "3.3.1",
     "JYPPX.TensorRT.CSharp.API": "4.0.0",
     "OnnxSharp": "0.3.2",
     "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1",
