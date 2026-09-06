@@ -7,9 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
-    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Core\DeploySharp.Core.csproj" />
-    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Extensibility\DeploySharp.Extensibility.csproj" />
-    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <PackageReference Include="JYPPX.DeploySharp.Core" />
+    <PackageReference Include="JYPPX.DeploySharp.Extensibility" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" />
     <!-- The application, rather than the backend library, opts in to the official CPU native runtime. -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="SixLabors.ImageSharp" />

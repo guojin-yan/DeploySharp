@@ -12,7 +12,7 @@
     <ProjectReference Include="..\DeploySharpApp.Contracts\DeploySharpApp.Contracts.csproj" />
     <ProjectReference Include="..\DeploySharpApp.Application\DeploySharpApp.Application.csproj" />
     <ProjectReference Include="..\DeploySharpApp.Infrastructure\DeploySharpApp.Infrastructure.csproj" />
-    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.ModelPack.Json\DeploySharp.ModelPack.Json.csproj" />
-    <ProjectReference Include="$(DeploySharpSourceRoot)DeploySharp.ModelFactory\DeploySharp.ModelFactory.csproj" />
+    <PackageReference Include="JYPPX.DeploySharp.ModelPack.Json" />
+    <PackageReference Include="JYPPX.DeploySharp.ModelFactory" />
   </ItemGroup>
 </Project>

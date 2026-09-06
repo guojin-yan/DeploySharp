@@ -11,6 +11,19 @@
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
     <PackageVersion Include="System.Text.Json" Version="10.0.10" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageVersion Include="JYPPX.DeploySharp.Core" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Extensibility" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.LLM" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Backend.LlamaSharp" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Backend.OpenCV" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Backend.OpenVINO" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Backend.TensorRT" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.ModelFactory" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.ModelPack.Json" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Visual" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0-alpha.1" />
+    <PackageVersion Include="JYPPX.DeploySharp.Visual.TensorRT" Version="2.0.0-alpha.1" />
     <PackageVersion Include="LLamaSharp" Version="0.27.0" />
     <PackageVersion Include="LLamaSharp.Backend.Cpu" Version="0.27.0" />
     <PackageVersion Include="JYPPX.OpenCV.CSharp.API" Version="5.0.0-preview.1" />
