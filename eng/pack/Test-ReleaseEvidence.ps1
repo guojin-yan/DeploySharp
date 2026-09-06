@@ -1200,6 +1200,14 @@ else {
                 $symbolDiffs.Add("root.$property")
             }
         }
+        if ((Get-CanonicalJson $normalizedExpectedSymbols.sdkIdentity) -ne (Get-CanonicalJson $normalizedActualSymbols.sdkIdentity)) {
+            $symbolDiffs.Add('root.sdkIdentity')
+            foreach ($property in @('globalJsonVersion', 'globalJsonRollForward', 'globalJsonAllowPrerelease', 'actualSdkVersion', 'msbuildVersion')) {
+                if ((Get-CanonicalJson $normalizedExpectedSymbols.sdkIdentity.$property) -ne (Get-CanonicalJson $normalizedActualSymbols.sdkIdentity.$property)) {
+                    $symbolDiffs.Add("root.sdkIdentity.$property")
+                }
+            }
+        }
         foreach ($key in $expectedSymbolMap.Keys) {
             $expectedAssembly = $expectedSymbolMap[$key]
             $actualAssembly = $actualSymbolMap[$key]
