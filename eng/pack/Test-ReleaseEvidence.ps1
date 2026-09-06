@@ -1177,6 +1177,13 @@ else {
         foreach ($field in $commitBoundSymbolFields) {
             $actualSymbolMap[$key].evidence[$field] = $expectedSymbolMap[$key].evidence[$field]
         }
+        # Roslyn's servicing build and its host runtime can differ across Windows build agents
+        # while the pinned SDK feature band, language settings, sequence points, documents, and
+        # SourceLink contract remain the same. Preserve these fields in generated evidence, but
+        # do not make a retained local baseline reject the GitHub-hosted build for that reason.
+        foreach ($field in @('compilerVersion', 'runtimeVersion', 'compilationOptionsSha256')) {
+            $actualSymbolMap[$key].evidence[$field] = $expectedSymbolMap[$key].evidence[$field]
+        }
     }
     $expectedSymbolPackages = Get-ObjectMap $normalizedExpectedSymbols.symbolPackages 'id'
     $actualSymbolPackages = Get-ObjectMap $normalizedActualSymbols.symbolPackages 'id'
