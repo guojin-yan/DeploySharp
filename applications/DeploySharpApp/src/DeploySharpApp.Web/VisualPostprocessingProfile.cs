@@ -13,6 +13,7 @@ public enum VisualPostprocessingKind
     OcrDetection,
     OcrRecognition,
     BackgroundRemoval,
+    AnomalyDetection,
     Captioning,
     Embedding
 }
@@ -27,11 +28,12 @@ public sealed record VisualPostprocessingProfile(
     double ScoreThreshold = 0.25,
     int TopK = 5)
 {
-    public bool DrawGeometry => Kind is VisualPostprocessingKind.Detection or VisualPostprocessingKind.OrientedDetection or VisualPostprocessingKind.Segmentation or VisualPostprocessingKind.Pose or VisualPostprocessingKind.OcrDetection;
+    public bool DrawGeometry => Kind is VisualPostprocessingKind.Detection or VisualPostprocessingKind.OrientedDetection or VisualPostprocessingKind.Segmentation or VisualPostprocessingKind.Pose or VisualPostprocessingKind.OcrDetection or VisualPostprocessingKind.AnomalyDetection;
 
     public static VisualPostprocessingProfile FromModel(string task, string name, string declared)
     {
         string value = string.Join(" ", task ?? string.Empty, name ?? string.Empty, declared ?? string.Empty).ToLowerInvariant();
+        if (value.Contains("anomaly") || value.Contains("padim") || value.Contains("anomalib")) return new(VisualPostprocessingKind.AnomalyDetection, "probability map", "anomaly score", "normal/anomaly label", "Anomaly score, label, map and mask are rendered from the declared Anomalib output contract.", 0.35, 1);
         if (value.Contains("ocr") && (value.Contains(" cls") || value.Contains("orientation") || value.Contains("direction"))) return new(VisualPostprocessingKind.Classification, "class score vector", "orientation confidence", "orientation class id", "OCR orientation classification is ranked by score; labels require the declared orientation contract.", 0.0, 4);
         if (value.Contains("ocr") && (value.Contains("rec") || value.Contains("recogn"))) return new(VisualPostprocessingKind.OcrRecognition, "token-id", "token confidence", "dictionary/token ids", "OCR recognition output is decoded from string/tokens when the model exposes a text contract.", 0.2, 1);
         if (value.Contains("ocr") || value.Contains("text detection")) return new(VisualPostprocessingKind.OcrDetection, "polygon or xyxy", "box confidence", "text region", "OCR text regions are drawn from polygon/box outputs; recognition text remains evidence-backed.");

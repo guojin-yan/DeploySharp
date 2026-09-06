@@ -28,7 +28,8 @@ internal static class VisionResultRenderer
             {
                 VisualPostprocessingProfile effectiveProfile = profile ?? VisualPostprocessingProfile.FromModel(task ?? string.Empty, string.Empty, string.Empty);
                 OutputData[] tensors = outputs.EnumerateArray().Select(ReadOutput).Where(item => item is not null).Cast<OutputData>().ToArray();
-                bool handled = effectiveProfile.Kind == VisualPostprocessingKind.Segmentation && TryRenderYoloSegmentation(tensors, effectiveProfile, overlays, labels);
+                bool handled = TryRenderNamedDetectionSet(tensors, effectiveProfile, overlays, labels);
+                if (!handled) handled = effectiveProfile.Kind == VisualPostprocessingKind.Segmentation && TryRenderYoloSegmentation(tensors, effectiveProfile, overlays, labels);
                 if (!handled) foreach (JsonElement output in outputs.EnumerateArray()) ParseOutput(output, overlays, labels, effectiveProfile);
             }
         }
@@ -63,9 +64,26 @@ internal static class VisionResultRenderer
             if (ranked.Length > 0) labels.Add(name + " top-" + ranked.Length + ": " + string.Join(", ", ranked.Select(item => "class " + item.index.ToString(CultureInfo.InvariantCulture) + "=" + F(item.value))));
             return;
         }
+        if (profile.Kind == VisualPostprocessingKind.Embedding)
+        {
+            double norm = Math.Sqrt(values.Sum(value => value * value));
+            labels.Add(name + " embedding · dim=" + values.Count.ToString(CultureInfo.InvariantCulture) + " · L2=" + F(norm));
+            return;
+        }
+        if (profile.Kind == VisualPostprocessingKind.AnomalyDetection)
+        {
+            if (lower.Contains("score") && values.Count > 0) labels.Add(name + " anomaly score=" + F(values[0]));
+            else if (lower.Contains("label") && values.Count > 0) labels.Add(name + " label=" + ((int)Math.Round(values[0])).ToString(CultureInfo.InvariantCulture));
+            else if ((lower.Contains("map") || lower.Contains("mask")) && shape.Length >= 2 && shape[^1] > 1 && shape[^2] > 1)
+            {
+                RenderProbabilityMap(overlays, values, SafeDimension(shape[^2], 0), SafeDimension(shape[^1], 0), "#e67e22", 0.35);
+                labels.Add(name + " anomaly map");
+            }
+            return;
+        }
         if (profile.Kind == VisualPostprocessingKind.Captioning || profile.Kind == VisualPostprocessingKind.OcrRecognition)
         {
-            labels.Add(name + " " + (values.Count == 0 ? "empty" : "token ids=" + string.Join(",", values.Take(12).Select(item => ((int)item).ToString(CultureInfo.InvariantCulture)))));
+            labels.Add(name + " " + (values.Count == 0 ? "empty" : LooksLikeTokenIds(values) ? "token ids=" + string.Join(",", values.Take(12).Select(item => ((int)item).ToString(CultureInfo.InvariantCulture))) + " · 需要词表/解码器" : "logits " + ShapeText(shape) + " · 未提供词表/解码器"));
             return;
         }
         if (profile.Kind == VisualPostprocessingKind.OcrDetection && shape.Length >= 2 && shape[^1] > 16 && shape[^2] > 16)
@@ -155,6 +173,71 @@ internal static class VisionResultRenderer
         return new OutputData(name, shape, values);
     }
 
+    private static bool TryRenderNamedDetectionSet(IReadOnlyList<OutputData> outputs, VisualPostprocessingProfile profile, List<string> overlays, List<string> labels)
+    {
+        if (profile.Kind is not (VisualPostprocessingKind.Detection or VisualPostprocessingKind.OrientedDetection or VisualPostprocessingKind.Segmentation)) return false;
+        OutputData? boxes = outputs.FirstOrDefault(item => (item.Name.Contains("box", StringComparison.OrdinalIgnoreCase) || item.Name.Contains("det", StringComparison.OrdinalIgnoreCase)) && item.Shape.Length >= 1 && item.Shape[^1] == 4 && item.Values.Count >= 4);
+        OutputData? scores = outputs.FirstOrDefault(item => item.Name.Contains("score", StringComparison.OrdinalIgnoreCase) && !item.Name.Contains("logit", StringComparison.OrdinalIgnoreCase));
+        OutputData? labelsTensor = outputs.FirstOrDefault(item => item.Name.Equals("labels", StringComparison.OrdinalIgnoreCase) || item.Name.Contains("label", StringComparison.OrdinalIgnoreCase));
+        if (boxes is null || labelsTensor is null) return false;
+        int candidates = boxes.Values.Count / 4;
+        if (candidates == 0 || labelsTensor.Values.Count == 0 || (scores is not null && scores.Values.Count == 0)) return false;
+        int labelWidth = labelsTensor.Shape.Length >= 3 && labelsTensor.Shape[^1] > 1 ? SafeDimension(labelsTensor.Shape[^1], 0) : 1;
+        bool rawQueryScores = labelWidth > 1;
+        int usable = Math.Min(candidates, rawQueryScores ? labelsTensor.Values.Count / labelWidth : labelsTensor.Values.Count);
+        if (scores is not null) usable = Math.Min(usable, scores.Values.Count);
+        if (usable == 0) return false;
+        var decoded = new List<BoxCandidate>(Math.Min(usable, 3000));
+        for (int index = 0; index < usable; index++)
+        {
+            double score = scores is null ? 1 : NormalizeScore(scores.Values[index]);
+            int classId = 0;
+            if (rawQueryScores)
+            {
+                double best = double.NegativeInfinity;
+                for (int classIndex = 0; classIndex < labelWidth; classIndex++)
+                {
+                    double candidate = labelsTensor.Values[index * labelWidth + classIndex];
+                    if (candidate > best) { best = candidate; classId = classIndex; }
+                }
+                score *= NormalizeScore(best);
+            }
+            else classId = (int)Math.Round(labelsTensor.Values[index]);
+            if (!double.IsFinite(score) || score < profile.ScoreThreshold) continue;
+            int offset = index * 4;
+            double a = boxes.Values[offset], b = boxes.Values[offset + 1], c = Math.Abs(boxes.Values[offset + 2]), d = Math.Abs(boxes.Values[offset + 3]);
+            decoded.Add(rawQueryScores ? new BoxCandidate(a, b, c, d, score, classId, 0, index) : new BoxCandidate(a, b, c, d, score, classId, 0, index));
+        }
+        IReadOnlyList<BoxCandidate> kept = Suppress(decoded.OrderByDescending(item => item.Score).Take(3000), 0.45, 50);
+        OutputData? masks = profile.Kind == VisualPostprocessingKind.Segmentation ? outputs.FirstOrDefault(item => item.Name.Contains("mask", StringComparison.OrdinalIgnoreCase) && item.Shape.Length >= 4) : null;
+        int renderedMasks = 0;
+        foreach (BoxCandidate item in kept)
+        {
+            if (rawQueryScores) DrawCenterBox(overlays, item.CenterX, item.CenterY, item.Width, item.Height, item.Score, item.ClassId, "#ff5c5c");
+            else DrawXyxyBox(overlays, item.CenterX, item.CenterY, item.Width, item.Height, item.Score, item.ClassId, "#ff5c5c");
+            if (masks is not null && item.SourceIndex >= 0 && renderedMasks++ < 8) RenderNamedMask(overlays, masks, item.SourceIndex);
+        }
+        labels.Add(boxes.Name + " + " + labelsTensor.Name + (scores is null ? string.Empty : " + " + scores.Name) + " · " + kept.Count.ToString(CultureInfo.InvariantCulture) + " decoded results");
+        if (masks is not null) labels.Add(masks.Name + " instance masks");
+        return true;
+    }
+
+    private static void RenderNamedMask(List<string> overlays, OutputData masks, int candidate)
+    {
+        int height = SafeDimension(masks.Shape[^2], 0), width = SafeDimension(masks.Shape[^1], 0);
+        int candidates = SafeDimension(masks.Shape[^3], 0);
+        if (height == 0 || width == 0 || candidates == 0 || masks.Values.Count < candidates * height * width) return;
+        int step = Math.Max(1, Math.Max(height, width) / 48);
+        int offset = candidate * height * width;
+        for (int row = 0; row < height; row += step)
+        for (int column = 0; column < width; column += step)
+        {
+            double probability = NormalizeScore(masks.Values[offset + row * width + column]);
+            if (probability < 0.5) continue;
+            overlays.Add("<rect x=\"" + F(20 + column * 600d / width) + "\" y=\"" + F(20 + row * 360d / height) + "\" width=\"" + F(step * 600d / width + .5) + "\" height=\"" + F(step * 360d / height + .5) + "\" fill=\"#4d7cff\" opacity=\"" + F(Math.Min(.5, .18 + probability * .3)) + "\"/>");
+        }
+    }
+
     private static bool TryRenderYoloSegmentation(IReadOnlyList<OutputData> outputs, VisualPostprocessingProfile profile, List<string> overlays, List<string> labels)
     {
         OutputData? prototype = outputs.FirstOrDefault(item => item.Shape.Length >= 3 && item.Shape[^3] is >= 8 and <= 64 && item.Shape[^2] > 16 && item.Shape[^1] > 16);
@@ -230,6 +313,16 @@ internal static class VisionResultRenderer
             overlays.Add("<rect x=\"" + F(20 + column * 600d / width) + "\" y=\"" + F(20 + row * 360d / height) + "\" width=\"" + F(step * 600d / width + .5) + "\" height=\"" + F(step * 360d / height + .5) + "\" fill=\"" + color + "\" opacity=\"" + F(Math.Min(.5, Math.Max(.12, probability * .45))) + "\"/>");
         }
     }
+
+    private static void DrawXyxyBox(List<string> overlays, double x1, double y1, double x2, double y2, double score, int classId, string color)
+    {
+        double left = X(Math.Min(x1, x2)), top = Y(Math.Min(y1, y2)), right = X(Math.Max(x1, x2)), bottom = Y(Math.Max(y1, y2));
+        overlays.Add("<rect x=\"" + F(left) + "\" y=\"" + F(top) + "\" width=\"" + F(Math.Abs(right - left)) + "\" height=\"" + F(Math.Abs(bottom - top)) + "\" fill=\"none\" stroke=\"" + color + "\" stroke-width=\"2\"/><text x=\"" + F(left + 3) + "\" y=\"" + F(top + 14) + "\" fill=\"" + color + "\" font-size=\"12\">class " + classId.ToString(CultureInfo.InvariantCulture) + " · " + F(score) + "</text>");
+    }
+
+    private static double NormalizeScore(double value) => value is >= 0 and <= 1 ? value : 1d / (1d + Math.Exp(-Math.Clamp(value, -30, 30)));
+    private static bool LooksLikeTokenIds(IReadOnlyList<double> values) => values.Count > 0 && values.Take(Math.Min(values.Count, 64)).All(value => value >= 0 && value <= 100000 && Math.Abs(value - Math.Round(value)) < 0.0001);
+    private static string ShapeText(IReadOnlyList<long> shape) => shape.Count == 0 ? "[unknown]" : "[" + string.Join(",", shape) + "]";
 
     private static bool TryRenderYoloRaw(string name, long[] shape, IReadOnlyList<double> values, VisualPostprocessingProfile profile, List<string> overlays, List<string> labels)
     {
