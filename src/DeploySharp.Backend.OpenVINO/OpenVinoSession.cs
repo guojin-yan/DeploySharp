@@ -102,7 +102,10 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 await _operationGate.WaitAsync(operationToken).ConfigureAwait(false);
                 entered = true;
                 EnsureUsable();
-                return await RunNativeAsync(inputs, operationToken).ConfigureAwait(false);
+                // Keep the async API independent from OpenVINO's request callback
+                // lifetime. A worker-thread synchronous infer is cancellation-safe at
+                // disposal boundaries and still overlaps work across pooled requests.
+                return await Task.Run(() => RunCore(inputs), operationToken).ConfigureAwait(false);
             }
             catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run-async", _device, operationToken); }
             finally
@@ -174,43 +177,6 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             finally { if (disposeRequest) request.Dispose(); }
         }
 
-        private async Task<InferenceOutputs> RunNativeAsync(InferenceInputs inputs, CancellationToken cancellationToken)
-        {
-            ValidateInputNames(inputs);
-            InferRequest request = AcquireInferRequest(out bool disposeRequest);
-            try
-            {
-                List<OvTensor> nativeInputs = BindInputs(request, inputs);
-                bool started = false;
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    request.StartAsync();
-                    started = true;
-                    while (!request.WaitFor(10))
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            TryCancelAndDrain(request);
-                            cancellationToken.ThrowIfCancellationRequested();
-                        }
-                        // WaitFor already yields to the native request for up to
-                        // 10 ms. Yield without a timer here so the continuation
-                        // stays asynchronous without adding a fixed 1 ms tail.
-                        await Task.Yield();
-                    }
-                    cancellationToken.ThrowIfCancellationRequested();
-                    return OpenVinoTensorBridge.CopyOutputs(_artifact, request, _outputs);
-                }
-                finally
-                {
-                    if (started && cancellationToken.IsCancellationRequested) TryCancelAndDrain(request);
-                    DisposeNativeInputs(nativeInputs);
-                }
-            }
-            finally { if (disposeRequest) request.Dispose(); }
-        }
-
         private InferRequest AcquireInferRequest(out bool disposeRequest)
         {
             if (!_reuseInferRequest)
@@ -256,12 +222,6 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
         {
             if (inputs.Count != _inputs.Count) throw new OpenVinoBackendException(OpenVinoErrorCodes.TensorInvalid, "The input collection must contain every model input and no extras.", modelId: _artifact.ModelId, operation: "validate-inputs", device: _device, technicalDetails: "expected=" + _inputs.Count + ";actual=" + inputs.Count);
             foreach (NamedTensor input in inputs) if (!_inputs.ContainsKey(input.Name)) throw new OpenVinoBackendException(OpenVinoErrorCodes.TensorInvalid, "The input collection contains an unknown tensor name.", modelId: _artifact.ModelId, tensorName: input.Name, operation: "validate-inputs", device: _device);
-        }
-
-        private static void TryCancelAndDrain(InferRequest request)
-        {
-            try { request.Cancel(); } catch (Exception) { }
-            try { request.Wait(); } catch (Exception) { }
         }
 
         private void EnsureUsable()
