@@ -46,5 +46,17 @@ namespace DeploySharpApp.Contracts.Tests
             Assert.IsNull(tensor.ValuesJson);
             Assert.IsNull(tensor.ValuesFilePath);
         }
+
+        [TestMethod]
+        public void BenchmarkPreservesNativeExecutionContract()
+        {
+            var tensor = new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]");
+            var request = new BenchmarkRequest("tests/model", "deploysharp.backend.openvino", 2, 4, "cpu", "model.onnx", "ONNX", "ABC", "image.png", new[] { tensor }, new Dictionary<string, string> { ["performanceHint"] = "Latency" });
+            Assert.AreEqual("onnx", request.ModelFormat);
+            Assert.AreEqual("model.onnx", request.ModelPath);
+            Assert.AreEqual("image.png", request.InputPath);
+            Assert.AreEqual("images", request.TensorInputs.Single().Name);
+            Assert.AreEqual("Latency", request.Options["performanceHint"]);
+        }
     }
 }

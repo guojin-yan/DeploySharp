@@ -65,6 +65,9 @@ internal static class BackendRuntimeProbeCatalog
             .Concat(status.Details.Where(pair => pair.Key.EndsWith(".root", StringComparison.OrdinalIgnoreCase) || pair.Key.EndsWith(".packaged", StringComparison.OrdinalIgnoreCase)).Select(pair => pair.Value))
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Distinct(StringComparer.OrdinalIgnoreCase));
+        bool abiPassed = status.State == BackendRuntimeState.Available
+            && status.Details.TryGetValue("abiSmokeState", out string? completedSmokeState)
+            && string.Equals(completedSmokeState, "passed", StringComparison.OrdinalIgnoreCase);
         var payload = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["backendId"] = appBackendId,
@@ -72,7 +75,7 @@ internal static class BackendRuntimeProbeCatalog
             ["pluginId"] = descriptor.PluginId,
             ["execution"] = "worker",
             ["preflightState"] = status.State.ToString(),
-            ["state"] = status.State == BackendRuntimeState.MissingNative ? "MissingNative" : status.State == BackendRuntimeState.Available ? "Unavailable" : status.State.ToString(),
+            ["state"] = status.State == BackendRuntimeState.MissingNative ? "MissingNative" : abiPassed ? "Available" : status.State == BackendRuntimeState.Available ? "Unavailable" : status.State.ToString(),
             ["diagnosticCode"] = status.State == BackendRuntimeState.MissingNative ? "DSAPP-WORKER-NATIVE-MISSING" : status.State == BackendRuntimeState.Available ? (status.Details.TryGetValue("abiSmokeState", out string? smokeState) && smokeState == "passed" ? "DSAPP-WORKER-ABI-SMOKE-PASSED" : AbiSmokePendingCode) : status.Details.TryGetValue("abiSmokeCode", out string? smokeCode) ? smokeCode : "DSAPP-WORKER-NATIVE-PREFLIGHT",
             ["missingItems"] = missingItems,
             ["preflightMissingItems"] = string.Join(",", status.MissingItems),
@@ -86,9 +89,11 @@ internal static class BackendRuntimeProbeCatalog
         foreach (KeyValuePair<string, string> detail in status.Details)
             payload["probe." + detail.Key] = detail.Value;
 
-        bool success = false;
+        bool success = abiPassed;
         string message = status.State == BackendRuntimeState.MissingNative
             ? "The Worker could not find every declared native runtime requirement."
+            : abiPassed
+                ? "Native files and the provider ABI smoke session were validated in the Worker."
             : status.State == BackendRuntimeState.Available
                 ? "Native files were found, but ABI smoke test and inference adapter execution are still required."
                 : "The Worker native preflight did not report an executable runtime.";

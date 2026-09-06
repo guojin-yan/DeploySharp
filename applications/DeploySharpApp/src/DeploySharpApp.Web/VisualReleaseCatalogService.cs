@@ -272,6 +272,7 @@ public sealed record VisualReleaseModel(
     public string Preprocessing { get; init; } = "not declared";
     public string Postprocessing { get; init; } = "raw tensor output";
     public string ValidationStatus { get; init; } = "not declared";
+    public VisualPostprocessingProfile PostprocessingProfile => VisualPostprocessingProfile.FromModel(Task, DisplayName, Postprocessing);
     public AppModelInfo ToAppModelInfo() => new(Id, DisplayName, Task, Format, Size, RecommendedBackends, License, Cached, location: null, sha256: PrimaryFile.Sha256, externalArtifact: true);
 }
 

@@ -71,6 +71,158 @@ internal static class WorkerInferenceAdapter
         }
     }
 
+    public static async Task<WorkerResponse> BenchmarkAsync(WorkerRequest request, Action<double>? reportProgress, CancellationToken cancellationToken)
+    {
+        string? suppliedPath = Value(request.Payload, "modelPath");
+        if (string.IsNullOrWhiteSpace(suppliedPath)) return Error(request, "DSAPP-WORKER-MODEL-PATH-REQUIRED", "A local modelPath is required for native Worker benchmark.", AppRuntimeState.Unavailable);
+        string modelPath;
+        try { modelPath = Path.GetFullPath(suppliedPath); }
+        catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is PathTooLongException)
+        { return Error(request, "DSAPP-WORKER-MODEL-PATH-INVALID", "The Worker benchmark model path is invalid.", AppRuntimeState.Unavailable, exception.Message); }
+        if (!File.Exists(modelPath)) return Error(request, "DSAPP-WORKER-MODEL-NOT-FOUND", "The Worker benchmark model file does not exist.", AppRuntimeState.Unavailable, modelPath);
+
+        try
+        {
+            string backendId = request.BackendId ?? string.Empty;
+            if (Contains(backendId, "llamasharp")) return await BenchmarkLlamaAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
+            return await BenchmarkTensorAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        { return Error(request, "DSAPP-WORKER-CANCELLED", "Native Worker benchmark was cancelled.", AppRuntimeState.Unavailable); }
+        catch (DeploySharpException exception)
+        { return Error(request, exception.ErrorCode, exception.Message, AppRuntimeState.Unavailable, exception.TechnicalDetails); }
+        catch (Exception exception) when (exception is ArgumentException || exception is FormatException || exception is JsonException || exception is IOException || exception is UnauthorizedAccessException || exception is OverflowException)
+        { return Error(request, "DSAPP-WORKER-INPUT-INVALID", "The native benchmark input or backend options are invalid.", AppRuntimeState.Unsupported, exception.Message); }
+        catch (Exception exception)
+        { return Error(request, "DSAPP-WORKER-NATIVE-BENCHMARK-FAILED", "Native Worker benchmark failed.", AppRuntimeState.Unavailable, exception.GetType().FullName + ": " + exception.Message); }
+    }
+
+    private static async Task<WorkerResponse> BenchmarkTensorAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
+    {
+        string backend = request.BackendId ?? string.Empty;
+        string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
+        IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
+        if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "Native tensor benchmark requires named tensor inputs.", AppRuntimeState.Unsupported);
+
+        IBackendProvider provider;
+        if (Contains(backend, "opencv"))
+        {
+            if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenCV DNN benchmark requires ONNX.", AppRuntimeState.Unsupported, format);
+            string[] outputNames = (Value(request.Payload, "outputTensorNames") ?? string.Empty).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(value => value.Trim()).Where(value => value.Length > 0).ToArray();
+            if (outputNames.Length == 0) return Error(request, "DSAPP-WORKER-OPENCV-OUTPUT-CONTRACT-REQUIRED", "OpenCV DNN benchmark requires an explicit output contract.", AppRuntimeState.Unsupported);
+            var outputShapes = JsonSerializer.Deserialize<Dictionary<string, long[]>>(Value(request.Payload, "outputTensorShapesJson") ?? "{}", JsonOptions) ?? new Dictionary<string, long[]>();
+            var outputTypes = JsonSerializer.Deserialize<Dictionary<string, string>>(Value(request.Payload, "outputTensorElementTypesJson") ?? "{}", JsonOptions) ?? new Dictionary<string, string>();
+            var modelId = new ModelId(request.ModelId ?? "worker/opencv-benchmark");
+            var inputDescriptors = inputs.Select(input => new TensorDescriptor(input.Name, ToElementType(input.ElementType), new TensorShape(input.Shape))).ToArray();
+            var outputDescriptors = outputNames.Select(name => new TensorDescriptor(name, ToElementType(outputTypes.TryGetValue(name, out string? type) ? type : "float32"), new TensorShape(outputShapes.TryGetValue(name, out long[]? shape) ? shape : new[] { -1L }))).ToArray();
+            provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(new OpenCvDnnModelContract(modelId, inputDescriptors, outputDescriptors, inputs.Where(IsImageTensorInput).Select(input => input.Name)), numThreads: GetNullableInt(request.Payload, "numThreads")));
+        }
+        else if (Contains(backend, "openvino"))
+        {
+            if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase) && !string.Equals(format, "openvino-ir", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenVINO benchmark requires ONNX or OpenVINO IR.", AppRuntimeState.Unsupported, format);
+            provider = new OpenVinoBackendProvider(ParseOpenVinoOptions(request.Payload));
+        }
+        else if (Contains(backend, "tensorrt"))
+        {
+            if (!string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT benchmark requires a device-bound engine/plan.", AppRuntimeState.Unsupported, format);
+            TensorRtValidationResult validation = TensorRtEngineIdentityValidator.Validate(modelPath, request.Payload);
+            if (!validation.Succeeded)
+            {
+                var details = new Dictionary<string, string>(validation.Details, StringComparer.Ordinal) { ["state"] = AppRuntimeState.Unavailable.ToString(), ["diagnosticCode"] = validation.Code, ["execution"] = "worker" };
+                return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, validation.Message, details);
+            }
+            provider = new TensorRtBackendProvider(ParseTensorRtOptions(request.Payload));
+        }
+        else return Error(request, "DSAPP-WORKER-BENCHMARK-BACKEND-UNKNOWN", "No native tensor benchmark adapter is registered for this backend.", AppRuntimeState.Unsupported);
+
+        Stopwatch initialization = Stopwatch.StartNew();
+        using (provider)
+        {
+            BackendId providerId = provider.Descriptor.Id;
+            var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/benchmark"), format, modelPath, Value(request.Payload, "modelSha256"), providerId);
+            var backendRequest = new BackendRequest(BackendCapabilities.TensorInference, providerId, Value(request.Payload, "device"));
+            using IInferenceSession session = provider.CreateSession(artifact, backendRequest, new SessionOptions(GetInt(request.Payload, "maxConcurrency", 1), GetBool(request.Payload, "enableProfiling", false)));
+            InferenceInputs inferenceInputs = await CreateInferenceInputsAsync(request, inputs, cancellationToken).ConfigureAwait(false);
+            initialization.Stop();
+            InferenceOutputs? last = null;
+            WorkerResponse report = await RunBenchmarkLoopAsync(request, initialization.Elapsed.TotalMilliseconds, reportProgress, cancellationToken, async token =>
+            {
+                last = await session.RunAsync(inferenceInputs, token).ConfigureAwait(false);
+                return JsonSerializer.Serialize(last.Select(item => new WorkerTensorOutput(item.Name, item.Tensor.ElementType.ToString(), item.Tensor.Shape.ToArray(), item.Tensor.Buffer)).ToArray(), JsonOptions);
+            }).ConfigureAwait(false);
+            return report;
+        }
+    }
+
+    private static async Task<WorkerResponse> BenchmarkLlamaAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
+    {
+        string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
+        if (!string.Equals(format, "gguf", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "LLamaSharp benchmark requires GGUF.", AppRuntimeState.Unsupported, format);
+        string prompt = Value(request.Payload, "prompt") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(prompt)) return Error(request, "DSAPP-WORKER-PROMPT-REQUIRED", "LLamaSharp benchmark requires an explicit prompt.", AppRuntimeState.Unsupported);
+        string device = Value(request.Payload, "device") ?? "cpu";
+        if (!string.Equals(device, "cpu", StringComparison.OrdinalIgnoreCase) && !string.Equals(device, "auto", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-LLAMA-DEVICE-UNAVAILABLE", "This Worker packages the LLamaSharp CPU provider.", AppRuntimeState.Unavailable, device);
+
+        Stopwatch initialization = Stopwatch.StartNew();
+        using var registry = new LanguageModelRegistry();
+        registry.UseLlamaSharp(ParseLlamaOptions(request.Payload));
+        var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/llama-benchmark"), "gguf", modelPath, Value(request.Payload, "modelSha256"), LlamaSharpBackendProvider.BackendId);
+        using ILanguageModelSession session = registry.CreateSession(artifact, new LanguageModelRequest(LanguageModelCapabilities.TextGeneration, LlamaSharpBackendProvider.BackendId, device));
+        initialization.Stop();
+        var generationOptions = new GenerationOptions(GetInt(request.Payload, "maxTokens", 32), GetFloat(request.Payload, "temperature", 0.8f), GetFloat(request.Payload, "topP", 0.95f), GetInt(request.Payload, "topK", 40), GetNullableInt(request.Payload, "seed"), GetStops(request.Payload), TimeSpan.FromMilliseconds(GetDouble(request.Payload, "timeoutMs", 120000)));
+        return await RunBenchmarkLoopAsync(request, initialization.Elapsed.TotalMilliseconds, reportProgress, cancellationToken, async token =>
+        {
+            GenerationResult result = await session.GenerateAsync(new TextGenerationRequest(prompt, generationOptions), token).ConfigureAwait(false);
+            return result.Text;
+        }).ConfigureAwait(false);
+    }
+
+    private static async Task<WorkerResponse> RunBenchmarkLoopAsync(WorkerRequest request, double initializationMs, Action<double>? reportProgress, CancellationToken cancellationToken, Func<CancellationToken, Task<string>> run)
+    {
+        int warmup = GetInt(request.Payload, "warmup", 3);
+        int iterations = GetInt(request.Payload, "iterations", 20);
+        if (warmup < 0 || warmup > 1000 || iterations <= 0 || iterations > 10000) throw new ArgumentOutOfRangeException("iterations", "Warmup must be 0..1000 and iterations 1..10000.");
+        reportProgress?.Invoke(0.4);
+        for (int index = 0; index < warmup; index++) await run(cancellationToken).ConfigureAwait(false);
+        var samples = new List<double>(iterations);
+        string lastOutput = string.Empty;
+        for (int index = 0; index < iterations; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Stopwatch timer = Stopwatch.StartNew();
+            lastOutput = await run(cancellationToken).ConfigureAwait(false);
+            timer.Stop();
+            samples.Add(timer.Elapsed.TotalMilliseconds);
+            reportProgress?.Invoke(0.4 + ((index + 1d) / iterations * 0.55));
+        }
+        samples.Sort();
+        double p50 = Percentile(samples, 0.50);
+        double p95 = Percentile(samples, 0.95);
+        var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["backendId"] = request.BackendId ?? string.Empty,
+            ["device"] = Value(request.Payload, "device") ?? "cpu",
+            ["execution"] = "worker",
+            ["timingScope"] = "session-execution-only",
+            ["warmup"] = warmup.ToString(CultureInfo.InvariantCulture),
+            ["iterations"] = iterations.ToString(CultureInfo.InvariantCulture),
+            ["initializationMs"] = initializationMs.ToString(CultureInfo.InvariantCulture),
+            ["p50Ms"] = p50.ToString(CultureInfo.InvariantCulture),
+            ["p95Ms"] = p95.ToString(CultureInfo.InvariantCulture),
+            ["throughput"] = (1000d / samples.Average()).ToString(CultureInfo.InvariantCulture),
+            ["output"] = lastOutput
+        };
+        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "Native benchmark completed with one reused provider/session; timings cover real execution only.", payload);
+    }
+
+    private static double Percentile(IReadOnlyList<double> values, double percentile)
+    {
+        double position = (values.Count - 1) * percentile;
+        int lower = (int)Math.Floor(position);
+        int upper = (int)Math.Ceiling(position);
+        return lower == upper ? values[lower] : values[lower] + ((values[upper] - values[lower]) * (position - lower));
+    }
+
     private static async Task<WorkerResponse> RunLlamaAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
     {
         string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');

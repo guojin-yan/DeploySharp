@@ -123,6 +123,33 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task AbiSmokeNeverMarksMissingModelAvailable()
+        {
+            var client = new BackendHostWorkerClient(LocateBackendHost());
+            string missing = Path.Combine(Path.GetTempPath(), "deploysharp-smoke-missing-" + Guid.NewGuid().ToString("N") + ".onnx");
+            var payload = new Dictionary<string, string> { ["smokeModelPath"] = missing };
+            WorkerResponse response = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Probe, "probe-smoke-missing", "deploysharp.backend.openvino", payload: payload), TimeSpan.FromSeconds(15), CancellationToken.None);
+            Assert.IsFalse(response.Succeeded);
+            Assert.AreNotEqual(AppRuntimeState.Available.ToString(), response.Payload["state"]);
+            Assert.AreNotEqual("DSAPP-WORKER-ABI-SMOKE-PASSED", response.Payload["diagnosticCode"]);
+        }
+
+        [TestMethod]
+        public async Task NativeBenchmarkReusesPreparedOpenVinoSession()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            var inputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]") };
+            var request = new BenchmarkRequest("tests/classification-benchmark", "deploysharp.backend.openvino", warmup: 1, iterations: 2, modelPath: Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"), modelFormat: "onnx", tensorInputs: inputs);
+            BenchmarkReport report = await new BackendHostWorkerClient(LocateBackendHost()).BenchmarkAsync(request, null, CancellationToken.None);
+            if (!report.Available && report.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-NATIVE-MISSING" || item.Code == "DSAPP-WORKER-NATIVE-PREFLIGHT")) Assert.Inconclusive(report.Message);
+            Assert.IsTrue(report.Available, report.Message + Environment.NewLine + string.Join(Environment.NewLine, report.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            Assert.IsTrue(report.P50Ms > 0);
+            Assert.IsTrue(report.P95Ms > 0);
+            Assert.IsTrue(report.Throughput > 0);
+            StringAssert.Contains(report.Message, "reused provider/session");
+        }
+
+        [TestMethod]
         public async Task NativeBackendsAreRoutedToWorkerClient()
         {
             foreach (string backendId in new[] { "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })

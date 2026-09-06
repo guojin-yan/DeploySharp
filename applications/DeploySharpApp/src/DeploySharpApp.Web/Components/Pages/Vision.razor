@@ -8,6 +8,7 @@
 @inject VisualTestImageCatalogService TestImageCatalog
 @inject ModelFactoryCatalogService FactoryCatalog
 @inject ModelFactoryRuntimeService FactoryRuntime
+@inject ModelPackRuntimeService ModelPackRuntime
 @inject WebActivityStore Activity
 <PageTitle>视觉推理 · DeploySharpApp</PageTitle>
 <style>
@@ -99,7 +100,7 @@
             <div class="download-row"><span class="muted">@(selectedReleaseModel.Cached ? "已缓存" : "首次运行需下载")</span><button class="ghost small" @onclick="() => DownloadSelectedAsync()" disabled="@downloading">@(downloading ? "下载中…" : "下载模型")</button></div>
             @if (downloading) { <progress value="@downloadProgress" max="1"></progress> }
             <p class="hint">@selectedReleaseModel.Task · @selectedReleaseModel.Version · SHA256 @selectedReleaseModel.PrimaryFile.Sha256[..Math.Min(12, selectedReleaseModel.PrimaryFile.Sha256.Length)]…</p>
-            <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@TensorContract(selectedReleaseModel.Inputs)</b></div><div><small>输出契约</small><b>@TensorContract(selectedReleaseModel.Outputs)</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。目录元数据用于推荐配置，不等于当前页面已经完成算法级解码。</p></div>
+            <div class="model-evidence"><div class="model-evidence-grid"><div><small>任务</small><b>@selectedReleaseModel.Task</b></div><div><small>精度 / 量化</small><b>@selectedReleaseModel.Precision · @selectedReleaseModel.Quantization</b></div><div><small>ONNX opset</small><b>@(selectedReleaseModel.Opset?.ToString() ?? "未声明")</b></div><div><small>输入契约</small><b>@TensorContract(selectedReleaseModel.Inputs)</b></div><div><small>输出契约</small><b>@TensorContract(selectedReleaseModel.Outputs)</b></div><div><small>后处理类型</small><b>@selectedReleaseModel.PostprocessingProfile.Kind</b></div><div><small>预处理</small><span>@selectedReleaseModel.Preprocessing</span></div><div><small>验证状态</small><span>@selectedReleaseModel.ValidationStatus</span></div></div><p class="hint">后处理契约：@selectedReleaseModel.Postprocessing。@selectedReleaseModel.PostprocessingProfile.Description 类别名或文本只在模型合同提供时显示，不会猜测。</p></div>
         }
         <label>本地模型文件
             <InputFile OnChange="HandleModelSelected" accept=".onnx,.engine,.plan" disabled="@modelUploading" />
@@ -111,6 +112,12 @@
         }
         @if (!string.IsNullOrWhiteSpace(uploadedModelSha256)) { <p class="hint">本地模型 SHA256：@uploadedModelSha256</p> }
         <label>本地模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="也可填写 Web 服务可访问的 .onnx/.engine 路径" /></label>
+        <details class="settings-group"><summary>本地 ModelPack <span>严格校验 manifest、大小、SHA256 与路径边界</span></summary>
+            <label>Manifest 路径<input @bind="modelPackManifestPath" placeholder="Web 服务器可访问的 modelpack.json 路径" /></label>
+            <div class="download-row"><button class="ghost small" @onclick="ValidateModelPackAsync" disabled="@(modelPackValidating || busy || string.IsNullOrWhiteSpace(modelPackManifestPath))">@(modelPackValidating ? "校验中…" : "校验并用于运行")</button><span class="muted">校验失败不会替换当前模型</span></div>
+            @if (modelPackMaterialization is not null) { <p class="hint">已验证 @modelPackMaterialization.ModelId · @modelPackMaterialization.Format · @modelPackMaterialization.ModelPath</p> }
+            @if (!string.IsNullOrWhiteSpace(modelPackError)) { <p class="hint">ModelPack：@modelPackError</p> }
+        </details>
         <label>输入图像 <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg,image/webp" /><span class="file-name">@(string.IsNullOrWhiteSpace(imageFileName) ? "未选择图片，运行将自动匹配 release 测试图像" : imageFileName)</span></label>
         @if (testImages.Count > 0)
         {
@@ -208,6 +215,10 @@
     private string padValue = "0";
     private bool usingRecommendedParameters;
     private string modelPath = string.Empty;
+    private string modelPackManifestPath = string.Empty;
+    private bool modelPackValidating;
+    private string? modelPackError;
+    private ModelPackMaterialization? modelPackMaterialization;
     private string? uploadedModelPath;
     private string modelFileName = string.Empty;
     private string uploadedModelSha256 = string.Empty;
@@ -313,6 +324,33 @@
         }
         catch (Exception exception) { factoryError = exception.Message; }
         finally { factoryMaterializing = false; }
+    }
+
+    private async Task ValidateModelPackAsync()
+    {
+        if (modelPackValidating || string.IsNullOrWhiteSpace(modelPackManifestPath)) return;
+        modelPackValidating = true; modelPackError = null;
+        try
+        {
+            ModelPackMaterialization validated = await ModelPackRuntime.ValidateAsync(modelPackManifestPath);
+            modelPackMaterialization = validated;
+            modelPath = validated.ModelPath;
+            uploadedModelPath = null;
+            uploadedModelSha256 = validated.Sha256 ?? string.Empty;
+            modelFileName = Path.GetFileName(validated.ModelPath);
+            selectedModelId = validated.ModelId;
+            selectedFactoryModelId = string.Empty;
+            factoryMaterialization = null;
+            usingRecommendedParameters = false;
+            runtimeMessage = "本地 ModelPack 已通过主库完整性校验，可以运行。";
+            Activity.Add("modelpack", "Validated local ModelPack " + validated.ModelId, "DSAPP-MODELPACK-VALIDATED");
+        }
+        catch (Exception exception)
+        {
+            modelPackError = exception.Message;
+            Activity.Add("modelpack", exception.Message, "DSAPP-MODELPACK-VALIDATION-FAILED");
+        }
+        finally { modelPackValidating = false; }
     }
 
     private void HandleTestImageChanged(ChangeEventArgs args)
@@ -693,7 +731,7 @@
             var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? InferModelFormat(modelPath)), modelSha256: selected?.PrimaryFile.Sha256 ?? (string.IsNullOrWhiteSpace(uploadedModelSha256) ? null : uploadedModelSha256), tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
-            if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl, selectedReleaseModel?.Task); resultImageCaption = "原图叠加通用后处理；模型原始输出见下方 JSON"; }
+            if (output.Succeeded && originalImageUrl is not null) { resultImageUrl = BuildResultImage(output, originalImageUrl, selectedReleaseModel?.Task, selectedReleaseModel?.PostprocessingProfile); resultImageCaption = "原图叠加任务级后处理；模型原始输出见下方 JSON"; }
             Activity.Add("run", output.Message, output.Diagnostics.FirstOrDefault()?.Code);
         }
         catch (OperationCanceledException) { runMode = "Cancelled"; runtimeState = "Unavailable"; errorCode = "Cancelled"; runtimeMessage = "操作已取消。"; result = runtimeMessage; Activity.Add("run", runtimeMessage, "DSAPP-WEB-CANCELLED"); }
@@ -758,7 +796,7 @@
     private static bool IsLocalModelFormatCompatible(string format, bool tensorRt) => tensorRt ? string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase) : string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase);
     private static string TensorContract(IReadOnlyList<VisualModelInput> tensors) => tensors.Count == 0 ? "未声明" : string.Join("; ", tensors.Select(tensor => tensor.Name + " " + tensor.ElementType + " " + string.Join("×", tensor.Shape)));
     private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F2") + " ms";
-    private static string BuildResultImage(ModelRunResult output, string originalImage, string? task) => VisionResultRenderer.Render(originalImage, output.Output, task);
+    private static string BuildResultImage(ModelRunResult output, string originalImage, string? task, VisualPostprocessingProfile? profile) => VisionResultRenderer.Render(originalImage, output.Output, task, profile);
 
     public void Dispose()
     {

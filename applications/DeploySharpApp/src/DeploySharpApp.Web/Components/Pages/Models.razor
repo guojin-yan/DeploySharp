@@ -3,6 +3,7 @@
 @inject DeploySharpAppService Service
 @inject VisualReleaseCatalogService ReleaseCatalog
 @inject ModelFactoryRuntimeService FactoryRuntime
+@inject RuntimeProbeService RuntimeProbe
 <PageTitle>模型与后端 · DeploySharpApp</PageTitle>
 <style>
     .catalog-toolbar { display: grid; grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1fr) auto auto; gap: 10px; align-items: end; margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcff; }
@@ -16,7 +17,12 @@
     .artifact-line strong { color: #44516f; }
     .factory-action { margin-top: 10px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
     .factory-result { padding: 8px 10px; border-left: 3px solid #4d7cff; background: #f4f7ff; color: #52617e; font-size: 10px; line-height: 1.55; }
-    @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } }
+    .probe-panel { margin-bottom: 14px; padding: 13px; border: 1px solid var(--line); background: #fbfcff; }
+    .probe-form { display: grid; grid-template-columns: minmax(170px, .7fr) minmax(260px, 1.8fr) auto; gap: 10px; align-items: end; }
+    .probe-form label { min-width: 0; color: #748098; font-size: 10px; font-weight: 800; }
+    .probe-form input, .probe-form select { display: block; width: 100%; min-width: 0; margin-top: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; }
+    .probe-evidence { margin-top: 11px; padding: 9px 10px; border-left: 3px solid #4d7cff; background: #f4f7ff; color: #52617e; font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+    @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } .probe-form { grid-template-columns: 1fr; } }
     @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
 </style>
 <div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="Refresh">刷新目录 ↻</button></div>
@@ -64,6 +70,16 @@ else if (tab == CatalogTab.Factory)
 }
 else
 {
+    <div class="probe-panel">
+        <div class="probe-form">
+            <label>Worker 后端<select @bind="probeBackendId"><option value="deploysharp.backend.opencv">OpenCV DNN</option><option value="deploysharp.backend.openvino">OpenVINO</option><option value="deploysharp.backend.tensorrt">TensorRT</option></select></label>
+            <label>Smoke 模型路径<input @bind="smokeModelPath" placeholder="服务器本地 .onnx / .engine 路径" /></label>
+            <button class="ghost small" @onclick="RunAbiSmokeAsync" disabled="@(probeBusy || string.IsNullOrWhiteSpace(smokeModelPath))">@(probeBusy ? "探测中…" : "执行 ABI smoke")</button>
+        </div>
+        <p class="hint">探测在短生命周期 BackendHost 中创建真实 provider/session；仅发现 native 文件不会标记为可用。TensorRT 还会验证 GPU、driver、CUDA、cuDNN、TensorRT、bridge 与 engine identity。</p>
+        @if (probeEvidence is not null) { <div class="probe-evidence"><b>@probeEvidence.BackendId · @probeEvidence.State</b><br />@probeEvidence.DiagnosticCode · @probeEvidence.Message<br />探测路径：@ProbeDetail("probedPaths")<br />加载路径：@ProbeDetail("loadedPath")<br />建议：@ProbeDetail("suggestedAction")</div> }
+        @if (!string.IsNullOrWhiteSpace(probeError)) { <div class="probe-evidence">探测失败：@probeError</div> }
+    </div>
     <div class="panel table-panel"><table><thead><tr><th>后端</th><th>状态</th><th>RID / 架构</th><th>加载路径</th><th>建议动作</th></tr></thead><tbody>@foreach (var status in Service.RuntimeStatuses) { <tr><td><b>@status.BackendId</b></td><td><span class="table-status @(status.State == AppRuntimeState.Available ? "ok" : "pending")">@status.State</span></td><td>@status.Rid / @status.ProcessArchitecture</td><td>@(status.LoadedPath ?? "未加载")</td><td>@(status.SuggestedAction ?? "无")</td></tr> }</tbody></table></div>
 }
 @code {
@@ -82,6 +98,11 @@ else
     private string? materializeError;
     private double materializeProgress;
     private ModelFactoryMaterialization? materialization;
+    private string probeBackendId = "deploysharp.backend.opencv";
+    private string smokeModelPath = string.Empty;
+    private bool probeBusy;
+    private string? probeError;
+    private RuntimeProbeEvidence? probeEvidence;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
@@ -108,6 +129,15 @@ else
         catch (Exception exception) { materializeError = exception.Message; }
         finally { materializingId = null; }
     }
+    private async Task RunAbiSmokeAsync()
+    {
+        if (probeBusy || string.IsNullOrWhiteSpace(smokeModelPath)) return;
+        probeBusy = true; probeError = null; probeEvidence = null;
+        try { probeEvidence = await RuntimeProbe.ProbeAsync(probeBackendId, smokeModelPath); }
+        catch (Exception exception) { probeError = exception.Message; }
+        finally { probeBusy = false; }
+    }
+    private string ProbeDetail(string key) => probeEvidence is not null && probeEvidence.Details.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : "未提供";
     private void ClearFilters() { modelSearch = string.Empty; taskFilter = string.Empty; }
     private bool Matches(string displayName, string id, string task, string format)
     {
