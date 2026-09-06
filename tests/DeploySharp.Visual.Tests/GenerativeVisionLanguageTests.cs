@@ -99,7 +99,7 @@ namespace DeploySharp.Visual.Tests
             registry.Register(provider);
             var session = Session(registry, profile);
             Task<GenerativeVisionLanguageImageState> active = session.SetImageAsync(ImageInput(profile));
-            await Task.Delay(20);
+            Assert.IsTrue(provider.Started.Wait(TimeSpan.FromSeconds(5)), "The fake backend did not start the asynchronous operation.");
             Assert.AreEqual(VisualErrorCodes.GenerativeVisionLanguageConcurrentOperation, Assert.ThrowsExactly<VisualException>(() => session.ClearImage()).ErrorCode);
             await active;
             var mismatch = new FakeTokenizer(new GenerativeVisionLanguageTokenizerContract("other", new string('f', 64), "fake", 10, 1, 2, 0, 3, 4, "exact"));
@@ -159,15 +159,16 @@ namespace DeploySharp.Visual.Tests
             private readonly TimeSpan _delay;
             internal Provider(GenerativeVisionLanguageProfile profile, TimeSpan delay) { _profile = profile; _delay = delay; Descriptor = new BackendDescriptor(Backend, "Generative VLM fake", "1", BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes, new[] { "onnx" }); }
             public BackendDescriptor Descriptor { get; }
+            internal ManualResetEventSlim Started { get; } = new ManualResetEventSlim(false);
             internal bool NaNLogits { get; set; }
             public bool CanCreate(ModelArtifact artifact, BackendRequest request) => _profile.Artifacts.Any(value => value.ModelId == artifact.ModelId) && Descriptor.Supports(request.RequiredCapabilities);
             public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
             {
                 GenerativeVisionLanguageArtifactContract contract = _profile.Artifacts.Single(value => value.ModelId == artifact.ModelId);
                 var metadata = new ModelMetadata(contract.ModelId, contract.Format, contract.Inputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)), contract.Outputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)));
-                return new FakeSession(metadata, inputs => Run(contract, inputs), _delay);
+                return new FakeSession(metadata, inputs => Run(contract, inputs), _delay, Started);
             }
-            public void Dispose() { }
+            public void Dispose() { Started.Dispose(); }
             private InferenceOutputs Run(GenerativeVisionLanguageArtifactContract contract, InferenceInputs inputs)
             {
                 if (contract.Role == GenerativeVisionLanguageArtifactRole.VisionEncoder) return InferenceOutputs.Create("encoder_hidden_states", new Tensor<float>(new TensorShape(1, 2, 4), Enumerable.Repeat(.25f, 8).ToArray()));
@@ -183,11 +184,12 @@ namespace DeploySharp.Visual.Tests
         {
             private readonly Func<InferenceInputs, InferenceOutputs> _run;
             private readonly TimeSpan _delay;
+            private readonly ManualResetEventSlim _started;
             private bool _disposed;
-            internal FakeSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> run, TimeSpan delay) { Metadata = metadata; _run = run; _delay = delay; }
+            internal FakeSession(ModelMetadata metadata, Func<InferenceInputs, InferenceOutputs> run, TimeSpan delay, ManualResetEventSlim started) { Metadata = metadata; _run = run; _delay = delay; _started = started; }
             public ModelMetadata Metadata { get; }
             public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken) => RunAsync(inputs, cancellationToken).GetAwaiter().GetResult();
-            public async Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken) { if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); return _run(inputs); }
+            public async Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken) { if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); _started.Set(); if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); return _run(inputs); }
             public void Dispose() { _disposed = true; }
         }
     }

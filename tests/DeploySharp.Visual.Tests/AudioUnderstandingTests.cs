@@ -126,7 +126,7 @@ namespace DeploySharp.Visual.Tests
             fixture.Provider.NaNLogits = true; Assert.AreEqual(VisualErrorCodes.AudioNonFinite, Assert.ThrowsExactly<VisualException>(() => fixture.Session.Transcribe(new AudioTranscriptionRequest(AudioUnderstandingTask.CtcTranscription, "en"))).ErrorCode); fixture.Provider.NaNLogits = false;
             fixture.Session.Reset(); Assert.IsFalse(fixture.Session.HasAudio); Assert.AreEqual(VisualErrorCodes.AudioStateInvalid, Assert.ThrowsExactly<VisualException>(() => fixture.Session.Transcribe(new AudioTranscriptionRequest(AudioUnderstandingTask.CtcTranscription, "en"))).ErrorCode); fixture.Session.SetAudio(input);
 
-            using Fixture delayed = Fixture.Create(TimeSpan.FromMilliseconds(150)); using PreparedAudioInput delayedInput = delayed.Input(); delayed.Session.SetAudio(delayedInput); Task<AudioTranscriptionResult> active = delayed.Session.TranscribeAsync(new AudioTranscriptionRequest(AudioUnderstandingTask.CtcTranscription, "en")); await Task.Delay(20); Assert.AreEqual(VisualErrorCodes.AudioConcurrentOperation, Assert.ThrowsExactly<VisualException>(() => delayed.Session.Clear()).ErrorCode); await active;
+            using Fixture delayed = Fixture.Create(TimeSpan.FromMilliseconds(150)); using PreparedAudioInput delayedInput = delayed.Input(); delayed.Session.SetAudio(delayedInput); Task<AudioTranscriptionResult> active = delayed.Session.TranscribeAsync(new AudioTranscriptionRequest(AudioUnderstandingTask.CtcTranscription, "en")); Assert.IsTrue(delayed.Provider.Started.Wait(TimeSpan.FromSeconds(5)), "The fake backend did not start the asynchronous operation."); Assert.AreEqual(VisualErrorCodes.AudioConcurrentOperation, Assert.ThrowsExactly<VisualException>(() => delayed.Session.Clear()).ErrorCode); await active;
             using (var cancellation = new CancellationTokenSource(20)) { VisualException cancelled = await Assert.ThrowsExactlyAsync<VisualException>(() => delayed.Session.TranscribeAsync(new AudioTranscriptionRequest(AudioUnderstandingTask.CtcTranscription, "en"), cancellationToken: cancellation.Token)); Assert.AreEqual(VisualErrorCodes.AudioCancelled, cancelled.ErrorCode); }
             delayed.Session.Dispose(); Assert.AreEqual(VisualErrorCodes.AudioDisposed, Assert.ThrowsExactly<VisualException>(() => delayed.Session.Clear()).ErrorCode);
         }
@@ -157,14 +157,14 @@ namespace DeploySharp.Visual.Tests
         private sealed class Provider : IBackendProvider
         {
             private readonly AudioUnderstandingProfile _profile; private readonly TimeSpan _delay; internal Provider(AudioUnderstandingProfile profile, TimeSpan delay) { _profile = profile; _delay = delay; Descriptor = new BackendDescriptor(Backend, "Audio fake", "1", BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes, new[] { "onnx" }); }
-            public BackendDescriptor Descriptor { get; } internal bool NaNLogits { get; set; }
+            public BackendDescriptor Descriptor { get; } internal bool NaNLogits { get; set; } internal ManualResetEventSlim Started { get; } = new ManualResetEventSlim(false);
             public bool CanCreate(ModelArtifact artifact, BackendRequest request) => _profile.Artifacts.Any(value => value.ModelId == artifact.ModelId) && Descriptor.Supports(request.RequiredCapabilities);
             public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
             {
                 AudioArtifactContract contract = _profile.GetArtifact(AudioArtifactRole.CtcEncoderHead); var metadata = new ModelMetadata(contract.ModelId, contract.Format, contract.Inputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)), contract.Outputs.Select(value => new TensorDescriptor(value.Name, value.ElementType, value.ShapePattern)));
                 return new FakeSession(metadata, _delay, this);
             }
-            public void Dispose() { }
+            public void Dispose() { Started.Dispose(); }
         }
 
         private sealed class FakeSession : IInferenceSession
@@ -174,7 +174,7 @@ namespace DeploySharp.Visual.Tests
             public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken) => RunAsync(inputs, cancellationToken).GetAwaiter().GetResult();
             public async Task<InferenceOutputs> RunAsync(InferenceInputs inputs, CancellationToken cancellationToken)
             {
-                if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); int[] tokens = { 0, 19, 19, 0, 7, 6, 6, 0 }; float[] values = Enumerable.Repeat(-10f, tokens.Length * 32).ToArray(); for (int frame = 0; frame < tokens.Length; frame++) values[(frame * 32) + tokens[frame]] = 10f; if (_provider.NaNLogits) values[0] = float.NaN; return InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(1, tokens.Length, 32), values));
+                if (_disposed) throw new ObjectDisposedException(nameof(FakeSession)); _provider.Started.Set(); if (_delay > TimeSpan.Zero) await Task.Delay(_delay, cancellationToken); int[] tokens = { 0, 19, 19, 0, 7, 6, 6, 0 }; float[] values = Enumerable.Repeat(-10f, tokens.Length * 32).ToArray(); for (int frame = 0; frame < tokens.Length; frame++) values[(frame * 32) + tokens[frame]] = 10f; if (_provider.NaNLogits) values[0] = float.NaN; return InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(1, tokens.Length, 32), values));
             }
             public void Dispose() { _disposed = true; }
         }
