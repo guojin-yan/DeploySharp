@@ -1167,6 +1167,12 @@ else {
     $normalizedExpectedSymbols = Get-CanonicalValue $expectedSymbols
     $normalizedActualSymbols = Get-CanonicalValue $symbols
     $normalizedActualSymbols.repositoryCommit = $normalizedExpectedSymbols.repositoryCommit
+    # The installed SDK and MSBuild patch versions are host observations. Keep the
+    # pinned global.json contract strict while allowing local and hosted runners in
+    # the same feature band to retain their actual host identities in evidence.
+    foreach ($field in @('actualSdkVersion', 'msbuildVersion')) {
+        $normalizedActualSymbols.sdkIdentity[$field] = $normalizedExpectedSymbols.sdkIdentity[$field]
+    }
     $expectedSymbolMap = @{}
     foreach ($assembly in @($normalizedExpectedSymbols.assemblies)) { $expectedSymbolMap["$($assembly.packageId)|$($assembly.tfm)"] = $assembly }
     $actualSymbolMap = @{}

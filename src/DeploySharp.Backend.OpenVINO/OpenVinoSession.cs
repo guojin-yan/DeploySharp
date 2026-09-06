@@ -105,7 +105,9 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 // Keep the async API independent from OpenVINO's request callback
                 // lifetime. A worker-thread synchronous infer is cancellation-safe at
                 // disposal boundaries and still overlaps work across pooled requests.
-                return await Task.Run(() => RunCore(inputs), operationToken).ConfigureAwait(false);
+                InferenceOutputs outputs = await Task.Run(() => RunCore(inputs), operationToken).ConfigureAwait(false);
+                operationToken.ThrowIfCancellationRequested();
+                return outputs;
             }
             catch (Exception exception) { throw OpenVinoExceptionMapper.Map(exception, _artifact, "run-async", _device, operationToken); }
             finally
