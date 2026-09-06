@@ -1185,7 +1185,36 @@ else {
         $actualSymbolPackages[$id].rawPackageBytes = $expectedSymbolPackages[$id].rawPackageBytes
         $actualSymbolPackages[$id].rawPackageSha256 = $expectedSymbolPackages[$id].rawPackageSha256
     }
-    if ((Get-CanonicalJson $normalizedExpectedSymbols) -ne (Get-CanonicalJson $normalizedActualSymbols)) { throw 'PDB/SourceLink baseline drift.' }
+    if ((Get-CanonicalJson $normalizedExpectedSymbols) -ne (Get-CanonicalJson $normalizedActualSymbols)) {
+        # Keep the CI failure actionable without dumping the complete evidence document.
+        $symbolDiffs = [Collections.Generic.List[string]]::new()
+        foreach ($property in @('schemaVersion', 'configuration', 'deterministicSetting', 'symbolPackagePolicy', 'rawSnupkgReproducibility', 'assemblySymbolSemanticDefinition', 'rawNupkgDefinition', 'blockers', 'summary')) {
+            if ((Get-CanonicalJson $normalizedExpectedSymbols.$property) -ne (Get-CanonicalJson $normalizedActualSymbols.$property)) {
+                $symbolDiffs.Add("root.$property")
+            }
+        }
+        foreach ($key in $expectedSymbolMap.Keys) {
+            $expectedAssembly = $expectedSymbolMap[$key]
+            $actualAssembly = $actualSymbolMap[$key]
+            foreach ($property in @('packageId', 'tfm')) {
+                if ([string]$expectedAssembly.$property -ne [string]$actualAssembly.$property) { $symbolDiffs.Add("assemblies[$key].$property") }
+            }
+            foreach ($property in @('assemblyBytes', 'packageBuildAssemblyMatch', 'mvid', 'deterministicReproducibleMarker', 'debugType', 'codeViewAge', 'codeViewPathMode', 'pdbBytes', 'documentCount', 'documentPathMode', 'sequencePointSha256', 'sourceLinkStatus', 'embeddedSourceCount', 'compilerVersion', 'languageVersion', 'optimization', 'nullable', 'runtimeVersion', 'compilationOptionsSha256')) {
+                if ((Get-CanonicalJson $expectedAssembly.evidence.$property) -ne (Get-CanonicalJson $actualAssembly.evidence.$property)) {
+                    $symbolDiffs.Add("assemblies[$key].evidence.$property")
+                }
+            }
+        }
+        foreach ($id in $expectedSymbolPackages.Keys) {
+            foreach ($property in @('id', 'version', 'packageSha256', 'packageBytes', 'packageBuildMatch')) {
+                if ((Get-CanonicalJson $expectedSymbolPackages[$id].$property) -ne (Get-CanonicalJson $actualSymbolPackages[$id].$property)) {
+                    $symbolDiffs.Add("symbolPackages[$id].$property")
+                }
+            }
+        }
+        $diffText = (@($symbolDiffs | Sort-Object -Unique | Select-Object -First 40) -join ', ')
+        throw "PDB/SourceLink baseline drift: $diffText"
+    }
 
     $normalizedExpectedApi = Get-CanonicalValue $expectedApi
     $normalizedActualApi = Get-CanonicalValue $api
