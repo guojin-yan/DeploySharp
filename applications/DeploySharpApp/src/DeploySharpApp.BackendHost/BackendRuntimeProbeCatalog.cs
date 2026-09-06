@@ -160,6 +160,7 @@ internal static class BackendRuntimeProbeCatalog
         var artifact = new ModelArtifact(new ModelId("worker/abi-smoke-openvino"), string.Equals(Path.GetExtension(path), ".xml", StringComparison.OrdinalIgnoreCase) ? "openvino-ir" : "onnx", path, null, OpenVinoBackendProvider.BackendId);
         using var provider = new OpenVinoBackendProvider();
         using IInferenceSession session = provider.CreateSession(artifact, new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU"), new SessionOptions(1, false));
+        session.RunAsync(CreateSmokeInputs(session.Metadata.Inputs), CancellationToken.None).GetAwaiter().GetResult();
     }
 
     private static void SmokeOpenCv(string path, IReadOnlyDictionary<string, string> payload)
@@ -170,6 +171,7 @@ internal static class BackendRuntimeProbeCatalog
         var artifact = new ModelArtifact(new ModelId("worker/abi-smoke-opencv"), "onnx", path, null, OpenCvDnnBackendProvider.BackendId);
         using var provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(contract));
         using IInferenceSession session = provider.CreateSession(artifact, new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu"), new SessionOptions(1, false));
+        session.RunAsync(CreateSmokeInputs(new[] { input }), CancellationToken.None).GetAwaiter().GetResult();
     }
 
     private static void SmokeTensorRt(string path)
@@ -177,6 +179,33 @@ internal static class BackendRuntimeProbeCatalog
         var artifact = new ModelArtifact(new ModelId("worker/abi-smoke-tensorrt"), "tensorrt-engine", path, null, TensorRtBackendProvider.BackendId);
         using var provider = new TensorRtBackendProvider();
         using IInferenceSession session = provider.CreateSession(artifact, new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"), new SessionOptions(1, false));
+        session.RunAsync(CreateSmokeInputs(session.Metadata.Inputs), CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    private static InferenceInputs CreateSmokeInputs(IReadOnlyList<TensorDescriptor> descriptors)
+    {
+        var tensors = new List<NamedTensor>(descriptors.Count);
+        foreach (TensorDescriptor descriptor in descriptors)
+        {
+            long[] dimensions = descriptor.Shape.ToArray();
+            for (int index = 0; index < dimensions.Length; index++)
+                if (dimensions[index] <= 0) dimensions[index] = index == 0 ? 1 : dimensions.Length == 4 && index == 1 ? 3 : 224;
+            var shape = new TensorShape(dimensions);
+            int count = checked((int)shape.GetElementCount());
+            ITensor tensor = descriptor.ElementType switch
+            {
+                TensorElementType.Float32 => new Tensor<float>(shape, new float[count], TensorBufferOwnership.Transfer),
+                TensorElementType.Float64 => new Tensor<double>(shape, new double[count], TensorBufferOwnership.Transfer),
+                TensorElementType.Int8 => new Tensor<sbyte>(shape, new sbyte[count], TensorBufferOwnership.Transfer),
+                TensorElementType.UInt8 => new Tensor<byte>(shape, new byte[count], TensorBufferOwnership.Transfer),
+                TensorElementType.Int32 => new Tensor<int>(shape, new int[count], TensorBufferOwnership.Transfer),
+                TensorElementType.Int64 => new Tensor<long>(shape, new long[count], TensorBufferOwnership.Transfer),
+                TensorElementType.Boolean => new Tensor<bool>(shape, new bool[count], TensorBufferOwnership.Transfer),
+                _ => throw new NotSupportedException("ABI smoke cannot construct input type " + descriptor.ElementType + " for " + descriptor.Name + ".")
+            };
+            tensors.Add(new NamedTensor(descriptor.Name, tensor));
+        }
+        return new InferenceInputs(tensors);
     }
 
     private static long[] ParseShape(IReadOnlyDictionary<string, string> payload, string key, long[] fallback)
