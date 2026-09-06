@@ -34,8 +34,22 @@ jobs:
       - name: Restore solution
         run: dotnet restore DeploySharp.sln --locked-mode
 
+      - name: Build Release solution
+        run: dotnet build DeploySharp.sln -c Release --no-restore --verbosity minimal
+
       - name: Run Release tests
-        run: dotnet test DeploySharp.sln -c Release --no-restore --verbosity minimal
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Run each test project in its own host. This keeps native runtime teardown isolated
+          # on Windows runners while preserving the complete solution test surface.
+          $projects = @(dotnet sln DeploySharp.sln list | Select-String '^tests\\.*Tests\\.*Tests\.csproj$' | ForEach-Object { $_.Line.Trim() })
+          if ($projects.Count -ne 14) { throw "Expected 14 release test projects; found $($projects.Count)." }
+          foreach ($project in $projects) {
+            Write-Host "DEPLOYSHARP_TEST_PROJECT $project"
+            dotnet test $project -c Release --no-restore --no-build --verbosity minimal --blame-hang-timeout 2m
+            if ($LASTEXITCODE -ne 0) { throw "Release tests failed: $project" }
+          }
 
       - name: Build release packages
         shell: pwsh
