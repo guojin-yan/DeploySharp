@@ -110,7 +110,7 @@ public sealed class VisualReleaseCatalogService
             }
         }
         progress?.Report(1);
-        return new VisualModelDownloadResult(model, primaryPath ?? throw new InvalidDataException("The release model has no downloadable ONNX entrypoint."));
+        return new VisualModelDownloadResult(model, primaryPath ?? throw new InvalidDataException("The release model has no downloadable executable entrypoint."));
     }
 
     private async Task<IReadOnlyList<VisualReleaseModel>> LoadCoreAsync(IProgress<double>? progress, CancellationToken cancellationToken)
@@ -190,6 +190,10 @@ public sealed class VisualReleaseCatalogService
         string postprocessing = Extension(artifact, "deploysharp.postprocessing-version") ?? Extension(artifact, "deploysharp.postprocessing-contract") ?? "raw tensor output";
         string validation = Extension(artifact, "deploysharp.validation-status") ?? "not declared";
         int? opset = artifact.TryGetProperty("opset", out JsonElement opsetElement) && opsetElement.TryGetInt32(out int parsedOpset) ? parsedOpset : null;
+        string upstreamRepository = root.TryGetProperty("source", out source) ? String(source, "projectUrl") ?? String(source, "sourceUrl") ?? String(source, "repository") ?? String(source, "url") ?? "release-manifest" : "release-manifest";
+        string upstreamRevision = root.TryGetProperty("source", out source) ? String(source, "revision") ?? "release-manifest" : "release-manifest";
+        string exporter = root.TryGetProperty("exporter", out JsonElement exporterElement) ? String(exporterElement, "name") ?? "release-manifest" : "release-manifest";
+        string exporterVersion = root.TryGetProperty("exporter", out exporterElement) ? String(exporterElement, "version") ?? "release-manifest" : "release-manifest";
         return new VisualReleaseModel(modelId, modelId, name, task, format, size, backends, license, String(root, "modelVersion") ?? "release", pack.Name, inputs, outputs, modelFiles, false)
         {
             Precision = precision,
@@ -197,7 +201,11 @@ public sealed class VisualReleaseCatalogService
             Opset = opset,
             Preprocessing = preprocessing,
             Postprocessing = postprocessing,
-            ValidationStatus = validation
+            ValidationStatus = validation,
+            UpstreamRepository = upstreamRepository,
+            UpstreamRevision = upstreamRevision,
+            Exporter = exporter,
+            ExporterVersion = exporterVersion
         };
     }
 
@@ -294,6 +302,10 @@ public sealed record VisualReleaseModel(
     public string Preprocessing { get; init; } = "not declared";
     public string Postprocessing { get; init; } = "raw tensor output";
     public string ValidationStatus { get; init; } = "not declared";
+    public string UpstreamRepository { get; init; } = "release-manifest";
+    public string UpstreamRevision { get; init; } = "release-manifest";
+    public string Exporter { get; init; } = "release-manifest";
+    public string ExporterVersion { get; init; } = "release-manifest";
     public VisualPostprocessingProfile PostprocessingProfile => VisualPostprocessingProfile.FromModel(Task, DisplayName, Postprocessing);
     public AppModelInfo ToAppModelInfo() => new(Id, DisplayName, Task, Format, Size, RecommendedBackends, License, Cached, location: null, sha256: PrimaryFile.Sha256, externalArtifact: true);
 }

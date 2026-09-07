@@ -293,8 +293,12 @@ namespace DeploySharpApp.Infrastructure
             DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
             for (var depth = 0; directory != null && depth < 7; depth++, directory = directory.Parent)
             {
+                candidates.Add(Path.Combine(directory.FullName, "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "win-x64", "DeploySharpApp.BackendHost.exe"));
+                candidates.Add(Path.Combine(directory.FullName, "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "win-x64", "DeploySharpApp.BackendHost.dll"));
                 candidates.Add(Path.Combine(directory.FullName, "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "DeploySharpApp.BackendHost.dll"));
                 candidates.Add(Path.Combine(directory.FullName, "DeploySharpApp.BackendHost.dll"));
+                candidates.Add(Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "win-x64", "DeploySharpApp.BackendHost.exe"));
+                candidates.Add(Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "win-x64", "DeploySharpApp.BackendHost.dll"));
                 candidates.Add(Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "DeploySharpApp.BackendHost.dll"));
             }
             return candidates.FirstOrDefault(File.Exists);

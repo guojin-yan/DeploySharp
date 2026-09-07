@@ -62,7 +62,7 @@
     .readiness-item.blocked::before { content: '!'; background: #fde9e8; color: #c34b4b; }
     .readiness-item b { color: #44516f; margin-right: 5px; }
     @@media(max-width:1180px) { .workbench { grid-template-columns: 1fr; } }
-    @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } .model-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media(max-width:760px) { .image-results { grid-template-columns: 1fr; } .image-results img { height: 210px; } .model-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .settings-group summary { align-items: flex-start; flex-wrap: wrap; } .settings-group summary span { width: 100%; margin-left: 0; text-align: left; overflow-wrap: anywhere; } .settings-group summary::after { position: absolute; right: 0; } .settings-group summary { position: relative; padding-right: 20px; } .download-row { align-items: flex-start; flex-wrap: wrap; } .download-row .muted { width: 100%; white-space: normal; overflow-wrap: anywhere; } }
     @@media(max-width:430px) { .two-col, .settings-grid, .three-col, .model-evidence-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
 <div class="section-head"><div><span class="eyebrow">VISION WORKBENCH</span><h3>视觉推理</h3></div><span class="status-tag">@backendExecutionLabel</span></div>
@@ -105,14 +105,14 @@
         }
         <label>本地模型文件
             <InputFile OnChange="HandleModelSelected" accept=".onnx,.engine,.plan" disabled="@modelUploading" />
-            <span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "可上传 .onnx；TensorRT 仅接受 .engine/.plan" : modelFileName)</span>
+            <span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "可上传 .onnx/.engine/.plan；OpenVINO IR 请填写含相邻 .bin 的服务器 .xml 路径" : modelFileName)</span>
         </label>
         @if (modelUploading)
         {
             <div class="download-row"><span class="muted">正在上传并计算 SHA256…</span><progress value="@modelUploadProgress" max="1"></progress></div>
         }
         @if (!string.IsNullOrWhiteSpace(uploadedModelSha256)) { <p class="hint">本地模型 SHA256：@uploadedModelSha256</p> }
-        <label>本地模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="也可填写 Web 服务可访问的 .onnx/.engine 路径" /></label>
+        <label>本地模型路径<input @bind="modelPath" @bind:after="MarkCustomParameters" placeholder="Web 服务可访问的 .onnx/.xml/.engine 路径" /></label>
         <details class="settings-group"><summary>本地 ModelPack <span>严格校验 manifest、大小、SHA256 与路径边界</span></summary>
             <label>Manifest 路径<input @bind="modelPackManifestPath" placeholder="Web 服务器可访问的 modelpack.json 路径" /></label>
             <div class="download-row"><button class="ghost small" @onclick="ValidateModelPackAsync" disabled="@(modelPackValidating || busy || string.IsNullOrWhiteSpace(modelPackManifestPath))">@(modelPackValidating ? "校验中…" : "校验并用于运行")</button><span class="muted">校验失败不会替换当前模型</span></div>
@@ -143,6 +143,14 @@
             <span class="muted">通道标准差（必须大于 0）</span><div class="three-col"><label>R<input type="number" step="any" min="0.000001" @bind="stdR" @bind:after="MarkCustomParameters" /></label><label>G<input type="number" step="any" min="0.000001" @bind="stdG" @bind:after="MarkCustomParameters" /></label><label>B<input type="number" step="any" min="0.000001" @bind="stdB" @bind:after="MarkCustomParameters" /></label></div>
             <div class="reset-row"><button class="ghost small" @onclick="ApplyCommonDefaults">恢复通用默认</button><button class="ghost small" @onclick="ApplyModelDefaults" disabled="@(selectedReleaseModel is null)">使用模型推荐值</button></div>
         </details>
+        @if (selectedReleaseModel?.LogicalModelId.Equals("segmentation/sam-v1-vit-b", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            <details class="settings-group" open><summary>SAM 提示 <span>归一化到原图坐标</span></summary>
+                <div class="two-col"><label>前景点 X<input type="number" min="0" max="1" step="0.01" @bind="samPointX" @bind:after="MarkCustomParameters" /></label><label>前景点 Y<input type="number" min="0" max="1" step="0.01" @bind="samPointY" @bind:after="MarkCustomParameters" /></label></div>
+                <div class="two-col"><label>框左 / 上<input @bind="samBoxLeftTop" @bind:after="MarkCustomParameters" placeholder="0.1,0.1" /></label><label>框右 / 下<input @bind="samBoxRightBottom" @bind:after="MarkCustomParameters" placeholder="0.9,0.9" /></label></div>
+                <label class="check-label"><input type="checkbox" @bind="samReturnMultipleMasks" @bind:after="MarkCustomParameters" />返回候选 mask</label>
+            </details>
+        }
         @if (IsBackend("opencv"))
         {
             <details class="settings-group" open><summary>OpenCV 输出合同 <span>本地模型必须填写</span></summary>
@@ -151,9 +159,20 @@
                 <label>输出类型 JSON<textarea @bind="outputTensorElementTypesJson" @bind:after="MarkCustomParameters" placeholder='例如 {"scores":"float32"}'></textarea></label>
             </details>
         }
+        @if (IsBackend("tensorrt"))
+        {
+            <details class="settings-group" open><summary>TensorRT 设备身份 <span>全部由 Worker 严格校验</span></summary>
+                <label>Engine identity sidecar<input @bind="engineIdentityPath" @bind:after="MarkCustomParameters" placeholder="与 .engine/.plan 匹配的 identity.json" /></label>
+                <label>来源 ONNX（可选）<input @bind="sourceOnnxPath" @bind:after="MarkCustomParameters" placeholder="填写后校验来源模型 SHA256" /></label>
+                <label>CUDA 根目录<input @bind="cudaRoot" @bind:after="MarkCustomParameters" placeholder="例如 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9" /></label>
+                <label>cuDNN 根目录<input @bind="cudnnRoot" @bind:after="MarkCustomParameters" placeholder="包含 bin/include/lib" /></label>
+                <label>TensorRT 根目录<input @bind="tensorRtRoot" @bind:after="MarkCustomParameters" placeholder="包含 bin/include/lib" /></label>
+                <div class="two-col"><label>Bridge DLL（可选）<input @bind="bridgePath" @bind:after="MarkCustomParameters" placeholder="留空使用 Worker 随附 bridge" /></label><label>TensorRT API line<select @bind="tensorRtApiVersion" @bind:after="MarkCustomParameters"><option value="8">8</option><option value="10">10</option><option value="11">11</option></select></label></div>
+            </details>
+        }
         <details class="settings-group"><summary>运行与性能 <span>@backendExecutionLabel · 点击展开</span></summary>
             <label>后端<select @bind="selectedBackend" @bind:after="HandleBackendChanged">@foreach (var backend in Service.Backends.Where(item => (item.Capabilities & AppBackendCapability.Vision) != 0)) { <option value="@backend.Id">@backend.DisplayName · @backend.State</option> }</select></label>
-            <div class="two-col"><label>设备<select @bind="device" @bind:after="MarkCustomParameters"><option value="cpu">@(IsWorkerVisionBackend ? "CPU · Worker" : "CPU · 进程内")</option><option value="cuda">CUDA · 需匹配 Worker</option></select></label><label>最大并发<input type="number" min="1" max="64" step="1" @bind="maxConcurrency" @bind:after="MarkCustomParameters" /></label></div>
+            <div class="two-col"><label>设备<select @bind="device" @bind:after="MarkCustomParameters"><option value="cpu">@(UsesWorkerForCurrentVision ? "CPU · Worker" : "CPU · 进程内")</option><option value="cuda">CUDA · 需匹配 Worker</option></select></label><label>最大并发<input type="number" min="1" max="64" step="1" @bind="maxConcurrency" @bind:after="MarkCustomParameters" /></label></div>
             <div class="two-col"><label>算子内线程<input type="number" min="0" max="256" step="1" @bind="intraOpThreads" @bind:after="MarkCustomParameters" /></label><label>算子间线程<input type="number" min="0" max="256" step="1" @bind="interOpThreads" @bind:after="MarkCustomParameters" /></label></div>
             <div class="settings-grid"><label>图优化<select @bind="graphOptimization" @bind:after="MarkCustomParameters"><option>Disabled</option><option>Basic</option><option>Extended</option><option>All</option></select></label><label>执行模式<select @bind="executionMode" @bind:after="MarkCustomParameters"><option>Sequential</option><option>Parallel</option></select></label></div>
             <div class="settings-grid"><label>原生日志<select @bind="logSeverity" @bind:after="MarkCustomParameters"><option>Verbose</option><option>Information</option><option>Warning</option><option>Error</option><option>Fatal</option></select></label><label>超时（秒）<input type="number" min="1" max="3600" step="1" @bind="timeoutSeconds" @bind:after="MarkCustomParameters" /></label></div>
@@ -231,6 +250,18 @@
     private string outputTensorNames = string.Empty;
     private string outputTensorShapesJson = string.Empty;
     private string outputTensorElementTypesJson = string.Empty;
+    private string samPointX = "0.5";
+    private string samPointY = "0.5";
+    private string samBoxLeftTop = "0.1,0.1";
+    private string samBoxRightBottom = "0.9,0.9";
+    private bool samReturnMultipleMasks;
+    private string cudaRoot = Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT") ?? Environment.GetEnvironmentVariable("CUDA_PATH") ?? string.Empty;
+    private string cudnnRoot = Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT") ?? string.Empty;
+    private string tensorRtRoot = Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT") ?? string.Empty;
+    private string bridgePath = Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH") ?? string.Empty;
+    private string engineIdentityPath = string.Empty;
+    private string sourceOnnxPath = string.Empty;
+    private string tensorRtApiVersion = "10";
     private string result = "运行后将在此显示可视化结果。";
     private string runMode = "尚未运行";
     private string runtimeState = "Unavailable";
@@ -275,10 +306,12 @@
     private IReadOnlyList<ReadinessCheck> readinessChecks => BuildReadinessChecks();
     private string readinessHeadline => readinessChecks.All(check => check.Ready) ? (readinessChecks.Any(check => check.Attention) ? "可运行 · 有待处理项" : "可运行") : "需要处理";
     private bool IsWorkerVisionBackend => IsBackend("opencv") || IsBackend("openvino") || IsBackend("tensorrt");
-    private string backendExecutionLabel => IsBackend("onnxruntime") ? "ONNX Runtime · CPU 进程内" : IsBackend("opencv") ? "OpenCV DNN · CPU Worker" : IsBackend("openvino") ? "OpenVINO · CPU Worker" : IsBackend("tensorrt") ? "TensorRT · CUDA Worker" : "后端待确认";
+    private bool UsesWorkerForCurrentVision => IsWorkerVisionBackend || selectedReleaseModel is not null;
+    private string backendExecutionLabel => IsBackend("onnxruntime") ? (selectedReleaseModel is null ? "ONNX Runtime · CPU 进程内" : "ONNX Runtime · CPU Worker") : IsBackend("opencv") ? "OpenCV DNN · CPU Worker" : IsBackend("openvino") ? "OpenVINO · CPU Worker" : IsBackend("tensorrt") ? "TensorRT · CUDA Worker" : "后端待确认";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
         Task<IReadOnlyList<VisualReleaseModel>> modelsTask = ReleaseCatalog.GetModelsAsync(new Progress<double>(value => { catalogProgress = value; InvokeAsync(StateHasChanged); }));
         Task<IReadOnlyList<VisualTestImage>> imagesTask = TestImageCatalog.GetImagesAsync();
         try { releaseModels.AddRange(await modelsTask); }
@@ -286,7 +319,7 @@
         finally { catalogLoading = false; ApplyModelDefaults(); }
         try { testImages.AddRange(await imagesTask); }
         catch (Exception exception) { testImageError = exception.Message; }
-        finally { testImageLoading = false; }
+        finally { testImageLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void HandleModelChanged(ChangeEventArgs args)
@@ -454,15 +487,17 @@
             checks.Add(new ReadinessCheck(true, "模型", "Demo 使用 FakeModelRunner；成功结果不代表真实 ONNX 推理。", true));
         else if (modelPackMaterialization?.IsBundle == true)
             checks.Add(new ReadinessCheck(false, "模型", "当前 ModelPack 是多文件 bundle（" + modelPackMaterialization.VerifiedFiles.Count + " 个已校验文件），Web 单文件 Engine 不会丢弃辅助文件；请使用专用 Worker/ModelPack 执行器。"));
-        else if (model is not null && model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase)) > 1)
+        else if (model is not null && model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase)) > 1 && !HasDedicatedReleaseAdapter(model))
         {
             int modelFileCount = model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase));
             checks.Add(new ReadinessCheck(false, "模型", "当前 release artifact 是多文件模型 bundle（" + modelFileCount + " 个模型文件），Web 单文件入口不会丢弃辅助模型；请使用对应 Worker/ModelPack 链路。"));
         }
-        else if (model is not null && !string.Equals(model.Format, "onnx", StringComparison.OrdinalIgnoreCase))
-            checks.Add(new ReadinessCheck(false, "模型", "当前 Engine 只接入 ONNX 格式，目录元数据不会伪装成已支持。"));
-        else if (model is null && !string.IsNullOrWhiteSpace(modelPath) && !IsLocalModelFormatCompatible(InferModelFormat(modelPath), isTensorRt))
-            checks.Add(new ReadinessCheck(false, "模型", isTensorRt ? "TensorRT 需要 .engine/.plan 设备绑定制品。" : "当前后端只接受 .onnx；TensorRT .engine/.plan 必须选择 TensorRT。"));
+        else if (model is not null && !IsReleaseModelFormatCompatible(model.Format, isOnnxRuntime, IsBackend("openvino"), isTensorRt))
+            checks.Add(new ReadinessCheck(false, "模型", "当前 Release artifact 格式与所选后端不兼容；OpenVINO IR 只在 OpenVINO Worker 执行。"));
+        else if (model is null && !string.IsNullOrWhiteSpace(modelPath) && !IsLocalModelFormatCompatible(InferModelFormat(modelPath), IsBackend("openvino"), isTensorRt))
+            checks.Add(new ReadinessCheck(false, "模型", isTensorRt ? "TensorRT 需要 .engine/.plan 设备绑定制品。" : IsBackend("openvino") ? "OpenVINO 接受 .onnx，或含相邻 .bin 的 .xml IR。" : "当前后端只接受 .onnx；TensorRT .engine/.plan 必须选择 TensorRT。"));
+        else if (model is null && IsBackend("openvino") && string.Equals(InferModelFormat(modelPath), "openvino-ir", StringComparison.OrdinalIgnoreCase) && !File.Exists(Path.ChangeExtension(modelPath, ".bin")))
+            checks.Add(new ReadinessCheck(false, "模型", "OpenVINO IR 缺少与 .xml 同名且同目录的 .bin 权重文件。"));
         else if (!string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath))
             checks.Add(new ReadinessCheck(true, "模型", "模型文件已定位：" + modelPath));
         else if (model is not null)
@@ -483,7 +518,7 @@
         else
             checks.Add(new ReadinessCheck(false, "输入", "请上传图像，或同时提供模型路径和 Tensor JSON。"));
 
-        if (model is not null)
+        if (model is not null && !HasDedicatedReleaseAdapter(model))
         {
             VisualModelInput? imageInput = model.Inputs.FirstOrDefault(IsImageInput);
             VisualModelInput[] unsupportedInputs = model.Inputs.Where(item => !IsImageInput(item) && !IsSupportedDerivedInput(item)).ToArray();
@@ -503,9 +538,13 @@
             checks.Add(new ReadinessCheck(false, "输出合同", "OpenCV DNN 需要精确输出名称、形状和元素类型；Release 模型会自动填充，本地模型需手动填写。"));
         else if (isTensorRt && !string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "设备", "TensorRT engine 必须使用 CUDA；CPU 不会加载设备绑定制品。"));
+        else if (isTensorRt && !TensorRtConfigurationReady(out string tensorRtDetail))
+            checks.Add(new ReadinessCheck(false, "设备身份", tensorRtDetail));
+        else if (isTensorRt)
+            checks.Add(new ReadinessCheck(true, "设备身份", "CUDA、cuDNN、TensorRT 根目录和 engine identity 已配置；Worker 将验证版本、GPU、驱动、bridge SHA256 和 engine 来源。", true));
         else if (string.Equals(device, "cuda", StringComparison.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "设备", "当前选择不具备已验证的 CUDA provider；不会回退到 CPU。"));
-        else if (IsWorkerVisionBackend)
+        else if (UsesWorkerForCurrentVision)
             checks.Add(new ReadinessCheck(true, "设备", "将在 net10 Worker 中执行，native runtime 会先探测再加载。"));
         else
             checks.Add(new ReadinessCheck(true, "设备", "ONNX Runtime CPU 进程内执行，运行时仍会进行 native preflight。"));
@@ -523,6 +562,32 @@
     }
 
     private bool IsTimeoutValid() => int.TryParse(timeoutSeconds, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int seconds) && seconds is >= 1 and <= 3600;
+
+    private static bool HasDedicatedReleaseAdapter(VisualReleaseModel model)
+    {
+        string id = model.LogicalModelId;
+        return id.Equals("segmentation/sam-v1-vit-b", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("yolo/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("deim/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("rf-detr/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("rt-detr/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("pp-yoloe/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("paddleocr/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("anomalib/", StringComparison.OrdinalIgnoreCase)
+            || id.StartsWith("bria/rmbg-", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool TensorRtConfigurationReady(out string detail)
+    {
+        if (string.IsNullOrWhiteSpace(engineIdentityPath) || !File.Exists(engineIdentityPath)) { detail = "请选择存在的 engine identity sidecar；没有身份文件时拒绝加载。"; return false; }
+        if (!Directory.Exists(cudaRoot)) { detail = "CUDA 根目录不存在。"; return false; }
+        if (!Directory.Exists(cudnnRoot)) { detail = "cuDNN 根目录不存在。"; return false; }
+        if (!Directory.Exists(tensorRtRoot)) { detail = "TensorRT 根目录不存在。"; return false; }
+        if (!string.IsNullOrWhiteSpace(bridgePath) && !File.Exists(bridgePath)) { detail = "指定的 bridge DLL 不存在。"; return false; }
+        if (!string.IsNullOrWhiteSpace(sourceOnnxPath) && !File.Exists(sourceOnnxPath)) { detail = "指定的来源 ONNX 不存在。"; return false; }
+        detail = string.Empty;
+        return true;
+    }
 
     private sealed record ReadinessCheck(bool Ready, string Label, string Detail, bool Attention = false);
 
@@ -746,6 +811,49 @@
                 if (!string.IsNullOrWhiteSpace(outputTensorShapesJson)) options["outputTensorShapesJson"] = outputTensorShapesJson;
                 if (!string.IsNullOrWhiteSpace(outputTensorElementTypesJson)) options["outputTensorElementTypesJson"] = outputTensorElementTypesJson;
             }
+            if (IsBackend("tensorrt"))
+            {
+                options["cudaRoot"] = cudaRoot;
+                options["cudnnRoot"] = cudnnRoot;
+                options["tensorRtRoot"] = tensorRtRoot;
+                options["engineIdentityPath"] = engineIdentityPath;
+                options["tensorRtApiVersion"] = tensorRtApiVersion;
+                options["apiVersion"] = tensorRtApiVersion;
+                if (!string.IsNullOrWhiteSpace(bridgePath)) options["bridgePath"] = bridgePath;
+                if (!string.IsNullOrWhiteSpace(sourceOnnxPath)) options["sourceOnnxPath"] = sourceOnnxPath;
+            }
+            if (selected is not null)
+            {
+                var assetPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (VisualReleaseFile file in selected.Files)
+                {
+                    string path = ReleaseCatalog.GetCachedFilePath(selected, file);
+                    // Bundle assets may share a role (SAM has two model files); retain both the role and stable filename keys.
+                    if (!assetPaths.ContainsKey(file.Role)) assetPaths[file.Role] = path;
+                    assetPaths[file.AssetName] = path;
+                    assetPaths[file.RelativePath] = path;
+                }
+                options["visualAssetPathsJson"] = System.Text.Json.JsonSerializer.Serialize(assetPaths);
+                options["visualPostprocessingKind"] = selected.PostprocessingProfile.Kind.ToString();
+                options["visualUpstreamRepository"] = selected.UpstreamRepository;
+                options["visualUpstreamRevision"] = selected.UpstreamRevision;
+                options["visualExporter"] = selected.Exporter;
+                options["visualExporterVersion"] = selected.ExporterVersion;
+                options["visualLicense"] = selected.License;
+                if (selected.Opset.HasValue) options["visualOpset"] = selected.Opset.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (selected.LogicalModelId.Equals("segmentation/sam-v1-vit-b", StringComparison.OrdinalIgnoreCase))
+                {
+                    (string left, string top) = ParseNormalizedPair(samBoxLeftTop, "SAM 框左/上");
+                    (string right, string bottom) = ParseNormalizedPair(samBoxRightBottom, "SAM 框右/下");
+                    options["samPointX"] = ParseNormalized(samPointX, "SAM 前景点 X");
+                    options["samPointY"] = ParseNormalized(samPointY, "SAM 前景点 Y");
+                    options["samBoxLeft"] = left;
+                    options["samBoxTop"] = top;
+                    options["samBoxRight"] = right;
+                    options["samBoxBottom"] = bottom;
+                    options["samReturnMultipleMasks"] = samReturnMultipleMasks.ToString();
+                }
+            }
             var request = new ModelRunRequest(AppOperationKind.Vision, selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/model" : selectedModelId), selectedBackend, device, inputPath: imagePath, modelPath: string.IsNullOrWhiteSpace(modelPath) ? null : modelPath, modelFormat: string.IsNullOrWhiteSpace(modelPath) ? null : (selected?.Format ?? InferModelFormat(modelPath)), modelSha256: selected?.PrimaryFile.Sha256 ?? (string.IsNullOrWhiteSpace(uploadedModelSha256) ? null : uploadedModelSha256), tensorInputs: tensors, options: options, timeout: ParseTimeout());
             var output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cts.Token);
             runSucceeded = output.Succeeded; runMode = output.RunMode.ToString(); runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); errorCode = output.ErrorCode.ToString(); runtimeMessage = output.RuntimeStatus?.Message ?? output.Message; diagnostics = output.Diagnostics; result = output.Message + (string.IsNullOrWhiteSpace(output.Output) ? string.Empty : "\n" + output.Output); preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
@@ -810,6 +918,18 @@
     }
     private static long[] ResolveShape(IReadOnlyList<long> shape, string? task) { long fallback = task?.Contains("matting", StringComparison.OrdinalIgnoreCase) == true ? 1024 : 640; return shape.Select((value, index) => value > 0 ? value : index == 0 ? 1 : index == 1 ? 3 : fallback).ToArray(); }
     private long[] ParseShape() => tensorShape.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+    private static (string First, string Second) ParseNormalizedPair(string value, string label)
+    {
+        string[] parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2) throw new FormatException(label + " 必须包含两个逗号分隔的 0 到 1 数值。");
+        return (ParseNormalized(parts[0], label), ParseNormalized(parts[1], label));
+    }
+    private static string ParseNormalized(string value, string label)
+    {
+        if (!double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double parsed) || !double.IsFinite(parsed) || parsed < 0 || parsed > 1)
+            throw new FormatException(label + " 必须是 0 到 1 的有限数值。");
+        return parsed.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+    }
     private TimeSpan ParseTimeout()
     {
         if (!int.TryParse(timeoutSeconds, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int seconds) || seconds is < 1 or > 3600)
@@ -835,9 +955,15 @@
     private static string InferModelFormat(string path)
     {
         string extension = Path.GetExtension(path).ToLowerInvariant();
-        return extension is ".engine" or ".plan" ? "tensorrt-engine" : extension.TrimStart('.');
+        return extension is ".engine" or ".plan" ? "tensorrt-engine" : extension == ".xml" ? "openvino-ir" : extension.TrimStart('.');
     }
-    private static bool IsLocalModelFormatCompatible(string format, bool tensorRt) => tensorRt ? string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase) : string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase);
+    private static bool IsReleaseModelFormatCompatible(string format, bool onnxRuntime, bool openVino, bool tensorRt)
+        => string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase) && (onnxRuntime || openVino)
+            || string.Equals(format, "openvino-ir", StringComparison.OrdinalIgnoreCase) && openVino
+            || string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase) && tensorRt;
+    private static bool IsLocalModelFormatCompatible(string format, bool openVino, bool tensorRt)
+        => tensorRt ? string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)
+            : string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase) || openVino && string.Equals(format, "openvino-ir", StringComparison.OrdinalIgnoreCase);
     private static string TensorContract(IReadOnlyList<VisualModelInput> tensors) => tensors.Count == 0 ? "未声明" : string.Join("; ", tensors.Select(tensor => tensor.Name + " " + tensor.ElementType + " " + string.Join("×", tensor.Shape)));
     private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F2") + " ms";
     private static string BuildResultImage(ModelRunResult output, string originalImage, string? task, VisualPostprocessingProfile? profile) => VisionResultRenderer.Render(originalImage, output.Output, task, profile);

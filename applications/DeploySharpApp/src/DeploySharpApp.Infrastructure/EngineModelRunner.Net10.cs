@@ -25,12 +25,24 @@ public sealed class EngineModelRunner : IModelRunner, IStreamingModelRunner
             || request.BackendId.IndexOf("llamasharp", StringComparison.OrdinalIgnoreCase) >= 0
             || request.BackendId.IndexOf("opencv", StringComparison.OrdinalIgnoreCase) >= 0
             || request.BackendId.IndexOf("openvino", StringComparison.OrdinalIgnoreCase) >= 0;
+        bool releaseVisual = request.Operation == AppOperationKind.Vision
+            && (request.ModelId.Equals("segmentation/sam-v1-vit-b", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("yolo/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("deim/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("rf-detr/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("rt-detr/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("pp-yoloe/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("paddleocr/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("mobile-", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("server-", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("anomalib/", StringComparison.OrdinalIgnoreCase)
+                || request.ModelId.StartsWith("bria/rmbg-", StringComparison.OrdinalIgnoreCase));
         bool explicitCuda = string.Equals(request.Device, "cuda", StringComparison.OrdinalIgnoreCase);
         bool demo = request.ModelId.StartsWith("demo/", StringComparison.OrdinalIgnoreCase)
             && string.IsNullOrWhiteSpace(request.ModelPath)
             && !workerBackend
             && !explicitCuda;
-        if (workerBackend || string.Equals(request.Options.TryGetValue("executionMode", out string? mode) ? mode : null, "worker", StringComparison.OrdinalIgnoreCase))
+        if (workerBackend || releaseVisual || string.Equals(request.Options.TryGetValue("executionMode", out string? mode) ? mode : null, "worker", StringComparison.OrdinalIgnoreCase))
             return _worker.RunAsync(request, progress, cancellationToken);
         return demo
             ? _demoFallback.RunAsync(request, progress, cancellationToken)

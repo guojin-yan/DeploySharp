@@ -52,8 +52,15 @@ internal static class WorkerInferenceAdapter
         reportProgress?.Invoke(0.45);
         try
         {
+            WorkerResponse? visual = await VisualReleaseInferenceAdapter.TryRunAsync(request, reportProgress, cancellationToken).ConfigureAwait(false);
+            if (visual != null) return visual;
             if (Contains(backendId, "onnxruntime") && string.Equals(Value(request.Payload, "operation"), AppOperationKind.Multimodal.ToString(), StringComparison.OrdinalIgnoreCase))
-                return await RunBlipCaptionAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
+            {
+                string profile = Value(request.Payload, "multimodalProfile") ?? "blip-caption-base";
+                return string.Equals(profile, "clip-vit-b-32-image-embedding", StringComparison.OrdinalIgnoreCase)
+                    ? await RunClipImageEmbeddingAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false)
+                    : await RunBlipCaptionAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
+            }
             if (Contains(backendId, "llamasharp")) return await RunLlamaAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "openvino")) return await RunCoreTensorAsync(request, modelPath, new OpenVinoBackendProvider(ParseOpenVinoOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "opencv")) return await RunOpenCvAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
@@ -159,6 +166,59 @@ internal static class WorkerInferenceAdapter
             ["postprocessMs"] = (result.Timing.PromptTokenize + result.Timing.FinalDecode).TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
         };
         return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "BLIP image caption completed with ONNX Runtime CPU in the Worker.", payload);
+    }
+
+    private static async Task<WorkerResponse> RunClipImageEmbeddingAsync(WorkerRequest request, string imageEncoderPath, Action<double>? reportProgress, CancellationToken cancellationToken)
+    {
+        string device = Value(request.Payload, "device") ?? "cpu";
+        if (!string.Equals(device, "cpu", StringComparison.OrdinalIgnoreCase) && !string.Equals(device, "auto", StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-WORKER-CLIP-DEVICE-UNAVAILABLE", "The published CLIP bundle is enabled only for the ONNX Runtime CPU provider.", AppRuntimeState.Unavailable, device);
+        string? textEncoderValue = Value(request.Payload, "textEncoderPath");
+        string? imageValue = Value(request.Payload, "inputPath");
+        if (string.IsNullOrWhiteSpace(textEncoderValue) || string.IsNullOrWhiteSpace(imageValue))
+            return Error(request, "DSAPP-WORKER-MULTIMODAL-BUNDLE-INCOMPLETE", "CLIP image embedding requires image encoder, text encoder, and image paths.", AppRuntimeState.Unavailable);
+        string textEncoderPath = Path.GetFullPath(textEncoderValue);
+        string imagePath = Path.GetFullPath(imageValue);
+        string? missingPath = new[] { imageEncoderPath, textEncoderPath, imagePath }.FirstOrDefault(path => !File.Exists(path));
+        if (missingPath != null) return Error(request, "DSAPP-WORKER-MULTIMODAL-FILE-NOT-FOUND", "A required CLIP bundle or input image file does not exist.", AppRuntimeState.Unavailable, missingPath);
+
+        VisionLanguageEmbeddingProfile profile = VisionLanguageProfiles.CreateClipVitB32();
+        BackendId backend = OnnxRuntimeBackendProvider.BackendId;
+        var bundle = new VisionLanguageArtifactBundle(
+            profile,
+            profile.CreateArtifact(VisionLanguageArtifactRole.ImageEncoder, imageEncoderPath, backend),
+            profile.CreateArtifact(VisionLanguageArtifactRole.TextEncoder, textEncoderPath, backend));
+        Stopwatch preprocess = Stopwatch.StartNew();
+        using PreparedVisualInput input = new OpenCvVisionLanguageInputFactory().CreateFromFile(imagePath, profile, cancellationToken: cancellationToken);
+        preprocess.Stop();
+        reportProgress?.Invoke(.58);
+        using var registry = new BackendRegistry();
+        registry.UseOnnxRuntime();
+        using var session = new VisionLanguageEmbeddingSession(registry, bundle, new BackendRequest(BackendCapabilities.TensorInference, backend, "cpu"));
+        VisionLanguageImageEmbedding embedding = await session.EncodeImageAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
+        reportProgress?.Invoke(.96);
+        string output = JsonSerializer.Serialize(new
+        {
+            schema = "deploysharp.visual-language.v1",
+            task = "vision-language-image-embedding",
+            profileId = profile.ProfileId,
+            dimension = embedding.Dimension,
+            batchSize = embedding.BatchSize,
+            sourceImageSha256 = embedding.Identity.ContentSha256,
+            artifactIdentity = embedding.Identity.ArtifactIdentity,
+            embeddingSha256 = embedding.Sha256,
+            values = embedding.CopyValues()
+        }, JsonOptions);
+        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "CLIP image embedding completed with ONNX Runtime CPU in the Worker.", new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["output"] = output,
+            ["backendId"] = backend.Value,
+            ["device"] = "cpu",
+            ["execution"] = "worker",
+            ["preprocessMs"] = preprocess.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["inferenceMs"] = embedding.EncoderTime.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["postprocessMs"] = "0"
+        });
     }
 
     public static async Task<WorkerResponse> BenchmarkAsync(WorkerRequest request, Action<double>? reportProgress, CancellationToken cancellationToken)
@@ -593,7 +653,15 @@ internal static class WorkerInferenceAdapter
 
     private static OpenVinoOptions ParseOpenVinoOptions(IReadOnlyDictionary<string, string> payload) => new OpenVinoOptions(Value(payload, "device") ?? "CPU", ParseEnum(Value(payload, "performanceHint"), OpenVinoPerformanceHint.Default), GetNullableInt(payload, "streams"), GetNullableInt(payload, "inferenceThreads"), Value(payload, "cacheDirectory"), GetBool(payload, "enableProfiling", false), GetNullableInt(payload, "requestCount"), null, GetBool(payload, "allowDynamicShapes", true));
 
-    private static TensorRtBackendOptions ParseTensorRtOptions(IReadOnlyDictionary<string, string> payload) => new TensorRtBackendOptions(ParseEnum(Value(payload, "apiVersion"), TensorRtApiVersion.TensorRt10), GetInt(payload, "optimizationProfile", 0), GetLong(payload, "maximumEngineBytes", int.MaxValue), Value(payload, "cudaTargetArchitecture"), GetBool(payload, "cacheImmutableHostInputsOnDevice", false));
+    private static TensorRtBackendOptions ParseTensorRtOptions(IReadOnlyDictionary<string, string> payload) => new TensorRtBackendOptions(ParseTensorRtApiVersion(Value(payload, "apiVersion") ?? Value(payload, "tensorRtApiVersion")), GetInt(payload, "optimizationProfile", 0), GetLong(payload, "maximumEngineBytes", int.MaxValue), Value(payload, "cudaTargetArchitecture"), GetBool(payload, "cacheImmutableHostInputsOnDevice", false));
+
+    private static TensorRtApiVersion ParseTensorRtApiVersion(string? value) => value switch
+    {
+        "8" => TensorRtApiVersion.TensorRt8,
+        "10" => TensorRtApiVersion.TensorRt10,
+        "11" => TensorRtApiVersion.TensorRt11,
+        _ => ParseEnum(value, TensorRtApiVersion.TensorRt10)
+    };
 
     private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum => value != null && Enum.TryParse(value, true, out T parsed) && Enum.IsDefined(parsed) ? parsed : fallback;
     private static TensorElementType ToElementType(string value) => value.ToLowerInvariant() switch { "float32" or "float" => TensorElementType.Float32, "float64" or "double" => TensorElementType.Float64, "int32" => TensorElementType.Int32, "int64" => TensorElementType.Int64, "int8" => TensorElementType.Int8, "uint8" => TensorElementType.UInt8, "bool" or "boolean" => TensorElementType.Boolean, _ => throw new NotSupportedException("Unsupported tensor element type: " + value) };

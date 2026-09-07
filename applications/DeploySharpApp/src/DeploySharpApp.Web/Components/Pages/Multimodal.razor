@@ -44,7 +44,7 @@
 
 <div class="multimodal-grid">
     <section class="panel multi-config">
-        <div class="panel-title"><div><span class="eyebrow">MODEL BUNDLE</span><h4>BLIP 图像描述</h4></div><span class="status-tag">Worker</span></div>
+        <div class="panel-title"><div><span class="eyebrow">MODEL BUNDLE</span><h4>@(selectedIsClip ? "CLIP 图像 Embedding" : "BLIP 图像描述")</h4></div><span class="status-tag">Worker</span></div>
         <div class="mode-tabs" role="group" aria-label="模型来源">
             <button class="@(useRelease ? "active" : null)" @onclick="UseRelease" disabled="@busy">Release 模型</button>
             <button class="@(!useRelease ? "active" : null)" @onclick="UseLocal" disabled="@busy">本地 bundle</button>
@@ -104,11 +104,11 @@
         }
 
         <div class="actions">
-            <button class="primary" @onclick="RunAsync" disabled="@(busy || loadingCatalog || uploadingBundle)">@(busy ? "运行中…" : "生成图像描述")</button>
+            <button class="primary" @onclick="RunAsync" disabled="@(busy || loadingCatalog || uploadingBundle)">@(busy ? "运行中…" : selectedIsClip ? "生成图像 Embedding" : "生成图像描述")</button>
             <button class="ghost" @onclick="Cancel" disabled="@(!busy)">取消</button>
         </div>
         @if (busy) { <div class="progress-row"><progress value="@runProgress" max="1"></progress><span>@runProgress.ToString("P0")</span></div> }
-        <p class="run-note">当前 Release Profile 只声明 image captioning。视觉问答和任意指令没有通过该模型合同验证，因此本页不会将提示词问答伪装成可用能力。</p>
+        <p class="run-note">@(selectedIsClip ? "CLIP 当前执行官方图像 Encoder 并返回 512 维归一化 embedding；主库未提供 CLIP BPE tokenizer 时不会伪造文本相似度。" : "当前 BLIP Release Profile 只声明 image captioning。视觉问答和任意指令没有通过该模型合同验证，因此本页不会将提示词问答伪装成可用能力。")</p>
     </section>
 
     <section class="panel multi-result">
@@ -168,10 +168,12 @@
     private string? ownedBundleDirectory;
     private CancellationTokenSource? cancellation;
     private VisualReleaseModel? selectedModel => releaseModels.FirstOrDefault(item => string.Equals(item.Id, selectedModelId, StringComparison.OrdinalIgnoreCase));
+    private bool selectedIsClip => selectedModel?.LogicalModelId.Equals("vision-language/clip-vit-b-32", StringComparison.OrdinalIgnoreCase) == true;
     private VisualTestImage? selectedTestImage => testImages.FirstOrDefault(item => string.Equals(item.Id, selectedTestImageId, StringComparison.OrdinalIgnoreCase));
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
         try
         {
             IReadOnlyList<VisualReleaseModel> models = await ReleaseCatalog.GetModelsAsync();
@@ -189,11 +191,11 @@
             statusMessage = "GitHub Release 目录加载失败：" + exception.Message;
             Activity.Add("multimodal-catalog", statusMessage, "DSAPP-MULTIMODAL-CATALOG-FAILED");
         }
-        finally { loadingCatalog = false; }
+        finally { loadingCatalog = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void UseRelease() { useRelease = true; statusMessage = "使用发布 bundle；缺少缓存时运行会自动下载。"; }
-    private void UseLocal() { useRelease = false; statusMessage = "请选择三个经过相同 BLIP Profile 导出的本地文件。"; }
+    private void UseLocal() { useRelease = false; statusMessage = "本地上传当前只接受三个经过相同 BLIP Profile 导出的文件。"; }
     private void HandleModelChanged(ChangeEventArgs args) { selectedModelId = args.Value?.ToString() ?? string.Empty; caption = string.Empty; }
     private void HandleTestImageChanged(ChangeEventArgs args) { selectedTestImageId = args.Value?.ToString() ?? string.Empty; DeleteOwnedImage(); imagePath = string.Empty; imageFileName = selectedTestImage?.FileName ?? string.Empty; imagePreview = null; }
 
@@ -214,12 +216,12 @@
     {
         VisualReleaseModel model = selectedModel ?? throw new InvalidOperationException("未选择 BLIP Release 模型。");
         VisualModelDownloadResult downloaded = await ReleaseCatalog.DownloadAsync(model, new Progress<double>(value => { modelProgress = value; _ = InvokeAsync(StateHasChanged); }), token);
-        VisualReleaseFile vision = FindBundleFile(model, "vision", "encoder") ?? model.PrimaryFile;
-        VisualReleaseFile decoder = FindBundleFile(model, "decoder") ?? throw new InvalidDataException("Release bundle 缺少 language decoder。");
-        VisualReleaseFile vocabulary = model.Files.FirstOrDefault(file => string.Equals(file.Role, "vocabulary", StringComparison.OrdinalIgnoreCase)) ?? FindBundleFile(model, "vocab") ?? throw new InvalidDataException("Release bundle 缺少 vocabulary。");
+        VisualReleaseFile vision = selectedIsClip ? FindBundleFile(model, "image", "encoder") ?? model.PrimaryFile : FindBundleFile(model, "vision", "encoder") ?? model.PrimaryFile;
+        VisualReleaseFile decoder = selectedIsClip ? FindBundleFile(model, "text", "encoder") ?? throw new InvalidDataException("Release bundle 缺少 CLIP text encoder。") : FindBundleFile(model, "decoder") ?? throw new InvalidDataException("Release bundle 缺少 language decoder。");
+        VisualReleaseFile? vocabulary = selectedIsClip ? null : model.Files.FirstOrDefault(file => string.Equals(file.Role, "vocabulary", StringComparison.OrdinalIgnoreCase)) ?? FindBundleFile(model, "vocab") ?? throw new InvalidDataException("Release bundle 缺少 vocabulary。");
         visionEncoderPath = ReleaseCatalog.GetCachedFilePath(model, vision);
         languageDecoderPath = ReleaseCatalog.GetCachedFilePath(model, decoder);
-        vocabularyPath = ReleaseCatalog.GetCachedFilePath(model, vocabulary);
+        vocabularyPath = vocabulary is null ? string.Empty : ReleaseCatalog.GetCachedFilePath(model, vocabulary);
         ReplaceReleaseModel(downloaded.Model with { Cached = true });
         Activity.Add("multimodal-model", "Downloaded and SHA256-verified " + model.DisplayName, "DSAPP-MULTIMODAL-MODEL-READY");
     }
@@ -326,12 +328,14 @@
         {
             if (useRelease) await PrepareReleaseBundleAsync(cancellation.Token);
             if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath)) await PrepareTestImageAsync(cancellation.Token);
-            if (!File.Exists(visionEncoderPath) || !File.Exists(languageDecoderPath) || !File.Exists(vocabularyPath)) throw new FileNotFoundException("BLIP bundle 不完整，请下载 Release 模型或提供三个本地文件。");
+            bool clip = useRelease && selectedIsClip;
+            if (!File.Exists(visionEncoderPath) || !File.Exists(languageDecoderPath) || !clip && !File.Exists(vocabularyPath)) throw new FileNotFoundException(clip ? "CLIP bundle 不完整，请下载完整 Release 模型。" : "BLIP bundle 不完整，请下载 Release 模型或提供三个本地文件。");
 
             var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["executionMode"] = "worker", ["operation"] = AppOperationKind.Multimodal.ToString(), ["multimodalProfile"] = "blip-caption-base", ["languageDecoderPath"] = languageDecoderPath, ["vocabularyPath"] = vocabularyPath, ["stream"] = bool.TrueString
+                ["executionMode"] = "worker", ["operation"] = AppOperationKind.Multimodal.ToString(), ["multimodalProfile"] = clip ? "clip-vit-b-32-image-embedding" : "blip-caption-base", [clip ? "textEncoderPath" : "languageDecoderPath"] = languageDecoderPath, ["stream"] = bool.TrueString
             };
+            if (!clip) options["vocabularyPath"] = vocabularyPath;
             string modelId = useRelease && selectedModel is not null ? selectedModel.LogicalModelId : "local/blip-caption-base";
             var request = new ModelRunRequest(AppOperationKind.Multimodal, modelId, "deploysharp.backend.onnxruntime", device: "cpu", inputPath: imagePath, options: options, timeout: TimeSpan.FromMinutes(30), modelPath: visionEncoderPath, modelFormat: "onnx");
             var textProgress = new Progress<string>(delta => { caption += delta; _ = InvokeAsync(StateHasChanged); });
@@ -357,10 +361,21 @@
         {
             using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(json);
             System.Text.Json.JsonElement root = document.RootElement;
-            caption = root.GetProperty("text").GetString() ?? caption;
-            finishReason = root.GetProperty("finishReason").GetString() ?? "-";
+            string task = root.TryGetProperty("task", out System.Text.Json.JsonElement taskElement) ? taskElement.GetString() ?? string.Empty : string.Empty;
+            if (task.Equals("vision-language-image-embedding", StringComparison.OrdinalIgnoreCase))
+            {
+                int dimension = root.GetProperty("dimension").GetInt32();
+                caption = "CLIP 图像 embedding 已生成：" + dimension + " 维，SHA256 " + ShortHash(root.GetProperty("embeddingSha256").GetString());
+                finishReason = "embedding";
+                generationIdentity = ShortHash(root.GetProperty("artifactIdentity").GetString());
+            }
+            else
+            {
+                caption = root.GetProperty("text").GetString() ?? caption;
+                finishReason = root.GetProperty("finishReason").GetString() ?? "-";
+                generationIdentity = ShortHash(root.GetProperty("generationIdentity").GetString());
+            }
             sourceImageSha = ShortHash(root.GetProperty("sourceImageSha256").GetString());
-            generationIdentity = ShortHash(root.GetProperty("generationIdentity").GetString());
         }
         catch (Exception exception) when (exception is System.Text.Json.JsonException || exception is InvalidOperationException || exception is KeyNotFoundException) { diagnostics = diagnostics.Concat(new[] { new RuntimeDiagnostic("DSAPP-MULTIMODAL-RESULT-INVALID", DiagnosticSeverity.Warning, "Worker 返回的结构化结果无法解析。", details: new Dictionary<string, string> { ["technicalDetail"] = exception.Message }) }).ToArray(); }
     }

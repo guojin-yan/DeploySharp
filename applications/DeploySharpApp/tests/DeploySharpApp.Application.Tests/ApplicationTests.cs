@@ -94,6 +94,9 @@ namespace DeploySharpApp.Application.Tests
             WorkerResponse capability = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Capability, "capability-test"), TimeSpan.FromSeconds(10), CancellationToken.None);
             Assert.IsTrue(capability.Succeeded);
             string backendList = capability.Payload["backends"];
+            StringAssert.Contains(capability.Payload["multimodal"], "blip-caption");
+            StringAssert.Contains(capability.Payload["multimodal"], "clip-image-embedding");
+            StringAssert.Contains(capability.Payload["probe"], "abi-smoke");
             foreach (string backendId in new[] { "deploysharp.backend.onnxruntime", "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
             {
                 StringAssert.Contains(backendList, backendId);
@@ -210,6 +213,202 @@ namespace DeploySharpApp.Application.Tests
                 Assert.IsTrue(worker.RunCalled, backendId);
                 Assert.AreEqual(AppErrorCode.WorkerRequired, result.ErrorCode, backendId);
             }
+        }
+
+        [TestMethod]
+        [DataRow("yolo/v5/detect/n")]
+        [DataRow("yolo/v5/segment/s")]
+        [DataRow("yolo/v6/detect/s")]
+        [DataRow("yolo/v7/detect/base")]
+        [DataRow("yolo/v8/classify/s")]
+        [DataRow("yolo/v8/detect/n")]
+        [DataRow("yolo/v8/segment/n")]
+        [DataRow("yolo/v8/pose/s")]
+        [DataRow("yolo/v8/obb/s")]
+        [DataRow("yolo/v9/detect/s")]
+        [DataRow("yolo/v9/segment/c")]
+        [DataRow("yolo/v10/detect/n")]
+        [DataRow("yolo/v11/detect/n")]
+        [DataRow("yolo/v11/segment/s")]
+        [DataRow("yolo/v11/pose/s")]
+        [DataRow("yolo/v11/obb/s")]
+        [DataRow("yolo/v12/detect/n")]
+        [DataRow("yolo/v13/detect/n")]
+        [DataRow("yolo/v26/detect/n")]
+        [DataRow("yolo/v26/segment/s")]
+        [DataRow("yolo/v26/pose/s")]
+        [DataRow("yolo/v26/obb/s")]
+        [DataRow("deim/v2/detect")]
+        [DataRow("rf-detr/detect")]
+        [DataRow("rf-detr/segment")]
+        [DataRow("rt-detr/r50vd-raw-query")]
+        [DataRow("rt-detr/r50vd-decoded-vector-ir")]
+        [DataRow("rt-detr/r50vd-decoded-vector-onnx")]
+        [DataRow("pp-yoloe/plus-crn-l")]
+        [DataRow("segmentation/sam-v1-vit-b")]
+        [DataRow("paddleocr/ppocrv5/mobile-cls")]
+        [DataRow("paddleocr/ppocrv5/mobile-det")]
+        [DataRow("paddleocr/ppocrv5/mobile-rec")]
+        [DataRow("paddleocr/ppocrv5/server-cls")]
+        [DataRow("paddleocr/ppocrv5/server-det")]
+        [DataRow("paddleocr/ppocrv5/server-rec")]
+        [DataRow("anomalib/padim/mvtec-bottle")]
+        [DataRow("bria/rmbg-1.4")]
+        [DataRow("bria/rmbg-2.0")]
+        public async Task DedicatedReleaseVisualModelsAreRoutedToWorker(string modelId)
+        {
+            var worker = new StubWorkerClient();
+            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+            ModelRunResult result = await runner.RunAsync(new ModelRunRequest(AppOperationKind.Vision, modelId, "deploysharp.backend.onnxruntime", modelPath: "model.onnx", modelFormat: "onnx"), null, CancellationToken.None);
+            Assert.IsTrue(worker.RunCalled, modelId);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode, modelId);
+        }
+
+        [TestMethod]
+        public async Task OpenVinoReleaseVisualRequestUsesDedicatedAdapter()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            var request = new ModelRunRequest(
+                AppOperationKind.Vision,
+                "yolo/v8/detect-n",
+                "deploysharp.backend.openvino",
+                modelPath: Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx"),
+                modelFormat: "onnx",
+                options: new Dictionary<string, string> { ["executionMode"] = "worker" });
+
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+
+            if (result.Diagnostics.Any(item => item.Code is "DSAPP-WORKER-NATIVE-MISSING" or "DSAPP-WORKER-NATIVE-PREFLIGHT")) Assert.Inconclusive(result.Message);
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            Assert.IsTrue(result.Diagnostics.Any(item => item.Code == "DSAPP-VISUAL-INPUT-REQUIRED"), string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public async Task CachedReleaseYoloSegmentationRunsRealWorkerWhenAvailable()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages Windows native runtimes.");
+            string visualRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharpApp", "visual-models");
+            string imageRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharpApp", "test-images");
+            string? modelPath = Directory.Exists(visualRoot) ? Directory.EnumerateFiles(visualRoot, "*yolo-v8-segment-n*.onnx", SearchOption.AllDirectories).FirstOrDefault() : null;
+            string? imagePath = Directory.Exists(imageRoot) ? Directory.EnumerateFiles(imageRoot, "bus.jpg", SearchOption.AllDirectories).FirstOrDefault() : null;
+            if (modelPath is null || imagePath is null) Assert.Inconclusive("The verified yolo/v8/segment/n Release cache and bus.jpg are not installed.");
+
+            var options = new Dictionary<string, string>
+            {
+                ["executionMode"] = "worker",
+                ["visualOpset"] = "12",
+                ["visualUpstreamRepository"] = "https://github.com/ultralytics/ultralytics",
+                ["visualUpstreamRevision"] = "ef141af4b837e0a1c34ff187ac40ef36af56c135",
+                ["visualExporter"] = "Upstream YOLO ONNX export",
+                ["visualExporterVersion"] = "8.0.119",
+                ["visualLicense"] = "AGPL-3.0-only",
+                ["visualAssetPathsJson"] = "{}"
+            };
+            var request = new ModelRunRequest(AppOperationKind.Vision, "yolo/v8/segment/n", "deploysharp.backend.onnxruntime", inputPath: imagePath, modelPath: modelPath, modelFormat: "onnx", modelSha256: "986ba70310322ad2d5aec429c4a07d27d3a1c1f5a4eb8f9127ae7c2d358be5c2", options: options, timeout: TimeSpan.FromMinutes(2));
+
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            using JsonDocument output = JsonDocument.Parse(result.Output!);
+            Assert.AreEqual("deploysharp.visual.result.v1", output.RootElement.GetProperty("schema").GetString());
+            Assert.AreEqual("segmentation", output.RootElement.GetProperty("kind").GetString());
+            Assert.AreEqual(810, output.RootElement.GetProperty("sourceWidth").GetInt32());
+            Assert.AreEqual(1080, output.RootElement.GetProperty("sourceHeight").GetInt32());
+            JsonElement instances = output.RootElement.GetProperty("instances");
+            Assert.IsTrue(instances.GetArrayLength() > 0);
+            JsonElement mask = instances[0].GetProperty("mask");
+            Assert.IsTrue(mask.GetProperty("sampleWidth").GetInt32() > 0);
+            Assert.IsTrue(mask.GetProperty("sampleHeight").GetInt32() > 0);
+            Assert.AreEqual(JsonValueKind.String, mask.GetProperty("values").ValueKind, "Byte masks must use System.Text.Json Base64 encoding instead of megabytes of integer tokens.");
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public async Task CachedReleaseRtDetrIrRunsRealOpenVinoWorkerWhenAvailable()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
+            string visualRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharpApp", "visual-models");
+            string imageRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharpApp", "test-images");
+            string? modelPath = Directory.Exists(visualRoot) ? Directory.EnumerateFiles(visualRoot, "rt-detr-r50vd-decoded-vector-ir.model.xml", SearchOption.AllDirectories).FirstOrDefault() : null;
+            string? imagePath = Directory.Exists(imageRoot) ? Directory.EnumerateFiles(imageRoot, "bus.jpg", SearchOption.AllDirectories).FirstOrDefault() : null;
+            if (modelPath is null || imagePath is null || !File.Exists(Path.ChangeExtension(modelPath, ".bin"))) Assert.Inconclusive("The verified RT-DETR OpenVINO IR Release bundle and bus.jpg are not installed.");
+
+            var options = new Dictionary<string, string>
+            {
+                ["executionMode"] = "worker", ["visualOpset"] = "16",
+                ["visualUpstreamRepository"] = "https://github.com/PaddlePaddle/PaddleDetection",
+                ["visualUpstreamRevision"] = "b25522a0f4bde8c80603f3ba5e3472059972e3b5",
+                ["visualExporter"] = "OpenVINO-model-conversion", ["visualExporterVersion"] = "local-converter-unverified",
+                ["visualLicense"] = "Apache-2.0", ["visualAssetPathsJson"] = "{}"
+            };
+            var request = new ModelRunRequest(AppOperationKind.Vision, "rt-detr/r50vd-decoded-vector-ir", "deploysharp.backend.openvino", inputPath: imagePath, modelPath: modelPath, modelFormat: "openvino-ir", modelSha256: "9d49703964c07567de7f00bda85bae1760da322e2b0655bfae110f2c222c778d", options: options, timeout: TimeSpan.FromMinutes(2));
+
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            using JsonDocument output = JsonDocument.Parse(result.Output!);
+            Assert.AreEqual("deploysharp.visual.result.v1", output.RootElement.GetProperty("schema").GetString());
+            Assert.AreEqual("detection", output.RootElement.GetProperty("kind").GetString());
+            Assert.AreEqual(810, output.RootElement.GetProperty("sourceWidth").GetInt32());
+            Assert.AreEqual(1080, output.RootElement.GetProperty("sourceHeight").GetInt32());
+            Assert.IsTrue(output.RootElement.GetProperty("detections").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public async Task ConfiguredTensorRtEngineRejectsBadIdentityThenRunsRealGpuInference()
+        {
+            string? enginePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_ENGINE");
+            string? identityPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_IDENTITY");
+            string? sourceOnnxPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_ONNX");
+            string? imagePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_IMAGE");
+            string? cudaRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_CUDA_ROOT");
+            string? cudnnRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_CUDNN_ROOT");
+            string? tensorRtRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_ROOT");
+            if (new[] { enginePath, identityPath, sourceOnnxPath, imagePath, cudaRoot, cudnnRoot, tensorRtRoot }.Any(string.IsNullOrWhiteSpace))
+                Assert.Inconclusive("Configure the DEPLOYSHARP_APP_TENSORRT_* and native root variables to run the external TensorRT validation.");
+
+            string badIdentityPath = Path.Combine(Path.GetTempPath(), "deploysharp-app-bad-trt-identity-" + Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                using JsonDocument identity = JsonDocument.Parse(await File.ReadAllTextAsync(identityPath!));
+                var badIdentity = identity.RootElement.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+                badIdentity["engineSha256"] = new string('0', 64);
+                await File.WriteAllTextAsync(badIdentityPath, JsonSerializer.Serialize(badIdentity));
+
+                var tensorInputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 640, 640 }, imageInput: true) };
+                var options = new Dictionary<string, string>
+                {
+                    ["executionMode"] = "worker",
+                    ["cudaRoot"] = cudaRoot!, ["cudnnRoot"] = cudnnRoot!, ["tensorRtRoot"] = tensorRtRoot!,
+                    ["bridgePath"] = Path.Combine(Path.GetDirectoryName(LocateBackendHost())!, "jyppxtrtbridge.dll"),
+                    ["tensorRtApiVersion"] = "10", ["apiVersion"] = "10", ["sourceOnnxPath"] = sourceOnnxPath!,
+                    ["imageResizeMode"] = "stretch", ["imageColorOrder"] = "rgb", ["imageScale"] = "0.0039215686"
+                };
+
+                options["engineIdentityPath"] = badIdentityPath;
+                var invalidRequest = new ModelRunRequest(AppOperationKind.Vision, "external/yolov8s", "deploysharp.backend.tensorrt", device: "cuda", inputPath: imagePath, modelPath: enginePath, modelFormat: "tensorrt-engine", tensorInputs: tensorInputs, options: options, timeout: TimeSpan.FromMinutes(2));
+                ModelRunResult invalid = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(invalidRequest, null, CancellationToken.None);
+                Assert.IsFalse(invalid.Succeeded);
+                Assert.IsTrue(invalid.Diagnostics.Any(item => item.Code == "DSAPP-TENSORRT-ENGINE-SHA256-MISMATCH"));
+
+                options["engineIdentityPath"] = identityPath!;
+                var validRequest = new ModelRunRequest(AppOperationKind.Vision, "external/yolov8s", "deploysharp.backend.tensorrt", device: "cuda", inputPath: imagePath, modelPath: enginePath, modelFormat: "tensorrt-engine", tensorInputs: tensorInputs, options: options, timeout: TimeSpan.FromMinutes(2));
+                ModelRunResult valid = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(validRequest, null, CancellationToken.None);
+
+                Assert.IsTrue(valid.Succeeded, valid.Message + Environment.NewLine + string.Join(Environment.NewLine, valid.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+                Assert.AreEqual(ModelRunMode.Worker, valid.RunMode);
+                Assert.IsTrue(valid.InferenceMs > 0);
+                using JsonDocument output = JsonDocument.Parse(valid.Output!);
+                Assert.AreEqual(JsonValueKind.Array, output.RootElement.ValueKind);
+                Assert.IsTrue(output.RootElement.GetArrayLength() > 0);
+                Console.WriteLine("TENSORRT_REAL_INFERENCE preprocessMs={0:F2}; inferenceMs={1:F2}; postprocessMs={2:F2}; outputChars={3}", valid.PreprocessMs, valid.InferenceMs, valid.PostprocessMs, valid.Output!.Length);
+            }
+            finally { if (File.Exists(badIdentityPath)) File.Delete(badIdentityPath); }
         }
 
         [TestMethod]
@@ -415,6 +614,8 @@ namespace DeploySharpApp.Application.Tests
             DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
             while (directory != null)
             {
+                string ridCandidate = Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "win-x64", "DeploySharpApp.BackendHost.dll");
+                if (File.Exists(ridCandidate)) return ridCandidate;
                 string candidate = Path.Combine(directory.FullName, "src", "DeploySharpApp.BackendHost", "bin", "Debug", "net10.0", "DeploySharpApp.BackendHost.dll");
                 if (File.Exists(candidate)) return candidate;
                 directory = directory.Parent;

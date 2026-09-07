@@ -40,11 +40,14 @@ while (true)
             response = new WorkerResponse(WorkerResponseKind.Handshake, request.RequestId, protocolCompatible, protocolCompatible ? "DeploySharpApp BackendHost ready" : "Worker protocol version mismatch.", new Dictionary<string, string> { ["protocolVersion"] = WorkerProtocol.ProtocolVersion.ToString(CultureInfo.InvariantCulture), ["execution"] = "worker", ["host"] = "DeploySharpApp.BackendHost" });
             break;
         case WorkerMessageKind.Capability:
-            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.onnxruntime,deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "native-adapter", ["multimodal"] = "blip-caption", ["cancel"] = "active-operation", ["probe"] = "filesystem-preflight" });
+            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.onnxruntime,deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "native-adapter", ["multimodal"] = "blip-caption,clip-image-embedding", ["cancel"] = "active-operation", ["probe"] = "filesystem-preflight,abi-smoke" });
             break;
         case WorkerMessageKind.Probe:
-            WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId, request.Payload);
-            response = new WorkerResponse(WorkerResponseKind.Probe, request.RequestId, probe.Succeeded, probe.Message, probe.Payload);
+            using (NativeWorkerEnvironment.Apply(request.Payload))
+            {
+                WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId, request.Payload);
+                response = new WorkerResponse(WorkerResponseKind.Probe, request.RequestId, probe.Succeeded, probe.Message, probe.Payload);
+            }
             break;
         case WorkerMessageKind.Inference:
             if (activeTask != null)
@@ -100,6 +103,7 @@ async Task ExecuteInferenceAsync(WorkerRequest request, CancellationTokenSource 
     using var timeoutCancellation = new CancellationTokenSource();
     try
     {
+        using NativeWorkerEnvironment nativeEnvironment = NativeWorkerEnvironment.Apply(request.Payload);
         // Native provider/session construction can be synchronous; keep stdin responsive for cancel/timeout messages.
         await Task.Yield();
         WorkerProbeResult inferenceProbe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
@@ -152,6 +156,7 @@ async Task ExecuteBenchmarkAsync(WorkerRequest request, CancellationTokenSource 
     using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(operationCancellation.Token, timeoutCancellation.Token);
     try
     {
+        using NativeWorkerEnvironment nativeEnvironment = NativeWorkerEnvironment.Apply(request.Payload);
         await Task.Yield();
         WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId);
         await WriteResponseAsync(Progress(request.RequestId, 0.3, "dispatch", "Native benchmark request accepted."));

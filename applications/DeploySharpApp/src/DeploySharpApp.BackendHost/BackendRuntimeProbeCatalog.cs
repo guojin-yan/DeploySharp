@@ -17,9 +17,9 @@ using JYPPX.DeploySharp.Tensors;
 namespace DeploySharpApp.BackendHost;
 
 /// <summary>
-/// Creates the main-repository backend descriptors and runs their conservative native preflight inside the Worker.
-/// The probe deliberately does not load a native library; a file-system success is therefore reported as
-/// <c>Unavailable</c> until the provider ABI smoke test and inference adapter are enabled.
+/// Creates the published backend descriptors and runs their conservative native preflight inside the Worker.
+/// A probe without a smoke model remains unavailable; when a verified model is supplied, the provider creates
+/// a real session and performs one ABI smoke inference before availability is reported.
 /// </summary>
 internal static class BackendRuntimeProbeCatalog
 {
@@ -265,21 +265,31 @@ internal static class BackendRuntimeProbeCatalog
 
     private static string? FindPackagedNative(string pluginId, NativeRuntimeKind kind)
     {
+        if (kind == NativeRuntimeKind.Driver && OperatingSystem.IsWindows())
+        {
+            string driver = Path.Combine(Environment.SystemDirectory, "nvcuda.dll");
+            return File.Exists(driver) ? driver : null;
+        }
         string rid = "win-x64";
         string nativeRoot = Path.Combine(AppContext.BaseDirectory, "runtimes", rid, "native");
-        if (!Directory.Exists(nativeRoot)) return null;
         string[] names = kind switch
         {
             NativeRuntimeKind.LlamaSharpNative => new[] { "llama.dll", "ggml.dll" },
             NativeRuntimeKind.OnnxRuntimeNative => new[] { "onnxruntime.dll", "libonnxruntime.so" },
             NativeRuntimeKind.OpenCV => new[] { "JYPPX.OpenCV.Native.dll", "opencv_core500.dll", "opencv_dnn500.dll" },
             NativeRuntimeKind.OpenVINO => new[] { "openvino_c.dll", "openvino.dll" },
+            NativeRuntimeKind.Unknown when pluginId.IndexOf("tensorrt", StringComparison.OrdinalIgnoreCase) >= 0 => new[] { "jyppxtrtbridge.dll" },
             _ => Array.Empty<string>()
         };
+        string[] roots = { AppContext.BaseDirectory, nativeRoot };
         foreach (string name in names)
         {
-            string? match = Directory.EnumerateFiles(nativeRoot, name, SearchOption.AllDirectories).FirstOrDefault();
-            if (match != null) return Path.GetFullPath(match);
+            foreach (string root in roots)
+            {
+                if (!Directory.Exists(root)) continue;
+                string? match = Directory.EnumerateFiles(root, name, SearchOption.AllDirectories).FirstOrDefault();
+                if (match != null) return Path.GetFullPath(match);
+            }
         }
         return null;
     }

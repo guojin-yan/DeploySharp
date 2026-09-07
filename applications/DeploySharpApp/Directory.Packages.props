@@ -31,5 +31,6 @@
     <PackageVersion Include="JYPPX.OpenVINO.CSharp.API" Version="3.3.1" />
     <PackageVersion Include="OpenVINO.runtime.win" Version="2026.2.1" />
     <PackageVersion Include="JYPPX.TensorRT.CSharp.API" Version="4.0.0" />
+    <PackageVersion Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" Version="4.0.0" />
   </ItemGroup>
 </Project>

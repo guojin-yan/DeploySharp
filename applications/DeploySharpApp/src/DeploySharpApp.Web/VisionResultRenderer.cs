@@ -23,6 +23,12 @@ internal static class VisionResultRenderer
         {
             using JsonDocument document = JsonDocument.Parse(outputJson ?? "{}");
             JsonElement root = document.RootElement;
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("schema", out JsonElement schema) && string.Equals(schema.GetString(), "deploysharp.visual.result.v1", StringComparison.OrdinalIgnoreCase))
+            {
+                RenderCanonical(root, overlays, labels);
+            }
+            else
+            {
             JsonElement outputs = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("outputs", out JsonElement named) ? named : root;
             if (outputs.ValueKind == JsonValueKind.Array)
             {
@@ -31,6 +37,7 @@ internal static class VisionResultRenderer
                 bool handled = TryRenderNamedDetectionSet(tensors, effectiveProfile, overlays, labels);
                 if (!handled) handled = effectiveProfile.Kind == VisualPostprocessingKind.Segmentation && TryRenderYoloSegmentation(tensors, effectiveProfile, overlays, labels);
                 if (!handled) foreach (JsonElement output in outputs.EnumerateArray()) ParseOutput(output, overlays, labels, effectiveProfile);
+            }
             }
         }
         catch (JsonException) { labels.Add("输出不是可解析的 tensor JSON"); }
@@ -43,6 +50,141 @@ internal static class VisionResultRenderer
         svg.Append("</text></svg>");
         return "data:image/svg+xml;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(svg.ToString()));
     }
+
+    private static void RenderCanonical(JsonElement root, List<string> overlays, List<string> labels)
+    {
+        string kind = root.TryGetProperty("kind", out JsonElement kindElement) ? kindElement.GetString() ?? string.Empty : string.Empty;
+        double sourceWidth = Math.Max(1, Number(root, "sourceWidth", 640));
+        double sourceHeight = Math.Max(1, Number(root, "sourceHeight", 640));
+        if (string.Equals(kind, "detection", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("detections", out JsonElement detections) && detections.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement item in detections.EnumerateArray())
+            {
+                if (!TryNumber(item, "x", out double x) || !TryNumber(item, "y", out double y) || !TryNumber(item, "width", out double width) || !TryNumber(item, "height", out double height)) continue;
+                string label = StringValue(item, "label") ?? ("class " + (StringValue(item, "classIndex") ?? "0"));
+                double score = Number(item, "score");
+                DrawBox(overlays, x, y, width, height, score, label, "#ff5c5c", sourceWidth, sourceHeight, center: false); count++;
+            }
+            labels.Add("主库 Detection 解码 · " + count.ToString(CultureInfo.InvariantCulture) + " 个结果"); return;
+        }
+        if (string.Equals(kind, "segmentation", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("instances", out JsonElement instances) && instances.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement item in instances.EnumerateArray())
+            {
+                if (item.TryGetProperty("box", out JsonElement box) && TryNumber(box, "x", out double x) && TryNumber(box, "y", out double y) && TryNumber(box, "width", out double width) && TryNumber(box, "height", out double height))
+                    DrawBox(overlays, x, y, width, height, Number(item, "score"), StringValue(item, "label") ?? "segment", "#ff5c5c", sourceWidth, sourceHeight, center: false);
+                if (item.TryGetProperty("mask", out JsonElement mask)) RenderCanonicalMask(mask, overlays);
+                count++;
+            }
+            labels.Add("主库 Instance Segmentation 解码 · " + count.ToString(CultureInfo.InvariantCulture) + " 个实例"); return;
+        }
+        if (string.Equals(kind, "pose", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("instances", out JsonElement instances) && instances.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement item in instances.EnumerateArray())
+            {
+                if (item.TryGetProperty("keypoints", out JsonElement points) && points.ValueKind == JsonValueKind.Array)
+                foreach (JsonElement point in points.EnumerateArray()) if (TryNumber(point, "x", out double x) && TryNumber(point, "y", out double y) && Number(point, "score") >= .2) overlays.Add("<circle cx=\"" + F(MapX(x, sourceWidth)) + "\" cy=\"" + F(MapY(y, sourceHeight)) + "\" r=\"4\" fill=\"#ffcc33\" stroke=\"#1d2742\" stroke-width=\"1\"/>");
+                count++;
+            }
+            labels.Add("主库 Pose 解码 · " + count.ToString(CultureInfo.InvariantCulture) + " 个实例"); return;
+        }
+        if (string.Equals(kind, "obb", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("detections", out JsonElement detections) && detections.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement item in detections.EnumerateArray())
+            {
+                if (!item.TryGetProperty("points", out JsonElement points) || points.ValueKind != JsonValueKind.Array) continue;
+                var polygon = new StringBuilder("<polygon points=\""); foreach (JsonElement point in points.EnumerateArray()) if (TryNumber(point, "x", out double x) && TryNumber(point, "y", out double y)) polygon.Append(F(MapX(x, sourceWidth))).Append(',').Append(F(MapY(y, sourceHeight))).Append(' ');
+                polygon.Append("\" fill=\"none\" stroke=\"#ff9f43\" stroke-width=\"2\"/>"); overlays.Add(polygon.ToString()); count++;
+            }
+            labels.Add("主库 OBB 解码 · " + count.ToString(CultureInfo.InvariantCulture) + " 个结果"); return;
+        }
+        if (string.Equals(kind, "anomaly", StringComparison.OrdinalIgnoreCase))
+        {
+            if (root.TryGetProperty("map", out JsonElement map)) RenderCanonicalMask(map, overlays);
+            labels.Add("主库 Anomalib 解码 · score=" + F(Number(root, "score")) + " · anomalous ratio=" + F(Number(root, "anomalousPixelRatio"))); return;
+        }
+        if (string.Equals(kind, "foreground-matting", StringComparison.OrdinalIgnoreCase))
+        {
+            if (root.TryGetProperty("alpha", out JsonElement alpha)) RenderCanonicalMask(alpha, overlays);
+            labels.Add("主库 BRIA RMBG Alpha 解码 · 已映射回原图坐标"); return;
+        }
+        if (string.Equals(kind, "classification", StringComparison.OrdinalIgnoreCase))
+        {
+            if (root.TryGetProperty("predictions", out JsonElement predictions) && predictions.ValueKind == JsonValueKind.Array) labels.Add("主库 Classification · " + string.Join(", ", predictions.EnumerateArray().Take(5).Select(item => (StringValue(item, "label") ?? "class") + "=" + F(Number(item, "score"))))); return;
+        }
+        if (string.Equals(kind, "ocr-detection", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("regions", out JsonElement regions) && regions.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement region in regions.EnumerateArray())
+            {
+                if (!region.TryGetProperty("points", out JsonElement points) || points.ValueKind != JsonValueKind.Array) continue;
+                var polygon = new StringBuilder("<polygon points=\"");
+                foreach (JsonElement point in points.EnumerateArray()) if (TryNumber(point, "x", out double x) && TryNumber(point, "y", out double y)) polygon.Append(F(MapX(x, sourceWidth))).Append(',').Append(F(MapY(y, sourceHeight))).Append(' ');
+                overlays.Add(polygon.Append("\" fill=\"none\" stroke=\"#00b894\" stroke-width=\"2\"/>").ToString()); count++;
+            }
+            labels.Add("主库 PaddleOCR 检测解码 · " + count.ToString(CultureInfo.InvariantCulture) + " 个文本区域"); return;
+        }
+        if (string.Equals(kind, "ocr-recognition", StringComparison.OrdinalIgnoreCase))
+        {
+            if (root.TryGetProperty("items", out JsonElement items) && items.ValueKind == JsonValueKind.Array)
+                labels.Add("主库 PaddleOCR 字典解码 · " + string.Join(" | ", items.EnumerateArray().Take(3).Select(item => (StringValue(item, "text") ?? string.Empty) + "=" + F(Number(item, "confidence")))));
+            return;
+        }
+        if (string.Equals(kind, "ocr-orientation", StringComparison.OrdinalIgnoreCase))
+        {
+            string orientation = StringValue(root, "acceptedOrientation") ?? "置信度不足，保持原方向";
+            labels.Add("主库 PaddleOCR 方向分类 · " + orientation + " · confidence=" + F(Number(root, "confidence")));
+            return;
+        }
+        labels.Add("主库视觉结果：" + kind);
+    }
+
+    private static void RenderCanonicalMask(JsonElement mask, List<string> overlays)
+    {
+        if (!mask.TryGetProperty("values", out JsonElement values)) return;
+        byte[]? bytes = null;
+        int length;
+        if (values.ValueKind == JsonValueKind.String)
+        {
+            try { bytes = Convert.FromBase64String(values.GetString() ?? string.Empty); }
+            catch (FormatException) { return; }
+            length = bytes.Length;
+        }
+        else if (values.ValueKind == JsonValueKind.Array) length = values.GetArrayLength();
+        else return;
+        if (length == 0) return;
+        int sampleWidth = Math.Max(1, (int)Number(mask, "sampleWidth", Math.Round(Math.Sqrt(length))));
+        int sampleHeight = Math.Max(1, (int)Number(mask, "sampleHeight", Math.Ceiling(length / (double)sampleWidth)));
+        for (int index = 0; index < length; index++)
+        {
+            double value = bytes is null ? values[index].GetDouble() : bytes[index]; if (value <= .35) continue;
+            int row = index / sampleWidth, column = index % sampleWidth;
+            overlays.Add("<rect x=\"" + F(20 + column * 600d / sampleWidth) + "\" y=\"" + F(20 + row * 360d / sampleHeight) + "\" width=\"" + F(600d / sampleWidth + 1) + "\" height=\"" + F(360d / sampleHeight + 1) + "\" fill=\"#4d7cff\" opacity=\".30\"/>");
+        }
+    }
+
+    private static void DrawBox(List<string> overlays, double x, double y, double width, double height, double score, string label, string color, double sourceWidth, double sourceHeight, bool center = true)
+    {
+        double left = center ? x - width / 2 : x;
+        double top = center ? y - height / 2 : y;
+        overlays.Add("<rect x=\"" + F(MapX(left, sourceWidth)) + "\" y=\"" + F(MapY(top, sourceHeight)) + "\" width=\"" + F(Math.Abs(width) * 600 / sourceWidth) + "\" height=\"" + F(Math.Abs(height) * 360 / sourceHeight) + "\" fill=\"none\" stroke=\"" + color + "\" stroke-width=\"2\"/><text x=\"" + F(MapX(left, sourceWidth) + 3) + "\" y=\"" + F(MapY(top, sourceHeight) + 14) + "\" fill=\"" + color + "\" font-size=\"12\">" + SecurityElement.Escape(label + " · " + F(score)) + "</text>");
+    }
+
+    private static bool TryNumber(JsonElement element, string name, out double value) { value = 0; return element.TryGetProperty(name, out JsonElement property) && property.TryGetDouble(out value); }
+    private static double Number(JsonElement element, string name) => TryNumber(element, name, out double value) ? value : 0;
+    private static double Number(JsonElement element, string name, double fallback) => TryNumber(element, name, out double value) ? value : fallback;
+    private static string? StringValue(JsonElement element, string name) => element.TryGetProperty(name, out JsonElement property) ? property.ToString() : null;
+    private static double MapX(double value, double sourceWidth) => 20 + value * 600 / sourceWidth;
+    private static double MapY(double value, double sourceHeight) => 20 + value * 360 / sourceHeight;
 
     private static void ParseOutput(JsonElement output, List<string> overlays, List<string> labels, VisualPostprocessingProfile profile)
     {

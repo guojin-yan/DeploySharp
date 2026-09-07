@@ -35,8 +35,27 @@ namespace DeploySharpApp.Application.Tests
             var text = File.ReadAllText(path);
             Assert.IsFalse(text.Contains("Microsoft.ML.OnnxRuntime"));
             Assert.IsFalse(text.Contains("Backend.OnnxRuntime"));
+            Assert.IsFalse(text.Contains("Backend.OpenCV"));
+            Assert.IsFalse(text.Contains("Backend.OpenVINO"));
+            Assert.IsFalse(text.Contains("Backend.LlamaSharp"));
             Assert.IsFalse(text.Contains("Backend.TensorRT"));
             Assert.IsFalse(text.Contains("Visual.TensorRT"));
+            Assert.IsFalse(text.Contains("CUDA", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsFalse(text.Contains("cuDNN", System.StringComparison.OrdinalIgnoreCase));
+        }
+
+        [TestMethod]
+        public void TensorRtBridgeIsScopedToWinX64Worker()
+        {
+            string appRoot = Path.GetFullPath(Path.Combine(TestContext?.TestRunDirectory ?? Directory.GetCurrentDirectory(), "..", "..", "..", "..", ".."));
+            string workerProject = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.BackendHost", "DeploySharpApp.BackendHost.csproj"));
+            string webProject = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.Web", "DeploySharpApp.Web.csproj"));
+            string net48Project = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.Desktop.Net48", "DeploySharpApp.Desktop.Net48.csproj"));
+
+            StringAssert.Contains(workerProject, "<RuntimeIdentifier>win-x64</RuntimeIdentifier>");
+            StringAssert.Contains(workerProject, "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge");
+            Assert.IsFalse(webProject.Contains("TensorRT", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsFalse(net48Project.Contains("TensorRT", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -66,6 +85,23 @@ namespace DeploySharpApp.Application.Tests
             Assert.IsTrue(text.Contains("DeploySharp.Backend.OnnxRuntime"));
             Assert.IsFalse(text.Contains("TensorRT"));
             Assert.IsFalse(text.Contains("DeploySharp.Visual"));
+        }
+
+        [TestMethod]
+        public void ReleaseVisualAdapterKeepsAuditedModelContracts()
+        {
+            string appRoot = Path.GetFullPath(Path.Combine(TestContext?.TestRunDirectory ?? Directory.GetCurrentDirectory(), "..", "..", "..", "..", ".."));
+            string adapter = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.BackendHost", "VisualReleaseInferenceAdapter.cs"));
+
+            StringAssert.Contains(adapter, "registry.UseOnnxRuntime()");
+            StringAssert.Contains(adapter, "registry.UseOpenVino()");
+            StringAssert.Contains(adapter, "CreatePaddleOcrOfficialInferenceDetectionOptions");
+            StringAssert.Contains(adapter, "CreatePaddleOcrOfficialInferenceRecognitionOptions");
+            StringAssert.Contains(adapter, "CreatePaddleOcrOfficialInferenceTextLineOrientationOptions");
+            StringAssert.Contains(adapter, "int candidates = id.Contains(\"v26\") ? 300");
+            StringAssert.Contains(adapter, "PaddleOcrProfiles.LoadCharacterSet");
+            StringAssert.Contains(adapter, "value is OcrOrientationResult orientation");
+            StringAssert.Contains(adapter, "prediction.Segmentation");
         }
 
         public TestContext? TestContext { get; set; }
