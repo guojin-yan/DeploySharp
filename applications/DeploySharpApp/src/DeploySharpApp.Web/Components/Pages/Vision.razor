@@ -454,8 +454,11 @@
             checks.Add(new ReadinessCheck(true, "模型", "Demo 使用 FakeModelRunner；成功结果不代表真实 ONNX 推理。", true));
         else if (modelPackMaterialization?.IsBundle == true)
             checks.Add(new ReadinessCheck(false, "模型", "当前 ModelPack 是多文件 bundle（" + modelPackMaterialization.VerifiedFiles.Count + " 个已校验文件），Web 单文件 Engine 不会丢弃辅助文件；请使用专用 Worker/ModelPack 执行器。"));
-        else if (model is not null && model.Files.Count > 1)
-            checks.Add(new ReadinessCheck(false, "模型", "当前 release artifact 是多文件 bundle（" + model.Files.Count + " 个模型文件），Web 单文件入口不会丢弃辅助模型；请使用对应 Worker/ModelPack 链路。"));
+        else if (model is not null && model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase)) > 1)
+        {
+            int modelFileCount = model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase));
+            checks.Add(new ReadinessCheck(false, "模型", "当前 release artifact 是多文件模型 bundle（" + modelFileCount + " 个模型文件），Web 单文件入口不会丢弃辅助模型；请使用对应 Worker/ModelPack 链路。"));
+        }
         else if (model is not null && !string.Equals(model.Format, "onnx", StringComparison.OrdinalIgnoreCase))
             checks.Add(new ReadinessCheck(false, "模型", "当前 Engine 只接入 ONNX 格式，目录元数据不会伪装成已支持。"));
         else if (model is null && !string.IsNullOrWhiteSpace(modelPath) && !IsLocalModelFormatCompatible(InferModelFormat(modelPath), isTensorRt))
