@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.LlamaSharp;
+using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Backends.TensorRT;
@@ -16,8 +18,11 @@ using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.LLM;
 using JYPPX.DeploySharp.LLM.Registry;
 using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Tensors;
+using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.OpenCV;
 using DeploySharpApp.Contracts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -29,7 +34,7 @@ internal static class WorkerInferenceAdapter
 {
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    public static async Task<WorkerResponse> RunAsync(WorkerRequest request, Action<double>? reportProgress, CancellationToken cancellationToken)
+    public static async Task<WorkerResponse> RunAsync(WorkerRequest request, Action<double>? reportProgress, Action<string>? reportText, CancellationToken cancellationToken)
     {
         string backendId = request.BackendId ?? string.Empty;
         string? modelPath = Value(request.Payload, "modelPath");
@@ -47,7 +52,9 @@ internal static class WorkerInferenceAdapter
         reportProgress?.Invoke(0.45);
         try
         {
-            if (Contains(backendId, "llamasharp")) return await RunLlamaAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
+            if (Contains(backendId, "onnxruntime") && string.Equals(Value(request.Payload, "operation"), AppOperationKind.Multimodal.ToString(), StringComparison.OrdinalIgnoreCase))
+                return await RunBlipCaptionAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
+            if (Contains(backendId, "llamasharp")) return await RunLlamaAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "openvino")) return await RunCoreTensorAsync(request, modelPath, new OpenVinoBackendProvider(ParseOpenVinoOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "opencv")) return await RunOpenCvAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "tensorrt")) return await RunCoreTensorAsync(request, modelPath, new TensorRtBackendProvider(ParseTensorRtOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
@@ -69,6 +76,89 @@ internal static class WorkerInferenceAdapter
         {
             return Error(request, "DSAPP-WORKER-NATIVE-EXECUTION-FAILED", "Native Worker inference failed.", AppRuntimeState.Unavailable, exception.GetType().FullName + ": " + exception.Message);
         }
+    }
+
+    private static async Task<WorkerResponse> RunBlipCaptionAsync(WorkerRequest request, string visionEncoderPath, Action<double>? reportProgress, Action<string>? reportText, CancellationToken cancellationToken)
+    {
+        string profileName = Value(request.Payload, "multimodalProfile") ?? "blip-caption-base";
+        if (!string.Equals(profileName, "blip-caption-base", StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-WORKER-MULTIMODAL-PROFILE-UNSUPPORTED", "The Worker currently supports only the audited BLIP caption-base release profile.", AppRuntimeState.Unsupported, profileName);
+
+        string device = Value(request.Payload, "device") ?? "cpu";
+        if (!string.Equals(device, "cpu", StringComparison.OrdinalIgnoreCase) && !string.Equals(device, "auto", StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-WORKER-BLIP-DEVICE-UNAVAILABLE", "The published BLIP caption bundle is enabled only for the ONNX Runtime CPU provider.", AppRuntimeState.Unavailable, device);
+
+        string? decoderValue = Value(request.Payload, "languageDecoderPath");
+        string? vocabularyValue = Value(request.Payload, "vocabularyPath");
+        string? imageValue = Value(request.Payload, "inputPath");
+        if (string.IsNullOrWhiteSpace(decoderValue) || string.IsNullOrWhiteSpace(vocabularyValue) || string.IsNullOrWhiteSpace(imageValue))
+            return Error(request, "DSAPP-WORKER-MULTIMODAL-BUNDLE-INCOMPLETE", "BLIP caption inference requires vision encoder, language decoder, vocabulary, and image paths.", AppRuntimeState.Unavailable);
+
+        string decoderPath = Path.GetFullPath(decoderValue);
+        string vocabularyPath = Path.GetFullPath(vocabularyValue);
+        string imagePath = Path.GetFullPath(imageValue);
+        string? missingPath = new[] { decoderPath, vocabularyPath, imagePath }.FirstOrDefault(path => !File.Exists(path));
+        if (missingPath != null)
+            return Error(request, "DSAPP-WORKER-MULTIMODAL-FILE-NOT-FOUND", "A required BLIP bundle or input image file does not exist.", AppRuntimeState.Unavailable, missingPath);
+
+        GenerativeVisionLanguageProfile profile = GenerativeVisionLanguageProfiles.CreateBlipCaptionBase();
+        var tokenizer = new BlipBertTokenizer(vocabularyPath, profile.Tokenizer);
+        BackendId backend = OnnxRuntimeBackendProvider.BackendId;
+        var bundle = new GenerativeVisionLanguageArtifactBundle(profile, new[]
+        {
+            new GenerativeVisionLanguageArtifactBinding(GenerativeVisionLanguageArtifactRole.VisionEncoder, profile.CreateArtifact(GenerativeVisionLanguageArtifactRole.VisionEncoder, visionEncoderPath, backend)),
+            new GenerativeVisionLanguageArtifactBinding(GenerativeVisionLanguageArtifactRole.LanguageDecoder, profile.CreateArtifact(GenerativeVisionLanguageArtifactRole.LanguageDecoder, decoderPath, backend))
+        });
+
+        Stopwatch preprocess = Stopwatch.StartNew();
+        using PreparedVisualInput input = new OpenCvGenerativeVisionLanguageInputFactory().CreateFromFile(imagePath, profile, cancellationToken);
+        preprocess.Stop();
+        reportProgress?.Invoke(0.55);
+
+        using var registry = new BackendRegistry();
+        registry.UseOnnxRuntime();
+        using var session = new GenerativeVisionLanguageSession(registry, bundle, new BackendRequest(BackendCapabilities.TensorInference, backend, "cpu"));
+        GenerativeVisionLanguageImageState imageState = await session.SetImageAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
+        reportProgress?.Invoke(0.72);
+
+        int emitted = 0;
+        Action<GenerationChunk>? stream = GetBool(request.Payload, "stream", true) && reportText != null
+            ? chunk =>
+            {
+                if (!string.IsNullOrEmpty(chunk.Text)) reportText(chunk.Text);
+                emitted++;
+                reportProgress?.Invoke(Math.Min(0.96, 0.72 + emitted * 0.006));
+            }
+            : null;
+        GenerativeVisionLanguageResult result = await session.GenerateAsync(GenerativeVisionLanguageRequest.Caption(), tokenizer, stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        reportProgress?.Invoke(0.98);
+
+        string output = JsonSerializer.Serialize(new
+        {
+            schema = "deploysharp.visual-language.v1",
+            task = "image-captioning",
+            text = result.Generation.Text,
+            finishReason = result.Generation.FinishReason.ToString(),
+            promptTokens = result.Generation.Usage.PromptTokens,
+            generatedTokens = result.Generation.Usage.GeneratedTokens,
+            profileId = profile.ProfileId,
+            imageIdentity = imageState.Identity.Identity,
+            sourceImageSha256 = imageState.Identity.SourceImageSha256,
+            encoderStateSha256 = imageState.ValueSha256,
+            encoderShape = imageState.Shape,
+            generationIdentity = result.Identity.Identity
+        }, JsonOptions);
+        var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["output"] = output,
+            ["backendId"] = backend.Value,
+            ["device"] = "cpu",
+            ["execution"] = "worker",
+            ["preprocessMs"] = preprocess.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["inferenceMs"] = (imageState.EncoderTime + result.Timing.DecoderTotal).TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["postprocessMs"] = (result.Timing.PromptTokenize + result.Timing.FinalDecode).TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
+        };
+        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "BLIP image caption completed with ONNX Runtime CPU in the Worker.", payload);
     }
 
     public static async Task<WorkerResponse> BenchmarkAsync(WorkerRequest request, Action<double>? reportProgress, CancellationToken cancellationToken)
@@ -105,7 +195,15 @@ internal static class WorkerInferenceAdapter
         if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "Native tensor benchmark requires named tensor inputs.", AppRuntimeState.Unsupported);
 
         IBackendProvider provider;
-        if (Contains(backend, "opencv"))
+        if (Contains(backend, "onnxruntime"))
+        {
+            if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "ONNX Runtime benchmark requires ONNX.", AppRuntimeState.Unsupported, format);
+            string device = Value(request.Payload, "device") ?? "cpu";
+            if (!string.Equals(device, "cpu", StringComparison.OrdinalIgnoreCase) && !string.Equals(device, "auto", StringComparison.OrdinalIgnoreCase))
+                return Error(request, "DSAPP-WORKER-ORT-DEVICE-UNAVAILABLE", "This Worker packages the ONNX Runtime CPU provider; CUDA is not implicitly downgraded to CPU.", AppRuntimeState.Unavailable, device);
+            provider = new OnnxRuntimeBackendProvider(ParseOnnxRuntimeOptions(request.Payload));
+        }
+        else if (Contains(backend, "opencv"))
         {
             if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "OpenCV DNN benchmark requires ONNX.", AppRuntimeState.Unsupported, format);
             string[] outputNames = (Value(request.Payload, "outputTensorNames") ?? string.Empty).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(value => value.Trim()).Where(value => value.Length > 0).ToArray();
@@ -223,41 +321,93 @@ internal static class WorkerInferenceAdapter
         return lower == upper ? values[lower] : values[lower] + ((values[upper] - values[lower]) * (position - lower));
     }
 
-    private static async Task<WorkerResponse> RunLlamaAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
+    private static async Task<WorkerResponse> RunLlamaAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, Action<string>? reportText, CancellationToken cancellationToken)
     {
         string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
         if (!string.Equals(format, "gguf", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "LLamaSharp Worker requires a modelFormat of gguf.", AppRuntimeState.Unsupported, format);
         var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/llamasharp"), "gguf", modelPath, Value(request.Payload, "modelSha256"), LlamaSharpBackendProvider.BackendId);
-        var generationOptions = new GenerationOptions(
-            GetInt(request.Payload, "maxTokens", 256),
-            GetFloat(request.Payload, "temperature", 0.8f),
-            GetFloat(request.Payload, "topP", 0.95f),
-            GetInt(request.Payload, "topK", 40),
-            GetNullableInt(request.Payload, "seed"),
-            GetStops(request.Payload),
-            TimeSpan.FromMilliseconds(GetDouble(request.Payload, "timeoutMs", 120000)));
         string prompt = Value(request.Payload, "prompt") ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(prompt)) return Error(request, "DSAPP-WORKER-PROMPT-REQUIRED", "LLamaSharp text generation requires a prompt.", AppRuntimeState.Unsupported);
+        if (string.IsNullOrWhiteSpace(prompt)) return Error(request, "DSAPP-WORKER-PROMPT-REQUIRED", "LLamaSharp generation and embedding require non-empty text.", AppRuntimeState.Unsupported);
         string device = Value(request.Payload, "device") ?? "cpu";
         if (!string.Equals(device, "cpu", StringComparison.OrdinalIgnoreCase) && !string.Equals(device, "auto", StringComparison.OrdinalIgnoreCase))
             return Error(request, "DSAPP-WORKER-LLAMA-DEVICE-UNAVAILABLE", "This Worker packages the LLamaSharp CPU provider; GPU device requests are unavailable until a matching provider is installed.", AppRuntimeState.Unavailable, device);
 
         using var registry = new LanguageModelRegistry();
         registry.UseLlamaSharp(ParseLlamaOptions(request.Payload));
-        using ILanguageModelSession session = registry.CreateSession(artifact, new LanguageModelRequest(LanguageModelCapabilities.TextGeneration, LlamaSharpBackendProvider.BackendId, device));
-        reportProgress?.Invoke(0.65);
-        GenerationResult result = await session.GenerateAsync(new TextGenerationRequest(prompt, generationOptions), cancellationToken).ConfigureAwait(false);
+        bool embedding = string.Equals(Value(request.Payload, "operation"), AppOperationKind.Embedding.ToString(), StringComparison.OrdinalIgnoreCase);
+        LanguageModelCapabilities capabilities = embedding ? LanguageModelCapabilities.Embeddings : LanguageModelCapabilities.TextGeneration;
+        using ILanguageModelSession session = registry.CreateSession(artifact, new LanguageModelRequest(capabilities, LlamaSharpBackendProvider.BackendId, device));
+        reportProgress?.Invoke(0.6);
+        if (embedding)
+        {
+            bool normalize = GetBool(request.Payload, "normalize", true);
+            EmbeddingResult embeddingResult = await session.EmbedAsync(new TextEmbeddingRequest(prompt, normalize, TimeSpan.FromMilliseconds(GetDouble(request.Payload, "timeoutMs", 120000))), cancellationToken).ConfigureAwait(false);
+            reportProgress?.Invoke(0.95);
+            var embeddingPayload = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["output"] = JsonSerializer.Serialize(new { dimensions = embeddingResult.Dimensions, normalized = embeddingResult.IsNormalized, values = embeddingResult.ToArray() }, JsonOptions),
+                ["dimensions"] = embeddingResult.Dimensions.ToString(CultureInfo.InvariantCulture),
+                ["normalized"] = embeddingResult.IsNormalized.ToString(CultureInfo.InvariantCulture),
+                ["backendId"] = "llamasharp",
+                ["execution"] = "worker"
+            };
+            return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "LLamaSharp GGUF embedding completed in the Worker.", embeddingPayload);
+        }
+
+        int maximumTokens = GetInt(request.Payload, "maxTokens", 256);
+        var generationOptions = new GenerationOptions(
+            maximumTokens,
+            GetFloat(request.Payload, "temperature", 0.8f),
+            GetFloat(request.Payload, "topP", 0.95f),
+            GetInt(request.Payload, "topK", 40),
+            GetNullableInt(request.Payload, "seed"),
+            GetStops(request.Payload),
+            TimeSpan.FromMilliseconds(GetDouble(request.Payload, "timeoutMs", 120000)));
+        bool stream = GetBool(request.Payload, "stream", false) && reportText != null;
+        string output;
+        string finishReason;
+        int generatedTokens;
+        int promptTokens;
+        if (stream)
+        {
+            var builder = new StringBuilder();
+            GenerationFinishReason finish = GenerationFinishReason.None;
+            generatedTokens = 0;
+            await foreach (GenerationChunk chunk in session.StreamAsync(new TextGenerationRequest(prompt, generationOptions), cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                if (!string.IsNullOrEmpty(chunk.Text))
+                {
+                    builder.Append(chunk.Text);
+                    reportText!(chunk.Text);
+                }
+                if (chunk.TokenId.HasValue) generatedTokens++;
+                if (chunk.IsTerminal) finish = chunk.FinishReason;
+                reportProgress?.Invoke(0.6 + Math.Min(0.35, generatedTokens / (double)Math.Max(1, maximumTokens) * 0.35));
+            }
+            output = builder.ToString();
+            finishReason = finish.ToString();
+            promptTokens = 0;
+        }
+        else
+        {
+            GenerationResult result = await session.GenerateAsync(new TextGenerationRequest(prompt, generationOptions), cancellationToken).ConfigureAwait(false);
+            output = result.Text;
+            finishReason = result.FinishReason.ToString();
+            promptTokens = result.Usage.PromptTokens;
+            generatedTokens = result.Usage.GeneratedTokens;
+        }
         reportProgress?.Invoke(0.95);
         var payload = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["output"] = result.Text,
-            ["finishReason"] = result.FinishReason.ToString(),
-            ["promptTokens"] = result.Usage.PromptTokens.ToString(CultureInfo.InvariantCulture),
-            ["generatedTokens"] = result.Usage.GeneratedTokens.ToString(CultureInfo.InvariantCulture),
+            ["output"] = output,
+            ["finishReason"] = finishReason,
+            ["promptTokens"] = promptTokens.ToString(CultureInfo.InvariantCulture),
+            ["generatedTokens"] = generatedTokens.ToString(CultureInfo.InvariantCulture),
             ["backendId"] = "llamasharp",
-            ["execution"] = "worker"
+            ["execution"] = "worker",
+            ["streamed"] = stream.ToString(CultureInfo.InvariantCulture)
         };
-        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "LLamaSharp GGUF generation completed in the Worker.", payload);
+        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, stream ? "LLamaSharp GGUF streaming generation completed in the Worker." : "LLamaSharp GGUF generation completed in the Worker.", payload);
     }
 
     private static async Task<WorkerResponse> RunOpenCvAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
@@ -428,6 +578,18 @@ internal static class WorkerInferenceAdapter
     }
 
     private static LlamaSharpOptions ParseLlamaOptions(IReadOnlyDictionary<string, string> payload) => new LlamaSharpOptions(GetNullableUInt(payload, "contextSize"), GetInt(payload, "gpuLayerCount", 0), GetInt(payload, "mainGpu", 0), GetNullableInt(payload, "threads"), GetNullableInt(payload, "batchThreads"), (uint)GetInt(payload, "batchSize", 512), (uint)GetInt(payload, "sequenceCount", 1), GetBool(payload, "useMemoryMap", true), GetBool(payload, "useMemoryLock", false), LlamaEmbeddingPooling.Mean, Value(payload, "device") ?? "cpu");
+
+    private static OnnxRuntimeOptions ParseOnnxRuntimeOptions(IReadOnlyDictionary<string, string> payload) => new OnnxRuntimeOptions(
+        GetInt(payload, "intraOpThreads", 0),
+        GetInt(payload, "interOpThreads", 0),
+        ParseEnum(Value(payload, "graphOptimization"), OnnxRuntimeGraphOptimization.All),
+        ParseEnum(Value(payload, "onnxExecutionMode"), OnnxRuntimeExecutionMode.Sequential),
+        GetBool(payload, "enableMemoryPattern", true),
+        GetBool(payload, "enableCpuMemoryArena", true),
+        ParseEnum(Value(payload, "logSeverity"), OnnxRuntimeLogSeverity.Warning),
+        Value(payload, "logId"),
+        Value(payload, "profilingOutputPathPrefix"),
+        OnnxRuntimeExecutionProvider.Cpu);
 
     private static OpenVinoOptions ParseOpenVinoOptions(IReadOnlyDictionary<string, string> payload) => new OpenVinoOptions(Value(payload, "device") ?? "CPU", ParseEnum(Value(payload, "performanceHint"), OpenVinoPerformanceHint.Default), GetNullableInt(payload, "streams"), GetNullableInt(payload, "inferenceThreads"), Value(payload, "cacheDirectory"), GetBool(payload, "enableProfiling", false), GetNullableInt(payload, "requestCount"), null, GetBool(payload, "allowDynamicShapes", true));
 

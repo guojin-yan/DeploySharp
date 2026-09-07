@@ -40,7 +40,7 @@ while (true)
             response = new WorkerResponse(WorkerResponseKind.Handshake, request.RequestId, protocolCompatible, protocolCompatible ? "DeploySharpApp BackendHost ready" : "Worker protocol version mismatch.", new Dictionary<string, string> { ["protocolVersion"] = WorkerProtocol.ProtocolVersion.ToString(CultureInfo.InvariantCulture), ["execution"] = "worker", ["host"] = "DeploySharpApp.BackendHost" });
             break;
         case WorkerMessageKind.Capability:
-            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "native-adapter", ["cancel"] = "active-operation", ["probe"] = "filesystem-preflight" });
+            response = new WorkerResponse(WorkerResponseKind.Capability, request.RequestId, true, "Capabilities are manifest-driven; native adapters and probes are isolated in this Worker.", new Dictionary<string, string> { ["execution"] = "worker", ["backends"] = "deploysharp.backend.onnxruntime,deploysharp.backend.llamasharp,deploysharp.backend.tensorrt,deploysharp.backend.opencv,deploysharp.backend.openvino", ["inference"] = "native-adapter", ["multimodal"] = "blip-caption", ["cancel"] = "active-operation", ["probe"] = "filesystem-preflight" });
             break;
         case WorkerMessageKind.Probe:
             WorkerProbeResult probe = BackendRuntimeProbeCatalog.Probe(request.BackendId, request.Payload);
@@ -106,7 +106,11 @@ async Task ExecuteInferenceAsync(WorkerRequest request, CancellationTokenSource 
         await WriteResponseAsync(Progress(request.RequestId, 0.35, "dispatch", "Worker request accepted."));
         if (inferenceProbe.Payload.TryGetValue("preflightState", out string? preflightState) && string.Equals(preflightState, AppRuntimeState.Available.ToString(), StringComparison.OrdinalIgnoreCase))
         {
-            Task<WorkerResponse> inferenceTask = Task.Run(() => WorkerInferenceAdapter.RunAsync(request, value => WriteResponseAsync(Progress(request.RequestId, value, "inference", "Native Worker inference progress.")).GetAwaiter().GetResult(), operationCancellation.Token));
+            Task<WorkerResponse> inferenceTask = Task.Run(() => WorkerInferenceAdapter.RunAsync(
+                request,
+                value => WriteResponseAsync(Progress(request.RequestId, value, "inference", "Native Worker inference progress.")).GetAwaiter().GetResult(),
+                delta => WriteResponseAsync(TextDelta(request.RequestId, delta)).GetAwaiter().GetResult(),
+                operationCancellation.Token));
             Task timeoutTask = CreateTimeoutTask(request.Payload, timeoutCancellation.Token);
             if (timeoutTask != Task.CompletedTask)
             {
@@ -187,6 +191,9 @@ async Task WriteResponseAsync(WorkerResponse response)
 
 static WorkerResponse Progress(string requestId, double value, string stage, string message)
     => new(WorkerResponseKind.Progress, requestId, true, message, new Dictionary<string, string> { ["value"] = value.ToString(CultureInfo.InvariantCulture), ["stage"] = stage });
+
+static WorkerResponse TextDelta(string requestId, string delta)
+    => new(WorkerResponseKind.Progress, requestId, true, "Streaming text delta.", new Dictionary<string, string> { ["stage"] = "generation", ["textDelta"] = delta });
 
 static Task CreateTimeoutTask(IReadOnlyDictionary<string, string> payload, CancellationToken cancellationToken)
 {

@@ -40,6 +40,13 @@ public sealed class VisualReleaseCatalogService
         return Path.Combine(_cacheRoot, CacheKey(model), SafeFileName(model.PrimaryFile.AssetName));
     }
 
+    public string GetCachedFilePath(VisualReleaseModel model, VisualReleaseFile file)
+    {
+        if (model == null) throw new ArgumentNullException(nameof(model));
+        if (file == null) throw new ArgumentNullException(nameof(file));
+        return Path.Combine(_cacheRoot, CacheKey(model), SafeFileName(file.AssetName));
+    }
+
     public async Task<VisualModelDownloadResult> DownloadAsync(VisualReleaseModel model, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         if (model == null) throw new ArgumentNullException(nameof(model));
@@ -62,12 +69,26 @@ public sealed class VisualReleaseCatalogService
             }
 
             string temporaryPath = targetPath + ".partial";
-            try
+            long partialBytes = File.Exists(temporaryPath) ? new FileInfo(temporaryPath).Length : 0;
+            if (partialBytes < 0 || file.Size > 0 && partialBytes > file.Size)
             {
-                using HttpResponseMessage response = await _http.GetAsync(file.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                File.Delete(temporaryPath);
+                partialBytes = 0;
+            }
+            completed += partialBytes;
+            using (var request = new HttpRequestMessage(HttpMethod.Get, file.DownloadUrl))
+            {
+                if (partialBytes > 0) request.Headers.Range = new RangeHeaderValue(partialBytes, null);
+                using HttpResponseMessage response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
+                bool resumed = partialBytes > 0 && response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+                if (!resumed && partialBytes > 0)
+                {
+                    completed -= partialBytes;
+                    partialBytes = 0;
+                }
                 await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                await using (var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
+                await using (var destination = new FileStream(temporaryPath, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
                 {
                     byte[] buffer = new byte[128 * 1024];
                     int read;
@@ -80,13 +101,12 @@ public sealed class VisualReleaseCatalogService
                     await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
                 }
                 if (!await VerifySha256Async(temporaryPath, file.Sha256, cancellationToken).ConfigureAwait(false))
+                {
+                    File.Delete(temporaryPath);
                     throw new InvalidDataException("SHA256 mismatch for release asset " + file.AssetName + ".");
+                }
                 File.Move(temporaryPath, targetPath, overwrite: true);
                 if (file.IsPrimaryModel) primaryPath = targetPath;
-            }
-            finally
-            {
-                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
             }
         }
         progress?.Report(1);
@@ -147,13 +167,15 @@ public sealed class VisualReleaseCatalogService
         var modelFiles = new List<VisualReleaseFile>();
         foreach (JsonElement file in files.EnumerateArray())
         {
-            if (!string.Equals(String(file, "role"), "model", StringComparison.OrdinalIgnoreCase)) continue;
+            string role = String(file, "role") ?? "other";
             string? sha = String(file, "sha256");
             if (sha == null || !TryFindAsset(sha, assets, hashes, out ReleaseAsset? asset)) continue;
             string relativePath = String(file, "relativePath") ?? asset!.Name;
-            modelFiles.Add(new VisualReleaseFile(asset!.Name, asset.DownloadUrl, asset.Size, sha, relativePath, modelFiles.Count == 0));
+            modelFiles.Add(new VisualReleaseFile(asset!.Name, asset.DownloadUrl, asset.Size, sha, relativePath, string.Equals(role, "model", StringComparison.OrdinalIgnoreCase), role));
         }
-        if (modelFiles.Count == 0) return null;
+        int primaryIndex = modelFiles.FindIndex(file => file.IsPrimaryModel);
+        if (primaryIndex < 0) return null;
+        modelFiles = modelFiles.Select((file, index) => file with { IsPrimaryModel = index == primaryIndex }).ToList();
         IReadOnlyList<VisualModelInput> inputs = ParseTensorContract(root, "inputs");
         IReadOnlyList<VisualModelInput> outputs = ParseTensorContract(root, "outputs");
         string format = String(artifact, "format") ?? "onnx";
@@ -277,5 +299,5 @@ public sealed record VisualReleaseModel(
 }
 
 public sealed record VisualModelInput(string Name, string ElementType, IReadOnlyList<long> Shape);
-public sealed record VisualReleaseFile(string AssetName, string DownloadUrl, long Size, string Sha256, string RelativePath, bool IsPrimaryModel);
+public sealed record VisualReleaseFile(string AssetName, string DownloadUrl, long Size, string Sha256, string RelativePath, bool IsPrimaryModel, string Role);
 public sealed record VisualModelDownloadResult(VisualReleaseModel Model, string PrimaryModelPath);

@@ -88,13 +88,13 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
-        public async Task WorkerCapabilityAndNativeProbesCoverFourBackends()
+        public async Task WorkerCapabilityAndNativeProbesCoverFiveBackends()
         {
             var client = new BackendHostWorkerClient(LocateBackendHost());
             WorkerResponse capability = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Capability, "capability-test"), TimeSpan.FromSeconds(10), CancellationToken.None);
             Assert.IsTrue(capability.Succeeded);
             string backendList = capability.Payload["backends"];
-            foreach (string backendId in new[] { "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
+            foreach (string backendId in new[] { "deploysharp.backend.onnxruntime", "deploysharp.backend.llamasharp", "deploysharp.backend.tensorrt", "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
             {
                 StringAssert.Contains(backendList, backendId);
                 WorkerResponse probe = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Probe, "probe-" + backendId.Replace('.', '-'), backendId), TimeSpan.FromSeconds(10), CancellationToken.None);
@@ -104,6 +104,56 @@ namespace DeploySharpApp.Application.Tests
                 Assert.IsTrue(probe.Payload.ContainsKey("probedPaths"));
                 Assert.IsTrue(probe.Payload.ContainsKey("diagnosticCode"));
             }
+        }
+
+        [TestMethod]
+        public async Task OnnxRuntimeBenchmarkWithModelRoutesToWorker()
+        {
+            var worker = new StubWorkerClient();
+            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+            BenchmarkReport report = await runner.BenchmarkAsync(new BenchmarkRequest("tests/onnx-benchmark", "deploysharp.backend.onnxruntime", modelPath: "model.onnx", modelFormat: "onnx"), null, CancellationToken.None);
+            Assert.IsTrue(worker.BenchmarkCalled);
+            Assert.IsFalse(report.Available);
+        }
+
+        [TestMethod]
+        public async Task StreamingMultimodalRequestRoutesToWorkerAndForwardsDelta()
+        {
+            var worker = new StubWorkerClient();
+            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+            var deltas = new List<string>();
+            ModelRunResult result = await runner.RunStreamingAsync(
+                new ModelRunRequest(AppOperationKind.Multimodal, "tests/blip", "deploysharp.backend.onnxruntime", modelPath: "vision.onnx", modelFormat: "onnx", options: new Dictionary<string, string> { ["executionMode"] = "worker" }),
+                null,
+                new Progress<string>(value => deltas.Add(value)),
+                CancellationToken.None);
+            Assert.IsTrue(worker.StreamingCalled);
+            Assert.IsTrue(result.Succeeded);
+            CollectionAssert.Contains(deltas, "stub-delta");
+        }
+
+        [TestMethod]
+        public async Task MultimodalWorkerRejectsIncompleteBundleWithoutFakeResult()
+        {
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            var request = new ModelRunRequest(AppOperationKind.Multimodal, "tests/blip", "deploysharp.backend.onnxruntime", inputPath: "missing.png", modelPath: modelPath, modelFormat: "onnx", options: new Dictionary<string, string> { ["executionMode"] = "worker", ["multimodalProfile"] = "blip-caption-base" });
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(AppErrorCode.ModelUnavailable, result.ErrorCode);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            Assert.IsTrue(result.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-MULTIMODAL-BUNDLE-INCOMPLETE"));
+        }
+
+        [TestMethod]
+        public async Task MultimodalCudaRequestDoesNotFallBackToCpu()
+        {
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            var options = new Dictionary<string, string> { ["executionMode"] = "worker", ["multimodalProfile"] = "blip-caption-base", ["languageDecoderPath"] = modelPath, ["vocabularyPath"] = modelPath };
+            var request = new ModelRunRequest(AppOperationKind.Multimodal, "tests/blip", "deploysharp.backend.onnxruntime", device: "cuda", inputPath: modelPath, modelPath: modelPath, modelFormat: "onnx", options: options);
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+            Assert.IsTrue(result.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-BLIP-DEVICE-UNAVAILABLE"));
         }
 
         [TestMethod]
@@ -338,13 +388,26 @@ namespace DeploySharpApp.Application.Tests
         private sealed class StubWorkerClient : IBackendHostWorkerClient
         {
             public bool RunCalled { get; private set; }
+            public bool StreamingCalled { get; private set; }
+            public bool BenchmarkCalled { get; private set; }
             public Task<WorkerResponse> SendAsync(WorkerRequest request, TimeSpan timeout, CancellationToken cancellationToken) => Task.FromResult(new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "stub"));
             public Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
             {
                 RunCalled = true;
                 return Task.FromResult(new ModelRunResult(false, AppErrorCode.WorkerRequired, "stub worker", diagnostics: new[] { new RuntimeDiagnostic("DSAPP-TEST-WORKER", DiagnosticSeverity.Information, "stub") }, runMode: ModelRunMode.Worker));
             }
-            public Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken) => Task.FromResult(new BenchmarkReport(request, false, "stub worker"));
+            public Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken)
+            {
+                RunCalled = true;
+                StreamingCalled = true;
+                textProgress?.Report("stub-delta");
+                return Task.FromResult(new ModelRunResult(true, AppErrorCode.None, "stub worker", "stub-delta", runMode: ModelRunMode.Worker));
+            }
+            public Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
+            {
+                BenchmarkCalled = true;
+                return Task.FromResult(new BenchmarkReport(request, false, "stub worker"));
+            }
         }
 
         private static string LocateBackendHost()

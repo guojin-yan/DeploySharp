@@ -20,8 +20,9 @@
         <span class="eyebrow">NATIVE BENCHMARK</span><h3>真实适配器基准</h3>
         <p>Worker 仅初始化一次 provider/session；warmup 不入样本，P50/P95 只覆盖真实执行。缺模型、输入或 native runtime 时不生成数字。</p>
         <div class="bench-config">
-            <label>后端<select @bind="selectedBackend"><option value="deploysharp.backend.onnxruntime">ONNX Runtime · 明确 Demo</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · Worker</option> }</select></label>
+            <label>后端<select @bind="selectedBackend"><option value="deploysharp.backend.onnxruntime">ONNX Runtime · Worker</option>@foreach (var backend in Service.Backends.Where(item => !item.Id.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase))) { <option value="@backend.Id">@backend.DisplayName · Worker</option> }</select></label>
             <label>设备<select @bind="device"><option value="cpu">CPU</option><option value="auto">Auto</option><option value="cuda">CUDA</option></select></label>
+            @if (IsOnnx) { <label class="bench-wide"><input type="checkbox" @bind="useDemoBenchmark" /> 使用明确标记的 Demo 基准（不加载模型）</label> }
             <label>Warmup<input type="number" min="0" max="1000" @bind="warmup" /></label>
             <label>Iterations<input type="number" min="1" max="10000" @bind="iterations" /></label>
             @if (!IsDemoBackend)
@@ -62,7 +63,7 @@
     private double progress;
     private string reportState = "等待运行";
     private string lastRun = "尚未执行";
-    private string message = "ONNX Runtime 项仅提供明确 Demo；其余后端通过 Worker 运行真实模型。";
+    private string message = "所有后端默认通过 Worker 复用一次真实 provider/session；只有显式勾选时才运行 Demo。";
     private string selectedBackend = "deploysharp.backend.onnxruntime";
     private string device = "cpu";
     private string modelPath = string.Empty;
@@ -77,9 +78,11 @@
     private string outputTensorNames = string.Empty;
     private string outputTensorShapesJson = string.Empty;
     private string outputTensorElementTypesJson = string.Empty;
+    private bool useDemoBenchmark;
     private IReadOnlyList<RuntimeDiagnostic> lastDiagnostics = Array.Empty<RuntimeDiagnostic>();
     private CancellationTokenSource? cancellation;
-    private bool IsDemoBackend => selectedBackend.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase);
+    private bool IsOnnx => selectedBackend.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase);
+    private bool IsDemoBackend => IsOnnx && useDemoBenchmark;
     private bool IsLlama => selectedBackend.Contains("llamasharp", StringComparison.OrdinalIgnoreCase);
     private bool IsOpenCv => selectedBackend.Contains("opencv", StringComparison.OrdinalIgnoreCase);
 

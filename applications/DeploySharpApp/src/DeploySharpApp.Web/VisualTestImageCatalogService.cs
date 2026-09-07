@@ -58,15 +58,24 @@ public sealed class VisualTestImageCatalogService
         }
 
         string temporaryPath = targetPath + ".partial";
-        try
+        long partialBytes = File.Exists(temporaryPath) ? new FileInfo(temporaryPath).Length : 0;
+        if (partialBytes < 0 || image.SizeBytes > 0 && partialBytes > image.SizeBytes)
         {
-            using HttpResponseMessage response = await _http.GetAsync(image.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            File.Delete(temporaryPath);
+            partialBytes = 0;
+        }
+        using (var request = new HttpRequestMessage(HttpMethod.Get, image.DownloadUrl))
+        {
+            if (partialBytes > 0) request.Headers.Range = new RangeHeaderValue(partialBytes, null);
+            using HttpResponseMessage response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
+            bool resumed = partialBytes > 0 && response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+            if (!resumed) partialBytes = 0;
             await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            await using (var destination = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
+            await using (var destination = new FileStream(temporaryPath, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, useAsync: true))
             {
                 byte[] buffer = new byte[128 * 1024];
-                long completed = 0;
+                long completed = partialBytes;
                 int read;
                 while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0)
                 {
@@ -77,14 +86,13 @@ public sealed class VisualTestImageCatalogService
                 await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
             if (!await VerifySha256Async(temporaryPath, image.Sha256, cancellationToken).ConfigureAwait(false))
+            {
+                File.Delete(temporaryPath);
                 throw new InvalidDataException("SHA256 mismatch for test image " + image.FileName + ".");
+            }
             File.Move(temporaryPath, targetPath, overwrite: true);
             progress?.Report(1);
             return new VisualTestImageDownloadResult(image with { Cached = true }, targetPath);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
         }
     }
 

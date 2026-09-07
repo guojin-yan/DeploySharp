@@ -5,8 +5,9 @@ using DeploySharpApp.Web;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("DEPLOYSHARPAPP_URL") ?? "http://127.0.0.1:5180");
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddHttpClient<VisualReleaseCatalogService>(client => client.Timeout = TimeSpan.FromSeconds(30));
-builder.Services.AddHttpClient<VisualTestImageCatalogService>(client => client.Timeout = TimeSpan.FromSeconds(30));
+// Release assets include multi-gigabyte model bundles. Each operation supplies its own cancellation token.
+builder.Services.AddHttpClient<VisualReleaseCatalogService>(client => client.Timeout = Timeout.InfiniteTimeSpan);
+builder.Services.AddHttpClient<VisualTestImageCatalogService>(client => client.Timeout = TimeSpan.FromMinutes(10));
 builder.Services.AddSingleton<ModelFactoryCatalogService>();
 builder.Services.AddSingleton<ModelFactoryRuntimeService>();
 builder.Services.AddSingleton<ModelPackRuntimeService>();

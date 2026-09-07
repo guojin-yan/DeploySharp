@@ -6,6 +6,7 @@ using System.Text.Json;
 using JYPPX.DeploySharp.Diagnostics;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.LlamaSharp;
+using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Backends.TensorRT;
@@ -29,6 +30,8 @@ internal static class BackendRuntimeProbeCatalog
         string backendId = requestedBackendId ?? string.Empty;
         try
         {
+            if (Contains(backendId, "onnxruntime"))
+                return Run(backendId, new OnnxRuntimePluginFactory().Descriptor, new OnnxRuntimeRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), Array.Empty<string>());
             if (Contains(backendId, "llamasharp"))
                 return Run(backendId, new LlamaSharpPluginFactory().Descriptor, new LlamaSharpRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), LlamaEnvironmentVariables);
             if (Contains(backendId, "opencv"))
@@ -268,6 +271,7 @@ internal static class BackendRuntimeProbeCatalog
         string[] names = kind switch
         {
             NativeRuntimeKind.LlamaSharpNative => new[] { "llama.dll", "ggml.dll" },
+            NativeRuntimeKind.OnnxRuntimeNative => new[] { "onnxruntime.dll", "libonnxruntime.so" },
             NativeRuntimeKind.OpenCV => new[] { "JYPPX.OpenCV.Native.dll", "opencv_core500.dll", "opencv_dnn500.dll" },
             NativeRuntimeKind.OpenVINO => new[] { "openvino_c.dll", "openvino.dll" },
             _ => Array.Empty<string>()

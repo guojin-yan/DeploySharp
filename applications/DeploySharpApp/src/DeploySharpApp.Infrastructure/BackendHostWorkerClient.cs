@@ -16,6 +16,7 @@ namespace DeploySharpApp.Infrastructure
     {
         Task<WorkerResponse> SendAsync(WorkerRequest request, TimeSpan timeout, CancellationToken cancellationToken);
         Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
+        Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken);
         Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
     }
 
@@ -43,7 +44,7 @@ namespace DeploySharpApp.Infrastructure
             try
             {
                 await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, request, cancellationToken).ConfigureAwait(false);
-                WorkerResponse? response = await ReadTerminalResponseAsync(process, request.RequestId, timeout, progress: null, diagnostics: null, cancellationToken).ConfigureAwait(false);
+                WorkerResponse? response = await ReadTerminalResponseAsync(process, request.RequestId, timeout, progress: null, textProgress: null, diagnostics: null, cancellationToken).ConfigureAwait(false);
                 if (response == null) throw new EndOfStreamException("BackendHost closed stdout before returning a response.");
 
                 await SendShutdownAsync(process, request.RequestId).ConfigureAwait(false);
@@ -56,6 +57,9 @@ namespace DeploySharpApp.Infrastructure
         }
 
         public async Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
+            => await RunStreamingAsync(request, progress, textProgress: null, cancellationToken).ConfigureAwait(false);
+
+        public async Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             string requestId = "run-" + Guid.NewGuid().ToString("N");
@@ -66,12 +70,12 @@ namespace DeploySharpApp.Infrastructure
             {
                 process = StartProcess();
                 progress?.Report(0.05);
-                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 if (!IsSuccessfulHandshake(handshake))
                     return Failure(request, AppErrorCode.WorkerRequired, "BackendHost Worker 未通过握手，未执行 native 推理。", "DSAPP-WORKER-HANDSHAKE-FAILED", handshake.Message, hostUnavailable: false);
 
                 progress?.Report(0.2);
-                WorkerResponse response = await ReadRequestResponseAsync(process, CreateInference(request, requestId), requestId, Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                WorkerResponse response = await ReadRequestResponseAsync(process, CreateInference(request, requestId), requestId, Remaining(deadline), progress, textProgress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
                 return MapRunResponse(request, response, streamDiagnostics);
             }
@@ -115,7 +119,7 @@ namespace DeploySharpApp.Infrastructure
             {
                 process = StartProcess();
                 progress?.Report(0.05);
-                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 if (!IsSuccessfulHandshake(handshake)) return BenchmarkFailure(request, "BackendHost Worker 未通过握手。", "DSAPP-WORKER-HANDSHAKE-FAILED", handshake.Message);
                 progress?.Report(0.2);
                 var payload = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -132,7 +136,7 @@ namespace DeploySharpApp.Infrastructure
                 payload["optionsJson"] = JsonSerializer.Serialize(request.Options);
                 foreach (KeyValuePair<string, string> option in request.Options)
                     if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
-                WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
                 if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
                     return new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString(), streamDiagnostics);
@@ -167,15 +171,15 @@ namespace DeploySharpApp.Infrastructure
             return process;
         }
 
-        private static async Task<WorkerResponse> ReadRequestResponseAsync(Process process, WorkerRequest request, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, List<RuntimeDiagnostic> diagnostics, CancellationToken cancellationToken)
+        private static async Task<WorkerResponse> ReadRequestResponseAsync(Process process, WorkerRequest request, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, IProgress<string>? textProgress, List<RuntimeDiagnostic> diagnostics, CancellationToken cancellationToken)
         {
             await WorkerProtocol.WriteRequestAsync(process.StandardInput.BaseStream, request, cancellationToken).ConfigureAwait(false);
-            WorkerResponse? response = await ReadTerminalResponseAsync(process, expectedRequestId, timeout, progress, diagnostics, cancellationToken).ConfigureAwait(false);
+            WorkerResponse? response = await ReadTerminalResponseAsync(process, expectedRequestId, timeout, progress, textProgress, diagnostics, cancellationToken).ConfigureAwait(false);
             if (response == null) throw new EndOfStreamException("BackendHost closed stdout before returning a response.");
             return response;
         }
 
-        private static async Task<WorkerResponse?> ReadTerminalResponseAsync(Process process, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, List<RuntimeDiagnostic>? diagnostics, CancellationToken cancellationToken)
+        private static async Task<WorkerResponse?> ReadTerminalResponseAsync(Process process, string expectedRequestId, TimeSpan timeout, IProgress<double>? progress, IProgress<string>? textProgress, List<RuntimeDiagnostic>? diagnostics, CancellationToken cancellationToken)
         {
             DateTime deadline = DateTime.UtcNow + timeout;
             while (true)
@@ -201,6 +205,7 @@ namespace DeploySharpApp.Infrastructure
                 if (response.Kind == WorkerResponseKind.Progress)
                 {
                     if (TryGetProgress(response, out double value)) progress?.Report(Math.Max(0, Math.Min(1, value)));
+                    if (response.Payload.TryGetValue("textDelta", out string? delta) && delta.Length > 0) textProgress?.Report(delta);
                     continue;
                 }
                 if (response.Kind == WorkerResponseKind.Log)
@@ -358,7 +363,9 @@ namespace DeploySharpApp.Infrastructure
 
         private static AppErrorCode MapWorkerErrorCode(string diagnosticCode, AppRuntimeState state)
         {
-            if (diagnosticCode.StartsWith("DSAPP-WORKER-MODEL", StringComparison.OrdinalIgnoreCase)) return AppErrorCode.ModelUnavailable;
+            if (diagnosticCode.StartsWith("DSAPP-WORKER-MODEL", StringComparison.OrdinalIgnoreCase)
+                || diagnosticCode.IndexOf("BUNDLE", StringComparison.OrdinalIgnoreCase) >= 0
+                || diagnosticCode.IndexOf("FILE-NOT-FOUND", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.ModelUnavailable;
             if (diagnosticCode.IndexOf("CANCEL", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.Cancelled;
             if (diagnosticCode.IndexOf("TIMED-OUT", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.TimedOut;
             if (diagnosticCode.StartsWith("DSAPP-WORKER-INPUT", StringComparison.OrdinalIgnoreCase)

@@ -1,7 +1,10 @@
 <Project>
   <PropertyGroup>
-    <UseDeploySharpProjectReferences>true</UseDeploySharpProjectReferences>
+    <UseDeploySharpProjectReferences>false</UseDeploySharpProjectReferences>
     <DeploySharpSourceRoot>$(MSBuildThisFileDirectory)..\..\src\</DeploySharpSourceRoot>
+    <!-- DeploySharp alpha package IDs were previously restored from a local feed with the same
+         version. Keep this application on an isolated cache so NuGet.org remains authoritative. -->
+    <RestorePackagesPath>$(LocalAppData)\DeploySharpApp\nuget-packages</RestorePackagesPath>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

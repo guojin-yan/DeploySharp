@@ -27,6 +27,11 @@ namespace DeploySharpApp.Application
         Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
     }
 
+    public interface IStreamingModelRunner
+    {
+        Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken);
+    }
+
     public sealed class DeploySharpAppService
     {
         private readonly IAppCatalog _catalog;
@@ -43,6 +48,10 @@ namespace DeploySharpApp.Application
         public IReadOnlyList<BackendRuntimeStatus> RuntimeStatuses => _catalog.GetRuntimeStatuses();
         public void RefreshCatalog() => _catalog.Refresh();
         public Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress = null, CancellationToken cancellationToken = default) => _runner.RunAsync(request, progress, cancellationToken);
+        public Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress = null, IProgress<string>? textProgress = null, CancellationToken cancellationToken = default)
+            => _runner is IStreamingModelRunner streaming
+                ? streaming.RunStreamingAsync(request, progress, textProgress, cancellationToken)
+                : _runner.RunAsync(request, progress, cancellationToken);
         public Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress = null, CancellationToken cancellationToken = default) => _runner.BenchmarkAsync(request, progress, cancellationToken);
     }
 
@@ -75,7 +84,7 @@ namespace DeploySharpApp.Application
         }
     }
 
-    public sealed class FakeModelRunner : IModelRunner
+    public sealed class FakeModelRunner : IModelRunner, IStreamingModelRunner
     {
         public async Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
         {
@@ -98,6 +107,13 @@ namespace DeploySharpApp.Application
             if (request == null) throw new ArgumentNullException(nameof(request));
             for (var index = 1; index <= request.Iterations; index++) { await Task.Delay(10, cancellationToken).ConfigureAwait(false); progress?.Report(index / (double)request.Iterations); }
             return new BenchmarkReport(request, true, "Demo benchmark completed; replace FakeModelRunner with the selected in-process or Worker adapter.", 4.8, 5.6, 207, AppExecutionMode.InProcess.ToString());
+        }
+
+        public async Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken)
+        {
+            ModelRunResult result = await RunAsync(request, progress, cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded && !string.IsNullOrEmpty(result.Output)) textProgress?.Report(result.Output!);
+            return result;
         }
     }
 }

@@ -20,12 +20,46 @@
     .upload-progress { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #778198; font-size: 10px; }
     .upload-progress progress { flex: 1; min-width: 0; }
     .model-hash { margin-top: 7px; color: #9aa4b6; font-size: 9px; overflow-wrap: anywhere; }
+    .mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 12px; padding: 4px; border: 1px solid var(--line); border-radius: 7px; background: #f3f5fa; }
+    .mode-tabs button { min-width: 0; padding: 7px 8px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
+    .mode-tabs button.active { background: white; color: var(--ink); box-shadow: 0 1px 3px rgb(25 35 55 / 10%); }
+    .embedding-output { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .embedding-output pre { max-height: 180px; margin: 7px 0 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: #4f596d; font-size: 9px; line-height: 1.55; }
+    .binary-setting { display: flex !important; align-items: center; gap: 7px; }
+    .binary-setting input { width: auto !important; margin: 0 !important; }
     @@media(max-width:430px) { .llm-settings { grid-template-columns: minmax(0, 1fr); } }
 </style>
 <div class="section-head"><div><span class="eyebrow">LANGUAGE LAB</span><h3>LLM / Embedding</h3></div><span class="status-tag purple-tag">LLamaSharp · Worker</span></div>
-<div class="llm-layout"><section class="panel chat-panel"><div class="chat-head"><div class="model-avatar">Q</div><div><strong>Qwen 2.5 0.5B Instruct</strong><small>GGUF · Worker required · native isolated</small></div><span class="online-dot"></span></div><div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div><div class="composer"><textarea @bind="prompt" placeholder="输入问题" disabled="@busy"></textarea><div class="composer-actions"><button class="primary" @onclick="SendAsync" disabled="@(busy || !CanSend)">@(busy ? "发送中…" : "发送 ↑")</button>@if (busy) { <button class="ghost small" @onclick="Cancel">取消</button> }</div></div>@if (busy || progress > 0) { <div class="worker-progress"><progress value="@progress" max="1"></progress><span>Worker @progress.ToString("P0")</span></div> }</section><section class="panel side-info"><span class="eyebrow">MODEL INFO</span><h3>运行参数</h3><label>本地 GGUF 模型<InputFile OnChange="HandleModelSelected" accept=".gguf" disabled="@modelUploading" /><span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "首次使用请上传 .gguf 模型" : modelFileName)</span></label>@if (modelUploading) { <div class="upload-progress"><span>上传并校验</span><progress value="@modelUploadProgress" max="1"></progress></div> }@if (!string.IsNullOrWhiteSpace(modelSha256)) { <div class="model-hash">SHA256：@modelSha256</div> }<label>模型路径<input @bind="modelPath" placeholder="Web 服务可访问的 GGUF 路径" /></label><div class="llm-settings"><label>上下文长度<input type="number" min="256" max="131072" step="256" @bind="contextSize" /></label><label>最大生成 token<input type="number" min="1" max="32768" step="1" @bind="maxTokens" /></label><label>Temperature<input type="number" min="0" max="5" step="0.05" @bind="temperature" /></label><label>Top P<input type="number" min="0" max="1" step="0.01" @bind="topP" /></label><label>Top K<input type="number" min="0" max="1000" step="1" @bind="topK" /></label><label>CPU 线程<input type="number" min="0" max="256" step="1" @bind="threads" /></label><label>GPU layers<input type="number" min="0" max="999" step="1" @bind="gpuLayerCount" /></label><label>Batch size<input type="number" min="1" max="4096" step="1" @bind="batchSize" /></label></div><div class="info-line"><span>Embedding</span><b class="good">支持</b></div><div class="info-line"><span>执行模式</span><b>Worker</b></div><div class="hint">Worker 会隔离 native runtime。必须先提供 GGUF 文件；CPU provider 可运行，GPU layers 只有安装并验证匹配的 GPU provider 后才会生效。</div></section></div>
+<div class="llm-layout">
+    <section class="panel chat-panel">
+        <div class="chat-head"><div class="model-avatar">Q</div><div><strong>本地 GGUF</strong><small>LLamaSharp · Worker · native isolated</small></div><span class="online-dot"></span></div>
+        <div class="messages">@foreach (var message in messages) { <div class="message @(message.IsUser ? "user" : "assistant")">@message.Text</div> }</div>
+        <div class="composer"><textarea @bind="prompt" placeholder="@PromptPlaceholder" disabled="@busy"></textarea><div class="composer-actions"><button class="primary" @onclick="SendAsync" disabled="@(busy || !CanSend)">@(busy ? "执行中…" : operation == AppOperationKind.Embedding ? "生成向量" : "发送 ↑")</button>@if (busy) { <button class="ghost small" @onclick="Cancel">取消</button> }</div></div>
+        @if (busy || progress > 0) { <div class="worker-progress"><progress value="@progress" max="1"></progress><span>Worker @progress.ToString("P0")</span></div> }
+    </section>
+    <section class="panel side-info">
+        <span class="eyebrow">MODEL INFO</span><h3>运行参数</h3>
+        <div class="mode-tabs" role="group" aria-label="运行模式"><button class="@(operation == AppOperationKind.TextGeneration ? "active" : null)" @onclick="UseGeneration" disabled="@busy">文本生成</button><button class="@(operation == AppOperationKind.Embedding ? "active" : null)" @onclick="UseEmbedding" disabled="@busy">Embedding</button></div>
+        <label>本地 GGUF 模型<InputFile OnChange="HandleModelSelected" accept=".gguf" disabled="@modelUploading" /><span class="file-name">@(string.IsNullOrWhiteSpace(modelFileName) ? "首次使用请上传 .gguf 模型" : modelFileName)</span></label>
+        @if (modelUploading) { <div class="upload-progress"><span>上传并校验</span><progress value="@modelUploadProgress" max="1"></progress></div> }
+        @if (!string.IsNullOrWhiteSpace(modelSha256)) { <div class="model-hash">SHA256：@modelSha256</div> }
+        <label>模型路径<input @bind="modelPath" placeholder="Web 服务可访问的 GGUF 路径" /></label>
+        <div class="llm-settings">
+            <label>上下文长度<input type="number" min="256" max="131072" step="256" @bind="contextSize" /></label>
+            @if (operation == AppOperationKind.TextGeneration) { <label>最大生成 token<input type="number" min="1" max="32768" step="1" @bind="maxTokens" /></label><label>Temperature<input type="number" min="0" max="5" step="0.05" @bind="temperature" /></label><label>Top P<input type="number" min="0" max="1" step="0.01" @bind="topP" /></label><label>Top K<input type="number" min="0" max="1000" step="1" @bind="topK" /></label> }
+            <label>CPU 线程<input type="number" min="0" max="256" step="1" @bind="threads" /></label><label>GPU layers<input type="number" min="0" max="999" step="1" @bind="gpuLayerCount" /></label><label>Batch size<input type="number" min="1" max="4096" step="1" @bind="batchSize" /></label>
+        </div>
+        @if (operation == AppOperationKind.Embedding) { <label class="binary-setting"><input type="checkbox" @bind="normalizeEmbedding" />L2 归一化</label> }
+        <div class="info-line"><span>执行模式</span><b>Worker</b></div>
+        @if (!string.IsNullOrWhiteSpace(embeddingOutput)) { <div class="embedding-output"><span class="eyebrow">VECTOR RESULT</span><pre>@embeddingOutput</pre></div> }
+        <div class="hint">文本生成使用真实流式增量；Embedding 会调用模型的嵌入能力。模型不支持相应能力时返回结构化不可用，不会生成模拟结果。</div>
+    </section>
+</div>
 @code {
     private string prompt = string.Empty;
+    private AppOperationKind operation = AppOperationKind.TextGeneration;
+    private bool normalizeEmbedding = true;
+    private string embeddingOutput = string.Empty;
     private bool busy;
     private double progress;
     private CancellationTokenSource? cancellation;
@@ -44,7 +78,11 @@
     private int gpuLayerCount;
     private int batchSize = 512;
     private bool CanSend => !string.IsNullOrWhiteSpace(prompt) && !string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath);
-    private readonly List<ChatMessage> messages = new() { new(false, "请上传 GGUF 模型后开始对话。网页不会在浏览器加载 native runtime，实际生成将在 BackendHost Worker 中执行。") };
+    private string PromptPlaceholder => operation == AppOperationKind.Embedding ? "输入需要向量化的文本" : "输入问题";
+    private readonly List<ChatMessage> messages = new() { new(false, "请上传 GGUF 模型，然后选择文本生成或 Embedding。所有 native 执行均位于 BackendHost Worker。") };
+
+    private void UseGeneration() { operation = AppOperationKind.TextGeneration; embeddingOutput = string.Empty; }
+    private void UseEmbedding() { operation = AppOperationKind.Embedding; embeddingOutput = string.Empty; }
 
     private async Task HandleModelSelected(InputFileChangeEventArgs args)
     {
@@ -84,22 +122,49 @@
     private async Task SendAsync()
     {
         if (busy || string.IsNullOrWhiteSpace(prompt)) return;
-        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); busy = true; progress = 0;
+        var value = prompt.Trim(); prompt = string.Empty; messages.Add(new(true, value)); var responseMessage = new ChatMessage(false, string.Empty); messages.Add(responseMessage); busy = true; progress = 0; embeddingOutput = string.Empty;
         cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(2));
         try
         {
-            var options = new Dictionary<string, string> { ["executionMode"] = "worker", ["contextSize"] = contextSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["maxTokens"] = maxTokens.ToString(System.Globalization.CultureInfo.InvariantCulture), ["temperature"] = temperature.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topP"] = topP.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topK"] = topK.ToString(System.Globalization.CultureInfo.InvariantCulture), ["batchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["gpuLayerCount"] = gpuLayerCount.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            var options = new Dictionary<string, string> { ["executionMode"] = "worker", ["stream"] = (operation == AppOperationKind.TextGeneration).ToString(System.Globalization.CultureInfo.InvariantCulture), ["normalize"] = normalizeEmbedding.ToString(System.Globalization.CultureInfo.InvariantCulture), ["contextSize"] = contextSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["maxTokens"] = maxTokens.ToString(System.Globalization.CultureInfo.InvariantCulture), ["temperature"] = temperature.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topP"] = topP.ToString(System.Globalization.CultureInfo.InvariantCulture), ["topK"] = topK.ToString(System.Globalization.CultureInfo.InvariantCulture), ["batchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ["gpuLayerCount"] = gpuLayerCount.ToString(System.Globalization.CultureInfo.InvariantCulture) };
             if (threads > 0) options["threads"] = threads.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var request = new ModelRunRequest(AppOperationKind.TextGeneration, "local/gguf", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelPath: modelPath, modelFormat: "gguf", modelSha256: string.IsNullOrWhiteSpace(modelSha256) ? null : modelSha256, options: options);
-            ModelRunResult output = await Service.RunAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
-            string assistantText = output.Succeeded ? output.Output ?? output.Message : output.Message;
-            if (output.Diagnostics.Count > 0) assistantText += "\n诊断：" + string.Join("；", output.Diagnostics.Select(diagnostic => diagnostic.Code + " - " + diagnostic.Message));
-            messages.Add(new(false, assistantText));
+            var request = new ModelRunRequest(operation, "local/gguf", "deploysharp.backend.llamasharp", device: "cpu", prompt: value, modelPath: modelPath, modelFormat: "gguf", modelSha256: string.IsNullOrWhiteSpace(modelSha256) ? null : modelSha256, options: options);
+            bool receivedDelta = false;
+            var textProgress = new Progress<string>(delta => { receivedDelta = true; responseMessage.Text += delta; _ = InvokeAsync(StateHasChanged); });
+            ModelRunResult output = await Service.RunStreamingAsync(request, new Progress<double>(value => { progress = value; _ = InvokeAsync(StateHasChanged); }), textProgress, cancellation.Token);
+            if (output.Succeeded && operation == AppOperationKind.Embedding)
+            {
+                embeddingOutput = FormatEmbedding(output.Output);
+                responseMessage.Text = "Embedding 已生成。" + Environment.NewLine + embeddingOutput;
+            }
+            else if (!output.Succeeded || !receivedDelta)
+            {
+                responseMessage.Text = output.Succeeded ? output.Output ?? output.Message : output.Message;
+            }
+            if (output.Diagnostics.Count > 0) responseMessage.Text += "\n诊断：" + string.Join("；", output.Diagnostics.Select(diagnostic => diagnostic.Code + " - " + diagnostic.Message));
             Activity.Add("llm", output.Message, output.Diagnostics.FirstOrDefault()?.Code);
         }
         finally { cancellation.Dispose(); cancellation = null; busy = false; progress = 0; }
     }
     private void Cancel() => cancellation?.Cancel();
     public void Dispose() { cancellation?.Cancel(); cancellation?.Dispose(); DeleteUploadedModel(); }
-    private sealed record ChatMessage(bool IsUser, string Text);
+    private static string FormatEmbedding(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "Worker 未返回向量。";
+        try
+        {
+            using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(json);
+            int dimensions = document.RootElement.GetProperty("dimensions").GetInt32();
+            bool normalized = document.RootElement.GetProperty("normalized").GetBoolean();
+            string preview = string.Join(", ", document.RootElement.GetProperty("values").EnumerateArray().Take(24).Select(value => value.GetSingle().ToString("G6", System.Globalization.CultureInfo.InvariantCulture)));
+            return $"维度：{dimensions} · L2 归一化：{normalized}\n[{preview}{(dimensions > 24 ? ", …" : string.Empty)}]";
+        }
+        catch (Exception exception) when (exception is System.Text.Json.JsonException || exception is InvalidOperationException || exception is KeyNotFoundException) { return "向量结果格式无效：" + exception.Message; }
+    }
+    private sealed class ChatMessage
+    {
+        public ChatMessage(bool isUser, string text) { IsUser = isUser; Text = text; }
+        public bool IsUser { get; }
+        public string Text { get; set; }
+    }
 }
