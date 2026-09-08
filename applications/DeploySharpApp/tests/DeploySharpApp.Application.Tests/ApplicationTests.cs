@@ -88,6 +88,26 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task WorkerRejectsModelAssetOutsideBundleRoot()
+        {
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            string outsidePath = Path.Combine(Path.GetTempPath(), "deploysharp-outside-" + Guid.NewGuid().ToString("N") + ".txt");
+            var request = new ModelRunRequest(
+                AppOperationKind.Vision,
+                "tests/modelpack-bundle",
+                "deploysharp.backend.onnxruntime",
+                modelPath: modelPath,
+                modelFormat: "onnx",
+                modelAssets: new[] { new ModelAssetReference("../outside.txt", outsidePath, "license") });
+
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(AppErrorCode.ModelUnavailable, result.ErrorCode);
+            Assert.IsTrue(result.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-MODEL-ASSET-OUTSIDE-BUNDLE"));
+        }
+
+        [TestMethod]
         public async Task WorkerCapabilityAndNativeProbesCoverFiveBackends()
         {
             var client = new BackendHostWorkerClient(LocateBackendHost());

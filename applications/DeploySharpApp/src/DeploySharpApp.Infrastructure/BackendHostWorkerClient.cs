@@ -322,6 +322,7 @@ namespace DeploySharpApp.Infrastructure
                 if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
             }
             Add(payload, "inputPath", request.InputPath); Add(payload, "prompt", request.Prompt); Add(payload, "modelPath", request.ModelPath); Add(payload, "modelFormat", request.ModelFormat); Add(payload, "modelSha256", request.ModelSha256);
+            if (request.ModelAssets.Count > 0) payload["modelAssetsJson"] = JsonSerializer.Serialize(request.ModelAssets);
             return new WorkerRequest(WorkerMessageKind.Inference, requestId, request.BackendId, request.ModelId, payload);
         }
 

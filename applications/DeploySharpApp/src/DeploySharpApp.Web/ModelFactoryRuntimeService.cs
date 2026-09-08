@@ -32,10 +32,50 @@ public sealed class ModelFactoryRuntimeService : IDisposable
         ResolvedModelArtifact artifact = materialized.Package.Artifacts.FirstOrDefault()
             ?? throw new InvalidOperationException("The verified ModelPack contains no runnable artifact.");
         ModelArtifact coreArtifact = artifact.ToCoreArtifact();
-        return new ModelFactoryMaterialization(materialized.Selection.Entry.ModelId!, materialized.CacheKey, materialized.PackageRoot, materialized.Package.ManifestPath, coreArtifact.ModelId.Value, coreArtifact.Format, coreArtifact.Location, coreArtifact.Sha256);
+        string[] modelFiles = artifact.Files.Where(file => file.Document.Role == ModelFileRole.Model).Select(file => file.FullPath).ToArray();
+        string modelPath = ResolveExecutablePath(materialized.PackageRoot, artifact, coreArtifact, modelFiles);
+        return new ModelFactoryMaterialization(
+            materialized.Selection.Entry.ModelId!,
+            materialized.CacheKey,
+            materialized.PackageRoot,
+            materialized.Package.ManifestPath,
+            coreArtifact.ModelId.Value,
+            coreArtifact.Format,
+            modelPath,
+            coreArtifact.Sha256)
+        {
+            ArtifactId = artifact.Document.ArtifactId,
+            BundleRole = artifact.Document.Extensions.TryGetValue("deploysharp.bundle-role", out string? bundleRole) ? bundleRole : null,
+            Opset = artifact.Document.Opset,
+            Extensions = artifact.Document.Extensions,
+            Assets = artifact.Files.Select(file => new ModelPackAsset(
+                file.Document.RelativePath ?? Path.GetFileName(file.FullPath),
+                file.FullPath,
+                file.Document.Role,
+                file.Document.Sha256,
+                file.Document.Size)).ToArray()
+        };
+    }
+
+    private static string ResolveExecutablePath(string packageRoot, ResolvedModelArtifact resolved, ModelArtifact artifact, IReadOnlyList<string> modelFiles)
+    {
+        if (resolved.Document.LocationKind == ModelArtifactLocationKind.File) return artifact.Location;
+        if (!string.IsNullOrWhiteSpace(resolved.Document.Entrypoint))
+        {
+            string candidate = Path.GetFullPath(Path.Combine(packageRoot, resolved.Document.Entrypoint));
+            if (File.Exists(candidate)) return candidate;
+        }
+        return modelFiles.FirstOrDefault() ?? artifact.Location;
     }
 
     public void Dispose() => _client.Dispose();
 }
 
-public sealed record ModelFactoryMaterialization(string ModelId, string CacheKey, string PackageRoot, string ManifestPath, string CoreModelId, string Format, string ModelPath, string? Sha256);
+public sealed record ModelFactoryMaterialization(string ModelId, string CacheKey, string PackageRoot, string ManifestPath, string CoreModelId, string Format, string ModelPath, string? Sha256)
+{
+    public string? ArtifactId { get; init; }
+    public string? BundleRole { get; init; }
+    public int? Opset { get; init; }
+    public IReadOnlyDictionary<string, string> Extensions { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    public IReadOnlyList<ModelPackAsset> Assets { get; init; } = Array.Empty<ModelPackAsset>();
+}

@@ -121,12 +121,32 @@ namespace DeploySharpApp.Contracts
         public bool ImageInput { get; }
     }
 
+    /// <summary>References one integrity-checked file belonging to a multi-file model artifact.</summary>
+    public sealed class ModelAssetReference
+    {
+        public ModelAssetReference(string relativePath, string fullPath, string role, string? sha256 = null, long size = 0)
+        {
+            RelativePath = ContractGuard.Text(relativePath, nameof(relativePath));
+            FullPath = ContractGuard.Text(fullPath, nameof(fullPath));
+            Role = ContractGuard.Text(role, nameof(role));
+            Sha256 = ContractGuard.Optional(sha256);
+            if (size < 0) throw new ArgumentOutOfRangeException(nameof(size));
+            Size = size;
+        }
+
+        public string RelativePath { get; }
+        public string FullPath { get; }
+        public string Role { get; }
+        public string? Sha256 { get; }
+        public long Size { get; }
+    }
+
     public sealed class ModelRunRequest
     {
-        public ModelRunRequest(AppOperationKind operation, string modelId, string backendId, string device = "cpu", string? inputPath = null, string? prompt = null, IReadOnlyDictionary<string, string>? options = null, TimeSpan? timeout = null, string? modelPath = null, string? modelFormat = null, string? modelSha256 = null, IEnumerable<ModelTensorInput>? tensorInputs = null, string outputFormat = "json")
+        public ModelRunRequest(AppOperationKind operation, string modelId, string backendId, string device = "cpu", string? inputPath = null, string? prompt = null, IReadOnlyDictionary<string, string>? options = null, TimeSpan? timeout = null, string? modelPath = null, string? modelFormat = null, string? modelSha256 = null, IEnumerable<ModelTensorInput>? tensorInputs = null, string outputFormat = "json", IEnumerable<ModelAssetReference>? modelAssets = null)
         {
             Operation = operation; ModelId = ContractGuard.Id(modelId, nameof(modelId)); BackendId = ContractGuard.Id(backendId, nameof(backendId)); Device = ContractGuard.Text(device, nameof(device)); InputPath = ContractGuard.Optional(inputPath); Prompt = ContractGuard.Optional(prompt); Options = ContractGuard.Dictionary(options); Timeout = timeout ?? TimeSpan.FromMinutes(2); if (Timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
-            ModelPath = ContractGuard.Optional(modelPath); ModelFormat = ContractGuard.Optional(modelFormat)?.ToLowerInvariant(); ModelSha256 = ContractGuard.Optional(modelSha256); TensorInputs = ContractGuard.List(tensorInputs); OutputFormat = ContractGuard.Id(outputFormat, nameof(outputFormat)).ToLowerInvariant();
+            ModelPath = ContractGuard.Optional(modelPath); ModelFormat = ContractGuard.Optional(modelFormat)?.ToLowerInvariant(); ModelSha256 = ContractGuard.Optional(modelSha256); TensorInputs = ContractGuard.List(tensorInputs); OutputFormat = ContractGuard.Id(outputFormat, nameof(outputFormat)).ToLowerInvariant(); ModelAssets = ContractGuard.List(modelAssets);
         }
         public AppOperationKind Operation { get; }
         public string ModelId { get; }
@@ -142,6 +162,7 @@ namespace DeploySharpApp.Contracts
         public string? ModelSha256 { get; }
         public IReadOnlyList<ModelTensorInput> TensorInputs { get; }
         public string OutputFormat { get; }
+        public IReadOnlyList<ModelAssetReference> ModelAssets { get; }
     }
 
     public sealed class ModelRunResult

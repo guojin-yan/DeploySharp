@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -49,6 +50,17 @@ internal static class WorkerInferenceAdapter
         }
         if (!File.Exists(modelPath)) return Error(request, "DSAPP-WORKER-MODEL-NOT-FOUND", "The Worker model file does not exist.", AppRuntimeState.Unavailable, modelPath);
 
+        WorkerResponse? assetError;
+        try
+        {
+            assetError = await VerifyModelAssetsAsync(request, modelPath, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Error(request, "DSAPP-WORKER-CANCELLED", "Native Worker model asset verification was cancelled.", AppRuntimeState.Unavailable);
+        }
+        if (assetError is not null) return assetError;
+
         reportProgress?.Invoke(0.45);
         try
         {
@@ -83,6 +95,43 @@ internal static class WorkerInferenceAdapter
         {
             return Error(request, "DSAPP-WORKER-NATIVE-EXECUTION-FAILED", "Native Worker inference failed.", AppRuntimeState.Unavailable, exception.GetType().FullName + ": " + exception.Message);
         }
+    }
+
+    private static async Task<WorkerResponse?> VerifyModelAssetsAsync(WorkerRequest request, string modelPath, CancellationToken cancellationToken)
+    {
+        string? json = Value(request.Payload, "modelAssetsJson");
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        ModelAssetReference[] assets;
+        try { assets = JsonSerializer.Deserialize<ModelAssetReference[]>(json, JsonOptions) ?? Array.Empty<ModelAssetReference>(); }
+        catch (JsonException exception) { return Error(request, "DSAPP-WORKER-MODEL-ASSETS-INVALID", "The model asset manifest is invalid JSON.", AppRuntimeState.Unsupported, exception.Message); }
+        string root = Path.GetDirectoryName(modelPath) ?? modelPath;
+        string rootPrefix = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        foreach (ModelAssetReference asset in assets)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            string fullPath;
+            try { fullPath = Path.GetFullPath(asset.FullPath); }
+            catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is PathTooLongException)
+            { return Error(request, "DSAPP-WORKER-MODEL-ASSET-PATH-INVALID", "A model asset path is invalid.", AppRuntimeState.Unsupported, exception.Message); }
+            if (!fullPath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase) && !string.Equals(fullPath, rootPrefix.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+                return Error(request, "DSAPP-WORKER-MODEL-ASSET-OUTSIDE-BUNDLE", "A model asset is outside the selected model bundle directory.", AppRuntimeState.Unsupported, fullPath);
+            if (!File.Exists(fullPath)) return Error(request, "DSAPP-WORKER-MODEL-ASSET-NOT-FOUND", "A verified model bundle asset does not exist.", AppRuntimeState.Unavailable, fullPath);
+            if (asset.Size > 0 && new FileInfo(fullPath).Length != asset.Size)
+                return Error(request, "DSAPP-WORKER-MODEL-ASSET-SIZE-MISMATCH", "A verified model bundle asset has an unexpected size.", AppRuntimeState.Unavailable, fullPath);
+            if (!string.IsNullOrWhiteSpace(asset.Sha256) && !await VerifySha256Async(fullPath, asset.Sha256!, cancellationToken).ConfigureAwait(false))
+                return Error(request, "DSAPP-WORKER-MODEL-ASSET-SHA256-MISMATCH", "A verified model bundle asset failed SHA256 validation.", AppRuntimeState.Unavailable, fullPath);
+        }
+        return null;
+    }
+
+    private static async Task<bool> VerifySha256Async(string path, string expected, CancellationToken cancellationToken)
+    {
+        await using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 1024, useAsync: true);
+        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        byte[] buffer = new byte[128 * 1024];
+        int read;
+        while ((read = await stream.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) != 0) hash.AppendData(buffer, 0, read);
+        return string.Equals(Convert.ToHexString(hash.GetHashAndReset()), expected, StringComparison.OrdinalIgnoreCase);
     }
 
     private static async Task<WorkerResponse> RunBlipCaptionAsync(WorkerRequest request, string visionEncoderPath, Action<double>? reportProgress, Action<string>? reportText, CancellationToken cancellationToken)
