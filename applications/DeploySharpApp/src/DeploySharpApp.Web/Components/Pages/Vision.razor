@@ -344,7 +344,7 @@
     private async Task MaterializeFactoryModelAsync()
     {
         if (string.IsNullOrWhiteSpace(selectedFactoryModelId) || factoryMaterializing) return;
-        factoryMaterializing = true; factoryProgress = 0; factoryError = null; factoryMaterialization = null;
+        factoryMaterializing = true; factoryProgress = 0; factoryError = null; factoryMaterialization = null; modelPackMaterialization = null;
         try
         {
             var progress = new Progress<JYPPX.DeploySharp.ModelFactory.ModelDownloadProgress>(value =>
