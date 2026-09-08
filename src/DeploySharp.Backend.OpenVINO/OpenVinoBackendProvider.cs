@@ -10,7 +10,7 @@ using CoreSessionOptions = JYPPX.DeploySharp.Models.SessionOptions;
 
 namespace JYPPX.DeploySharp.Backends.OpenVINO
 {
-    /// <summary>Creates Core tensor-inference sessions through OpenVINO C# API 3.3.0. / 通过 OpenVINO C# API 3.3.0 创建 Core 张量推理会话。</summary>
+    /// <summary>Creates Core tensor-inference sessions through OpenVINO C# API 3.3.1. / 通过 OpenVINO C# API 3.3.1 创建 Core 张量推理会话。</summary>
     public sealed class OpenVinoBackendProvider : IBackendProvider
     {
         private readonly OpenVinoOptions _options;
@@ -26,7 +26,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             Descriptor = new BackendDescriptor(
                 BackendId,
                 "OpenVINO",
-                "3.3.0",
+                "3.3.1",
                 BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes,
                 new[] { "onnx", "openvino-ir" },
                 description: "OpenVINO C# API adapter using an application-owned runtime and device plug-ins.",
@@ -35,11 +35,11 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64" },
                 supportedDevices: new[] { "CPU" },
                 providerPackageId: "JYPPX.OpenVINO.CSharp.API",
-                providerPackageVersion: "3.3.0",
+                providerPackageVersion: "3.3.1",
                 preferredExecutionMode: BackendExecutionMode.InProcessOrWorker,
                 runtimeDependencies: new IBackendRuntimeDependency[]
                 {
-                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.0"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.1"),
                     new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "OpenVINO.runtime.win", "2026.2.1", "win-x64", downloadable: true, licenseExpression: "Apache-2.0")
                 },
                 nativeProbeId: "openvino-native",

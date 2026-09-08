@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Upstream 3.3.0 publishes an exact managed asset for every declared TFM; it has no netstandard asset. / 上游 3.3.0 为每个声明的 TFM 发布精确托管资产，但不提供 netstandard 资产。 -->
+    <!-- Upstream 3.3.1 publishes an exact managed asset for every declared TFM; it has no netstandard asset. / 上游 3.3.1 为每个声明的 TFM 发布精确托管资产，但不提供 netstandard 资产。 -->
     <TargetFrameworks>net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>JYPPX.DeploySharp.Backend.OpenVINO</AssemblyName>
     <RootNamespace>JYPPX.DeploySharp.Backends.OpenVINO</RootNamespace>

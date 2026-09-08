@@ -103,9 +103,13 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 await _operationGate.WaitAsync(operationToken).ConfigureAwait(false);
                 entered = true;
                 EnsureUsable();
-                // ORT 1.28 native RunAsync can fail to complete its callback when RunOptions.Terminate races the call. Cancellable requests therefore use the synchronous native path, which honors terminate; no worker task is fabricated. / ORT 1.28 原生 RunAsync 在 RunOptions.Terminate 与调用竞争时可能无法完成回调，因此可取消请求使用能够响应 terminate 的同步原生路径，且不伪造工作线程任务。
+                // ORT 1.28's native RunAsync callback can remain incomplete on Windows CPU
+                // even for a non-cancellable static graph. Keep the public async contract,
+                // but execute the cancellation-aware synchronous native path on the pool;
+                // independent session-pool slots still overlap requests without relying on
+                // the unstable callback implementation.
                 if (!_nativeAsyncEnabled || cancellationToken.CanBeCanceled || _hasDynamicOutputs) return RunCore(inputs, operationToken);
-                return await RunNativeAsync(inputs, operationToken).ConfigureAwait(false);
+                return await Task.Run(() => RunCore(inputs, operationToken), operationToken).ConfigureAwait(false);
             }
             catch (Exception exception) { throw OnnxRuntimeExceptionMapper.Map(exception, _artifact, "run-async", operationToken); }
             finally
@@ -165,41 +169,6 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 }
                 finally
                 {
-                    foreach (OrtValue value in inputValues) value.Dispose();
-                    inputValues.Clear();
-                    inputNames.Clear();
-                }
-            }
-        }
-
-        private async Task<InferenceOutputs> RunNativeAsync(InferenceInputs inputs, CancellationToken cancellationToken)
-        {
-            ValidateInputNames(inputs);
-            List<string> inputNames = _reuseInputCollections
-                ? (_singleInputNames ??= new List<string>(inputs.Count))
-                : new List<string>(inputs.Count);
-            List<OrtValue> inputValues = _reuseInputCollections
-                ? (_singleInputValues ??= new List<OrtValue>(inputs.Count))
-                : new List<OrtValue>(inputs.Count);
-            var outputValues = new List<OrtValue>(_outputNames.Count);
-            using (var runOptions = new RunOptions())
-            {
-                try
-                {
-                    foreach (NamedTensor input in inputs)
-                    {
-                        inputNames.Add(input.Name);
-                        inputValues.Add(OnnxTensorBridge.CreateInput(_artifact, input.Name, input.Tensor, _inputs[input.Name]));
-                    }
-                    foreach (TensorDescriptor output in Metadata.Outputs) outputValues.Add(OnnxTensorBridge.AllocateOutput(_artifact, output));
-                    IReadOnlyCollection<OrtValue> outputs = await _session.RunAsync(runOptions, inputNames, inputValues, _outputNames, outputValues).ConfigureAwait(false);
-                    // Native async is entered only for a non-cancellable caller token. Disposal is observed after native completion so the ORT callback is never raced with terminate. / 仅在调用方 token 不可取消时进入原生异步；释放请求在原生完成后观察，避免 terminate 与 ORT 回调竞争。
-                    cancellationToken.ThrowIfCancellationRequested();
-                    return OnnxTensorBridge.CopyOutputs(_artifact, _outputNames, outputs);
-                }
-                finally
-                {
-                    foreach (OrtValue value in outputValues) value.Dispose();
                     foreach (OrtValue value in inputValues) value.Dispose();
                     inputValues.Clear();
                     inputNames.Clear();

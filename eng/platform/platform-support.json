@@ -66,7 +66,7 @@
             "tests/assets/onnxruntime/classification.onnx"
           ],
           "runtimeDependencies": [
-            { "id": "JYPPX.OpenVINO.CSharp.API", "version": "3.3.0" },
+            { "id": "JYPPX.OpenVINO.CSharp.API", "version": "3.3.1" },
             { "id": "OpenVINO.runtime.win", "version": "2026.2.1" }
           ],
           "goldenKind": "contract-fixture",
