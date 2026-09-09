@@ -3,6 +3,7 @@
 @using DeploySharpApp.Contracts
 @inject DeploySharpAppService Service
 @inject WebActivityStore Activity
+@inject ModelPackRuntimeService ModelPackRuntime
 <PageTitle>性能基准 · DeploySharpApp</PageTitle>
 <style>
     .bench-config { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
@@ -12,6 +13,10 @@
     .bench-wide { grid-column: 1 / -1; }
     .bench-actions { display: flex; gap: 8px; margin-top: 12px; }
     .bench-evidence { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; color: #778198; font-size: 10px; }
+    .bench-pack { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-top: 10px; }
+    .bench-pack input { width: 100%; padding: 9px; border: 1px solid var(--line); border-radius: 7px; font: inherit; font-size: 11px; }
+    .bench-history { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .bench-history a { margin-right: 8px; }
     @@media(max-width:700px) { .bench-config { grid-template-columns: 1fr; } .bench-wide { grid-column: auto; } }
 </style>
 <div class="section-head"><div><span class="eyebrow">PERFORMANCE LAB</span><h3>性能基准</h3></div><span class="status-tag">@reportState</span></div>
@@ -28,6 +33,8 @@
             @if (!IsDemoBackend)
             {
                 <label class="bench-wide">模型路径<input @bind="modelPath" placeholder="服务器本地 .onnx / .gguf / .engine" /></label>
+                <div class="bench-pack bench-wide"><label>ModelPack manifest<input @bind="modelPackManifestPath" placeholder="可选：本地 modelpack.json，校验全部多文件资产" /></label><button class="ghost small" @onclick="ValidateModelPackAsync" disabled="@(modelPackBusy || string.IsNullOrWhiteSpace(modelPackManifestPath))">@(modelPackBusy ? "校验中…" : "校验并接入")</button></div>
+                @if (modelPack is not null) { <p class="hint bench-wide">已接入 @modelPack.ModelId · @modelPack.Assets.Count 个资产 · 主入口 @modelPack.ModelPath；Benchmark 会在 Worker 中逐项校验 SHA256。</p> }
                 @if (IsLlama)
                 {
                     <label class="bench-wide">固定 Prompt<textarea @bind="prompt" placeholder="每次迭代使用相同 prompt"></textarea></label>
@@ -56,9 +63,12 @@
     <table><thead><tr><th>后端</th><th>状态</th><th>P50 延迟</th><th>P95 延迟</th><th>吞吐</th><th>执行模式</th></tr></thead><tbody>@foreach (var backend in Service.Backends) { var latest = reports.TryGetValue(backend.Id, out var value) ? value : null; <tr><td><b>@backend.DisplayName</b><small>@backend.Version</small></td><td><span class="table-status @(latest?.Available == true ? "ok" : "pending")">@(latest?.Available == true ? "已完成" : latest is null ? backend.State.ToString() : "不可用")</span></td><td>@(latest?.Available == true ? latest.P50Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.P95Ms.ToString("F2") + " ms" : "—")</td><td>@(latest?.Available == true ? latest.Throughput.ToString("F1") + "/s" : "—")</td><td>@(latest?.ExecutionMode ?? backend.ExecutionMode.ToString())</td></tr> }</tbody></table>
     <progress value="@progress" max="1"></progress><p class="hint">@message</p>
     @if (lastDiagnostics.Count > 0) { <div class="bench-evidence">@foreach (RuntimeDiagnostic diagnostic in lastDiagnostics) { <span>@diagnostic.Code · @diagnostic.Message</span> }</div> }
+    @if (lastReport?.Metadata.Count > 0) { <div class="bench-evidence">@foreach (var item in lastReport.Metadata) { <span>@item.Key: @item.Value</span> }</div> }
+    <div class="bench-history"><b>报告历史</b> · @history.Count 条 <a class="ghost small" href='@ExportHistoryHref()' download="deploysharp-benchmark-history.json">导出 JSON</a>@if (history.Count > 0) { <span class="muted">最近报告：@history[0].Message</span> }</div>
 </div>
 @code {
     private readonly Dictionary<string, BenchmarkReport> reports = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<BenchmarkReport> history = new();
     private bool busy;
     private double progress;
     private string reportState = "等待运行";
@@ -80,6 +90,10 @@
     private string outputTensorElementTypesJson = string.Empty;
     private bool useDemoBenchmark;
     private IReadOnlyList<RuntimeDiagnostic> lastDiagnostics = Array.Empty<RuntimeDiagnostic>();
+    private BenchmarkReport? lastReport;
+    private string modelPackManifestPath = string.Empty;
+    private ModelPackMaterialization? modelPack;
+    private bool modelPackBusy;
     private CancellationTokenSource? cancellation;
     private bool IsOnnx => selectedBackend.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase);
     private bool IsDemoBackend => IsOnnx && useDemoBenchmark;
@@ -94,6 +108,7 @@
         try
         {
             var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (modelPack is not null) options["modelBundleRoot"] = modelPack.PackageRoot;
             IReadOnlyList<ModelTensorInput>? tensors = null;
             if (!IsDemoBackend)
             {
@@ -113,9 +128,12 @@
                     if (IsOpenCv) { options["outputTensorNames"] = outputTensorNames; options["outputTensorShapesJson"] = outputTensorShapesJson; options["outputTensorElementTypesJson"] = outputTensorElementTypesJson; }
                 }
             }
-            var request = new BenchmarkRequest(IsDemoBackend ? "demo/benchmark" : "web/benchmark", selectedBackend, warmup, iterations, device, IsDemoBackend ? null : modelPath, IsDemoBackend ? null : InferFormat(modelPath), inputPath: string.IsNullOrWhiteSpace(inputPath) ? null : inputPath, tensorInputs: tensors, options: options);
+            string? benchmarkModelPath = IsDemoBackend ? null : modelPack?.ModelPath ?? modelPath;
+            string? benchmarkFormat = IsDemoBackend ? null : modelPack?.Format ?? InferFormat(modelPath);
+            IReadOnlyList<ModelAssetReference> assets = modelPack?.Assets.Select(asset => new ModelAssetReference(asset.RelativePath, asset.FullPath, asset.Role.ToString(), asset.Sha256, asset.Size)).ToArray() ?? Array.Empty<ModelAssetReference>();
+            var request = new BenchmarkRequest(IsDemoBackend ? "demo/benchmark" : "web/benchmark", selectedBackend, warmup, iterations, device, benchmarkModelPath, benchmarkFormat, modelSha256: modelPack?.Sha256, inputPath: string.IsNullOrWhiteSpace(inputPath) ? null : inputPath, tensorInputs: tensors, options: options, modelAssets: assets);
             BenchmarkReport report = await Service.BenchmarkAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
-            reports[request.BackendId] = report; reportState = report.Available ? (IsDemoBackend ? "Demo" : "可复核") : "不可用"; message = report.Message; lastDiagnostics = report.Diagnostics; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message, report.Diagnostics.FirstOrDefault()?.Code);
+            reports[request.BackendId] = report; history.Insert(0, report); if (history.Count > 20) history.RemoveAt(history.Count - 1); lastReport = report; reportState = report.Available ? (IsDemoBackend ? "Demo" : "可复核") : "不可用"; message = report.Message; lastDiagnostics = report.Diagnostics; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message, report.Diagnostics.FirstOrDefault()?.Code);
         }
         catch (OperationCanceledException) { reportState = "已取消"; message = "基准已取消。"; }
         catch (Exception exception) { reportState = "输入无效"; message = exception.Message; }
@@ -123,6 +141,19 @@
     }
 
     private void Cancel() => cancellation?.Cancel();
+    private async Task ValidateModelPackAsync()
+    {
+        if (modelPackBusy || string.IsNullOrWhiteSpace(modelPackManifestPath)) return;
+        modelPackBusy = true;
+        try { modelPack = await ModelPackRuntime.ValidateAsync(modelPackManifestPath); modelPath = modelPack.ModelPath; Activity.Add("benchmark", "Validated benchmark ModelPack " + modelPack.ModelId, "DSAPP-BENCHMARK-MODELPACK"); }
+        catch (Exception exception) { message = exception.Message; Activity.Add("benchmark", exception.Message, "DSAPP-BENCHMARK-MODELPACK-FAILED"); }
+        finally { modelPackBusy = false; }
+    }
+    private string ExportHistoryHref()
+    {
+        string json = System.Text.Json.JsonSerializer.Serialize(history.Select(report => new { report.Request.ModelId, report.Request.BackendId, report.Available, report.Message, report.P50Ms, report.P95Ms, report.Throughput, report.ExecutionMode, report.Metadata, report.Diagnostics }));
+        return "data:application/json;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+    }
     private static string InferFormat(string path) => Path.GetExtension(path).Equals(".gguf", StringComparison.OrdinalIgnoreCase) ? "gguf" : Path.GetExtension(path).Equals(".engine", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".plan", StringComparison.OrdinalIgnoreCase) ? "tensorrt-engine" : Path.GetExtension(path).TrimStart('.');
     public void Dispose() { cancellation?.Cancel(); cancellation?.Dispose(); }
 }

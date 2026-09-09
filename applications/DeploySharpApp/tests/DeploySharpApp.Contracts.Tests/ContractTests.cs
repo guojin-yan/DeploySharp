@@ -58,5 +58,15 @@ namespace DeploySharpApp.Contracts.Tests
             Assert.AreEqual("images", request.TensorInputs.Single().Name);
             Assert.AreEqual("Latency", request.Options["performanceHint"]);
         }
+
+        [TestMethod]
+        public void BenchmarkCarriesVerifiedModelPackAssetsAndMetadata()
+        {
+            var asset = new ModelAssetReference("main.onnx", "C:\\models\\main.onnx", "model", "ABC", 42);
+            var request = new BenchmarkRequest("tests/modelpack", "deploysharp.backend.onnxruntime", modelPath: asset.FullPath, modelFormat: "onnx", modelAssets: new[] { asset });
+            var report = new BenchmarkReport(request, true, "ok", metadata: new Dictionary<string, string> { ["runtimeIdentifier"] = "win-x64" });
+            Assert.AreEqual(1, request.ModelAssets.Count);
+            Assert.AreEqual("win-x64", report.Metadata["runtimeIdentifier"]);
+        }
     }
 }

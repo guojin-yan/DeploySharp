@@ -73,6 +73,11 @@ internal static class WorkerInferenceAdapter
                     ? await RunClipImageEmbeddingAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false)
                     : await RunBlipCaptionAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
             }
+            // A ModelPack without a dedicated algorithm adapter still runs its declared
+            // primary graph through the provider. Auxiliary files remain verified above
+            // and are never silently discarded or represented as an algorithm result.
+            if (Contains(backendId, "onnxruntime"))
+                return await RunCoreTensorAsync(request, modelPath, new OnnxRuntimeBackendProvider(ParseOnnxRuntimeOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "llamasharp")) return await RunLlamaAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "openvino")) return await RunCoreTensorAsync(request, modelPath, new OpenVinoBackendProvider(ParseOpenVinoOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "opencv")) return await RunOpenCvAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
@@ -105,7 +110,16 @@ internal static class WorkerInferenceAdapter
         try { assets = JsonSerializer.Deserialize<ModelAssetReference[]>(json, JsonOptions) ?? Array.Empty<ModelAssetReference>(); }
         catch (JsonException exception) { return Error(request, "DSAPP-WORKER-MODEL-ASSETS-INVALID", "The model asset manifest is invalid JSON.", AppRuntimeState.Unsupported, exception.Message); }
         string root = Path.GetDirectoryName(modelPath) ?? modelPath;
+        string? declaredRoot = Value(request.Payload, "modelBundleRoot");
+        if (!string.IsNullOrWhiteSpace(declaredRoot))
+        {
+            try { root = Path.GetFullPath(declaredRoot); }
+            catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is PathTooLongException)
+            { return Error(request, "DSAPP-WORKER-MODEL-BUNDLE-ROOT-INVALID", "The model bundle root is invalid.", AppRuntimeState.Unsupported, exception.Message); }
+        }
         string rootPrefix = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!modelPath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase) && !string.Equals(modelPath, rootPrefix.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-WORKER-MODEL-OUTSIDE-BUNDLE", "The selected model entrypoint is outside the declared model bundle root.", AppRuntimeState.Unsupported, modelPath);
         foreach (ModelAssetReference asset in assets)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -282,6 +296,8 @@ internal static class WorkerInferenceAdapter
 
         try
         {
+            WorkerResponse? assetError = await VerifyModelAssetsAsync(request, modelPath, cancellationToken).ConfigureAwait(false);
+            if (assetError is not null) return assetError;
             string backendId = request.BackendId ?? string.Empty;
             if (Contains(backendId, "llamasharp")) return await BenchmarkLlamaAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
             return await BenchmarkTensorAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
@@ -417,7 +433,12 @@ internal static class WorkerInferenceAdapter
             ["p50Ms"] = p50.ToString(CultureInfo.InvariantCulture),
             ["p95Ms"] = p95.ToString(CultureInfo.InvariantCulture),
             ["throughput"] = (1000d / samples.Average()).ToString(CultureInfo.InvariantCulture),
-            ["output"] = lastOutput
+            ["output"] = lastOutput,
+            ["runtimeIdentifier"] = System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier,
+            ["processArchitecture"] = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+            ["osDescription"] = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+            ["frameworkDescription"] = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            ["timestampUtc"] = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)
         };
         return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "Native benchmark completed with one reused provider/session; timings cover real execution only.", payload);
     }

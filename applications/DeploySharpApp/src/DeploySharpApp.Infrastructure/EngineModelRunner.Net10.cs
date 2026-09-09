@@ -38,11 +38,12 @@ public sealed class EngineModelRunner : IModelRunner, IStreamingModelRunner
                 || request.ModelId.StartsWith("anomalib/", StringComparison.OrdinalIgnoreCase)
                 || request.ModelId.StartsWith("bria/rmbg-", StringComparison.OrdinalIgnoreCase));
         bool explicitCuda = string.Equals(request.Device, "cuda", StringComparison.OrdinalIgnoreCase);
+        bool modelBundle = request.ModelAssets.Count > 0;
         bool demo = request.ModelId.StartsWith("demo/", StringComparison.OrdinalIgnoreCase)
             && string.IsNullOrWhiteSpace(request.ModelPath)
             && !workerBackend
             && !explicitCuda;
-        if (workerBackend || releaseVisual || string.Equals(request.Options.TryGetValue("executionMode", out string? mode) ? mode : null, "worker", StringComparison.OrdinalIgnoreCase))
+        if (workerBackend || releaseVisual || modelBundle || string.Equals(request.Options.TryGetValue("executionMode", out string? mode) ? mode : null, "worker", StringComparison.OrdinalIgnoreCase))
             return _worker.RunAsync(request, progress, cancellationToken);
         return demo
             ? _demoFallback.RunAsync(request, progress, cancellationToken)
@@ -53,6 +54,7 @@ public sealed class EngineModelRunner : IModelRunner, IStreamingModelRunner
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
         bool workerBackend = IsWorkerBackend(request.BackendId)
+            || request.ModelAssets.Count > 0
             || string.Equals(request.Options.TryGetValue("executionMode", out string? mode) ? mode : null, "worker", StringComparison.OrdinalIgnoreCase);
         if (workerBackend) return await _worker.RunStreamingAsync(request, progress, textProgress, cancellationToken).ConfigureAwait(false);
 

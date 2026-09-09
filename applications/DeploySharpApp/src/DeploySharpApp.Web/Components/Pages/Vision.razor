@@ -491,8 +491,10 @@
             checks.Add(new ReadinessCheck(false, "模型", "本地模型仍在上传和校验，请等待完成。"));
         else if (isDemo)
             checks.Add(new ReadinessCheck(true, "模型", "Demo 使用 FakeModelRunner；成功结果不代表真实 ONNX 推理。", true));
+        else if (IsActiveModelBundle() && !HasDedicatedModelAdapter(model) && !HasExplicitGenericInput())
+            checks.Add(new ReadinessCheck(false, "模型", "当前 ModelPack 是多文件 bundle（" + ActiveModelAssetCount() + " 个已校验文件）。没有专用算法适配器时，请提供真实图像或命名 Tensor JSON；辅助文件会在 Worker 中完整校验。"));
         else if (IsActiveModelBundle() && !HasDedicatedModelAdapter(model))
-            checks.Add(new ReadinessCheck(false, "模型", "当前 ModelPack 是多文件 bundle（" + ActiveModelAssetCount() + " 个已校验文件），Web 单文件 Engine 不会丢弃辅助文件；请使用对应的专用 Worker/ModelPack 执行器。"));
+            checks.Add(new ReadinessCheck(true, "模型", "未发现专用算法适配器，将在 Worker 中执行 manifest 主入口 Tensor；已校验的辅助文件不会被丢弃，输出保持原始 Tensor。", true));
         else if (model is not null && model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase)) > 1 && !HasDedicatedReleaseAdapter(model))
         {
             int modelFileCount = model.Files.Count(file => string.Equals(file.Role, "model", StringComparison.OrdinalIgnoreCase));
@@ -602,6 +604,10 @@
         if (string.IsNullOrWhiteSpace(id)) return false;
         return IsDedicatedAdapterId(id);
     }
+
+    private bool HasExplicitGenericInput()
+        => imagePath is not null && File.Exists(imagePath)
+            || !string.IsNullOrWhiteSpace(tensorJson) && !string.IsNullOrWhiteSpace(modelPath);
 
     private static bool IsDedicatedAdapterId(string id)
         => id.Equals("segmentation/sam-v1-vit-b", StringComparison.OrdinalIgnoreCase)
@@ -847,6 +853,8 @@
                 ["imagePadValue"] = padValue
             };
             ApplyModelPackOptions(options);
+            if (BuildModelAssetReferences().Count > 0 && !HasDedicatedModelAdapter(selected))
+                options["executionMode"] = "worker";
             if (IsBackend("opencv"))
             {
                 if (!string.IsNullOrWhiteSpace(outputTensorNames)) options["outputTensorNames"] = outputTensorNames;
@@ -869,13 +877,18 @@
                 if (!localMaterialized)
                 {
                     var assetPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                    foreach (VisualReleaseFile file in selected.Files)
-                    {
+                foreach (VisualReleaseFile file in selected.Files)
+                {
                         string path = ReleaseCatalog.GetCachedFilePath(selected, file);
                         // Bundle assets may share a role (SAM has two model files); retain both the role and stable filename keys.
                         if (!assetPaths.ContainsKey(file.Role)) assetPaths[file.Role] = path;
                         assetPaths[file.AssetName] = path;
                         assetPaths[file.RelativePath] = path;
+                        if (file.Role.Contains("vocab", StringComparison.OrdinalIgnoreCase) || file.Role.Contains("label", StringComparison.OrdinalIgnoreCase))
+                        {
+                            assetPaths["labels"] = path;
+                            assetPaths["vocabulary"] = path;
+                        }
                     }
                     options["visualAssetPathsJson"] = System.Text.Json.JsonSerializer.Serialize(assetPaths);
                 }
@@ -960,6 +973,12 @@
                 paths.TryAdd(asset.Role.ToString(), asset.FullPath);
                 paths[asset.RelativePath] = asset.FullPath;
                 paths[Path.GetFileName(asset.FullPath)] = asset.FullPath;
+                string role = asset.Role.ToString();
+                if (role.Contains("vocab", StringComparison.OrdinalIgnoreCase) || role.Contains("label", StringComparison.OrdinalIgnoreCase))
+                {
+                    paths["labels"] = asset.FullPath;
+                    paths["vocabulary"] = asset.FullPath;
+                }
             }
             options["visualAssetPathsJson"] = System.Text.Json.JsonSerializer.Serialize(paths);
         }
@@ -967,6 +986,8 @@
         if (opset.HasValue) options["visualOpset"] = opset.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
         string? bundleRole = modelPackMaterialization?.BundleRole ?? factoryMaterialization?.BundleRole;
         if (!string.IsNullOrWhiteSpace(bundleRole)) options["visualBundleRole"] = bundleRole!;
+        string? bundleRoot = modelPackMaterialization?.PackageRoot ?? factoryMaterialization?.PackageRoot;
+        if (!string.IsNullOrWhiteSpace(bundleRoot)) options["modelBundleRoot"] = bundleRoot!;
     }
 
     private static bool IsImageInput(VisualModelInput input) => input.Shape.Count == 4 && (input.Shape[1] is 1 or 3 or 4) && (input.ElementType.Equals("float32", StringComparison.OrdinalIgnoreCase) || input.ElementType.Equals("float", StringComparison.OrdinalIgnoreCase));

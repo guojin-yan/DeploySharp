@@ -108,6 +108,22 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task GenericModelPackRoutesToWorkerWithoutDedicatedAdapter()
+        {
+            var worker = new StubWorkerClient();
+            var runner = new EngineModelRunner(new ThrowingEngine(), new FakeModelRunner(), worker);
+            ModelRunResult result = await runner.RunAsync(new ModelRunRequest(
+                AppOperationKind.Vision,
+                "custom/modelpack",
+                "deploysharp.backend.onnxruntime",
+                modelPath: "bundle/main.onnx",
+                modelFormat: "onnx",
+                modelAssets: new[] { new ModelAssetReference("main.onnx", "bundle/main.onnx", "model") }), null, CancellationToken.None);
+            Assert.IsTrue(worker.RunCalled);
+            Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+        }
+
+        [TestMethod]
         public async Task WorkerCapabilityAndNativeProbesCoverFiveBackends()
         {
             var client = new BackendHostWorkerClient(LocateBackendHost());
@@ -152,6 +168,7 @@ namespace DeploySharpApp.Application.Tests
                 CancellationToken.None);
             Assert.IsTrue(worker.StreamingCalled);
             Assert.IsTrue(result.Succeeded);
+            await Task.Delay(25);
             CollectionAssert.Contains(deltas, "stub-delta");
         }
 

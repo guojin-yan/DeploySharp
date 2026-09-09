@@ -4,6 +4,8 @@
 @inject VisualReleaseCatalogService ReleaseCatalog
 @inject ModelFactoryRuntimeService FactoryRuntime
 @inject RuntimeProbeService RuntimeProbe
+@inject BackendLifecycleService BackendLifecycle
+@inject WebActivityStore Activity
 <PageTitle>模型与后端 · DeploySharpApp</PageTitle>
 <style>
     .catalog-toolbar { display: grid; grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1fr) auto auto; gap: 10px; align-items: end; margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcff; }
@@ -22,6 +24,8 @@
     .probe-form label { min-width: 0; color: #748098; font-size: 10px; font-weight: 800; }
     .probe-form input, .probe-form select { display: block; width: 100%; min-width: 0; margin-top: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; }
     .probe-evidence { margin-top: 11px; padding: 9px 10px; border-left: 3px solid #4d7cff; background: #f4f7ff; color: #52617e; font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+    .plugin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 10px; }
+    .plugin-actions .hint { margin: 0; flex: 1 1 100%; }
     @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } .probe-form { grid-template-columns: 1fr; } }
     @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
 </style>
@@ -29,7 +33,7 @@
 <div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Factory ? "active" : "")" @onclick="() => tab = CatalogTab.Factory">官方 ModelFactory</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
 @if (tab == CatalogTab.Backends)
 {
-    <div class="plugin-grid">@foreach (var backend in Service.Backends) { <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div></article> }</div>
+    <div class="plugin-grid">@foreach (var backend in Service.Backends) { var lifecycle = BackendLifecycle.Get(backend.Id, backend.Version); <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div><div class="plugin-actions"><button class="ghost small" @onclick="() => InstallBackendAsync(backend.Id)" disabled="@(lifecycleBusyId is not null)">@(lifecycle.State == BackendLifecycleState.Active ? "升级/重新探测" : "安装/准备")</button><button class="ghost small" @onclick="() => RollbackBackend(backend.Id)" disabled="@(lifecycleBusyId is not null || lifecycle.State == BackendLifecycleState.NotInstalled)">回滚</button><span class="table-status @(lifecycle.State == BackendLifecycleState.Active ? "ok" : "pending")">@lifecycle.State</span><p class="hint">@lifecycle.Message</p></div></article> }</div>
 }
 else if (tab == CatalogTab.Models)
 {
@@ -103,6 +107,7 @@ else
     private bool probeBusy;
     private string? probeError;
     private RuntimeProbeEvidence? probeEvidence;
+    private string? lifecycleBusyId;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
@@ -117,6 +122,23 @@ else
         catch (Exception exception) { factoryError = exception.Message; }
     }
     private void Refresh() => Service.RefreshCatalog();
+    private async Task InstallBackendAsync(string backendId)
+    {
+        if (lifecycleBusyId is not null) return;
+        lifecycleBusyId = backendId;
+        try
+        {
+            BackendLifecycleRecord record = await BackendLifecycle.InstallOrUpgradeAsync(backendId);
+            Activity.Add("backend", record.Message, "DSAPP-BACKEND-LIFECYCLE");
+        }
+        catch (Exception exception) { Activity.Add("backend", exception.Message, "DSAPP-BACKEND-LIFECYCLE-FAILED"); }
+        finally { lifecycleBusyId = null; }
+    }
+    private void RollbackBackend(string backendId)
+    {
+        BackendLifecycleRecord record = BackendLifecycle.Rollback(backendId);
+        Activity.Add("backend", record.Message, "DSAPP-BACKEND-ROLLBACK");
+    }
     private async Task Materialize(string modelId)
     {
         materializingId = modelId; materializedId = null; materializeError = null; materialization = null; materializeProgress = 0;

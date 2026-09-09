@@ -1,9 +1,25 @@
 @page "/logs"
 @inject WebActivityStore Activity
 <PageTitle>运行日志 · DeploySharpApp</PageTitle>
-<div class="section-head"><div><span class="eyebrow">DIAGNOSTICS</span><h3>运行日志</h3></div><button class="ghost small" @onclick="Clear">清空本机日志</button></div>
-<div class="panel log-panel"><div class="log-toolbar"><span class="status-tag">最近一次运行 · 仅本机</span><span class="muted">已脱敏 · 不上传模型和输入</span></div><pre>@LogText</pre></div>
+<style>
+    .log-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .log-toolbar input, .log-toolbar select { min-width: 150px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font: inherit; font-size: 11px; }
+    .log-toolbar input { flex: 1 1 220px; }
+    .log-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .log-count { margin-left: auto; color: #778198; font-size: 10px; }
+</style>
+<div class="section-head"><div><span class="eyebrow">DIAGNOSTICS</span><h3>运行日志</h3></div><div class="log-actions"><a class="ghost small" href='@ExportHref("txt")' download="deploysharp-activity.txt">导出 TXT</a><a class="ghost small" href='@ExportHref("json")' download="deploysharp-activity.json">导出 JSON</a><button class="ghost small" @onclick="Clear">清空本机日志</button></div></div>
+<div class="panel log-panel"><div class="log-toolbar"><span class="status-tag">最近一次运行 · 仅本机</span><input @bind="search" @bind:event="oninput" placeholder="搜索消息、类别或诊断码" /><select @bind="category"><option value="">全部类别</option>@foreach (string item in Activity.Categories) { <option value="@item">@item</option> }</select><span class="log-count">@FilteredEntries.Count 条 · 已脱敏 · 不上传模型和输入</span></div><pre>@LogText</pre></div>
 @code {
-    private string LogText => Activity.Entries.Count == 0 ? "[doctor] manifest catalog loaded\n[doctor] native runtimes are probed before activation\n[doctor] browser never loads native DLL" : string.Join(Environment.NewLine, Activity.Entries.Select(item => $"[{item.Timestamp:HH:mm:ss} {item.Category}] {item.Message}{(item.Code == null ? string.Empty : " · " + item.Code)}"));
+    private string search = string.Empty;
+    private string category = string.Empty;
+    private IReadOnlyList<WebActivity> FilteredEntries => Activity.Query(search, category);
+    private string LogText => FilteredEntries.Count == 0 ? "[doctor] manifest catalog loaded\n[doctor] native runtimes are probed before activation\n[doctor] browser never loads native DLL" : Activity.ExportText(FilteredEntries);
+    private string ExportHref(string format)
+    {
+        string content = format == "json" ? Activity.ExportJson(FilteredEntries) : Activity.ExportText(FilteredEntries);
+        string mime = format == "json" ? "application/json" : "text/plain";
+        return "data:" + mime + ";base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(content));
+    }
     private void Clear() => Activity.Clear();
 }

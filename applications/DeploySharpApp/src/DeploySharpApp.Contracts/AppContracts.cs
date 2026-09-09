@@ -185,8 +185,8 @@ namespace DeploySharpApp.Contracts
 
     public sealed class BenchmarkRequest
     {
-        public BenchmarkRequest(string modelId, string backendId, int warmup = 3, int iterations = 20, string device = "cpu", string? modelPath = null, string? modelFormat = null, string? modelSha256 = null, string? inputPath = null, IEnumerable<ModelTensorInput>? tensorInputs = null, IReadOnlyDictionary<string, string>? options = null)
-        { ModelId = ContractGuard.Id(modelId, nameof(modelId)); BackendId = ContractGuard.Id(backendId, nameof(backendId)); Device = ContractGuard.Text(device, nameof(device)); if (warmup < 0) throw new ArgumentOutOfRangeException(nameof(warmup)); if (iterations <= 0) throw new ArgumentOutOfRangeException(nameof(iterations)); Warmup = warmup; Iterations = iterations; ModelPath = ContractGuard.Optional(modelPath); ModelFormat = ContractGuard.Optional(modelFormat)?.ToLowerInvariant(); ModelSha256 = ContractGuard.Optional(modelSha256); InputPath = ContractGuard.Optional(inputPath); TensorInputs = ContractGuard.List(tensorInputs); Options = ContractGuard.Dictionary(options); }
+        public BenchmarkRequest(string modelId, string backendId, int warmup = 3, int iterations = 20, string device = "cpu", string? modelPath = null, string? modelFormat = null, string? modelSha256 = null, string? inputPath = null, IEnumerable<ModelTensorInput>? tensorInputs = null, IReadOnlyDictionary<string, string>? options = null, IEnumerable<ModelAssetReference>? modelAssets = null)
+        { ModelId = ContractGuard.Id(modelId, nameof(modelId)); BackendId = ContractGuard.Id(backendId, nameof(backendId)); Device = ContractGuard.Text(device, nameof(device)); if (warmup < 0) throw new ArgumentOutOfRangeException(nameof(warmup)); if (iterations <= 0) throw new ArgumentOutOfRangeException(nameof(iterations)); Warmup = warmup; Iterations = iterations; ModelPath = ContractGuard.Optional(modelPath); ModelFormat = ContractGuard.Optional(modelFormat)?.ToLowerInvariant(); ModelSha256 = ContractGuard.Optional(modelSha256); InputPath = ContractGuard.Optional(inputPath); TensorInputs = ContractGuard.List(tensorInputs); Options = ContractGuard.Dictionary(options); ModelAssets = ContractGuard.List(modelAssets); }
         public string ModelId { get; }
         public string BackendId { get; }
         public string Device { get; }
@@ -198,12 +198,13 @@ namespace DeploySharpApp.Contracts
         public string? InputPath { get; }
         public IReadOnlyList<ModelTensorInput> TensorInputs { get; }
         public IReadOnlyDictionary<string, string> Options { get; }
+        public IReadOnlyList<ModelAssetReference> ModelAssets { get; }
     }
 
     public sealed class BenchmarkReport
     {
-        public BenchmarkReport(BenchmarkRequest request, bool available, string message, double p50Ms = 0, double p95Ms = 0, double throughput = 0, string? executionMode = null, IEnumerable<RuntimeDiagnostic>? diagnostics = null)
-        { Request = request ?? throw new ArgumentNullException(nameof(request)); Available = available; Message = ContractGuard.Text(message, nameof(message)); P50Ms = p50Ms; P95Ms = p95Ms; Throughput = throughput; ExecutionMode = executionMode; Diagnostics = ContractGuard.List(diagnostics); }
+        public BenchmarkReport(BenchmarkRequest request, bool available, string message, double p50Ms = 0, double p95Ms = 0, double throughput = 0, string? executionMode = null, IEnumerable<RuntimeDiagnostic>? diagnostics = null, IReadOnlyDictionary<string, string>? metadata = null)
+        { Request = request ?? throw new ArgumentNullException(nameof(request)); Available = available; Message = ContractGuard.Text(message, nameof(message)); P50Ms = p50Ms; P95Ms = p95Ms; Throughput = throughput; ExecutionMode = executionMode; Diagnostics = ContractGuard.List(diagnostics); Metadata = ContractGuard.Dictionary(metadata); }
         public BenchmarkRequest Request { get; }
         public bool Available { get; }
         public string Message { get; }
@@ -212,6 +213,7 @@ namespace DeploySharpApp.Contracts
         public double Throughput { get; }
         public string? ExecutionMode { get; }
         public IReadOnlyList<RuntimeDiagnostic> Diagnostics { get; }
+        public IReadOnlyDictionary<string, string> Metadata { get; }
     }
 
     public sealed class PluginInstallState

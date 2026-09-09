@@ -134,12 +134,13 @@ namespace DeploySharpApp.Infrastructure
                 Add(payload, "inputPath", request.InputPath);
                 payload["tensorInputsJson"] = JsonSerializer.Serialize(request.TensorInputs);
                 payload["optionsJson"] = JsonSerializer.Serialize(request.Options);
+                if (request.ModelAssets.Count > 0) payload["modelAssetsJson"] = JsonSerializer.Serialize(request.ModelAssets);
                 foreach (KeyValuePair<string, string> option in request.Options)
                     if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
                 WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.Benchmark, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
                 progress?.Report(1);
                 if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
-                    return new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString(), streamDiagnostics);
+                    return new BenchmarkReport(request, true, response.Message ?? "Worker benchmark completed.", ParseDouble(response.Payload, "p50Ms"), ParseDouble(response.Payload, "p95Ms"), ParseDouble(response.Payload, "throughput"), AppExecutionMode.Worker.ToString(), streamDiagnostics, ExtractBenchmarkMetadata(response.Payload));
                 string responseCode = response.Payload.TryGetValue("diagnosticCode", out string? workerCode) && !string.IsNullOrWhiteSpace(workerCode) ? workerCode : "DSAPP-WORKER-BENCHMARK-UNAVAILABLE";
                 BenchmarkReport failure = BenchmarkFailure(request, response.Message ?? "Worker backend 尚未提供 benchmark adapter。", responseCode, response.Message, response.Payload);
                 return streamDiagnostics.Count == 0 ? failure : new BenchmarkReport(request, false, failure.Message, executionMode: failure.ExecutionMode, diagnostics: streamDiagnostics.Concat(failure.Diagnostics));
@@ -253,6 +254,15 @@ namespace DeploySharpApp.Infrastructure
             string message = response.Message ?? (response.Payload.TryGetValue("message", out string? payloadMessage) ? payloadMessage : "Worker log event.");
             string code = response.Payload.TryGetValue("diagnosticCode", out string? diagnosticCode) && !string.IsNullOrWhiteSpace(diagnosticCode) ? diagnosticCode : "DSAPP-WORKER-LOG";
             return new RuntimeDiagnostic(code, severity, message, details: response.Payload);
+        }
+
+        private static IReadOnlyDictionary<string, string> ExtractBenchmarkMetadata(IReadOnlyDictionary<string, string> payload)
+        {
+            string[] keys = { "backendId", "device", "execution", "timingScope", "warmup", "iterations", "initializationMs", "runtimeIdentifier", "processArchitecture", "osDescription", "frameworkDescription", "timestampUtc" };
+            var metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string key in keys)
+                if (payload.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value)) metadata[key] = value;
+            return metadata;
         }
 
         private ProcessStartInfo? CreateStartInfo()
