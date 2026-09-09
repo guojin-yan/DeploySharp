@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DeploySharpApp.Application;
 using DeploySharpApp.BackendHost.Protocol;
@@ -225,6 +226,33 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task OpenCvAndOpenVinoAbiSmokeValidatesRealFixtureWhenAvailable()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages Windows native runtimes.");
+            string smokeModel = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            Assert.IsTrue(File.Exists(smokeModel), "The checked-in classification fixture is required for the ABI smoke contract.");
+            var client = new BackendHostWorkerClient(LocateBackendHost());
+            foreach (string backendId in new[] { "deploysharp.backend.opencv", "deploysharp.backend.openvino" })
+            {
+                var payload = new Dictionary<string, string> { ["smokeModelPath"] = smokeModel };
+                if (backendId.EndsWith("opencv", StringComparison.OrdinalIgnoreCase))
+                {
+                    payload["smokeInputName"] = "images";
+                    payload["smokeInputShape"] = "[1,3,2,2]";
+                    payload["smokeOutputName"] = "scores";
+                    payload["smokeOutputShape"] = "[1,3]";
+                }
+                WorkerResponse response = await client.SendAsync(new WorkerRequest(WorkerMessageKind.Probe, "probe-real-smoke-" + backendId.Replace('.', '-'), backendId, payload: payload), TimeSpan.FromSeconds(30), CancellationToken.None);
+                if (!response.Succeeded && response.Payload.TryGetValue("diagnosticCode", out string? code) && code is "DSAPP-WORKER-NATIVE-MISSING" or "DSAPP-WORKER-ABI-SMOKE-MISSING-NATIVE" or "DSAPP-WORKER-NATIVE-PREFLIGHT")
+                    Assert.Inconclusive(backendId + " native runtime is unavailable: " + response.Message);
+                Assert.IsTrue(response.Succeeded, backendId + ": " + response.Message + " [" + string.Join(";", response.Payload.Select(item => item.Key + "=" + item.Value)) + "]");
+                Assert.AreEqual("Available", response.Payload["state"], backendId);
+                Assert.AreEqual("DSAPP-WORKER-ABI-SMOKE-PASSED", response.Payload["diagnosticCode"], backendId);
+                Assert.IsTrue(response.Payload.TryGetValue("probe.abiSmokePath", out string? smokePath) && string.Equals(Path.GetFullPath(smokeModel), smokePath, StringComparison.OrdinalIgnoreCase), backendId);
+            }
+        }
+
+        [TestMethod]
         public async Task NativeBenchmarkReusesPreparedOpenVinoSession()
         {
             if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
@@ -347,7 +375,7 @@ namespace DeploySharpApp.Application.Tests
 
             ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
 
-            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message + " [" + string.Join(";", item.Details.Select(pair => pair.Key + "=" + pair.Value)) + "]")));
             Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
             using JsonDocument output = JsonDocument.Parse(result.Output!);
             Assert.AreEqual("deploysharp.visual.result.v1", output.RootElement.GetProperty("schema").GetString());
@@ -385,7 +413,7 @@ namespace DeploySharpApp.Application.Tests
 
             ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
 
-            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message + " [" + string.Join(";", item.Details.Select(pair => pair.Key + "=" + pair.Value)) + "]")));
             Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
             using JsonDocument output = JsonDocument.Parse(result.Output!);
             Assert.AreEqual("deploysharp.visual.result.v1", output.RootElement.GetProperty("schema").GetString());
@@ -393,6 +421,40 @@ namespace DeploySharpApp.Application.Tests
             Assert.AreEqual(810, output.RootElement.GetProperty("sourceWidth").GetInt32());
             Assert.AreEqual(1080, output.RootElement.GetProperty("sourceHeight").GetInt32());
             Assert.IsTrue(output.RootElement.GetProperty("detections").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        [DataRow("paddleocr/ppocrv5/mobile-rec", "ppocrv5-mobile-rec.model.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", 7)]
+        [DataRow("paddleocr/ppocrv5/server-rec", "ppocrv5-server-rec.model.onnx", "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", 10)]
+        public async Task CachedReleasePaddleOcrRecognitionRunsFullDictionaryDecode(string modelId, string modelFile, string modelSha, int opset)
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages Windows native runtimes.");
+            string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharpApp", "verification-assets", "paddleocr-v5");
+            string modelPath = Path.Combine(root, modelFile);
+            string dictionaryPath = Path.Combine(root, "ppocrv5_dict.txt");
+            string imagePath = Path.Combine(root, "ocr-demo_1.jpg");
+            if (!File.Exists(modelPath) || !File.Exists(dictionaryPath) || !File.Exists(imagePath)) Assert.Inconclusive("The verified PP-OCRv5 model, dictionary, or ocr-demo_1.jpg is not installed.");
+            var options = new Dictionary<string, string>
+            {
+                ["executionMode"] = "worker", ["visualOpset"] = opset.ToString(CultureInfo.InvariantCulture),
+                ["visualUpstreamRepository"] = "https://github.com/PaddlePaddle/PaddleOCR",
+                ["visualUpstreamRevision"] = "release-ppocrv5", ["visualExporter"] = "Paddle2ONNX", ["visualExporterVersion"] = "2.0.2rc3",
+                ["visualLicense"] = "Apache-2.0", ["paddleDictionarySha256"] = "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+                ["visualAssetPathsJson"] = JsonSerializer.Serialize(new Dictionary<string, string> { ["labels"] = dictionaryPath, ["vocabulary"] = dictionaryPath })
+            };
+            var request = new ModelRunRequest(AppOperationKind.Vision, modelId, "deploysharp.backend.onnxruntime", inputPath: imagePath, modelPath: modelPath, modelFormat: "onnx", modelSha256: modelSha, options: options, timeout: TimeSpan.FromMinutes(3));
+            Assert.AreEqual(64, request.ModelSha256!.Length);
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message + " [" + string.Join(";", item.Details.Select(pair => pair.Key + "=" + pair.Value)) + "]")));
+            using JsonDocument output = JsonDocument.Parse(result.Output!);
+            Assert.AreEqual("ocr-recognition", output.RootElement.GetProperty("kind").GetString());
+            Assert.IsTrue(output.RootElement.GetProperty("items").GetArrayLength() > 0);
+            JsonElement item = output.RootElement.GetProperty("items")[0];
+            Assert.AreEqual("release.ppocr", item.GetProperty("characterSetId").GetString());
+            Assert.AreEqual("v5", item.GetProperty("characterSetVersion").GetString());
+            Assert.IsFalse(string.IsNullOrWhiteSpace(item.GetProperty("characterSetSha256").GetString()));
+            Assert.IsNotNull(item.GetProperty("text").GetString());
         }
 
         [TestMethod]

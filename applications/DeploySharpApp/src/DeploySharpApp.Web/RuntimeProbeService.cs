@@ -11,12 +11,16 @@ public sealed class RuntimeProbeService
 
     public RuntimeProbeService(IBackendHostWorkerClient worker) => _worker = worker;
 
-    public async Task<RuntimeProbeEvidence> ProbeAsync(string backendId, string smokeModelPath, CancellationToken cancellationToken = default)
+    public Task<RuntimeProbeEvidence> ProbeAsync(string backendId, string smokeModelPath, CancellationToken cancellationToken = default)
+        => ProbeAsync(backendId, smokeModelPath, null, cancellationToken);
+
+    public async Task<RuntimeProbeEvidence> ProbeAsync(string backendId, string smokeModelPath, string? runtimeRoot, CancellationToken cancellationToken = default)
     {
         var payload = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["smokeModelPath"] = smokeModelPath
         };
+        if (!string.IsNullOrWhiteSpace(runtimeRoot)) payload["runtimeRoot"] = Path.GetFullPath(runtimeRoot);
         WorkerResponse response = await _worker.SendAsync(
             new WorkerRequest(WorkerMessageKind.Probe, "probe-" + Guid.NewGuid().ToString("N"), backendId, payload: payload),
             TimeSpan.FromMinutes(2),

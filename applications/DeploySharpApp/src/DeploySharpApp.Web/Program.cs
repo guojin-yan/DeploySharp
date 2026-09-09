@@ -12,10 +12,15 @@ builder.Services.AddSingleton<ModelFactoryCatalogService>();
 builder.Services.AddSingleton<ModelFactoryRuntimeService>();
 builder.Services.AddSingleton<ModelPackRuntimeService>();
 builder.Services.AddScoped<DeploySharpAppService>(_ => AppComposition.CreateService());
-builder.Services.AddScoped<BackendLifecycleService>();
+builder.Services.AddHttpClient<BackendLifecycleService>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(20);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("DeploySharpApp/2.0");
+});
 builder.Services.AddScoped<IBackendHostWorkerClient>(_ => new BackendHostWorkerClient());
 builder.Services.AddScoped<RuntimeProbeService>();
 builder.Services.AddSingleton<WebActivityStore>();
+builder.Services.AddSingleton<BenchmarkHistoryStore>();
 var app = builder.Build();
 app.UseAntiforgery();
 app.MapStaticAssets();

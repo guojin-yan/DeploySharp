@@ -4,6 +4,7 @@
 @inject DeploySharpAppService Service
 @inject WebActivityStore Activity
 @inject ModelPackRuntimeService ModelPackRuntime
+@inject BenchmarkHistoryStore HistoryStore
 <PageTitle>性能基准 · DeploySharpApp</PageTitle>
 <style>
     .bench-config { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
@@ -64,11 +65,10 @@
     <progress value="@progress" max="1"></progress><p class="hint">@message</p>
     @if (lastDiagnostics.Count > 0) { <div class="bench-evidence">@foreach (RuntimeDiagnostic diagnostic in lastDiagnostics) { <span>@diagnostic.Code · @diagnostic.Message</span> }</div> }
     @if (lastReport?.Metadata.Count > 0) { <div class="bench-evidence">@foreach (var item in lastReport.Metadata) { <span>@item.Key: @item.Value</span> }</div> }
-    <div class="bench-history"><b>报告历史</b> · @history.Count 条 <a class="ghost small" href='@ExportHistoryHref()' download="deploysharp-benchmark-history.json">导出 JSON</a>@if (history.Count > 0) { <span class="muted">最近报告：@history[0].Message</span> }</div>
+    <div class="bench-history"><b>报告历史</b> · @HistoryStore.Entries.Count 条 <a class="ghost small" href='@ExportHistoryHref()' download="deploysharp-benchmark-history.json">导出 JSON</a>@if (HistoryStore.Entries.Count > 0) { <span class="muted">最近报告：@HistoryStore.Entries[0].Message</span> }</div>
 </div>
 @code {
     private readonly Dictionary<string, BenchmarkReport> reports = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<BenchmarkReport> history = new();
     private bool busy;
     private double progress;
     private string reportState = "等待运行";
@@ -133,7 +133,7 @@
             IReadOnlyList<ModelAssetReference> assets = modelPack?.Assets.Select(asset => new ModelAssetReference(asset.RelativePath, asset.FullPath, asset.Role.ToString(), asset.Sha256, asset.Size)).ToArray() ?? Array.Empty<ModelAssetReference>();
             var request = new BenchmarkRequest(IsDemoBackend ? "demo/benchmark" : "web/benchmark", selectedBackend, warmup, iterations, device, benchmarkModelPath, benchmarkFormat, modelSha256: modelPack?.Sha256, inputPath: string.IsNullOrWhiteSpace(inputPath) ? null : inputPath, tensorInputs: tensors, options: options, modelAssets: assets);
             BenchmarkReport report = await Service.BenchmarkAsync(request, new Progress<double>(value => { progress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
-            reports[request.BackendId] = report; history.Insert(0, report); if (history.Count > 20) history.RemoveAt(history.Count - 1); lastReport = report; reportState = report.Available ? (IsDemoBackend ? "Demo" : "可复核") : "不可用"; message = report.Message; lastDiagnostics = report.Diagnostics; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message, report.Diagnostics.FirstOrDefault()?.Code);
+            reports[request.BackendId] = report; HistoryStore.Add(report); lastReport = report; reportState = report.Available ? (IsDemoBackend ? "Demo" : "可复核") : "不可用"; message = report.Message; lastDiagnostics = report.Diagnostics; lastRun = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"); Activity.Add("benchmark", report.Message, report.Diagnostics.FirstOrDefault()?.Code);
         }
         catch (OperationCanceledException) { reportState = "已取消"; message = "基准已取消。"; }
         catch (Exception exception) { reportState = "输入无效"; message = exception.Message; }
@@ -151,7 +151,7 @@
     }
     private string ExportHistoryHref()
     {
-        string json = System.Text.Json.JsonSerializer.Serialize(history.Select(report => new { report.Request.ModelId, report.Request.BackendId, report.Available, report.Message, report.P50Ms, report.P95Ms, report.Throughput, report.ExecutionMode, report.Metadata, report.Diagnostics }));
+        string json = HistoryStore.ExportJson();
         return "data:application/json;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
     }
     private static string InferFormat(string path) => Path.GetExtension(path).Equals(".gguf", StringComparison.OrdinalIgnoreCase) ? "gguf" : Path.GetExtension(path).Equals(".engine", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".plan", StringComparison.OrdinalIgnoreCase) ? "tensorrt-engine" : Path.GetExtension(path).TrimStart('.');

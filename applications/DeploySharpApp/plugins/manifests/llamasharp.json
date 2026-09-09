@@ -12,7 +12,7 @@
   "formats": [ "gguf" ],
   "providerPackageId": "LLamaSharp.Backend.Cpu",
   "providerPackageVersion": "0.27.0",
-  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "LLamaSharp", "version": "0.27.0", "license": "MIT" }, { "kind": "managed-package", "packageId": "LLamaSharp.Backend.Cpu", "version": "0.27.0", "rid": "win-x64", "downloadable": true, "license": "MIT" } ],
+  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "LLamaSharp", "version": "0.27.0", "downloadable": true, "license": "MIT" }, { "kind": "managed-package", "packageId": "LLamaSharp.Backend.Cpu", "version": "0.27.0", "rid": "win-x64", "downloadable": true, "license": "MIT" } ],
   "nativeRequirements": [ { "kind": "llamasharp-native", "rootSelection": "package-or-user", "environmentVariables": [ "LLAMASHARP_BACKEND_PATH", "DEPLOYSHARP_LLAMASHARP_ROOT" ] } ],
   "optionsSchema": { "contextLength": { "type": "integer", "default": 2048, "minimum": 128 }, "threads": { "type": "integer", "default": 8, "minimum": 1 } },
   "probeId": "llamasharp.default",

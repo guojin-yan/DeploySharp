@@ -33,7 +33,8 @@
 <div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Factory ? "active" : "")" @onclick="() => tab = CatalogTab.Factory">官方 ModelFactory</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
 @if (tab == CatalogTab.Backends)
 {
-    <div class="plugin-grid">@foreach (var backend in Service.Backends) { var lifecycle = BackendLifecycle.Get(backend.Id, backend.Version); <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div><div class="plugin-actions"><button class="ghost small" @onclick="() => InstallBackendAsync(backend.Id)" disabled="@(lifecycleBusyId is not null)">@(lifecycle.State == BackendLifecycleState.Active ? "升级/重新探测" : "安装/准备")</button><button class="ghost small" @onclick="() => RollbackBackend(backend.Id)" disabled="@(lifecycleBusyId is not null || lifecycle.State == BackendLifecycleState.NotInstalled)">回滚</button><span class="table-status @(lifecycle.State == BackendLifecycleState.Active ? "ok" : "pending")">@lifecycle.State</span><p class="hint">@lifecycle.Message</p></div></article> }</div>
+    <div class="probe-panel"><label>激活 Smoke 模型路径<input @bind="activationSmokePath" placeholder="服务器本地 .onnx / .engine 路径；用于 staged 根目录真实 ABI smoke" /></label><p class="hint">安装会下载并 SHA512 校验 manifest 依赖；填写路径后再次点击安装/准备，将使用下载的 staged 根目录执行真实 smoke，只有通过后才会标记 Active。</p></div>
+    <div class="plugin-grid">@foreach (var backend in Service.Backends) { var lifecycle = BackendLifecycle.Get(backend.Id, backend.Version); <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div><div class="plugin-actions"><button class="ghost small" @onclick="() => InstallBackendAsync(backend.Id)" disabled="@(lifecycleBusyId is not null)">@(lifecycle.State == BackendLifecycleState.Active ? "升级/重新探测" : "安装/准备")</button><button class="ghost small" @onclick="() => RollbackBackend(backend.Id)" disabled="@(lifecycleBusyId is not null || lifecycle.State == BackendLifecycleState.NotInstalled)">回滚</button><span class="table-status @(lifecycle.State == BackendLifecycleState.Active ? "ok" : "pending")">@lifecycle.State</span><p class="hint">@lifecycle.Message</p>@if (!string.IsNullOrWhiteSpace(lifecycle.InstallRoot)) { <span class="hint">Staged 根目录：@lifecycle.InstallRoot</span> }</div></article> }</div>
 }
 else if (tab == CatalogTab.Models)
 {
@@ -108,6 +109,7 @@ else
     private string? probeError;
     private RuntimeProbeEvidence? probeEvidence;
     private string? lifecycleBusyId;
+    private string activationSmokePath = string.Empty;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<string> ReleaseTasks => Service.Models.Select(model => model.Task).Concat(releaseModels.Select(model => model.Task)).Where(task => !string.IsNullOrWhiteSpace(task)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(task => task, StringComparer.OrdinalIgnoreCase);
@@ -129,6 +131,11 @@ else
         try
         {
             BackendLifecycleRecord record = await BackendLifecycle.InstallOrUpgradeAsync(backendId);
+            if (record.State == BackendLifecycleState.Staged && !string.IsNullOrWhiteSpace(activationSmokePath) && !string.IsNullOrWhiteSpace(record.InstallRoot) && File.Exists(activationSmokePath))
+            {
+                RuntimeProbeEvidence evidence = await RuntimeProbe.ProbeAsync(backendId, activationSmokePath, record.InstallRoot);
+                record = BackendLifecycle.ActivateAfterProbe(backendId, evidence);
+            }
             Activity.Add("backend", record.Message, "DSAPP-BACKEND-LIFECYCLE");
         }
         catch (Exception exception) { Activity.Add("backend", exception.Message, "DSAPP-BACKEND-LIFECYCLE-FAILED"); }

@@ -35,10 +35,12 @@ internal sealed class NativeWorkerEnvironment : IDisposable
                 if (mapping.Key.EndsWith("Root", StringComparison.OrdinalIgnoreCase)) searchRoots.Add(normalized);
                 else if (mapping.Key.Equals("bridgePath", StringComparison.OrdinalIgnoreCase)) searchRoots.Add(Path.GetDirectoryName(normalized)!);
             }
+            if (payload.TryGetValue("runtimeRoot", out string? runtimeRoot) && !string.IsNullOrWhiteSpace(runtimeRoot) && Directory.Exists(runtimeRoot))
+                searchRoots.Add(Path.GetFullPath(runtimeRoot));
         }
         string path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         previous["PATH"] = path;
-        IEnumerable<string> nativeSearch = searchRoots.SelectMany(root => new[] { root, Path.Combine(root, "bin"), Path.Combine(root, "lib") }).Where(Directory.Exists);
+        IEnumerable<string> nativeSearch = searchRoots.SelectMany(NativeSearchDirectories).Where(Directory.Exists);
         string prefix = string.Join(Path.PathSeparator.ToString(), nativeSearch.Distinct(StringComparer.OrdinalIgnoreCase));
         if (prefix.Length > 0) Environment.SetEnvironmentVariable("PATH", prefix + Path.PathSeparator + path);
         return new NativeWorkerEnvironment(previous);
@@ -53,5 +55,17 @@ internal sealed class NativeWorkerEnvironment : IDisposable
     {
         string trimmed = value.Trim();
         return key.Equals("tensorRtApiVersion", StringComparison.OrdinalIgnoreCase) ? trimmed : Path.GetFullPath(trimmed);
+    }
+
+    private static IEnumerable<string> NativeSearchDirectories(string root)
+    {
+        var directories = new List<string> { root, Path.Combine(root, "bin"), Path.Combine(root, "lib") };
+        try
+        {
+            directories.AddRange(Directory.EnumerateFiles(root, OperatingSystem.IsWindows() ? "*.dll" : "*.so*", SearchOption.AllDirectories)
+                .Select(Path.GetDirectoryName).Where(value => value is not null).Select(value => value!).Distinct(StringComparer.OrdinalIgnoreCase).Take(64));
+        }
+        catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException) { }
+        return directories;
     }
 }

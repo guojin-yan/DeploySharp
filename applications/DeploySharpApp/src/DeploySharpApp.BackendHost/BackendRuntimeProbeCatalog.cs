@@ -31,9 +31,9 @@ internal static class BackendRuntimeProbeCatalog
         try
         {
             if (Contains(backendId, "onnxruntime"))
-                return Run(backendId, new OnnxRuntimePluginFactory().Descriptor, new OnnxRuntimeRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), Array.Empty<string>());
+                return Run(backendId, new OnnxRuntimePluginFactory().Descriptor, new OnnxRuntimeRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), Array.Empty<string>(), smokePayload);
             if (Contains(backendId, "llamasharp"))
-                return Run(backendId, new LlamaSharpPluginFactory().Descriptor, new LlamaSharpRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), LlamaEnvironmentVariables);
+                return Run(backendId, new LlamaSharpPluginFactory().Descriptor, new LlamaSharpRuntimeProbe(new BackendPluginContext(AppContext.BaseDirectory)), LlamaEnvironmentVariables, smokePayload);
             if (Contains(backendId, "opencv"))
             {
                 var contract = new OpenCvDnnModelContract(
@@ -59,9 +59,10 @@ internal static class BackendRuntimeProbeCatalog
     private static WorkerProbeResult Run(string appBackendId, BackendPluginDescriptor descriptor, IBackendRuntimeProbe probe, IReadOnlyList<string> environmentVariables, IReadOnlyDictionary<string, string>? smokePayload = null)
     {
         descriptor = MakeWorkerCompatible(descriptor);
+        ApplyRuntimeRoot(appBackendId, smokePayload);
         BackendRuntimeStatus status = probe.ProbeAsync(descriptor, default).GetAwaiter().GetResult();
         status = NormalizePlatformStatus(descriptor, status);
-        status = AugmentPackagedNativeStatus(descriptor, status);
+        status = AugmentPackagedNativeStatus(descriptor, status, smokePayload);
         status = ApplyAbiSmoke(appBackendId, status, smokePayload);
         string missingItems = string.Join(",", status.MissingItems.Select(MapMissingItem));
         string probedPaths = string.Join(";", ProbeRoots(environmentVariables)
@@ -151,8 +152,21 @@ internal static class BackendRuntimeProbeCatalog
         details["abiSmokeState"] = "failed";
         details["abiSmokeCode"] = code;
         details["abiSmokeError"] = exception.GetType().FullName + ": " + exception.Message;
-        var diagnostic = new RuntimeDiagnostic(code, DiagnosticSeverity.Warning, message, details: details);
+        var diagnostic = new RuntimeDiagnostic(code.ToLowerInvariant(), DiagnosticSeverity.Warning, message, details: DiagnosticDetails(details));
         return Rebuild(status, BackendRuntimeState.Unavailable, details, "Install matching native assets and rerun the ABI smoke test with a model contract valid for this backend.", status.Diagnostics.Concat(new[] { diagnostic }));
+    }
+
+    private static IReadOnlyDictionary<string, string> DiagnosticDetails(IReadOnlyDictionary<string, string> details)
+    {
+        var normalized = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (KeyValuePair<string, string> pair in details)
+        {
+            if (string.IsNullOrWhiteSpace(pair.Value)) continue;
+            string key = new string(pair.Key.ToLowerInvariant().Select(character =>
+                character is >= 'a' and <= 'z' or >= '0' and <= '9' or '.' or '-' or '_' or '/' ? character : '-').ToArray());
+            if (!string.IsNullOrWhiteSpace(key)) normalized[key] = pair.Value;
+        }
+        return normalized;
     }
 
     private static BackendRuntimeStatus Rebuild(BackendRuntimeStatus status, BackendRuntimeState state, IReadOnlyDictionary<string, string> details, string? suggestedAction, IEnumerable<RuntimeDiagnostic>? diagnostics = null)
@@ -239,7 +253,7 @@ internal static class BackendRuntimeProbeCatalog
         return true;
     }
 
-    private static BackendRuntimeStatus AugmentPackagedNativeStatus(BackendPluginDescriptor descriptor, BackendRuntimeStatus status)
+    private static BackendRuntimeStatus AugmentPackagedNativeStatus(BackendPluginDescriptor descriptor, BackendRuntimeStatus status, IReadOnlyDictionary<string, string>? smokePayload)
     {
         if (status.State != BackendRuntimeState.MissingNative || status.MissingItems.Count == 0) return status;
         var details = new Dictionary<string, string>(status.Details, StringComparer.Ordinal);
@@ -250,7 +264,7 @@ internal static class BackendRuntimeProbeCatalog
             NativeRuntimeRequirement requirement = descriptor.NativeRequirements[index];
             string key = "native." + requirement.Kind.ToString().ToLowerInvariant();
             if (!status.MissingItems.Contains(key, StringComparer.Ordinal)) continue;
-            string? packagedPath = FindPackagedNative(descriptor.PluginId, requirement.Kind);
+            string? packagedPath = FindPackagedNative(descriptor.PluginId, requirement.Kind, smokePayload);
             if (packagedPath == null) missing.Add(key);
             else
             {
@@ -263,7 +277,7 @@ internal static class BackendRuntimeProbeCatalog
         return new BackendRuntimeStatus(BackendRuntimeState.Available, loadedPath, status.Version, status.AbiApiLine, status.RuntimeIdentifier, status.ProcessArchitecture, status.Device, missingItems: Array.Empty<string>(), suggestedAction: null, details: details, diagnostics: status.Diagnostics);
     }
 
-    private static string? FindPackagedNative(string pluginId, NativeRuntimeKind kind)
+    private static string? FindPackagedNative(string pluginId, NativeRuntimeKind kind, IReadOnlyDictionary<string, string>? smokePayload)
     {
         if (kind == NativeRuntimeKind.Driver && OperatingSystem.IsWindows())
         {
@@ -281,7 +295,8 @@ internal static class BackendRuntimeProbeCatalog
             NativeRuntimeKind.Unknown when pluginId.IndexOf("tensorrt", StringComparison.OrdinalIgnoreCase) >= 0 => new[] { "jyppxtrtbridge.dll" },
             _ => Array.Empty<string>()
         };
-        string[] roots = { AppContext.BaseDirectory, nativeRoot };
+        var roots = new List<string> { AppContext.BaseDirectory, nativeRoot };
+        if (smokePayload is not null && smokePayload.TryGetValue("runtimeRoot", out string? suppliedRoot) && Directory.Exists(suppliedRoot)) roots.Insert(0, Path.GetFullPath(suppliedRoot));
         foreach (string name in names)
         {
             foreach (string root in roots)
@@ -291,6 +306,45 @@ internal static class BackendRuntimeProbeCatalog
                 if (match != null) return Path.GetFullPath(match);
             }
         }
+        return null;
+    }
+
+    private static void ApplyRuntimeRoot(string backendId, IReadOnlyDictionary<string, string>? payload)
+    {
+        if (payload is null || !payload.TryGetValue("runtimeRoot", out string? root) || string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) return;
+        root = Path.GetFullPath(root);
+        if (Contains(backendId, "onnxruntime"))
+        {
+            Environment.SetEnvironmentVariable("DEPLOYSHARP_ONNXRUNTIME_NATIVE_PATH", FindRuntimeFile(root, "onnxruntime.dll", "libonnxruntime.so") ?? root);
+            Environment.SetEnvironmentVariable("DEPLOYSHARP_ORT_ROOT", root);
+        }
+        else if (Contains(backendId, "opencv")) Environment.SetEnvironmentVariable("DEPLOYSHARP_OPENCV_ROOT", RuntimeDirectory(root, "JYPPX.OpenCV.Native.dll", "opencv_core500.dll", "opencv_dnn500.dll") ?? root);
+        else if (Contains(backendId, "openvino")) Environment.SetEnvironmentVariable("DEPLOYSHARP_OPENVINO_ROOT", RuntimeDirectory(root, "openvino_c.dll", "libopenvino_c.so") ?? root);
+        else if (Contains(backendId, "llamasharp"))
+        {
+            Environment.SetEnvironmentVariable("LLAMASHARP_BACKEND_PATH", RuntimeDirectory(root, "llama.dll", "libllama.so") ?? root);
+            Environment.SetEnvironmentVariable("DEPLOYSHARP_LLAMASHARP_ROOT", root);
+        }
+        else if (Contains(backendId, "tensorrt")) Environment.SetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH", FindRuntimeFile(root, "jyppxtrtbridge.dll", "libjyppxtrtbridge.so") ?? root);
+    }
+
+    private static string? RuntimeDirectory(string root, params string[] names)
+    {
+        string? path = FindRuntimeFile(root, names);
+        return path is null ? null : Path.GetDirectoryName(path);
+    }
+
+    private static string? FindRuntimeFile(string root, params string[] names)
+    {
+        try
+        {
+            foreach (string name in names)
+            {
+                string? match = Directory.EnumerateFiles(root, name, SearchOption.AllDirectories).FirstOrDefault();
+                if (match is not null) return Path.GetFullPath(match);
+            }
+        }
+        catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException) { }
         return null;
     }
 

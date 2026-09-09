@@ -12,7 +12,7 @@
   "formats": [ "tensorrt-engine" ],
   "providerPackageId": "JYPPX.TensorRT.CSharp.API",
   "providerPackageVersion": "4.0.0",
-  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "JYPPX.TensorRT.CSharp.API", "version": "4.0.0", "downloadable": true, "license": "Apache-2.0" }, { "kind": "environment", "downloadable": false, "license": "Apache-2.0" } ],
+  "runtimeDependencies": [ { "kind": "managed-package", "packageId": "JYPPX.TensorRT.CSharp.API", "version": "4.0.0", "downloadable": true, "license": "Apache-2.0" }, { "kind": "native-bridge-package", "packageId": "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge", "version": "4.0.0", "rid": "win-x64", "downloadable": true, "condition": "runtimeIdentifier == win-x64", "license": "Apache-2.0" } ],
   "nativeRequirements": [
     { "kind": "cuda", "rootSelection": "user", "environmentVariables": [ "JYPPX_CUDA_ROOT", "CUDA_PATH" ], "minimumVersion": "12.0" },
     { "kind": "cudnn", "rootSelection": "user", "environmentVariables": [ "JYPPX_CUDNN_ROOT" ], "minimumVersion": "9" },
