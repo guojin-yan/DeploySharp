@@ -81,7 +81,7 @@ internal static class WorkerInferenceAdapter
             if (Contains(backendId, "llamasharp")) return await RunLlamaAsync(request, modelPath, reportProgress, reportText, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "openvino")) return await RunCoreTensorAsync(request, modelPath, new OpenVinoBackendProvider(ParseOpenVinoOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
             if (Contains(backendId, "opencv")) return await RunOpenCvAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
-            if (Contains(backendId, "tensorrt")) return await RunCoreTensorAsync(request, modelPath, new TensorRtBackendProvider(ParseTensorRtOptions(request.Payload)), reportProgress, cancellationToken).ConfigureAwait(false);
+            if (Contains(backendId, "tensorrt")) return await RunTensorRtAsync(request, modelPath, reportProgress, cancellationToken).ConfigureAwait(false);
             return Error(request, "DSAPP-WORKER-BACKEND-UNKNOWN", "No native inference adapter is registered for this backend.", AppRuntimeState.Unsupported);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -316,6 +316,8 @@ internal static class WorkerInferenceAdapter
     {
         string backend = request.BackendId ?? string.Empty;
         string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
+        string? artifactSha256 = Value(request.Payload, "modelSha256");
+        TensorRtPreparedEngine? preparedEngine = null;
         IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
         if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "Native tensor benchmark requires named tensor inputs.", AppRuntimeState.Unsupported);
 
@@ -347,12 +349,20 @@ internal static class WorkerInferenceAdapter
         }
         else if (Contains(backend, "tensorrt"))
         {
-            if (!string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase)) return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT benchmark requires a device-bound engine/plan.", AppRuntimeState.Unsupported, format);
-            TensorRtValidationResult validation = TensorRtEngineIdentityValidator.Validate(modelPath, request.Payload);
-            if (!validation.Succeeded)
+            if (string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase))
             {
-                var details = new Dictionary<string, string>(validation.Details, StringComparer.Ordinal) { ["state"] = AppRuntimeState.Unavailable.ToString(), ["diagnosticCode"] = validation.Code, ["execution"] = "worker" };
-                return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, validation.Message, details);
+                preparedEngine = TensorRtOnnxEngineAdapter.ResolveOrBuild(request, modelPath, reportProgress, cancellationToken);
+                if (!preparedEngine.Succeeded) return TensorRtFailure(request, preparedEngine);
+                modelPath = preparedEngine.EnginePath!;
+                artifactSha256 = preparedEngine.EngineSha256;
+                format = "tensorrt-engine";
+            }
+            else if (!string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase))
+                return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT benchmark accepts ONNX for an explicit local build, or a device-bound engine/plan.", AppRuntimeState.Unsupported, format);
+            else
+            {
+                TensorRtValidationResult validation = TensorRtEngineIdentityValidator.Validate(modelPath, request.Payload);
+                if (!validation.Succeeded) return TensorRtFailure(request, validation);
             }
             provider = new TensorRtBackendProvider(ParseTensorRtOptions(request.Payload));
         }
@@ -362,7 +372,7 @@ internal static class WorkerInferenceAdapter
         using (provider)
         {
             BackendId providerId = provider.Descriptor.Id;
-            var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/benchmark"), format, modelPath, Value(request.Payload, "modelSha256"), providerId);
+            var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/benchmark"), format, modelPath, artifactSha256, providerId);
             var backendRequest = new BackendRequest(BackendCapabilities.TensorInference, providerId, Value(request.Payload, "device"));
             using IInferenceSession session = provider.CreateSession(artifact, backendRequest, new SessionOptions(GetInt(request.Payload, "maxConcurrency", 1), GetBool(request.Payload, "enableProfiling", false)));
             InferenceInputs inferenceInputs = await CreateInferenceInputsAsync(request, inputs, cancellationToken).ConfigureAwait(false);
@@ -373,7 +383,7 @@ internal static class WorkerInferenceAdapter
                 last = await session.RunAsync(inferenceInputs, token).ConfigureAwait(false);
                 return JsonSerializer.Serialize(last.Select(item => new WorkerTensorOutput(item.Name, item.Tensor.ElementType.ToString(), item.Tensor.Shape.ToArray(), item.Tensor.Buffer)).ToArray(), JsonOptions);
             }).ConfigureAwait(false);
-            return report;
+            return preparedEngine is null ? report : WithTensorRtBuildMetadata(report, preparedEngine);
         }
     }
 
@@ -585,9 +595,39 @@ internal static class WorkerInferenceAdapter
             return await RunSessionAsync(request, modelPath, format, backendId, provider, inputs, reportProgress, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<WorkerResponse> RunSessionAsync(WorkerRequest request, string modelPath, string format, BackendId backendId, IBackendProvider provider, IReadOnlyList<WorkerTensorInput> inputs, Action<double>? reportProgress, CancellationToken cancellationToken)
+    private static async Task<WorkerResponse> RunTensorRtAsync(WorkerRequest request, string modelPath, Action<double>? reportProgress, CancellationToken cancellationToken)
     {
-        var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/model"), format, modelPath, Value(request.Payload, "modelSha256"), backendId);
+        string format = Value(request.Payload, "modelFormat") ?? Path.GetExtension(modelPath).TrimStart('.');
+        string? artifactSha256 = Value(request.Payload, "modelSha256");
+        TensorRtPreparedEngine? prepared = null;
+        if (string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase))
+        {
+            prepared = TensorRtOnnxEngineAdapter.ResolveOrBuild(request, modelPath, reportProgress, cancellationToken);
+            if (!prepared.Succeeded) return TensorRtFailure(request, prepared);
+            modelPath = prepared.EnginePath!;
+            artifactSha256 = prepared.EngineSha256;
+            format = "tensorrt-engine";
+        }
+        else if (string.Equals(format, "tensorrt-engine", StringComparison.OrdinalIgnoreCase))
+        {
+            TensorRtValidationResult validation = TensorRtEngineIdentityValidator.Validate(modelPath, request.Payload);
+            if (!validation.Succeeded) return TensorRtFailure(request, validation);
+        }
+        else
+        {
+            return Error(request, "DSAPP-WORKER-MODEL-FORMAT-INVALID", "TensorRT Worker accepts ONNX for an explicit local build, or a device-bound .engine/.plan artifact.", AppRuntimeState.Unsupported, format);
+        }
+
+        IReadOnlyList<WorkerTensorInput> inputs = ParseInputs(request.Payload);
+        if (inputs.Count == 0) return Error(request, "DSAPP-WORKER-TENSOR-INPUT-REQUIRED", "TensorRT Worker inference requires named tensor inputs.", AppRuntimeState.Unsupported);
+        using var provider = new TensorRtBackendProvider(ParseTensorRtOptions(request.Payload));
+        WorkerResponse response = await RunSessionAsync(request, modelPath, format, TensorRtBackendProvider.BackendId, provider, inputs, reportProgress, cancellationToken, artifactSha256, prepared?.Details).ConfigureAwait(false);
+        return prepared is null ? response : WithTensorRtBuildMetadata(response, prepared);
+    }
+
+    private static async Task<WorkerResponse> RunSessionAsync(WorkerRequest request, string modelPath, string format, BackendId backendId, IBackendProvider provider, IReadOnlyList<WorkerTensorInput> inputs, Action<double>? reportProgress, CancellationToken cancellationToken, string? artifactSha256 = null, IReadOnlyDictionary<string, string>? responseMetadata = null)
+    {
+        var artifact = new ModelArtifact(new ModelId(request.ModelId ?? "worker/model"), format, modelPath, artifactSha256 ?? Value(request.Payload, "modelSha256"), backendId);
         var backendRequest = new BackendRequest(BackendCapabilities.TensorInference, backendId, Value(request.Payload, "device"));
         using IInferenceSession session = provider.CreateSession(artifact, backendRequest, new SessionOptions(GetInt(request.Payload, "maxConcurrency", 1), GetBool(request.Payload, "enableProfiling", false)));
         Stopwatch preprocess = Stopwatch.StartNew();
@@ -611,7 +651,41 @@ internal static class WorkerInferenceAdapter
             ["inferenceMs"] = stopwatch.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
             ["postprocessMs"] = postprocess.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
         };
+        if (responseMetadata is not null)
+            foreach (KeyValuePair<string, string> pair in responseMetadata)
+                if (!payload.ContainsKey(pair.Key)) payload[pair.Key] = pair.Value;
         return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, backendId.Value + " inference completed in the Worker.", payload);
+    }
+
+    private static WorkerResponse TensorRtFailure(WorkerRequest request, TensorRtPreparedEngine failure)
+    {
+        AppRuntimeState state = failure.Code.Contains("NATIVE", StringComparison.OrdinalIgnoreCase) || failure.Code.Contains("RUNTIME", StringComparison.OrdinalIgnoreCase)
+            ? AppRuntimeState.MissingNative
+            : AppRuntimeState.Unavailable;
+        var details = new Dictionary<string, string>(failure.Details, StringComparer.Ordinal)
+        {
+            ["state"] = state.ToString(),
+            ["backendId"] = request.BackendId ?? "deploysharp.backend.tensorrt",
+            ["diagnosticCode"] = failure.Code,
+            ["execution"] = "worker"
+        };
+        return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, failure.Message, details);
+    }
+
+    private static WorkerResponse TensorRtFailure(WorkerRequest request, TensorRtValidationResult failure)
+        => TensorRtFailure(request, new TensorRtPreparedEngine(false, failure.Code, failure.Message, null, null, null, false, failure.Details));
+
+    private static WorkerResponse WithTensorRtBuildMetadata(WorkerResponse response, TensorRtPreparedEngine prepared)
+    {
+        var payload = new Dictionary<string, string>(response.Payload, StringComparer.Ordinal)
+        {
+            ["engineBuildState"] = prepared.Built ? "built" : "cache-hit",
+            ["enginePath"] = prepared.EnginePath ?? string.Empty,
+            ["engineIdentityPath"] = prepared.IdentityPath ?? string.Empty,
+            ["engineSha256"] = prepared.EngineSha256 ?? string.Empty
+        };
+        string message = prepared.Message + " " + (response.Message ?? "TensorRT operation completed.");
+        return new WorkerResponse(response.Kind, response.RequestId, response.Succeeded, message, payload);
     }
 
     private static async Task<InferenceInputs> CreateInferenceInputsAsync(WorkerRequest request, IReadOnlyList<WorkerTensorInput> inputs, CancellationToken cancellationToken)

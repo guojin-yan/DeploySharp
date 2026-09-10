@@ -343,7 +343,17 @@ namespace DeploySharpApp.Infrastructure
         private static ModelRunResult MapRunResponse(ModelRunRequest request, WorkerResponse response, IReadOnlyList<RuntimeDiagnostic> streamDiagnostics)
         {
             if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
-                return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: streamDiagnostics, runMode: ModelRunMode.Worker);
+            {
+                var diagnostics = streamDiagnostics.ToList();
+                if (response.Payload.TryGetValue("engineBuildState", out string? buildState) && !string.IsNullOrWhiteSpace(buildState))
+                {
+                    var details = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (string key in new[] { "engineBuildState", "enginePath", "engineIdentityPath", "engineSha256", "engineBuildInputsSha256", "engineCacheKey", "engineBytes", "enginePrecision", "engineApiVersion", "optimizationProfileCount" })
+                        if (response.Payload.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value)) details[key] = value;
+                    diagnostics.Add(new RuntimeDiagnostic("DSAPP-TENSORRT-ENGINE-" + buildState.ToUpperInvariant(), DiagnosticSeverity.Information, buildState.Equals("built", StringComparison.OrdinalIgnoreCase) ? "TensorRT engine was built from ONNX and its device identity was verified." : "A compatible TensorRT engine was reused from the local device-bound cache.", request.BackendId, request.ModelId, details));
+                }
+                return new ModelRunResult(true, AppErrorCode.None, response.Message ?? "Worker operation completed.", response.Payload.TryGetValue("output", out string? output) ? output : null, ParseDouble(response.Payload, "preprocessMs"), ParseDouble(response.Payload, "inferenceMs"), ParseDouble(response.Payload, "postprocessMs"), diagnostics: diagnostics, runMode: ModelRunMode.Worker);
+            }
             if (response.Payload.TryGetValue("state", out string? stateText) && Enum.TryParse(stateText, true, out AppRuntimeState state))
             {
                 string diagnosticCode = response.Payload.TryGetValue("diagnosticCode", out string? workerCode) ? workerCode : string.Empty;

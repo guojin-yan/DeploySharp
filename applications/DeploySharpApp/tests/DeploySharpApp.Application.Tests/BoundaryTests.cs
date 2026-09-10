@@ -54,6 +54,7 @@ namespace DeploySharpApp.Application.Tests
 
             StringAssert.Contains(workerProject, "<RuntimeIdentifier>win-x64</RuntimeIdentifier>");
             StringAssert.Contains(workerProject, "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge");
+            Assert.IsTrue(File.Exists(Path.Combine(appRoot, "src", "DeploySharpApp.BackendHost", "TensorRtOnnxEngineAdapter.cs")));
             Assert.IsFalse(webProject.Contains("TensorRT", System.StringComparison.OrdinalIgnoreCase));
             Assert.IsFalse(net48Project.Contains("TensorRT", System.StringComparison.OrdinalIgnoreCase));
         }

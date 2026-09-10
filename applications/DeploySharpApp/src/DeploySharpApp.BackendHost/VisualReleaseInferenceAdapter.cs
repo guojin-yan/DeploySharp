@@ -4,6 +4,7 @@ using DeploySharpApp.Contracts;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenVINO;
+using JYPPX.DeploySharp.Backends.TensorRT;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
@@ -27,10 +28,14 @@ internal static class VisualReleaseInferenceAdapter
         if (!string.Equals(Value(request.Payload, "operation"), AppOperationKind.Vision.ToString(), StringComparison.OrdinalIgnoreCase)) return null;
         bool useOnnxRuntime = Contains(request.BackendId, "onnxruntime");
         bool useOpenVino = Contains(request.BackendId, "openvino");
-        if (!useOnnxRuntime && !useOpenVino) return null;
+        bool useTensorRt = Contains(request.BackendId, "tensorrt");
+        if (!useOnnxRuntime && !useOpenVino && !useTensorRt) return null;
         string id = request.ModelId ?? string.Empty;
         if (!IsReleaseVisualId(id)) return null;
-        if (string.Equals(Value(request.Payload, "device"), "cuda", StringComparison.OrdinalIgnoreCase))
+        string requestedDevice = Value(request.Payload, "device") ?? "cpu";
+        if (useTensorRt && !string.Equals(requestedDevice, "cuda", StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-TENSORRT-DEVICE-INVALID", "TensorRT visual inference requires the CUDA device; it never falls back to CPU.", AppRuntimeState.Unavailable, "requestedDevice=" + requestedDevice);
+        if (!useTensorRt && string.Equals(requestedDevice, "cuda", StringComparison.OrdinalIgnoreCase))
             return Error(request, useOpenVino ? "DSAPP-OPENVINO-DEVICE-UNAVAILABLE" : "DSAPP-CUDA-UNAVAILABLE", useOpenVino
                 ? "CUDA was requested for the OpenVINO visual adapter, but this release verifies only the CPU device; no CPU fallback is performed."
                 : "CUDA was requested for the ONNX Runtime visual adapter, but this Worker build only enables the audited CPU provider; no CPU fallback is performed.", AppRuntimeState.Unavailable, "requestedDevice=cuda;provider=" + (useOpenVino ? "openvino-cpu" : "onnxruntime-cpu"));
@@ -46,10 +51,26 @@ internal static class VisualReleaseInferenceAdapter
             progress?.Invoke(.5);
             object? profile = CreateProfile(id, request);
             if (profile is null) return Error(request, "DSAPP-VISUAL-PROFILE-UNSUPPORTED", "The Release manifest has no executable visual profile in this Worker build.", AppRuntimeState.Unsupported, id);
+            if (useTensorRt && profile is PromptableSegmentationProfile)
+                return Error(request, "DSAPP-TENSORRT-MULTI-ENGINE-BUILD-REQUIRED", "SAM requires separately built and identity-bound encoder and decoder engines; the Worker will not reuse one engine for both ONNX graphs.", AppRuntimeState.Unsupported, id);
+            TensorRtPreparedEngine? preparedEngine = null;
+            string runtimeModelPath = modelPath;
+            if (useTensorRt)
+            {
+                preparedEngine = TensorRtOnnxEngineAdapter.ResolveOrBuild(request, modelPath, progress, cancellationToken);
+                if (!preparedEngine.Succeeded) return TensorRtError(request, preparedEngine);
+                runtimeModelPath = preparedEngine.EnginePath!;
+            }
             using var registry = new BackendRegistry();
             BackendId backendId;
             string device;
-            if (useOpenVino)
+            if (useTensorRt)
+            {
+                registry.UseTensorRT(ParseTensorRtOptions(request.Payload));
+                backendId = TensorRtBackendProvider.BackendId;
+                device = "cuda";
+            }
+            else if (useOpenVino)
             {
                 registry.UseOpenVino();
                 backendId = OpenVinoBackendProvider.BackendId;
@@ -66,37 +87,37 @@ internal static class VisualReleaseInferenceAdapter
             VisualInferenceResult result;
             if (profile is PromptableSegmentationProfile sam)
             {
-                result = RunSam(registry, sam, modelPath, request, imagePath, backendId, backendRequest, cancellationToken);
+                result = RunSam(registry, sam, runtimeModelPath, request, imagePath, backendId, backendRequest, cancellationToken);
             }
             else if (profile is YoloDetectionProfile detection)
             {
                 using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(imagePath, detection.VisualProfile.Input.Name, OpenCvYoloPreprocessing.CreateOptions(detection));
-                result = RunPipeline(registry, detection.CreateArtifact(modelPath, backendId), detection.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, detection.CreateArtifact(modelPath, backendId), detection.VisualProfile, input, backendRequest, preparedEngine);
             }
             else if (profile is YoloMultiTaskProfile multi)
             {
                 using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(imagePath, multi.VisualProfile.Input.Name, OpenCvYoloPreprocessing.CreateOptions(multi));
-                result = RunPipeline(registry, multi.CreateArtifact(modelPath, backendId), multi.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, multi.CreateArtifact(modelPath, backendId), multi.VisualProfile, input, backendRequest, preparedEngine);
             }
             else if (profile is PortableDetectorProfile portable)
             {
                 using PreparedVisualInput input = OpenCvPortableDetectorPreprocessing.CreateFromFile(new OpenCvVisualInputFactory(), imagePath, portable);
-                result = RunPipeline(registry, portable.CreateArtifact(modelPath, backendId), portable.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, portable.CreateArtifact(modelPath, backendId), portable.VisualProfile, input, backendRequest, preparedEngine);
             }
             else if (profile is PaddleOcrProfile paddle)
             {
                 using PreparedVisualInput input = CreatePaddleInput(imagePath, paddle);
-                result = RunPipeline(registry, paddle.CreateArtifact(modelPath, backendId), paddle.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, paddle.CreateArtifact(modelPath, backendId), paddle.VisualProfile, input, backendRequest, preparedEngine);
             }
             else if (profile is AnomalibProfile anomaly)
             {
                 using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(imagePath, anomaly.VisualProfile.Input.Name, OpenCvStage19Preprocessing.CreateAnomalibOptions(anomaly));
-                result = RunPipeline(registry, anomaly.CreateArtifact(modelPath, backendId), anomaly.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, anomaly.CreateArtifact(modelPath, backendId), anomaly.VisualProfile, input, backendRequest, preparedEngine);
             }
             else if (profile is BriaRmbgProfile matting)
             {
                 using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(imagePath, matting.VisualProfile.Input.Name, OpenCvStage19Preprocessing.CreateBriaRmbgOptions(matting));
-                result = RunPipeline(registry, matting.CreateArtifact(modelPath, backendId), matting.VisualProfile, input, backendRequest);
+                result = RunPipeline(registry, matting.CreateArtifact(modelPath, backendId), matting.VisualProfile, input, backendRequest, preparedEngine);
             }
             else return Error(request, "DSAPP-VISUAL-PROFILE-UNSUPPORTED", "The selected Release visual profile is not executable by this Worker.", AppRuntimeState.Unsupported, id);
             progress?.Invoke(.95);
@@ -110,8 +131,16 @@ internal static class VisualReleaseInferenceAdapter
                 ["execution"] = "worker",
                 ["visualProfileId"] = visualProfileId
             };
+            if (preparedEngine is not null)
+            {
+                payload["engineBuildState"] = preparedEngine.Built ? "built" : "cache-hit";
+                payload["enginePath"] = preparedEngine.EnginePath ?? string.Empty;
+                payload["engineIdentityPath"] = preparedEngine.IdentityPath ?? string.Empty;
+                payload["engineSha256"] = preparedEngine.EngineSha256 ?? string.Empty;
+            }
             progress?.Invoke(1);
-            return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, "Release visual model inference completed with the audited main-library profile on " + backendId.Value + ".", payload);
+            string buildMessage = preparedEngine is null ? string.Empty : preparedEngine.Message + " ";
+            return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, buildMessage + "Release visual model inference completed with the audited main-library profile on " + backendId.Value + ".", payload);
         }
         catch (FileNotFoundException exception) { return Error(request, "DSAPP-MODEL-NOT-FOUND", "A Release visual bundle file is missing.", AppRuntimeState.Unavailable, exception.FileName ?? exception.Message); }
         catch (DllNotFoundException exception) { return Error(request, "DSAPP-NATIVE-MISSING", "A native library required by the selected visual backend is missing.", AppRuntimeState.MissingNative, exception.Message); }
@@ -121,13 +150,38 @@ internal static class VisualReleaseInferenceAdapter
         catch (Exception exception) { return Error(request, "DSAPP-VISUAL-INFERENCE-FAILED", "Release visual inference failed.", AppRuntimeState.Unavailable, exception.ToString()); }
     }
 
-    private static VisualInferenceResult RunPipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, PreparedVisualInput input, BackendRequest request)
+    private static VisualInferenceResult RunPipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, PreparedVisualInput input, BackendRequest request, TensorRtPreparedEngine? preparedEngine = null)
     {
+        if (preparedEngine is not null)
+        {
+            profile = new VisualModelProfile(profile.ProfileId + ".tensorrt", profile.ModelId, profile.Task, profile.Version, "tensorrt-engine", profile.Input, profile.Outputs, profile.Labels, profile.Decoder, profile.RequiredCapabilities, profile.MinimumBackendVersion);
+            artifact = new ModelArtifact(profile.ModelId, "tensorrt-engine", preparedEngine.EnginePath!, preparedEngine.EngineSha256, TensorRtBackendProvider.BackendId);
+        }
         var profiles = new VisualProfileRegistry();
         profiles.Register(profile);
         profiles.Freeze();
         using var pipeline = new VisualPipeline(registry, profiles.Select(artifact, registry, request, profile.Task), request);
         return pipeline.Run(input);
+    }
+
+    private static TensorRtBackendOptions ParseTensorRtOptions(IReadOnlyDictionary<string, string> payload)
+        => new(ParseTensorRtApiVersion(Value(payload, "apiVersion") ?? Value(payload, "tensorRtApiVersion")), IntOption(payload, "optimizationProfile", 0), LongOption(payload, "maximumEngineBytes", int.MaxValue), Value(payload, "cudaTargetArchitecture"), BoolOption(payload, "cacheImmutableHostInputsOnDevice", false));
+
+    private static TensorRtApiVersion ParseTensorRtApiVersion(string? value) => value switch
+    {
+        "8" => TensorRtApiVersion.TensorRt8,
+        "11" => TensorRtApiVersion.TensorRt11,
+        _ => TensorRtApiVersion.TensorRt10
+    };
+
+    private static WorkerResponse TensorRtError(WorkerRequest request, TensorRtPreparedEngine failure)
+    {
+        AppRuntimeState state = failure.Code.Contains("NATIVE", StringComparison.OrdinalIgnoreCase) || failure.Code.Contains("RUNTIME", StringComparison.OrdinalIgnoreCase) ? AppRuntimeState.MissingNative : AppRuntimeState.Unavailable;
+        var payload = new Dictionary<string, string>(failure.Details, StringComparer.Ordinal)
+        {
+            ["state"] = state.ToString(), ["backendId"] = request.BackendId ?? string.Empty, ["diagnosticCode"] = failure.Code, ["execution"] = "worker"
+        };
+        return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, failure.Message, payload);
     }
 
     private static string ProfileId(object profile) => profile switch
@@ -301,6 +355,9 @@ internal static class VisualReleaseInferenceAdapter
         return value;
     }
     private static bool BoolOption(WorkerRequest request, string key, bool fallback) => bool.TryParse(Value(request.Payload, key), out bool value) ? value : fallback;
+    private static bool BoolOption(IReadOnlyDictionary<string, string> values, string key, bool fallback) => bool.TryParse(Value(values, key), out bool value) ? value : fallback;
+    private static int IntOption(IReadOnlyDictionary<string, string> values, string key, int fallback) => int.TryParse(Value(values, key), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) ? value : fallback;
+    private static long LongOption(IReadOnlyDictionary<string, string> values, string key, long fallback) => long.TryParse(Value(values, key), NumberStyles.Integer, CultureInfo.InvariantCulture, out long value) ? value : fallback;
     private static string? Value(IReadOnlyDictionary<string, string> values, string key) => values.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : null;
     private static WorkerResponse Error(WorkerRequest request, string code, string message, AppRuntimeState state, string? detail = null)
     {
@@ -317,7 +374,7 @@ internal static class VisualResultJson
         if (sourceWidth <= 0 || sourceHeight <= 0) throw new ArgumentOutOfRangeException(nameof(sourceWidth), "Source image dimensions must be positive.");
         if (value is DetectionResult detection) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "detection", sourceWidth, sourceHeight, detections = detection.Detections.Select(item => new { x = item.Box.X, y = item.Box.Y, width = item.Box.Width, height = item.Box.Height, label = item.Label.Label, classIndex = item.Label.Index, score = item.Label.Score }) }, JsonOptions);
         if (value is ClassificationResult classification) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "classification", sourceWidth, sourceHeight, predictions = classification.Predictions.Select(item => new { label = item.Label, classIndex = item.Index, score = item.Score }) }, JsonOptions);
-        if (value is InstanceSegmentationResult segmentation) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "segmentation", sourceWidth, sourceHeight, instances = segmentation.Instances.Select(item => new { item.SourceIndex, item.ClassIndex, item.Label, item.Score, box = new { x = item.BoundingBox.X, y = item.BoundingBox.Y, width = item.BoundingBox.Width, height = item.BoundingBox.Height }, mask = Downsample(item.Mask.ToArray(), item.Mask.Width, item.Mask.Height) }) }, JsonOptions);
+        if (value is InstanceSegmentationResult segmentation) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "segmentation", sourceWidth, sourceHeight, instances = segmentation.Instances.Select(item => new { item.SourceIndex, item.ClassIndex, item.Label, item.Score, box = new { x = item.BoundingBox.X, y = item.BoundingBox.Y, width = item.BoundingBox.Width, height = item.BoundingBox.Height }, mask = Downsample(item.Mask.ToArray(), item.Mask.Width, item.Mask.Height, item.Mask.CoordinateSpace.ToString(), item.Mask.OriginX, item.Mask.OriginY) }) }, JsonOptions);
         if (value is PoseEstimationResult pose) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "pose", sourceWidth, sourceHeight, instances = pose.Instances.Select(item => new { item.SourceIndex, item.Score, box = item.BoundingBox, keypoints = item.Keypoints.Select(point => new { point.Index, x = point.Point.X, y = point.Point.Y, score = point.Score }) }) }, JsonOptions);
         if (value is JYPPX.DeploySharp.Visual.OrientedDetectionResult oriented) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "obb", sourceWidth, sourceHeight, detections = oriented.Detections.Select(item => new { item.SourceIndex, item.ClassIndex, item.Label, item.Score, points = new[] { item.Quadrilateral.First, item.Quadrilateral.Second, item.Quadrilateral.Third, item.Quadrilateral.Fourth } }) }, JsonOptions);
         if (value is TextDetectionResult ocrDetection) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "ocr-detection", sourceWidth, sourceHeight, regions = ocrDetection.Regions.Select(region => new { region.SourceIndex, score = region.Score, points = region.Polygon.Vertices.Select(point => new { x = point.X, y = point.Y }) }) }, JsonOptions);
@@ -327,12 +384,12 @@ internal static class VisualResultJson
         if (value is BackgroundRemovalResult matting) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "foreground-matting", sourceWidth, sourceHeight, alpha = Downsample(matting.Alpha.ToArray(), matting.Alpha.Width, matting.Alpha.Height) }, JsonOptions);
         return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = value.GetType().Name, sourceWidth, sourceHeight, value }, JsonOptions);
     }
-    private static object Downsample(byte[] values, int width, int height)
+    private static object Downsample(byte[] values, int width, int height, string coordinateSpace = "SourceImage", int originX = 0, int originY = 0)
     {
         (int sampleWidth, int sampleHeight) = SampleSize(width, height);
         var samples = new byte[sampleWidth * sampleHeight];
         for (int y = 0; y < sampleHeight; y++) for (int x = 0; x < sampleWidth; x++) samples[y * sampleWidth + x] = values[Math.Min(height - 1, y * height / sampleHeight) * width + Math.Min(width - 1, x * width / sampleWidth)];
-        return new { width, height, sampleWidth, sampleHeight, values = samples };
+        return new { width, height, sampleWidth, sampleHeight, coordinateSpace, originX, originY, values = samples };
     }
     private static object Downsample(float[] values, int width, int height)
     {

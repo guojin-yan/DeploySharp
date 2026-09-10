@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
+using System.Text;
 using System.Diagnostics;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,6 +11,7 @@ using DeploySharpApp.BackendHost.Protocol;
 using DeploySharpApp.Contracts;
 using DeploySharpApp.Engine;
 using DeploySharpApp.Infrastructure;
+using DeploySharpApp.Web;
 
 namespace DeploySharpApp.Application.Tests
 {
@@ -508,6 +510,100 @@ namespace DeploySharpApp.Application.Tests
                 Console.WriteLine("TENSORRT_REAL_INFERENCE preprocessMs={0:F2}; inferenceMs={1:F2}; postprocessMs={2:F2}; outputChars={3}", valid.PreprocessMs, valid.InferenceMs, valid.PostprocessMs, valid.Output!.Length);
             }
             finally { if (File.Exists(badIdentityPath)) File.Delete(badIdentityPath); }
+        }
+
+        [TestMethod]
+        public async Task TensorRtOnnxRequestReachesNativeBuildBoundary()
+        {
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            var inputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]") };
+            var request = new ModelRunRequest(AppOperationKind.Vision, "tests/tensorrt-onnx-build", "deploysharp.backend.tensorrt", device: "cuda", modelPath: modelPath, modelFormat: "onnx", tensorInputs: inputs, options: new Dictionary<string, string> { ["executionMode"] = "worker" });
+
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+
+            Assert.IsFalse(result.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-MODEL-FORMAT-INVALID"), "ONNX must reach TensorRT native preflight/build instead of the old engine-only format rejection.");
+            if (result.Succeeded)
+            {
+                Assert.AreEqual(ModelRunMode.Worker, result.RunMode);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.Output));
+            }
+            else
+            {
+                Assert.IsTrue(result.ErrorCode is AppErrorCode.NativeDependencyMissing or AppErrorCode.BackendUnavailable);
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public async Task ConfiguredTensorRtOnnxBuildsRunsAndReusesEngine()
+        {
+            string? cudaRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_CUDA_ROOT");
+            string? cudnnRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_CUDNN_ROOT");
+            string? tensorRtRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_ROOT");
+            if (new[] { cudaRoot, cudnnRoot, tensorRtRoot }.Any(string.IsNullOrWhiteSpace))
+                Assert.Inconclusive("Configure DEPLOYSHARP_APP_CUDA_ROOT, DEPLOYSHARP_APP_CUDNN_ROOT and DEPLOYSHARP_APP_TENSORRT_ROOT to run the real ONNX-to-engine test.");
+
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "classification.onnx");
+            string outputRoot = Path.Combine(Path.GetTempPath(), "deploysharp-app-trt-build-" + Guid.NewGuid().ToString("N"));
+            string enginePath = Path.Combine(outputRoot, "classification.engine");
+            string identityPath = enginePath + ".identity.json";
+            Directory.CreateDirectory(outputRoot);
+            try
+            {
+                var options = new Dictionary<string, string>
+                {
+                    ["executionMode"] = "worker",
+                    ["cudaRoot"] = cudaRoot!, ["cudnnRoot"] = cudnnRoot!, ["tensorRtRoot"] = tensorRtRoot!,
+                    ["bridgePath"] = Path.Combine(Path.GetDirectoryName(LocateBackendHost())!, "jyppxtrtbridge.dll"),
+                    ["tensorRtApiVersion"] = "10", ["apiVersion"] = "10", ["tensorRtPrecision"] = "runtime-default",
+                    ["tensorRtWorkspaceMiB"] = "64", ["tensorRtEngineOutputPath"] = enginePath, ["engineIdentityPath"] = identityPath,
+                    ["tensorRtForceRebuild"] = "true"
+                };
+                var inputs = new[] { new ModelTensorInput("images", "float32", new long[] { 1, 3, 2, 2 }, valuesJson: "[1,1,1,1,2,2,2,2,3,3,3,3]") };
+                var firstRequest = new ModelRunRequest(AppOperationKind.Vision, "tests/tensorrt-onnx-build-real", "deploysharp.backend.tensorrt", device: "cuda", modelPath: modelPath, modelFormat: "onnx", tensorInputs: inputs, options: options, timeout: TimeSpan.FromMinutes(5));
+                ModelRunResult first = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(firstRequest, null, CancellationToken.None);
+                Assert.IsTrue(first.Succeeded, first.Message + Environment.NewLine + string.Join(Environment.NewLine, first.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+                Assert.IsTrue(File.Exists(enginePath));
+                Assert.IsTrue(File.Exists(identityPath));
+                StringAssert.Contains(first.Message, "converted to a device-bound TensorRT engine");
+
+                options["tensorRtForceRebuild"] = "false";
+                var secondRequest = new ModelRunRequest(AppOperationKind.Vision, "tests/tensorrt-onnx-build-real", "deploysharp.backend.tensorrt", device: "cuda", modelPath: modelPath, modelFormat: "onnx", tensorInputs: inputs, options: options, timeout: TimeSpan.FromMinutes(5));
+                ModelRunResult second = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(secondRequest, null, CancellationToken.None);
+                Assert.IsTrue(second.Succeeded, second.Message);
+                StringAssert.Contains(second.Message, "reused from the local cache");
+                using JsonDocument output = JsonDocument.Parse(second.Output!);
+                Assert.AreEqual(3, output.RootElement[0].GetProperty("values").GetArrayLength());
+            }
+            finally
+            {
+                if (Directory.Exists(outputRoot)) Directory.Delete(outputRoot, true);
+            }
+        }
+
+        [TestMethod]
+        public void VisionRendererUsesOneFittedSourceCoordinateSpace()
+        {
+            const string output = "{\"schema\":\"deploysharp.visual.result.v1\",\"kind\":\"segmentation\",\"sourceWidth\":100,\"sourceHeight\":200,\"instances\":[{\"label\":\"item\",\"score\":0.9,\"box\":{\"x\":0,\"y\":0,\"width\":100,\"height\":200},\"mask\":{\"width\":100,\"height\":200,\"sampleWidth\":1,\"sampleHeight\":1,\"coordinateSpace\":\"SourceImage\",\"originX\":0,\"originY\":0,\"values\":\"AQ==\"}}]}";
+
+            string dataUrl = VisionResultRenderer.Render("data:image/png;base64,AA==", output, "segmentation");
+            string svg = Encoding.UTF8.GetString(Convert.FromBase64String(dataUrl[(dataUrl.IndexOf(',') + 1)..]));
+
+            StringAssert.Contains(svg, "<image href=\"data:image/png;base64,AA==\" x=\"230\" y=\"20\" width=\"180\" height=\"360\"");
+            StringAssert.Contains(svg, "<rect x=\"230\" y=\"20\" width=\"180\" height=\"360\" fill=\"none\"");
+            StringAssert.Contains(svg, "<rect x=\"230\" y=\"20\" width=\"180.75\" height=\"360.75\" fill=\"#4d7cff\"");
+        }
+
+        [TestMethod]
+        public void VisionResultSummaryOmitsMaskValues()
+        {
+            const string output = "{\"schema\":\"deploysharp.visual.result.v1\",\"kind\":\"segmentation\",\"instances\":[{\"mask\":{\"width\":2,\"height\":2,\"values\":\"AQEBAQ==\"}}]}";
+
+            string summary = VisionResultRenderer.FormatForDisplay(output);
+
+            Assert.IsFalse(summary.Contains("AQEBAQ==", StringComparison.Ordinal));
+            Assert.IsFalse(summary.Contains("\"values\"", StringComparison.Ordinal));
+            StringAssert.Contains(summary, "maskValuesOmitted");
         }
 
         [TestMethod]
