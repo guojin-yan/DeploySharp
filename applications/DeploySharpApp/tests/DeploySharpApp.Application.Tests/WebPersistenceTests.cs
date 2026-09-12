@@ -67,7 +67,7 @@ public sealed class WebPersistenceTests
                 Path.Combine(directory, "packages"));
 
             BackendLifecycleRecord staged = await lifecycle.InstallOrUpgradeAsync("deploysharp.backend.opencv");
-            Assert.IsTrue(staged.State is BackendLifecycleState.Staged or BackendLifecycleState.Active);
+            Assert.AreEqual(BackendLifecycleState.Staged, staged.State, staged.Message);
             Assert.AreEqual(2, staged.Packages!.Count);
             Assert.IsTrue(Directory.EnumerateFiles(staged.InstallRoot!, "*.nupkg", SearchOption.AllDirectories).Any());
             Assert.IsTrue(Directory.EnumerateFiles(staged.InstallRoot!, "opencv_core500.dll", SearchOption.AllDirectories).Any());
@@ -76,6 +76,31 @@ public sealed class WebPersistenceTests
             Assert.AreEqual(BackendLifecycleState.Staged, rejected.State);
             BackendLifecycleRecord active = lifecycle.ActivateAfterProbe(staged.BackendId, new RuntimeProbeEvidence(true, staged.BackendId, "Available", "DSAPP-TEST", "smoke passed", new Dictionary<string, string>()));
             Assert.AreEqual(BackendLifecycleState.Active, active.State);
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task BackendLifecycleRepairsCorruptCachedPackageBeforeStaging()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "DeploySharpAppTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            byte[] package = CreatePackage();
+            string packageRoot = Path.Combine(directory, "packages", "deploysharp.backend.opencv", "5.0.0", "jyppx.opencv.csharp.api", "5.0.0");
+            Directory.CreateDirectory(packageRoot);
+            File.WriteAllBytes(Path.Combine(packageRoot, "jyppx.opencv.csharp.api.5.0.0.nupkg"), new byte[] { 0, 1, 2 });
+            using var http = new HttpClient(new PackageHandler(package));
+            var lifecycle = new BackendLifecycleService(AppComposition.CreateService(), http, Path.Combine(directory, "state.json"), Path.Combine(directory, "packages"));
+
+            BackendLifecycleRecord record = await lifecycle.InstallOrUpgradeAsync("deploysharp.backend.opencv");
+            Assert.AreEqual(BackendLifecycleState.Staged, record.State, record.Message);
+            byte[] repaired = await File.ReadAllBytesAsync(Path.Combine(packageRoot, "jyppx.opencv.csharp.api.5.0.0.nupkg"));
+            Assert.AreEqual(Convert.ToHexString(SHA512.HashData(package)), Convert.ToHexString(SHA512.HashData(repaired)), record.InstallRoot);
+            Assert.AreEqual(Convert.ToBase64String(SHA512.HashData(package)), File.ReadAllText(Path.Combine(packageRoot, ".extracted")));
         }
         finally
         {

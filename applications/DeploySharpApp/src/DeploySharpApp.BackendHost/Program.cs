@@ -69,6 +69,16 @@ while (true)
             activeRequestId = request.RequestId;
             activeTask = ExecuteBenchmarkAsync(request, activeCancellation);
             continue;
+        case WorkerMessageKind.TensorRtBuild:
+            if (activeTask != null)
+            {
+                response = new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, "A native Worker operation is already active.", new Dictionary<string, string> { ["diagnosticCode"] = "DSAPP-WORKER-BUSY", ["activeRequestId"] = activeRequestId ?? string.Empty });
+                break;
+            }
+            activeCancellation = new CancellationTokenSource();
+            activeRequestId = request.RequestId;
+            activeTask = ExecuteTensorRtBuildAsync(request, activeCancellation);
+            continue;
         case WorkerMessageKind.Cancel:
             if (activeTask != null && activeCancellation != null)
             {
@@ -187,6 +197,72 @@ async Task ExecuteBenchmarkAsync(WorkerRequest request, CancellationTokenSource 
     await WriteResponseAsync(response);
 }
 
+async Task ExecuteTensorRtBuildAsync(WorkerRequest request, CancellationTokenSource operationCancellation)
+{
+    WorkerResponse response;
+    using var timeoutCancellation = new CancellationTokenSource();
+    using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(operationCancellation.Token, timeoutCancellation.Token);
+    bool timedOut = false;
+    try
+    {
+        using NativeWorkerEnvironment nativeEnvironment = NativeWorkerEnvironment.Apply(request.Payload);
+        await Task.Yield();
+        await WriteResponseAsync(Progress(request.RequestId, 0.25, "dispatch", "TensorRT engine preparation request accepted."));
+        string? modelPath = Value(request.Payload, "modelPath") ?? Value(request.Payload, "sourceOnnxPath");
+        string format = Value(request.Payload, "modelFormat") ?? (modelPath is null ? string.Empty : Path.GetExtension(modelPath).TrimStart('.'));
+        if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+        {
+            response = TensorRtBuildError(request, "DSAPP-TENSORRT-ONNX-NOT-FOUND", "The ONNX source file does not exist; TensorRT conversion was not attempted.", AppRuntimeState.Unavailable, modelPath);
+        }
+        else if (!string.Equals(format, "onnx", StringComparison.OrdinalIgnoreCase))
+        {
+            response = TensorRtBuildError(request, "DSAPP-TENSORRT-BUILD-FORMAT-INVALID", "TensorRT engine preparation accepts an ONNX source only; choose an .onnx file or run an existing .engine/.plan artifact directly.", AppRuntimeState.Unsupported, format);
+        }
+        else
+        {
+            Task<TensorRtPreparedEngine> buildTask = Task.Run(
+                () => TensorRtOnnxEngineAdapter.ResolveOrBuild(
+                    request,
+                    Path.GetFullPath(modelPath),
+                    value => WriteResponseAsync(Progress(request.RequestId, value, "tensorrt-build", "TensorRT ONNX-to-engine conversion progress.")).GetAwaiter().GetResult(),
+                    linkedCancellation.Token),
+                linkedCancellation.Token);
+            Task timeoutTask = CreateTimeoutTask(request.Payload, timeoutCancellation.Token);
+            if (timeoutTask == Task.CompletedTask)
+            {
+                TensorRtPreparedEngine prepared = await buildTask.ConfigureAwait(false);
+                response = TensorRtBuildResponse(request, prepared);
+            }
+            else
+            {
+                Task completed = await Task.WhenAny(buildTask, timeoutTask).ConfigureAwait(false);
+                if (completed == timeoutTask)
+                {
+                    timedOut = true;
+                    operationCancellation.Cancel();
+                    await Task.WhenAny(buildTask, Task.Delay(250)).ConfigureAwait(false);
+                    response = TensorRtBuildError(request, "DSAPP-WORKER-TIMED-OUT", "TensorRT engine preparation timed out.", AppRuntimeState.Unavailable, modelPath);
+                }
+                else
+                {
+                    timeoutCancellation.Cancel();
+                    TensorRtPreparedEngine prepared = await buildTask.ConfigureAwait(false);
+                    response = TensorRtBuildResponse(request, prepared);
+                }
+            }
+        }
+    }
+    catch (OperationCanceledException)
+    {
+        response = TensorRtBuildError(request, timedOut ? "DSAPP-WORKER-TIMED-OUT" : "DSAPP-WORKER-CANCELLED", timedOut ? "TensorRT engine preparation timed out." : "TensorRT engine preparation was cancelled.", AppRuntimeState.Unavailable, null);
+    }
+    catch (Exception exception)
+    {
+        response = TensorRtBuildError(request, "DSAPP-TENSORRT-BUILD-FAILED", "TensorRT engine preparation failed before producing an engine.", AppRuntimeState.ProbeFailed, exception.GetType().FullName + ": " + exception.Message);
+    }
+    await WriteResponseAsync(response);
+}
+
 async Task WriteResponseAsync(WorkerResponse response)
 {
     await outputGate.WaitAsync();
@@ -199,6 +275,41 @@ static WorkerResponse Progress(string requestId, double value, string stage, str
 
 static WorkerResponse TextDelta(string requestId, string delta)
     => new(WorkerResponseKind.Progress, requestId, true, "Streaming text delta.", new Dictionary<string, string> { ["stage"] = "generation", ["textDelta"] = delta });
+
+static WorkerResponse TensorRtBuildResponse(WorkerRequest request, TensorRtPreparedEngine prepared)
+{
+    var payload = new Dictionary<string, string>(prepared.Details, StringComparer.Ordinal)
+    {
+        ["backendId"] = request.BackendId ?? "deploysharp.backend.tensorrt",
+        ["execution"] = "worker",
+        ["diagnosticCode"] = prepared.Code,
+        ["engineBuildState"] = prepared.Built ? "built" : "cache-hit",
+        ["enginePath"] = prepared.EnginePath ?? string.Empty,
+        ["engineIdentityPath"] = prepared.IdentityPath ?? string.Empty,
+        ["engineSha256"] = prepared.EngineSha256 ?? string.Empty
+    };
+    if (prepared.Succeeded) return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, prepared.Message, payload);
+    payload["state"] = prepared.Code.IndexOf("NATIVE", StringComparison.OrdinalIgnoreCase) >= 0 || prepared.Code.IndexOf("RUNTIME", StringComparison.OrdinalIgnoreCase) >= 0
+        ? AppRuntimeState.MissingNative.ToString()
+        : AppRuntimeState.Unavailable.ToString();
+    return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, prepared.Message, payload);
+}
+
+static WorkerResponse TensorRtBuildError(WorkerRequest request, string diagnosticCode, string message, AppRuntimeState state, string? detail)
+{
+    var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["state"] = state.ToString(),
+        ["backendId"] = request.BackendId ?? "deploysharp.backend.tensorrt",
+        ["diagnosticCode"] = diagnosticCode,
+        ["execution"] = "worker"
+    };
+    if (!string.IsNullOrWhiteSpace(detail)) payload["detail"] = detail!;
+    return new WorkerResponse(WorkerResponseKind.Error, request.RequestId, false, message, payload);
+}
+
+static string? Value(IReadOnlyDictionary<string, string> payload, string key)
+    => payload.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value.Trim() : null;
 
 static Task CreateTimeoutTask(IReadOnlyDictionary<string, string> payload, CancellationToken cancellationToken)
 {

@@ -10,7 +10,9 @@ namespace DeploySharpApp.Contracts
     public enum AppOperationKind { Vision, TextGeneration, Embedding, Multimodal, Benchmark, Doctor }
     public enum AppErrorCode { None, InvalidRequest, BackendUnavailable, ModelUnavailable, NativeDependencyMissing, WorkerFailed, Cancelled, TimedOut, Unknown, WorkerRequired }
     public enum ModelRunMode { Unspecified, Demo, RealOnnxRuntime, Worker }
-    public enum WorkerMessageKind { Handshake, Capability, Probe, Inference, Benchmark, Cancel, Shutdown, Error, Log, Progress }
+    // Keep newly added messages at the end so existing JSON-lines clients that
+    // persist the numeric enum values remain wire-compatible.
+    public enum WorkerMessageKind { Handshake, Capability, Probe, Inference, Benchmark, Cancel, Shutdown, Error, Log, Progress, TensorRtBuild }
     public enum WorkerResponseKind { Handshake, Capability, Probe, Result, Error, Log, Progress, Shutdown }
 
     public sealed class AppBackendInfo
@@ -247,6 +249,65 @@ namespace DeploySharpApp.Contracts
         public bool Succeeded { get; }
         public string? Message { get; }
         public IReadOnlyDictionary<string, string> Payload { get; }
+    }
+
+    /// <summary>
+    /// Describes an explicit ONNX-to-TensorRT preparation request.  The
+    /// conversion always runs in the isolated BackendHost Worker; the Web and
+    /// desktop hosts only carry paths and user-selected build options.
+    /// </summary>
+    public sealed class TensorRtEngineBuildRequest
+    {
+        public TensorRtEngineBuildRequest(string modelId, string backendId, string onnxPath, string device = "cuda", string? modelSha256 = null, IReadOnlyDictionary<string, string>? options = null, TimeSpan? timeout = null, IEnumerable<ModelAssetReference>? modelAssets = null)
+        {
+            ModelId = ContractGuard.Id(modelId, nameof(modelId));
+            BackendId = ContractGuard.Id(backendId, nameof(backendId));
+            OnnxPath = ContractGuard.Text(onnxPath, nameof(onnxPath));
+            Device = ContractGuard.Text(device, nameof(device));
+            ModelSha256 = ContractGuard.Optional(modelSha256);
+            Options = ContractGuard.Dictionary(options);
+            Timeout = timeout ?? TimeSpan.FromMinutes(10);
+            if (Timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+            ModelAssets = ContractGuard.List(modelAssets);
+        }
+
+        public string ModelId { get; }
+        public string BackendId { get; }
+        public string OnnxPath { get; }
+        public string Device { get; }
+        public string? ModelSha256 { get; }
+        public IReadOnlyDictionary<string, string> Options { get; }
+        public TimeSpan Timeout { get; }
+        public IReadOnlyList<ModelAssetReference> ModelAssets { get; }
+    }
+
+    /// <summary>Structured result of an explicit TensorRT engine preparation.</summary>
+    public sealed class TensorRtEngineBuildReport
+    {
+        public TensorRtEngineBuildReport(bool succeeded, AppErrorCode errorCode, string message, string? enginePath = null, string? identityPath = null, string? engineSha256 = null, string? buildState = null, bool cacheHit = false, IEnumerable<RuntimeDiagnostic>? diagnostics = null, BackendRuntimeStatus? runtimeStatus = null)
+        {
+            Succeeded = succeeded;
+            ErrorCode = errorCode;
+            Message = ContractGuard.Text(message, nameof(message));
+            EnginePath = ContractGuard.Optional(enginePath);
+            IdentityPath = ContractGuard.Optional(identityPath);
+            EngineSha256 = ContractGuard.Optional(engineSha256);
+            BuildState = ContractGuard.Optional(buildState);
+            CacheHit = cacheHit;
+            Diagnostics = ContractGuard.List(diagnostics);
+            RuntimeStatus = runtimeStatus;
+        }
+
+        public bool Succeeded { get; }
+        public AppErrorCode ErrorCode { get; }
+        public string Message { get; }
+        public string? EnginePath { get; }
+        public string? IdentityPath { get; }
+        public string? EngineSha256 { get; }
+        public string? BuildState { get; }
+        public bool CacheHit { get; }
+        public IReadOnlyList<RuntimeDiagnostic> Diagnostics { get; }
+        public BackendRuntimeStatus? RuntimeStatus { get; }
     }
 
     public sealed class AppCapabilityDescriptor

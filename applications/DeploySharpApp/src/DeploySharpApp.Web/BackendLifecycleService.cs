@@ -57,10 +57,11 @@ public sealed class BackendLifecycleService
                 await DownloadPackageAsync(dependency.PackageId!, dependency.Version!, installRoot, cancellationToken).ConfigureAwait(false);
                 packages.Add(dependency.PackageId + "/" + dependency.Version);
             }
-            BackendRuntimeStatus? status = _application.RuntimeStatuses.FirstOrDefault(item => string.Equals(item.BackendId, backend.Id, StringComparison.OrdinalIgnoreCase));
-            bool canActivate = status?.State == AppRuntimeState.Available;
-            return Set(new BackendLifecycleRecord(backend.Id, backend.Version, canActivate ? BackendLifecycleState.Active : BackendLifecycleState.Staged,
-                canActivate ? "依赖已下载并通过当前应用探测，可作为活动版本使用。" : "依赖已下载并完成 SHA512 校验，仍需使用 staged 根目录执行真实 native/ABI probe；未伪造可用状态。", DateTimeOffset.UtcNow, previousVersion, installRoot, packages));
+            // The application catalog is not evidence for the staged package. A
+            // package can only become Active after the caller probes this exact
+            // install root (and passes the result to ActivateAfterProbe).
+            return Set(new BackendLifecycleRecord(backend.Id, backend.Version, BackendLifecycleState.Staged,
+                "依赖已下载并完成 SHA512 校验；仍需使用此 staged 根目录执行真实 native/ABI probe，未伪造可用状态。", DateTimeOffset.UtcNow, previousVersion, installRoot, packages));
         }
         catch (OperationCanceledException)
         {
@@ -132,26 +133,52 @@ public sealed class BackendLifecycleService
         Directory.CreateDirectory(packageRoot);
         string packagePath = Path.Combine(packageRoot, id + "." + normalizedVersion + ".nupkg");
         string url = $"https://api.nuget.org/v3-flatcontainer/{id}/{normalizedVersion}/{id}.{normalizedVersion}.nupkg";
-        if (!File.Exists(packagePath))
+        string hashText = (await _http.GetStringAsync(url + ".sha512", cancellationToken).ConfigureAwait(false)).Trim();
+        byte[] expected = Convert.FromBase64String(hashText);
+        bool packageIsValid = false;
+        if (File.Exists(packagePath))
         {
+            byte[] actualExisting;
+            await using (FileStream existing = new(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                actualExisting = await SHA512.HashDataAsync(existing, cancellationToken).ConfigureAwait(false);
+            packageIsValid = CryptographicOperations.FixedTimeEquals(actualExisting, expected);
+        }
+
+        if (!packageIsValid)
+        {
+            // Download into a sibling file and replace only after the response
+            // has been completely written. A cancelled/failed transfer leaves
+            // the previously verified package intact.
             using HttpResponseMessage response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             string tempPath = packagePath + ".download";
-            await using (Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
-            await using (FileStream target = new(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                await source.CopyToAsync(target, cancellationToken).ConfigureAwait(false);
-            File.Move(tempPath, packagePath, true);
+            try
+            {
+                await using (Stream source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+                await using (FileStream target = new(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    await source.CopyToAsync(target, cancellationToken).ConfigureAwait(false);
+                byte[] actual;
+                await using (FileStream downloaded = new(tempPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    actual = await SHA512.HashDataAsync(downloaded, cancellationToken).ConfigureAwait(false);
+                if (!CryptographicOperations.FixedTimeEquals(actual, expected)) throw new CryptographicException("NuGet package SHA512 mismatch for " + packageId + " " + version + ".");
+                // The existing cache entry was already proven invalid. Copying
+                // the verified download over it also works when a previous
+                // antivirus/indexer briefly holds a rename handle on Windows.
+                File.Copy(tempPath, packagePath, true);
+            }
+            finally
+            {
+                if (File.Exists(tempPath)) File.Delete(tempPath);
+            }
         }
-        string hashText = (await _http.GetStringAsync(url + ".sha512", cancellationToken).ConfigureAwait(false)).Trim();
-        byte[] expected = Convert.FromBase64String(hashText);
-        await using FileStream stream = new(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        byte[] actual = await SHA512.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
-        if (!CryptographicOperations.FixedTimeEquals(actual, expected)) throw new CryptographicException("NuGet package SHA512 mismatch for " + packageId + " " + version + ".");
+
         string extractedMarker = Path.Combine(packageRoot, ".extracted");
-        if (!File.Exists(extractedMarker))
+        bool extractedForCurrentPackage = File.Exists(extractedMarker)
+            && string.Equals(File.ReadAllText(extractedMarker).Trim(), hashText, StringComparison.OrdinalIgnoreCase);
+        if (!extractedForCurrentPackage)
         {
             ZipFile.ExtractToDirectory(packagePath, packageRoot, true);
-            File.WriteAllText(extractedMarker, DateTimeOffset.UtcNow.ToString("O"));
+            File.WriteAllText(extractedMarker, hashText);
         }
     }
 

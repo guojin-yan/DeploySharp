@@ -34,6 +34,13 @@ public sealed class VisualReleaseCatalogService
         return loadTask.WaitAsync(cancellationToken);
     }
 
+    /// <summary>Forces the next catalog read to fetch the current Release metadata.</summary>
+    public Task<IReadOnlyList<VisualReleaseModel>> RefreshAsync(IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    {
+        lock (SharedLoadGate) SharedLoadTask = null;
+        return GetModelsAsync(progress, cancellationToken);
+    }
+
     public string GetCachedPrimaryPath(VisualReleaseModel model)
     {
         if (model == null) throw new ArgumentNullException(nameof(model));

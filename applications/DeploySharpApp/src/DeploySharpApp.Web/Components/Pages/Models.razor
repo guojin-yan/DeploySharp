@@ -29,11 +29,11 @@
     @@media(max-width:760px) { .catalog-toolbar { grid-template-columns: 1fr 1fr; } .catalog-toolbar .count { grid-column: 1 / -1; } .probe-form { grid-template-columns: 1fr; } }
     @@media(max-width:430px) { .catalog-toolbar { grid-template-columns: 1fr; } }
 </style>
-<div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="Refresh">刷新目录 ↻</button></div>
+<div class="section-head"><div><span class="eyebrow">CATALOG & PLUGINS</span><h3>模型与后端</h3></div><button class="ghost small" @onclick="RefreshAsync" disabled="@refreshing">@(refreshing ? "刷新中…" : "刷新目录 ↻")</button></div>
 <div class="catalog-tabs"><button class="@(tab == CatalogTab.Backends ? "active" : "")" @onclick="() => tab = CatalogTab.Backends">后端插件</button><button class="@(tab == CatalogTab.Models ? "active" : "")" @onclick="() => tab = CatalogTab.Models">模型目录</button><button class="@(tab == CatalogTab.Factory ? "active" : "")" @onclick="() => tab = CatalogTab.Factory">官方 ModelFactory</button><button class="@(tab == CatalogTab.Runtime ? "active" : "")" @onclick="() => tab = CatalogTab.Runtime">运行时证据</button></div>
 @if (tab == CatalogTab.Backends)
 {
-    <div class="probe-panel"><label>激活 Smoke 模型路径<input @bind="activationSmokePath" placeholder="服务器本地 .onnx / .engine 路径；用于 staged 根目录真实 ABI smoke" /></label><p class="hint">安装会下载并 SHA512 校验 manifest 依赖；填写路径后再次点击安装/准备，将使用下载的 staged 根目录执行真实 smoke，只有通过后才会标记 Active。</p></div>
+    <div class="probe-panel"><label>激活 Smoke 模型路径<input @bind="activationSmokePath" placeholder="服务器本地 .onnx / .engine 路径；用于 staged 根目录真实 ABI smoke" /></label><p class="hint">安装会下载并 SHA512 校验 manifest 依赖；填写路径后再次点击安装/准备，将使用下载的 staged 根目录执行真实 smoke，只有通过后才会标记 Active。</p>@if (!string.IsNullOrWhiteSpace(lifecycleError)) { <p class="hint">@lifecycleError</p> }</div>
     <div class="plugin-grid">@foreach (var backend in Service.Backends) { var lifecycle = BackendLifecycle.Get(backend.Id, backend.Version); <article class="plugin-card"><div class="plugin-card-head"><div class="plugin-logo @LogoClass(backend)">@Logo(backend)</div><div><h4>@backend.DisplayName</h4><small>@backend.Id</small></div></div><p>@backend.Detail</p><div class="plugin-foot"><span>@backend.ExecutionMode · @backend.Version</span><span class="table-status @(backend.State == AppRuntimeState.Available ? "ok" : "pending")">@backend.State</span></div><div class="plugin-actions"><button class="ghost small" @onclick="() => InstallBackendAsync(backend.Id)" disabled="@(lifecycleBusyId is not null)">@(lifecycle.State == BackendLifecycleState.Active ? "升级/重新探测" : "安装/准备")</button><button class="ghost small" @onclick="() => RollbackBackend(backend.Id)" disabled="@(lifecycleBusyId is not null || lifecycle.State == BackendLifecycleState.NotInstalled)">回滚</button><span class="table-status @(lifecycle.State == BackendLifecycleState.Active ? "ok" : "pending")">@lifecycle.State</span><p class="hint">@lifecycle.Message</p>@if (!string.IsNullOrWhiteSpace(lifecycle.InstallRoot)) { <span class="hint">Staged 根目录：@lifecycle.InstallRoot</span> }</div></article> }</div>
 }
 else if (tab == CatalogTab.Models)
@@ -92,6 +92,7 @@ else
     [Inject] private ModelFactoryCatalogService FactoryCatalog { get; set; } = null!;
     private readonly List<VisualReleaseModel> releaseModels = new();
     private bool releaseLoading = true;
+    private bool refreshing;
     private string? releaseError;
     private string modelSearch = string.Empty;
     private string taskFilter = string.Empty;
@@ -109,6 +110,7 @@ else
     private string? probeError;
     private RuntimeProbeEvidence? probeEvidence;
     private string? lifecycleBusyId;
+    private string? lifecycleError;
     private string activationSmokePath = string.Empty;
     private IEnumerable<AppModelInfo> FilteredBuiltinModels => Service.Models.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
     private IEnumerable<VisualReleaseModel> FilteredReleaseModels => releaseModels.Where(model => Matches(model.DisplayName, model.Id, model.Task, model.Format));
@@ -123,18 +125,50 @@ else
         try { FactoryItems = FactoryCatalog.Items; }
         catch (Exception exception) { factoryError = exception.Message; }
     }
-    private void Refresh() => Service.RefreshCatalog();
+    private async Task RefreshAsync()
+    {
+        if (refreshing) return;
+        refreshing = true;
+        releaseLoading = true;
+        releaseError = null;
+        try
+        {
+            Service.RefreshCatalog();
+            IReadOnlyList<VisualReleaseModel> latest = await ReleaseCatalog.RefreshAsync();
+            releaseModels.Clear();
+            releaseModels.AddRange(latest);
+            FactoryItems = FactoryCatalog.Items;
+        }
+        catch (Exception exception) { releaseError = exception.Message; }
+        finally
+        {
+            releaseLoading = false;
+            refreshing = false;
+        }
+    }
     private async Task InstallBackendAsync(string backendId)
     {
         if (lifecycleBusyId is not null) return;
         lifecycleBusyId = backendId;
+        lifecycleError = null;
         try
         {
             BackendLifecycleRecord record = await BackendLifecycle.InstallOrUpgradeAsync(backendId);
-            if (record.State == BackendLifecycleState.Staged && !string.IsNullOrWhiteSpace(activationSmokePath) && !string.IsNullOrWhiteSpace(record.InstallRoot) && File.Exists(activationSmokePath))
+            if (record.State == BackendLifecycleState.Staged && !string.IsNullOrWhiteSpace(activationSmokePath) && !string.IsNullOrWhiteSpace(record.InstallRoot))
             {
-                RuntimeProbeEvidence evidence = await RuntimeProbe.ProbeAsync(backendId, activationSmokePath, record.InstallRoot);
-                record = BackendLifecycle.ActivateAfterProbe(backendId, evidence);
+                if (!File.Exists(activationSmokePath))
+                {
+                    lifecycleError = "Smoke 模型路径不存在，后端保持 Staged；请填写服务器可访问的真实模型文件后重试。";
+                }
+                else
+                {
+                    RuntimeProbeEvidence evidence = await RuntimeProbe.ProbeAsync(backendId, activationSmokePath, record.InstallRoot);
+                    record = BackendLifecycle.ActivateAfterProbe(backendId, evidence);
+                }
+            }
+            else if (record.State == BackendLifecycleState.Staged)
+            {
+                lifecycleError = "依赖已 staged，但尚未执行真实 smoke；填写 Smoke 模型路径后再次点击安装/准备才能激活。";
             }
             Activity.Add("backend", record.Message, "DSAPP-BACKEND-LIFECYCLE");
         }

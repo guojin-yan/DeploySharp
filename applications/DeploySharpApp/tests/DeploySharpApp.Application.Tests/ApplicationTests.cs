@@ -76,6 +76,30 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task TensorRtBuildMissingOnnxReturnsStructuredModelUnavailable()
+        {
+            string missingPath = Path.Combine(Path.GetTempPath(), "deploysharp-tensorrt-missing-" + Guid.NewGuid().ToString("N") + ".onnx");
+            var request = new TensorRtEngineBuildRequest("tests/missing-onnx", "deploysharp.backend.tensorrt", missingPath, timeout: TimeSpan.FromSeconds(30));
+            TensorRtEngineBuildReport report = await new BackendHostWorkerClient(LocateBackendHost()).BuildTensorRtEngineAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(report.Succeeded);
+            Assert.AreEqual(AppErrorCode.ModelUnavailable, report.ErrorCode);
+            Assert.IsNotNull(report.RuntimeStatus);
+            Assert.IsTrue(report.Diagnostics.Any(item => item.Code == "DSAPP-TENSORRT-ONNX-NOT-FOUND"));
+        }
+
+        [TestMethod]
+        public async Task TensorRtBuildWithoutWorkerReturnsStructuredWorkerRequired()
+        {
+            string missingHost = Path.Combine(Path.GetTempPath(), "deploysharp-worker-" + Guid.NewGuid().ToString("N"), "BackendHost.dll");
+            string onnxPath = Path.Combine(Path.GetTempPath(), "deploysharp-tensorrt-source-" + Guid.NewGuid().ToString("N") + ".onnx");
+            var request = new TensorRtEngineBuildRequest("tests/onnx", "deploysharp.backend.tensorrt", onnxPath, timeout: TimeSpan.FromSeconds(30));
+            TensorRtEngineBuildReport report = await new BackendHostWorkerClient(missingHost).BuildTensorRtEngineAsync(request, null, CancellationToken.None);
+            Assert.IsFalse(report.Succeeded);
+            Assert.AreEqual(AppErrorCode.WorkerRequired, report.ErrorCode);
+            Assert.IsTrue(report.Diagnostics.Any(item => item.Code == "DSAPP-WORKER-HOST-NOT-CONFIGURED"));
+        }
+
+        [TestMethod]
         public async Task ReachableWorkerReportsNativeStatusWithoutFakeResult()
         {
             string hostPath = LocateBackendHost();
@@ -802,6 +826,8 @@ namespace DeploySharpApp.Application.Tests
                 BenchmarkCalled = true;
                 return Task.FromResult(new BenchmarkReport(request, false, "stub worker"));
             }
+            public Task<TensorRtEngineBuildReport> BuildTensorRtEngineAsync(TensorRtEngineBuildRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
+                => Task.FromResult(new TensorRtEngineBuildReport(false, AppErrorCode.WorkerRequired, "stub worker", diagnostics: new[] { new RuntimeDiagnostic("DSAPP-TEST-WORKER", DiagnosticSeverity.Information, "stub") }));
         }
 
         private static string LocateBackendHost()

@@ -2,6 +2,7 @@
 @implements IDisposable
 @using DeploySharpApp.Contracts
 @using DeploySharpApp.Application
+@using DeploySharpApp.Infrastructure
 @using System.Security.Cryptography
 @using SixLabors.ImageSharp
 @inject DeploySharpAppService Service
@@ -11,6 +12,7 @@
 @inject ModelFactoryRuntimeService FactoryRuntime
 @inject ModelPackRuntimeService ModelPackRuntime
 @inject WebActivityStore Activity
+@inject IBackendHostWorkerClient Worker
 <PageTitle>视觉推理 · DeploySharpApp</PageTitle>
 <style>
     .workbench { align-items: start; grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); }
@@ -28,6 +30,8 @@
     .download-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
     .download-row progress { flex: 1; min-width: 0; }
     .download-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .build-report { margin-top: 10px; border: 1px solid #e5eaf6; border-radius: 10px; padding: 10px; background: #fbfcff; }
+    .build-report code { display: block; margin-top: 4px; overflow-wrap: anywhere; color: #3c4c6b; font-size: 10px; }
     .file-name { display: block; margin-top: 6px; color: #778198; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .catalog-loading { margin: 12px 0; color: #778198; font-size: 10px; }
     .settings-group { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 3px; }
@@ -189,6 +193,21 @@
             <div class="readiness-list">@foreach (ReadinessCheck check in readinessChecks) { <div class="readiness-item @(check.Ready ? check.Attention ? "attention" : "" : "blocked")"><span><b>@check.Label</b>@check.Detail</span></div> }</div>
         </div>
         <button class="primary wide" disabled="@(busy || !readinessChecks.All(check => check.Ready))" @onclick="RunAsync">@(busy ? "运行中…" : "运行推理 →")</button>
+        @if (IsBackend("tensorrt") && IsTensorRtOnnxSource())
+        {
+            <button class="ghost wide" disabled="@(busy || tensorRtBuilding || downloading || !TensorRtBuildInputReady())" @onclick="BuildTensorRtEngineAsync">@(tensorRtBuilding ? "转换 Engine 中…" : "先转换 / 准备 TensorRT Engine")</button>
+            @if (tensorRtBuilding) { <progress value="@tensorRtBuildProgress" max="1"></progress> }
+            @if (tensorRtBuildReport is not null)
+            {
+                <div class="build-report">
+                    <b>@(tensorRtBuildReport.Succeeded ? (tensorRtBuildReport.CacheHit ? "已复用兼容 Engine" : "Engine 转换完成") : "Engine 转换未完成")</b>
+                    <span class="muted"> · @tensorRtBuildReport.Message</span>
+                    @if (!string.IsNullOrWhiteSpace(tensorRtBuildReport.EnginePath)) { <code>Engine: @tensorRtBuildReport.EnginePath</code> }
+                    @if (!string.IsNullOrWhiteSpace(tensorRtBuildReport.IdentityPath)) { <code>Identity: @tensorRtBuildReport.IdentityPath</code> }
+                    @if (!string.IsNullOrWhiteSpace(tensorRtBuildReport.EngineSha256)) { <code>SHA256: @tensorRtBuildReport.EngineSha256</code> }
+                </div>
+            }
+        }
         <button class="ghost wide" disabled="@(!busy)" @onclick="Cancel">取消当前运行</button>
         <div class="hint">真实推理会校验模型路径、图片尺寸、命名输入、native runtime 和 ABI；没有图片且未提供 tensor 时不会伪造测试输入。CUDA 请求会明确返回不可用，不会回退到 CPU。</div>
         <progress value="@progress" max="1"></progress>
@@ -274,6 +293,10 @@
     private string tensorRtInputProfilesJson = string.Empty;
     private bool tensorRtStronglyTypedNetwork;
     private bool tensorRtForceRebuild;
+    private bool tensorRtBuilding;
+    private double tensorRtBuildProgress;
+    private TensorRtEngineBuildReport? tensorRtBuildReport;
+    private CancellationTokenSource? tensorRtBuildCts;
     private string result = "运行后将在此显示可视化结果。";
     private string runMode = "尚未运行";
     private string runtimeState = "Unavailable";
@@ -830,6 +853,111 @@
         finally { downloading = false; }
     }
 
+    private bool IsTensorRtOnnxSource()
+        => string.Equals(selectedReleaseModel?.Format ?? InferModelFormat(modelPath), "onnx", StringComparison.OrdinalIgnoreCase);
+
+    private bool TensorRtBuildInputReady()
+    {
+        if (!IsTensorRtOnnxSource() || modelUploading || modelPackValidating || factoryMaterializing) return false;
+        // A Release model may be uncached; the build action will download and
+        // verify it before handing the ONNX path to the isolated Worker.
+        if (selectedReleaseModel is not null && modelPackMaterialization is null && factoryMaterialization is null) return true;
+        return !string.IsNullOrWhiteSpace(modelPath) && File.Exists(modelPath);
+    }
+
+    private async Task BuildTensorRtEngineAsync()
+    {
+        if (tensorRtBuilding || !IsBackend("tensorrt")) return;
+        tensorRtBuilding = true;
+        tensorRtBuildProgress = 0;
+        tensorRtBuildReport = null;
+        tensorRtBuildCts = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+        Activity.Add("tensorrt-build", "TensorRT ONNX-to-engine preparation started.", "DSAPP-TENSORRT-BUILD-STARTED");
+        try
+        {
+            VisualReleaseModel? selected = selectedReleaseModel;
+            bool localMaterialized = modelPackMaterialization is not null || factoryMaterialization is not null;
+            if (selected is not null && !localMaterialized)
+            {
+                await DownloadSelectedAsync(tensorRtBuildCts.Token);
+                selected = selectedReleaseModel;
+            }
+            if (!IsTensorRtOnnxSource() || string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+            {
+                tensorRtBuildReport = new TensorRtEngineBuildReport(false, AppErrorCode.ModelUnavailable, "请先准备存在的 ONNX 模型文件。", diagnostics: new[] { new RuntimeDiagnostic("DSAPP-TENSORRT-ONNX-NOT-FOUND", DiagnosticSeverity.Warning, "The ONNX source file is missing.", selectedBackend, selected?.LogicalModelId ?? selectedModelId) });
+                runtimeState = "ModelUnavailable";
+                errorCode = AppErrorCode.ModelUnavailable.ToString();
+                runtimeMessage = tensorRtBuildReport.Message;
+                return;
+            }
+
+            string runtimeModelId = selected?.LogicalModelId ?? (string.IsNullOrWhiteSpace(selectedModelId) ? "local/onnx" : selectedModelId);
+            string? resolvedSha256 = localMaterialized ? ActiveModelPackSha256 : selected?.PrimaryFile.Sha256 ?? (string.IsNullOrWhiteSpace(uploadedModelSha256) ? null : uploadedModelSha256);
+            var buildRequest = new TensorRtEngineBuildRequest(runtimeModelId, selectedBackend, modelPath, device: "cuda", modelSha256: resolvedSha256, options: BuildTensorRtOptions(selected), timeout: ParseTimeout(), modelAssets: BuildModelAssetReferences());
+            tensorRtBuildReport = await Worker.BuildTensorRtEngineAsync(buildRequest, new Progress<double>(value => { tensorRtBuildProgress = value; InvokeAsync(StateHasChanged); }), tensorRtBuildCts.Token);
+            runMode = "TensorRT Engine 准备";
+            runtimeState = tensorRtBuildReport.RuntimeStatus?.State.ToString() ?? (tensorRtBuildReport.Succeeded ? AppRuntimeState.Available.ToString() : tensorRtBuildReport.ErrorCode.ToString());
+            errorCode = tensorRtBuildReport.ErrorCode.ToString();
+            runtimeMessage = tensorRtBuildReport.Message;
+            diagnostics = tensorRtBuildReport.Diagnostics;
+            result = tensorRtBuildReport.Message;
+            if (tensorRtBuildReport.Succeeded)
+            {
+                if (!string.IsNullOrWhiteSpace(tensorRtBuildReport.EnginePath)) tensorRtEngineOutputPath = tensorRtBuildReport.EnginePath!;
+                if (!string.IsNullOrWhiteSpace(tensorRtBuildReport.IdentityPath)) engineIdentityPath = tensorRtBuildReport.IdentityPath!;
+                tensorRtForceRebuild = false;
+                Activity.Add("tensorrt-build", tensorRtBuildReport.Message, tensorRtBuildReport.CacheHit ? "DSAPP-TENSORRT-ENGINE-CACHE-HIT" : "DSAPP-TENSORRT-ENGINE-BUILT");
+            }
+            else Activity.Add("tensorrt-build", tensorRtBuildReport.Message, tensorRtBuildReport.Diagnostics.FirstOrDefault()?.Code ?? "DSAPP-TENSORRT-BUILD-FAILED");
+        }
+        catch (OperationCanceledException)
+        {
+            runtimeState = AppRuntimeState.Unavailable.ToString();
+            errorCode = AppErrorCode.Cancelled.ToString();
+            runtimeMessage = "TensorRT engine 准备已取消。";
+            result = runtimeMessage;
+            Activity.Add("tensorrt-build", runtimeMessage, "DSAPP-WEB-CANCELLED");
+        }
+        catch (Exception exception)
+        {
+            runtimeState = AppRuntimeState.Unavailable.ToString();
+            errorCode = AppErrorCode.WorkerFailed.ToString();
+            runtimeMessage = "TensorRT engine 准备失败：" + exception.Message;
+            result = runtimeMessage;
+            Activity.Add("tensorrt-build", runtimeMessage, "DSAPP-TENSORRT-BUILD-FAILED");
+        }
+        finally
+        {
+            tensorRtBuilding = false;
+            tensorRtBuildCts?.Dispose();
+            tensorRtBuildCts = null;
+        }
+    }
+
+    private Dictionary<string, string> BuildTensorRtOptions(VisualReleaseModel? selected)
+    {
+        var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["cudaRoot"] = cudaRoot,
+            ["cudnnRoot"] = cudnnRoot,
+            ["tensorRtRoot"] = tensorRtRoot,
+            ["tensorRtApiVersion"] = tensorRtApiVersion,
+            ["apiVersion"] = tensorRtApiVersion,
+            ["tensorRtPrecision"] = tensorRtPrecision,
+            ["tensorRtWorkspaceMiB"] = tensorRtWorkspaceMiB,
+            ["tensorRtBuilderOptimizationLevel"] = tensorRtBuilderOptimizationLevel,
+            ["tensorRtStronglyTypedNetwork"] = tensorRtStronglyTypedNetwork.ToString(),
+            ["tensorRtForceRebuild"] = tensorRtForceRebuild.ToString()
+        };
+        if (!string.IsNullOrWhiteSpace(bridgePath)) options["bridgePath"] = bridgePath;
+        if (!string.IsNullOrWhiteSpace(sourceOnnxPath)) options["sourceOnnxPath"] = sourceOnnxPath;
+        if (!string.IsNullOrWhiteSpace(tensorRtEngineOutputPath)) options["tensorRtEngineOutputPath"] = tensorRtEngineOutputPath;
+        if (!string.IsNullOrWhiteSpace(engineIdentityPath)) options["engineIdentityPath"] = engineIdentityPath;
+        string profilesJson = ResolveTensorRtInputProfiles(selected);
+        if (!string.IsNullOrWhiteSpace(profilesJson)) options["tensorRtInputProfilesJson"] = profilesJson;
+        return options;
+    }
+
     private async Task RunAsync()
     {
         if (busy) return;
@@ -902,22 +1030,7 @@
             }
             if (IsBackend("tensorrt"))
             {
-                options["cudaRoot"] = cudaRoot;
-                options["cudnnRoot"] = cudnnRoot;
-                options["tensorRtRoot"] = tensorRtRoot;
-                options["engineIdentityPath"] = engineIdentityPath;
-                options["tensorRtApiVersion"] = tensorRtApiVersion;
-                options["apiVersion"] = tensorRtApiVersion;
-                options["tensorRtPrecision"] = tensorRtPrecision;
-                options["tensorRtWorkspaceMiB"] = tensorRtWorkspaceMiB;
-                options["tensorRtBuilderOptimizationLevel"] = tensorRtBuilderOptimizationLevel;
-                options["tensorRtStronglyTypedNetwork"] = tensorRtStronglyTypedNetwork.ToString();
-                options["tensorRtForceRebuild"] = tensorRtForceRebuild.ToString();
-                if (!string.IsNullOrWhiteSpace(bridgePath)) options["bridgePath"] = bridgePath;
-                if (!string.IsNullOrWhiteSpace(sourceOnnxPath)) options["sourceOnnxPath"] = sourceOnnxPath;
-                if (!string.IsNullOrWhiteSpace(tensorRtEngineOutputPath)) options["tensorRtEngineOutputPath"] = tensorRtEngineOutputPath;
-                string profilesJson = ResolveTensorRtInputProfiles(selected);
-                if (!string.IsNullOrWhiteSpace(profilesJson)) options["tensorRtInputProfilesJson"] = profilesJson;
+                foreach (KeyValuePair<string, string> option in BuildTensorRtOptions(selected)) options[option.Key] = option.Value;
             }
             if (selected is not null)
             {
@@ -1096,7 +1209,11 @@
             throw new FormatException("超时必须是 1 到 3600 秒之间的整数。");
         return TimeSpan.FromSeconds(seconds);
     }
-    private void MarkCustomParameters() => usingRecommendedParameters = false;
+    private void MarkCustomParameters()
+    {
+        usingRecommendedParameters = false;
+        tensorRtBuildReport = null;
+    }
     private void HandleBackendChanged()
     {
         usingRecommendedParameters = false;
@@ -1109,7 +1226,12 @@
         outputTensorElementTypesJson = System.Text.Json.JsonSerializer.Serialize(model.Outputs.ToDictionary(output => output.Name, output => output.ElementType));
     }
     private void ReplaceModel(VisualReleaseModel model) { int index = releaseModels.FindIndex(item => string.Equals(item.Id, model.Id, StringComparison.OrdinalIgnoreCase)); if (index >= 0) releaseModels[index] = model; }
-    private void Cancel() { cts?.Cancel(); Activity.Add("run", "Cancellation requested", "DSAPP-WEB-CANCEL-REQUESTED"); }
+    private void Cancel()
+    {
+        cts?.Cancel();
+        tensorRtBuildCts?.Cancel();
+        Activity.Add("run", tensorRtBuilding ? "TensorRT engine preparation cancellation requested" : "Cancellation requested", "DSAPP-WEB-CANCEL-REQUESTED");
+    }
     private static long[] ParseShape(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => long.Parse(item.Trim(), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
     private bool IsBackend(string token) => selectedBackend.Contains(token, StringComparison.OrdinalIgnoreCase);
     private static string InferModelFormat(string path)
@@ -1131,6 +1253,7 @@
     public void Dispose()
     {
         cts?.Cancel();
+        tensorRtBuildCts?.Cancel();
         DeleteOwnedImage();
         if (!string.IsNullOrWhiteSpace(uploadedModelPath) && File.Exists(uploadedModelPath))
         {

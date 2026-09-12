@@ -18,6 +18,7 @@ namespace DeploySharpApp.Infrastructure
         Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
         Task<ModelRunResult> RunStreamingAsync(ModelRunRequest request, IProgress<double>? progress, IProgress<string>? textProgress, CancellationToken cancellationToken);
         Task<BenchmarkReport> BenchmarkAsync(BenchmarkRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
+        Task<TensorRtEngineBuildReport> BuildTensorRtEngineAsync(TensorRtEngineBuildRequest request, IProgress<double>? progress, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -149,6 +150,70 @@ namespace DeploySharpApp.Infrastructure
             catch (TimeoutException exception) { await SendCancelAsync(process, requestId).ConfigureAwait(false); return BenchmarkFailure(request, "Worker benchmark 超时。", "DSAPP-WORKER-TIMED-OUT", exception.Message); }
             catch (WorkerHostUnavailableException exception) { return BenchmarkFailure(request, "未配置可启动的 BackendHost Worker。", "DSAPP-WORKER-HOST-NOT-CONFIGURED", exception.Message); }
             catch (Exception exception) { return BenchmarkFailure(request, "BackendHost Worker benchmark 通信失败。", "DSAPP-WORKER-FAILED", exception.Message); }
+            finally
+            {
+                if (process != null)
+                {
+                    await SendShutdownAsync(process, requestId).ConfigureAwait(false);
+                    Kill(process);
+                    process.Dispose();
+                }
+            }
+        }
+
+        public async Task<TensorRtEngineBuildReport> BuildTensorRtEngineAsync(TensorRtEngineBuildRequest request, IProgress<double>? progress, CancellationToken cancellationToken)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            string requestId = "tensorrt-build-" + Guid.NewGuid().ToString("N");
+            Process? process = null;
+            var streamDiagnostics = new List<RuntimeDiagnostic>();
+            DateTime deadline = DateTime.UtcNow + request.Timeout;
+            try
+            {
+                process = StartProcess();
+                progress?.Report(0.05);
+                WorkerResponse handshake = await ReadRequestResponseAsync(process, CreateHandshake(requestId, request.BackendId), requestId + "-handshake", Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                if (!IsSuccessfulHandshake(handshake))
+                    return BuildFailure(request, AppErrorCode.WorkerRequired, "BackendHost Worker 未通过握手，未执行 TensorRT engine 构建。", "DSAPP-WORKER-HANDSHAKE-FAILED", handshake.Message, streamDiagnostics, hostUnavailable: false);
+
+                progress?.Report(0.2);
+                var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["operation"] = "tensorrt-build",
+                    ["device"] = request.Device,
+                    ["modelFormat"] = "onnx",
+                    ["timeoutMs"] = request.Timeout.TotalMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["optionsJson"] = JsonSerializer.Serialize(request.Options)
+                };
+                Add(payload, "modelPath", request.OnnxPath);
+                Add(payload, "modelSha256", request.ModelSha256);
+                payload["sourceOnnxPath"] = request.OnnxPath;
+                if (request.ModelAssets.Count > 0) payload["modelAssetsJson"] = JsonSerializer.Serialize(request.ModelAssets);
+                foreach (KeyValuePair<string, string> option in request.Options)
+                    if (!payload.ContainsKey(option.Key)) payload[option.Key] = option.Value;
+
+                WorkerResponse response = await ReadRequestResponseAsync(process, new WorkerRequest(WorkerMessageKind.TensorRtBuild, requestId, request.BackendId, request.ModelId, payload), requestId, Remaining(deadline), progress, textProgress: null, streamDiagnostics, cancellationToken).ConfigureAwait(false);
+                progress?.Report(1);
+                return MapTensorRtBuildResponse(request, response, streamDiagnostics);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                await SendCancelAsync(process, requestId).ConfigureAwait(false);
+                return BuildFailure(request, AppErrorCode.Cancelled, "TensorRT engine 构建已取消。", "DSAPP-WORKER-CANCELLED", null, streamDiagnostics, hostUnavailable: false);
+            }
+            catch (TimeoutException exception)
+            {
+                await SendCancelAsync(process, requestId).ConfigureAwait(false);
+                return BuildFailure(request, AppErrorCode.TimedOut, "TensorRT engine 构建超时，Worker 进程已终止。", "DSAPP-WORKER-TIMED-OUT", exception.Message, streamDiagnostics, hostUnavailable: false);
+            }
+            catch (WorkerHostUnavailableException exception)
+            {
+                return BuildFailure(request, AppErrorCode.WorkerRequired, "未配置可启动的 BackendHost Worker，TensorRT engine 没有在当前进程内构建。", "DSAPP-WORKER-HOST-NOT-CONFIGURED", exception.Message, streamDiagnostics, hostUnavailable: true);
+            }
+            catch (Exception exception)
+            {
+                return BuildFailure(request, AppErrorCode.WorkerFailed, "BackendHost Worker TensorRT 构建通信失败。", "DSAPP-WORKER-FAILED", exception.Message, streamDiagnostics, hostUnavailable: false);
+            }
             finally
             {
                 if (process != null)
@@ -339,6 +404,89 @@ namespace DeploySharpApp.Infrastructure
         private static void Add(IDictionary<string, string> payload, string key, string? value) { if (!string.IsNullOrWhiteSpace(value)) payload[key] = value!; }
 
         private static bool IsSuccessfulHandshake(WorkerResponse response) => response.Kind == WorkerResponseKind.Handshake && response.Succeeded;
+
+        private static TensorRtEngineBuildReport MapTensorRtBuildResponse(TensorRtEngineBuildRequest request, WorkerResponse response, IReadOnlyList<RuntimeDiagnostic> streamDiagnostics)
+        {
+            var diagnostics = streamDiagnostics.ToList();
+            if (response.Succeeded && response.Kind == WorkerResponseKind.Result)
+            {
+                string buildState = Value(response.Payload, "engineBuildState") ?? "built";
+                var details = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (KeyValuePair<string, string> pair in response.Payload) details[pair.Key] = pair.Value;
+                diagnostics.Add(new RuntimeDiagnostic(
+                    "DSAPP-TENSORRT-ENGINE-" + buildState.ToUpperInvariant(),
+                    DiagnosticSeverity.Information,
+                    buildState.Equals("cache-hit", StringComparison.OrdinalIgnoreCase)
+                        ? "A compatible device-bound TensorRT engine was reused from the local cache."
+                        : "ONNX was converted to a device-bound TensorRT engine and its identity sidecar was verified.",
+                    request.BackendId,
+                    request.ModelId,
+                    details));
+                return new TensorRtEngineBuildReport(
+                    true,
+                    AppErrorCode.None,
+                    response.Message ?? "TensorRT engine preparation completed.",
+                    Value(response.Payload, "enginePath"),
+                    Value(response.Payload, "engineIdentityPath"),
+                    Value(response.Payload, "engineSha256"),
+                    buildState,
+                    buildState.Equals("cache-hit", StringComparison.OrdinalIgnoreCase),
+                    diagnostics);
+            }
+
+            string diagnosticCode = Value(response.Payload, "diagnosticCode") ?? "DSAPP-TENSORRT-BUILD-FAILED";
+            AppRuntimeState state = ParseRuntimeState(response.Payload);
+            AppErrorCode errorCode = MapTensorRtBuildErrorCode(diagnosticCode, state);
+            string message = response.Message ?? "TensorRT engine preparation was not available.";
+            var diagnostic = new RuntimeDiagnostic(diagnosticCode, errorCode == AppErrorCode.WorkerFailed ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning, message, request.BackendId, request.ModelId, response.Payload);
+            diagnostics.Add(diagnostic);
+            string[] missingItems = response.Payload.TryGetValue("missingItems", out string? missing) && !string.IsNullOrWhiteSpace(missing)
+                ? missing.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(item => item.Trim()).ToArray()
+                : Array.Empty<string>();
+            var runtimeStatus = new BackendRuntimeStatus(
+                request.BackendId,
+                state,
+                message,
+                loadedPath: Value(response.Payload, "loadedPath"),
+                version: Value(response.Payload, "runtime.tensorRtVersion"),
+                apiLine: Value(response.Payload, "apiVersion") ?? Value(response.Payload, "tensorRtApiVersion"),
+                rid: Value(response.Payload, "runtimeIdentifier"),
+                processArchitecture: Value(response.Payload, "processArchitecture"),
+                missingItems: missingItems,
+                suggestedAction: Value(response.Payload, "suggestedAction"),
+                details: response.Payload,
+                diagnostics: diagnostics);
+            return new TensorRtEngineBuildReport(false, errorCode, message, identityPath: Value(response.Payload, "engineIdentityPath"), buildState: Value(response.Payload, "engineBuildState"), diagnostics: diagnostics, runtimeStatus: runtimeStatus);
+        }
+
+        private static AppRuntimeState ParseRuntimeState(IReadOnlyDictionary<string, string> payload)
+            => payload.TryGetValue("state", out string? stateText) && Enum.TryParse(stateText, true, out AppRuntimeState state) ? state : AppRuntimeState.Unavailable;
+
+        private static AppErrorCode MapTensorRtBuildErrorCode(string diagnosticCode, AppRuntimeState state)
+        {
+            if (diagnosticCode.IndexOf("CANCEL", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.Cancelled;
+            if (diagnosticCode.IndexOf("TIMED-OUT", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.TimedOut;
+            if (diagnosticCode.IndexOf("MODEL", StringComparison.OrdinalIgnoreCase) >= 0
+                || diagnosticCode.IndexOf("ONNX", StringComparison.OrdinalIgnoreCase) >= 0 && (diagnosticCode.IndexOf("MISSING", StringComparison.OrdinalIgnoreCase) >= 0 || diagnosticCode.IndexOf("NOT-FOUND", StringComparison.OrdinalIgnoreCase) >= 0)
+                || diagnosticCode.IndexOf("FILE-NOT-FOUND", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.ModelUnavailable;
+            if (diagnosticCode.IndexOf("FORMAT", StringComparison.OrdinalIgnoreCase) >= 0
+                || diagnosticCode.IndexOf("SHA256", StringComparison.OrdinalIgnoreCase) >= 0
+                || diagnosticCode.IndexOf("INVALID", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.InvalidRequest;
+            if (state == AppRuntimeState.MissingNative || diagnosticCode.IndexOf("NATIVE", StringComparison.OrdinalIgnoreCase) >= 0
+                || diagnosticCode.IndexOf("RUNTIME", StringComparison.OrdinalIgnoreCase) >= 0) return AppErrorCode.NativeDependencyMissing;
+            if (diagnosticCode.StartsWith("DSAPP-WORKER-", StringComparison.OrdinalIgnoreCase)) return AppErrorCode.WorkerFailed;
+            return AppErrorCode.BackendUnavailable;
+        }
+
+        private static TensorRtEngineBuildReport BuildFailure(TensorRtEngineBuildRequest request, AppErrorCode code, string message, string diagnosticCode, string? technicalDetail, IReadOnlyList<RuntimeDiagnostic> existing, bool hostUnavailable)
+        {
+            var details = new Dictionary<string, string>(StringComparer.Ordinal) { ["workerHost"] = hostUnavailable ? "not-configured" : "configured-or-unresolved" };
+            if (!string.IsNullOrWhiteSpace(technicalDetail)) details["technicalDetail"] = technicalDetail!;
+            var diagnostics = existing.ToList();
+            diagnostics.Add(new RuntimeDiagnostic(diagnosticCode, code == AppErrorCode.WorkerFailed ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning, message, request.BackendId, request.ModelId, details));
+            var status = new BackendRuntimeStatus(request.BackendId, AppRuntimeState.Unavailable, message, suggestedAction: hostUnavailable ? "配置 DEPLOYSHARPAPP_BACKEND_HOST 指向 net10 BackendHost，再重试。" : "检查 BackendHost stderr、Worker 协议版本和 TensorRT adapter。", details: details, diagnostics: diagnostics);
+            return new TensorRtEngineBuildReport(false, code, message, diagnostics: diagnostics, runtimeStatus: status);
+        }
 
         private static ModelRunResult MapRunResponse(ModelRunRequest request, WorkerResponse response, IReadOnlyList<RuntimeDiagnostic> streamDiagnostics)
         {

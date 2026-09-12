@@ -39,5 +39,20 @@ namespace DeploySharpApp.Protocol.Tests
             Assert.AreEqual("Warning", logCopy.Payload["level"]);
             Assert.AreEqual("DSAPP-WORKER-ADAPTER-UNAVAILABLE", logCopy.Payload["diagnosticCode"]);
         }
+
+        [TestMethod]
+        public void TensorRtBuildMessageRoundTripsWithoutChangingPayload()
+        {
+            var request = new WorkerRequest(WorkerMessageKind.TensorRtBuild, "build-1", "deploysharp.backend.tensorrt", "demo/onnx", new Dictionary<string, string>
+            {
+                ["modelPath"] = "C:\\models\\demo.onnx",
+                ["modelFormat"] = "onnx",
+                ["tensorRtPrecision"] = "fp16"
+            });
+            WorkerRequest copy = WorkerProtocol.DeserializeRequest(WorkerProtocol.SerializeRequest(request));
+            Assert.AreEqual(WorkerMessageKind.TensorRtBuild, copy.Kind);
+            Assert.AreEqual("onnx", copy.Payload["modelFormat"]);
+            Assert.AreEqual("fp16", copy.Payload["tensorRtPrecision"]);
+        }
     }
 }
