@@ -97,6 +97,7 @@
                     @foreach (VisualTestImage image in testImages) { <option value="@image.Id">@image.FileName · @string.Join(", ", image.Tasks)</option> }
                 </select>
             </label>
+            <div class="actions"><span class="file-name">test-assets.1 · @testImages.Count 个可验证测试图像</span><button class="ghost small" @onclick="RefreshTestImagesAsync" disabled="@(testImageRefreshing || busy)">@(testImageRefreshing ? "刷新中…" : "刷新测试图像 ↻")</button></div>
         }
         @if (downloadingImage)
         {
@@ -142,6 +143,7 @@
     private bool downloadingModel;
     private bool uploadingBundle;
     private bool downloadingImage;
+    private bool testImageRefreshing;
     private bool busy;
     private bool lastSucceeded;
     private double modelProgress;
@@ -198,6 +200,28 @@
     private void UseLocal() { useRelease = false; statusMessage = "本地上传当前只接受三个经过相同 BLIP Profile 导出的文件。"; }
     private void HandleModelChanged(ChangeEventArgs args) { selectedModelId = args.Value?.ToString() ?? string.Empty; caption = string.Empty; }
     private void HandleTestImageChanged(ChangeEventArgs args) { selectedTestImageId = args.Value?.ToString() ?? string.Empty; DeleteOwnedImage(); imagePath = string.Empty; imageFileName = selectedTestImage?.FileName ?? string.Empty; imagePreview = null; }
+
+    private async Task RefreshTestImagesAsync()
+    {
+        if (testImageRefreshing || busy) return;
+        testImageRefreshing = true;
+        string previousId = selectedTestImageId;
+        try
+        {
+            IReadOnlyList<VisualTestImage> latest = await TestImageCatalog.RefreshAsync();
+            testImages.Clear();
+            testImages.AddRange(latest);
+            selectedTestImageId = latest.Any(image => string.Equals(image.Id, previousId, StringComparison.OrdinalIgnoreCase)) ? previousId : latest.FirstOrDefault()?.Id ?? string.Empty;
+            statusMessage = "测试图像清单已刷新；下载时仍会逐文件校验 SHA256。";
+            Activity.Add("multimodal-catalog", "Refreshed test-assets.1 image catalog", "DSAPP-MULTIMODAL-IMAGE-CATALOG-REFRESHED");
+        }
+        catch (Exception exception)
+        {
+            statusMessage = "测试图像清单刷新失败：" + exception.Message;
+            Activity.Add("multimodal-catalog", statusMessage, "DSAPP-MULTIMODAL-IMAGE-CATALOG-REFRESH-FAILED");
+        }
+        finally { testImageRefreshing = false; }
+    }
 
     private async Task DownloadModelAsync()
     {
@@ -307,6 +331,8 @@
         try
         {
             VisualTestImageDownloadResult downloaded = await TestImageCatalog.DownloadAsync(image, new Progress<double>(value => { imageProgress = value; _ = InvokeAsync(StateHasChanged); }), token);
+            int imageIndex = testImages.FindIndex(item => string.Equals(item.Id, downloaded.Image.Id, StringComparison.OrdinalIgnoreCase));
+            if (imageIndex >= 0) testImages[imageIndex] = downloaded.Image;
             imagePath = downloaded.Path; imageFileName = downloaded.Image.FileName; await SetImagePreviewAsync(downloaded.Path, downloaded.Image.MediaType);
             Activity.Add("multimodal-image", "Downloaded and SHA256-verified " + image.FileName, "DSAPP-MULTIMODAL-IMAGE-READY");
         }

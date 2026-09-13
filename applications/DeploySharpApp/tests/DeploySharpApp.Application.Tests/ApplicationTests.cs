@@ -6,6 +6,9 @@ using System.Text;
 using System.Diagnostics;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
 using DeploySharpApp.Application;
 using DeploySharpApp.BackendHost.Protocol;
 using DeploySharpApp.Contracts;
@@ -631,6 +634,24 @@ namespace DeploySharpApp.Application.Tests
         }
 
         [TestMethod]
+        public async Task TestImageCatalogRefreshReloadsReleaseMetadata()
+        {
+            string sha256 = Convert.ToHexString(SHA256.HashData(new byte[] { 0 })).ToLowerInvariant();
+            string catalog = "{\"assets\":[{\"id\":\"bus\",\"fileName\":\"bus.jpg\",\"mediaType\":\"image/jpeg\",\"sha256\":\"" + sha256 + "\",\"tasks\":[\"detection\"]}]}";
+            string sums = sha256 + "  bus.jpg\n";
+            var handler = new TestImageCatalogHandler(catalog, sums);
+            using var http = new HttpClient(handler);
+            var service = new VisualTestImageCatalogService(http);
+
+            IReadOnlyList<VisualTestImage> first = await service.RefreshAsync();
+            IReadOnlyList<VisualTestImage> second = await service.RefreshAsync();
+
+            Assert.AreEqual(1, first.Count);
+            Assert.AreEqual("bus.jpg", second[0].FileName);
+            Assert.AreEqual(2, handler.ReleaseMetadataRequests);
+        }
+
+        [TestMethod]
         public async Task OpenVinoWorkerExecutesNamedTensorInference()
         {
             if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages the Windows OpenVINO runtime.");
@@ -801,6 +822,27 @@ namespace DeploySharpApp.Application.Tests
         private sealed class ThrowingEngine : IDeploySharpEngine
         {
             public Task<ModelRunResult> RunAsync(ModelRunRequest request, IProgress<double>? progress, CancellationToken cancellationToken) => throw new AssertFailedException("Worker request was incorrectly sent to the in-process engine.");
+        }
+
+        private sealed class TestImageCatalogHandler : HttpMessageHandler
+        {
+            private readonly string _catalog;
+            private readonly string _sums;
+            public int ReleaseMetadataRequests { get; private set; }
+            public TestImageCatalogHandler(string catalog, string sums) { _catalog = catalog; _sums = sums; }
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                string body;
+                if (request.RequestUri?.AbsoluteUri.Contains("api.github.com/repos/guojin-yan/DeploySharp/releases/tags/test-assets.1", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    ReleaseMetadataRequests++;
+                    body = "{\"assets\":[{\"name\":\"test-image-catalog.json\",\"browser_download_url\":\"https://local/catalog\",\"size\":1},{\"name\":\"SHA256SUMS\",\"browser_download_url\":\"https://local/sums\",\"size\":1},{\"name\":\"bus.jpg\",\"browser_download_url\":\"https://local/bus\",\"size\":1}]}";
+                }
+                else if (request.RequestUri?.AbsoluteUri == "https://local/catalog") body = _catalog;
+                else if (request.RequestUri?.AbsoluteUri == "https://local/sums") body = _sums;
+                else body = string.Empty;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new StringContent(body) });
+            }
         }
 
         private sealed class StubWorkerClient : IBackendHostWorkerClient

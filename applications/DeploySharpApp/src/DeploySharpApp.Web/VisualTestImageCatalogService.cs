@@ -32,6 +32,13 @@ public sealed class VisualTestImageCatalogService
         return loadTask.WaitAsync(cancellationToken);
     }
 
+    /// <summary>Forces the next test-image catalog read to fetch current Release metadata.</summary>
+    public Task<IReadOnlyList<VisualTestImage>> RefreshAsync(IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    {
+        lock (SharedLoadGate) SharedLoadTask = null;
+        return GetImagesAsync(progress, cancellationToken);
+    }
+
     public string GetCachedPath(VisualTestImage image)
     {
         if (image == null) throw new ArgumentNullException(nameof(image));

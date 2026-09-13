@@ -132,6 +132,7 @@
                     @foreach (VisualTestImage image in testImages) { <option value="@image.Id">@image.FileName · @string.Join(", ", image.Tasks)</option> }
                 </select>
             </label>
+            <div class="download-row"><span class="muted">test-assets.1 · @testImages.Count 个可验证测试图像</span><button class="ghost small" @onclick="RefreshTestImagesAsync" disabled="@(testImageRefreshing || busy)">@(testImageRefreshing ? "刷新中…" : "刷新测试图像 ↻")</button></div>
         }
         @if (effectiveTestImage is not null && imagePath is null)
         {
@@ -315,6 +316,7 @@
     private bool downloading;
     private double downloadProgress;
     private bool testImageLoading = true;
+    private bool testImageRefreshing;
     private string? testImageError;
     private bool downloadingImage;
     private bool imageFromRelease;
@@ -432,6 +434,30 @@
     {
         selectedTestImageId = args.Value?.ToString() ?? string.Empty;
         ClearImagePreview();
+    }
+
+    private async Task RefreshTestImagesAsync()
+    {
+        if (testImageRefreshing || busy) return;
+        testImageRefreshing = true;
+        testImageError = null;
+        string previousId = selectedTestImageId;
+        try
+        {
+            IReadOnlyList<VisualTestImage> latest = await TestImageCatalog.RefreshAsync();
+            testImages.Clear();
+            testImages.AddRange(latest);
+            selectedTestImageId = latest.Any(image => string.Equals(image.Id, previousId, StringComparison.OrdinalIgnoreCase)) ? previousId : string.Empty;
+            runtimeMessage = "测试图像清单已刷新；下载时仍会逐文件校验 SHA256。";
+            Activity.Add("test-image-catalog", "Refreshed test-assets.1 catalog", "DSAPP-TEST-IMAGE-CATALOG-REFRESHED");
+        }
+        catch (Exception exception)
+        {
+            testImageError = exception.Message;
+            runtimeMessage = "测试图像清单刷新失败：" + exception.Message;
+            Activity.Add("test-image-catalog", runtimeMessage, "DSAPP-TEST-IMAGE-CATALOG-REFRESH-FAILED");
+        }
+        finally { testImageRefreshing = false; }
     }
 
     private void ApplyCommonDefaults()
@@ -794,6 +820,8 @@
         try
         {
             VisualTestImageDownloadResult downloaded = await TestImageCatalog.DownloadAsync(image, new Progress<double>(value => { imageDownloadProgress = value; InvokeAsync(StateHasChanged); }), cancellationToken);
+            int imageIndex = testImages.FindIndex(item => string.Equals(item.Id, downloaded.Image.Id, StringComparison.OrdinalIgnoreCase));
+            if (imageIndex >= 0) testImages[imageIndex] = downloaded.Image;
             selectedTestImageId = downloaded.Image.Id;
             await SetImagePreviewAsync(downloaded.Path, downloaded.Image.FileName, downloaded.Image.MediaType);
             imageFromRelease = true;
