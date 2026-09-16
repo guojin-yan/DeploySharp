@@ -472,7 +472,64 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(1, fixture.RecognitionProvider.LastSession!.RunCount + fixture.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
         }
 
-        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L)
+        [TestMethod]
+        public async Task GeometryReportKeepsTextHashesAndWindowDiagnostics()
+        {
+            foreach (RecognitionOverflowMode mode in new[] { RecognitionOverflowMode.Clamp, RecognitionOverflowMode.SlidingWindow })
+            {
+                using OcrFixture baseline = CreateOcrFixture(recognitionWidth: 8, overflowMode: mode);
+                using OcrFixture reporting = CreateOcrFixture(recognitionWidth: 8, overflowMode: mode, geometryOptions: new OcrGeometryOptions(minimumArea: 2000));
+                using var input = new FakeOcrImageInput();
+                using var otherInput = new FakeOcrImageInput();
+                OcrResult expected = await baseline.Pipeline.RunAsync(input);
+                OcrResult actual = await reporting.Pipeline.RunAsync(otherInput);
+                Assert.AreEqual(expected.ComputeSha256(), actual.ComputeSha256());
+                Assert.AreEqual(2, actual.Regions.Count);
+                for (int index = 0; index < actual.Regions.Count; index++)
+                {
+                    Assert.IsNull(expected.Regions[index].Geometry);
+                    OcrGeometryDiagnostics diagnostic = actual.Regions[index].Geometry!;
+                    Assert.AreSame(actual.Regions[index].Region.Polygon, diagnostic.InputPolygon);
+                    Assert.AreEqual(input.SourceSize, diagnostic.InputSize);
+                    Assert.AreEqual(OcrGeometryRisk.SmallArea, diagnostic.Risks);
+                    Assert.AreEqual(expected.Regions[index].RecognitionWindows.Count, actual.Regions[index].RecognitionWindows.Count);
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task GeometryRejectPrecedesCropAndRecognitionAndReleasesOwnedInputAndGate()
+        {
+            using OcrFixture fixture = CreateOcrFixture(geometryOptions: new OcrGeometryOptions(OcrGeometryValidationMode.Reject, minimumArea: 2000));
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                var input = new FakeOcrImageInput();
+                OcrPipelineException error = await Assert.ThrowsExactlyAsync<OcrPipelineException>(() => fixture.Pipeline.RunAsync(input, new OcrExecutionOptions(disposeInputOnCompletion: true)));
+                Assert.AreEqual(VisualErrorCodes.OcrGeometryRejected, error.ErrorCode);
+                Assert.AreEqual(OcrPipelineStage.CropAndBatch, error.Stage);
+                Assert.AreEqual("tests.crop", error.ProfileId);
+                Assert.AreEqual(0, error.RegionIndex);
+                StringAssert.Contains(error.TechnicalDetails!, "SmallArea");
+                Assert.AreEqual(0, input.LastBatchSize);
+                Assert.AreEqual(1, input.DisposeCount);
+                Assert.AreEqual(0, fixture.RecognitionProvider.LastSession!.RunCount + fixture.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task GeometryRejectionMaskAndDiagnosticBudgetAreEnforced()
+        {
+            using OcrFixture ignored = CreateOcrFixture(geometryOptions: new OcrGeometryOptions(OcrGeometryValidationMode.Reject, minimumArea: 2000, rejectedRisks: OcrGeometryRisk.OutsideImage));
+            using var input = new FakeOcrImageInput();
+            Assert.AreEqual(2, (await ignored.Pipeline.RunAsync(input)).Regions.Count);
+            using OcrFixture bounded = CreateOcrFixture(geometryOptions: new OcrGeometryOptions(), maximumResultBytes: 64);
+            OcrPipelineException error = await Assert.ThrowsExactlyAsync<OcrPipelineException>(() => bounded.Pipeline.RunAsync(input));
+            Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, error.ErrorCode);
+            Assert.AreEqual(OcrPipelineStage.CropAndBatch, error.Stage);
+            Assert.AreEqual(0, bounded.RecognitionProvider.LastSession!.RunCount + bounded.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
+        }
+
+        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null)
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .3f, maximumCandidates: 3, maximumRegions: 3));
             VisualModelProfile detectorProfile = DetectionProfile(detectorDecoder, TensorElementType.Float32, 3, "fake-detector");
@@ -496,6 +553,7 @@ namespace DeploySharp.Visual.Tests
             var crop = new TextCropProfile("tests.crop", 8, dynamicWidth ? OcrRecognitionWidthMode.Dynamic : OcrRecognitionWidthMode.Fixed, recognitionWidth, recognitionWidth)
                 .WithRecognitionOverflowMode(overflowMode);
             if (windowOptions != null) crop = crop.WithRecognitionWindows(windowOptions);
+            if (geometryOptions != null) crop = crop.WithGeometryValidation(geometryOptions);
             var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2, maximumRecognitionPaddingRatio: 2, maximumResultBytes: maximumResultBytes), new SessionOptions(1), new SessionOptions(1));
             return new OcrFixture(registry, detectionProvider, recognitionProvider, pipeline);
         }

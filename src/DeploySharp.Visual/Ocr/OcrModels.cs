@@ -492,6 +492,13 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets immutable bounds for overlapping recognition windows. / 获取重叠识别窗口的不可变边界。</summary>
         public OcrRecognitionWindowOptions RecognitionWindows { get; } = new OcrRecognitionWindowOptions();
 
+        /// <summary>Gets optional geometry checks; existing constructors disable them. / 获取可选几何检查；既有构造函数默认禁用。</summary>
+        public OcrGeometryOptions Geometry { get; } = OcrGeometryOptions.Disabled;
+
+        /// <summary>Configures pre-CLS/REC geometry checks without changing crop sampling. / 配置 CLS/REC 前的几何检查，不改变裁剪采样。</summary>
+        public TextCropProfile WithGeometryValidation(OcrGeometryOptions options)
+            => new TextCropProfile(this, OverflowMode, geometry: options ?? throw new ArgumentNullException(nameof(options)));
+
         /// <summary>Enables bounded overlapping recognition windows without changing model input limits. / 启用有界重叠识别窗口，不改变模型输入限制。</summary>
         public TextCropProfile WithRecognitionWindows(OcrRecognitionWindowOptions options)
             => new TextCropProfile(this, RecognitionOverflowMode.SlidingWindow, options ?? throw new ArgumentNullException(nameof(options)));
@@ -503,13 +510,14 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
         {
             OverflowMode = mode;
             RecognitionWindows = windows ?? source.RecognitionWindows;
+            Geometry = geometry ?? source.Geometry;
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
@@ -654,12 +662,19 @@ namespace JYPPX.DeploySharp.Visual
 
         /// <summary>Initializes a region with recognition-window provenance; windows are not additional detected lines. / 使用识别窗口来源信息初始化区域；窗口不是额外的检测行。</summary>
         public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth, IEnumerable<OcrRecognitionWindowResult> recognitionWindows)
+            : this(region, recognition, recognitionWidth, recognitionWindows, null)
+        {
+        }
+
+        /// <summary>Initializes a result with geometry evidence in its evaluated input space. / 使用评估时输入空间的几何证据初始化结果。</summary>
+        public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth, IEnumerable<OcrRecognitionWindowResult> recognitionWindows, OcrGeometryDiagnostics? geometry)
         {
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition));
             if (region.SourceIndex != recognition.SourceRegionIndex) throw new ArgumentException("Detection and recognition source indexes must match.", nameof(recognition));
             if (recognitionWidth.HasValue && recognitionWidth.Value.TargetWidth <= 0) throw new ArgumentException("Recognition width diagnostics must be initialized.", nameof(recognitionWidth));
             RecognitionWidth = recognitionWidth;
+            Geometry = geometry;
             if (recognitionWindows == null) throw new ArgumentNullException(nameof(recognitionWindows));
             if (recognitionWindows is IReadOnlyCollection<OcrRecognitionWindowResult> collection && collection.Count == 0)
             {
@@ -685,13 +700,19 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets ordered raw recognition windows and seam diagnostics; empty for the unsliced path. / 获取有序原始识别窗口与接缝诊断；未切片路径为空。</summary>
         public IReadOnlyList<OcrRecognitionWindowResult> RecognitionWindows { get; }
 
+        /// <summary>Gets optional input-space geometry evidence; null means it was not collected, not that geometry was safe. / 获取可选输入空间几何证据；null 表示未采集，不代表几何安全。</summary>
+        public OcrGeometryDiagnostics? Geometry { get; }
+
+        internal OcrRegionResult WithGeometry(OcrGeometryDiagnostics geometry)
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry);
+
         internal OcrRegionResult WithRegion(TextRegion region)
         {
-            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows);
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
-            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows);
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry);
         }
     }
 
@@ -804,7 +825,7 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional orientation provenance used before OCR. / 获取 OCR 前使用的可选方向来源信息。</summary>
         public OcrOrientationResult? Orientation { get; }
 
-        /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. Width-planning diagnostics are excluded to preserve the existing recognition fingerprint. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256；不包含宽度规划诊断，以保持既有识别结果指纹。</summary>
+        /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. Width and quality diagnostics are excluded to preserve the existing recognition fingerprint. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256；不包含宽度与质量诊断，以保持既有识别结果指纹。</summary>
         public string ComputeSha256()
         {
             using (var stream = new MemoryStream())

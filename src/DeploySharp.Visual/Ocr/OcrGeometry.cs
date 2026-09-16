@@ -93,8 +93,14 @@ namespace JYPPX.DeploySharp.Visual
                 for (int other = index + 1; other < points.Length; other++) if (points[index] == points[other]) throw new ArgumentException("Text polygon vertices must be distinct.", nameof(points));
                 PointF current = points[index];
                 PointF next = points[(index + 1) % points.Length];
-                PointF following = points[(index + 2) % points.Length];
-                if (OcrGeometry.Cross(current, next, following) <= epsilon) throw new ArgumentException("The text polygon must be strictly convex and non-self-intersecting.", nameof(points));
+                // A self-intersecting star can turn the same way at every vertex. Require
+                // every other vertex to lie strictly inside every directed edge instead.
+                // 自交星形也可能在每个顶点同向转弯；必须保证其余顶点都严格位于每条有向边的内侧。
+                for (int other = 0; other < points.Length; other++)
+                {
+                    if (other == index || other == (index + 1) % points.Length) continue;
+                    if (OcrGeometry.Cross(current, next, points[other]) <= epsilon) throw new ArgumentException("The text polygon must be strictly convex and non-self-intersecting.", nameof(points));
+                }
             }
         }
 

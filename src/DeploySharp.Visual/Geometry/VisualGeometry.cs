@@ -166,6 +166,26 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets whether the transform contains rotation, shear, or perspective terms. / 获取变换是否包含旋转、剪切或透视项。</summary>
         public bool IsProjective => _isProjective;
 
+        internal double FrobeniusCondition
+        {
+            get
+            {
+                double norm, inverseNorm;
+                if (_isProjective)
+                {
+                    norm = _m11 * _m11 + _m12 * _m12 + _m13 * _m13 + _m21 * _m21 + _m22 * _m22 + _m23 * _m23 + _m31 * _m31 + _m32 * _m32 + _m33 * _m33;
+                    inverseNorm = _i11 * _i11 + _i12 * _i12 + _i13 * _i13 + _i21 * _i21 + _i22 * _i22 + _i23 * _i23 + _i31 * _i31 + _i32 * _i32 + _i33 * _i33;
+                }
+                else
+                {
+                    double x = ScaleX, y = ScaleY, dx = OffsetX, dy = OffsetY;
+                    norm = x * x + y * y + dx * dx + dy * dy + 1;
+                    inverseNorm = (1 + dx * dx) / (x * x) + (1 + dy * dy) / (y * y) + 1;
+                }
+                return Math.Sqrt(norm * inverseNorm);
+            }
+        }
+
         /// <summary>Creates an invertible projective transform from four corresponding source/model corners. / 根据四组对应的源图和模型角点创建可逆透视变换。</summary>
         /// <remarks>Points must be supplied in the same clockwise or counter-clockwise order and form non-degenerate quadrilaterals. Rectangles are mapped by all four corners, so rotated and perspective crops retain exact point geometry. / 两组点必须按相同顺时针或逆时针顺序提供并构成非退化四边形；矩形的四个角点均参与映射，因此旋转和透视裁剪可以保留精确点几何。</remarks>
         public static ImageTransform Perspective(VisualSize sourceSize, VisualSize modelSize, IReadOnlyList<PointF> sourcePoints, IReadOnlyList<PointF> modelPoints)

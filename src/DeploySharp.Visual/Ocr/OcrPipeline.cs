@@ -292,6 +292,30 @@ namespace JYPPX.DeploySharp.Visual
 
                     var orientationDuration = TimeSpan.Zero;
                     IReadOnlyList<TextRegion> regions = detection.Regions;
+                    OcrGeometryDiagnostics[]? geometry = null;
+                    TimeSpan geometryDuration = TimeSpan.Zero;
+                    long geometryBytes = 0;
+                    if (_cropProfile.Geometry.Mode != OcrGeometryValidationMode.Disabled)
+                    {
+                        stage = OcrPipelineStage.CropAndBatch;
+                        var geometryWatch = Stopwatch.StartNew();
+                        geometry = new OcrGeometryDiagnostics[regions.Count];
+                        for (int index = 0; index < regions.Count; index++)
+                        {
+                            operationToken.ThrowIfCancellationRequested();
+                            regionIndex = regions[index].SourceIndex;
+                            geometryBytes = checked(geometryBytes + 160L + regions[index].Polygon.Vertices.Count * 8L);
+                            if (geometryBytes > _options.MaximumResultBytes) throw Limit("OCR geometry diagnostics exceed their result budget.", stage, regionIndex: regionIndex);
+                            OcrGeometryDiagnostics diagnostic = OcrGeometryAnalyzer.Analyze(regions[index], input.SourceSize, _cropProfile.Geometry, operationToken);
+                            geometry[index] = diagnostic;
+                            if (_cropProfile.Geometry.Mode == OcrGeometryValidationMode.Reject && (diagnostic.Risks & _cropProfile.Geometry.RejectedRisks) != 0)
+                                throw new OcrPipelineException(VisualErrorCodes.OcrGeometryRejected, "OCR input geometry exceeds its configured acceptance thresholds.",
+                                    stage, profileId: _cropProfile.ProfileId, regionIndex: regionIndex, technicalDetails: "risks=" + diagnostic.Risks);
+                        }
+                        regionIndex = null;
+                        geometryWatch.Stop();
+                        geometryDuration = geometryWatch.Elapsed;
+                    }
                     if (_regionOrientation != null || _options.AutoRotateVerticalText)
                     {
                         stage = OcrPipelineStage.OrientationClassification;
@@ -364,7 +388,7 @@ namespace JYPPX.DeploySharp.Visual
                     var recognitionWidths = new OcrRecognitionWidthInfo[requests.Count];
                     List<OcrBatchDescriptor> recognitionBatches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, operationToken);
                     cropWatch.Stop();
-                    TimeSpan cropDuration = cropWatch.Elapsed;
+                    TimeSpan cropDuration = cropWatch.Elapsed + geometryDuration;
                     var recognitionWatch = Stopwatch.StartNew();
                     TimeSpan recognitionPreparationWork = TimeSpan.Zero;
                     TimeSpan recognitionInferenceWork = TimeSpan.Zero;
@@ -414,7 +438,7 @@ namespace JYPPX.DeploySharp.Visual
                     regionIndex = null;
                     var mergeWatch = Stopwatch.StartNew();
                     var results = new List<OcrRegionResult>(regions.Count);
-                    long resultBytes = 0;
+                    long resultBytes = geometryBytes;
                     CtcConfidenceAggregation aggregation = (RecognitionSelection.Profile.Decoder as GreedyCtcDecoder)?.Options.ConfidenceAggregation ?? CtcConfidenceAggregation.Mean;
                     for (int index = 0; index < regions.Count; index++)
                     {
@@ -433,12 +457,13 @@ namespace JYPPX.DeploySharp.Visual
                         resultBytes = checked(resultBytes + checked((long)regions[index].Polygon.Vertices.Count * 8));
                         if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
                         if (windows == null || windows.Count == 1)
-                            results.Add(new OcrRegionResult(regions[index], recognized[offset], recognitionWidths[offset]));
+                            results.Add(new OcrRegionResult(regions[index], recognized[offset], recognitionWidths[offset], Array.Empty<OcrRecognitionWindowResult>(), geometry?[index]));
                         else
                         {
                             var rawWindows = new List<OcrRecognitionWindowResult>(windows.Count);
                             for (int item = 0; item < windows.Count; item++) rawWindows.Add(new OcrRecognitionWindowResult(windows[item], recognized[offset + item], recognitionWidths[offset + item]));
-                            results.Add(OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, operationToken));
+                            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, operationToken);
+                            results.Add(geometry == null ? merged : merged.WithGeometry(geometry[index]));
                         }
                     }
                     mergeWatch.Stop();

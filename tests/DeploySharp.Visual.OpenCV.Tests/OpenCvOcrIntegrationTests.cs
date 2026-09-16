@@ -189,6 +189,53 @@ namespace DeploySharp.Visual.OpenCV.Tests
             }
         }
 
+        [TestMethod]
+        public void ArbitraryAngleAndPerspectiveCropsSampleTheOriginalImageCoordinates()
+        {
+            const int side = 256;
+            byte[] header = Encoding.ASCII.GetBytes("P6\n256 256\n255\n");
+            var ppm = new byte[header.Length + side * side * 3];
+            Buffer.BlockCopy(header, 0, ppm, 0, header.Length);
+            for (int y = 0; y < side; y++) for (int x = 0; x < side; x++)
+            {
+                int offset = header.Length + (y * side + x) * 3;
+                ppm[offset] = (byte)x; ppm[offset + 1] = 100; ppm[offset + 2] = (byte)y;
+            }
+            using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().Create(OpenCvImageSource.FromBytes(ppm), "images", new OpenCvPreprocessOptions(new VisualSize(32, 32)));
+            var profile = new TextCropProfile("tests/native-angle", 20, OcrRecognitionWidthMode.Dynamic, 120, 160,
+                interpolation: TextCropInterpolation.Linear).WithGeometryValidation(new OcrGeometryOptions());
+            var quads = new List<TextQuadrilateral>();
+            foreach (int degrees in new[] { -45, -30, -15, -5, 0, 5, 15, 30, 45, 90, 180 })
+            {
+                double angle = degrees * Math.PI / 180;
+                PointF Rotate(double x, double y) => new PointF((float)(128 + x * Math.Cos(angle) - y * Math.Sin(angle)), (float)(128 + x * Math.Sin(angle) + y * Math.Cos(angle)));
+                quads.Add(new TextQuadrilateral(Rotate(-60, -10), Rotate(60, -10), Rotate(60, 10), Rotate(-60, 10), TextCornerOrder.TopLeftClockwise));
+            }
+            quads.Add(new TextQuadrilateral(new PointF(50, 80), new PointF(200, 70), new PointF(170, 120), new PointF(80, 125), TextCornerOrder.TopLeftClockwise));
+            foreach (TextQuadrilateral quad in quads)
+            {
+                var region = new TextRegion(0, 1, quad.Polygon, quad);
+                var request = new TextCropRequest(region, profile);
+                OcrGeometryDiagnostics diagnostic = OcrGeometryAnalyzer.Analyze(region, input.SourceSize);
+                Assert.AreEqual(OcrGeometryRisk.None, diagnostic.Risks);
+                using PreparedVisualInput prepared = input.PrepareRecognitionBatch("crops", new[] { request }, CancellationToken.None);
+                float[] data = ((Tensor<float>)prepared.Tensor).ToArray();
+                int plane = request.TargetWidth * request.TargetHeight;
+                ImageTransform transform = ImageTransform.Perspective(input.SourceSize, new VisualSize(1, 1),
+                    new[] { quad.TopLeft, quad.TopRight, quad.BottomRight, quad.BottomLeft },
+                    new[] { new PointF(0, 0), new PointF(1, 0), new PointF(1, 1), new PointF(0, 1) });
+                foreach (double u in new[] { .25, .75 }) foreach (double v in new[] { .25, .75 })
+                {
+                    int x = (int)(u * (request.TargetWidth - 1)), y = (int)(v * (request.TargetHeight - 1));
+                    PointF expected = transform.ToSource(new PointF((float)x / (request.TargetWidth - 1), (float)y / (request.TargetHeight - 1)));
+                    int pixel = y * request.TargetWidth + x;
+                    Assert.AreEqual(expected.X, data[pixel], 4, "source X after warp/resize");
+                    Assert.AreEqual(100, data[plane + pixel], .01);
+                    Assert.AreEqual(expected.Y, data[2 * plane + pixel], 4, "source Y after warp/resize");
+                }
+            }
+        }
+
         private static TextCropRequest Request(TextOrientation orientation, TextCropProfile profile)
         {
             var corners = new TextQuadrilateral(new PointF(2,2), new PointF(14,2), new PointF(14,6), new PointF(2,6), TextCornerOrder.TopLeftClockwise);

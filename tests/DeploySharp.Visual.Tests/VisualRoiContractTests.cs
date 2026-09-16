@@ -1523,9 +1523,10 @@ namespace DeploySharp.Visual.Tests
             var region = new JYPPX.DeploySharp.Visual.TextRegion(3, .95f, localQuad.Polygon, localQuad, TextOrientation.Degrees0, externalId: "text");
             var recognition = new RecognizedText(3, "OK", .9f, Array.Empty<OcrToken>(), "latin", "1", new string('0', 64));
             OcrRecognitionWidthInfo width = new TextCropProfile("roi/width", 4, OcrRecognitionWidthMode.Dynamic, 16, 16).DescribeWidth(localQuad, region.Orientation);
+            OcrGeometryDiagnostics geometry = OcrGeometryAnalyzer.Analyze(region, model);
             var timing = new OcrStageTiming(TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             var local = new JYPPX.DeploySharp.Visual.OcrResult(
-                new[] { new OcrRegionResult(region, recognition, width) },
+                new[] { new OcrRegionResult(region, recognition, width, Array.Empty<OcrRecognitionWindowResult>(), geometry) },
                 model,
                 "det", new JYPPX.DeploySharp.Models.ModelId("det"),
                 "rec", new JYPPX.DeploySharp.Models.ModelId("rec"),
@@ -1540,6 +1541,9 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(new PointF(2.5f, 2.5f), projected.Regions[0].Region.Polygon.Vertices[0]);
             Assert.AreEqual(new PointF(5.5f, 4.5f), projected.Regions[0].Region.CropQuadrilateral!.BottomRight);
             Assert.AreEqual(width, projected.Regions[0].RecognitionWidth);
+            Assert.AreSame(geometry, projected.Regions[0].Geometry);
+            Assert.AreEqual(model, projected.Regions[0].Geometry!.InputSize);
+            Assert.AreEqual(new PointF(.5f, .5f), projected.Regions[0].Geometry!.InputPolygon.Vertices[0]);
         }
 
         [TestMethod]
@@ -1584,9 +1588,10 @@ namespace DeploySharp.Visual.Tests
             string hash = new string('a', 64);
             var widthQuad = new TextQuadrilateral(new PointF(0, 0), new PointF(20, 0), new PointF(20, 10), new PointF(0, 10), TextCornerOrder.TopLeftClockwise);
             OcrRecognitionWidthInfo width = new TextCropProfile("roi/merge-width", 8, OcrRecognitionWidthMode.Fixed, 8, 8).DescribeWidth(widthQuad, TextOrientation.Degrees0);
+            OcrGeometryDiagnostics geometry = OcrGeometryAnalyzer.Analyze(new JYPPX.DeploySharp.Visual.TextRegion(7, .95f, leftPolygon), new VisualSize(100, 100));
             OcrRegionResult high = new OcrRegionResult(
-                new JYPPX.DeploySharp.Visual.TextRegion(0, .95f, leftPolygon),
-                new RecognizedText(0, "  OK  ", .95f, Array.Empty<OcrToken>(), "latin", "1", hash), width);
+                new JYPPX.DeploySharp.Visual.TextRegion(7, .95f, leftPolygon),
+                new RecognizedText(7, "  OK  ", .95f, Array.Empty<OcrToken>(), "latin", "1", hash), width, Array.Empty<OcrRecognitionWindowResult>(), geometry);
             OcrRegionResult low = new OcrRegionResult(
                 new JYPPX.DeploySharp.Visual.TextRegion(1, .8f, rightPolygon),
                 new RecognizedText(1, "OK", .8f, Array.Empty<OcrToken>(), "latin", "1", hash));
@@ -1603,6 +1608,8 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(1, merged.Items.Count);
             Assert.AreEqual("  OK  ", merged.Items[0].Region.Recognition.Text);
             Assert.AreEqual(width, merged.Items[0].Region.RecognitionWidth);
+            Assert.AreSame(geometry, merged.Items[0].Region.Geometry);
+            Assert.AreEqual(0, merged.Items[0].Region.Region.SourceIndex);
             CollectionAssert.AreEqual(new[] { "left", "right" }, merged.Items[0].RoiIds.ToArray());
             Assert.AreEqual(new PointF(10, 10), merged.Items[0].Region.Region.Polygon.Vertices[0]);
         }

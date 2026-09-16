@@ -36,6 +36,30 @@ Unmatched seams retain both sides and set `SeamUncertain`; duplicates may remain
 
 匹配以完整字典 token 和近似 CTC 位置为依据，未匹配接缝保留双侧文本并标记不确定。增大重叠或允许单 token 匹配都应结合真实样本评估；当前工具只记录结果，不自动选择准确率更好的组合。
 
+## Geometry diagnostics / 几何诊断
+
+Set `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MODE=Report` to collect geometry after DET and before CLS/REC; the default is `Disabled`. `Reject` fails the entire call with `DS-VISUAL-4104` if the default rejection mask matches. It does not silently skip a line or change perspective sampling. / 使用 Report 先观察风险；Reject 明确失败，默认不因贴边而拒绝。
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MODE` | `Disabled` | Disabled / Report / Reject |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MIN_AREA` | `4` | Minimum polygon area, pixels² / 最小面积 |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MIN_EDGE` | `1` | Minimum polygon edge, pixels / 最短边 |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MAX_ASPECT` | `200` | Maximum long/short-side ratio / 最大长短边比 |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MAX_OUTSIDE` | `0.25` | Maximum polygon area outside the input / 图外面积比例上限 |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_EDGE_MARGIN` | `1` | Boundary-risk margin, pixels / 贴边风险距离 |
+| `DEPLOYSHARP_PADDLEOCR_GEOMETRY_MAX_CONDITION` | `10000` | Maximum normalized homography Frobenius condition / 归一化单应矩阵条件数上限 |
+
+```powershell
+$env:DEPLOYSHARP_PADDLEOCR_GEOMETRY_MODE = 'Report'
+$env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-geometry/report'
+# Run the benchmark with the same model/input/batch settings as the Disabled baseline.
+```
+
+Sidecar schema 2 adds `Crop.Geometry` options and per-region `Geometry` evidence, including the evaluated input polygon, angle, exact outside-area fraction, condition number and risk flags. Export remains outside timed spans. `crop_ms` includes enabled geometry checks; `recognition_ms` includes actual crop materialization. Null diagnostics mean not collected. ROI/global orientation projection preserves the diagnostic input space; use the final `Region.Polygon` for drawing. / JSON 仍在计时外写入，但几何检查本身计入流水线耗时；null 不表示已证明安全。
+
+These checks are heuristics, not CER/WER or measured text truncation. Small angles do not imply affine equivalence: this version retains four-corner perspective rectification and does not enable an automatic affine fast path or low-confidence retry. Details and API configuration: [OCR geometry](../../docs/articles/visual-ocr.md#几何质量倾斜角度与边界风险).
+
 ## Portable Windows x64 package
 
 `portable/Build-PortableWinX64.ps1` publishes a self-contained Windows x64 benchmark package. The generated folder carries the .NET runtime, native CPU dependencies, the fixed benchmark image, selected ONNX/dictionary assets, a SHA-256 manifest, and a launcher that records hardware/runtime metadata next to every result. The executable first looks for `models` and `images/benchmark/demo_1.jpg` beside itself, so the folder can be copied without rewriting absolute paths. Run the package with `run-benchmark.cmd`; no .NET installation is required on the target host.

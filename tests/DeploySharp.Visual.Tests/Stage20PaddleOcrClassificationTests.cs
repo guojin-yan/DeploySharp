@@ -125,7 +125,7 @@ namespace DeploySharp.Visual.Tests
             VisualProfileSelection recSelection = Select(recognizer, recognitionProvider, profiles, registry);
             using var pipeline = new OcrPipeline(registry, detSelection, Request(detectionProvider), clsSelection, Request(classificationProvider),
                 new TextCropProfile("tests/stage20-cls-crop", 80, OcrRecognitionWidthMode.Fixed, 160, 160), recSelection, Request(recognitionProvider),
-                new TextCropProfile("tests/stage20-rec-crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16), new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 2));
+                new TextCropProfile("tests/stage20-rec-crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16).WithGeometryValidation(new OcrGeometryOptions()), new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 2));
             using var input = new Stage20OcrInput();
 
             OcrResult result = pipeline.Run(input);
@@ -140,6 +140,18 @@ namespace DeploySharp.Visual.Tests
             CollectionAssert.AreEqual(new[] { "AB", "CA" }, result.Regions.Select(value => value.Recognition.Text).ToArray());
             Assert.AreEqual(2, classificationProvider.LastSession!.RunCount);
             Assert.IsTrue(result.Timing.OrientationClassification > TimeSpan.Zero);
+            Assert.AreEqual(0, result.Regions[1].Geometry!.BaselineAngleRadians!.Value);
+            Assert.AreEqual(new PointF(50, 50), result.Regions[1].Geometry!.InputPolygon.Vertices[0]);
+
+            using var rejecting = new OcrPipeline(registry, detSelection, Request(detectionProvider), clsSelection, Request(classificationProvider),
+                new TextCropProfile("tests/stage20-cls-crop", 80, OcrRecognitionWidthMode.Fixed, 160, 160), recSelection, Request(recognitionProvider),
+                new TextCropProfile("tests/stage20-rec-crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16).WithGeometryValidation(new OcrGeometryOptions(OcrGeometryValidationMode.Reject, minimumArea: 100000)),
+                new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 2));
+            OcrPipelineException rejected = Assert.ThrowsExactly<OcrPipelineException>(() => rejecting.Run(input));
+            Assert.AreEqual(VisualErrorCodes.OcrGeometryRejected, rejected.ErrorCode);
+            Assert.AreEqual(2, classificationCall, "Rejected geometry must not enter CLS.");
+            Assert.AreEqual(0, classificationProvider.LastSession!.RunCount);
+            Assert.AreEqual(0, recognitionProvider.LastSession!.RunCount + recognitionProvider.LastSession.SequenceArgMaxRunCount);
         }
 
         [TestMethod]
