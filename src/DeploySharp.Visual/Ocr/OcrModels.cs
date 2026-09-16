@@ -495,6 +495,13 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional geometry checks; existing constructors disable them. / 获取可选几何检查；既有构造函数默认禁用。</summary>
         public OcrGeometryOptions Geometry { get; } = OcrGeometryOptions.Disabled;
 
+        /// <summary>Gets optional bounded orientation retries; null disables them. / 获取可选的有界方向重试；null 表示禁用。</summary>
+        public OcrOrientationRetryOptions? OrientationRetry { get; }
+
+        /// <summary>Enables bounded low-confidence REC retries without changing DET/CLS or model input contracts. / 启用有界低置信度 REC 重试，不改变 DET/CLS 或模型输入合同。</summary>
+        public TextCropProfile WithOrientationRetry(OcrOrientationRetryOptions options)
+            => new TextCropProfile(this, OverflowMode, retry: options ?? throw new ArgumentNullException(nameof(options)));
+
         /// <summary>Configures pre-CLS/REC geometry checks without changing crop sampling. / 配置 CLS/REC 前的几何检查，不改变裁剪采样。</summary>
         public TextCropProfile WithGeometryValidation(OcrGeometryOptions options)
             => new TextCropProfile(this, OverflowMode, geometry: options ?? throw new ArgumentNullException(nameof(options)));
@@ -510,7 +517,7 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
@@ -518,6 +525,7 @@ namespace JYPPX.DeploySharp.Visual
             OverflowMode = mode;
             RecognitionWindows = windows ?? source.RecognitionWindows;
             Geometry = geometry ?? source.Geometry;
+            OrientationRetry = retry ?? source.OrientationRetry;
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
@@ -668,6 +676,11 @@ namespace JYPPX.DeploySharp.Visual
 
         /// <summary>Initializes a result with geometry evidence in its evaluated input space. / 使用评估时输入空间的几何证据初始化结果。</summary>
         public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth, IEnumerable<OcrRecognitionWindowResult> recognitionWindows, OcrGeometryDiagnostics? geometry)
+            : this(region, recognition, recognitionWidth, recognitionWindows, geometry, null)
+        {
+        }
+
+        internal OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth, IEnumerable<OcrRecognitionWindowResult> recognitionWindows, OcrGeometryDiagnostics? geometry, OcrOrientationRetryResult? orientationRetry)
         {
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition));
@@ -675,6 +688,7 @@ namespace JYPPX.DeploySharp.Visual
             if (recognitionWidth.HasValue && recognitionWidth.Value.TargetWidth <= 0) throw new ArgumentException("Recognition width diagnostics must be initialized.", nameof(recognitionWidth));
             RecognitionWidth = recognitionWidth;
             Geometry = geometry;
+            OrientationRetry = orientationRetry;
             if (recognitionWindows == null) throw new ArgumentNullException(nameof(recognitionWindows));
             if (recognitionWindows is IReadOnlyCollection<OcrRecognitionWindowResult> collection && collection.Count == 0)
             {
@@ -703,16 +717,22 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional input-space geometry evidence; null means it was not collected, not that geometry was safe. / 获取可选输入空间几何证据；null 表示未采集，不代表几何安全。</summary>
         public OcrGeometryDiagnostics? Geometry { get; }
 
+        /// <summary>Gets original/retry evidence; null means retries were disabled or this line did not qualify. / 获取初始与重试证据；null 表示禁用重试或该行不符合触发条件。</summary>
+        public OcrOrientationRetryResult? OrientationRetry { get; }
+
+        internal OcrRegionResult WithOrientationRetry(OcrOrientationRetryResult retry)
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry);
+
         internal OcrRegionResult WithGeometry(OcrGeometryDiagnostics geometry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry);
 
         internal OcrRegionResult WithRegion(TextRegion region)
         {
-            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry);
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
-            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry);
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex));
         }
     }
 

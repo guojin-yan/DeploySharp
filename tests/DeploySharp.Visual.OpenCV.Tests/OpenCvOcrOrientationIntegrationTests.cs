@@ -34,7 +34,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var detectorArtifact = new ModelArtifact(new ModelId("tests/opencv-ocr-detector"), "onnx", Model("text-detection.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
             var recognizerArtifact = new ModelArtifact(new ModelId("tests/opencv-ocr-recognizer"), "onnx", Model("text-recognition-ctc.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
             using var orientation = new OcrOrientationPipeline(registry, profiles.Select(orientationArtifact, registry, request, VisualTaskId.TextOrientationClassification), request);
-            using var ocr = new OcrPipeline(registry, profiles.Select(detectorArtifact, registry, request, VisualTaskId.TextDetection), request, profiles.Select(recognizerArtifact, registry, request, VisualTaskId.TextRecognition), request, CropProfile().WithGeometryValidation(new OcrGeometryOptions()), new OcrPipelineOptions(maximumRecognitionBatch: 2));
+            using var ocr = new OcrPipeline(registry, profiles.Select(detectorArtifact, registry, request, VisualTaskId.TextDetection), request, profiles.Select(recognizerArtifact, registry, request, VisualTaskId.TextRecognition), request, CropProfile().WithGeometryValidation(new OcrGeometryOptions()).WithOrientationRetry(new OcrOrientationRetryOptions(1)), new OcrPipelineOptions(maximumRecognitionBatch: 2));
             using var workflow = new OcrOrientationWorkflow(orientation, ocr);
             var factory = new OpenCvOcrImageInputFactory();
             var orientationOptions = new OpenCvPreprocessOptions(new VisualSize(2, 2), OpenCvResizeMode.Resize, VisualColorOrder.Gray, layout: VisualTensorLayout.Nchw, outputType: OpenCvOutputType.Float32);
@@ -52,6 +52,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(result.CorrectedSourceSize, region.Geometry!.InputSize);
                 var restored = TextPolygon.Canonicalize(region.Geometry.InputPolygon.Vertices.Select(result.Orientation!.ToOriginalPoint).ToArray(), OrientedVertexOrder.CounterClockwise);
                 CollectionAssert.AreEqual(restored.Vertices.ToArray(), region.Region.Polygon.Vertices.ToArray());
+                Assert.AreEqual(2, region.OrientationRetry!.Attempts.Count);
+                Assert.AreEqual(0, region.OrientationRetry.SelectedIndex);
+                Assert.AreEqual(region.Region.SourceIndex, region.OrientationRetry.Attempts[1].Recognition.SourceRegionIndex);
             }
             input.Dispose(); input.Dispose();
         }

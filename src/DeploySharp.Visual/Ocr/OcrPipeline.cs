@@ -111,7 +111,7 @@ namespace JYPPX.DeploySharp.Visual
     }
 
     /// <summary>Runs bounded detector, perspective-crop, recognizer, and CTC stages through two Core-backed Visual pipelines. / 通过两个 Core 支持的 Visual Pipeline 运行有界检测、透视裁剪、识别和 CTC 阶段。</summary>
-    public sealed class OcrPipeline : IDisposable
+    public sealed partial class OcrPipeline : IDisposable
     {
         private readonly object _lifetimeGate = new object();
         private readonly VisualPipeline _detector;
@@ -467,13 +467,24 @@ namespace JYPPX.DeploySharp.Visual
                         }
                     }
                     mergeWatch.Stop();
+                    int recognitionBatchCount = recognitionBatches.Count;
+                    if (_cropProfile.OrientationRetry != null)
+                    {
+                        stage = OcrPipelineStage.Recognition;
+                        RetryWork retry = await RunOrientationRetriesAsync(input, results, resultBytes, execution, aggregation, operationToken).ConfigureAwait(false);
+                        recognitionDuration += retry.Elapsed;
+                        recognitionPreparationWork += retry.Preparation;
+                        recognitionInferenceWork += retry.Inference;
+                        recognitionPostprocessingWork += retry.Postprocessing;
+                        recognitionBatchCount += retry.BatchCount;
+                    }
                     var detailedTiming = new OcrDetailedStageTiming(
                         detectionInference.Timing.Inference,
                         detectionInference.Timing.Postprocessing,
                         recognitionPreparationWork,
                         recognitionInferenceWork,
                         recognitionPostprocessingWork,
-                        recognitionBatches.Count);
+                        recognitionBatchCount);
                     return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed, orientationDuration, detailedTiming), orientation);
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken, stage, regionIndex); }

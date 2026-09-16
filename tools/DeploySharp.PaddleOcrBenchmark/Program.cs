@@ -226,6 +226,8 @@ internal static class Program
             VisualModelProfile recProfile = rec.VisualProfile;
             VisualModelProfile? clsProfile = cls?.VisualProfile;
             TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode()).WithGeometryValidation(ReadGeometryOptions());
+            OcrOrientationRetryOptions? orientationRetry = ReadOrientationRetryOptions();
+            if (orientationRetry != null) recognitionCrop = recognitionCrop.WithOrientationRetry(orientationRetry);
             if (recognitionCrop.OverflowMode == RecognitionOverflowMode.SlidingWindow)
                 recognitionCrop = recognitionCrop.WithRecognitionWindows(new OcrRecognitionWindowOptions(
                     overlapRatio: ReadWindowOverlap(),
@@ -401,6 +403,29 @@ internal static class Program
         return false;
     }
 
+    private static OcrOrientationRetryOptions? ReadOrientationRetryOptions()
+    {
+        string enabled = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ORIENTATION_RETRY")?.Trim().ToLowerInvariant() ?? "0";
+        if (enabled == "0" || enabled == "false") return null;
+        if (enabled != "1" && enabled != "true") throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_ORIENTATION_RETRY accepts 0/1/false/true.");
+        static float Score(string suffix, float fallback)
+        {
+            string name = "DEPLOYSHARP_PADDLEOCR_RETRY_" + suffix;
+            string? value = Environment.GetEnvironmentVariable(name);
+            if (value == null) return fallback;
+            if (float.TryParse(value, NumberStyles.Float, Invariant, out float score) && float.IsFinite(score)) return score;
+            throw new ArgumentException(name + " must be a finite confidence value.");
+        }
+        string rotations = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_RETRY_ROTATIONS") ?? "180";
+        TextOrientation[] angles = rotations.Split(',').Select(value => value.Trim() switch
+        {
+            "90" => TextOrientation.Clockwise90, "180" => TextOrientation.Degrees180, "270" => TextOrientation.CounterClockwise90,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_RETRY_ROTATIONS requires distinct comma-separated 90,180,270 values.")
+        }).ToArray();
+        return new OcrOrientationRetryOptions(Score("CONFIDENCE", .8f), Score("MIN_GAIN", .05f),
+            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_REGIONS", 16), angles, ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_CROPS", 1024));
+    }
+
     private static OcrGeometryOptions ReadGeometryOptions()
     {
         string configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_GEOMETRY_MODE")?.Trim().ToLowerInvariant() ?? "disabled";
@@ -463,19 +488,19 @@ internal static class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 2, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 3, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             Regions = result.Regions.Select(item => new
             {
                 item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
-                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry
             }).ToArray()
         };
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions

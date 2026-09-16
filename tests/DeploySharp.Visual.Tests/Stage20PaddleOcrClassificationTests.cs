@@ -125,7 +125,7 @@ namespace DeploySharp.Visual.Tests
             VisualProfileSelection recSelection = Select(recognizer, recognitionProvider, profiles, registry);
             using var pipeline = new OcrPipeline(registry, detSelection, Request(detectionProvider), clsSelection, Request(classificationProvider),
                 new TextCropProfile("tests/stage20-cls-crop", 80, OcrRecognitionWidthMode.Fixed, 160, 160), recSelection, Request(recognitionProvider),
-                new TextCropProfile("tests/stage20-rec-crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16).WithGeometryValidation(new OcrGeometryOptions()), new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 2));
+                new TextCropProfile("tests/stage20-rec-crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16).WithGeometryValidation(new OcrGeometryOptions()).WithOrientationRetry(new OcrOrientationRetryOptions(1)), new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 2));
             using var input = new Stage20OcrInput();
 
             OcrResult result = pipeline.Run(input);
@@ -136,7 +136,9 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual("fake-stage20-classifier", result.Regions[1].Region.Metadata["ocr.orientation.backendId"]);
             Assert.AreEqual("per-text-region", result.Regions[1].Region.Metadata["ocr.orientation.strategy"]);
             Assert.AreEqual(new PointF(50, 50), result.Regions[1].Region.Polygon.Vertices[0]);
-            CollectionAssert.AreEqual(new[] { TextOrientation.Degrees0, TextOrientation.Degrees180 }, input.RecognitionOrientations.ToArray());
+            CollectionAssert.AreEqual(new[] { TextOrientation.Degrees0, TextOrientation.Degrees180, TextOrientation.Degrees180, TextOrientation.Degrees0 }, input.RecognitionOrientations.ToArray());
+            Assert.AreEqual(TextOrientation.Degrees180, result.Regions[1].OrientationRetry!.Attempts[0].Orientation);
+            Assert.AreEqual(TextOrientation.Degrees0, result.Regions[1].OrientationRetry!.Attempts[1].Orientation);
             CollectionAssert.AreEqual(new[] { "AB", "CA" }, result.Regions.Select(value => value.Recognition.Text).ToArray());
             Assert.AreEqual(2, classificationProvider.LastSession!.RunCount);
             Assert.IsTrue(result.Timing.OrientationClassification > TimeSpan.Zero);

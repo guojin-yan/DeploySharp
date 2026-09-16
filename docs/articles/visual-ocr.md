@@ -12,7 +12,7 @@ Pipeline 只处理模型张量，图像解码和几何裁剪由可选的 <code>J
 4. 文本行按目标宽度分组，以有界 batch 提交识别器；CTC Decoder 执行 argmax、repeat collapse、blank 移除和置信度计算。
 5. 结果中的坐标通过同一个 <code>ImageTransform</code> 还原到原图，并带有阶段耗时和模型来源信息。
 
-方向校正可以来自显式的 0、90、180、270 度配置、可选 CLS Pipeline，或竖排长宽比策略。四边形透视裁剪可处理显式倾斜角点；可选几何检查报告基线角度和透视风险，不自动猜测文字是否倒置。低置信度方向重试尚未实现。方向来源和 polygon 角点顺序必须明确。
+方向校正可以来自显式的 0、90、180、270 度配置、可选 CLS Pipeline，或竖排长宽比策略。四边形透视裁剪可处理显式倾斜角点；可选几何检查报告基线角度和透视风险，不自动猜测文字是否倒置。低置信度 REC 结果可显式启用有界方向重试。方向来源和 polygon 角点顺序必须明确。
 
 ## 快速使用
 
@@ -227,9 +227,59 @@ var strictCrop = cropProfile.WithGeometryValidation(new OcrGeometryOptions(
 
 ### 为什么没有仅按角度切换仿射
 
-上下边几乎水平的梯形仍可能具有明显透视变化。仅按“小于 5°”选择仿射会破坏四角对应关系，因此当前保持**四角透视校正 → 可选直角旋转 → resize/padding**。`ParallelogramError` 为后续经验证的仿射快路径提供可观察依据，但本版本没有自动启用该快路径，也没有额外的图像旋转/增强或方向重试。
+上下边几乎水平的梯形仍可能具有明显透视变化。仅按“小于 5°”选择仿射会破坏四角对应关系，因此当前保持**四角透视校正 → 可选直角旋转 → resize/padding**。`ParallelogramError` 为后续经验证的仿射快路径提供可观察依据，但本版本没有自动启用该快路径，也没有任意角度搜索或图像增强链。下面的方向重试只处理显式配置的直角候选。
 
 自交、重复顶点、非有限坐标及不符合声明顺序的几何在 `TextPolygon`/`TextQuadrilateral` 构造时拒绝，不会伪装成可识别区域。检查只读取少量顶点，不复制图片或张量；诊断工作计入 `CropAndBatch`，持有诊断的近似空间计入 `MaximumResultBytes`。超出预算报 `DS-VISUAL-4102`。既有文本/结果 SHA 不加入诊断，允许与关闭检查时对照。
+
+## 低置信度方向重试
+
+透视去倾斜不等于知道文字正反。可通过 `WithOrientationRetry` 对初次识别仍不可靠的行尝试其他直角方向；默认不启用，不额外执行 REC。
+
+```csharp
+var crop = cropProfile.WithOrientationRetry(new OcrOrientationRetryOptions(
+    confidenceThreshold: 0.8f,
+    minimumConfidenceGain: 0.05f,
+    maximumRegionsPerImage: 16,
+    rotations: new[] { TextOrientation.Degrees180 },
+    maximumCropsPerImage: 1024));
+
+// 把 crop 传给 OcrPipeline 后，结果保留原始与候选识别：
+foreach (OcrRegionResult row in result.Regions)
+{
+    if (row.OrientationRetry is not { } retry) continue;
+    Console.WriteLine($"selected={retry.SelectedIndex}; skipped={retry.SkippedByRegionLimit}");
+    foreach (OcrOrientationAttempt attempt in retry.Attempts)
+        Console.WriteLine($"{attempt.Orientation}: {attempt.Recognition.Text} ({attempt.Recognition.Confidence:F3})");
+}
+```
+
+### 触发、方向和选择规则
+
+- REC 置信度**严格低于** `ConfidenceThreshold`，或文本为空时触发。它不是 CLS 置信度阈值；CLS 的 Fail 策略仍优先执行，不能靠 REC 重试绕过。
+- `Rotations` 可显式选择顺时针 90°、180°、逆时针 90°，最多三个、不重复且不含 0°；默认只试 180°。它们相对于**初次经过 CLS/竖排规则之后的裁剪方向**，不是相对于上次候选逐步累加。例如初次为 180°，再试相对 180°时，实际裁剪方向为 0°。
+- 初次非空结果仅在候选非空、置信度严格更高且增量达到 `MinimumConfidenceGain` 时被替换；平局或增益不足保持当前结果。初次/当前为空时，非空候选可以替换它；空候选不会替换非空结果。
+- 每轮都与当前获选结果比较；一旦获选结果非空且达到阈值，该行不再进入后续轮次。不同候选置信度不可视为经过校准的正确率，增益也可能选择错误文字；应结合业务真值评估。
+- `Region.Orientation` 反映最终获选裁剪方向，polygon、SourceIndex 和阅读顺序不变。原 CLS metadata 保留其原始预测，不伪装成重试结果；完整决策见 `OrientationRetry`。
+
+### Batch、滑窗与资源
+
+每轮只重试仍符合条件且已接收的行，不重复 DET、CLS 或图像解码。复用原识别器的独立 Session 池、动态宽度分组、真 Batch、最小批量补齐及输入释放；裁剪仍在工作槽位可用时准备。
+
+`maximumRegionsPerImage` 按原阅读顺序接收，超出的符合条件行保留原结果，并给出 `SkippedByRegionLimit=true`；不要把它当成完成重试。`maximumCropsPerImage` 是**跨所有重试轮次**的额外裁剪硬上限，不含初次 REC，也不含满足模型 minimum batch 的重复行。默认 1024，上限 4096；达到硬限制时抛出 `DS-VISUAL-4102`，不返回部分成功。
+
+在 SlidingWindow 模式下，会按候选方向重新规划有界窗口、执行识别并归并为原行；长行窗口数量也计入重试裁剪上限，并保留逐窗口文本和接缝不确定信息。既有每行窗口限制及每轮图像窗口限制仍生效。90°旋转可能改变自然宽度：在 Reject 模式下，超宽候选报 `DS-VISUAL-4103`，不会静默改成 Clamp；模型/engine 自身的 shape 限制也不放宽。
+
+初次与候选 token、窗口及合并结果共同计入近似 `MaximumResultBytes`，包含 minimum-batch 重复行的保守预算。所有轮次共用一次总超时、取消和 Pipeline 生命周期；后端错误、取消、超时或硬限制失败会使**整个调用失败**，不悄悄吞掉后返回原结果。仅接收行数限制使用明确标记的跳过语义。
+
+### 诊断、计时和复现
+
+`OrientationRetry=null` 表示未开启或没有触发，不表示“尝试过但没改善”。非 null 时，`Attempts[0]` 始终保存初次原文/置信度/宽度/窗口，之后为实际执行的候选，`SelectedIndex` 标明选择；最多保留四次尝试。诊断引用不可变识别结果，不保留图像或 GPU 缓冲。
+
+ROI 投影、合并重新编号、全图方向恢复都保留记录并同步原区域索引；尝试中的方向仍是 OCR 输入空间的裁剪方向。绘制最终框使用最终 `Region.Polygon`。`Geometry` 仍是初次 DET 后的几何证据，不被候选覆盖。
+
+重试的规划、裁剪、REC 和合并墙钟时间计入 `Timing.Recognition`；`Timing.Details` 的识别准备/推理/后处理工作及 batch 数累加所有轮次，DET/CLS 不重复计时。最终结果的 SHA 仍只包含最终选中的文字/几何/方向；诊断本身不加入，所以保留初次结果时可以继续比较历史 SHA。
+
+先测试默认 180°候选及少量低置信度行，再决定是否开启三个候选；不要为了更高置信度无限增加推理。该接口不是任意角度搜索、图像去噪/锐化或语义纠错器。
 
 ## 性能测量建议
 
@@ -242,7 +292,19 @@ var strictCrop = cropProfile.WithGeometryValidation(new OcrGeometryOptions(
 - 将 `minimumArea` 故意设为 100000000 后，6 组调用均按预期返回 `DS-VISUAL-4104`，并非后端不支持。
 - 原生像素测试覆盖 0°、±5°、±15°、±30°、±45°、90°、180°和梯形透视；检查采样坐标、颜色通道、ROI 投影及方向恢复后的诊断来源。
 
-这是正确性和兼容性回归，不是最佳性能或 CER/WER 测试。本轮 Report 的 `crop_ms`（几何检查加分组）约 0.037～0.237 ms，但开发机有其他任务且样本仅 3 次，不能由此做稳定性能结论。尚未完成真实文字的多角度标注集、其他后端几何模式矩阵、仿射快路径及低置信度方向重试。
+这是正确性和兼容性回归，不是最佳性能或 CER/WER 测试。本轮 Report 的 `crop_ms`（几何检查加分组）约 0.037～0.237 ms，但开发机有其他任务且样本仅 3 次，不能由此做稳定性能结论。尚未完成真实文字的多角度标注集、其他后端几何模式矩阵及仿射快路径；后续方向重试验证见下节。
+
+### 方向重试验证（2026-09-17）
+
+使用同一图片、v4 mobile/v5 mobile/v6 tiny、ORT CPU/CUDA、Batch=4/通道=1、Clamp/320、warmup=1/iterations=3，对照关闭、默认启用、强制触发三组模式，共 18 组完整调用通过。
+
+- 关闭时全部结果合同 SHA 与上一批几何 Report 基线一致。
+- 默认阈值 0.8、最小增量 0.05、只试相对 180°：v4/v6 未触发，v5 触发 1 行且保留原结果；同版本 CPU/CUDA 的最终文字及决策一致。
+- 将阈值设为 1 以强制试验时，三版本每个后端均对 16 行额外试一次 180°，没有候选被接受。此项证明调度和原始结果保留，不证明准确率改善。
+- v6 tiny 的 SlidingWindow/320、最多重试 1 行、阈值 1 组合在 CPU/CUDA 上通过：1 行重试，15 行明确标记被行数限制跳过；重试行包含 2 个窗口，两后端最终文字一致。完整合同 SHA 可因浮点置信度不同而不同，不能据文字一致宣称逐位数值一致。
+- 单元及原生测试覆盖改善候选被接受、多轮早停/平局、空文本、相对于 CLS 结果的旋转、旋转后 Reject 宽度限制、并发独立 Session、取消/失败/资源释放、ROI 重新编号、全图方向恢复。
+
+这些是开发机短时行为验证，未形成有人工真值的“倒置文字修复率”、CER/WER 或最优速度结论。重试会额外执行模型；业务中应保留关闭时的基线，并根据触发比例评估收益与耗时。
 
 ### 宽度诊断与兼容性验证（2026-09-16）
 
