@@ -214,6 +214,26 @@ namespace JYPPX.DeploySharp.Visual
         public VisualPreprocessingDescriptor Preprocessing { get; }
         /// <summary>Gets an optional application input identifier. / 获取可选应用输入标识符。</summary>
         public string? InputId { get; }
+
+#if !DEPLOYSHARP_LEGACY_NO_ROI
+        /// <summary>Creates a source projection for one batch row and ROI. / 为一个 Batch 行和 ROI 创建源图投影。</summary>
+        /// <remarks>The row transform is used instead of the input-level transform, so heterogeneous source sizes and per-row crops remain reversible. / 使用行级变换而不是输入级变换，因此不同源尺寸和逐行裁剪仍可逆。</remarks>
+        public RoiProjection CreateRoiProjection(VisualRoi roi, int batchIndex = 0)
+        {
+            if (roi == null) throw new ArgumentNullException(nameof(roi));
+            if (batchIndex < 0 || batchIndex >= BatchFrames.Count) throw new ArgumentOutOfRangeException(nameof(batchIndex));
+            return RoiProjection.FromPreparedInput(roi, this, batchIndex);
+        }
+
+        /// <summary>Creates a source projection for one batch row and an explicit TileLocal or World context. / 使用显式 TileLocal 或 World 上下文为一个 Batch 行创建源图投影。</summary>
+        public RoiProjection CreateRoiProjection(VisualRoi roi, VisualRoiCoordinateContext coordinateContext, int batchIndex = 0)
+        {
+            if (roi == null) throw new ArgumentNullException(nameof(roi));
+            if (coordinateContext == null) throw new ArgumentNullException(nameof(coordinateContext));
+            if (batchIndex < 0 || batchIndex >= BatchFrames.Count) throw new ArgumentOutOfRangeException(nameof(batchIndex));
+            return RoiProjection.FromPreparedInput(roi, this, batchIndex, coordinateContext);
+        }
+#endif
         /// <summary>Gets resource ownership for this prepared input. / 获取此已准备输入的资源所有权。</summary>
         public PreparedInputOwnership Ownership { get; }
         /// <summary>Gets whether the prepared input has released its owned resource. / 获取已准备输入是否已释放其拥有的资源。</summary>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
@@ -113,6 +114,75 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(VisualErrorCodes.GenerativeVisionLanguageGenerationInvalid, Assert.ThrowsExactly<VisualException>(() => session.Generate(GenerativeVisionLanguageRequest.Caption(), new FakeTokenizer(profile.Tokenizer))).ErrorCode);
             session.Dispose();
             Assert.AreEqual(VisualErrorCodes.ObjectDisposed, Assert.ThrowsExactly<VisualException>(() => session.ClearImage()).ErrorCode);
+        }
+
+        [TestMethod]
+        public async Task VlmRoiRunnerExecutesApplicableCropsInOrderAndRetainsPreparationFailures()
+        {
+            GenerativeVisionLanguageProfile profile = Profile();
+            using var registry = new BackendRegistry();
+            registry.Register(new Provider(profile, TimeSpan.Zero));
+            using GenerativeVisionLanguageSession session = Session(registry, profile);
+            var snapshot = new VisualRoiSnapshot(
+                new VisualSize(4, 3),
+                new[]
+                {
+                    new VisualRoi("caption-a", new RectangleRoiGeometry(new RectangleF(0, 0, 2, 3)), executionMode: RoiExecutionMode.CropAndInfer, taskFilter: new[] { VisualTaskId.ImageCaptioning }),
+                    new VisualRoi("detection-only", new RectangleRoiGeometry(new RectangleF(0, 0, 2, 3)), executionMode: RoiExecutionMode.CropAndInfer, taskFilter: new[] { VisualTaskId.ObjectDetection }),
+                    new VisualRoi("caption-b", new RectangleRoiGeometry(new RectangleF(2, 0, 2, 3)), executionMode: RoiExecutionMode.CropAndInfer, taskFilter: new[] { VisualTaskId.ImageCaptioning })
+                });
+            int prepareCalls = 0;
+            var runner = new VisualRoiGenerativeVisionLanguageRunner();
+            VisualRoiGenerativeVisionLanguageBatchResult batch = await runner.RunAsync(
+                session,
+                new FakeTokenizer(profile.Tokenizer),
+                snapshot,
+                GenerativeVisionLanguageRequest.Caption(),
+                (roi, geometry, token) =>
+                {
+                    prepareCalls++;
+                    if (roi.Id == "caption-b") throw new InvalidOperationException("synthetic preparation failure");
+                    return Task.FromResult<PreparedVisualInput>(ImageInput(profile));
+                },
+                new RoiExecutionOptions(failureMode: RoiFailureMode.ReturnPartialResults, correlationId: "vlm-roi"));
+
+            Assert.AreEqual(2, prepareCalls);
+            Assert.AreEqual(2, batch.SelectedRoiCount);
+            Assert.AreEqual(1, batch.SucceededResultCount);
+            Assert.AreEqual(1, batch.FailedResultCount);
+            Assert.AreEqual(1, batch.InferenceCallCount);
+            Assert.AreEqual("vlm-roi", batch.CorrelationId);
+            Assert.AreEqual("caption-a", batch.Items[0].Roi.Id);
+            Assert.AreEqual("caption-b", batch.Items[1].Roi.Id);
+            Assert.AreEqual("caption", batch.Items[0].Result!.Generation.Text);
+            Assert.IsNotNull(batch.Items[1].Failure);
+        }
+
+        [TestMethod]
+        public async Task VlmRoiRunnerRejectsRequestThatDiffersFromSessionProfileBeforePreparingInputs()
+        {
+            GenerativeVisionLanguageProfile profile = Profile();
+            using var registry = new BackendRegistry();
+            registry.Register(new Provider(profile, TimeSpan.Zero));
+            using GenerativeVisionLanguageSession session = Session(registry, profile);
+            var snapshot = new VisualRoiSnapshot(
+                new VisualSize(4, 3),
+                new[] { new VisualRoi("question", new RectangleRoiGeometry(new RectangleF(0, 0, 4, 3)), executionMode: RoiExecutionMode.CropAndInfer, taskFilter: new[] { VisualTaskId.VisualQuestionAnswering }) });
+            int prepareCalls = 0;
+
+            VisualException exception = await Assert.ThrowsExactlyAsync<VisualException>(() => new VisualRoiGenerativeVisionLanguageRunner().RunAsync(
+                session,
+                new FakeTokenizer(profile.Tokenizer),
+                snapshot,
+                GenerativeVisionLanguageRequest.Question("What is visible?"),
+                (roi, geometry, token) =>
+                {
+                    prepareCalls++;
+                    return Task.FromResult(ImageInput(profile));
+                }));
+
+            Assert.AreEqual(VisualErrorCodes.GenerativeVisionLanguageContractInvalid, exception.ErrorCode);
+            Assert.AreEqual(0, prepareCalls);
         }
 
         private static GenerativeVisionLanguageProfile Profile()

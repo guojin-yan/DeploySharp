@@ -531,9 +531,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             foreach (PointF point in points) { centerX += point.X; centerY += point.Y; }
             PointF center = new PointF(centerX / points.Length, centerY / points.Length);
             Array.Sort(points, (left, right) => Math.Atan2(left.Y - center.Y, left.X - center.X).CompareTo(Math.Atan2(right.Y - center.Y, right.X - center.X)));
-            int start = 0; for (int index = 1; index < points.Length; index++) if (points[index].Y < points[start].Y || (points[index].Y == points[start].Y && points[index].X < points[start].X)) start = index;
+            if (SignedArea(points) < 0) Array.Reverse(points);
+            int start = 0;
+            for (int index = 1; index < points.Length; index++)
+            {
+                float candidate = points[index].X + points[index].Y;
+                float current = points[start].X + points[start].Y;
+                if (candidate < current || (candidate == current && points[index].X < points[start].X)) start = index;
+            }
             var ordered = new PointF[points.Length]; for (int index = 0; index < points.Length; index++) ordered[index] = points[(start + index) % points.Length];
-            if (SignedArea(ordered) < 0) Array.Reverse(ordered);
             return ordered;
         }
 
@@ -670,19 +676,20 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         }
 
         /// <summary>Creates a CTC probability recognition profile and its matching dynamic-width crop profile. / 创建 CTC 概率识别 Profile 及匹配的动态宽度裁剪 Profile。</summary>
-        public static PaddleOcrProfile CreateRecognition(ModelId modelId, PaddleOcrArtifactContract artifact, OcrCharacterSet characterSet, string inputName = "x", string outputName = "fetch_name_0", int inputHeight = 48, int maximumWidth = 3200, int maximumBatch = 64)
+        public static PaddleOcrProfile CreateRecognition(ModelId modelId, PaddleOcrArtifactContract artifact, OcrCharacterSet characterSet, string inputName = "x", string outputName = "fetch_name_0", int inputHeight = 48, int maximumWidth = 3200, int maximumBatch = 64, int minimumWidth = 0)
         {
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model ID is required.");
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
             if (characterSet == null) throw new ArgumentNullException(nameof(characterSet));
-            if (inputHeight <= 0 || maximumWidth <= 0 || maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(inputHeight));
+            int effectiveMinimumWidth = minimumWidth == 0 ? inputHeight : minimumWidth;
+            if (inputHeight <= 0 || maximumWidth <= 0 || maximumBatch <= 0 || effectiveMinimumWidth <= 0 || effectiveMinimumWidth > maximumWidth) throw new ArgumentOutOfRangeException(nameof(inputHeight));
             var ctc = new GreedyCtcDecoder(new CtcOutputSchema(outputName, CtcTensorLayout.BatchTimeClasses), characterSet,
                 new CtcDecoderOptions(0, applySoftmax: false, collapseRepeats: true, removeBlank: true, maximumBatch: maximumBatch, maximumSequenceLength: 8192, maximumCharacters: 4096));
             var profile = new VisualModelProfile("paddle-ocr-rec." + modelId.Value + ".opset" + artifact.Opset, modelId, VisualTaskId.TextRecognition, "paddleocr-ctc/opset" + artifact.Opset, artifact.ModelFormat,
                 new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(-1, 3, inputHeight, -1), VisualTensorLayout.Nchw, 1, maximumBatch),
                 new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(-1, -1, ctc.ExpectedClassCount)) }, Array.Empty<VisualLabel>(), ctc);
             var crop = new TextCropProfile("paddle-ocr-rec-crop-h" + inputHeight, inputHeight, OcrRecognitionWidthMode.Dynamic, maximumWidth, maximumWidth, 1, TextCropInterpolation.Linear,
-                VisualColorOrder.Bgr, VisualTensorLayout.Nchw, new[] { 127.5f }, new[] { 1f / 127.5f }, TextCropColor.Black);
+                VisualColorOrder.Bgr, VisualTensorLayout.Nchw, new[] { 127.5f }, new[] { 1f / 127.5f }, TextCropColor.Black, minimumWidth: effectiveMinimumWidth);
             return new PaddleOcrProfile(PaddleOcrFamily.PaddleOcrRec, artifact, profile, crop, characterSet);
         }
 
@@ -718,7 +725,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 tokens.Add(value);
             }
             if (useSpaceCharacter) tokens.Add(" ");
-            return new OcrCharacterSet(id, version, tokens);
+            return OcrCharacterSet.CreateIndexedDictionary(id, version, tokens);
         }
 
         private static bool IsUnicodeToken(string value)

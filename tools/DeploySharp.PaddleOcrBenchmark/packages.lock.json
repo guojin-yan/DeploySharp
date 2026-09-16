@@ -4,23 +4,38 @@
     "net10.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.OpenCV.runtime.win-x64": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "2I4TcBgId4eo1bZbaMZwJ0KYsiQOJVnBwFoTnN5xanqpUi8DO1aVXGW2Koe0uH1B/l7g1FHARsabaVQum4IH4g=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "TxuLKpLDQaQEST9e80MkILvHTGKihIF2/0tr1TrvEir6Cu7bb/E3aYqmsMgDwKvoTgXtHHbYXdS4/2nIdrxKbg=="
+      },
+      "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge": {
+        "type": "Direct",
+        "requested": "[4.0.0, )",
+        "resolved": "4.0.0",
+        "contentHash": "a9g4/SekAo4fTPLbPCueoXIR37xtA3w9xGWAz5+ipV0hHqJ5SKV+qnvZfMikK76O9s87I6CnGFDK3+zn59EZdA=="
       },
       "Microsoft.ML.OnnxRuntime.Gpu.Windows": {
         "type": "Direct",
-        "requested": "[1.28.0, )",
-        "resolved": "1.28.0",
-        "contentHash": "jGq5uGVjnbwrvzqLd7CqW53GXEzfWJY1cVKeIc/gqmeRDEAQaShQPLrmMi4zMhtIIvmHTErzDVKDWWmibAPgmQ==",
+        "requested": "[1.23.2, )",
+        "resolved": "1.23.2",
+        "contentHash": "qOU3DVcxq4XalFV3wlrNrdatYWufIqvg8FZqVC3LS2rFPoTfl++xpMC2nnaxB2Wc5jrpDb2izrcDsQatCyjVnA==",
         "dependencies": {
-          "Microsoft.ML.OnnxRuntime.Managed": "1.28.0"
+          "Microsoft.ML.OnnxRuntime.Managed": "1.23.2"
+        }
+      },
+      "Microsoft.ML.OnnxRuntime.Managed": {
+        "type": "Direct",
+        "requested": "[1.23.2, )",
+        "resolved": "1.23.2",
+        "contentHash": "HtlQuzmVrqhnkmwfmkQ+2re8xPxtVmeLRQaYSJ3pXfzKs4b36+yBfa/LnDuzfX1bGcyWn/McKxmbY87TCAmo1Q==",
+        "dependencies": {
+          "System.Numerics.Tensors": "9.0.0"
         }
       },
       "OpenVINO.runtime.win": {
@@ -44,7 +59,7 @@
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
           "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
-          "Microsoft.ML.OnnxRuntime.Managed": "[1.28.0, )"
+          "Microsoft.ML.OnnxRuntime.Managed": "[1.23.2, )"
         }
       },
       "JYPPX.DeploySharp.Backend.OpenCV": {
@@ -52,7 +67,7 @@
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
           "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )",
           "OnnxSharp": "[0.3.2, )"
         }
       },
@@ -93,7 +108,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )"
         }
       },
       "JYPPX.OpenVINO.CSharp.API": {
@@ -107,15 +122,6 @@
         "requested": "[4.0.0, )",
         "resolved": "4.0.0",
         "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow=="
-      },
-      "Microsoft.ML.OnnxRuntime.Managed": {
-        "type": "CentralTransitive",
-        "requested": "[1.28.0, )",
-        "resolved": "1.28.0",
-        "contentHash": "4ecKjwASHhAZXczK/xm5KU6MdvoIGfMd23UAwDbM9vfcfgqZgNqvFWPZPT0Elc1wu5vXWs2Kij1ZBmHCcv1UlA==",
-        "dependencies": {
-          "System.Numerics.Tensors": "9.0.0"
-        }
       },
       "Microsoft.ML.Tokenizers": {
         "type": "CentralTransitive",

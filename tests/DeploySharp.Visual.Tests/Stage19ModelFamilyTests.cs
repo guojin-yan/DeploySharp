@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using JYPPX.DeploySharp;
@@ -36,8 +37,32 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(new TensorShape(-1, 3, 48, -1), recognition.VisualProfile.Input.ShapePattern);
             Assert.AreEqual(3L, recognition.VisualProfile.Outputs[0].ShapePattern[2]);
             Assert.AreEqual(48, recognition.CropProfile!.TargetHeight);
+            Assert.AreEqual(48, recognition.CropProfile.MinimumWidth);
+            Assert.AreEqual(3200, recognition.CropProfile.MaximumWidth);
+            PaddleOcrProfile boundedRecognition = PaddleOcrProfiles.CreateRecognition(new ModelId("tests/paddle-rec-bounded"), PaddleArtifact(7), characters, minimumWidth: 64, maximumWidth: 640);
+            Assert.AreEqual(64, boundedRecognition.CropProfile!.MinimumWidth);
+            Assert.AreEqual(640, boundedRecognition.CropProfile.MaximumWidth);
             Assert.AreSame(characters, recognition.CharacterSet);
             Assert.AreEqual(Sha, recognition.CreateArtifact("model.onnx").Sha256);
+        }
+
+        [TestMethod]
+        public void PaddleDictionaryPreservesDuplicateTokensByClassIndex()
+        {
+            string path = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-dictionary-" + Guid.NewGuid().ToString("N") + ".txt");
+            try
+            {
+                File.WriteAllText(path, "A\nA\nB\n");
+
+                OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(path, "tests.paddle.duplicates", "1", useSpaceCharacter: true);
+
+                CollectionAssert.AreEqual(new[] { "A", "A", "B", " " }, characters.Characters.ToArray());
+                Assert.ThrowsExactly<ArgumentException>(() => new OcrCharacterSet("tests.charset", "1", new[] { "A", "A" }));
+            }
+            finally
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
         }
 
         [TestMethod]
@@ -78,6 +103,9 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(1, result.Regions.Count);
             Assert.IsTrue(result.Regions[0].Polygon.Vertices.Select(point => point.X).Distinct().Count() > 2);
             Assert.IsTrue(result.Regions[0].Polygon.Vertices.Select(point => point.Y).Distinct().Count() > 2);
+            TextQuadrilateral crop = result.Regions[0].CropQuadrilateral!;
+            float minimumCornerSum = crop.Polygon.Vertices.Min(point => point.X + point.Y);
+            Assert.AreEqual(minimumCornerSum, crop.TopLeft.X + crop.TopLeft.Y, .001f, "Paddle DB crop roles must begin at the visual top-left corner.");
             Assert.IsTrue(result.Regions[0].AxisAlignedBounds.Width > result.Regions[0].AxisAlignedBounds.Height);
         }
 

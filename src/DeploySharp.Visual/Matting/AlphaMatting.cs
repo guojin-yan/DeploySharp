@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 
@@ -360,6 +361,22 @@ namespace JYPPX.DeploySharp.Visual
             int sourceHeight = frame.SourceSize.Height;
             int modelWidth = frame.ModelSize.Width;
             int modelHeight = frame.ModelSize.Height;
+            if (frame.Transform.IsProjective)
+            {
+                var projective = new float[checked(sourceWidth * sourceHeight)];
+                for (int y = 0; y < sourceHeight; y++)
+                {
+                    if ((y & 63) == 0) cancellationToken.ThrowIfCancellationRequested();
+                    for (int x = 0; x < sourceWidth; x++)
+                    {
+                        PointF modelPoint = frame.Transform.ToModel(new PointF(x + .5f, y + .5f));
+                        int modelX = (int)Math.Floor(modelPoint.X);
+                        int modelY = (int)Math.Floor(modelPoint.Y);
+                        if (modelX >= 0 && modelX < modelWidth && modelY >= 0 && modelY < modelHeight) projective[(y * sourceWidth) + x] = model[(modelY * modelWidth) + modelX];
+                    }
+                }
+                return projective;
+            }
             AxisSample[] xSamples = BuildAxisSamples(sourceWidth, modelWidth, frame.Transform.ScaleX, frame.Transform.OffsetX);
             AxisSample[] ySamples = BuildAxisSamples(sourceHeight, modelHeight, frame.Transform.ScaleY, frame.Transform.OffsetY);
             var result = new float[checked(sourceWidth * sourceHeight)];
@@ -457,7 +474,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class BriaRmbgProfileOptions
     {
         /// <summary>Initializes BRIA profile options. / 初始化 BRIA Profile 选项。</summary>
-        public BriaRmbgProfileOptions(int opset, VisualSize modelSize, string inputName, string outputName, string artifactSha256, string upstreamCommit, string exporterVersion, string license, string modelFormat = "onnx", string upstreamRepository = "https://huggingface.co/briaai", int maximumDynamicSide = 4096, int maximumBatch = 1)
+        public BriaRmbgProfileOptions(int opset, VisualSize modelSize, string inputName, string outputName, string artifactSha256, string upstreamCommit, string exporterVersion, string license, string modelFormat = "onnx", string upstreamRepository = "https://huggingface.co/briaai", int maximumDynamicSide = 4096, int maximumBatch = 1, VisualPreprocessingOptions? preprocessing = null)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(inputName)) throw new ArgumentException("An input name is required.", nameof(inputName));
@@ -477,6 +494,7 @@ namespace JYPPX.DeploySharp.Visual
             ModelFormat = modelFormat.Trim();
             MaximumDynamicSide = maximumDynamicSide;
             MaximumBatch = maximumBatch;
+            Preprocessing = preprocessing;
         }
 
         /// <summary>Gets ONNX opset. / 获取 ONNX opset。</summary>
@@ -503,6 +521,8 @@ namespace JYPPX.DeploySharp.Visual
         public int MaximumDynamicSide { get; }
         /// <summary>Gets the maximum image batch size. / 获取最大图像 Batch 大小。</summary>
         public int MaximumBatch { get; }
+        /// <summary>Gets an optional explicit image preprocessing override. / 获取可选的显式图像预处理覆盖。</summary>
+        public VisualPreprocessingOptions? Preprocessing { get; }
 
         private static string NormalizeSha(string value)
         {
@@ -556,7 +576,16 @@ namespace JYPPX.DeploySharp.Visual
             var visual = new VisualModelProfile(profileId, modelId, VisualTaskId.ForegroundMatting, "bria-rmbg/" + family + "/opset" + options.Opset, options.ModelFormat,
                 new VisualInputBinding(options.InputName, TensorElementType.Float32, inputShape, VisualTensorLayout.Nchw, 1, options.MaximumBatch),
                 new[] { new VisualOutputBinding(options.OutputName, TensorElementType.Float32, outputShape) },
-                Array.Empty<VisualLabel>(), decoder);
+                Array.Empty<VisualLabel>(), decoder,
+                preprocessing: options.Preprocessing ?? new VisualPreprocessingOptions(
+                    options.ModelSize,
+                    VisualResizeMode.Resize,
+                    VisualColorOrder.Rgb,
+                    family == BriaRmbgFamily.Rmbg14
+                        ? VisualNormalizationOptions.MeanStandardDeviation(new[] { 127.5f }, new[] { 255f })
+                        : VisualNormalizationOptions.MeanStandardDeviation(new[] { 127.5f }, new[] { 127.5f }),
+                    VisualTensorLayout.Nchw,
+                    1));
             return new BriaRmbgProfile(family, options, visual);
         }
     }

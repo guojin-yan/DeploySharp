@@ -12,6 +12,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public static OpenCvPreprocessOptions CreateOptions(PortableDetectorProfile profile)
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (profile.VisualProfile.Preprocessing != null) return profile.VisualProfile.Preprocessing.ToOpenCvOptions();
             PortableDetectorFamily family = profile.Family;
             if (family == PortableDetectorFamily.DEIMv2Det)
             {
@@ -28,6 +29,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
 
             // PaddleDetection TestReader decodes RGB, resizes directly, and scales pixels to [0,1]. / PaddleDetection TestReader 解码 RGB、直接缩放，并将像素缩放到 [0,1]。
             return new OpenCvPreprocessOptions(ModelSize(profile), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, standardDeviations: new[] { 255f }, layout: VisualTensorLayout.Nchw, batchSize: 1, outputType: OpenCvOutputType.Float32);
+        }
+
+        /// <summary>Creates options from a portable detector profile and an explicit validated override. / 根据 Portable Detector Profile 和显式校验后的覆盖配置创建选项。</summary>
+        public static OpenCvPreprocessOptions CreateOptions(PortableDetectorProfile profile, VisualPreprocessingOptions preprocessing)
+        {
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (preprocessing == null) throw new ArgumentNullException(nameof(preprocessing));
+            if (!preprocessing.ModelSize.HasValue || preprocessing.ModelSize.Value != ModelSize(profile)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The preprocessing override must use the portable detector model size.");
+            return preprocessing.ToOpenCvOptions();
         }
 
         /// <summary>Loads an image and appends exact geometry auxiliary tensors required by the profile. / 加载图像并附加 Profile 所需的精确几何辅助张量。</summary>

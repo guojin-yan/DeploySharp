@@ -278,6 +278,11 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     oriented = scratch.Rotated;
                 }
                 int contentWidth = CalculateContentWidth(oriented.Cols, oriented.Rows, request.TargetHeight, request.TargetWidth);
+                // Dynamic PaddleOCR recognition profiles require at least one full
+                // character-height of horizontal content. Scale narrow crops up to the
+                // profile minimum; fixed-width engine profiles retain their usual padding.
+                if (request.Profile.WidthMode == OcrRecognitionWidthMode.Dynamic)
+                    contentWidth = Math.Max(contentWidth, request.Profile.MinimumWidth);
                 ImageProcessing.Resize(oriented, scratch.Resized, new Size(contentWidth, request.TargetHeight), interpolation: ToInterpolation(request.Profile.Interpolation));
                 return scratch.Resized;
             }

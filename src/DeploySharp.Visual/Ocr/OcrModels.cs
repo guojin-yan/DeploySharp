@@ -188,17 +188,17 @@ namespace JYPPX.DeploySharp.Visual
 
         /// <summary>Initializes a character set from a Unicode scalar sequence. / 从 Unicode 标量序列初始化字符表。</summary>
         public OcrCharacterSet(string id, string version, string characters)
-            : this(id, version, CreateScalarTokens(characters), nameof(characters))
+            : this(id, version, CreateScalarTokens(characters), nameof(characters), requireUniqueTokens: true)
         {
         }
 
         /// <summary>Initializes a character set from ordered dictionary tokens. / 从有序字典 token 初始化字符表。</summary>
         public OcrCharacterSet(string id, string version, IEnumerable<string> tokens)
-            : this(id, version, tokens, nameof(tokens))
+            : this(id, version, tokens, nameof(tokens), requireUniqueTokens: true)
         {
         }
 
-        private OcrCharacterSet(string id, string version, IEnumerable<string> tokens, string parameterName)
+        private OcrCharacterSet(string id, string version, IEnumerable<string> tokens, string parameterName, bool requireUniqueTokens)
         {
             if (tokens == null) throw new ArgumentNullException(parameterName);
             Id = VisualGuard.Identifier(id, nameof(id));
@@ -218,7 +218,7 @@ namespace JYPPX.DeploySharp.Visual
                     }
                     else if (char.IsLowSurrogate(token[index])) throw new ArgumentException("A character-set token contains an unpaired low surrogate.", parameterName);
                 }
-                if (!unique.Add(token)) throw new ArgumentException("Character-set tokens must be unique.", parameterName);
+                if (!unique.Add(token) && requireUniqueTokens) throw new ArgumentException("Character-set tokens must be unique.", parameterName);
                 if (values.Count >= 65535) throw new ArgumentOutOfRangeException(parameterName);
                 values.Add(token);
             }
@@ -226,6 +226,11 @@ namespace JYPPX.DeploySharp.Visual
             _characters = values.AsReadOnly();
             Sha256 = Hash(Id + "\n" + Version + "\n" + string.Join("", values));
         }
+
+        // Some model dictionaries intentionally assign the same visible token to
+        // multiple class indexes. Preserve that ordered mapping for their decoders.
+        internal static OcrCharacterSet CreateIndexedDictionary(string id, string version, IEnumerable<string> tokens)
+            => new OcrCharacterSet(id, version, tokens, nameof(tokens), requireUniqueTokens: false);
 
         private static IEnumerable<string> CreateScalarTokens(string characters)
         {
@@ -424,7 +429,7 @@ namespace JYPPX.DeploySharp.Visual
         private readonly IReadOnlyList<float> _scales;
 
         /// <summary>Initializes a bounded crop profile. / 初始化有界裁剪 Profile。</summary>
-        public TextCropProfile(string profileId, int targetHeight, OcrRecognitionWidthMode widthMode, int fixedWidth, int maximumWidth, int widthAlignment = 1, TextCropInterpolation interpolation = TextCropInterpolation.Linear, VisualColorOrder colorOrder = VisualColorOrder.Rgb, VisualTensorLayout layout = VisualTensorLayout.Nchw, IEnumerable<float>? means = null, IEnumerable<float>? scales = null, TextCropColor? paddingColor = null, long maximumCropPixels = 16L * 1024L * 1024L)
+        public TextCropProfile(string profileId, int targetHeight, OcrRecognitionWidthMode widthMode, int fixedWidth, int maximumWidth, int widthAlignment = 1, TextCropInterpolation interpolation = TextCropInterpolation.Linear, VisualColorOrder colorOrder = VisualColorOrder.Rgb, VisualTensorLayout layout = VisualTensorLayout.Nchw, IEnumerable<float>? means = null, IEnumerable<float>? scales = null, TextCropColor? paddingColor = null, long maximumCropPixels = 16L * 1024L * 1024L, int minimumWidth = 1)
         {
             ProfileId = VisualGuard.Identifier(profileId, nameof(profileId));
             if (targetHeight <= 0 || fixedWidth <= 0 || maximumWidth <= 0 || fixedWidth > maximumWidth) throw new ArgumentOutOfRangeException(nameof(targetHeight));
@@ -434,15 +439,18 @@ namespace JYPPX.DeploySharp.Visual
             if (colorOrder != VisualColorOrder.Rgb && colorOrder != VisualColorOrder.Bgr && colorOrder != VisualColorOrder.Gray) throw new ArgumentOutOfRangeException(nameof(colorOrder));
             if (layout != VisualTensorLayout.Nchw && layout != VisualTensorLayout.Nhwc) throw new ArgumentOutOfRangeException(nameof(layout));
             if (maximumCropPixels <= 0) throw new ArgumentOutOfRangeException(nameof(maximumCropPixels));
+            if (minimumWidth <= 0 || minimumWidth > maximumWidth) throw new ArgumentOutOfRangeException(nameof(minimumWidth));
             TargetHeight = targetHeight;
             WidthMode = widthMode;
             FixedWidth = fixedWidth;
             MaximumWidth = maximumWidth;
+            MinimumWidth = widthMode == OcrRecognitionWidthMode.Fixed ? fixedWidth : minimumWidth;
             WidthAlignment = widthAlignment;
             Interpolation = interpolation;
             ColorOrder = colorOrder;
             Layout = layout;
             MaximumCropPixels = maximumCropPixels;
+            OverflowMode = RecognitionOverflowMode.Clamp;
             PaddingColor = paddingColor ?? TextCropColor.Black;
             int channels = colorOrder == VisualColorOrder.Gray ? 1 : 3;
             _means = CopyFinite(means, channels, false, nameof(means));
@@ -459,6 +467,8 @@ namespace JYPPX.DeploySharp.Visual
         public int FixedWidth { get; }
         /// <summary>Gets maximum width. / 获取最大宽度。</summary>
         public int MaximumWidth { get; }
+        /// <summary>Gets the minimum recognition tensor width. / 获取识别张量的最小宽度。</summary>
+        public int MinimumWidth { get; }
         /// <summary>Gets width alignment. / 获取宽度对齐。</summary>
         public int WidthAlignment { get; }
         /// <summary>Gets interpolation. / 获取插值方式。</summary>
@@ -476,12 +486,37 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets maximum intermediate crop pixels. / 获取最大中间裁剪像素数。</summary>
         public long MaximumCropPixels { get; }
 
+        /// <summary>Gets the recognition overflow policy; existing constructors retain Clamp. / 获取识别超宽策略；既有构造函数保持 Clamp。</summary>
+        public RecognitionOverflowMode OverflowMode { get; }
+
+        /// <summary>Creates an immutable copy with an explicit overflow policy, without changing model tensor contracts. / 创建显式指定超宽策略的不可变副本，不改变模型张量合同。</summary>
+        public TextCropProfile WithRecognitionOverflowMode(RecognitionOverflowMode mode)
+        {
+            if (!Enum.IsDefined(typeof(RecognitionOverflowMode), mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+            return mode == OverflowMode ? this : new TextCropProfile(this, mode);
+        }
+
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode)
+            : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
+                source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
+                source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
+        {
+            OverflowMode = mode;
+        }
+
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
         public int CalculateWidth(TextQuadrilateral quadrilateral, TextOrientation orientation)
         {
+            OcrRecognitionWidthInfo width = DescribeWidth(quadrilateral, orientation);
+            ValidateWidth(width, null);
+            return width.TargetWidth;
+        }
+
+        /// <summary>Plans width without enforcing Reject, allowing callers to inspect overflow before creating a crop. / 规划宽度但不执行 Reject，使调用方能在创建裁剪前检查超宽。</summary>
+        public OcrRecognitionWidthInfo DescribeWidth(TextQuadrilateral quadrilateral, TextOrientation orientation)
+        {
             if (quadrilateral == null) throw new ArgumentNullException(nameof(quadrilateral));
             if (!Enum.IsDefined(typeof(TextOrientation), orientation)) throw new ArgumentOutOfRangeException(nameof(orientation));
-            if (WidthMode == OcrRecognitionWidthMode.Fixed) return FixedWidth;
             double width = Math.Max(Distance(quadrilateral.TopLeft, quadrilateral.TopRight), Distance(quadrilateral.BottomLeft, quadrilateral.BottomRight));
             double height = Math.Max(Distance(quadrilateral.TopLeft, quadrilateral.BottomLeft), Distance(quadrilateral.TopRight, quadrilateral.BottomRight));
             if (orientation == TextOrientation.Clockwise90 || orientation == TextOrientation.CounterClockwise90)
@@ -491,9 +526,30 @@ namespace JYPPX.DeploySharp.Visual
                 height = swap;
             }
             if (height <= 0) throw new VisualException(VisualErrorCodes.InputInvalid, "A text crop has zero height.", profileId: ProfileId);
-            int raw = Math.Max(1, checked((int)Math.Ceiling(TargetHeight * width / height)));
-            int aligned = checked(((raw + WidthAlignment - 1) / WidthAlignment) * WidthAlignment);
-            return Math.Min(MaximumWidth, aligned);
+            double scaled = Math.Ceiling(TargetHeight * width / height);
+            if (double.IsNaN(scaled) || double.IsInfinity(scaled) || scaled >= long.MaxValue)
+                throw new VisualException(VisualErrorCodes.InputInvalid, "The OCR natural width exceeds supported geometry bounds.", profileId: ProfileId);
+            long naturalWidth = Math.Max(1L, (long)scaled);
+            int target;
+            if (WidthMode == OcrRecognitionWidthMode.Fixed) target = FixedWidth;
+            else
+            {
+                // Bound before alignment so hostile aspect ratios cannot overflow int arithmetic.
+                long bounded = Math.Min(MaximumWidth, Math.Max(MinimumWidth, naturalWidth));
+                long aligned = ((bounded + WidthAlignment - 1) / WidthAlignment) * WidthAlignment;
+                target = (int)Math.Min(MaximumWidth, aligned);
+            }
+            return new OcrRecognitionWidthInfo(naturalWidth, target, target, OverflowMode);
+        }
+
+        internal void ValidateWidth(OcrRecognitionWidthInfo width, int? regionIndex)
+        {
+            if (OverflowMode == RecognitionOverflowMode.Reject && width.WidthClamped)
+                throw new OcrPipelineException(VisualErrorCodes.OcrRecognitionWidthExceeded,
+                    "The OCR region requires horizontal compression. Increase the compatible recognition width or explicitly select Clamp.",
+                    OcrPipelineStage.CropAndBatch, profileId: ProfileId, regionIndex: regionIndex,
+                    technicalDetails: "naturalWidth=" + width.NaturalWidth.ToString(CultureInfo.InvariantCulture)
+                        + ";targetWidth=" + width.TargetWidth.ToString(CultureInfo.InvariantCulture) + ";overflowMode=Reject");
         }
 
         internal int ChannelCount => ColorOrder == VisualColorOrder.Gray ? 1 : 3;
@@ -539,9 +595,11 @@ namespace JYPPX.DeploySharp.Visual
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Profile = profile ?? throw new ArgumentNullException(nameof(profile));
             Quadrilateral = region.CropQuadrilateral ?? throw new VisualException(VisualErrorCodes.CapabilityUnavailable, "Perspective OCR cropping requires explicit quadrilateral corner roles.", profileId: profile.ProfileId);
-            int naturalWidth = profile.CalculateWidth(Quadrilateral, region.Orientation);
-            if (targetWidth.HasValue && (targetWidth.Value < naturalWidth || targetWidth.Value > profile.MaximumWidth)) throw new ArgumentOutOfRangeException(nameof(targetWidth));
-            TargetWidth = targetWidth ?? naturalWidth;
+            OcrRecognitionWidthInfo width = profile.DescribeWidth(Quadrilateral, region.Orientation);
+            profile.ValidateWidth(width, region.SourceIndex);
+            if (targetWidth.HasValue && (targetWidth.Value < width.TargetWidth || targetWidth.Value > profile.MaximumWidth)) throw new ArgumentOutOfRangeException(nameof(targetWidth));
+            TargetWidth = targetWidth ?? width.TargetWidth;
+            WidthInfo = width.WithTensorWidth(TargetWidth);
             TargetHeight = profile.TargetHeight;
             if (checked((long)TargetWidth * TargetHeight) > profile.MaximumCropPixels) throw new VisualException(VisualErrorCodes.InputInvalid, "The OCR crop exceeds its pixel limit.", profileId: profile.ProfileId);
         }
@@ -552,6 +610,8 @@ namespace JYPPX.DeploySharp.Visual
         public TextQuadrilateral Quadrilateral { get; }
         /// <summary>Gets crop profile. / 获取裁剪 Profile。</summary>
         public TextCropProfile Profile { get; }
+        /// <summary>Gets width planning and actual batch-padding diagnostics for this crop. / 获取此裁剪的宽度规划和实际批填充诊断。</summary>
+        public OcrRecognitionWidthInfo WidthInfo { get; }
         /// <summary>Gets target width. / 获取目标宽度。</summary>
         public int TargetWidth { get; }
         /// <summary>Gets target height. / 获取目标高度。</summary>
@@ -574,16 +634,26 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes an OCR region result. / 初始化 OCR 区域结果。</summary>
         public OcrRegionResult(TextRegion region, RecognizedText recognition)
+            : this(region, recognition, null)
+        {
+        }
+
+        /// <summary>Initializes an OCR region with optional recognition-width provenance. / 初始化含可选识别宽度来源信息的 OCR 区域。</summary>
+        public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth)
         {
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition));
             if (region.SourceIndex != recognition.SourceRegionIndex) throw new ArgumentException("Detection and recognition source indexes must match.", nameof(recognition));
+            if (recognitionWidth.HasValue && recognitionWidth.Value.TargetWidth <= 0) throw new ArgumentException("Recognition width diagnostics must be initialized.", nameof(recognitionWidth));
+            RecognitionWidth = recognitionWidth;
         }
 
         /// <summary>Gets detected region. / 获取检测区域。</summary>
         public TextRegion Region { get; }
         /// <summary>Gets recognized text. / 获取识别文本。</summary>
         public RecognizedText Recognition { get; }
+        /// <summary>Gets optional width diagnostics; null means the producing pipeline did not provide them, not that no compression occurred. / 获取可选宽度诊断；null 表示生成方未提供，不代表没有压缩。</summary>
+        public OcrRecognitionWidthInfo? RecognitionWidth { get; }
     }
 
     /// <summary>Contains detailed OCR work timings for backend and adapter profiling. / 包含用于后端与适配器分析的 OCR 详细工作时长。</summary>
@@ -695,7 +765,7 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional orientation provenance used before OCR. / 获取 OCR 前使用的可选方向来源信息。</summary>
         public OcrOrientationResult? Orientation { get; }
 
-        /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256。</summary>
+        /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. Width-planning diagnostics are excluded to preserve the existing recognition fingerprint. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256；不包含宽度规划诊断，以保持既有识别结果指纹。</summary>
         public string ComputeSha256()
         {
             using (var stream = new MemoryStream())

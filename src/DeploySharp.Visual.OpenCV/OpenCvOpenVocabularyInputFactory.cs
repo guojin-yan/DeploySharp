@@ -12,22 +12,23 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         private readonly OpenCvVisualInputFactory _inner = new OpenCvVisualInputFactory();
 
         /// <summary>Creates one detector tensor from PNG/JPEG/bytes using the artifact-bound RGB letterbox contract. / 使用工件绑定的 RGB Letterbox 合同从 PNG/JPEG/字节创建一个检测器张量。</summary>
-        public PreparedVisualInput Create(OpenCvImageSource source, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken))
+        public PreparedVisualInput Create(OpenCvImageSource source, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? preprocessing = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (profile == null) throw new ArgumentNullException(nameof(profile));
             YoloDetectionProfile detector = profile.DetectorProfile ?? throw new VisualException(VisualErrorCodes.CapabilityUnavailable, "The open-vocabulary profile has no executable image graph: " + profile.Blocker + ".", profileId: profile.ProfileId);
-            return _inner.Create(source, detector.VisualProfile.Input.Name, OpenCvYoloPreprocessing.CreateOptions(detector), source.Sha256, cancellationToken);
+            OpenCvPreprocessOptions options = preprocessing == null ? OpenCvYoloPreprocessing.CreateOptions(detector) : OpenCvYoloPreprocessing.CreateOptions(detector, preprocessing);
+            return _inner.Create(source, detector.VisualProfile.Input.Name, options, source.Sha256, cancellationToken);
         }
 
         /// <summary>Creates one detector tensor from an absolute PNG or JPEG path. / 从绝对 PNG 或 JPEG 路径创建一个检测器张量。</summary>
-        public PreparedVisualInput CreateFromFile(string path, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken)) => Create(OpenCvImageSource.FromFile(path), profile, cancellationToken);
+        public PreparedVisualInput CreateFromFile(string path, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? preprocessing = null) => Create(OpenCvImageSource.FromFile(path), profile, cancellationToken, preprocessing);
 
         /// <summary>Creates one detector tensor from copied encoded bytes. / 从复制的编码字节创建一个检测器张量。</summary>
-        public PreparedVisualInput CreateFromBytes(byte[] bytes, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken)) => Create(OpenCvImageSource.FromBytes(bytes), profile, cancellationToken);
+        public PreparedVisualInput CreateFromBytes(byte[] bytes, OpenVocabularyDetectionProfile profile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? preprocessing = null) => Create(OpenCvImageSource.FromBytes(bytes), profile, cancellationToken, preprocessing);
 
         /// <summary>Decodes the image exactly once, then prepares detector and SAM encoder tensors with the same encoded-image identity. / 图像仅解码一次，随后以相同编码图像 Identity 准备检测器与 SAM Encoder 张量。</summary>
-        public GroundedSamPreparedInput CreateGroundedSam(OpenCvImageSource source, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken))
+        public GroundedSamPreparedInput CreateGroundedSam(OpenCvImageSource source, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? detectorPreprocessing = null, VisualPreprocessingOptions? segmentationPreprocessing = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detectorProfile == null) throw new ArgumentNullException(nameof(detectorProfile));
@@ -42,8 +43,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat decoded = OpenCvImageLoader.Decode(source))
                 {
                     OpenCvImageLoader.Validate(decoded, source);
-                    detectorInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, detector.VisualProfile.Input.Name, OpenCvYoloPreprocessing.CreateOptions(detector), source.Sha256, cancellationToken);
-                    PreparedVisualInput segmentationInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, segmentationProfile.SamV1TensorMap.ImageInput, OpenCvPromptableSegmentationInputFactory.CreateSamV1Options(segmentationProfile.ImageInputSize.Width), source.Sha256, cancellationToken);
+                    OpenCvPreprocessOptions detectorOptions = detectorPreprocessing == null ? OpenCvYoloPreprocessing.CreateOptions(detector) : OpenCvYoloPreprocessing.CreateOptions(detector, detectorPreprocessing);
+                    detectorInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, detector.VisualProfile.Input.Name, detectorOptions, source.Sha256, cancellationToken);
+                    PreparedVisualInput segmentationInput = OpenCvVisualInputFactory.CreateFromDecoded(decoded, segmentationProfile.SamV1TensorMap.ImageInput, OpenCvPromptableSegmentationInputFactory.CreateSamV1Options(segmentationProfile.ImageInputSize.Width, segmentationPreprocessing), source.Sha256, cancellationToken);
                     return new GroundedSamPreparedInput(detectorInput, segmentationInput);
                 }
             }
@@ -55,9 +57,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         }
 
         /// <summary>Creates a single-decode Grounded-SAM input from an absolute image path. / 从绝对图像路径创建单次解码 Grounded-SAM 输入。</summary>
-        public GroundedSamPreparedInput CreateGroundedSamFromFile(string path, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken)) => CreateGroundedSam(OpenCvImageSource.FromFile(path), detectorProfile, segmentationProfile, cancellationToken);
+        public GroundedSamPreparedInput CreateGroundedSamFromFile(string path, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? detectorPreprocessing = null, VisualPreprocessingOptions? segmentationPreprocessing = null) => CreateGroundedSam(OpenCvImageSource.FromFile(path), detectorProfile, segmentationProfile, cancellationToken, detectorPreprocessing, segmentationPreprocessing);
 
         /// <summary>Creates a single-decode Grounded-SAM input from copied encoded bytes. / 从复制的编码字节创建单次解码 Grounded-SAM 输入。</summary>
-        public GroundedSamPreparedInput CreateGroundedSamFromBytes(byte[] bytes, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken)) => CreateGroundedSam(OpenCvImageSource.FromBytes(bytes), detectorProfile, segmentationProfile, cancellationToken);
+        public GroundedSamPreparedInput CreateGroundedSamFromBytes(byte[] bytes, OpenVocabularyDetectionProfile detectorProfile, PromptableSegmentationProfile segmentationProfile, CancellationToken cancellationToken = default(CancellationToken), VisualPreprocessingOptions? detectorPreprocessing = null, VisualPreprocessingOptions? segmentationPreprocessing = null) => CreateGroundedSam(OpenCvImageSource.FromBytes(bytes), detectorProfile, segmentationProfile, cancellationToken, detectorPreprocessing, segmentationPreprocessing);
     }
 }

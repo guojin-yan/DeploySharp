@@ -44,6 +44,72 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SamVideoRoiPlannerSeparatesPlanAndCommitAndPreservesFrameOrder()
+        {
+            PromptableSegmentationProfile profile = PromptableSegmentationProfiles.CreateSam2VideoBlocker(
+                "tests/sam2-video-roi", "2b90b9f5ceec907a1c18123530e92e794ad901a4", "Native video predictor is supplied by the application.", maximumObjects: 2, maximumFrames: 4);
+            var snapshot = new VisualRoiSnapshot(new VisualSize(640, 480), new[]
+            {
+                new VisualRoi("zone-a", new RectangleRoiGeometry(new RectangleF(.1f, .1f, .25f, .25f)), RoiCoordinateSpace.Normalized, taskFilter: new[] { VisualTaskId.PromptableVideoSegmentation }),
+                new VisualRoi("zone-b", new RectangleRoiGeometry(new RectangleF(.5f, .2f, .25f, .25f)), RoiCoordinateSpace.Normalized, taskFilter: new[] { VisualTaskId.PromptableVideoSegmentation })
+            });
+            var planner = new VisualRoiVideoPromptPlanner(profile);
+
+            VisualRoiVideoPromptPlan initial = planner.CreatePlan(snapshot, 0, VisualRoiVideoFrameMode.Initialize);
+            Assert.AreEqual(-1, planner.LastFrameIndex);
+            Assert.IsTrue(initial.RequiresExternalPredictor);
+            Assert.AreEqual(2, initial.Items.Count);
+            Assert.AreEqual(2, initial.Prompts.Count);
+            Assert.AreEqual("zone-a", initial.Items[0].Roi.Id);
+            Assert.IsFalse(initial.Items[0].Propagate);
+
+            planner.Commit(initial);
+            Assert.AreEqual(0, planner.LastFrameIndex);
+            VisualRoiVideoPromptPlan propagation = planner.CreatePlan(snapshot, 1, VisualRoiVideoFrameMode.Propagate);
+            Assert.AreEqual(2, propagation.Items.Count);
+            Assert.AreEqual(0, propagation.Prompts.Count);
+            Assert.IsTrue(propagation.Items.All(value => value.Propagate));
+            planner.Commit(propagation);
+
+            Assert.ThrowsExactly<VisualException>(() => planner.CreatePlan(snapshot, 1, VisualRoiVideoFrameMode.Correct));
+            Assert.AreEqual(1, planner.LastFrameIndex);
+            planner.Reset();
+            Assert.IsFalse(planner.IsInitialized);
+            Assert.AreEqual(-1, planner.LastFrameIndex);
+        }
+
+        [TestMethod]
+        public async Task SamVideoRoiRunnerCommitsOnlyAfterPredictorSuccessAndResetsBothStates()
+        {
+            PromptableSegmentationProfile profile = PromptableSegmentationProfiles.CreateSam3VideoBlocker(
+                "tests/sam3-video-runner", "2b90b9f5ceec907a1c18123530e92e794ad901a4", "Native video predictor is supplied by the application.", maximumObjects: 1, maximumFrames: 8);
+            var snapshot = new VisualRoiSnapshot(
+                new VisualSize(320, 240),
+                new[] { new VisualRoi("target", new RectangleRoiGeometry(new RectangleF(10, 20, 100, 80)), taskFilter: new[] { VisualTaskId.PromptableVideoSegmentation }) });
+            var planner = new VisualRoiVideoPromptPlanner(profile);
+            var predictor = new FakeVideoPredictor(profile) { Failure = new InvalidOperationException("synthetic predictor failure") };
+            var runner = new VisualRoiVideoPromptRunner<string, string>(planner, predictor);
+
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => runner.RunAsync("frame-0", snapshot, 0, VisualRoiVideoFrameMode.Initialize));
+            Assert.AreEqual(-1, planner.LastFrameIndex);
+            Assert.IsFalse(planner.IsInitialized);
+
+            predictor.Failure = null;
+            VisualRoiVideoFrameResult<string> initialized = await runner.RunAsync("frame-0", snapshot, 0, VisualRoiVideoFrameMode.Initialize);
+            Assert.AreEqual("frame-0:Initialize", initialized.Result);
+            Assert.AreEqual(0, initialized.Plan.FrameIndex);
+            Assert.AreEqual(0, planner.LastFrameIndex);
+            VisualRoiVideoFrameResult<string> propagated = await runner.RunAsync("frame-1", snapshot, 1, VisualRoiVideoFrameMode.Propagate);
+            Assert.AreEqual("frame-1:Propagate", propagated.Result);
+            Assert.AreEqual(1, planner.LastFrameIndex);
+
+            await runner.ResetAsync();
+            Assert.AreEqual(1, predictor.ResetCount);
+            Assert.AreEqual(-1, planner.LastFrameIndex);
+            Assert.IsFalse(planner.IsInitialized);
+        }
+
+        [TestMethod]
         public void PromptSchemaRejectsEmptyNonFiniteAndInvalidFeedback()
         {
             Assert.AreEqual(VisualErrorCodes.PromptableSegmentationContractInvalid, Assert.ThrowsExactly<VisualException>(() => new PromptableSegmentationPrompt()).ErrorCode);
@@ -95,6 +161,43 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(1f, ((Tensor<float>)provider.LastInputs[DecoderId].GetRequired("has_mask_input")).ToArray()[0]);
             Assert.AreEqual(1, provider.GetRunCount(EncoderId));
             Assert.AreEqual(2, provider.GetRunCount(DecoderId));
+        }
+
+        [TestMethod]
+        public async Task PromptRoiRunnerExecutesApplicableRoisInOrderAndRetainsPartialFailures()
+        {
+            PromptableSegmentationProfile profile = Profile();
+            using var registry = new BackendRegistry();
+            var provider = Provider(profile);
+            registry.Register(provider);
+            using var session = new PromptableSegmentationImageSession(registry, Bundle(profile), new BackendRequest(BackendCapabilities.TensorInference, Backend));
+            using PreparedVisualInput input = Input();
+            session.SetImage(input);
+
+            var snapshot = new VisualRoiSnapshot(new VisualSize(6, 4), new[]
+            {
+                new VisualRoi("prompt-zone", new RectangleRoiGeometry(new RectangleF(.1f, .1f, .5f, .5f)), RoiCoordinateSpace.Normalized, priority: 1, taskFilter: new[] { VisualTaskId.PromptableSegmentation }),
+                new VisualRoi("detection-only", new RectangleRoiGeometry(new RectangleF(0, 0, 6, 4)), taskFilter: new[] { VisualTaskId.ObjectDetection }),
+                new VisualRoi("outside", new RectangleRoiGeometry(new RectangleF(20, 20, 2, 2)), taskFilter: new[] { VisualTaskId.InstanceSegmentation })
+            });
+
+            VisualRoiPromptBatchResult result = await new VisualRoiPromptRunner().RunAsync(
+                session,
+                snapshot,
+                new VisualRoiPromptOptions(maximumPoints: 8),
+                new RoiExecutionOptions(failureMode: RoiFailureMode.ReturnPartialResults, maximumRois: 4, correlationId: "prompt-roi"));
+
+            Assert.AreEqual(2, result.SelectedRoiCount);
+            Assert.AreEqual(1, result.SucceededResultCount);
+            Assert.AreEqual(1, result.FailedResultCount);
+            Assert.AreEqual("prompt-zone", result.Items[0].Roi.Id);
+            Assert.AreEqual("prompt-zone", result.Items[0].Prompt!.PromptId);
+            Assert.IsNotNull(result.Items[0].Result);
+            Assert.AreEqual("outside", result.Items[1].Roi.Id);
+            Assert.IsNull(result.Items[1].Prompt);
+            Assert.IsNotNull(result.Items[1].Failure);
+            Assert.AreEqual("prompt-roi", result.CorrelationId);
+            Assert.AreEqual(1, provider.GetRunCount(DecoderId));
         }
 
         [TestMethod]
@@ -193,6 +296,26 @@ namespace DeploySharp.Visual.Tests
             private readonly float _tolerance;
             public FloatComparer(float tolerance) { _tolerance = tolerance; }
             public int Compare(object? x, object? y) => Math.Abs((float)x! - (float)y!) <= _tolerance ? 0 : 1;
+        }
+
+        private sealed class FakeVideoPredictor : IVisualRoiVideoPromptPredictor<string, string>
+        {
+            internal FakeVideoPredictor(PromptableSegmentationProfile profile) { Profile = profile; }
+            public PromptableSegmentationProfile Profile { get; }
+            internal Exception? Failure { get; set; }
+            internal int ResetCount { get; private set; }
+            public Task<string> ProcessFrameAsync(string frame, VisualRoiVideoPromptPlan plan, CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (Failure != null) throw Failure;
+                return Task.FromResult(frame + ":" + plan.Mode);
+            }
+            public Task ResetAsync(CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ResetCount++;
+                return Task.CompletedTask;
+            }
         }
 
         private sealed class MultiModelProvider : IBackendProvider

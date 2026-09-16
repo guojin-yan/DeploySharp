@@ -569,6 +569,11 @@ namespace JYPPX.DeploySharp.Visual
             CancellationToken cancellationToken,
             bool thresholdIsStrict = false)
         {
+            if (input.Transform.IsProjective)
+            {
+                return RestoreProjective(grid, gridOffset, gridWidth, gridHeight, input, modelBox, valueKind, activation, interpolation, thresholdOrder, cropSpace, cropOrder, threshold, cancellationToken, thresholdIsStrict);
+            }
+
             // RF-DETR emits the common raw-logit + bilinear-half-pixel contract.  Keep the
             // general sampler below for every other profile, but use a branch-free inner loop
             // for this hot path: it avoids four virtual-looking helper calls and repeated enum
@@ -611,6 +616,48 @@ namespace JYPPX.DeploySharp.Visual
                     if (thresholdIsStrict ? sampled > comparisonThreshold : sampled >= comparisonThreshold)
                     {
                         result[destination] = 1;
+                        foreground++;
+                    }
+                }
+            }
+
+            return new InstanceBinaryMask(sourceWidth, sourceHeight, result, InstanceMaskCoordinateSpace.SourceImage, 0, 0, foreground);
+        }
+
+        private static InstanceBinaryMask RestoreProjective(
+            float[] grid,
+            int gridOffset,
+            int gridWidth,
+            int gridHeight,
+            PreparedVisualInput input,
+            RectangleF modelBox,
+            InstanceMaskValueKind valueKind,
+            InstanceMaskActivation activation,
+            InstanceMaskInterpolationMode interpolation,
+            InstanceMaskThresholdOrder thresholdOrder,
+            InstanceMaskCropSpace cropSpace,
+            InstanceMaskCropOrder cropOrder,
+            float threshold,
+            CancellationToken cancellationToken,
+            bool thresholdIsStrict)
+        {
+            int sourceWidth = input.SourceSize.Width;
+            int sourceHeight = input.SourceSize.Height;
+            var result = new byte[checked(sourceWidth * sourceHeight)];
+            int foreground = 0;
+            for (int sourceY = 0; sourceY < sourceHeight; sourceY++)
+            {
+                if ((sourceY & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
+                for (int sourceX = 0; sourceX < sourceWidth; sourceX++)
+                {
+                    PointF model = input.Transform.ToModel(new PointF(sourceX + .5f, sourceY + .5f));
+                    if (model.X < 0 || model.X >= input.ModelSize.Width || model.Y < 0 || model.Y >= input.ModelSize.Height) continue;
+                    if (cropSpace == InstanceMaskCropSpace.ModelInput && cropOrder == InstanceMaskCropOrder.AfterResize && !Contains(modelBox, model.X, model.Y)) continue;
+                    float sampled = Sample(grid, gridOffset, gridWidth, gridHeight, input.ModelSize, modelBox, model.X, model.Y, valueKind, activation, interpolation, thresholdOrder, cropSpace, cropOrder, threshold);
+                    float comparisonThreshold = thresholdOrder == InstanceMaskThresholdOrder.BeforeResize ? 0.5f : threshold;
+                    if (thresholdIsStrict ? sampled > comparisonThreshold : sampled >= comparisonThreshold)
+                    {
+                        result[(sourceY * sourceWidth) + sourceX] = 1;
                         foreground++;
                     }
                 }
@@ -740,8 +787,11 @@ namespace JYPPX.DeploySharp.Visual
                 float offsetY = input.Transform.OffsetY;
                 var result = new byte[checked(sourceWidth * sourceHeight)];
                 int foreground = 0;
-                FillBilinearSamples(xSamples, sourceWidth, modelWidth, gridWidth, scaleX, offsetX, modelBox.X, modelBox.Right);
-                FillBilinearSamples(ySamples, sourceHeight, modelHeight, gridHeight, scaleY, offsetY, modelBox.Y, modelBox.Bottom);
+                // The prototype grid was already cropped. Cropping source samples
+                // again would turn BeforeResize into BeforeAndAfterResize and
+                // disagree with the projective reference sampler at box edges.
+                FillBilinearSamples(xSamples, sourceWidth, modelWidth, gridWidth, scaleX, offsetX, float.NegativeInfinity, float.PositiveInfinity);
+                FillBilinearSamples(ySamples, sourceHeight, modelHeight, gridHeight, scaleY, offsetY, float.NegativeInfinity, float.PositiveInfinity);
                 for (int sourceY = 0; sourceY < sourceHeight; sourceY++)
                 {
                     if ((sourceY & 31) == 0) cancellationToken.ThrowIfCancellationRequested();

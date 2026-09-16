@@ -2,13 +2,18 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.Detr;
 using JYPPX.DeploySharp.Visual.Models.Yolo;
 using JYPPX.DeploySharp.Visual.OpenCV;
+using JYPPX.OpenCvSharp.Core;
+using JYPPX.OpenCvSharp.ImgCodecs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ImageCodecs = JYPPX.OpenCvSharp.ImgCodecs.Cv2;
 
 namespace DeploySharp.Visual.OpenCV.Tests
 {
@@ -57,7 +62,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
         public void RuntimePreflightReportsExactManagedNativePair()
         {
             OpenCvRuntimeInfo info = OpenCvRuntimePreflight.Check();
-            Assert.AreEqual("5.0.0.0", info.ManagedPackageVersion);
+            Assert.AreEqual("5.0.0", info.ManagedPackageVersion);
             Assert.AreEqual("5.0.0", info.OpenCvVersion);
             Assert.IsTrue(info.IsCompatible);
             Assert.AreEqual("JYPPX.OpenCV.Native", info.NativeLibraryName);
@@ -80,6 +85,34 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(18, compact.ByteLength);
             Assert.AreEqual("compact", compact.InputId);
             CollectionAssert.AreEqual(((Tensor<byte>)existing.Tensor).ToArray(), compact.ToArray());
+        }
+
+        [TestMethod]
+        public void DecodeNormalizesJpegExifOrientationForFileAndByteInputs()
+        {
+            using Mat source = ImageCodecs.ImRead(Fixture("rgb.png"), ImreadModes.Unchanged);
+            byte[] jpeg = ImageCodecs.ImEncode(".jpg", source);
+            var factory = new OpenCvBgrImageFactory();
+            OpenCvBgrImage raw = factory.Create(OpenCvImageSource.FromBytes(jpeg));
+
+            byte[] orientation3 = AddExifOrientation(jpeg, 3);
+            OpenCvBgrImage rotated = factory.Create(OpenCvImageSource.FromBytes(orientation3));
+            Assert.AreEqual(raw.Width, rotated.Width);
+            Assert.AreEqual(raw.Height, rotated.Height);
+            AssertPixelsRotated180(raw.ToArray(), rotated.ToArray());
+
+            string path = Path.Combine(Path.GetTempPath(), "deploysharp-exif-" + Guid.NewGuid().ToString("N") + ".jpg");
+            try
+            {
+                File.WriteAllBytes(path, AddExifOrientation(jpeg, 6));
+                OpenCvBgrImage clockwise = factory.CreateFromFile(path);
+                Assert.AreEqual(raw.Height, clockwise.Width);
+                Assert.AreEqual(raw.Width, clockwise.Height);
+            }
+            finally
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
         }
 
         [TestMethod]
@@ -159,6 +192,175 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void RectangleRoiUsesSubMatAndComposesTransformIntoOriginalSourceSpace()
+        {
+            var options = new OpenCvPreprocessOptions(new VisualSize(2, 2), resizeMode: OpenCvResizeMode.Resize, outputType: OpenCvOutputType.UInt8);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateRectangleRoi(
+                OpenCvImageSource.FromFile(Fixture("rgb.png")),
+                new JYPPX.DeploySharp.Geometry.RectangleF(1, 0, 2, 2),
+                "images",
+                options);
+
+            Assert.AreEqual(new VisualSize(3, 2), input.SourceSize);
+            Assert.AreEqual(ImageTransformKind.Custom, input.Transform.Kind);
+            Assert.AreEqual(-1f, input.Transform.OffsetX, .001f);
+            Assert.AreEqual(new JYPPX.DeploySharp.Geometry.PointF(1, 0), input.Transform.ToSource(new JYPPX.DeploySharp.Geometry.PointF(0, 0)));
+            Assert.AreEqual(new TensorShape(1, 3, 2, 2), input.Tensor.Shape);
+        }
+
+        [TestMethod]
+        public async Task DecodedRoiImagePreparesConcurrentRectanglesAndRejectsUseAfterDispose()
+        {
+            var factory = new OpenCvVisualInputFactory();
+            var options = new OpenCvPreprocessOptions(new VisualSize(2, 2), resizeMode: OpenCvResizeMode.Resize, outputType: OpenCvOutputType.UInt8);
+            OpenCvDecodedRoiImage decoded = factory.DecodeForRois(OpenCvImageSource.FromFile(Fixture("rgb.png")));
+            Assert.AreEqual(new VisualSize(3, 2), decoded.SourceSize);
+
+            Task<PreparedVisualInput> first = Task.Run(() => decoded.PrepareRectangle(new RectangleRoiGeometry(new RectangleF(0, 0, 2, 2)), "images", options));
+            Task<PreparedVisualInput> second = Task.Run(() => decoded.PrepareRectangle(new RectangleRoiGeometry(new RectangleF(1, 0, 2, 2)), "images", options));
+            PreparedVisualInput[] prepared = await Task.WhenAll(first, second);
+            try
+            {
+                Assert.AreEqual(0f, prepared[0].Transform.ToSource(new PointF(0, 0)).X, .001f);
+                Assert.AreEqual(1f, prepared[1].Transform.ToSource(new PointF(0, 0)).X, .001f);
+                Assert.AreEqual(new TensorShape(1, 3, 2, 2), prepared[0].Tensor.Shape);
+                Assert.AreEqual(new TensorShape(1, 3, 2, 2), prepared[1].Tensor.Shape);
+            }
+            finally
+            {
+                foreach (PreparedVisualInput input in prepared) input.Dispose();
+                decoded.Dispose();
+            }
+
+            Assert.AreEqual(OpenCvErrorCodes.ObjectDisposed, Assert.ThrowsExactly<OpenCvVisualException>(() => decoded.PrepareRectangle(new RectangleRoiGeometry(new RectangleF(0, 0, 1, 1)), "images", options)).ErrorCode);
+        }
+
+        [TestMethod]
+        public void PolygonRoiMasksPixelsAndKeepsOriginalSourceProjection()
+        {
+            var options = new OpenCvPreprocessOptions(new VisualSize(3, 2), resizeMode: OpenCvResizeMode.Resize, layout: VisualTensorLayout.Nhwc, outputType: OpenCvOutputType.UInt8);
+            var polygon = new PolygonRoiGeometry(new[] { new PointF(0, 0), new PointF(3, 0), new PointF(0, 2) });
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateRoi(OpenCvImageSource.FromFile(Fixture("rgb.png")), polygon, "images", options);
+
+            byte[] values = ((Tensor<byte>)input.Tensor).ToArray();
+            Assert.AreEqual(new VisualSize(3, 2), input.SourceSize);
+            Assert.AreEqual(new PointF(0, 0), input.Transform.ToSource(new PointF(0, 0)));
+            Assert.IsTrue(values.Any(value => value != 0));
+            Assert.AreEqual(0, values[((1 * 3) + 2) * 3]);
+            Assert.AreEqual(0, values[(((1 * 3) + 2) * 3) + 1]);
+            Assert.AreEqual(0, values[(((1 * 3) + 2) * 3) + 2]);
+        }
+
+        [TestMethod]
+        public void MaskRoiUsesTightCropRejectsEmptyMaskAndCanReuseDecodedImage()
+        {
+            var options = new OpenCvPreprocessOptions(new VisualSize(2, 2), resizeMode: OpenCvResizeMode.Resize, layout: VisualTensorLayout.Nhwc, outputType: OpenCvOutputType.UInt8);
+            byte[] maskValues = { 0, 1, 1, 0, 1, 0 };
+            var mask = new MaskRoiGeometry(new VisualSize(3, 2), maskValues);
+            using OpenCvDecodedRoiImage decoded = new OpenCvVisualInputFactory().DecodeForRois(OpenCvImageSource.FromFile(Fixture("rgb.png")));
+            using PreparedVisualInput input = decoded.Prepare(mask, "images", options);
+
+            Assert.AreEqual(new PointF(1, 0), input.Transform.ToSource(new PointF(0, 0)));
+            Assert.AreEqual(new VisualSize(3, 2), input.SourceSize);
+            Assert.IsTrue(((Tensor<byte>)input.Tensor).ToArray().Any(value => value != 0));
+
+            var empty = new MaskRoiGeometry(new VisualSize(3, 2), new byte[6]);
+            OpenCvVisualException exception = Assert.ThrowsExactly<OpenCvVisualException>(() => decoded.Prepare(empty, "images", options));
+            Assert.AreEqual(OpenCvErrorCodes.PreprocessInvalid, exception.ErrorCode);
+        }
+
+        [TestMethod]
+        public void PerspectiveAndRotatedRoiInputsExposeProjectiveSourceMapping()
+        {
+            var options = new OpenCvPreprocessOptions(new VisualSize(4, 4), resizeMode: OpenCvResizeMode.Resize, layout: VisualTensorLayout.Nhwc, outputType: OpenCvOutputType.UInt8);
+            var quadrilateral = new[] { new PointF(0, 0), new PointF(3, 0), new PointF(2, 2), new PointF(0, 2) };
+            using PreparedVisualInput perspective = new OpenCvVisualInputFactory().CreateQuadrilateralRoi(OpenCvImageSource.FromFile(Fixture("rgb.png")), quadrilateral, "images", options);
+            Assert.IsTrue(perspective.Transform.IsProjective);
+            PointF source = perspective.Transform.ToSource(new PointF(0, 0));
+            Assert.AreEqual(0f, source.X, .001f);
+            Assert.AreEqual(0f, source.Y, .001f);
+
+            var rotated = new RotatedRectangleRoiGeometry(new PointF(1.5f, 1f), new SizeF(2f, 1.5f), 12f);
+            using PreparedVisualInput rotatedInput = new OpenCvVisualInputFactory().CreateRotatedRectangleRoi(OpenCvImageSource.FromFile(Fixture("rgb.png")), rotated, "images", options);
+            Assert.IsTrue(rotatedInput.Transform.IsProjective);
+            PointF center = rotatedInput.Transform.ToSource(rotatedInput.Transform.ToModel(rotated.Center));
+            Assert.AreEqual(rotated.Center.X, center.X, .001f);
+            Assert.AreEqual(rotated.Center.Y, center.Y, .001f);
+        }
+
+        [TestMethod]
+        public void MultipleRoisPackIntoTrueBatchAndRetainIndependentTransforms()
+        {
+            var factory = new OpenCvVisualInputFactory();
+            var geometries = new IVisualRoiGeometry[]
+            {
+                new RectangleRoiGeometry(new RectangleF(0, 0, 2, 2)),
+                new RectangleRoiGeometry(new RectangleF(1, 0, 2, 2))
+            };
+
+            foreach (VisualTensorLayout layout in new[] { VisualTensorLayout.Nchw, VisualTensorLayout.Nhwc })
+            {
+                var options = new OpenCvPreprocessOptions(
+                    new VisualSize(2, 2),
+                    resizeMode: OpenCvResizeMode.Resize,
+                    layout: layout,
+                    outputType: OpenCvOutputType.UInt8,
+                    batchSize: 99);
+                using PreparedVisualInput input = factory.CreateRoiBatch(
+                    OpenCvImageSource.FromFile(Fixture("rgb.png")),
+                    geometries,
+                    "images",
+                    options);
+
+                Assert.AreEqual(2, input.BatchSize);
+                Assert.AreEqual(2, input.BatchFrames.Count);
+                Assert.AreEqual(layout, input.Layout);
+                Assert.AreEqual(layout == VisualTensorLayout.Nchw ? new TensorShape(2, 3, 2, 2) : new TensorShape(2, 2, 2, 3), input.Tensor.Shape);
+                Assert.AreEqual(0f, input.BatchFrames[0].Transform.ToSource(new PointF(0, 0)).X, .001f);
+                Assert.AreEqual(1f, input.BatchFrames[1].Transform.ToSource(new PointF(0, 0)).X, .001f);
+                Assert.AreEqual(0f, input.BatchFrames[0].Transform.ToSource(new PointF(0, 0)).Y, .001f);
+                Assert.AreEqual(0f, input.BatchFrames[1].Transform.ToSource(new PointF(0, 0)).Y, .001f);
+                Assert.IsTrue(((Tensor<byte>)input.Tensor).ToArray().Any(value => value != 0));
+            }
+        }
+
+        [TestMethod]
+        public void RoiBatchHandlesSubMatStrideAndGrayOrBgraChannelContracts()
+        {
+            var factory = new OpenCvVisualInputFactory();
+            var rois = new IVisualRoiGeometry[]
+            {
+                new RectangleRoiGeometry(new RectangleF(0, 0, 2, 2)),
+                new RectangleRoiGeometry(new RectangleF(1, 0, 2, 2))
+            };
+
+            var grayOptions = new OpenCvPreprocessOptions(
+                new VisualSize(2, 2),
+                resizeMode: OpenCvResizeMode.Resize,
+                colorOrder: VisualColorOrder.Gray,
+                layout: VisualTensorLayout.Nhwc,
+                outputType: OpenCvOutputType.UInt8);
+            using (PreparedVisualInput gray = factory.CreateRoiBatch(OpenCvImageSource.FromFile(Fixture("rgb.png")), rois, "images", grayOptions))
+            {
+                Assert.AreEqual(new TensorShape(2, 2, 2, 1), gray.Tensor.Shape);
+                Assert.AreEqual(2, gray.BatchFrames.Count);
+                Assert.IsTrue(((Tensor<byte>)gray.Tensor).ToArray().Any(value => value != 0));
+            }
+
+            var bgraOptions = new OpenCvPreprocessOptions(
+                new VisualSize(2, 2),
+                resizeMode: OpenCvResizeMode.Resize,
+                colorOrder: VisualColorOrder.Rgba,
+                alphaMode: OpenCvAlphaMode.Preserve,
+                layout: VisualTensorLayout.Nhwc,
+                outputType: OpenCvOutputType.UInt8);
+            using PreparedVisualInput bgra = factory.CreateRoiBatch(OpenCvImageSource.FromFile(Fixture("alpha.png")), rois, "images", bgraOptions);
+            Assert.AreEqual(new TensorShape(2, 2, 2, 4), bgra.Tensor.Shape);
+            Assert.AreEqual(VisualColorOrder.Rgba, bgra.Preprocessing.ColorOrder);
+            Assert.IsTrue(((Tensor<byte>)bgra.Tensor).ToArray().Any(value => value != 0));
+        }
+
+        [TestMethod]
         public void YoloProfileProducesOfficialLetterboxAndNormalizationContract()
         {
             YoloDetectionProfile profile = YoloDetectionProfiles.Create(
@@ -197,6 +399,47 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(expectedPadding, values[0], 0.000001f);
                 Assert.AreEqual(expectedPadding, values[36], 0.000001f);
                 Assert.AreEqual(expectedPadding, values[72], 0.000001f);
+            }
+        }
+
+        [TestMethod]
+        public void SharedProfileContractSwitchesYoloGeometryAndNormalization()
+        {
+            var shared = new VisualPreprocessingOptions(
+                new VisualSize(6, 6),
+                VisualResizeMode.Resize,
+                VisualColorOrder.Bgr,
+                VisualNormalizationOptions.MeanStandardDeviation(new[] { 127.5f }, new[] { 127.5f }));
+            YoloDetectionProfile profile = YoloDetectionProfiles.Create(
+                YoloDetectionFamily.YoloV8,
+                new ModelId("tests/yolov8n-custom-preprocess"),
+                new string('b', 64),
+                YoloLabelSets.Coco80,
+                "commit",
+                "exporter",
+                new YoloDetectionProfileOptions(19, new VisualSize(6, 6), preprocessing: shared));
+
+            OpenCvPreprocessOptions options = OpenCvYoloPreprocessing.CreateOptions(profile);
+            Assert.AreEqual(OpenCvResizeMode.Resize, options.ResizeMode);
+            Assert.AreEqual(VisualColorOrder.Bgr, options.ColorOrder);
+            Assert.AreEqual(127.5f, options.Means.Single());
+
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), profile.VisualProfile);
+            Assert.AreEqual(ImageTransformKind.Resize, input.Transform.Kind);
+            Assert.AreEqual(new TensorShape(1, 3, 6, 6), input.Tensor.Shape);
+        }
+
+        [TestMethod]
+        public void SharedContractMapsAllCommonGeometryModes()
+        {
+            var factory = new OpenCvVisualInputFactory();
+            foreach (VisualResizeMode mode in new[] { VisualResizeMode.Resize, VisualResizeMode.Letterbox, VisualResizeMode.CenterCrop })
+            {
+                var shared = new VisualPreprocessingOptions(new VisualSize(6, 6), mode, VisualColorOrder.Rgb, VisualNormalizationOptions.Scale(255f));
+                using PreparedVisualInput input = factory.CreateFromFile(Fixture("rgb.png"), "images", shared);
+                ImageTransformKind expected = mode == VisualResizeMode.Resize ? ImageTransformKind.Resize : mode == VisualResizeMode.Letterbox ? ImageTransformKind.Letterbox : ImageTransformKind.Crop;
+                Assert.AreEqual(expected, input.Transform.Kind);
+                Assert.AreEqual(new TensorShape(1, 3, 6, 6), input.Tensor.Shape);
             }
         }
 
@@ -276,7 +519,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
-        public void YoloScaleUpFalseIsRejectedUntilGeometryIsRepresentable()
+        public void YoloScaleUpFalseFlowsToOpenCvGeometry()
         {
             YoloDetectionProfile profile = YoloDetectionProfiles.Create(
                 YoloDetectionFamily.YoloV5,
@@ -287,8 +530,12 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 "7.0",
                 new YoloDetectionProfileOptions(12, new VisualSize(640, 640), scaleUp: false));
 
-            OpenCvVisualException exception = Assert.ThrowsExactly<OpenCvVisualException>(() => OpenCvYoloPreprocessing.CreateOptions(profile));
-            Assert.AreEqual(OpenCvErrorCodes.PreprocessInvalid, exception.ErrorCode);
+            OpenCvPreprocessOptions options = OpenCvYoloPreprocessing.CreateOptions(profile);
+            Assert.IsFalse(options.ScaleUp);
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), profile.VisualProfile.Input.Name, options);
+            Assert.AreEqual(ImageTransformKind.Letterbox, input.Transform.Kind);
+            Assert.AreEqual(1f, input.Transform.ScaleX);
+            Assert.AreEqual(1f, input.Transform.ScaleY);
         }
 
         [TestMethod]
@@ -322,6 +569,39 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 var options = new OpenCvPreprocessOptions(new VisualSize(2, 2));
                 OpenCvVisualException exception = Assert.ThrowsExactly<OpenCvVisualException>(() => new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", options, cancellationToken: cancellation.Token));
                 Assert.AreEqual(OpenCvErrorCodes.Cancelled, exception.ErrorCode);
+            }
+        }
+
+        private static byte[] AddExifOrientation(byte[] jpeg, ushort orientation)
+        {
+            byte[] app1 =
+            {
+                0xff, 0xe1, 0x00, 0x22,
+                (byte)'E', (byte)'x', (byte)'i', (byte)'f', 0x00, 0x00,
+                (byte)'I', (byte)'I', 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00,
+                0x01, 0x00,
+                0x12, 0x01, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00,
+                (byte)(orientation & 0xff), (byte)(orientation >> 8), 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00
+            };
+            var result = new byte[jpeg.Length + app1.Length];
+            Buffer.BlockCopy(jpeg, 0, result, 0, 2);
+            Buffer.BlockCopy(app1, 0, result, 2, app1.Length);
+            Buffer.BlockCopy(jpeg, 2, result, 2 + app1.Length, jpeg.Length - 2);
+            return result;
+        }
+
+        private static void AssertPixelsRotated180(byte[] source, byte[] actual)
+        {
+            Assert.AreEqual(source.Length, actual.Length);
+            int pixels = source.Length / 3;
+            for (int destination = 0; destination < pixels; destination++)
+            {
+                int expectedOffset = (pixels - 1 - destination) * 3;
+                int actualOffset = destination * 3;
+                Assert.AreEqual(source[expectedOffset], actual[actualOffset]);
+                Assert.AreEqual(source[expectedOffset + 1], actual[actualOffset + 1]);
+                Assert.AreEqual(source[expectedOffset + 2], actual[actualOffset + 2]);
             }
         }
     }

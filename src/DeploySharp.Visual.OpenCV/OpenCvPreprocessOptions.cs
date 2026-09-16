@@ -120,7 +120,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OpenCvRgbColor? alphaBackground = null,
             OpenCvLetterboxRounding letterboxRounding = OpenCvLetterboxRounding.Nearest,
             OpenCvInterpolation interpolation = OpenCvInterpolation.Linear,
-            IEnumerable<float>? inputDivisors = null)
+            IEnumerable<float>? inputDivisors = null,
+            bool scaleUp = true)
         {
             if (!Enum.IsDefined(typeof(OpenCvResizeMode), resizeMode)) throw Invalid("The resize mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualColorOrder), colorOrder) || colorOrder == VisualColorOrder.Unspecified) throw Invalid("A concrete output color order is required.");
@@ -155,6 +156,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             AlphaBackground = alphaBackground ?? OpenCvRgbColor.Black;
             LetterboxRounding = letterboxRounding;
             Interpolation = interpolation;
+            ScaleUp = scaleUp;
         }
 
         /// <summary>Gets the model input size. / 获取模型输入尺寸。</summary>
@@ -185,6 +187,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public OpenCvLetterboxRounding LetterboxRounding { get; }
         /// <summary>Gets the resize interpolation. / 获取缩放插值。</summary>
         public OpenCvInterpolation Interpolation { get; }
+        /// <summary>Gets whether aspect-preserving geometry may enlarge a source image. / 获取保持宽高比几何是否允许放大源图。</summary>
+        public bool ScaleUp { get; }
 
         internal int ChannelCount => GetChannelCount(ColorOrder);
         internal float Mean(int channel) => _expandedMeans[channel];

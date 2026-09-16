@@ -192,6 +192,13 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(8, dynamicProfile.CalculateWidth(quad, TextOrientation.Clockwise90));
             TextRegion region = new TextRegion(0, .9f, quad.Polygon, quad);
             Assert.AreEqual(16, new TextCropRequest(region, fixedProfile).TargetWidth);
+
+            var boundedProfile = new TextCropProfile("tests.crop.dynamic-min", 48, OcrRecognitionWidthMode.Dynamic, 320, 320, minimumWidth: 48);
+            var narrow = new TextQuadrilateral(new PointF(0, 0), new PointF(5, 0), new PointF(5, 20), new PointF(0, 20), TextCornerOrder.TopLeftClockwise);
+            Assert.AreEqual(48, boundedProfile.CalculateWidth(narrow, TextOrientation.Degrees0));
+            var longLine = new TextQuadrilateral(new PointF(0, 0), new PointF(500, 0), new PointF(500, 20), new PointF(0, 20), TextCornerOrder.TopLeftClockwise);
+            Assert.AreEqual(320, boundedProfile.CalculateWidth(longLine, TextOrientation.Degrees0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TextCropProfile("tests.crop.invalid-min", 48, OcrRecognitionWidthMode.Dynamic, 32, 32, minimumWidth: 48));
         }
 
         [TestMethod]
@@ -374,12 +381,52 @@ namespace DeploySharp.Visual.Tests
             Assert.IsTrue(allocated >= 0);
         }
 
-        private static OcrFixture CreateOcrFixture()
+        [TestMethod]
+        public async Task WidthDiagnosticsSurviveBatchPaddingAndSourceOrderRestoration()
+        {
+            using OcrFixture fixture = CreateOcrFixture(dynamicWidth: true);
+            using var input = new FakeOcrImageInput();
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+            Assert.AreEqual(2, result.Regions.Count);
+            OcrRecognitionWidthInfo first = result.Regions[0].RecognitionWidth!.Value;
+            OcrRecognitionWidthInfo second = result.Regions[1].RecognitionWidth!.Value;
+            Assert.AreEqual(16L, first.NaturalWidth);
+            Assert.AreEqual(12L, second.NaturalWidth);
+            Assert.AreEqual(12, second.TargetWidth);
+            Assert.AreEqual(16, second.TensorWidth);
+            Assert.IsTrue(second.BatchPadded);
+            Assert.IsFalse(first.WidthClamped);
+            Assert.IsFalse(second.WidthClamped);
+            Assert.AreEqual(2, input.LastBatchSize);
+            var legacy = new OcrRegionResult(result.Regions[0].Region, result.Regions[0].Recognition);
+            Assert.IsNull(legacy.RecognitionWidth);
+        }
+
+        [TestMethod]
+        public async Task WidthRejectHappensBeforeCropAllocationAndRecognizerRunAndReleasesGate()
+        {
+            using OcrFixture fixture = CreateOcrFixture(recognitionWidth: 8, overflowMode: RecognitionOverflowMode.Reject);
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                var input = new FakeOcrImageInput();
+                OcrPipelineException error = await Assert.ThrowsExactlyAsync<OcrPipelineException>(() => fixture.Pipeline.RunAsync(input,
+                    new OcrExecutionOptions(disposeInputOnCompletion: true)));
+                Assert.AreEqual(VisualErrorCodes.OcrRecognitionWidthExceeded, error.ErrorCode);
+                Assert.AreEqual(OcrPipelineStage.CropAndBatch, error.Stage);
+                Assert.AreEqual(0, error.RegionIndex);
+                Assert.AreEqual(0, input.LastBatchSize);
+                Assert.AreEqual(1, input.DisposeCount);
+                Assert.AreEqual(0, fixture.RecognitionProvider.LastSession!.RunCount);
+                Assert.AreEqual(0, fixture.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
+            }
+        }
+
+        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false)
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .3f, maximumCandidates: 3, maximumRegions: 3));
             VisualModelProfile detectorProfile = DetectionProfile(detectorDecoder, TensorElementType.Float32, 3, "fake-detector");
             var recognizerDecoder = new GreedyCtcDecoder(new CtcOutputSchema("logits", CtcTensorLayout.BatchTimeClasses), new OcrCharacterSet("tests.abc", "1", "ABC"), new CtcDecoderOptions(0, applySoftmax: false));
-            VisualModelProfile recognizerProfile = RecognitionProfile(recognizerDecoder, TensorElementType.Float32, 2, 6, 4, format: "fake-recognizer");
+            VisualModelProfile recognizerProfile = RecognitionProfile(recognizerDecoder, TensorElementType.Float32, 2, 6, 4, format: "fake-recognizer", width: recognitionWidth);
             var detectionProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(detectorProfile, new TensorShape(1, 3, 4, 2)), _ => DetectionOutputs(), "fake-detector", new BackendId("fake-ocr-detector"));
             var recognitionProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(recognizerProfile, new TensorShape(2, 6, 4)), _ => RecognitionOutputs(), "fake-recognizer", new BackendId("fake-ocr-recognizer"));
             var registry = new BackendRegistry();
@@ -395,8 +442,9 @@ namespace DeploySharp.Visual.Tests
             var recognizerRequest = new BackendRequest(BackendCapabilities.TensorInference, recognitionProvider.Descriptor.Id);
             VisualProfileSelection detectorSelection = profiles.Select(detectorArtifact, registry, detectorRequest, VisualTaskId.TextDetection);
             VisualProfileSelection recognizerSelection = profiles.Select(recognizerArtifact, registry, recognizerRequest, VisualTaskId.TextRecognition);
-            var crop = new TextCropProfile("tests.crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16);
-            var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2), new SessionOptions(1), new SessionOptions(1));
+            var crop = new TextCropProfile("tests.crop", 8, dynamicWidth ? OcrRecognitionWidthMode.Dynamic : OcrRecognitionWidthMode.Fixed, recognitionWidth, recognitionWidth)
+                .WithRecognitionOverflowMode(overflowMode);
+            var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2, maximumRecognitionPaddingRatio: 2), new SessionOptions(1), new SessionOptions(1));
             return new OcrFixture(registry, detectionProvider, recognitionProvider, pipeline);
         }
 
@@ -408,11 +456,11 @@ namespace DeploySharp.Visual.Tests
                 Array.Empty<VisualLabel>(), decoder);
         }
 
-        private static VisualModelProfile RecognitionProfile(IVisualDecoder decoder, TensorElementType type, int batch, int time, int classes, CtcTensorLayout layout = CtcTensorLayout.BatchTimeClasses, string format = "fake")
+        private static VisualModelProfile RecognitionProfile(IVisualDecoder decoder, TensorElementType type, int batch, int time, int classes, CtcTensorLayout layout = CtcTensorLayout.BatchTimeClasses, string format = "fake", int width = 16)
         {
             TensorShape output = layout == CtcTensorLayout.BatchTimeClasses ? new TensorShape(batch, time, classes) : new TensorShape(time, batch, classes);
             return new VisualModelProfile("tests/text-recognition.v1", new ModelId("tests/text-recognizer"), VisualTaskId.TextRecognition, "1", format,
-                new VisualInputBinding("crops", TensorElementType.Float32, new TensorShape(batch, 3, 8, 16), VisualTensorLayout.Nchw, batch, batch),
+                new VisualInputBinding("crops", TensorElementType.Float32, new TensorShape(batch, 3, 8, width), VisualTensorLayout.Nchw, batch, batch),
                 new[] { new VisualOutputBinding("logits", type, output) }, Array.Empty<VisualLabel>(), decoder);
         }
 

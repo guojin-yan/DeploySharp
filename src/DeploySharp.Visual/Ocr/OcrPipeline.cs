@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 
@@ -58,7 +59,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class OcrPipelineOptions
     {
         /// <summary>Initializes OCR pipeline bounds. / 初始化 OCR Pipeline 边界。</summary>
-        public OcrPipelineOptions(int maximumConcurrency = 1, int maximumRegions = 128, int maximumRecognitionBatch = 16, long maximumSourcePixels = 128L * 1024L * 1024L, long maximumResultBytes = 16L * 1024L * 1024L, double maximumRecognitionPaddingRatio = 1.0)
+        public OcrPipelineOptions(int maximumConcurrency = 1, int maximumRegions = 128, int maximumRecognitionBatch = 16, long maximumSourcePixels = 128L * 1024L * 1024L, long maximumResultBytes = 16L * 1024L * 1024L, double maximumRecognitionPaddingRatio = 1.0, bool autoRotateVerticalText = false)
         {
             if (maximumConcurrency <= 0 || maximumRegions <= 0 || maximumRecognitionBatch <= 0 || maximumSourcePixels <= 0 || maximumResultBytes <= 0) throw new ArgumentOutOfRangeException(nameof(maximumConcurrency));
             if (double.IsNaN(maximumRecognitionPaddingRatio) || double.IsInfinity(maximumRecognitionPaddingRatio) || maximumRecognitionPaddingRatio < 1.0) throw new ArgumentOutOfRangeException(nameof(maximumRecognitionPaddingRatio));
@@ -68,6 +69,7 @@ namespace JYPPX.DeploySharp.Visual
             MaximumSourcePixels = maximumSourcePixels;
             MaximumResultBytes = maximumResultBytes;
             MaximumRecognitionPaddingRatio = maximumRecognitionPaddingRatio;
+            AutoRotateVerticalText = autoRotateVerticalText;
         }
 
         /// <summary>Gets maximum concurrent end-to-end calls. / 获取最大并发端到端调用数。</summary>
@@ -82,6 +84,8 @@ namespace JYPPX.DeploySharp.Visual
         public long MaximumResultBytes { get; }
         /// <summary>Gets maximum padded-width work divided by natural-width work when forming recognition batches. / 获取组成识别批次时填充后宽度工作量与自然宽度工作量的最大比值。</summary>
         public double MaximumRecognitionPaddingRatio { get; }
+        /// <summary>Gets whether tall text regions are rotated counter-clockwise before recognition. / 获取是否在识别前将高宽比明显的竖排文本区域逆时针旋转。</summary>
+        public bool AutoRotateVerticalText { get; }
     }
 
     /// <summary>Controls one OCR call without changing reusable pipeline configuration. / 控制一次 OCR 调用而不更改可复用 Pipeline 配置。</summary>
@@ -288,42 +292,50 @@ namespace JYPPX.DeploySharp.Visual
 
                     var orientationDuration = TimeSpan.Zero;
                     IReadOnlyList<TextRegion> regions = detection.Regions;
-                    if (_regionOrientation != null)
+                    if (_regionOrientation != null || _options.AutoRotateVerticalText)
                     {
                         stage = OcrPipelineStage.OrientationClassification;
                         var orientationRequests = new List<IndexedRequest>(detection.Regions.Count);
+                        var oriented = new TextRegion[detection.Regions.Count];
                         for (int index = 0; index < detection.Regions.Count; index++)
                         {
                             operationToken.ThrowIfCancellationRequested();
                             TextRegion region = detection.Regions[index];
                             regionIndex = region.SourceIndex;
-                            orientationRequests.Add(new IndexedRequest(index, new TextCropRequest(region, _orientationCropProfile ?? throw Failure("The per-region orientation crop profile is missing.", stage, regionIndex: regionIndex))));
+                            if (_options.AutoRotateVerticalText && IsVerticalTextRegion(region))
+                                oriented[index] = WithVerticalOrientation(region);
+                            else if (_regionOrientation != null)
+                                orientationRequests.Add(new IndexedRequest(index, new TextCropRequest(region, _orientationCropProfile ?? throw Failure("The per-region orientation crop profile is missing.", stage, regionIndex: regionIndex))));
+                            else
+                                oriented[index] = region;
                         }
                         regionIndex = null;
-                        var orientationWatch = Stopwatch.StartNew();
-                        List<OcrBatchDescriptor> orientationBatches = CreateBatches(orientationRequests, _regionOrientation.Selection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(_regionOrientation.Selection), 1.0, operationToken);
-                        try
+                        if (_regionOrientation != null && orientationRequests.Count != 0)
                         {
-                            BatchExecution<IReadOnlyList<OcrOrientationResult>>[] orientationResults = await RunBatchesAsync(input, _regionOrientation.Selection.Profile.Input.Name, orientationBatches, _regionOrientation.MaximumConcurrency, (prepared, token) => _regionOrientation.RunBatchAsync(prepared, new VisualExecutionOptions(correlationId: execution.CorrelationId), token), operationToken).ConfigureAwait(false);
-                            var oriented = new TextRegion[detection.Regions.Count];
-                            for (int batchIndex = 0; batchIndex < orientationBatches.Count; batchIndex++)
+                            var orientationWatch = Stopwatch.StartNew();
+                            List<OcrBatchDescriptor> orientationBatches = CreateBatches(orientationRequests, _regionOrientation.Selection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(_regionOrientation.Selection), 1.0, operationToken);
+                            try
                             {
-                                OcrBatchDescriptor batch = orientationResults[batchIndex].Batch;
-                                IReadOnlyList<OcrOrientationResult> batchResults = orientationResults[batchIndex].Result;
-                                if (batchResults.Count != batch.Requests.Count) throw Failure("Orientation result count does not match submitted batch.", stage, _regionOrientation.Selection.Profile.ProfileId);
-                                for (int itemIndex = 0; itemIndex < batch.ActualCount; itemIndex++)
+                                BatchExecution<IReadOnlyList<OcrOrientationResult>>[] orientationResults = await RunBatchesAsync(input, _regionOrientation.Selection.Profile.Input.Name, orientationBatches, _regionOrientation.MaximumConcurrency, (prepared, token) => _regionOrientation.RunBatchAsync(prepared, new VisualExecutionOptions(correlationId: execution.CorrelationId), token), operationToken).ConfigureAwait(false);
+                                for (int batchIndex = 0; batchIndex < orientationBatches.Count; batchIndex++)
                                 {
-                                    IndexedRequest request = batch.Requests[itemIndex];
-                                    OcrOrientationResult orientationResult = batchResults[itemIndex];
-                                    TextRegion region = detection.Regions[request.Position];
-                                    if (orientationResult.Rejected && _orientationRejectionPolicy == OcrOrientationRejectionPolicy.Fail) throw new OcrPipelineException(VisualErrorCodes.OcrOrientationCapabilityUnavailable, "A text-region orientation result was rejected by its confidence threshold.", stage, profileId: orientationResult.ProfileId, regionIndex: region.SourceIndex, backendId: orientationResult.BackendId, modelId: orientationResult.ModelId, technicalDetails: "confidence=" + orientationResult.Confidence.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
-                                    oriented[request.Position] = WithOrientation(region, orientationResult);
+                                    OcrBatchDescriptor batch = orientationResults[batchIndex].Batch;
+                                    IReadOnlyList<OcrOrientationResult> batchResults = orientationResults[batchIndex].Result;
+                                    if (batchResults.Count != batch.Requests.Count) throw Failure("Orientation result count does not match submitted batch.", stage, _regionOrientation.Selection.Profile.ProfileId);
+                                    for (int itemIndex = 0; itemIndex < batch.ActualCount; itemIndex++)
+                                    {
+                                        IndexedRequest request = batch.Requests[itemIndex];
+                                        OcrOrientationResult orientationResult = batchResults[itemIndex];
+                                        TextRegion region = detection.Regions[request.Position];
+                                        if (orientationResult.Rejected && _orientationRejectionPolicy == OcrOrientationRejectionPolicy.Fail) throw new OcrPipelineException(VisualErrorCodes.OcrOrientationCapabilityUnavailable, "A text-region orientation result was rejected by its confidence threshold.", stage, profileId: orientationResult.ProfileId, regionIndex: region.SourceIndex, backendId: orientationResult.BackendId, modelId: orientationResult.ModelId, technicalDetails: "confidence=" + orientationResult.Confidence.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                                        oriented[request.Position] = WithOrientation(region, orientationResult);
+                                    }
                                 }
                             }
-                            regions = Array.AsReadOnly(oriented);
+                            finally { orientationWatch.Stop(); }
+                            orientationDuration = orientationWatch.Elapsed;
                         }
-                        finally { orientationWatch.Stop(); }
-                        orientationDuration = orientationWatch.Elapsed;
+                        regions = Array.AsReadOnly(oriented);
                     }
 
                     stage = OcrPipelineStage.CropAndBatch;
@@ -336,6 +348,7 @@ namespace JYPPX.DeploySharp.Visual
                     }
                     regionIndex = null;
                     var recognized = new RecognizedText[regions.Count];
+                    var recognitionWidths = new OcrRecognitionWidthInfo[regions.Count];
                     var cropWatch = Stopwatch.StartNew();
                     List<OcrBatchDescriptor> recognitionBatches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, operationToken);
                     cropWatch.Stop();
@@ -360,6 +373,7 @@ namespace JYPPX.DeploySharp.Visual
                             {
                                 IndexedRequest request = prepared.Requests[index];
                                 recognized[request.Position] = batch.Items[index].WithSourceRegionIndex(request.Request.Region.SourceIndex);
+                                recognitionWidths[request.Position] = prepared.Crops[index].WidthInfo;
                             }
                         }
                     }
@@ -375,8 +389,8 @@ namespace JYPPX.DeploySharp.Visual
                     {
                         operationToken.ThrowIfCancellationRequested();
                         RecognizedText text = recognized[index] ?? throw Failure("OCR recognition did not produce every detected region.", stage, regionIndex: regions[index].SourceIndex);
-                        results.Add(new OcrRegionResult(regions[index], text));
-                        resultBytes = checked(resultBytes + EncodingBytes(text.Text) + checked((long)text.Tokens.Count * 40) + checked((long)regions[index].Polygon.Vertices.Count * 8));
+                        results.Add(new OcrRegionResult(regions[index], text, recognitionWidths[index]));
+                        resultBytes = checked(resultBytes + 32L + EncodingBytes(text.Text) + checked((long)text.Tokens.Count * 40) + checked((long)regions[index].Polygon.Vertices.Count * 8));
                         if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
                     }
                     mergeWatch.Stop();
@@ -558,6 +572,32 @@ namespace JYPPX.DeploySharp.Visual
             metadata.Add(new KeyValuePair<string, string>("ocr.orientation.rejected", orientation.Rejected ? "true" : "false"));
             metadata.Add(new KeyValuePair<string, string>("ocr.orientation.canonicalSha256", orientation.CanonicalSha256));
             return new TextRegion(region.SourceIndex, region.Score, region.Polygon, region.CropQuadrilateral, orientation.Orientation, region.AngleRadians, region.Language, region.Script, region.ExternalId, metadata);
+        }
+
+        private static bool IsVerticalTextRegion(TextRegion region)
+        {
+            TextQuadrilateral? corners = region.CropQuadrilateral;
+            if (corners == null) return false;
+            double width = Math.Max(Distance(corners.TopLeft, corners.TopRight), Distance(corners.BottomLeft, corners.BottomRight));
+            double height = Math.Max(Distance(corners.TopLeft, corners.BottomLeft), Distance(corners.TopRight, corners.BottomRight));
+            return width > 0 && height >= width * 1.5;
+        }
+
+        private static TextRegion WithVerticalOrientation(TextRegion region)
+        {
+            var metadata = new List<KeyValuePair<string, string>>(region.Metadata.Count + 3);
+            foreach (KeyValuePair<string, string> pair in region.Metadata) metadata.Add(pair);
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.strategy", "vertical-aspect-ratio"));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.degrees", "counter-clockwise-90"));
+            metadata.Add(new KeyValuePair<string, string>("ocr.orientation.threshold", "height-width-ratio>=1.5"));
+            return new TextRegion(region.SourceIndex, region.Score, region.Polygon, region.CropQuadrilateral, TextOrientation.CounterClockwise90, region.AngleRadians, region.Language, region.Script, region.ExternalId, metadata);
+        }
+
+        private static double Distance(PointF first, PointF second)
+        {
+            double x = second.X - first.X;
+            double y = second.Y - first.Y;
+            return Math.Sqrt((x * x) + (y * y));
         }
 
         private static long EncodingBytes(string value) => Encoding.UTF8.GetByteCount(value);

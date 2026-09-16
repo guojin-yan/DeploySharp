@@ -14,6 +14,7 @@ using JYPPX.OpenCvSharp.Core;
 using JYPPX.OpenCvSharp.ImgCodecs;
 using JYPPX.OpenCvSharp.ImgProc;
 using ImageCodecs = JYPPX.OpenCvSharp.ImgCodecs.Cv2;
+using CoreOperations = JYPPX.OpenCvSharp.Core.Cv2;
 using ImageProcessing = JYPPX.OpenCvSharp.ImgProc.Cv2;
 
 namespace JYPPX.DeploySharp.Visual.OpenCV
@@ -53,6 +54,156 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         {
             return Create(OpenCvImageSource.FromFile(path), inputName, options, inputId, cancellationToken, auxiliaryInputs);
         }
+
+        /// <summary>Creates a prepared tensor from one axis-aligned source ROI. The image is decoded once and the ROI is exposed as an OpenCV SubMat view. / 根据一个源图轴对齐 ROI 创建张量；图像只解码一次，ROI 使用 OpenCV SubMat 视图。</summary>
+        /// <remarks>Rotated and polygon ROI input requires an explicit affine or perspective contract and is intentionally not approximated by this method. / 旋转和多边形 ROI 需要显式仿射或透视合同，本方法不会静默近似为外接矩形。</remarks>
+        public PreparedVisualInput CreateRectangleRoi(OpenCvImageSource source, RectangleF crop, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (string.IsNullOrWhiteSpace(inputName)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "An input tensor name is required.");
+            ObserveCancellation(cancellationToken);
+            OpenCvRuntimePreflight.Check();
+            try
+            {
+                using (Mat decoded = OpenCvImageLoader.Decode(source))
+                {
+                    OpenCvImageLoader.Validate(decoded, source);
+                    return CreateRectangleRoiFromDecoded(decoded, crop, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+                }
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The OpenCV ROI operation was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while preparing the ROI tensor.", exception); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The ROI tensor could not be prepared.", exception); }
+        }
+
+ #if !DEPLOYSHARP_LEGACY_NO_ROI
+        /// <summary>Creates a prepared tensor from a source-space rectangle, polygon, or binary-mask ROI. / 根据源图空间矩形、多边形或二值 Mask ROI 创建已准备张量。</summary>
+        /// <remarks>Polygon and mask pixels outside the ROI are filled with zero before model preprocessing. Rotated rectangles require the perspective-aware input path and are rejected here instead of being approximated by their bounds. / 多边形和 Mask ROI 外的像素会在模型预处理前填零；旋转矩形需要支持透视的输入路径，本方法会拒绝该类型而不是以外接框近似。</remarks>
+        public PreparedVisualInput CreateRoi(OpenCvImageSource source, IVisualRoiGeometry geometry, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            return CreateRoiCore(source, geometry, inputName, options, inputId, cancellationToken, auxiliaryInputs, false);
+        }
+
+        private PreparedVisualInput CreateRoiCore(OpenCvImageSource source, IVisualRoiGeometry geometry, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs, bool usePerspective)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (geometry == null) throw new ArgumentNullException(nameof(geometry));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (string.IsNullOrWhiteSpace(inputName)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "An input tensor name is required.");
+            ObserveCancellation(cancellationToken);
+            OpenCvRuntimePreflight.Check();
+            try
+            {
+                using (Mat decoded = OpenCvImageLoader.Decode(source))
+                {
+                    OpenCvImageLoader.Validate(decoded, source);
+                    return CreateRoiFromDecoded(decoded, geometry, inputName, options, inputId, cancellationToken, auxiliaryInputs, usePerspective);
+                }
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The OpenCV ROI operation was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while preparing the ROI tensor.", exception, "geometry=" + geometry.Kind); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The ROI tensor could not be prepared.", exception, "geometry=" + geometry.Kind); }
+        }
+
+        /// <summary>Creates a prepared tensor by perspective-warping four ordered source corners into a rectangular model input. / 将四个有序源图角点透视变换为矩形模型输入并创建张量。</summary>
+        /// <remarks>The corner order must be clockwise or counter-clockwise without crossing edges. The returned transform is projective and preserves the exact source-to-model mapping for point, box, OBB, pose, and OCR projection. / 角点必须按顺时针或逆时针排列且边不相交；返回的变换为单应变换，可为点、框、OBB、Pose 和 OCR 投影保留精确源图到模型映射。</remarks>
+        public PreparedVisualInput CreateQuadrilateralRoi(OpenCvImageSource source, IReadOnlyList<PointF> quadrilateral, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (quadrilateral == null) throw new ArgumentNullException(nameof(quadrilateral));
+            if (quadrilateral.Count != 4) throw new ArgumentException("A quadrilateral ROI requires exactly four ordered points.", nameof(quadrilateral));
+            return CreateRoiCore(source, new PolygonRoiGeometry(quadrilateral), inputName, options, inputId, cancellationToken, auxiliaryInputs, true);
+        }
+
+        /// <summary>Creates a prepared tensor from a rotated rectangle ROI using an exact perspective warp. / 使用精确透视变换根据旋转矩形 ROI 创建张量。</summary>
+        public PreparedVisualInput CreateRotatedRectangleRoi(OpenCvImageSource source, RotatedRectangleRoiGeometry geometry, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (geometry == null) throw new ArgumentNullException(nameof(geometry));
+            return CreateRoiCore(source, geometry, inputName, options, inputId, cancellationToken, auxiliaryInputs, true);
+        }
+
+        /// <summary>Creates one true NCHW or NHWC batch from multiple ROIs after decoding the source image once. / 在源图只解码一次后，将多个 ROI 直接打包为真正的 NCHW 或 NHWC Batch。</summary>
+        /// <remarks>Every ROI is prepared independently so its geometry remains reversible in <see cref="PreparedVisualInput.BatchFrames"/>. The options batch size is ignored and the number of geometries determines the resulting batch dimension. CHW/HWC unbatched layouts are rejected. / 每个 ROI 独立准备，因此其几何会在 <see cref="PreparedVisualInput.BatchFrames"/> 中保持可逆；options 的 BatchSize 被忽略，由 geometry 数量决定 Batch 维度；CHW/HWC 无 Batch 布局会被拒绝。</remarks>
+        public PreparedVisualInput CreateRoiBatch(OpenCvImageSource source, IReadOnlyList<IVisualRoiGeometry> geometries, string inputName, OpenCvPreprocessOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (geometries == null) throw new ArgumentNullException(nameof(geometries));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (geometries.Count == 0) throw new ArgumentException("At least one ROI geometry is required.", nameof(geometries));
+            if (geometries.Count > 4096) throw new ArgumentOutOfRangeException(nameof(geometries));
+            if (options.Layout != VisualTensorLayout.Nchw && options.Layout != VisualTensorLayout.Nhwc) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "ROI batches require NCHW or NHWC layout.");
+            for (int index = 0; index < geometries.Count; index++) if (geometries[index] == null) throw new ArgumentException("ROI geometries cannot contain null values.", nameof(geometries));
+            ObserveCancellation(cancellationToken);
+            OpenCvRuntimePreflight.Check();
+            try
+            {
+                using (Mat decoded = OpenCvImageLoader.Decode(source))
+                {
+                    OpenCvImageLoader.Validate(decoded, source);
+                    return CreateRoiBatchFromDecodedPublic(decoded, geometries, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+                }
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The OpenCV ROI batch operation was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while preparing the ROI batch.", exception); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The ROI batch could not be prepared.", exception); }
+        }
+
+ #endif
+
+ #if !DEPLOYSHARP_LEGACY_NO_ROI
+
+        /// <summary>Decodes a source once for repeated or concurrent ROI preparation. / 将源图解码一次，用于重复或并发 ROI 准备。</summary>
+        public OpenCvDecodedRoiImage DecodeForRois(OpenCvImageSource source, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            ObserveCancellation(cancellationToken);
+            OpenCvRuntimePreflight.Check();
+            Mat? decoded = null;
+            try
+            {
+                decoded = OpenCvImageLoader.Decode(source);
+                OpenCvImageLoader.Validate(decoded, source);
+                var result = new OpenCvDecodedRoiImage(decoded, source.Sha256);
+                decoded = null;
+                return result;
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The OpenCV ROI image decode was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.DecodeFailed, "OpenCV failed to decode the ROI source image.", exception); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.DecodeFailed, "The ROI source image could not be decoded.", exception); }
+            finally { decoded?.Dispose(); }
+        }
+
+ #endif
+
+        /// <summary>Creates a prepared input from the shared backend-neutral preprocessing contract. / 根据共享的后端无关预处理合同创建已准备输入。</summary>
+        public PreparedVisualInput Create(OpenCvImageSource source, string inputName, VisualPreprocessingOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            return Create(source, inputName, options.ToOpenCvOptions(), inputId, cancellationToken, auxiliaryInputs);
+        }
+
+        /// <summary>Creates a prepared input from a local file and the shared backend-neutral preprocessing contract. / 根据本地文件和共享的后端无关预处理合同创建已准备输入。</summary>
+        public PreparedVisualInput CreateFromFile(string path, string inputName, VisualPreprocessingOptions options, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            return Create(OpenCvImageSource.FromFile(path), inputName, options, inputId, cancellationToken, auxiliaryInputs);
+        }
+
+        /// <summary>Creates an input directly from a profile's preprocessing contract. / 直接根据 Profile 的预处理合同创建输入。</summary>
+        public PreparedVisualInput Create(OpenCvImageSource source, VisualModelProfile profile, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            VisualPreprocessingOptions effective = profile.Preprocessing ?? throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The visual profile does not declare common image preprocessing; use WithPreprocessing or its specialized input factory.", technicalDetails: "profileId=" + profile.ProfileId);
+            return Create(source, profile.Input.Name, effective, inputId, cancellationToken, auxiliaryInputs);
+        }
+
+        /// <summary>Creates an input from a local file and a profile's preprocessing contract. / 根据本地文件及 Profile 的预处理合同创建输入。</summary>
+        public PreparedVisualInput CreateFromFile(string path, VisualModelProfile profile, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
+            => Create(OpenCvImageSource.FromFile(path), profile, inputId, cancellationToken, auxiliaryInputs);
 
         internal static PreparedVisualInput CreateFromDecoded(Mat decoded, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
@@ -100,6 +251,226 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 // 临时颜色转换 Mat 仅由本次调用拥有；解码 Mat 仍由调用方拥有。
                 convertedColor?.Dispose();
             }
+        }
+
+        internal static PreparedVisualInput CreateRectangleRoiFromDecoded(Mat decoded, RectangleF crop, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs = null)
+        {
+            if (decoded == null) throw new ArgumentNullException(nameof(decoded));
+            Rect roi = ToClippedRect(crop, decoded.Cols, decoded.Rows);
+            using (Mat view = decoded.SubMat(roi))
+            using (PreparedVisualInput local = CreateFromDecoded(view, inputName, options, inputId, cancellationToken, auxiliaryInputs))
+            {
+                ImageTransform transform = ComposeCropTransform(new VisualSize(decoded.Cols, decoded.Rows), roi, local.Transform);
+                return new PreparedVisualInput(inputName, local.Tensor, new VisualSize(decoded.Cols, decoded.Rows), local.ModelSize, local.BatchSize, local.Layout, transform, local.Preprocessing, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
+            }
+        }
+
+ #if !DEPLOYSHARP_LEGACY_NO_ROI
+        internal static PreparedVisualInput CreateRoiFromDecoded(Mat decoded, IVisualRoiGeometry geometry, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs = null, bool usePerspective = false)
+        {
+            if (decoded == null) throw new ArgumentNullException(nameof(decoded));
+            if (geometry == null) throw new ArgumentNullException(nameof(geometry));
+            if (geometry is RectangleRoiGeometry rectangle) return CreateRectangleRoiFromDecoded(decoded, rectangle.Rectangle, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+            if (geometry is PolygonRoiGeometry polygon)
+            {
+                if (usePerspective && polygon.Points.Count == 4) return CreatePerspectiveRoiFromDecoded(decoded, polygon.Points, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+                return CreateMaskedRoiFromDecoded(decoded, polygon, null, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+            }
+            if (geometry is MaskRoiGeometry mask)
+            {
+                if (mask.SourceSize != new VisualSize(decoded.Cols, decoded.Rows)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI mask dimensions must match the decoded source image.");
+                byte[] values = mask.ToArray();
+                Rect crop = FindMaskBounds(values, mask.SourceSize);
+                return CreateMaskedRoiFromDecoded(decoded, mask, new MaskRegion(values, mask.SourceSize, crop), inputName, options, inputId, cancellationToken, auxiliaryInputs);
+            }
+            if (geometry is RotatedRectangleRoiGeometry rotated && usePerspective) return CreatePerspectiveRoiFromDecoded(decoded, rotated.Points, inputName, options, inputId, cancellationToken, auxiliaryInputs);
+            throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI geometry requires a perspective-aware OpenCV input path.", technicalDetails: "geometry=" + geometry.Kind);
+        }
+
+        internal static PreparedVisualInput CreateRoiBatchFromDecodedPublic(Mat decoded, IReadOnlyList<IVisualRoiGeometry> geometries, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs)
+        {
+            var singleOptions = new OpenCvPreprocessOptions(options.ModelSize, options.ResizeMode, options.ColorOrder, options.AlphaMode, options.Means, options.StandardDeviations, options.Layout, 1, options.OutputType, options.PaddingColor, options.AlphaBackground, options.LetterboxRounding, options.Interpolation, options.InputDivisors, options.ScaleUp);
+            var prepared = new PreparedVisualInput[geometries.Count];
+            try
+            {
+                for (int index = 0; index < geometries.Count; index++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    prepared[index] = CreateRoiFromDecoded(decoded, geometries[index], inputName, singleOptions, inputId, cancellationToken, auxiliaryInputs, geometries[index] is RotatedRectangleRoiGeometry);
+                    if (prepared[index].BatchSize != 1 || prepared[index].Layout != options.Layout) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Every ROI batch row must produce one image with the requested layout.");
+                    if (prepared[index].Tensor.Shape.Rank != 4) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Every ROI batch row must produce a rank-4 tensor.");
+                }
+
+                int rowLength = checked((int)prepared[0].Tensor.Length);
+                for (int index = 1; index < prepared.Length; index++) if (prepared[index].Tensor.Length != rowLength || !prepared[index].Tensor.Shape.Equals(prepared[0].Tensor.Shape)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "ROI batch rows must have identical tensor shapes.");
+                TensorShape rowShape = prepared[0].Tensor.Shape;
+                long[] batchDimensions = rowShape.ToArray();
+                batchDimensions[0] = geometries.Count;
+                ITensor tensor;
+                if (options.OutputType == OpenCvOutputType.UInt8)
+                {
+                    var values = new byte[checked(rowLength * geometries.Count)];
+                    for (int index = 0; index < prepared.Length; index++) Array.Copy((byte[])prepared[index].Tensor.Buffer, 0, values, index * rowLength, rowLength);
+                    tensor = new Tensor<byte>(new TensorShape(batchDimensions), values, TensorBufferOwnership.Transfer);
+                }
+                else
+                {
+                    var values = new float[checked(rowLength * geometries.Count)];
+                    for (int index = 0; index < prepared.Length; index++) Array.Copy((float[])prepared[index].Tensor.Buffer, 0, values, index * rowLength, rowLength);
+                    tensor = new Tensor<float>(new TensorShape(batchDimensions), values, TensorBufferOwnership.Transfer);
+                }
+
+                var frames = new List<VisualInputFrame>(prepared.Length);
+                for (int index = 0; index < prepared.Length; index++) frames.Add(prepared[index].BatchFrames[0]);
+                return new PreparedVisualInput(inputName, tensor, new VisualSize(decoded.Cols, decoded.Rows), options.ModelSize, geometries.Count, options.Layout, frames[0].Transform, prepared[0].Preprocessing, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs, frames);
+            }
+            finally
+            {
+                for (int index = 0; index < prepared.Length; index++) prepared[index]?.Dispose();
+            }
+        }
+
+        private static PreparedVisualInput CreatePerspectiveRoiFromDecoded(Mat decoded, IReadOnlyList<PointF> points, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs)
+        {
+            if (points == null || points.Count != 4) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A perspective ROI requires four ordered points.");
+            float widthTop = Distance(points[0], points[1]);
+            float widthBottom = Distance(points[3], points[2]);
+            float heightLeft = Distance(points[0], points[3]);
+            float heightRight = Distance(points[1], points[2]);
+            int cropWidth = Math.Max(2, checked((int)Math.Ceiling(Math.Max(widthTop, widthBottom))));
+            int cropHeight = Math.Max(2, checked((int)Math.Ceiling(Math.Max(heightLeft, heightRight))));
+            Point2f[] sourcePoints = { ToNative(points[0]), ToNative(points[1]), ToNative(points[2]), ToNative(points[3]) };
+            Point2f[] targetPoints = { new Point2f(0, 0), new Point2f(cropWidth - 1, 0), new Point2f(cropWidth - 1, cropHeight - 1), new Point2f(0, cropHeight - 1) };
+            using (Mat perspective = ImageProcessing.GetPerspectiveTransform(sourcePoints, targetPoints, DecompTypes.LU))
+            using (var warped = new Mat())
+            {
+                ObserveCancellation(cancellationToken);
+                ImageProcessing.WarpPerspective(decoded, warped, perspective, new Size(cropWidth, cropHeight), ToInterpolation(options.Interpolation == OpenCvInterpolation.PillowBicubic ? OpenCvInterpolation.Cubic : options.Interpolation), BorderTypes.Constant, PaddingScalar(options.PaddingColor, decoded.Channels));
+                using (PreparedVisualInput local = CreateFromDecoded(warped, inputName, options, inputId, cancellationToken, auxiliaryInputs))
+                {
+                    ImageTransform roiTransform = ImageTransform.Perspective(new VisualSize(decoded.Cols, decoded.Rows), new VisualSize(cropWidth, cropHeight), points, new[] { new PointF(0, 0), new PointF(cropWidth, 0), new PointF(cropWidth, cropHeight), new PointF(0, cropHeight) });
+                    ImageTransform transform = ImageTransform.Compose(roiTransform, local.Transform);
+                    return new PreparedVisualInput(inputName, local.Tensor, new VisualSize(decoded.Cols, decoded.Rows), local.ModelSize, local.BatchSize, local.Layout, transform, local.Preprocessing, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
+                }
+            }
+        }
+
+        private static Point2f ToNative(PointF point) => new Point2f(point.X, point.Y);
+
+        private static float Distance(PointF first, PointF second)
+        {
+            float x = second.X - first.X;
+            float y = second.Y - first.Y;
+            return (float)Math.Sqrt((x * x) + (y * y));
+        }
+
+        private static PreparedVisualInput CreateMaskedRoiFromDecoded(Mat decoded, IVisualRoiGeometry geometry, MaskRegion? maskRegion, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs)
+        {
+            Rect roi = maskRegion.HasValue ? maskRegion.Value.Crop : ToClippedRect(geometry.Bounds, decoded.Cols, decoded.Rows);
+            using (Mat view = decoded.SubMat(roi))
+            using (var nativeMask = new Mat(roi.Height, roi.Width, MatType.CV_8UC1, new Scalar(0)))
+            using (var masked = new Mat(roi.Height, roi.Width, decoded.Type, new Scalar(0)))
+            {
+                if (maskRegion.HasValue) CopyMaskRegion(nativeMask, maskRegion.Value, cancellationToken);
+                else FillPolygonMask(nativeMask, geometry.Points, roi);
+                ObserveCancellation(cancellationToken);
+                CoreOperations.CopyTo(view, masked, nativeMask);
+                using (PreparedVisualInput local = CreateFromDecoded(masked, inputName, options, inputId, cancellationToken, auxiliaryInputs))
+                {
+                    ImageTransform transform = ComposeCropTransform(new VisualSize(decoded.Cols, decoded.Rows), roi, local.Transform);
+                    return new PreparedVisualInput(inputName, local.Tensor, new VisualSize(decoded.Cols, decoded.Rows), local.ModelSize, local.BatchSize, local.Layout, transform, local.Preprocessing, inputId, PreparedInputOwnership.Borrowed, null, auxiliaryInputs);
+                }
+            }
+        }
+
+        private static void FillPolygonMask(Mat mask, IReadOnlyList<PointF> points, Rect crop)
+        {
+            var nativePoints = new Point[points.Count];
+            for (int index = 0; index < points.Count; index++)
+            {
+                int x = checked((int)Math.Round(points[index].X - crop.X));
+                int y = checked((int)Math.Round(points[index].Y - crop.Y));
+                nativePoints[index] = new Point(x, y);
+            }
+            ImageProcessing.FillPoly(mask, nativePoints, new Scalar(255), LineTypes.Line8, 0, null);
+        }
+
+        private static Rect FindMaskBounds(byte[] values, VisualSize size)
+        {
+            int left = size.Width;
+            int top = size.Height;
+            int right = -1;
+            int bottom = -1;
+            for (int y = 0; y < size.Height; y++)
+            {
+                int row = y * size.Width;
+                for (int x = 0; x < size.Width; x++)
+                {
+                    if (values[row + x] == 0) continue;
+                    if (x < left) left = x;
+                    if (x > right) right = x;
+                    if (y < top) top = y;
+                    if (y > bottom) bottom = y;
+                }
+            }
+            if (right < left || bottom < top) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI mask must contain at least one selected pixel.");
+            return new Rect(left, top, right - left + 1, bottom - top + 1);
+        }
+
+        private static void CopyMaskRegion(Mat destination, MaskRegion region, CancellationToken cancellationToken)
+        {
+            ulong step = destination.Step.ToUInt64();
+            if (step < (ulong)region.Crop.Width || step > int.MaxValue) throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV reported an unsupported ROI mask stride.");
+            var row = new byte[region.Crop.Width];
+            for (int y = 0; y < region.Crop.Height; y++)
+            {
+                if ((y & 31) == 0) ObserveCancellation(cancellationToken);
+                Buffer.BlockCopy(region.Values, ((region.Crop.Y + y) * region.SourceSize.Width) + region.Crop.X, row, 0, row.Length);
+                Marshal.Copy(row, 0, IntPtr.Add(destination.Data, checked(y * (int)step)), row.Length);
+            }
+        }
+
+        private readonly struct MaskRegion
+        {
+            internal MaskRegion(byte[] values, VisualSize sourceSize, Rect crop)
+            {
+                Values = values;
+                SourceSize = sourceSize;
+                Crop = crop;
+            }
+
+            internal byte[] Values { get; }
+            internal VisualSize SourceSize { get; }
+            internal Rect Crop { get; }
+        }
+ #endif
+
+        private static Rect ToClippedRect(RectangleF crop, int width, int height)
+        {
+            if (float.IsNaN(crop.X) || float.IsNaN(crop.Y) || float.IsNaN(crop.Width) || float.IsNaN(crop.Height) || float.IsInfinity(crop.X) || float.IsInfinity(crop.Y) || float.IsInfinity(crop.Width) || float.IsInfinity(crop.Height) || crop.Width <= 0 || crop.Height <= 0)
+            {
+                throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI rectangle must be finite and non-empty.");
+            }
+            if (crop.Right <= 0 || crop.Bottom <= 0 || crop.X >= width || crop.Y >= height) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI rectangle does not intersect the source image.");
+
+            int left = Math.Max(0, Math.Min(width - 1, (int)Math.Floor(crop.X)));
+            int top = Math.Max(0, Math.Min(height - 1, (int)Math.Floor(crop.Y)));
+            int right = Math.Max(left + 1, Math.Min(width, checked((int)Math.Ceiling(crop.Right))));
+            int bottom = Math.Max(top + 1, Math.Min(height, checked((int)Math.Ceiling(crop.Bottom))));
+            if (right <= left || bottom <= top) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI rectangle does not intersect the source image.");
+            return new Rect(left, top, right - left, bottom - top);
+        }
+
+        private static ImageTransform ComposeCropTransform(VisualSize sourceSize, Rect crop, ImageTransform local)
+        {
+            return new ImageTransform(
+                ImageTransformKind.Custom,
+                sourceSize,
+                local.ModelSize,
+                local.ScaleX,
+                local.ScaleY,
+                local.OffsetX - (crop.X * local.ScaleX),
+                local.OffsetY - (crop.Y * local.ScaleY));
         }
 
         private static Mat PrepareColorForGeometry(Mat source, OpenCvPreprocessOptions options, out Mat? converted)
@@ -182,6 +553,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             }
 
             double scale = Math.Min((double)options.ModelSize.Width / sourceSize.Width, (double)options.ModelSize.Height / sourceSize.Height);
+            if (!options.ScaleUp) scale = Math.Min(1d, scale);
             int resizedWidth = Math.Max(1, Math.Min(options.ModelSize.Width, RoundLetterboxDimension(sourceSize.Width * scale, options.LetterboxRounding)));
             int resizedHeight = Math.Max(1, Math.Min(options.ModelSize.Height, RoundLetterboxDimension(sourceSize.Height * scale, options.LetterboxRounding)));
             bool bottomRight = options.ResizeMode == OpenCvResizeMode.LongestSidePadBottomRight;

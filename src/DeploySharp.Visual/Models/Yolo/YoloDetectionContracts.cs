@@ -140,13 +140,16 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
     public sealed class YoloPreprocessingContract
     {
         /// <summary>Initializes a centered RGB NCHW YOLO preprocessing contract. / 初始化居中的 RGB NCHW YOLO 预处理合同。</summary>
-        public YoloPreprocessingContract(VisualSize modelSize, int stride = 32, byte paddingValue = 114, bool scaleUp = true)
+        public YoloPreprocessingContract(VisualSize modelSize, int stride = 32, byte paddingValue = 114, bool scaleUp = true, YoloImageResizeMode resizeMode = YoloImageResizeMode.Letterbox, VisualNormalizationOptions? normalization = null)
         {
             if (stride <= 0) throw new ArgumentOutOfRangeException(nameof(stride));
+            if (!Enum.IsDefined(typeof(YoloImageResizeMode), resizeMode)) throw new ArgumentOutOfRangeException(nameof(resizeMode));
             ModelSize = modelSize;
             Stride = stride;
             PaddingValue = paddingValue;
             ScaleUp = scaleUp;
+            ResizeMode = resizeMode;
+            Normalization = normalization ?? VisualNormalizationOptions.DivideByStandardDeviation(new[] { 255f });
         }
 
         /// <summary>Gets the static model image size. / 获取静态模型图像尺寸。</summary>
@@ -157,6 +160,10 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public byte PaddingValue { get; }
         /// <summary>Gets whether smaller source images may be enlarged. / 获取是否允许放大小源图。</summary>
         public bool ScaleUp { get; }
+        /// <summary>Gets the selected geometry operation. / 获取所选几何操作。</summary>
+        public YoloImageResizeMode ResizeMode { get; }
+        /// <summary>Gets the selected channel normalization. / 获取所选通道归一化。</summary>
+        public VisualNormalizationOptions Normalization { get; }
         /// <summary>Gets the fixed RGB color order. / 获取固定 RGB 颜色顺序。</summary>
         public VisualColorOrder ColorOrder => VisualColorOrder.Rgb;
         /// <summary>Gets the fixed NCHW tensor layout. / 获取固定 NCHW 张量布局。</summary>

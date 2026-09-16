@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual
@@ -398,6 +399,26 @@ namespace JYPPX.DeploySharp.Visual
                 ? tensorMask
                 : ResizeNearest(tensorMask, tensorWidth, tensorHeight, frame.ModelSize.Width, frame.ModelSize.Height, context.CancellationToken);
             if (Options.OutputSizeMode == SegmentationOutputSizeMode.Model) return modelMask;
+
+            if (frame.Transform.IsProjective)
+            {
+                var projective = new ushort[checked(target.Width * target.Height)];
+                ushort fillProjective = (ushort)Schema.BackgroundClassIndex;
+                for (int y = 0; y < target.Height; y++)
+                {
+                    if ((y & 63) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    for (int x = 0; x < target.Width; x++)
+                    {
+                        PointF modelPoint = frame.Transform.ToModel(new PointF(x + .5f, y + .5f));
+                        int modelX = (int)Math.Floor(modelPoint.X);
+                        int modelY = (int)Math.Floor(modelPoint.Y);
+                        projective[(y * target.Width) + x] = modelX >= 0 && modelX < frame.ModelSize.Width && modelY >= 0 && modelY < frame.ModelSize.Height
+                            ? modelMask[(modelY * frame.ModelSize.Width) + modelX]
+                            : fillProjective;
+                    }
+                }
+                return projective;
+            }
 
             var sourceMask = new ushort[checked(target.Width * target.Height)];
             ushort fill = (ushort)Schema.BackgroundClassIndex;

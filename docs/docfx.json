@@ -12,11 +12,16 @@
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net8.0",
+        "TargetFrameworks": "net8.0",
+        "DeploySharpLibraryTargetFrameworks": "net8.0",
         "Configuration": "Release"
       }
     }
   ],
   "build": {
+    "resource": [
+      { "files": ["examples/**/*.json"] }
+    ],
     "content": [
       { "files": ["api/**/*.yml", "api/index.md"] },
       { "files": ["articles/**/*.md", "articles/**/toc.yml", "releases/*.md", "releases/toc.yml", "model-backend-verification-matrix.md", "toc.yml", "index.md"] }

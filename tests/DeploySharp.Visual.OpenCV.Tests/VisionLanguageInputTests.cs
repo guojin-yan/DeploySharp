@@ -44,6 +44,31 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void VisionLanguageFactoryAcceptsValidatedSharedPreprocessingOverride()
+        {
+            VisionLanguageEmbeddingProfile profile = VisionLanguageProfiles.CreateClipVitB32();
+            var preprocessing = new VisualPreprocessingOptions(
+                profile.ImageSize,
+                VisualResizeMode.Resize,
+                VisualColorOrder.Rgb,
+                VisualNormalizationOptions.Scale(255f),
+                VisualTensorLayout.Nchw,
+                batchSize: 2,
+                interpolation: VisualInterpolationMode.Linear);
+            var factory = new OpenCvVisionLanguageInputFactory();
+
+            using PreparedVisualInput input = factory.CreateFromFile(Fixture("rgb.png"), profile, preprocessing: preprocessing);
+
+            Assert.AreEqual(new TensorShape(2, 3, 224, 224), input.Tensor.Shape);
+            Assert.AreEqual(ImageTransformKind.Resize, input.Transform.Kind);
+            VisualException invalid = Assert.ThrowsExactly<VisualException>(() => factory.CreateFromFile(
+                Fixture("rgb.png"),
+                profile,
+                preprocessing: preprocessing.WithModelSize(new VisualSize(32, 32))));
+            Assert.AreEqual(VisualErrorCodes.VisionLanguageContractInvalid, invalid.ErrorCode);
+        }
+
+        [TestMethod]
         [TestCategory("ExternalModels")]
         public void OfficialBusPreprocessingRecordsAuditedOpenCvPillowDifference()
         {

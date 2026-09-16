@@ -25,7 +25,10 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             string postprocessingVersion = "deploysharp-yolo-detection-v1",
             string modelFormat = "onnx",
             YoloDetectionOutputKind? outputKind = null,
-            int maximumBatch = 1)
+            int maximumBatch = 1,
+            YoloImageResizeMode resizeMode = YoloImageResizeMode.Letterbox,
+            VisualNormalizationOptions? normalization = null,
+            VisualPreprocessingOptions? preprocessing = null)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A YOLO model format is required.", nameof(modelFormat));
@@ -35,6 +38,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             if (!Enum.IsDefined(typeof(YoloScoreActivation), scoreActivation)) throw new ArgumentOutOfRangeException(nameof(scoreActivation));
             if (outputKind.HasValue && !Enum.IsDefined(typeof(YoloDetectionOutputKind), outputKind.Value)) throw new ArgumentOutOfRangeException(nameof(outputKind));
             if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
+            if (!Enum.IsDefined(typeof(YoloImageResizeMode), resizeMode)) throw new ArgumentOutOfRangeException(nameof(resizeMode));
             if (string.IsNullOrWhiteSpace(preprocessingVersion)) throw new ArgumentException("A preprocessing contract version is required.", nameof(preprocessingVersion));
             if (string.IsNullOrWhiteSpace(postprocessingVersion)) throw new ArgumentException("A postprocessing contract version is required.", nameof(postprocessingVersion));
             Opset = opset;
@@ -53,6 +57,9 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
             PostprocessingVersion = postprocessingVersion.Trim();
             OutputKind = outputKind;
             MaximumBatch = maximumBatch;
+            ResizeMode = resizeMode;
+            Normalization = normalization ?? VisualNormalizationOptions.DivideByStandardDeviation(new[] { 255f });
+            Preprocessing = preprocessing;
         }
 
         /// <summary>Gets the ONNX opset imported by the exact artifact. / 获取精确工件导入的 ONNX opset。</summary>
@@ -87,6 +94,12 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
         public YoloDetectionOutputKind? OutputKind { get; }
         /// <summary>Gets the maximum true model batch; one keeps the legacy static contract. / 获取真正模型 Batch 最大值；1 表示保持旧静态合同。</summary>
         public int MaximumBatch { get; }
+        /// <summary>Gets the default YOLO geometry mode. / 获取默认 YOLO 几何模式。</summary>
+        public YoloImageResizeMode ResizeMode { get; }
+        /// <summary>Gets the default YOLO normalization. / 获取默认 YOLO 归一化。</summary>
+        public VisualNormalizationOptions Normalization { get; }
+        /// <summary>Gets an optional complete preprocessing override. / 获取可选的完整预处理覆盖。</summary>
+        public VisualPreprocessingOptions? Preprocessing { get; }
     }
 
     /// <summary>Binds one exact YOLO artifact and upstream provenance to a Visual profile. / 将一个精确 YOLO 工件及其上游来源绑定到 Visual Profile。</summary>
@@ -203,10 +216,17 @@ namespace JYPPX.DeploySharp.Visual.Models.Yolo
                 effective.DynamicShapes,
                 effective.PreprocessingVersion,
                 effective.PostprocessingVersion,
-                new YoloPreprocessingContract(effective.ModelSize, effective.Stride, effective.PaddingValue, effective.ScaleUp),
+                new YoloPreprocessingContract(effective.ModelSize, effective.Stride, effective.PaddingValue, effective.ScaleUp, effective.ResizeMode, effective.Normalization),
                 output,
-                visual);
+                effective.Preprocessing == null ? visual.WithPreprocessing(new VisualPreprocessingOptions(effective.ModelSize, ToVisualResizeMode(effective.ResizeMode), VisualColorOrder.Rgb, effective.Normalization, VisualTensorLayout.Nchw, 1, VisualPreprocessingOutputType.Float32, new VisualRgbColor(effective.PaddingValue, effective.PaddingValue, effective.PaddingValue), scaleUp: effective.ScaleUp)) : visual.WithPreprocessing(effective.Preprocessing));
         }
+
+        private static VisualResizeMode ToVisualResizeMode(YoloImageResizeMode mode) => mode switch
+        {
+            YoloImageResizeMode.Resize => VisualResizeMode.Resize,
+            YoloImageResizeMode.CenterCrop => VisualResizeMode.CenterCrop,
+            _ => VisualResizeMode.Letterbox
+        };
 
         private static List<VisualLabel> CopyLabels(IEnumerable<string> labels)
         {

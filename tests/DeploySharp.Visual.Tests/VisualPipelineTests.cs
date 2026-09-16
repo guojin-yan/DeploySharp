@@ -298,6 +298,28 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task SlidingWindowRunnerRejectsPreparedPixelBudgetBeforeCallingPreparer()
+        {
+            var schema = new DetectionOutputSchema("detections", DetectionBoxFormat.Xyxy, false, DetectionScoreMode.ClassScore, 2, 4);
+            VisualModelProfile profile = VisualTestData.DetectionProfile(schema, outputShape: new TensorShape(1, 6));
+            using PipelineFixture fixture = VisualTestData.Pipeline(profile, new TensorShape(1, 6), _ =>
+                InferenceOutputs.Create("detections", new Tensor<float>(new TensorShape(1, 1), new[] { 0f })));
+            var options = new SlidingWindowDetectionOptions(new VisualSize(10, 10), overlap: .5f, maximumPreparedPixels: 50);
+            int preparations = 0;
+
+            await Assert.ThrowsExactlyAsync<VisualException>(() => new SlidingWindowDetectionRunner(fixture.Pipeline).RunAsync(
+                new VisualSize(20, 20),
+                options,
+                (window, token) =>
+                {
+                    preparations++;
+                    return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12]), new VisualSize(20, 20), new VisualSize(2, 2), 1, VisualTensorLayout.Nchw, ImageTransform.Crop(new VisualSize(20, 20), new VisualSize(2, 2), window.Bounds));
+                }));
+
+            Assert.AreEqual(0, preparations);
+        }
+
+        [TestMethod]
         public async Task OwnedInputDisposesOnFailureWhenExplicitlyRequested()
         {
             VisualModelProfile profile = VisualTestData.ClassificationProfile();

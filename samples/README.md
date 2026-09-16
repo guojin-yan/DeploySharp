@@ -7,7 +7,7 @@ Samples are organized by complete workflows. A workflow may combine profile regi
 | Folder | Complete workflow | Entry point |
 | --- | --- | --- |
 | 01-core | Backend-neutral model/tensor/profile contract lifecycle | CoreContractInspection |
-| 02-visual | Visual profile registration, exact tensor bindings, decoder ownership, registry freeze | VisualProfileInspection |
+| 02-visual | Visual profile registration, exact tensor bindings, decoder ownership, registry freeze, and complete ROI workflow | VisualProfileInspection; VisualRoiWorkflow |
 | 03-backends | OpenCV DNN native loading, named tensor execution, golden check, disposal | OpenCvDnnContractInspection |
 | 04-multimodal | Ordered media, in-memory adapter, streaming, cancellation, lifecycle | MultimodalContractInspection |
 | 05-llm | Conversation history, prompt formatting, assistant boundary | LlmPromptInspection |

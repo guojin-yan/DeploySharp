@@ -115,7 +115,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Detr
             bool hasDynamicBatchAxis = false,
             int minimumBatch = 1,
             int maximumBatch = 1,
-            PortableDetectorCountShape paddleCountShape = PortableDetectorCountShape.Scalar)
+            PortableDetectorCountShape paddleCountShape = PortableDetectorCountShape.Scalar,
+            VisualPreprocessingOptions? preprocessing = null)
         {
             if (opset <= 0) throw new ArgumentOutOfRangeException(nameof(opset));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
@@ -155,6 +156,7 @@ namespace JYPPX.DeploySharp.Visual.Models.Detr
             DeimUsesImageNetNormalization = deimUsesImageNetNormalization;
             Batch = new PortableDetectorBatchContract(hasDynamicBatchAxis, minimumBatch, maximumBatch);
             PaddleCountShape = paddleCountShape;
+            Preprocessing = preprocessing;
         }
 
         /// <summary>Gets the ONNX opset. / 获取 ONNX opset。</summary>
@@ -213,6 +215,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Detr
         public PortableDetectorBatchContract Batch { get; }
         /// <summary>Gets the physical Paddle result-count shape. / 获取 Paddle 结果数量的物理 shape。</summary>
         public PortableDetectorCountShape PaddleCountShape { get; }
+        /// <summary>Gets an optional complete image preprocessing override. / 获取可选的完整图像预处理覆盖。</summary>
+        public VisualPreprocessingOptions? Preprocessing { get; }
 
         private static IReadOnlyList<string> CopyLabels(IEnumerable<string>? labels)
         {
@@ -469,8 +473,19 @@ namespace JYPPX.DeploySharp.Visual.Models.Detr
                 outputs,
                 labels,
                 decoder,
-                auxiliaryInputs: auxiliaryBindings);
+                auxiliaryInputs: auxiliaryBindings,
+                preprocessing: options.Preprocessing ?? DetectorPreprocessing(family, options));
             return new PortableDetectorProfile(family, output, options, auxiliaryContracts, visual);
+        }
+
+        private static VisualPreprocessingOptions DetectorPreprocessing(PortableDetectorFamily family, PortableDetectorProfileOptions options)
+        {
+            VisualResizeMode resize = family == PortableDetectorFamily.DEIMv2Det ? VisualResizeMode.Letterbox : VisualResizeMode.Resize;
+            VisualNormalizationOptions normalization = family == PortableDetectorFamily.RTDETRDet || family == PortableDetectorFamily.PPYOLOEDet
+                ? VisualNormalizationOptions.DivideByStandardDeviation(new[] { 255f })
+                : VisualNormalizationOptions.ImageNet;
+            VisualDimensionRounding rounding = family == PortableDetectorFamily.DEIMv2Det ? VisualDimensionRounding.Floor : VisualDimensionRounding.Nearest;
+            return new VisualPreprocessingOptions(options.ModelSize, resize, VisualColorOrder.Rgb, normalization, VisualTensorLayout.Nchw, 1, VisualPreprocessingOutputType.Float32, VisualRgbColor.Black, VisualAlphaMode.Drop, VisualRgbColor.Black, rounding);
         }
 
         private static string NormalizeHash(string? hash)

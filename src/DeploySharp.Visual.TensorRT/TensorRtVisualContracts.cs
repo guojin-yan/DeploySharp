@@ -19,8 +19,8 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 throw new NotSupportedException("CUDA visual preprocessing currently supports RGB or BGR output.");
             if (preprocessing.Interpolation != OpenCvInterpolation.Linear)
                 throw new NotSupportedException("CUDA visual preprocessing currently supports bilinear interpolation.");
-            if (preprocessing.ResizeMode != OpenCvResizeMode.Resize && preprocessing.ResizeMode != OpenCvResizeMode.Letterbox && preprocessing.ResizeMode != OpenCvResizeMode.LongestSidePadBottomRight)
-                throw new NotSupportedException("CUDA visual preprocessing currently supports Resize or longest-side padding.");
+            if (preprocessing.ResizeMode != OpenCvResizeMode.Resize && preprocessing.ResizeMode != OpenCvResizeMode.Letterbox && preprocessing.ResizeMode != OpenCvResizeMode.CenterCrop && preprocessing.ResizeMode != OpenCvResizeMode.LongestSidePadBottomRight)
+                throw new NotSupportedException("CUDA visual preprocessing currently supports Resize, Letterbox, CenterCrop, or longest-side padding.");
             if (profile.Input.ElementType != TensorElementType.Float32 || profile.Input.Layout != VisualTensorLayout.Nchw || profile.Input.MinimumBatch != 1 || profile.Input.MaximumBatch != 1)
                 throw new NotSupportedException("The visual profile must expose one Float32 NCHW image.");
             TensorShape shape = profile.Input.ShapePattern;

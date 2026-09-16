@@ -7,6 +7,16 @@
         "resolved": "3.30.2",
         "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
       },
+      "System.IO.Pipelines": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "7WX0W96y3dpQdYG4sEGdh38g3/0lOD4/dKbn2rRVOVzKhzoZUn2gKNIKaFeKWs8RCbpFfmmEWsRhSy95hMpvqA=="
+      },
+      "System.Text.Encodings.Web": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "o16m2YpDN/pjHsnxf9pTGwkpcuvjW8v1/wGUwJtM1c3QZUKm7ZEO/eYRJg7iIx6GxS2Zv9lAMHpiQwHDdgqauA=="
+      },
       "JYPPX.DeploySharp.Backend.TensorRT": {
         "type": "Project",
         "dependencies": {
@@ -29,21 +39,22 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
-          "Microsoft.ML.Tokenizers": "[2.0.0, )"
+          "Microsoft.ML.Tokenizers": "[2.0.0, )",
+          "System.Text.Json": "[10.0.10, )"
         }
       },
       "JYPPX.DeploySharp.Visual.OpenCV": {
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )"
         }
       },
       "JYPPX.OpenCV.CSharp.API": {
         "type": "CentralTransitive",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.TensorRT.CSharp.API": {
         "type": "CentralTransitive",
@@ -67,6 +78,16 @@
         "contentHash": "zXoFIRPxxW1hUnte/o4am/cjSBWi2WC1aD7Ppc2LOFE3P/CURMWk2Ni6gY4x0fO9yT5oZTnntBI7KFIbmhpsKw==",
         "dependencies": {
           "Google.Protobuf": "3.29.3"
+        }
+      },
+      "System.Text.Json": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "bmsO6UdYtBdtn32zYXfsh7KlyTIzV/3V9hdT9RIb4pXKgYOsNxXR+VbWigNwBtNFVGYGm6Hwmqw5a+/IWFd36Q==",
+        "dependencies": {
+          "System.IO.Pipelines": "10.0.10",
+          "System.Text.Encodings.Web": "10.0.10"
         }
       }
     }

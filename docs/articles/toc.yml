@@ -22,6 +22,8 @@
     href: performance-benchmarking.md
   - name: 设备性能实测
     href: device-performance-benchmarks.md
+  - name: ROI 多后端性能矩阵
+    href: roi-backend-performance-matrix.md
   - name: 默认测试图片
     href: test-images.md
   - name: V1 模型能力迁移
@@ -65,6 +67,10 @@
     href: visual-audio-speech.md
   - name: Visual.OpenCV
     href: visual-opencv-getting-started.md
+  - name: 自定义视觉模型与预处理合同
+    href: visual-custom-model.md
+  - name: Visual ROI 配置与热更新
+    href: visual-roi-configuration.md
 
 - name: 后端
   items:
@@ -93,6 +99,10 @@
     href: model-support.md
   - name: 官方模型目录
     href: model-catalog.md
+  - name: 已发布视觉模型集合
+    href: models-vision-collection.md
+  - name: Qwen2.5 0.5B Instruct Preview
+    href: models-qwen2.5-0.5b-instruct-q4-k-m.md
   - name: ModelFactory
     href: modelfactory-getting-started.md
   - name: ModelFactory CLI

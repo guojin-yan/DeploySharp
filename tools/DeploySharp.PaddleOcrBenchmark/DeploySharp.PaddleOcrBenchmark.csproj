@@ -5,21 +5,51 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>DeploySharp.PaddleOcrBenchmark</AssemblyName>
+    <!-- This executable selects the CUDA-12 ORT line directly. The referenced
+         reusable backend keeps the repository default (1.28) for library
+         consumers, so do not enforce the higher transitive central pin here. -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <!-- This application is distributed against the CUDA 12.x ORT provider
+         line. Keep the setting unconditional for every host OS; publish also
+         passes it globally so the referenced backend is compiled consistently. -->
+    <DeploySharpPaddleOcrCuda12>true</DeploySharpPaddleOcrCuda12>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <RuntimeIdentifier>ubuntu.22.04-x64</RuntimeIdentifier>
+    <UseRidGraph>true</UseRidGraph>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="JYPPX.OpenCV.CSharp.API" />
+    <!-- Keep the managed ORT assembly on the same CUDA 12-compatible line as
+         the GPU provider. The reusable backend remains version-neutral. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" VersionOverride="1.23.2" NoWarn="NU1605" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != 'ubuntu.22.04-x64' And '$(RuntimeIdentifier)' != 'linux-x64'">
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" />
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" />
     <PackageReference Include="OpenVINO.runtime.win" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'ubuntu.22.04-x64' Or '$(RuntimeIdentifier)' == 'linux-x64' Or $([MSBuild]::IsOSPlatform('Linux'))">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Linux" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge" />
+    <PackageReference Include="OpenVINO.runtime.ubuntu.22-x86_64" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="../../src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj" />
-    <ProjectReference Include="../../src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj" />
-    <ProjectReference Include="../../src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj" />
-    <ProjectReference Include="../../src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj" />
-    <ProjectReference Include="../../src/DeploySharp.Visual/DeploySharp.Visual.csproj" />
-    <ProjectReference Include="../../src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj" AdditionalProperties="DeploySharpPaddleOcrCuda12=true" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../../src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../../src/DeploySharp.Visual/DeploySharp.Visual.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../../src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
   </ItemGroup>
 </Project>

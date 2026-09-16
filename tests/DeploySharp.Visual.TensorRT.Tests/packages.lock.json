@@ -135,7 +135,7 @@
         "type": "Project",
         "dependencies": {
           "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
-          "JYPPX.OpenCV.CSharp.API": "[5.0.0-preview.1, )"
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )"
         }
       },
       "JYPPX.DeploySharp.Visual.TensorRT": {
@@ -148,9 +148,9 @@
       },
       "JYPPX.OpenCV.CSharp.API": {
         "type": "CentralTransitive",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.TensorRT.CSharp.API": {
         "type": "CentralTransitive",

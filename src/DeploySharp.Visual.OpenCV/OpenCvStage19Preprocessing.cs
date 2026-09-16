@@ -84,6 +84,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public static OpenCvPreprocessOptions CreateAnomalibOptions(AnomalibProfile profile)
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (profile.VisualProfile.Preprocessing != null) return profile.VisualProfile.Preprocessing.ToOpenCvOptions();
             TensorShape input = profile.VisualProfile.Input.ShapePattern;
             if (input.Rank != 4 || input[2] <= 0 || input[3] <= 0) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Anomalib preprocessing requires static model spatial dimensions.");
             return new OpenCvPreprocessOptions(new VisualSize(checked((int)input[3]), checked((int)input[2])), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, standardDeviations: new[] { 255f });
@@ -93,6 +94,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public static OpenCvPreprocessOptions CreateBriaRmbgOptions(BriaRmbgProfile profile, VisualSize? dynamicModelSize = null)
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (!dynamicModelSize.HasValue && profile.VisualProfile.Preprocessing != null) return profile.VisualProfile.Preprocessing.ToOpenCvOptions();
             VisualSize size = dynamicModelSize ?? profile.Options.ModelSize;
             if (size.Width <= 0 || size.Height <= 0 || size.Width > profile.Options.MaximumDynamicSide || size.Height > profile.Options.MaximumDynamicSide) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "BRIA model size exceeds its configured dynamic bound.");
             if (profile.Family == BriaRmbgFamily.Rmbg14)

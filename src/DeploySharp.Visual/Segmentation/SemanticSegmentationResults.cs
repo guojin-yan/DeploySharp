@@ -308,6 +308,8 @@ namespace JYPPX.DeploySharp.Visual
         public int ClassCount { get; }
         /// <summary>Returns a defensive canonical HWC copy. / 返回规范 HWC 防御性副本。</summary>
         public float[] ToArray() => (float[])_values.Clone();
+
+        internal float[] DangerousGetReadOnlyBuffer() => _values;
     }
 
     /// <summary>Describes the semantic polygon capability conclusion for a result. / 描述结果的语义多边形能力结论。</summary>

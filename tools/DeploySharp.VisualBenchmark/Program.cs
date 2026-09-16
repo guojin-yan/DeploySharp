@@ -11,6 +11,7 @@ using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Backends.TensorRT;
 using JYPPX.DeploySharp.Errors;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results;
@@ -39,13 +40,20 @@ internal static class Program
 
             DeviceSnapshot deviceBefore = DeviceSnapshot.Capture();
             var rows = new List<ResultRow>();
+            var artifacts = new Dictionary<string, ArtifactEvidence>();
             foreach (string backend in options.Backends)
             {
                 foreach (string kind in options.Kinds)
                 {
                     try
                     {
-                        BenchmarkCase item = BenchmarkCase.Create(kind, options.ModelPathFor(kind, backend), TestImageResolver.Resolve(options.ImagePath, kind), backend);
+                        string modelPath = options.ModelPathFor(kind, backend);
+                        if (options.BuildEngines && (backend == "tensorrt" || backend == "tensorrt-cuda"))
+                            modelPath = EnsureTensorRtEngine(kind, options, modelPath);
+                        string imagePath = TestImageResolver.Resolve(options.ImagePath, kind);
+                        RecordArtifact(artifacts, modelPath);
+                        RecordArtifact(artifacts, imagePath);
+                        BenchmarkCase item = BenchmarkCase.Create(kind, modelPath, imagePath, backend);
                         foreach (BenchmarkMode mode in options.Modes) rows.Add(Run(item, backend, mode, options));
                     }
                     catch (Exception exception)
@@ -78,9 +86,14 @@ internal static class Program
                     Backends = options.Backends,
                     ImagePath = string.IsNullOrWhiteSpace(options.ImagePath) ? "auto-by-task (test-assets.1)" : options.ImagePath,
                     ModelPaths = options.ModelPaths,
+                    ModelPath = options.ModelPath,
+                    Artifacts = artifacts.Values.ToArray(),
+                    SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
+                    AssemblySha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(Program).Assembly.Location))).ToLowerInvariant(),
                     Warmup = options.Warmup,
                     Iterations = options.Iterations,
                     Modes = options.Modes.Select(mode => mode.ToString().ToLowerInvariant()).ToArray(),
+                    Roi = options.Roi.HasValue ? FormatRoi(options.Roi.Value) : "full-image",
                     OpenCvFusionEnabled = !string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_OPENCV_ENABLE_FUSION"), "0", StringComparison.Ordinal),
                     OpenCvWinogradEnabled = !string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_OPENCV_ENABLE_WINOGRAD"), "0", StringComparison.Ordinal),
                     CsvOutputPath = outputPath,
@@ -151,20 +164,20 @@ internal static class Program
                 {
                     long setupAllocatedBefore = GC.GetAllocatedBytesForCurrentThread();
                     Stopwatch setupWatch = Stopwatch.StartNew();
-                    steadyInput = item.Prepare(factory, source);
+                    steadyInput = item.Prepare(factory, source, options.Roi);
                     setupWatch.Stop();
                     setup = Measurement.Setup(setupWatch.Elapsed.TotalMilliseconds, GC.GetAllocatedBytesForCurrentThread() - setupAllocatedBefore);
                 }
 
                 for (int index = 0; index < options.Warmup; index++)
                 {
-                    if (steadyInput == null) RunOne(factory, pipeline, item, source);
+                    if (steadyInput == null) RunOne(factory, pipeline, item, source, options.Roi);
                     else RunPreparedOne(pipeline, steadyInput);
                 }
                 var measurements = new List<Measurement>(options.Iterations);
                 for (int index = 0; index < options.Iterations; index++)
                 {
-                    measurements.Add(steadyInput == null ? RunOne(factory, pipeline, item, source) : RunPreparedOne(pipeline, steadyInput));
+                    measurements.Add(steadyInput == null ? RunOne(factory, pipeline, item, source, options.Roi) : RunPreparedOne(pipeline, steadyInput));
                 }
                 Measurement measured = Measurement.Aggregate(measurements, setup);
                 return ResultRow.Pass(item, backend, mode, request.Device ?? DeviceFor(backend), measured);
@@ -180,6 +193,28 @@ internal static class Program
             string status = backend == "opencv-dnn" ? "unsupported" : "unavailable";
             return ResultRow.Failure(item, backend, mode, DeviceFor(backend), status, detail);
         }
+    }
+
+    private static string EnsureTensorRtEngine(string kind, Options options, string enginePath)
+    {
+        string sourcePath = options.ModelPathFor(kind, "onnxruntime");
+        if (!sourcePath.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase)) return enginePath;
+        using var source = File.OpenRead(sourcePath);
+        string digest = Convert.ToHexString(SHA256.HashData(source)).ToLowerInvariant();
+        // Engines are device/runtime-specific. Never replace the caller's model or
+        // implicitly consume an engine created on a different benchmark machine.
+        string directory = Path.GetFullPath(options.EngineDirectory ?? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(options.OutputPath))!, "engines"));
+        Directory.CreateDirectory(directory);
+        string name = kind + "-" + digest.Substring(0, 16) + "-" + Environment.MachineName + "-" + ResolveTensorRtApiVersion();
+        string target = Path.Combine(directory, name + ".engine");
+        if (File.Exists(target)) return target;
+        var artifact = new ModelArtifact(new ModelId("benchmark-" + kind), "onnx", sourcePath);
+        Console.WriteLine("DEPLOYSHARP_TENSORRT_BUILD_START=" + target);
+        var result = new TensorRtOnnxEngineBuilder().Build(artifact, target,
+            new TensorRtOnnxEngineBuildOptions(ResolveTensorRtApiVersion(), optimizationLevel: 3));
+        File.WriteAllText(target + ".build.json", JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine("DEPLOYSHARP_TENSORRT_BUILD_OK=" + result.EngineSha256);
+        return target;
     }
 
     private static ResultRow RunTensorRtCuda(BenchmarkCase item, BenchmarkMode mode, Options options)
@@ -201,7 +236,7 @@ internal static class Program
             var factory = new OpenCvBgrImageFactory();
             if (pipeline.UsesCudaPostprocessing && string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_CUDA_VALIDATE_POSTPROCESSING"), "1", StringComparison.Ordinal))
             {
-                ValidateTensorRtCudaPostprocessing(item, backendOptions, pipeline, factory);
+                ValidateTensorRtCudaPostprocessing(item, backendOptions, pipeline, factory, options.Roi);
             }
             OpenCvBgrImage? steadyImage = null;
             Measurement setup = Measurement.Empty;
@@ -216,9 +251,9 @@ internal static class Program
                     setup = Measurement.Setup(setupWatch.Elapsed.TotalMilliseconds, GC.GetAllocatedBytesForCurrentThread() - setupAllocatedBefore);
                 }
 
-                for (int index = 0; index < options.Warmup; index++) RunTensorRtCudaOne(pipeline, factory, item.ImagePath, steadyImage);
+                for (int index = 0; index < options.Warmup; index++) RunTensorRtCudaOne(pipeline, factory, item.ImagePath, steadyImage, options.Roi);
                 var measurements = new List<Measurement>(options.Iterations);
-                for (int index = 0; index < options.Iterations; index++) measurements.Add(RunTensorRtCudaOne(pipeline, factory, item.ImagePath, steadyImage));
+                for (int index = 0; index < options.Iterations; index++) measurements.Add(RunTensorRtCudaOne(pipeline, factory, item.ImagePath, steadyImage, options.Roi));
                 return ResultRow.Pass(item, "tensorrt-cuda", mode, "cuda", Measurement.Aggregate(measurements, setup));
             }
             finally
@@ -233,7 +268,7 @@ internal static class Program
         }
     }
 
-    private static Measurement RunTensorRtCudaOne(TensorRtVisualPipeline pipeline, OpenCvBgrImageFactory factory, string imagePath, OpenCvBgrImage? steadyImage)
+    private static Measurement RunTensorRtCudaOne(TensorRtVisualPipeline pipeline, OpenCvBgrImageFactory factory, string imagePath, OpenCvBgrImage? steadyImage, RectangleF? roi)
     {
         Stopwatch totalWatch = Stopwatch.StartNew();
         OpenCvBgrImage? image = steadyImage;
@@ -243,7 +278,7 @@ internal static class Program
         decodeWatch.Stop();
         long preprocessAllocated = steadyImage == null ? GC.GetAllocatedBytesForCurrentThread() - preprocessAllocatedBefore : 0;
         long pipelineAllocatedBefore = GC.GetAllocatedBytesForCurrentThread();
-        VisualInferenceResult result = pipeline.Run(image);
+        VisualInferenceResult result = roi.HasValue ? pipeline.RunRoi(image, roi.Value) : pipeline.Run(image);
         totalWatch.Stop();
         long pipelineAllocated = GC.GetAllocatedBytesForCurrentThread() - pipelineAllocatedBefore;
         InferenceTiming timing = result.Timing;
@@ -252,12 +287,12 @@ internal static class Program
         return Measurement.Single(preprocess, timing.Inference.TotalMilliseconds, timing.Postprocessing.TotalMilliseconds, orchestration, totalWatch.Elapsed.TotalMilliseconds, preprocessAllocated, pipelineAllocated, ResultFingerprint(result.Value));
     }
 
-    private static void ValidateTensorRtCudaPostprocessing(BenchmarkCase item, TensorRtBackendOptions backendOptions, TensorRtVisualPipeline accelerated, OpenCvBgrImageFactory factory)
+    private static void ValidateTensorRtCudaPostprocessing(BenchmarkCase item, TensorRtBackendOptions backendOptions, TensorRtVisualPipeline accelerated, OpenCvBgrImageFactory factory, RectangleF? roi)
     {
         using var baseline = new TensorRtVisualPipeline(item.Profile, item.ModelPath, item.Preprocessing, backendOptions, TensorRtCudaVisualPostprocessingMode.Disabled);
         OpenCvBgrImage image = factory.CreateFromFile(item.ImagePath, item.ImagePath);
-        object expected = baseline.Run(image).Value;
-        object actual = accelerated.Run(image).Value;
+        object expected = (roi.HasValue ? baseline.RunRoi(image, roi.Value) : baseline.Run(image)).Value;
+        object actual = (roi.HasValue ? accelerated.RunRoi(image, roi.Value) : accelerated.Run(image)).Value;
         if (expected is BackgroundRemovalResult expectedMatting && actual is BackgroundRemovalResult actualMatting)
         {
             ValidateFloatPlanes(item.Kind, expectedMatting.Alpha.ToArray(), actualMatting.Alpha.ToArray(), 0.0001f);
@@ -289,7 +324,11 @@ internal static class Program
                 byte[] expectedMask = expectedInstance.Mask.ToArray();
                 byte[] actualMask = actualInstance.Mask.ToArray();
                 if (expectedMask.Length != actualMask.Length) throw new InvalidOperationException("CUDA postprocessing changed an instance-mask element count.");
-                for (int pixel = 0; pixel < expectedMask.Length; pixel++) if (expectedMask[pixel] != actualMask[pixel]) differences++;
+                int instanceDifferences = 0, firstDifference = -1;
+                for (int pixel = 0; pixel < expectedMask.Length; pixel++)
+                    if (expectedMask[pixel] != actualMask[pixel]) { differences++; instanceDifferences++; if (firstDifference < 0) firstDifference = pixel; }
+                if (instanceDifferences != 0)
+                    Console.WriteLine($"CUDA_MASK_DIFFERENCE instance={instanceIndex} source={expectedInstance.SourceIndex} count={instanceDifferences} first_index={firstDifference} expected={expectedMask[firstDifference]} actual={actualMask[firstDifference]}");
             }
             Console.WriteLine("DEPLOYSHARP_TENSORRT_CUDA_POSTPROCESSING_VALIDATION kind=" + item.Kind + " mask_pixel_differences=" + differences.ToString(Invariant));
             if (differences != 0) throw new InvalidOperationException("CUDA postprocessing changed " + differences.ToString(Invariant) + " instance-mask pixels.");
@@ -476,11 +515,11 @@ internal static class Program
         return result;
     }
 
-    private static Measurement RunOne(OpenCvVisualInputFactory factory, VisualPipeline pipeline, BenchmarkCase item, OpenCvImageSource source)
+    private static Measurement RunOne(OpenCvVisualInputFactory factory, VisualPipeline pipeline, BenchmarkCase item, OpenCvImageSource source, RectangleF? roi)
     {
         long preAllocatedBefore = GC.GetAllocatedBytesForCurrentThread();
         Stopwatch preprocessWatch = Stopwatch.StartNew();
-        using PreparedVisualInput input = item.Prepare(factory, source);
+        using PreparedVisualInput input = item.Prepare(factory, source, roi);
         preprocessWatch.Stop();
         long preprocessAllocated = GC.GetAllocatedBytesForCurrentThread() - preAllocatedBefore;
 
@@ -609,13 +648,18 @@ internal static class Program
         Console.WriteLine("Usage: dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind <catalog-kind|all> [--image <path>] [options]");
         Console.WriteLine("When --image is omitted, the task default is downloaded from the DeploySharp test-assets.1 release and SHA-256 verified.");
         Console.WriteLine("  --model <path>                         Model path when exactly one kind is selected");
+        Console.WriteLine("  --build-engines                        Build missing TensorRT engines with DeploySharp's ONNX converter (outside timed iterations)");
+        Console.WriteLine("  --engine-directory <path>              Device-specific engine cache; defaults next to the result file");
         Console.WriteLine("  --model-<kind> <path>                  Model path for a case when --kind all is used");
         Console.WriteLine("  --backend <all|onnxruntime|onnxruntime-cuda|openvino|opencv-dnn|tensorrt|tensorrt-cuda|comma-list>  Backend(s), default all");
         Console.WriteLine("  --warmup <count> --iterations <count>  Defaults: 3 and 10");
         Console.WriteLine("  --mode <cold|steady|both>              Cold includes decode/preprocess per call; steady reuses one prepared input; default cold");
+        Console.WriteLine("  --roi <x,y,width,height>               Optional source-pixel rectangle; records the same ROI for every selected backend");
         Console.WriteLine("  --output <path>                        CSV report path");
         Console.WriteLine("  --json-output <path>                   JSON report with device information and rows");
     }
+
+    private static string FormatRoi(RectangleF roi) => string.Format(Invariant, "{0:R},{1:R},{2:R},{3:R}", roi.X, roi.Y, roi.Width, roi.Height);
 
     private static string DeviceFor(string backend) => backend == "openvino" ? "CPU" : backend == "onnxruntime-cuda" || backend == "tensorrt" || backend == "tensorrt-cuda" ? "cuda" : "cpu";
 
@@ -635,8 +679,15 @@ internal static class Program
         public OpenCvPreprocessOptions Preprocessing { get; }
         public IReadOnlyList<TensorDescriptor>? OpenCvOutputs { get; }
 
-        public PreparedVisualInput Prepare(OpenCvVisualInputFactory factory, OpenCvImageSource source)
-            => _prepare == null ? factory.Create(source, Profile.Input.Name, Preprocessing) : _prepare(factory, source);
+        public PreparedVisualInput Prepare(OpenCvVisualInputFactory factory, OpenCvImageSource source, RectangleF? roi)
+        {
+            if (!roi.HasValue) return _prepare == null ? factory.Create(source, Profile.Input.Name, Preprocessing) : _prepare(factory, source);
+            if (_prepare != null || Profile.AuxiliaryInputs.Count != 0)
+            {
+                throw new NotSupportedException("ROI benchmarking is unavailable for model cases that require task-specific preprocessing or auxiliary inputs.");
+            }
+            return factory.CreateRectangleRoi(source, roi.Value, Profile.Input.Name, Preprocessing);
+        }
 
         public static BenchmarkCase Create(string kind, string modelPath, string imagePath, string backend)
         {
@@ -819,15 +870,30 @@ internal static class Program
         public IReadOnlyList<ResultRow> Rows { get; init; } = Array.Empty<ResultRow>();
     }
 
+    private static void RecordArtifact(Dictionary<string, ArtifactEvidence> artifacts, string path)
+    {
+        string fullPath = Path.GetFullPath(path);
+        if (artifacts.ContainsKey(fullPath)) return;
+        using var stream = File.OpenRead(fullPath);
+        artifacts.Add(fullPath, new ArtifactEvidence(fullPath, stream.Length, Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant()));
+    }
+
+    private sealed record ArtifactEvidence(string Path, long Bytes, string Sha256);
+
     private sealed class BenchmarkConfiguration
     {
         public IReadOnlyList<string> Kinds { get; init; } = Array.Empty<string>();
         public IReadOnlyList<string> Backends { get; init; } = Array.Empty<string>();
         public string ImagePath { get; init; } = string.Empty;
         public IReadOnlyDictionary<string, string> ModelPaths { get; init; } = new Dictionary<string, string>();
+        public string? ModelPath { get; init; }
+        public IReadOnlyList<ArtifactEvidence> Artifacts { get; init; } = Array.Empty<ArtifactEvidence>();
+        public string? SourceRevision { get; init; }
+        public string AssemblySha256 { get; init; } = string.Empty;
         public int Warmup { get; init; }
         public int Iterations { get; init; }
         public IReadOnlyList<string> Modes { get; init; } = Array.Empty<string>();
+        public string Roi { get; init; } = "full-image";
         public bool OpenCvFusionEnabled { get; init; }
         public bool OpenCvWinogradEnabled { get; init; }
         public string CsvOutputPath { get; init; } = string.Empty;
@@ -873,7 +939,7 @@ internal static class Program
                 TotalAvailableMemoryBytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
                 CudaArchitecture = Environment.GetEnvironmentVariable("DEPLOYSHARP_CUDA_ARCHITECTURE"),
                 TensorRtExternalEnabled = string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.OrdinalIgnoreCase) || string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_RUN_EXTERNAL"), "true", StringComparison.OrdinalIgnoreCase),
-                TensorRtApiVersion = Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_API_VERSION"),
+                TensorRtApiVersion = Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_API") ?? Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_API_VERSION"),
                 NativeBridgePath = Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH"),
                 TensorRtRoot = Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT"),
                 CudaRoot = Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT"),
@@ -929,8 +995,8 @@ internal static class Program
         };
         private static readonly string[] AllBackends = { "onnxruntime", "onnxruntime-cuda", "openvino", "opencv-dnn", "tensorrt", "tensorrt-cuda" };
 
-        private Options(IReadOnlyList<string> kinds, IReadOnlyList<string> backends, string imagePath, string? modelPath, IReadOnlyDictionary<string, string> modelPaths, int warmup, int iterations, string outputPath, string jsonOutputPath, IReadOnlyList<BenchmarkMode> modes, bool help)
-        { Kinds = kinds; Backends = backends; ImagePath = imagePath; ModelPath = modelPath; ModelPaths = modelPaths; Warmup = warmup; Iterations = iterations; OutputPath = outputPath; JsonOutputPath = jsonOutputPath; Modes = modes; Help = help; }
+        private Options(IReadOnlyList<string> kinds, IReadOnlyList<string> backends, string imagePath, string? modelPath, IReadOnlyDictionary<string, string> modelPaths, int warmup, int iterations, string outputPath, string jsonOutputPath, IReadOnlyList<BenchmarkMode> modes, RectangleF? roi, bool help)
+        { Kinds = kinds; Backends = backends; ImagePath = imagePath; ModelPath = modelPath; ModelPaths = modelPaths; Warmup = warmup; Iterations = iterations; OutputPath = outputPath; JsonOutputPath = jsonOutputPath; Modes = modes; Roi = roi; Help = help; }
 
         public IReadOnlyList<string> Kinds { get; }
         public IReadOnlyList<string> Backends { get; }
@@ -942,30 +1008,38 @@ internal static class Program
         public string OutputPath { get; }
         public string JsonOutputPath { get; }
         public IReadOnlyList<BenchmarkMode> Modes { get; }
+        public RectangleF? Roi { get; }
         public bool Help { get; }
+        public bool BuildEngines { get; private set; }
+        public string? EngineDirectory { get; private set; }
 
         public string ModelPathFor(string kind, string backend)
         {
             string? path = null;
             if (ModelPaths.TryGetValue(kind, out string? value)) path = value;
             else if (Kinds.Count == 1 && !string.IsNullOrWhiteSpace(ModelPath)) path = ModelPath;
-            if (path != null && kind != "rtdetr-decoded-ir" && (backend == "tensorrt" || backend == "tensorrt-cuda") && !path.EndsWith(".engine", StringComparison.OrdinalIgnoreCase)) return path + ".engine";
+            if (path != null && kind != "rtdetr-decoded-ir" && (backend == "tensorrt" || backend == "tensorrt-cuda") && !path.EndsWith(".engine", StringComparison.OrdinalIgnoreCase) && !path.EndsWith(".plan", StringComparison.OrdinalIgnoreCase)) return path + ".engine";
             if (path != null) return path;
             throw new ArgumentException("A --model-" + kind + " path is required.");
         }
 
         public static Options Parse(string[] args)
         {
-            string kindsValue = "all"; string backendsValue = "all"; string modeValue = "cold"; string? image = null; string? model = null; int warmup = 3; int iterations = 10; bool help = false; string output = Path.Combine("artifacts", "local-model-benchmarks", "visual-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", Invariant) + ".csv"); string? jsonOutput = null;
+            string kindsValue = "all"; string backendsValue = "all"; string modeValue = "cold"; string? image = null; string? model = null; string? roiValue = null; int warmup = 3; int iterations = 10; bool help = false; string output = Path.Combine("artifacts", "local-model-benchmarks", "visual-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", Invariant) + ".csv"); string? jsonOutput = null;
             var models = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            bool buildEngines = false;
+            string? engineDirectory = null;
             for (int index = 0; index < args.Length; index++)
             {
                 string argument = args[index];
                 if (argument == "--help" || argument == "-h") { help = true; continue; }
+                if (argument == "--build-engines") { buildEngines = true; continue; }
+                if (argument == "--engine-directory") { engineDirectory = Next(args, ref index, argument); continue; }
                 if (argument == "--kind") { kindsValue = Next(args, ref index, argument); continue; }
                 if (argument == "--backend") { backendsValue = Next(args, ref index, argument); continue; }
                 if (argument == "--mode") { modeValue = Next(args, ref index, argument); continue; }
                 if (argument == "--image") { image = Next(args, ref index, argument); continue; }
+                if (argument == "--roi") { roiValue = Next(args, ref index, argument); continue; }
                 if (argument == "--model") { model = Next(args, ref index, argument); continue; }
                 if (argument == "--warmup") { warmup = Positive(Next(args, ref index, argument), argument); continue; }
                 if (argument == "--iterations") { iterations = Positive(Next(args, ref index, argument), argument); continue; }
@@ -980,8 +1054,22 @@ internal static class Program
                 }
                 throw new ArgumentException("Unknown option: " + argument);
             }
-            if (help) return new Options(Array.Empty<string>(), Array.Empty<string>(), string.Empty, null, models, warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), Array.Empty<BenchmarkMode>(), true);
-            return new Options(Select(kindsValue, AllKinds, "kind"), Select(backendsValue, AllBackends, "backend"), string.IsNullOrWhiteSpace(image) ? string.Empty : Path.GetFullPath(image), model == null ? null : Path.GetFullPath(model), models.ToDictionary(pair => pair.Key, pair => Path.GetFullPath(pair.Value), StringComparer.OrdinalIgnoreCase), warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), SelectModes(modeValue), false);
+            if (help) return new Options(Array.Empty<string>(), Array.Empty<string>(), string.Empty, null, models, warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), Array.Empty<BenchmarkMode>(), null, true);
+            return new Options(Select(kindsValue, AllKinds, "kind"), Select(backendsValue, AllBackends, "backend"), string.IsNullOrWhiteSpace(image) ? string.Empty : Path.GetFullPath(image), model == null ? null : Path.GetFullPath(model), models.ToDictionary(pair => pair.Key, pair => Path.GetFullPath(pair.Value), StringComparer.OrdinalIgnoreCase), warmup, iterations, output, jsonOutput ?? Path.ChangeExtension(output, ".json"), SelectModes(modeValue), roiValue == null ? null : ParseRoi(roiValue), false) { BuildEngines = buildEngines, EngineDirectory = engineDirectory };
+        }
+
+        private static RectangleF ParseRoi(string value)
+        {
+            string[] fields = value.Split(',');
+            if (fields.Length != 4) throw new ArgumentException("--roi must use x,y,width,height source-pixel syntax.");
+            var values = new float[4];
+            for (int index = 0; index < fields.Length; index++)
+            {
+                if (!float.TryParse(fields[index], NumberStyles.Float, Invariant, out values[index]) || float.IsNaN(values[index]) || float.IsInfinity(values[index]))
+                    throw new ArgumentException("--roi values must be finite invariant-culture numbers.");
+            }
+            if (values[0] < 0 || values[1] < 0 || values[2] <= 0 || values[3] <= 0) throw new ArgumentException("--roi x/y must be non-negative and width/height must be positive.");
+            return new RectangleF(values[0], values[1], values[2], values[3]);
         }
 
         private static IReadOnlyList<BenchmarkMode> SelectModes(string value)

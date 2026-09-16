@@ -36,6 +36,20 @@ namespace JYPPX.DeploySharp.Visual
         public InferenceOutputs Outputs { get; }
         /// <summary>Gets the operation cancellation token. / 获取操作取消令牌。</summary>
         public CancellationToken CancellationToken { get; }
+
+        /// <summary>Gets one required output as a strongly typed managed tensor. / 将一个必需输出作为强类型托管张量获取。</summary>
+        public Tensor<T> GetOutput<T>(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("An output tensor name is required.", nameof(name));
+            ITensor tensor;
+            try { tensor = Outputs.GetRequired(name); }
+            catch (System.Collections.Generic.KeyNotFoundException exception)
+            {
+                throw new VisualException(VisualErrorCodes.TensorInvalid, "A required decoder output is missing.", exception, profileId: Profile.ProfileId, tensorName: name);
+            }
+            if (tensor is Tensor<T> typed) return typed;
+            throw new VisualException(VisualErrorCodes.TensorInvalid, "A decoder output does not use the requested managed element type.", profileId: Profile.ProfileId, tensorName: name, technicalDetails: "actual=" + tensor.ElementType + ";requested=" + typeof(T).FullName);
+        }
     }
 
     /// <summary>Wraps a decoded visual result with model, backend, timing, task, and correlation metadata. / 使用模型、后端、时长、任务和关联元数据包装解码后的视觉结果。</summary>

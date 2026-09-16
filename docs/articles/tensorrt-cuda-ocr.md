@@ -40,6 +40,24 @@
 
 这些 API 仅负责设备侧计算和紧凑结果传输。token 到字典文本的映射以及现有 `RecognizedText` 结果对象仍在主机侧完成。
 
+## 完整流水线的调度
+
+PaddleOCR 的三个阶段不应按“每个文本框顺序跑一次”实现。推荐调度是：
+
+1. det 使用一个 Session 对整图执行一次；
+2. GPU 或 CPU 后处理得到文本四边形，并按识别宽高比/方向组织 crop；
+3. cls 和 rec 按实际 Engine profile 组成 batch，最后一个不足 batch 的请求按合同补齐；
+4. 当 crop 数量超过一个 batch 时，从独立创建的 Session 池租用空闲通道，并用有界队列限制在途 batch；
+5. 按原始文本框索引合并方向和识别结果，再返回源图坐标。
+
+同一 CUDA stream 可以减少阶段同步，但多个独立 Session 通常需要各自的 stream 和 workspace。最佳 batch 与通道数取决于 Engine profile、显存和图片中文字区域数，必须在目标设备用完整流水线扫描组合，不能只测 rec 单图。
+
+## 数据传输和内存复用
+
+性能路径应复用图像 staging buffer、crop batch buffer、Engine 输入输出和紧凑 token buffer。只有最终四边形、token 长度、token ID 和置信度需要回到 CPU；完整 det/CTC logits 回读仅用于诊断。缓冲区租约必须覆盖最后一次 stream 同步，不能在 kernel 入队后立即归还池。
+
+JPEG/PNG 解码目前仍在主机侧，第一次 H2D 上传无法消除。若输入来自相机 CUDA buffer，可直接进入设备预处理接口，但需要调用方提供正确的 stride、格式和生命周期。
+
 ## 验证与性能
 
 先运行 CUDA 探针，确认本机可以编译并加载 kernel：
@@ -52,3 +70,5 @@ dotnet run --project tools/DeploySharp.TensorRtCudaOcrProbe -c Release -- --exec
 设置 `DEPLOYSHARP_CUDA_ARCHITECTURE` 为目标 GPU 的兼容架构。若要验证 Engine 设备内存调用，还需配置 `DEPLOYSHARP_TENSORRT_ENGINE`、`JYPPX_NATIVE_BRIDGE_PATH` 以及 CUDA/TensorRT DLL 搜索路径。
 
 性能只应在相同设备、模型、输入图、batch、会话数和预热策略下比较。请查看[设备性能实测](device-performance-benchmarks.md)了解已记录设备的完整 OCR 流水线结果与最佳组合；具体模型/后端可用性以[模型后端验证矩阵](../model-backend-verification-matrix.md)为准。
+
+验证不仅看耗时，还要检查文本框数量、阅读顺序、方向分类、token 序列和置信度与 CPU reference 一致。建议允许明确的浮点容差，但文本内容、框映射和空白折叠规则应完全一致。报告同时给出 det、crop、cls、rec、merge、total、区域数和 P50/P95，避免用一个异常少文本的输入得到虚假的最优时间。

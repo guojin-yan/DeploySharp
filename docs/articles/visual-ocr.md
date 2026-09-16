@@ -57,21 +57,74 @@ OcrResult result = await ocr.RunAsync(
     new OcrExecutionOptions(timeout: TimeSpan.FromSeconds(10)),
     cancellationToken);
 
-foreach (OcrRegion region in result.Regions)
-    Console.WriteLine($"{region.Text} ({region.Confidence:P1})");
+foreach (OcrRegionResult region in result.Regions)
+    Console.WriteLine($"{region.Recognition.Text} ({region.Recognition.Confidence:P1})");
 ~~~
 
 <code>OpenCvOcrImageInputFactory</code> 在输入释放前保留源图；Pipeline 释放所有临时 transform、warp、旋转和 ROI。调用方负责释放自己创建的图像输入、Registry 和其他资源。
 
 ## 模型和后端配置
 
-检测模型通常使用 batch=1；识别模型可声明动态宽度和动态 batch。识别器的 <code>maximumRecognitionBatch</code> 决定一次提交的文本行数量，<code>maximumConcurrency</code> 决定独立推理通道数量。通道数量大于一时，Registry 会创建多个独立后端 Session，并把识别 batch 分派给空闲通道。
+检测模型通常使用 batch=1；识别模型可声明动态宽度和动态 batch。`OcrPipelineOptions.MaximumRecognitionBatch` 限制一次提交的文本行数量；同一配置里的 `MaximumConcurrency` 限制并发的完整 OCR 调用，**不等于 REC Session 数量**。通过构造 `OcrPipeline` 时的 `recognitionSessionOptions: new SessionOptions(2)` 配置两个独立识别通道，再由 Pipeline 将有界批任务分派给空闲通道。
 
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 一个 ModelPack 可以同时携带检测和识别 ONNX，或对应的 OpenVINO IR XML/BIN，并通过 <code>deploysharp.ocr.*</code> 扩展键绑定 Profile、字符集和预处理版本。字符表的 blank、unknown、Unicode 顺序必须和 logits 导出一致。
 
-## 性能和并发
+## 长文本宽度诊断与超宽策略
+
+本节新增接口以当前开发源码为准；旧 NuGet 包不会自动获得这些 API，使用前应确认所安装版本包含此能力。
+
+`PaddleOcrProfiles.CreateRecognition` 的主库默认值为 `TargetHeight=48`、`MinimumWidth=48`、`MaximumWidth=3200`。基准工具历史默认的 320 只是测试参数，不是主库上限。提高宽度前，应确认模型、动态 shape 以及 TensorRT optimization profile 支持该范围；修改裁剪配置不会自动扩大 engine 的 shape 范围。
+
+```csharp
+// recognitionProfile 是 PaddleOcrProfiles.CreateRecognition(...) 的返回值。
+TextCropProfile crop = recognitionProfile.CropProfile!
+    .WithRecognitionOverflowMode(RecognitionOverflowMode.Reject);
+// 将 crop 作为 OcrPipeline 的 cropProfile 参数。
+
+foreach (OcrRegionResult item in result.Regions)
+{
+    if (item.RecognitionWidth is OcrRecognitionWidthInfo width)
+        Console.WriteLine($"region={item.Region.SourceIndex}, natural={width.NaturalWidth}, " +
+            $"target={width.TargetWidth}, tensor={width.TensorWidth}, compressed={width.WidthClamped}");
+}
+```
+
+| 字段 | 含义 |
+| --- | --- |
+| `NaturalWidth` | 按已定向四边形长宽比计算的 `ceil(TargetHeight × width / height)`；在最小宽度、对齐和上限之前 |
+| `TargetWidth` | 当前区域经最小值、对齐和上限处理后的规划宽度；固定宽度模式采用 `FixedWidth` |
+| `TensorWidth` | 实际提交的 Batch 张量宽度，可能包含与其他更宽文本行共同补齐的 padding |
+| `WidthClamped` | 自然宽度大于该区域受限宽度，意味着水平压缩；仅增加 padding 不算压缩 |
+| `BatchPadded` | `TensorWidth > TargetWidth`，仅表示 Batch 补齐 |
+
+这些值由几何合同计算；OpenCV 透视中间图的边长会先取整，因此不是逐像素测得的 crop 栅格宽度。90°/270°方向先交换长宽，再做计算。宽度对齐产生的额外 padding 被上限裁掉时，只要原始内容仍可放下，就不会误报压缩。
+
+- **Clamp（兼容默认）**：超长行仍缩放到上限，结果的 `RecognitionWidth.WidthClamped=true`。它不是切分或无损长文本识别。
+- **Reject（显式启用）**：在识别 crop 分配和 REC 调用之前抛出 `OcrPipelineException`，错误码 `DS-VISUAL-4103`，阶段 `CropAndBatch`；包含 crop Profile、原 `RegionIndex` 和自然/受限宽度。DET 和可选 CLS 此时可能已经执行。一个区域超宽会使本次完整 OCR 调用失败，不静默丢掉该行；输入释放与取消语义不变。
+- **Split / SlidingWindow**：属于下一实施步骤，目前没有可用的公开枚举值或自动拼接能力，不能当作已支持。
+
+`crop.DescribeWidth(quadrilateral, orientation)` 只返回诊断，即使是 Reject 也不抛超宽异常，便于应用先规划；`CalculateWidth`、`TextCropRequest` 和实际 Pipeline 会执行 Reject。固定宽度模型的有效限制是 `FixedWidth`，不能通过更大的 `MaximumWidth` 绕过。
+
+既有构造函数和默认策略保留；手工使用旧 `OcrRegionResult(region, recognition)` 构造结果时，`RecognitionWidth=null` 表示诊断未知，不代表没有压缩。方向恢复及 ROI 投影/合并保留宽度来源。既有 `OcrResult.ComputeSha256()` 继续针对识别内容与几何，不加入这些诊断，以便与历史结果对照。
+
+基准工具可设置 `DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE=Clamp/Reject`、`DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH` 和 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR`。报告在计时外导出输入/模型/程序集 SHA、每行文字、polygon、字典 SHA 和宽度信息；完整操作见[基准工具说明](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark)。
+
+## 性能测量建议
+
+### 本步正确性验证（2026-09-16）
+
+使用同一 `demo_1.jpg`、v4 mobile/v5 mobile/v6 tiny，在 ONNX Runtime 1.23.2 CPU 与 CUDA 上验证了以下行为。设备为 Windows x64 / RTX3060 Laptop；这不是所有模型/后端的完整验收。
+
+| 检查 | 实测结果 |
+| --- | --- |
+| 同样的 Clamp/320 设置，改动前后各 6 组 | 文本 SHA 与完整结果合同 SHA 均一致 |
+| Clamp/320 的宽度记录 | v4 有 13/16 个区域压缩，v5/v6 各 12/16；两后端一致 |
+| Reject/320，各 6 组负向调用 | 都返回 `DS-VISUAL-4103` 和源区域索引，未作为模型“不支持”掩盖 |
+| Reject/3200，各 6 组 | 完整流水线通过；压缩区域为 0，同版本 CPU/CUDA 文本 SHA 一致 |
+
+将宽度从 320 改为 3200 后，本图实际规划的最大宽度是 859～973，而不是给每行都分配 3200。文本指纹有变化，但目前没有人工标注真值，不能将变化直接称为准确率提升。warmup=1/iterations=3 的短测用于验证行为，不作为性能结论；性能调优与长文本完整性指标将在后续步骤单独验收。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。

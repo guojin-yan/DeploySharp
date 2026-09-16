@@ -1,8 +1,37 @@
 # PaddleOCR backend benchmark
 
-This Windows-only console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
+This console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
 
-Detection uses one independently-created backend session. Classification and recognition use independent session pools and batches. ONNX Runtime and OpenVINO use the dynamic model contract; OpenCV DNN specializes symbolic dimensions into exact static contracts and pads the final fixed batch. Batches beyond pool capacity wait for an idle session, and their crop tensors are created only after a slot is available so a long document does not retain every prepared batch at once. The pipeline restores detector order before it writes a result.
+## Recognition width correctness / 识别宽度正确性
+
+The library default is **MaximumWidth=3200**. This benchmark retains **320** as its historical performance setting; it is not a library limitation. Increase it only when the model/backend/engine profile admits the requested shape.
+
+```powershell
+$env:DEPLOYSHARP_PADDLEOCR_AUTOTUNE = '0'
+$env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = 'Clamp' # or Reject
+$env:DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH = '320'
+$env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-widths'
+$env:DEPLOYSHARP_BENCHMARK_SOURCE_REVISION = '<actual-commit>+dirty'
+dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- E:\Model\paddleocr artifacts/ocr-widths/full.csv
+```
+
+`Clamp` preserves existing resizing and reports compressed rows. `Reject` fails the complete OCR call at `CropAndBatch` with `DS-VISUAL-4103`, before REC crop allocation/inference; DET/CLS may already have run. The policy applies to recognition only, not the fixed-width orientation classifier. Split and SlidingWindow recognition are not implemented in this step.
+
+The tool exits with code 3 when there are no successful rows, including when all calls are intentionally rejected by the width policy. A mixed-backend run with at least one success still requires inspection of every CSV status; exit code 0 is not a claim that all combinations passed.
+
+JSON sidecars are exported **outside measured spans** and contain the last measured result's text/polygons, dictionary SHA, natural/target/tensor widths, compression and batch-padding flags, input/model/assembly hashes and protocol. Existing CSV text/contract hashes are unchanged. A null width diagnostic means unknown, not uncompressed. Successful repeated configurations overwrite their same-named report; use a fresh output directory per experiment and retain failure rows/logs (failed calls have no successful width sidecar).
+
+主库默认上限仍为 3200，基准工具的 320 仅用于保持历史协议。自然宽度、区域受限宽度和实际批张量宽度分别记录，不能把补齐 padding 当成压缩。`Reject` 是显式正确性检查，不是失败后静默删行或退回 CPU；后续切分、滑窗拼接另行实施。
+
+## Portable Windows x64 package
+
+`portable/Build-PortableWinX64.ps1` publishes a self-contained Windows x64 benchmark package. The generated folder carries the .NET runtime, native CPU dependencies, the fixed benchmark image, selected ONNX/dictionary assets, a SHA-256 manifest, and a launcher that records hardware/runtime metadata next to every result. The executable first looks for `models` and `images/benchmark/demo_1.jpg` beside itself, so the folder can be copied without rewriting absolute paths. Run the package with `run-benchmark.cmd`; no .NET installation is required on the target host.
+
+The default portable protocol is ORT CPU with one fixed image. Multi-scene images belong to correctness demonstrations, not the cross-device performance table. The package now includes the project-owned Windows TensorRT bridge; the NVIDIA driver, CUDA/cuDNN/TensorRT vendor DLLs and GPU-specific engine sidecars remain target-machine prerequisites and are intentionally not copied into the package.
+
+Detection uses one independently-created backend session. Classification and recognition use independent session pools and batches. ONNX Runtime and OpenVINO use the dynamic model contract; OpenCV DNN specializes symbolic dimensions for each concrete batch shape, keeping recognition width dynamic while padding only within a width group. Batches beyond pool capacity wait for an idle session, and their crop tensors are created only after a slot is available so a long document does not retain every prepared batch at once. The pipeline restores detector order before it writes a result.
+
+When CUDA is selected, ONNX Runtime may report <code>VerifyEachNodeIsAssignedToAnEp</code>. Shape-only and indexing nodes can be intentionally partitioned to the CPU while the main convolution and matrix operators remain on CUDA. The message is emitted during session creation, not inside the measured inference interval; CPU fallback can still add a small synchronization/copy cost, but this warning alone does not indicate a failed CUDA provider. The portable benchmark uses ORT 1.23.2 because its GPU package imports CUDA 12 DLLs required by CUDA 12.8; changing ORT versions may change operator coverage, but the warning is primarily determined by the model graph and execution-provider support rather than by a version mismatch.
 
 ~~~powershell
 $env:DEPLOYSHARP_PADDLEOCR_ROOT = 'E:\\Model\\paddleocr'
@@ -15,7 +44,7 @@ Keep enough warm-up calls when comparing versions. The first supported pipeline 
 
 On the dedicated Win10 host, a five-warm-up/ten-call v5 mobile ORT CPU run measured about 10 ms preprocessing; a previous approximately 72 ms value came from a short noisy sample. Treat preprocessing as workload/host dependent and compare P50/P95.
 
-The default image is <code>E:\\Data\\ocr\\demo\\_1.jpg</code>. On the current workstation that name resolves to the existing file <code>E:\\Data\\ocr\\demo_1.jpg</code>; when it is not present, the runner downloads <code>ocr-demo_1.jpg</code> from the <code>test-assets.1</code> release, verifies SHA-256, and caches it under <code>%LOCALAPPDATA%\\DeploySharp\\TestImages</code>. Set <code>DEPLOYSHARP_TEST_IMAGE_ROOT</code> to reuse another cache or <code>DEPLOYSHARP_PADDLEOCR_IMAGE</code> to use an explicit image. The complete-pipeline CSV is written as <code>paddleocr-full-*.csv</code>. In addition to stage means, the final row contains <code>total_p50_ms</code> and <code>total_p95_ms</code> calculated from the timed calls; these are zero only for an internal single-sample autotune probe and are populated by the formal run.
+The default image is <code>E:\\Data\\ocr\\demo\\_1.jpg</code>. On the current workstation that name resolves to the existing file <code>E:\\Data\\ocr\\demo_1.jpg</code>; when it is not present, the runner downloads <code>ocr-demo_1.jpg</code> from the <code>test-assets.1</code> release, verifies SHA-256, and caches it under <code>%LOCALAPPDATA%\\DeploySharp\\TestImages</code>. Set <code>DEPLOYSHARP_TEST_IMAGE_ROOT</code> to reuse another cache or <code>DEPLOYSHARP_PADDLEOCR_IMAGE</code> to use an explicit image. The complete-pipeline CSV is written as <code>paddleocr-full-*.csv</code>. In addition to stage means, each formal row contains <code>total_min_ms</code>, <code>total_max_ms</code>, <code>total_p50_ms</code>, and <code>total_p95_ms</code> calculated from the timed calls. These exclude warm-up, model loading, autotune candidates, and inter-test delays, allowing the same result to show both peak latency and tail behavior.
 Use <code>DEPLOYSHARP_PADDLEOCR_BACKENDS</code> with a comma-separated list (for example <code>opencv-dnn</code> or <code>onnxruntime,openvino</code>) to run only selected backends while troubleshooting.
 Each full-pipeline call is bounded by <code>DEPLOYSHARP_PADDLEOCR_PIPELINE_TIMEOUT_MS</code> (default 15000 ms). A timeout is recorded as <code>unavailable</code> with a timeout detail instead of blocking the remaining model/backend rows.
 For steady-state throughput, set <code>DEPLOYSHARP_PADDLEOCR_REUSE_INPUT=1</code>. The decoded OpenCV image and detector tensor are prepared once and reused for warmup/timed calls; <code>preprocess_ms=0</code> and <code>total_ms</code> then represent warm pipeline latency. Leave it unset for end-to-end latency that includes image decode and preprocessing.
@@ -27,38 +56,73 @@ The fixed-run and batching controls are:
 - <code>DEPLOYSHARP_PADDLEOCR_STAGE_CONCURRENCY</code>: independently-created classifier/recognizer sessions (default <code>1</code>).
 - <code>DEPLOYSHARP_OPENCV_NUM_THREADS</code>: optional process-global OpenCV CPU thread count applied before OCR sessions are created. Leave it unset for the native default; test <code>4</code>, <code>8</code>, and <code>16</code> when combining several OCR channels because this trades per-session parallelism against channel-level concurrency.
 - <code>DEPLOYSHARP_PADDLEOCR_BATCH_SIZE</code>: maximum classifier/recognizer batch (default <code>4</code>).
+- <code>DEPLOYSHARP_PADDLEOCR_MAX_REGIONS</code>: maximum detected regions accepted by the complete-pipeline benchmark (default <code>32</code>). Increase it for dense documents; this is an application safety limit and does not change the DeploySharp pipeline default.
 - <code>DEPLOYSHARP_PADDLEOCR_INTRA_OP_THREADS</code>: explicit ONNX Runtime CPU threads per classifier/recognizer session. When unset during automatic tuning, CPU threads are divided by the candidate inference-channel count.
 - <code>DEPLOYSHARP_PADDLEOCR_DETECTION_INTRA_OP_THREADS</code>: ONNX Runtime CPU threads for the single detector session (default <code>0</code>, the runtime default); it is independent of the recognition pool size.
 - <code>DEPLOYSHARP_PADDLEOCR_MAX_PADDING_RATIO</code>: maximum padded-width work divided by natural-width work (default <code>2.0</code>). This permits useful batches for mixed-width text while bounding wasted padded computation.
 - <code>DEPLOYSHARP_PADDLEOCR_VERSIONS</code>: comma-separated filter such as <code>v5,v6-tiny</code>.
 - <code>DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE</code>: explicit TensorRT classification/recognition batch (default <code>1</code>; requires dynamic-batch engines).
+- <code>DEPLOYSHARP_PADDLEOCR_INTER_TEST_DELAY_MS</code>: pause after each disposed autotune candidate and formal version/backend case (default <code>1000</code>; outside measured timings). The portable PowerShell wrapper exposes the same setting as <code>-InterTestDelayMs</code>.
 
 Tune CPU thread counts and session count together. Multiplying full-core sessions usually oversubscribes the processor and can make a larger pool slower.
 
-If the repository contains `.onnx.engine` sidecars built by a different TensorRT minor release, rebuild them into an isolated output directory before measuring TensorRT. This leaves the source model directory unchanged:
+If the repository contains `.onnx.engine` sidecars built by a different TensorRT minor release, rebuild them on the target machine before measuring TensorRT. The portable package includes `Build-TensorRtEngines.ps1`; use the installed TensorRT `trtexec.exe` and write the sidecars directly into `models` so no vendor DLLs have to be copied into the package:
 
 ~~~powershell
-pwsh -NoProfile -File tools/DeploySharp.PaddleOcrBenchmark/Build-TensorRtEngines.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-TensorRtEngines.ps1 -ModelRoot .\models -OutputRoot .\models -TensorRtRoot 'C:\TensorRT-10.10.0.31'
 ~~~
 
-Then point the benchmark at that isolated directory with <code>DEPLOYSHARP_PADDLEOCR_ROOT=artifacts\local-model-benchmarks\paddleocr-trt11-rebuilt</code>. The script uses the v4/v5/v6 input profiles documented below and requires <code>trtexec.exe</code> from the selected TensorRT installation. It defaults to TensorRT <code>BuilderOptimizationLevel=3</code>; pass <code>-BuilderOptimizationLevel 0</code> only when engine build time matters more than steady-state latency. The optional <code>-Fp16</code> switch is capability checked before any model is copied or built. TensorRT 11 strongly typed builds do not expose <code>--fp16</code>; for that runtime, an FP16-typed ONNX graph is required and the script fails explicitly instead of labelling an FP32 graph as FP16.
+The script uses the v4/v5/v6 input profiles documented below and requires <code>trtexec.exe</code> from the selected TensorRT installation. It defaults to <code>BuilderOptimizationLevel=3</code>; pass <code>-BuilderOptimizationLevel 0</code> only when engine build time matters more than steady-state latency. Set <code>JYPPX_CUDA_ROOT</code> and <code>JYPPX_CUDNN_ROOT</code> to the target CUDA 12.8/cuDNN directories before building. The optional <code>-Fp16</code> switch is capability checked before any model is copied or built.
 
-To measure the TensorRT sidecars, configure a matching consumer-owned bridge and vendor runtimes in the same PowerShell process. The runner defaults to the TensorRT 11 API line; set <code>DEPLOYSHARP_TENSORRT_API_VERSION</code> to <code>8</code>, <code>10</code>, or <code>11</code> when the sidecars were built for another API line.
+To measure the TensorRT sidecars, configure the consumer-owned vendor runtimes in the same PowerShell process. The runner automatically points <code>JYPPX_NATIVE_BRIDGE_PATH</code> at the bundled Windows bridge and defaults to API line <code>10</code>; pass <code>-TensorRtApiVersion 8|10|11</code> when using another engine line. NuGet does not currently publish an exact `TRT 10.10 + CUDA 12.8` bridge; the bundled bridge is the published Windows TensorRT 10 bridge (`trt10.11.cuda12.9.cudnn9.22`, v4.0.0). Because the bridge uses the TensorRT 10 major ABI, validate the target's 10.10 engine load before collecting formal data and record the exact vendor versions in `environment.json`.
+
+On Windows the benchmark selects Microsoft.ML.OnnxRuntime.Gpu.Windows <code>1.23.2</code> for the CUDA 12 provider, so <code>onnxruntime-cuda</code> resolves <code>cublasLt64_12.dll</code> on CUDA 12.x systems. The repository default remains ORT <code>1.28.0</code>; restore or publish this CUDA 12 application with <code>-p:DeploySharpPaddleOcrCuda12=true</code> so the managed adapter and GPU package both resolve to 1.23.2. On Ubuntu 22.04 x64 the same property selects <code>Microsoft.ML.OnnxRuntime.Gpu.Linux</code> 1.23.2. The demo and benchmark reference the project-owned bridge package <code>JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge</code> (version <code>4.0.0</code>). The package contains only <code>libjyppxtrtbridge.so</code>; CUDA, cuDNN and TensorRT remain NVIDIA user-space prerequisites. Install CUDA 12.9, cuDNN 9.22 and TensorRT 11.0.0.114 from the matching NVIDIA repository, then restore/publish with <code>-p:RuntimeIdentifier=ubuntu.22.04-x64 -p:DeploySharpPaddleOcrCuda12=true</code>. The bridge is copied into the publish directory by the normal .NET asset flow.
+
+The repository also includes <code>build-tensorrt-engines.sh</code> for Linux. It copies ONNX files and OCR text assets to an isolated output, builds one static TensorRT 11 engine per ONNX file with <code>trtexec</code>, checks the v4/v5/v6 stage shapes, and fails on an empty engine. For the RTX 2060 host used by the case study:
+
+~~~bash
+export JYPPX_TENSORRT_ROOT=/usr
+export DEPLOYSHARP_PADDLEOCR_ROOT=/home/ygj/models/paddleocr
+export DEPLOYSHARP_PADDLEOCR_TENSORRT_ROOT=/home/ygj/models/paddleocr-trt11-cuda12.9-sm75
+TRTEXEC=/usr/bin/trtexec tools/DeploySharp.PaddleOcrBenchmark/build-tensorrt-engines.sh
+~~~
+
+The resulting <code>.onnx.engine</code> files are bound to the build GPU, TensorRT serialization version and declared profiles (detection <code>1x3x736x736</code>, recognition batch-dynamic with <code>48..320</code> width and an optimization width of <code>160</code>, v4 classification <code>1x3x48x192</code>, v5/v6 classification <code>1x3x80x160</code>). Rebuild them when moving to another GPU or TensorRT minor release.
+
+The Linux validation host completed the full DeploySharp pipeline with that isolated output. With one warm-up, two measured calls, batch one, and stage concurrency one, TensorRT 11 + CUDA 12.9 produced: PP-OCRv4 mobile <code>100.415 ms</code>, PP-OCRv5 mobile <code>171.841 ms</code>, PP-OCRv6 tiny <code>53.554 ms</code>, PP-OCRv6 small <code>93.051 ms</code>, and PP-OCRv6 medium <code>183.059 ms</code>. Every row returned 16 regions. The raw report is <code>paddleocr投稿/实测数据/远端Linux-20260908/linux-tensorrt-report.csv</code>; the combined CPU/GPU matrix is <code>linux-backend-matrix.csv</code> in the same directory.
+
+Example Linux run after publishing the benchmark and installing the matching NVIDIA user-space libraries:
+
+~~~bash
+app_root=/home/ygj/DeploySharp-linux/tools/DeploySharp.PaddleOcrBenchmark/bin/Release/net10.0/ubuntu.22.04-x64
+export LD_LIBRARY_PATH="$app_root:/usr/local/cuda/targets/x86_64-linux/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export JYPPX_NATIVE_BRIDGE_PATH="$app_root/libjyppxtrtbridge.so"
+export JYPPX_CUDA_ROOT=/usr/local/cuda
+export JYPPX_CUDNN_ROOT=/usr
+export JYPPX_TENSORRT_ROOT=/usr
+export DEPLOYSHARP_TENSORRT_RUN_EXTERNAL=1
+export DEPLOYSHARP_TENSORRT_API_VERSION=11
+export DEPLOYSHARP_CUDA_ARCHITECTURE=compute_75
+export DEPLOYSHARP_PADDLEOCR_ROOT=/home/ygj/models/paddleocr-trt11-cuda12.9-sm75
+export DEPLOYSHARP_PADDLEOCR_IMAGE=/home/ygj/demo_1.jpg
+export DEPLOYSHARP_PADDLEOCR_BACKENDS=tensorrt
+dotnet "$app_root/DeploySharp.PaddleOcrBenchmark.dll" "$DEPLOYSHARP_PADDLEOCR_ROOT" /tmp/linux-tensorrt-report.csv
+~~~
 
 ~~~powershell
-$env:DEPLOYSHARP_TENSORRT_RUN_EXTERNAL = '1'
-$env:DEPLOYSHARP_TENSORRT_API_VERSION = '11'
-$env:JYPPX_NATIVE_BRIDGE_PATH = '<path>\jyppxtrtbridge.dll'
-$env:JYPPX_TENSORRT_ROOT = 'D:\Program Files\TensorRT-11.0.0.114-cu12'
-$env:JYPPX_CUDA_ROOT = 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9'
-$env:JYPPX_CUDNN_ROOT = 'D:\Program Files\cuDNN-9.22.0-cuda12.9'
+$env:JYPPX_TENSORRT_ROOT = 'C:\TensorRT-10.10.0.31'
+$env:JYPPX_CUDA_ROOT = 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8'
+$env:JYPPX_CUDNN_ROOT = 'C:\Program Files\NVIDIA\CUDNN\v9'
 $env:PATH = "$env:JYPPX_TENSORRT_ROOT\bin;$env:JYPPX_TENSORRT_ROOT\lib;$env:JYPPX_CUDA_ROOT\bin;$env:JYPPX_CUDNN_ROOT\bin;$env:PATH"
-dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-TensorRtEngines.ps1 -ModelRoot .\models -OutputRoot .\models -TensorRtRoot $env:JYPPX_TENSORRT_ROOT
+.\Run-PaddleOcrBenchmark.ps1 -Backends tensorrt -Versions v4,v5,v6 -TensorRtApiVersion 10 -Warmup 5 -Iterations 20
 ~~~
+
+在多台设备上复测时可给运行命令增加 `-DeviceLabel RTX2060-Win10`。便携运行器会在每个 `results/<时间戳>/environment.json` 中记录设备标签、机器名、操作系统、CPU/内存、GPU/驱动、`nvidia-smi`、电源计划、输入与程序 SHA256，以及 CUDA/cuDNN/TensorRT 路径；同目录的 `summary.md` 会显示设备标签和 Run ID，便于后续合并报告。
 
 The bridge DLL must match the selected TensorRT API/CUDA line, and a serialized engine must also be built by the same TensorRT serialization version. A missing or incompatible bridge, or an engine deserialization mismatch, is recorded as <code>unavailable</code>; it is never reported as a timing pass. For example, an engine serialized by TensorRT 10.10 cannot be loaded by TensorRT 10.11 or 11.0.
 
-The TensorRT backend also runs the complete OCR pipeline when all three stage engines are present. The retained v4/v5/v6 sidecars under the original model directory are static TensorRT 11 engines with <code>1x3x736x736</code> detection, fixed <code>1x3x48x320</code> recognition, and batch-one contracts; their results are a correctness/latency baseline. For production batch throughput, rebuild isolated dynamic-batch engines with <code>Build-TensorRtEngines.ps1 -StageOptBatch 4 -StageMaxBatch 8</code>. Detection remains one image per call, while classification/recognition accept batches from 1 through 8. Set <code>DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE=4</code> when using that isolated output; the runner will not claim a larger batch for static sidecars.
+The TensorRT backend also runs the complete OCR pipeline when all three stage engines are present. Historical sidecars retained under the original model directory use a fixed <code>1x3x48x320</code> recognition contract and are kept only as an earlier correctness/latency baseline; do not use those engines for the current portable benchmark. Rebuild the package's ONNX files with <code>Build-TensorRtEngines.ps1 -StageOptBatch 4 -StageMaxBatch 8</code>. The current recognition profile accepts batch-dynamic widths from <code>48</code> through <code>320</code> (optimization width <code>160</code>), so each width-grouped batch is padded only to that batch's widest crop. Detection remains one image per call, while classification/recognition accept batches from 1 through 8. Set <code>DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE=4</code> when using that rebuilt output; the runner will not claim a larger batch for historical static sidecars.
 
 The complete-pipeline run uses the real image <code>E:\Data\ocr\demo_1.jpg</code> and reports separate preprocessing, detection, crop, orientation, recognition, merge, and total columns. On the dedicated Windows 10 / RTX 2060 machine, TensorRT 11.0 + CUDA 12.9 completed all five mobile pipelines (two warm-ups, five measured calls, stage concurrency one): the latest steady totals were v4 mobile <code>146.838 ms</code>, v5 mobile <code>190.556 ms</code>, v6 tiny <code>83.764 ms</code>, v6 small <code>167.552 ms</code>, and v6 medium <code>339.484 ms</code>. These runs reuse the decoded image and prepared detector input; model loading, engine building, and CUDA initialization are outside the timed region. Report: <code>artifacts/remote-test/paddleocr-full-tensorrt-all-rerun-20260829.csv</code>. A cold rerun (decode and preprocessing included) measured v4 mobile <code>189.896 ms</code>, v5 mobile <code>184.215 ms</code>, v6 tiny <code>92.890 ms</code>, v6 small <code>171.562 ms</code>, and v6 medium <code>343.556 ms</code>; report: <code>artifacts/remote-test/paddleocr-full-tensorrt-all-cold-rerun-20260829.csv</code>.
 
@@ -84,6 +148,8 @@ On the dedicated Windows 10 / RTX 2060 host, the current code and dynamic Tensor
 
 Setting <code>DEPLOYSHARP_CUDA_ARCHITECTURE=compute_75</code> enables the TensorRT session's compact GPU sequence-argmax path. The recognizer output remains on its TensorRT stream, a lazily compiled CUDA kernel produces only per-timestep class/confidence traces, and the full logits tensor is not copied to the CPU. Under the same ten-warm-up/fifty-call protocol, all five pipelines returned 16 regions and measured v4 mobile <code>53.045 ms</code>, v5 mobile <code>60.489 ms</code>, v6 tiny <code>29.972 ms</code>, v6 small <code>42.703 ms</code>, and v6 medium <code>92.142 ms</code>. Relative to the CPU CTC baseline, these totals are approximately 21%, 42%, 35%, 52%, and 32% lower. Report: <code>artifacts/remote-test/paddleocr-all-trt-opt3-b8-gpuctc-20260829.csv</code>.
 
+The CUDA sequence-argmax path is optional. With `DEPLOYSHARP_CUDA_ARCHITECTURE` unset, TensorRT still executes the OCR network on the GPU and the recognizer copies logits to the host for CPU CTC decoding. For `DS-TRT-5006`, repeat the same TensorRT case once with the variable cleared. Current diagnostics identify the OCR stage, TensorRT operation, internal phase, batch/time/class dimensions, CUDA architecture, and native exception message; `environment.json` records whether CUDA sequence argmax was enabled. An error that disappears only with the variable cleared is isolated to the optional CUDA CTC path, while a persistent error points to TensorRT enqueue, the engine optimization profile, or the installed runtime combination.
+
 A separate three-warm-up/ten-call A/B run compared the complete public OCR result contract, not only recognized text. Region indices/scores/polygons, recognized confidence/charset, and every token timestep/class/confidence/blank/repeat/unknown/emitted flag are included in <code>result_contract_sha256</code>. The CPU and GPU rows matched for all five models. In that controlled sample, GPU CTC reduced recognition from 41.128 to 24.586 ms (v4), 77.202 to 32.138 ms (v5), 97.492 to 50.916 ms (v6 medium), 66.893 to 22.501 ms (v6 small), and 28.875 to 12.607 ms (v6 tiny). Managed pipeline allocation fell from 56-120 MB to approximately 21-26 MB per call. Reports: <code>artifacts/remote-test/paddleocr-all-trt-b8-cpuctc-contract-20260829.csv</code> and <code>artifacts/remote-test/paddleocr-all-trt-b8-gpuctc-contract-20260829.csv</code>. DB contour/box decoding and region crop preparation still run on the CPU; this is not yet a fully device-resident OCR pipeline.
 
 The subsequent host hot-path pass reuses exact-size recognition tensor buffers and pooled DB workspaces, and computes convex hulls from connected-component boundary pixels instead of sorting every interior pixel. With ten warm-ups, fifty calls, batch eight, and one stage session, the sustained totals became v4 <code>44.652 ms</code>, v5 <code>54.210 ms</code>, v6 tiny <code>24.798 ms</code>, v6 small <code>37.477 ms</code>, and v6 medium <code>86.997 ms</code>. Managed allocation was approximately 14.1-16.8 MB per call and all five complete contract hashes remained unchanged. Report: <code>artifacts/remote-test/paddleocr-all-trt-opt3-b8-gpuctc-dbpool-telemetry-run-20260829.csv</code>.
@@ -98,9 +164,9 @@ The no-softmax CTC decoder now validates probabilities during its required argma
 
 BuilderOptimizationLevel 5 was also tested against level 3 with otherwise identical v6-tiny batch-16 profiles. Recognition was approximately <code>0.14%</code> slower and detection approximately <code>0.37%</code> faster, while engine construction took about 200 seconds. The difference is within run-to-run noise, so level 3 remains the default.
 
-The command writes a CSV under <code>artifacts/local-model-benchmarks</code> by default and emits one <code>PADDLEOCR_BENCHMARK</code> line per model/backend. Full-pipeline rows include detector inference/postprocessing, recognition preparation/inference/postprocessing work, recognition batch count, <code>result_text_sha256</code>, and <code>result_contract_sha256</code>; the latter covers geometry, region metadata, recognized text metadata, and the complete CTC token trace. Work timings are summed across concurrently executing batches and therefore may exceed recognition wall time. The detail column states whether TensorRT CUDA sequence argmax was enabled and records its architecture target. <code>pass</code> includes mean, P50, and P95 milliseconds; <code>unavailable</code> means runtime/device initialization or TensorRT engine deserialization failed; <code>unsupported</code> means the backend importer rejected the graph; <code>skip</code> means the backend gate was not enabled. TensorRT measurements require the consumer-owned bridge/runtime and <code>DEPLOYSHARP_TENSORRT_RUN_EXTERNAL=1</code>.
+The command writes a CSV under <code>artifacts/local-model-benchmarks</code> by default and emits one <code>PADDLEOCR_BENCHMARK</code> line per model/backend. Full-pipeline rows include detector inference/postprocessing, recognition preparation/inference/postprocessing work, recognition batch count, <code>result_text_sha256</code>, and <code>result_contract_sha256</code>; the latter covers geometry, region metadata, recognized text metadata, and the complete CTC token trace. Work timings are summed across concurrently executing batches and therefore may exceed recognition wall time. The detail column states whether TensorRT CUDA sequence argmax was enabled and records its architecture target. <code>pass</code> includes mean, minimum, maximum, P50, and P95 milliseconds; <code>unavailable</code> means runtime/device initialization or TensorRT engine deserialization failed; <code>unsupported</code> means the backend importer rejected the graph; <code>skip</code> means the backend gate was not enabled. TensorRT measurements require the consumer-owned bridge/runtime and <code>DEPLOYSHARP_TENSORRT_RUN_EXTERNAL=1</code>.
 
-The pipeline benchmark keeps model loading and OpenVINO compilation outside the timed region and measures OCR postprocessing in the stage columns. The crop_ms column is the bounded batch-planning/grouping cost; actual crop tensor materialization is performed just before each recognizer call and is included in recognition_ms so the reported stage sum remains an end-to-end wall-time accounting when batches overlap. The shared OpenCV Pillow-compatible resamplers use parallel row passes for large images (BLIP/Donut/SAM); small OCR crops stay single-threaded to avoid scheduler overhead. Results are local evidence and are not cross-machine performance guarantees.
+The pipeline benchmark keeps model loading and OpenVINO compilation outside the timed region and measures OCR postprocessing in the stage columns. The crop_ms column is the bounded batch-planning/grouping cost; actual crop tensor materialization is performed just before each recognizer call and is included in recognition_ms so the reported stage sum remains an end-to-end wall-time accounting when batches overlap. The shared OpenCV Pillow-compatible resamplers use parallel row passes for large images (BLIP/Donut/SAM); small OCR crops stay single-threaded to avoid scheduler overhead. On Ubuntu 22.04 the benchmark project selects the Ubuntu OpenCV and OpenVINO native packages; ORT CPU, OpenVINO CPU, and OpenCV DNN CPU have been exercised across PP-OCRv4/v5/v6 in the submission matrix. Results are local evidence and are not cross-machine performance guarantees.
 
 The OCR adapter reuses thread-local perspective-warp and resize Mats plus point buffers. This keeps the returned crop Mat independently owned while removing temporary native allocations from the per-region hot path. The visual pipeline also caches the immutable Core input collection for prepared-frame reuse. / OCR 适配器会复用线程本地透视变换/缩放 Mat 及角点缓冲；返回的 crop Mat 仍独立拥有，同时移除每个区域热路径中的临时 native 分配。视觉 Pipeline 还会缓存已准备帧对应的不可变 Core 输入集合。
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JYPPX.DeploySharp.Geometry;
 
 namespace JYPPX.DeploySharp.Visual
@@ -56,6 +57,26 @@ namespace JYPPX.DeploySharp.Visual
     /// <summary>Maps half-open source-image coordinates to model-input coordinates using scale and offset. / 使用缩放和偏移将半开区间源图坐标映射到模型输入坐标。</summary>
     public sealed class ImageTransform
     {
+        private readonly bool _isProjective;
+        private readonly double _m11;
+        private readonly double _m12;
+        private readonly double _m13;
+        private readonly double _m21;
+        private readonly double _m22;
+        private readonly double _m23;
+        private readonly double _m31;
+        private readonly double _m32;
+        private readonly double _m33;
+        private readonly double _i11;
+        private readonly double _i12;
+        private readonly double _i13;
+        private readonly double _i21;
+        private readonly double _i22;
+        private readonly double _i23;
+        private readonly double _i31;
+        private readonly double _i32;
+        private readonly double _i33;
+
         /// <summary>Initializes an invertible axis-aligned transform. / 初始化可逆的轴对齐变换。</summary>
         public ImageTransform(ImageTransformKind kind, VisualSize sourceSize, VisualSize modelSize, float scaleX, float scaleY, float offsetX, float offsetY)
         {
@@ -73,6 +94,55 @@ namespace JYPPX.DeploySharp.Visual
             ScaleY = scaleY;
             OffsetX = offsetX;
             OffsetY = offsetY;
+            _isProjective = false;
+            _m11 = scaleX;
+            _m12 = 0;
+            _m13 = offsetX;
+            _m21 = 0;
+            _m22 = scaleY;
+            _m23 = offsetY;
+            _m31 = 0;
+            _m32 = 0;
+            _m33 = 1;
+            _i11 = 1d / scaleX;
+            _i12 = 0;
+            _i13 = -offsetX / scaleX;
+            _i21 = 0;
+            _i22 = 1d / scaleY;
+            _i23 = -offsetY / scaleY;
+            _i31 = 0;
+            _i32 = 0;
+            _i33 = 1;
+        }
+
+        private ImageTransform(VisualSize sourceSize, VisualSize modelSize, double[] matrix, double[] inverse, ImageTransformKind kind = ImageTransformKind.Custom)
+        {
+            SourceSize = sourceSize;
+            ModelSize = modelSize;
+            Kind = kind;
+            _isProjective = true;
+            _m11 = matrix[0];
+            _m12 = matrix[1];
+            _m13 = matrix[2];
+            _m21 = matrix[3];
+            _m22 = matrix[4];
+            _m23 = matrix[5];
+            _m31 = matrix[6];
+            _m32 = matrix[7];
+            _m33 = matrix[8];
+            _i11 = inverse[0];
+            _i12 = inverse[1];
+            _i13 = inverse[2];
+            _i21 = inverse[3];
+            _i22 = inverse[4];
+            _i23 = inverse[5];
+            _i31 = inverse[6];
+            _i32 = inverse[7];
+            _i33 = inverse[8];
+            ScaleX = (float)_m11;
+            ScaleY = (float)_m22;
+            OffsetX = (float)_m13;
+            OffsetY = (float)_m23;
         }
 
         /// <summary>Gets the transform kind. / 获取变换类型。</summary>
@@ -89,6 +159,34 @@ namespace JYPPX.DeploySharp.Visual
         public float OffsetX { get; }
         /// <summary>Gets the vertical model-space offset. / 获取模型空间垂直偏移。</summary>
         public float OffsetY { get; }
+
+        /// <summary>Gets whether the transform is the legacy axis-aligned scale and offset form. / 获取变换是否为传统轴对齐缩放和偏移形式。</summary>
+        public bool IsAxisAligned => !_isProjective;
+
+        /// <summary>Gets whether the transform contains rotation, shear, or perspective terms. / 获取变换是否包含旋转、剪切或透视项。</summary>
+        public bool IsProjective => _isProjective;
+
+        /// <summary>Creates an invertible projective transform from four corresponding source/model corners. / 根据四组对应的源图和模型角点创建可逆透视变换。</summary>
+        /// <remarks>Points must be supplied in the same clockwise or counter-clockwise order and form non-degenerate quadrilaterals. Rectangles are mapped by all four corners, so rotated and perspective crops retain exact point geometry. / 两组点必须按相同顺时针或逆时针顺序提供并构成非退化四边形；矩形的四个角点均参与映射，因此旋转和透视裁剪可以保留精确点几何。</remarks>
+        public static ImageTransform Perspective(VisualSize sourceSize, VisualSize modelSize, IReadOnlyList<PointF> sourcePoints, IReadOnlyList<PointF> modelPoints)
+        {
+            if (sourcePoints == null) throw new ArgumentNullException(nameof(sourcePoints));
+            if (modelPoints == null) throw new ArgumentNullException(nameof(modelPoints));
+            if (sourcePoints.Count != 4 || modelPoints.Count != 4) throw new ArgumentException("Perspective transforms require exactly four source and four model points.");
+            double[] matrix = SolveHomography(sourcePoints, modelPoints);
+            double[] inverse = Invert3x3(matrix);
+            return new ImageTransform(sourceSize, modelSize, matrix, inverse);
+        }
+
+        /// <summary>Composes two transforms in source-to-intermediate then intermediate-to-model order. / 按源图到中间空间再到模型空间的顺序组合两个变换。</summary>
+        public static ImageTransform Compose(ImageTransform sourceToIntermediate, ImageTransform intermediateToModel)
+        {
+            if (sourceToIntermediate == null) throw new ArgumentNullException(nameof(sourceToIntermediate));
+            if (intermediateToModel == null) throw new ArgumentNullException(nameof(intermediateToModel));
+            if (sourceToIntermediate.ModelSize != intermediateToModel.SourceSize) throw new ArgumentException("The intermediate transform sizes must match.", nameof(intermediateToModel));
+            double[] product = Multiply(intermediateToModel.Matrix(), sourceToIntermediate.Matrix());
+            return new ImageTransform(sourceToIntermediate.SourceSize, intermediateToModel.ModelSize, product, Invert3x3(product));
+        }
 
         /// <summary>Creates a direct resize transform. / 创建直接缩放变换。</summary>
         public static ImageTransform Resize(VisualSize sourceSize, VisualSize modelSize)
@@ -123,32 +221,28 @@ namespace JYPPX.DeploySharp.Visual
         public PointF ToModel(PointF sourcePoint)
         {
             EnsureFinite(sourcePoint);
-            return new PointF((sourcePoint.X * ScaleX) + OffsetX, (sourcePoint.Y * ScaleY) + OffsetY);
+            return _isProjective ? Map(sourcePoint, _m11, _m12, _m13, _m21, _m22, _m23, _m31, _m32, _m33) : new PointF((sourcePoint.X * ScaleX) + OffsetX, (sourcePoint.Y * ScaleY) + OffsetY);
         }
 
         /// <summary>Maps a model-space point back to source space. / 将模型空间点逆向映射到源图空间。</summary>
         public PointF ToSource(PointF modelPoint)
         {
             EnsureFinite(modelPoint);
-            return new PointF((modelPoint.X - OffsetX) / ScaleX, (modelPoint.Y - OffsetY) / ScaleY);
+            return _isProjective ? Map(modelPoint, _i11, _i12, _i13, _i21, _i22, _i23, _i31, _i32, _i33) : new PointF((modelPoint.X - OffsetX) / ScaleX, (modelPoint.Y - OffsetY) / ScaleY);
         }
 
         /// <summary>Maps a half-open source-space rectangle to model space. / 将半开区间源图空间矩形映射到模型空间。</summary>
         public RectangleF ToModel(RectangleF sourceRectangle)
         {
             EnsureFinite(sourceRectangle);
-            PointF first = ToModel(new PointF(sourceRectangle.X, sourceRectangle.Y));
-            PointF second = ToModel(new PointF(sourceRectangle.Right, sourceRectangle.Bottom));
-            return FromCorners(first.X, first.Y, second.X, second.Y);
+            return Bounds(ToModelPoints(sourceRectangle));
         }
 
         /// <summary>Maps a half-open model-space rectangle back to source space. / 将半开区间模型空间矩形逆向映射到源图空间。</summary>
         public RectangleF ToSource(RectangleF modelRectangle)
         {
             EnsureFinite(modelRectangle);
-            PointF first = ToSource(new PointF(modelRectangle.X, modelRectangle.Y));
-            PointF second = ToSource(new PointF(modelRectangle.Right, modelRectangle.Bottom));
-            return FromCorners(first.X, first.Y, second.X, second.Y);
+            return Bounds(ToSourcePoints(modelRectangle));
         }
 
         /// <summary>Clips a source-space rectangle to half-open source image bounds. / 将源图空间矩形裁剪到半开区间源图边界。</summary>
@@ -169,6 +263,138 @@ namespace JYPPX.DeploySharp.Visual
             float right = Math.Max(x1, x2);
             float bottom = Math.Max(y1, y2);
             return new RectangleF(left, top, right - left, bottom - top);
+        }
+
+        private IReadOnlyList<PointF> ToModelPoints(RectangleF rectangle)
+        {
+            return new[]
+            {
+                ToModel(new PointF(rectangle.X, rectangle.Y)),
+                ToModel(new PointF(rectangle.Right, rectangle.Y)),
+                ToModel(new PointF(rectangle.Right, rectangle.Bottom)),
+                ToModel(new PointF(rectangle.X, rectangle.Bottom))
+            };
+        }
+
+        private IReadOnlyList<PointF> ToSourcePoints(RectangleF rectangle)
+        {
+            return new[]
+            {
+                ToSource(new PointF(rectangle.X, rectangle.Y)),
+                ToSource(new PointF(rectangle.Right, rectangle.Y)),
+                ToSource(new PointF(rectangle.Right, rectangle.Bottom)),
+                ToSource(new PointF(rectangle.X, rectangle.Bottom))
+            };
+        }
+
+        private static RectangleF Bounds(IReadOnlyList<PointF> points)
+        {
+            float minX = points[0].X;
+            float minY = points[0].Y;
+            float maxX = points[0].X;
+            float maxY = points[0].Y;
+            for (int index = 1; index < points.Count; index++)
+            {
+                minX = Math.Min(minX, points[index].X);
+                minY = Math.Min(minY, points[index].Y);
+                maxX = Math.Max(maxX, points[index].X);
+                maxY = Math.Max(maxY, points[index].Y);
+            }
+            return FromCorners(minX, minY, maxX, maxY);
+        }
+
+        private static PointF Map(PointF point, double m11, double m12, double m13, double m21, double m22, double m23, double m31, double m32, double m33)
+        {
+            double denominator = (m31 * point.X) + (m32 * point.Y) + m33;
+            if (Math.Abs(denominator) <= 1e-12) throw new VisualException(VisualErrorCodes.TransformInvalid, "A projective transform maps a point to infinity.");
+            float x = (float)(((m11 * point.X) + (m12 * point.Y) + m13) / denominator);
+            float y = (float)(((m21 * point.X) + (m22 * point.Y) + m23) / denominator);
+            if (float.IsNaN(x) || float.IsInfinity(x) || float.IsNaN(y) || float.IsInfinity(y)) throw new VisualException(VisualErrorCodes.TransformInvalid, "A projective transform produced a non-finite point.");
+            return new PointF(x, y);
+        }
+
+        private double[] Matrix()
+        {
+            return new[] { _m11, _m12, _m13, _m21, _m22, _m23, _m31, _m32, _m33 };
+        }
+
+        private static double[] Multiply(double[] left, double[] right)
+        {
+            var result = new double[9];
+            for (int row = 0; row < 3; row++) for (int column = 0; column < 3; column++)
+            {
+                result[(row * 3) + column] = (left[row * 3] * right[column]) + (left[(row * 3) + 1] * right[3 + column]) + (left[(row * 3) + 2] * right[6 + column]);
+            }
+            return result;
+        }
+
+        private static double[] SolveHomography(IReadOnlyList<PointF> source, IReadOnlyList<PointF> model)
+        {
+            var augmented = new double[8, 9];
+            for (int index = 0; index < 4; index++)
+            {
+                double x = source[index].X;
+                double y = source[index].Y;
+                double u = model[index].X;
+                double v = model[index].Y;
+                EnsureFinite(source[index]);
+                EnsureFinite(model[index]);
+                int row = index * 2;
+                augmented[row, 0] = x;
+                augmented[row, 1] = y;
+                augmented[row, 2] = 1;
+                augmented[row, 6] = -u * x;
+                augmented[row, 7] = -u * y;
+                augmented[row, 8] = u;
+                augmented[row + 1, 3] = x;
+                augmented[row + 1, 4] = y;
+                augmented[row + 1, 5] = 1;
+                augmented[row + 1, 6] = -v * x;
+                augmented[row + 1, 7] = -v * y;
+                augmented[row + 1, 8] = v;
+            }
+
+            for (int column = 0; column < 8; column++)
+            {
+                int pivot = column;
+                double largest = Math.Abs(augmented[pivot, column]);
+                for (int row = column + 1; row < 8; row++)
+                {
+                    double candidate = Math.Abs(augmented[row, column]);
+                    if (candidate > largest) { largest = candidate; pivot = row; }
+                }
+                if (largest <= 1e-12) throw new VisualException(VisualErrorCodes.TransformInvalid, "Perspective point correspondences are degenerate.");
+                if (pivot != column) for (int value = column; value <= 8; value++)
+                {
+                    double temporary = augmented[column, value];
+                    augmented[column, value] = augmented[pivot, value];
+                    augmented[pivot, value] = temporary;
+                }
+                double divisor = augmented[column, column];
+                for (int value = column; value <= 8; value++) augmented[column, value] /= divisor;
+                for (int row = 0; row < 8; row++)
+                {
+                    if (row == column) continue;
+                    double factor = augmented[row, column];
+                    if (Math.Abs(factor) <= 1e-15) continue;
+                    for (int value = column; value <= 8; value++) augmented[row, value] -= factor * augmented[column, value];
+                }
+            }
+
+            return new[] { augmented[0, 8], augmented[1, 8], augmented[2, 8], augmented[3, 8], augmented[4, 8], augmented[5, 8], augmented[6, 8], augmented[7, 8], 1d };
+        }
+
+        private static double[] Invert3x3(double[] matrix)
+        {
+            double a = matrix[0], b = matrix[1], c = matrix[2], d = matrix[3], e = matrix[4], f = matrix[5], g = matrix[6], h = matrix[7], i = matrix[8];
+            double determinant = a * ((e * i) - (f * h)) - b * ((d * i) - (f * g)) + c * ((d * h) - (e * g));
+            if (Math.Abs(determinant) <= 1e-12) throw new VisualException(VisualErrorCodes.TransformInvalid, "Perspective transform is not invertible.");
+            return new[]
+            {
+                ((e * i) - (f * h)) / determinant, ((c * h) - (b * i)) / determinant, ((b * f) - (c * e)) / determinant,
+                ((f * g) - (d * i)) / determinant, ((a * i) - (c * g)) / determinant, ((c * d) - (a * f)) / determinant,
+                ((d * h) - (e * g)) / determinant, ((b * g) - (a * h)) / determinant, ((a * e) - (b * d)) / determinant
+            };
         }
 
         private static void EnsureFinite(PointF point)

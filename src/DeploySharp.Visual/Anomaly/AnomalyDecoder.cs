@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JYPPX.DeploySharp.Results;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual
@@ -415,9 +416,31 @@ namespace JYPPX.DeploySharp.Visual
             int modelHeight = context.Input.ModelSize.Height;
             int sourceWidth = context.Input.SourceSize.Width;
             int sourceHeight = context.Input.SourceSize.Height;
+            if (context.Input.Transform.IsProjective)
+            {
+                return RestoreProjectiveSource(modelMap, modelWidth, modelHeight, sourceWidth, sourceHeight, context);
+            }
             return Options.Interpolation == AnomalyMapInterpolation.Nearest
                 ? RestoreNearestSource(modelMap, modelWidth, modelHeight, sourceWidth, sourceHeight, context)
                 : RestoreBilinearSource(modelMap, modelWidth, modelHeight, sourceWidth, sourceHeight, context);
+        }
+
+        private static float[] RestoreProjectiveSource(float[] modelMap, int modelWidth, int modelHeight, int sourceWidth, int sourceHeight, VisualDecodeContext context)
+        {
+            var result = new float[checked(sourceWidth * sourceHeight)];
+            for (int y = 0; y < sourceHeight; y++)
+            {
+                if ((y & 63) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                for (int x = 0; x < sourceWidth; x++)
+                {
+                    PointF model = context.Input.Transform.ToModel(new PointF(x + .5f, y + .5f));
+                    if (model.X < 0f || model.X >= modelWidth || model.Y < 0f || model.Y >= modelHeight) continue;
+                    int modelX = Math.Min(modelWidth - 1, Math.Max(0, (int)Math.Floor(model.X)));
+                    int modelY = Math.Min(modelHeight - 1, Math.Max(0, (int)Math.Floor(model.Y)));
+                    result[(y * sourceWidth) + x] = modelMap[(modelY * modelWidth) + modelX];
+                }
+            }
+            return result;
         }
 
         private static float[] RestoreNearestSource(float[] modelMap, int modelWidth, int modelHeight, int sourceWidth, int sourceHeight, VisualDecodeContext context)

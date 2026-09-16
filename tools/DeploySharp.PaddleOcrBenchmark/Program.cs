@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
@@ -19,12 +20,12 @@ using DnnCv2 = JYPPX.OpenCvSharp.Dnn.Cv2;
 
 internal static class Program
 {
-    private const string DefaultRoot = @"E:\Model\paddleocr";
+    private const string FallbackRoot = @"E:\Model\paddleocr";
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
     private static int Main(string[] args)
     {
-        string root = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? DefaultRoot;
+        string root = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? DefaultModelRoot();
         int warmup = ReadInt("DEPLOYSHARP_PADDLEOCR_WARMUP", 3);
         int iterations = ReadInt("DEPLOYSHARP_PADDLEOCR_ITERATIONS", 15);
         int stageConcurrency = ReadInt("DEPLOYSHARP_PADDLEOCR_STAGE_CONCURRENCY", 1);
@@ -33,6 +34,7 @@ internal static class Program
         int intraOpThreads = string.IsNullOrWhiteSpace(configuredIntraOpThreads) ? -1 : ReadNonNegativeInt("DEPLOYSHARP_PADDLEOCR_INTRA_OP_THREADS", 0);
         int detectionIntraOpThreads = ReadNonNegativeInt("DEPLOYSHARP_PADDLEOCR_DETECTION_INTRA_OP_THREADS", 0);
         double maximumPaddingRatio = ReadDouble("DEPLOYSHARP_PADDLEOCR_MAX_PADDING_RATIO", 2.0);
+        int interTestDelayMs = ReadNonNegativeInt("DEPLOYSHARP_PADDLEOCR_INTER_TEST_DELAY_MS", 1000);
         bool reusePreparedInput = ReadBool("DEPLOYSHARP_PADDLEOCR_REUSE_INPUT", false);
         bool autoTune = ReadBool("DEPLOYSHARP_PADDLEOCR_AUTOTUNE", true);
         int tensorRtBatchSize = ReadInt("DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE", 1);
@@ -50,18 +52,18 @@ internal static class Program
             Console.Error.WriteLine("PADDLEOCR_BENCHMARK_ERROR no-onnx-models-found=" + root);
             return 2;
         }
-        return RunFullPipeline(root, models, output, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, autoTune);
+        return RunFullPipeline(root, models, output, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, interTestDelayMs, autoTune);
     }
 
-    private static int RunFullPipeline(string root, IReadOnlyList<ModelCase> models, string output, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int stageConcurrency, int batchSize, int tensorRtBatchSize, int intraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio, bool autoTune)
+    private static int RunFullPipeline(string root, IReadOnlyList<ModelCase> models, string output, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int stageConcurrency, int batchSize, int tensorRtBatchSize, int intraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio, int interTestDelayMs, bool autoTune)
     {
         string? configuredImage = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_IMAGE");
-        string requestedImage = configuredImage ?? @"E:\Data\ocr\demo\_1.jpg";
+        string requestedImage = configuredImage ?? DefaultBenchmarkImage();
         string imagePath = TestImageResolver.Resolve(requestedImage, configuredImage == null);
         HashSet<string> selectedBackends = new HashSet<string>((Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_BACKENDS") ?? "onnxruntime,openvino,opencv-dnn,onnxruntime-cuda,tensorrt").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         HashSet<string> selectedVersions = new HashSet<string>((Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VERSIONS") ?? "v4,v5,v6").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         Console.WriteLine("PADDLEOCR_FULL_IMAGE requested=" + requestedImage + ";used=" + imagePath);
-        Console.WriteLine("PADDLEOCR_FULL_PARALLEL stageConcurrency=" + stageConcurrency.ToString(Invariant) + ";batchSize=" + batchSize.ToString(Invariant) + ";tensorRtBatchSize=" + tensorRtBatchSize.ToString(Invariant) + ";intraOpThreads=" + intraOpThreads.ToString(Invariant) + ";maximumPaddingRatio=" + maximumPaddingRatio.ToString("F3", Invariant));
+        Console.WriteLine("PADDLEOCR_FULL_PARALLEL stageConcurrency=" + stageConcurrency.ToString(Invariant) + ";batchSize=" + batchSize.ToString(Invariant) + ";tensorRtBatchSize=" + tensorRtBatchSize.ToString(Invariant) + ";intraOpThreads=" + intraOpThreads.ToString(Invariant) + ";maximumPaddingRatio=" + maximumPaddingRatio.ToString("F3", Invariant) + ";interTestDelayMs=" + interTestDelayMs.ToString(Invariant));
         var rows = new List<FullResultRow>();
         foreach (string version in new[] { "v4", "v5", "v6" })
         {
@@ -75,9 +77,11 @@ internal static class Program
                 if (detector == null || recognizer == null) continue;
                 void Add(string backend, string device)
                 {
-                    rows.Add(autoTune
-                        ? RunBestFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, warmup, iterations, tensorRtApiVersion, reusePreparedInput, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio)
-                        : RunFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, ResolveStageIntraOpThreads(backend, stageConcurrency, intraOpThreads), detectionIntraOpThreads, maximumPaddingRatio));
+                    FullResultRow result = autoTune
+                        ? RunBestFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, warmup, iterations, tensorRtApiVersion, reusePreparedInput, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, interTestDelayMs)
+                        : RunFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, ResolveStageIntraOpThreads(backend, stageConcurrency, intraOpThreads), detectionIntraOpThreads, maximumPaddingRatio);
+                    rows.Add(result);
+                    PauseBetweenTests(interTestDelayMs);
                 }
                 if (selectedBackends.Contains("onnxruntime")) Add("onnxruntime", "cpu");
                 if (selectedBackends.Contains("openvino")) Add("openvino", "CPU");
@@ -89,15 +93,27 @@ internal static class Program
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
         using (var writer = new StreamWriter(output, false, new System.Text.UTF8Encoding(false)))
         {
-            writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,image_path,detail");
+            writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_min_ms,total_max_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,image_path,detail");
             foreach (FullResultRow row in rows) writer.WriteLine(row.ToCsv());
         }
         Console.WriteLine("PADDLEOCR_FULL_REPORT=" + Path.GetFullPath(output));
         Console.WriteLine("PADDLEOCR_FULL_ROWS=" + rows.Count.ToString(Invariant));
-        return 0;
+        return rows.Any(row => row.Status == "pass") ? 0 : 3;
     }
 
-    private static FullResultRow RunBestFullBackend(string version, string backend, string device, ModelCase detector, ModelCase recognizer, ModelCase? classifier, string imagePath, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int configuredIntraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio)
+    private static string DefaultModelRoot()
+    {
+        string bundled = Path.Combine(AppContext.BaseDirectory, "models");
+        return Directory.Exists(bundled) ? bundled : FallbackRoot;
+    }
+
+    private static string DefaultBenchmarkImage()
+    {
+        string bundled = Path.Combine(AppContext.BaseDirectory, "images", "benchmark", "demo_1.jpg");
+        return File.Exists(bundled) ? bundled : @"E:\Data\ocr\demo\_1.jpg";
+    }
+
+    private static FullResultRow RunBestFullBackend(string version, string backend, string device, ModelCase detector, ModelCase recognizer, ModelCase? classifier, string imagePath, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int configuredIntraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio, int interTestDelayMs)
     {
         int[] concurrencyCandidates = ReadPositiveIntList("DEPLOYSHARP_PADDLEOCR_AUTOTUNE_CONCURRENCY", "1,2,4");
         int[] batchCandidates = ReadPositiveIntList("DEPLOYSHARP_PADDLEOCR_AUTOTUNE_BATCHES", "1,2,4,8,16");
@@ -111,7 +127,8 @@ internal static class Program
                 int stageIntraOpThreads = ResolveStageIntraOpThreads(backend, concurrency, configuredIntraOpThreads);
                 FullResultRow trial = RunFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, tuneWarmup, tuneIterations, tensorRtApiVersion, reusePreparedInput: true, concurrency, batch, batch, stageIntraOpThreads, detectionIntraOpThreads, maximumPaddingRatio);
                 trials.Add((concurrency, batch, trial));
-                Console.WriteLine("PADDLEOCR_AUTOTUNE_TRIAL version=" + version + ";variant=" + detector.Variant + ";backend=" + backend + ";concurrency=" + concurrency.ToString(Invariant) + ";batch=" + batch.ToString(Invariant) + ";status=" + trial.Status + (trial.Timing.HasValue ? ";stageMs=" + TunedStageMilliseconds(trial.Timing.Value).ToString("F3", Invariant) + ";totalMs=" + trial.Timing.Value.Total.ToString("F3", Invariant) + ";actualRecognitionBatches=" + trial.Timing.Value.RecognitionBatches.ToString(Invariant) : ";detail=" + trial.Detail));
+                Console.WriteLine("PADDLEOCR_AUTOTUNE_TRIAL version=" + version + ";variant=" + detector.Variant + ";backend=" + backend + ";concurrency=" + concurrency.ToString(Invariant) + ";batch=" + batch.ToString(Invariant) + ";status=" + trial.Status + (trial.Timing.HasValue ? ";stageMs=" + TunedStageMilliseconds(trial.Timing.Value).ToString("F3", Invariant) + ";totalMs=" + trial.Timing.Value.Total.ToString("F3", Invariant) + ";totalMinMs=" + trial.Timing.Value.TotalMin.ToString("F3", Invariant) + ";totalMaxMs=" + trial.Timing.Value.TotalMax.ToString("F3", Invariant) + ";actualRecognitionBatches=" + trial.Timing.Value.RecognitionBatches.ToString(Invariant) : ";detail=" + trial.Detail));
+                PauseBetweenTests(interTestDelayMs);
             }
         }
 
@@ -143,6 +160,15 @@ internal static class Program
     }
 
     private static double TunedStageMilliseconds(FullTiming timing) => timing.Orientation + timing.Recognition;
+
+    private static void PauseBetweenTests(int delayMs)
+    {
+        if (delayMs <= 0) return;
+        // The pipeline/session is disposed before this method is called. The
+        // pause gives native allocators and GPU drivers a short settling window,
+        // and is intentionally outside every measured timing sample.
+        Thread.Sleep(delayMs);
+    }
 
     private static int ResolveStageIntraOpThreads(string backend, int concurrency, int configured)
     {
@@ -180,6 +206,8 @@ internal static class Program
             using (PreparedVisualInput probe = new OpenCvVisualInputFactory().CreateFromFile(imagePath, detector.InputName, new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr))) sourceSize = probe.SourceSize;
             OpenCvPreprocessOptions detOptions = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize);
             int effectiveBatchSize = backend == "tensorrt" ? tensorRtBatchSize : batchSize;
+            int maximumRegions = ReadInt("DEPLOYSHARP_PADDLEOCR_MAX_REGIONS", 32);
+            if (maximumRegions <= 0) throw new ArgumentOutOfRangeException("DEPLOYSHARP_PADDLEOCR_MAX_REGIONS", "Maximum regions must be greater than zero.");
             if (backend == "tensorrt")
             {
                 // The retained remote sidecars use a static 736x736 detector input.
@@ -197,13 +225,16 @@ internal static class Program
             VisualModelProfile detProfile = det.VisualProfile;
             VisualModelProfile recProfile = rec.VisualProfile;
             VisualModelProfile? clsProfile = cls?.VisualProfile;
-            TextCropProfile recognitionCrop = rec.CropProfile!;
-            if (backend == "tensorrt") recognitionCrop = FixedWidthCrop(recognitionCrop, 320);
+            TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode());
             if (backend == "onnxruntime" || backend == "onnxruntime-cuda")
             {
                 OnnxRuntimeExecutionProvider executionProvider = backend == "onnxruntime-cuda" ? OnnxRuntimeExecutionProvider.Cuda : OnnxRuntimeExecutionProvider.Cpu;
-                var detectionOrtOptions = new OnnxRuntimeOptions(intraOpThreads: detectionIntraOpThreads, interOpThreads: 1, executionProvider: executionProvider, cudaDeviceId: 0);
-                var stageOrtOptions = new OnnxRuntimeOptions(intraOpThreads: intraOpThreads, interOpThreads: 1, executionProvider: executionProvider, cudaDeviceId: 0);
+                // ORT reports expected CPU placement for shape-only nodes at
+                // warning level when CUDA is enabled. Keep benchmark logs
+                // focused on actionable failures; the library default remains
+                // Warning for general applications.
+                var detectionOrtOptions = new OnnxRuntimeOptions(intraOpThreads: detectionIntraOpThreads, interOpThreads: 1, executionProvider: executionProvider, cudaDeviceId: 0, logSeverity: OnnxRuntimeLogSeverity.Error);
+                var stageOrtOptions = new OnnxRuntimeOptions(intraOpThreads: intraOpThreads, interOpThreads: 1, executionProvider: executionProvider, cudaDeviceId: 0, logSeverity: OnnxRuntimeLogSeverity.Error);
                 detectionRegistry.UseOnnxRuntime(detectionOrtOptions);
                 stageRegistry.UseOnnxRuntime(stageOrtOptions);
                 orientationRegistry.UseOnnxRuntime(stageOrtOptions);
@@ -222,15 +253,14 @@ internal static class Program
                 TensorShape detInput = new TensorShape(1, 3, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorShape detOutput = new TensorShape(1, 1, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorDescriptor recOutput = OpenCvOutput(recognizer);
-                TensorShape recInput = new TensorShape(effectiveBatchSize, 3, 48, 320);
-                TensorShape recOutputShape = WithBatch(recOutput.Shape, effectiveBatchSize);
+                // Keep the batch dimension static for OpenCV's importer, but
+                // specialize recognition width for each concrete runtime batch.
+                TensorShape recInput = new TensorShape(effectiveBatchSize, 3, 48, -1);
+                TensorShape recOutputShape = new TensorShape(effectiveBatchSize, -1, recOutput.Shape[2]);
                 detProfile = WithStaticOpenCvContract(detProfile, detInput, detOutput);
                 recProfile = WithStaticOpenCvContract(recProfile, recInput, recOutputShape);
-                recognitionCrop = FixedWidthCrop(recognitionCrop, 320);
                 // Keep OpenCV DNN's production CPU graph optimizations enabled. The
-                // static contracts above already constrain the admitted graph; Fusion
-                // and Winograd reduce repeated convolution work without changing the
-                // tensor contract.
+                // batch-static / width-dynamic contract is specialized by the adapter.
                 detectionRegistry.UseOpenCvDnn(new OpenCvDnnOptions(OpenCvContract(detProfile), numThreads: openCvNumThreads));
                 stageRegistry.UseOpenCvDnn(new OpenCvDnnOptions(OpenCvContract(recProfile), numThreads: openCvNumThreads));
                 if (clsProfile != null)
@@ -263,12 +293,14 @@ internal static class Program
             using OcrPipeline pipeline = cls == null
                 ? new OcrPipeline(detectionRegistry, profiles.Select(det.CreateArtifact(detectorPath, request.BackendId), detectionRegistry, request, VisualTaskId.TextDetection), request,
                     stageRegistry, profiles.Select(rec.CreateArtifact(recognizerPath, request.BackendId), stageRegistry, request, VisualTaskId.TextRecognition), request, recognitionCrop,
-                    new OcrPipelineOptions(maximumRegions: 32, maximumRecognitionBatch: effectiveBatchSize, maximumRecognitionPaddingRatio: maximumPaddingRatio), new SessionOptions(1), new SessionOptions(stageConcurrency))
+                    new OcrPipelineOptions(maximumRegions: maximumRegions, maximumRecognitionBatch: effectiveBatchSize, maximumRecognitionPaddingRatio: maximumPaddingRatio, autoRotateVerticalText: true), new SessionOptions(1), new SessionOptions(stageConcurrency))
                 : new OcrPipeline(detectionRegistry, profiles.Select(det.CreateArtifact(detectorPath, request.BackendId), detectionRegistry, request, VisualTaskId.TextDetection), request,
                     orientationRegistry, profiles.Select(cls.CreateArtifact(classifierPath!, request.BackendId), orientationRegistry, request, VisualTaskId.TextOrientationClassification), request, cls.CropProfile!,
                     stageRegistry, profiles.Select(rec.CreateArtifact(recognizerPath, request.BackendId), stageRegistry, request, VisualTaskId.TextRecognition), request, recognitionCrop,
-                    new OcrPipelineOptions(maximumRegions: 32, maximumRecognitionBatch: effectiveBatchSize, maximumRecognitionPaddingRatio: maximumPaddingRatio), new SessionOptions(1), new SessionOptions(stageConcurrency), new SessionOptions(stageConcurrency), OcrOrientationRejectionPolicy.UseZeroDegrees);
+                    new OcrPipelineOptions(maximumRegions: maximumRegions, maximumRecognitionBatch: effectiveBatchSize, maximumRecognitionPaddingRatio: maximumPaddingRatio, autoRotateVerticalText: true), new SessionOptions(1), new SessionOptions(stageConcurrency), new SessionOptions(stageConcurrency), OcrOrientationRejectionPolicy.UseZeroDegrees);
             if (reusePreparedInput) reusableInput = new OpenCvOcrImageInputFactory().CreateFromFile(imagePath, det.VisualProfile.Input.Name, detOptions);
+            string? widthReportDirectory = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR");
+            OcrResult? widthReportResult = null;
             FullTiming MeasureOne()
             {
                 long preprocessAllocatedBefore = GC.GetAllocatedBytesForCurrentThread();
@@ -284,6 +316,7 @@ internal static class Program
                     long pipelineAllocatedBefore = GC.GetTotalAllocatedBytes(false);
                     OcrResult result = pipeline.Run(ownedInput, new OcrExecutionOptions(TimeSpan.FromMilliseconds(pipelineTimeoutMs)));
                     long pipelineAllocated = GC.GetTotalAllocatedBytes(false) - pipelineAllocatedBefore;
+                    if (!string.IsNullOrWhiteSpace(widthReportDirectory)) widthReportResult = result;
                     double preprocessing = reusePreparedInput ? 0d : prep.Elapsed.TotalMilliseconds;
                     OcrDetailedStageTiming details = result.Timing.Details ?? new OcrDetailedStageTiming(TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, 0);
                     return new FullTiming(
@@ -300,6 +333,8 @@ internal static class Program
                         details.RecognitionBatchCount,
                         result.Timing.Orchestration.TotalMilliseconds,
                         preprocessing + result.Timing.Total.TotalMilliseconds,
+                        0d,
+                        0d,
                         0d,
                         0d,
                         preprocessAllocated,
@@ -323,6 +358,11 @@ internal static class Program
                     ? "TensorRT CUDA sequence argmax is disabled; recognition output uses the CPU fallback"
                     : "TensorRT CUDA sequence argmax is enabled for " + architecture.Trim();
             }
+            if (widthReportResult != null)
+                WriteWidthReport(widthReportDirectory!, version, detector.Variant, backend, widthReportResult, recognitionCrop,
+                    imagePath, detectorPath, recognizerPath, classifierPath, warmup, iterations, effectiveBatchSize, stageConcurrency, reusePreparedInput);
+            accelerationDetail = (accelerationDetail == null ? string.Empty : accelerationDetail + "; ")
+                + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant);
             return FullResultRow.Pass(version, detector.Variant, backend, device, imagePath, FullTiming.Average(values), reusePreparedInput, stageConcurrency, effectiveBatchSize, accelerationDetail);
         }
         catch (OcrPipelineException ex) when (ex.InnerException is OperationCanceledException || ex.Message.Contains("cancel", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
@@ -331,8 +371,8 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            if (version == "v4" && (backend == "onnxruntime" || backend == "openvino"))
-                return FullResultRow.Unsupported(version, detector.Variant, backend, device, imagePath, "PP-OCRv4 legacy graph output metadata does not match the current strict visual OCR pipeline profile.");
+            // Preserve the actual failure. A version-wide legacy label hides width rejection,
+            // runtime errors and resource limits as an unrelated metadata incompatibility.
             if (IsRuntimeUnavailable(ex))
                 return FullResultRow.Unavailable(version, detector.Variant, backend, device, imagePath, FullResultRow.ExceptionDetail(ex));
             return FullResultRow.Fail(version, detector.Variant, backend, device, imagePath, ex);
@@ -348,9 +388,58 @@ internal static class Program
         for (Exception? current = exception; current != null; current = current.InnerException)
         {
             if (current is DeploySharpException deploySharp &&
-                (deploySharp.ErrorCode == OnnxRuntimeErrorCodes.ExecutionProviderUnavailable || deploySharp.ErrorCode == DeploySharpErrorCodes.NativeRuntimeUnavailable)) return true;
+                (deploySharp.ErrorCode == OnnxRuntimeErrorCodes.ExecutionProviderUnavailable ||
+                 deploySharp.ErrorCode == DeploySharpErrorCodes.NativeRuntimeUnavailable ||
+                 deploySharp.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)) return true;
         }
         return false;
+    }
+
+    private static RecognitionOverflowMode ReadRecognitionOverflowMode()
+    {
+        string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE")?.Trim().ToLowerInvariant() ?? "clamp";
+        return mode switch
+        {
+            "clamp" => RecognitionOverflowMode.Clamp,
+            "reject" => RecognitionOverflowMode.Reject,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE currently accepts only Clamp or Reject. Split/SlidingWindow are not implemented yet.")
+        };
+    }
+
+    private static void WriteWidthReport(string directory, string version, string variant, string backend, OcrResult result, TextCropProfile crop,
+        string image, string detector, string recognizer, string? classifier, int warmup, int iterations, int batch, int sessions, bool reusePreparedInput)
+    {
+        // Export outside timed spans. Keep text/geometry and width provenance in separate fields so existing text/contract hashes stay stable.
+        static object Artifact(string path)
+        {
+            using FileStream stream = File.OpenRead(path);
+            return new { Path = Path.GetFullPath(path), Bytes = stream.Length, Sha256 = Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant() };
+        }
+        string path = Path.Combine(Path.GetFullPath(directory), version + "-" + variant + "-" + backend + "-b" + batch + "-s" + sessions + ".width.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var report = new
+        {
+            SchemaVersion = 1, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
+            Assembly = Artifact(typeof(Program).Assembly.Location),
+            VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
+            Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
+            Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode },
+            SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
+            ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
+            Regions = result.Regions.Select(item => new
+            {
+                item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth
+            }).ToArray()
+        };
+        File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        }));
+        Console.WriteLine("PADDLEOCR_WIDTH_REPORT=" + path);
     }
 
     private static string ComputeTextSha256(OcrResult result)
@@ -412,7 +501,11 @@ internal static class Program
     {
         string dictionary = version == "v4" ? Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, "ppocrv4_keys.txt") : version == "v5" ? Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, "ppocrv5_dict.txt") : Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, model.Variant == "tiny" ? "PP-OCRv6_tiny_rec_dict.txt" : "PP-OCRv6_" + model.Variant + "_rec_dict.txt");
         OcrCharacterSet chars = LoadBenchmarkCharacterSet(dictionary, "external." + version + ".dict", version);
-        return PaddleOcrProfiles.CreateRecognition(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/rec"), Artifact(model, modelFormat), chars, outputName: version == "v4" ? "softmax_11.tmp_0" : "fetch_name_0");
+        // The benchmark application intentionally caps recognition crops at 320 pixels.
+        // The reusable DeploySharp library keeps its broader default (3200); this
+        // application-level cap avoids measuring padded work that is not representative
+        // of the bundled PaddleOCR mobile models.
+        return PaddleOcrProfiles.CreateRecognition(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/rec"), Artifact(model, modelFormat), chars, outputName: version == "v4" ? "softmax_11.tmp_0" : "fetch_name_0", maximumWidth: ReadInt("DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH", 320));
     }
 
     private static VisualModelProfile WithStaticOpenCvContract(VisualModelProfile source, TensorShape inputShape, TensorShape outputShape)
@@ -438,11 +531,6 @@ internal static class Program
         dimensions[0] = batch;
         return new TensorShape(dimensions);
     }
-
-    private static TextCropProfile FixedWidthCrop(TextCropProfile source, int width)
-        => new TextCropProfile(
-            source.ProfileId + ".fixed-w" + width.ToString(Invariant), source.TargetHeight, OcrRecognitionWidthMode.Fixed, width, width,
-            source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales, source.PaddingColor, source.MaximumCropPixels);
 
     private static OcrCharacterSet LoadBenchmarkCharacterSet(string path, string id, string version)
     {
@@ -614,7 +702,7 @@ internal static class Program
             values[i] = stopwatch.Elapsed.TotalMilliseconds;
         }
         Array.Sort(values);
-        return new Timing(values.Average(), Percentile(values, .5), Percentile(values, .95));
+        return new Timing(values.Average(), values[0], values[^1], Percentile(values, .5), Percentile(values, .95));
     }
 
     private static double Percentile(double[] values, double percentile)
@@ -629,14 +717,14 @@ internal static class Program
 
     private static ResultRow Pass(ModelCase model, string backend, string device, Timing timing, string detail)
     {
-        var row = new ResultRow(model, backend, device, "pass", timing.Mean, timing.P50, timing.P95, detail);
+        var row = new ResultRow(model, backend, device, "pass", timing.Mean, timing.Min, timing.Max, timing.P50, timing.P95, detail);
         Console.WriteLine(row.ToLog());
         return row;
     }
 
     private static ResultRow Skip(ModelCase model, string backend, string device, string detail)
     {
-        var row = new ResultRow(model, backend, device, "skip", null, null, null, detail);
+        var row = new ResultRow(model, backend, device, "skip", null, null, null, null, null, detail);
         Console.WriteLine(row.ToLog());
         return row;
     }
@@ -646,9 +734,9 @@ internal static class Program
         string detail = exception.GetType().Name + ": " + exception.Message.Replace((char)13, ' ').Replace((char)10, ' ');
         if (exception is DeploySharpException deploySharp && !string.IsNullOrWhiteSpace(deploySharp.TechnicalDetails))
             detail += " | " + deploySharp.TechnicalDetails!.Replace((char)13, ' ').Replace((char)10, ' ');
-        bool tensorRtBridgeUnavailable = backend == "tensorrt" && detail.Contains("BridgeProbeException", StringComparison.OrdinalIgnoreCase);
+        bool tensorRtBridgeUnavailable = backend == "tensorrt" && (detail.Contains("BridgeProbeException", StringComparison.OrdinalIgnoreCase) || exception is TensorRtBackendException tensorRt && tensorRt.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable);
         string status = backend.IndexOf("cuda", StringComparison.OrdinalIgnoreCase) >= 0 || tensorRtBridgeUnavailable ? "unavailable" : backend == "opencv-dnn" ? "unsupported" : "fail";
-        var row = new ResultRow(model, backend, device, status, null, null, null, detail);
+        var row = new ResultRow(model, backend, device, status, null, null, null, null, null, detail);
         Console.WriteLine(row.ToLog());
         return row;
     }
@@ -686,16 +774,16 @@ internal static class Program
     }
 
     private sealed record ModelCase(string Version, string Variant, string Role, string OnnxPath, string? EnginePath, TensorShape InputShape, string InputName);
-    private readonly record struct Timing(double Mean, double P50, double P95);
-    private sealed record ResultRow(ModelCase Model, string Backend, string Device, string Status, double? Mean, double? P50, double? P95, string Detail)
+    private readonly record struct Timing(double Mean, double Min, double Max, double P50, double P95);
+    private sealed record ResultRow(ModelCase Model, string Backend, string Device, string Status, double? Mean, double? Min, double? Max, double? P50, double? P95, string Detail)
     {
-        public string ToLog() => "PADDLEOCR_BENCHMARK version=" + Model.Version + ";variant=" + Model.Variant + ";role=" + Model.Role + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Mean.HasValue ? ";meanMs=" + Mean.Value.ToString("F3", Invariant) + ";p50Ms=" + P50!.Value.ToString("F3", Invariant) + ";p95Ms=" + P95!.Value.ToString("F3", Invariant) : ";detail=" + Detail);
-        public string ToCsv() => string.Join(",", new[] { Model.Version, Model.Variant, Model.Role, Backend, Device, Status, Csv(Mean), Csv(P50), Csv(P95), Csv(Model.OnnxPath), Csv(Detail) });
+        public string ToLog() => "PADDLEOCR_BENCHMARK version=" + Model.Version + ";variant=" + Model.Variant + ";role=" + Model.Role + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Mean.HasValue ? ";meanMs=" + Mean.Value.ToString("F3", Invariant) + ";minMs=" + Min!.Value.ToString("F3", Invariant) + ";maxMs=" + Max!.Value.ToString("F3", Invariant) + ";p50Ms=" + P50!.Value.ToString("F3", Invariant) + ";p95Ms=" + P95!.Value.ToString("F3", Invariant) : ";detail=" + Detail);
+        public string ToCsv() => string.Join(",", new[] { Model.Version, Model.Variant, Model.Role, Backend, Device, Status, Csv(Mean), Csv(Min), Csv(Max), Csv(P50), Csv(P95), Csv(Model.OnnxPath), Csv(Detail) });
         private static string Csv(double? value) => value.HasValue ? value.Value.ToString("F3", Invariant) : "";
         private static string Csv(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 
-    private readonly record struct FullTiming(double Preprocess, double Detection, double DetectionInference, double DetectionPostprocess, double Crop, double Orientation, double Recognition, double RecognitionPrepareWork, double RecognitionInferenceWork, double RecognitionPostprocessWork, int RecognitionBatches, double Merge, double Total, double TotalP50, double TotalP95, long PreprocessAllocatedBytes, long PipelineProcessAllocatedBytes, int Regions, string ResultTextSha256, string ResultContractSha256)
+    private readonly record struct FullTiming(double Preprocess, double Detection, double DetectionInference, double DetectionPostprocess, double Crop, double Orientation, double Recognition, double RecognitionPrepareWork, double RecognitionInferenceWork, double RecognitionPostprocessWork, int RecognitionBatches, double Merge, double Total, double TotalMin, double TotalMax, double TotalP50, double TotalP95, long PreprocessAllocatedBytes, long PipelineProcessAllocatedBytes, int Regions, string ResultTextSha256, string ResultContractSha256)
     {
         public static FullTiming Average(IReadOnlyList<FullTiming> values)
         {
@@ -718,6 +806,8 @@ internal static class Program
                 (int)Math.Round(values.Average(x => x.RecognitionBatches)),
                 values.Average(x => x.Merge),
                 values.Average(x => x.Total),
+                totals[0],
+                totals[^1],
                 Percentile(totals, .5),
                 Percentile(totals, .95),
                 checked((long)values.Average(x => x.PreprocessAllocatedBytes)),
@@ -758,11 +848,27 @@ internal static class Program
         {
             string detail = ex.GetType().Name + ": " + ex.Message.Replace((char)13, ' ').Replace((char)10, ' ');
             var errorCodes = new List<string>();
+            var contexts = new List<string>();
             for (Exception? current = ex; current != null; current = current.InnerException)
             {
                 if (current is DeploySharpException deploySharp && !errorCodes.Contains(deploySharp.ErrorCode, StringComparer.Ordinal)) errorCodes.Add(deploySharp.ErrorCode);
+                if (current is OcrPipelineException ocr)
+                {
+                    string value = "ocrStage=" + ocr.Stage;
+                    if (!string.IsNullOrWhiteSpace(ocr.ProfileId)) value += ";profile=" + ocr.ProfileId;
+                    if (ocr.RegionIndex.HasValue) value += ";region=" + ocr.RegionIndex.Value.ToString(Invariant);
+                    if (!string.IsNullOrWhiteSpace(ocr.TensorName)) value += ";tensor=" + ocr.TensorName;
+                    if (!contexts.Contains(value, StringComparer.Ordinal)) contexts.Add(value);
+                }
+                if (current is TensorRtBackendException tensorRt)
+                {
+                    string value = "trtOperation=" + (tensorRt.Operation ?? "unknown");
+                    if (!string.IsNullOrWhiteSpace(tensorRt.TensorName)) value += ";tensor=" + tensorRt.TensorName;
+                    if (!contexts.Contains(value, StringComparer.Ordinal)) contexts.Add(value);
+                }
             }
             if (errorCodes.Count > 0) detail += " | errorCodes=" + string.Join("->", errorCodes);
+            if (contexts.Count > 0) detail += " | " + string.Join(" | ", contexts);
             string? technical = FindConciseTechnicalDetails(ex);
             if (!string.IsNullOrWhiteSpace(technical)) detail += " | " + technical;
             return detail;
@@ -778,13 +884,13 @@ internal static class Program
             }
             return null;
         }
-        public string ToLog() => "PADDLEOCR_FULL version=" + Version + ";variant=" + Variant + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Timing.HasValue ? ";selectedBatchSize=" + SelectedBatchSize + ";selectedInferenceChannels=" + SelectedInferenceChannels + ";preprocessMs=" + Timing.Value.Preprocess.ToString("F3", Invariant) + ";detectionMs=" + Timing.Value.Detection.ToString("F3", Invariant) + ";detectionInferenceMs=" + Timing.Value.DetectionInference.ToString("F3", Invariant) + ";detectionPostprocessMs=" + Timing.Value.DetectionPostprocess.ToString("F3", Invariant) + ";cropMs=" + Timing.Value.Crop.ToString("F3", Invariant) + ";orientationMs=" + Timing.Value.Orientation.ToString("F3", Invariant) + ";recognitionMs=" + Timing.Value.Recognition.ToString("F3", Invariant) + ";recognitionPrepareWorkMs=" + Timing.Value.RecognitionPrepareWork.ToString("F3", Invariant) + ";recognitionInferenceWorkMs=" + Timing.Value.RecognitionInferenceWork.ToString("F3", Invariant) + ";recognitionPostprocessWorkMs=" + Timing.Value.RecognitionPostprocessWork.ToString("F3", Invariant) + ";recognitionBatches=" + Timing.Value.RecognitionBatches.ToString(Invariant) + ";mergeMs=" + Timing.Value.Merge.ToString("F3", Invariant) + ";totalMs=" + Timing.Value.Total.ToString("F3", Invariant) + ";totalP50Ms=" + Timing.Value.TotalP50.ToString("F3", Invariant) + ";totalP95Ms=" + Timing.Value.TotalP95.ToString("F3", Invariant) + ";preprocessAllocated=" + Timing.Value.PreprocessAllocatedBytes.ToString(Invariant) + ";pipelineProcessAllocated=" + Timing.Value.PipelineProcessAllocatedBytes.ToString(Invariant) + ";regions=" + Regions + ";resultTextSha256=" + Timing.Value.ResultTextSha256 + ";resultContractSha256=" + Timing.Value.ResultContractSha256 : ";detail=" + Detail);
+        public string ToLog() => "PADDLEOCR_FULL version=" + Version + ";variant=" + Variant + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Timing.HasValue ? ";selectedBatchSize=" + SelectedBatchSize + ";selectedInferenceChannels=" + SelectedInferenceChannels + ";preprocessMs=" + Timing.Value.Preprocess.ToString("F3", Invariant) + ";detectionMs=" + Timing.Value.Detection.ToString("F3", Invariant) + ";detectionInferenceMs=" + Timing.Value.DetectionInference.ToString("F3", Invariant) + ";detectionPostprocessMs=" + Timing.Value.DetectionPostprocess.ToString("F3", Invariant) + ";cropMs=" + Timing.Value.Crop.ToString("F3", Invariant) + ";orientationMs=" + Timing.Value.Orientation.ToString("F3", Invariant) + ";recognitionMs=" + Timing.Value.Recognition.ToString("F3", Invariant) + ";recognitionPrepareWorkMs=" + Timing.Value.RecognitionPrepareWork.ToString("F3", Invariant) + ";recognitionInferenceWorkMs=" + Timing.Value.RecognitionInferenceWork.ToString("F3", Invariant) + ";recognitionPostprocessWorkMs=" + Timing.Value.RecognitionPostprocessWork.ToString("F3", Invariant) + ";recognitionBatches=" + Timing.Value.RecognitionBatches.ToString(Invariant) + ";mergeMs=" + Timing.Value.Merge.ToString("F3", Invariant) + ";totalMs=" + Timing.Value.Total.ToString("F3", Invariant) + ";totalMinMs=" + Timing.Value.TotalMin.ToString("F3", Invariant) + ";totalMaxMs=" + Timing.Value.TotalMax.ToString("F3", Invariant) + ";totalP50Ms=" + Timing.Value.TotalP50.ToString("F3", Invariant) + ";totalP95Ms=" + Timing.Value.TotalP95.ToString("F3", Invariant) + ";preprocessAllocated=" + Timing.Value.PreprocessAllocatedBytes.ToString(Invariant) + ";pipelineProcessAllocated=" + Timing.Value.PipelineProcessAllocatedBytes.ToString(Invariant) + ";regions=" + Regions + ";resultTextSha256=" + Timing.Value.ResultTextSha256 + ";resultContractSha256=" + Timing.Value.ResultContractSha256 : ";detail=" + Detail);
         public string ToCsv()
         {
             FullTiming t = Timing.GetValueOrDefault();
             string[] timings = Timing.HasValue
-                ? new[] { N(t.Preprocess), N(t.Detection), N(t.DetectionInference), N(t.DetectionPostprocess), N(t.Crop), N(t.Orientation), N(t.Recognition), N(t.RecognitionPrepareWork), N(t.RecognitionInferenceWork), N(t.RecognitionPostprocessWork), t.RecognitionBatches.ToString(Invariant), N(t.Merge), N(t.Total), N(t.TotalP50), N(t.TotalP95), t.PreprocessAllocatedBytes.ToString(Invariant), t.PipelineProcessAllocatedBytes.ToString(Invariant) }
-                : new[] { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+                ? new[] { N(t.Preprocess), N(t.Detection), N(t.DetectionInference), N(t.DetectionPostprocess), N(t.Crop), N(t.Orientation), N(t.Recognition), N(t.RecognitionPrepareWork), N(t.RecognitionInferenceWork), N(t.RecognitionPostprocessWork), t.RecognitionBatches.ToString(Invariant), N(t.Merge), N(t.Total), N(t.TotalMin), N(t.TotalMax), N(t.TotalP50), N(t.TotalP95), t.PreprocessAllocatedBytes.ToString(Invariant), t.PipelineProcessAllocatedBytes.ToString(Invariant) }
+                : new[] { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
             return string.Join(",", new[] { Csv(Version), Csv(Variant), Csv(Backend), Csv(Device), Csv(Status), SelectedBatchSize?.ToString(Invariant) ?? "", SelectedInferenceChannels?.ToString(Invariant) ?? "" }.Concat(timings).Concat(new[] { Regions?.ToString(Invariant) ?? "", Timing.HasValue ? Csv(t.ResultTextSha256) : "", Timing.HasValue ? Csv(t.ResultContractSha256) : "", Csv(ImagePath), Csv(Detail) }));
         }
         private static string N(double value) => value == 0d && double.IsNaN(value) ? "" : value.ToString("F3", Invariant);

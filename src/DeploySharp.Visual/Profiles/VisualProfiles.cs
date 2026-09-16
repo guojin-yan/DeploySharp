@@ -44,6 +44,12 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId PromptableSegmentation { get; } = new VisualTaskId("promptable-segmentation");
         /// <summary>Gets stateful video prompt propagation. / 获取有状态视频提示传播任务。</summary>
         public static VisualTaskId PromptableVideoSegmentation { get; } = new VisualTaskId("promptable-video-segmentation");
+        /// <summary>Gets image-captioning generation. / 获取图像描述生成任务。</summary>
+        public static VisualTaskId ImageCaptioning { get; } = new VisualTaskId("image-captioning");
+        /// <summary>Gets visual-question-answering generation. / 获取视觉问答生成任务。</summary>
+        public static VisualTaskId VisualQuestionAnswering { get; } = new VisualTaskId("visual-question-answering");
+        /// <summary>Gets image-conditioned instruction generation. / 获取图像条件指令生成任务。</summary>
+        public static VisualTaskId ConditionalTextGeneration { get; } = new VisualTaskId("conditional-text-generation");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);
@@ -185,7 +191,8 @@ namespace JYPPX.DeploySharp.Visual
             IVisualDecoder decoder,
             BackendCapabilities requiredCapabilities = BackendCapabilities.TensorInference,
             string? minimumBackendVersion = null,
-            IEnumerable<VisualAuxiliaryInputBinding>? auxiliaryInputs = null)
+            IEnumerable<VisualAuxiliaryInputBinding>? auxiliaryInputs = null,
+            VisualPreprocessingOptions? preprocessing = null)
         {
             ProfileId = VisualGuard.Identifier(profileId, nameof(profileId));
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model identifier is required.", profileId: ProfileId);
@@ -201,6 +208,8 @@ namespace JYPPX.DeploySharp.Visual
             if ((requiredCapabilities & BackendCapabilities.TensorInference) == 0) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual profiles require tensor inference capability.", profileId: ProfileId);
             RequiredCapabilities = requiredCapabilities;
             MinimumBackendVersion = string.IsNullOrWhiteSpace(minimumBackendVersion) ? null : minimumBackendVersion;
+            ValidatePreprocessing(preprocessing, input, ProfileId);
+            Preprocessing = preprocessing;
 
             var auxiliaryList = new List<VisualAuxiliaryInputBinding>();
             var auxiliaryNames = new HashSet<string>(StringComparer.Ordinal) { Input.Name };
@@ -262,16 +271,41 @@ namespace JYPPX.DeploySharp.Visual
         public IReadOnlyList<VisualLabel> Labels => _labels;
         /// <summary>Gets the reusable decoder. / 获取可复用解码器。</summary>
         public IVisualDecoder Decoder { get; }
+        /// <summary>Gets the complete backend-neutral image preprocessing contract, or null when input preparation is entirely custom. / 获取完整的后端无关图像预处理合同；输入准备完全自定义时为 null。</summary>
+        public VisualPreprocessingOptions? Preprocessing { get; }
         /// <summary>Gets required backend capabilities. / 获取所需后端能力。</summary>
         public BackendCapabilities RequiredCapabilities { get; }
         /// <summary>Gets an optional documented minimum backend version. / 获取可选的已记录最低后端版本。</summary>
         public string? MinimumBackendVersion { get; }
+
+        /// <summary>Creates a profile copy with an explicitly selected preprocessing contract. / 使用显式选择的预处理合同创建 Profile 副本。</summary>
+        public VisualModelProfile WithPreprocessing(VisualPreprocessingOptions preprocessing)
+        {
+            if (preprocessing == null) throw new ArgumentNullException(nameof(preprocessing));
+            return new VisualModelProfile(ProfileId, ModelId, Task, Version, ModelFormat, Input, Outputs, Labels, Decoder, RequiredCapabilities, MinimumBackendVersion, AuxiliaryInputs, preprocessing);
+        }
 
         /// <summary>Gets a label by class index, falling back to the invariant index string. / 按类别索引获取标签；缺失时回退到不变索引字符串。</summary>
         public string GetLabel(int classIndex)
         {
             if (classIndex < 0) throw new ArgumentOutOfRangeException(nameof(classIndex));
             return _labelsByIndex.TryGetValue(classIndex, out string? label) ? label : classIndex.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private static void ValidatePreprocessing(VisualPreprocessingOptions? preprocessing, VisualInputBinding input, string profileId)
+        {
+            if (preprocessing == null) return;
+            if (preprocessing.Layout != input.Layout) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Preprocessing layout must match the image input binding.", profileId: profileId, tensorName: input.Name);
+            if (preprocessing.TensorElementType != input.ElementType) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Preprocessing output type must match the image input binding.", profileId: profileId, tensorName: input.Name);
+            if (preprocessing.BatchSize < input.MinimumBatch || preprocessing.BatchSize > input.MaximumBatch) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Preprocessing batch size is outside the image input bounds.", profileId: profileId, tensorName: input.Name);
+            VisualSize? modelSize = preprocessing.ModelSize;
+            if (!modelSize.HasValue) return;
+            TensorShape shape = input.ShapePattern;
+            if (shape.Rank != 4) return;
+            int heightIndex = input.Layout == VisualTensorLayout.Nchw ? 2 : 1;
+            int widthIndex = input.Layout == VisualTensorLayout.Nchw ? 3 : 2;
+            if (shape[heightIndex] > 0 && shape[heightIndex] != modelSize.Value.Height) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Preprocessing height must match the static image input shape.", profileId: profileId, tensorName: input.Name);
+            if (shape[widthIndex] > 0 && shape[widthIndex] != modelSize.Value.Width) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Preprocessing width must match the static image input shape.", profileId: profileId, tensorName: input.Name);
         }
     }
 

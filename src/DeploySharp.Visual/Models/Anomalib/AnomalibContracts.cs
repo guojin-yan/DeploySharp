@@ -174,14 +174,14 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
     public static class AnomalibProfiles
     {
         /// <summary>Creates a PaDiM four-output profile. / 创建 PaDiM 四输出 Profile。</summary>
-        public static AnomalibProfile CreatePadim(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1)
-            => Create(modelId, AnomalibModelFamily.Padim, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1));
+        public static AnomalibProfile CreatePadim(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1, VisualPreprocessingOptions? preprocessing = null)
+            => Create(modelId, AnomalibModelFamily.Padim, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1), preprocessing);
 
         /// <summary>Creates a PatchCore four-output profile. / 创建 PatchCore 四输出 Profile。</summary>
-        public static AnomalibProfile CreatePatchCore(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1)
-            => Create(modelId, AnomalibModelFamily.PatchCore, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1));
+        public static AnomalibProfile CreatePatchCore(ModelId modelId, AnomalibArtifactContract artifact, VisualSize modelSize = default(VisualSize), int maximumBatch = 1, VisualPreprocessingOptions? preprocessing = null)
+            => Create(modelId, AnomalibModelFamily.PatchCore, artifact, modelSize, maximumBatch, new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1), new TensorShape(maximumBatch > 1 ? -1 : 1, 1, -1, -1), preprocessing);
 
-        private static AnomalibProfile Create(ModelId modelId, AnomalibModelFamily family, AnomalibArtifactContract artifact, VisualSize modelSize, int maximumBatch, TensorShape scoreShape, TensorShape labelShape, TensorShape maskShape)
+        private static AnomalibProfile Create(ModelId modelId, AnomalibModelFamily family, AnomalibArtifactContract artifact, VisualSize modelSize, int maximumBatch, TensorShape scoreShape, TensorShape labelShape, TensorShape maskShape, VisualPreprocessingOptions? preprocessing)
         {
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model ID is required.");
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
@@ -197,7 +197,8 @@ namespace JYPPX.DeploySharp.Visual.Models.Anomalib
                 new VisualOutputBinding("pred_mask", TensorElementType.Boolean, maskShape)
             };
             var visual = new VisualModelProfile(id, modelId, VisualTaskId.AnomalyDetection, "anomalib/" + family + "/opset" + artifact.Opset, artifact.ModelFormat,
-                new VisualInputBinding("input", TensorElementType.Float32, new TensorShape(maximumBatch > 1 ? -1 : 1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch), outputs, Array.Empty<VisualLabel>(), decoder);
+                new VisualInputBinding("input", TensorElementType.Float32, new TensorShape(maximumBatch > 1 ? -1 : 1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch), outputs, Array.Empty<VisualLabel>(), decoder,
+                preprocessing: preprocessing ?? new VisualPreprocessingOptions(modelSize, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.DivideByStandardDeviation(new[] { 255f }), VisualTensorLayout.Nchw, 1));
             return new AnomalibProfile(family, artifact, visual);
         }
     }

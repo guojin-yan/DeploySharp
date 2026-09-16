@@ -59,6 +59,26 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void SamFactoryAcceptsValidatedGeometryAndNormalizationOverride()
+        {
+            var preprocessing = new VisualPreprocessingOptions(
+                new VisualSize(8, 8),
+                VisualResizeMode.CenterCrop,
+                VisualColorOrder.Rgb,
+                VisualNormalizationOptions.Scale(255f),
+                VisualTensorLayout.Nchw);
+
+            using PreparedVisualInput input = new OpenCvPromptableSegmentationInputFactory().CreateSamV1FromFile(
+                Fixture("rgb.png"), imageSize: 8, preprocessing: preprocessing);
+
+            Assert.AreEqual(ImageTransformKind.Crop, input.Transform.Kind);
+            OpenCvVisualException invalid = Assert.ThrowsExactly<OpenCvVisualException>(() =>
+                new OpenCvPromptableSegmentationInputFactory().CreateSamV1FromFile(
+                    Fixture("rgb.png"), imageSize: 8, preprocessing: preprocessing.WithColorOrder(VisualColorOrder.Bgr)));
+            Assert.AreEqual(OpenCvErrorCodes.PreprocessInvalid, invalid.ErrorCode);
+        }
+
+        [TestMethod]
         public void LongestSideUsesRoundedAxisScalesForPromptMapping()
         {
             using PreparedVisualInput input = new OpenCvPromptableSegmentationInputFactory().CreateSamV1FromBytes(File.ReadAllBytes(Fixture("rgb.png")), imageSize: 5);

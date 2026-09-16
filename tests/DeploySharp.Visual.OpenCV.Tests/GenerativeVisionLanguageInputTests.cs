@@ -40,6 +40,29 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(VisualErrorCodes.GenerativeVisionLanguageLimitExceeded, Assert.ThrowsExactly<VisualException>(() => factory.Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), small)).ErrorCode);
         }
 
+        [TestMethod]
+        public void FactoryAcceptsValidatedSharedPreprocessingOverride()
+        {
+            GenerativeVisionLanguageProfile profile = Profile();
+            var preprocessing = new VisualPreprocessingOptions(
+                profile.Processor.ImageSize,
+                VisualResizeMode.CenterCrop,
+                VisualColorOrder.Rgb,
+                VisualNormalizationOptions.Scale(255f),
+                VisualTensorLayout.Nchw,
+                interpolation: VisualInterpolationMode.Linear);
+            var factory = new OpenCvGenerativeVisionLanguageInputFactory();
+
+            using PreparedVisualInput input = factory.CreateFromFile(Fixture("rgb.png"), profile, preprocessing: preprocessing);
+
+            Assert.AreEqual(ImageTransformKind.Crop, input.Transform.Kind);
+            VisualException invalid = Assert.ThrowsExactly<VisualException>(() => factory.CreateFromFile(
+                Fixture("rgb.png"),
+                profile,
+                preprocessing: preprocessing.WithColorOrder(VisualColorOrder.Bgr)));
+            Assert.AreEqual(VisualErrorCodes.GenerativeVisionLanguageContractInvalid, invalid.ErrorCode);
+        }
+
         private static GenerativeVisionLanguageProfile Profile(int maximumImageBytes = 1024 * 1024)
         {
             var vision = new GenerativeVisionLanguageArtifactContract(GenerativeVisionLanguageArtifactRole.VisionEncoder, new ModelId("external/blip/opencv/vision"), "onnx", new string('a', 64), 1, 17,

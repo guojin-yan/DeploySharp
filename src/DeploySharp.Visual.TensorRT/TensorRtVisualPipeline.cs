@@ -46,6 +46,8 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
         private int _sourceHeight;
         private PreparedVisualInput? _decodeInput;
         private VisualSize _decodeSourceSize;
+        private CropRegion? _decodeCrop;
+        private CropRegion? _preprocessCrop;
         private Geometry _decodeGeometry;
         private bool _disposed;
 
@@ -104,6 +106,32 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             }
         }
 
+        /// <summary>Initializes a TensorRT visual pipeline from the shared backend-neutral preprocessing contract. / 根据共享的后端无关预处理合同初始化 TensorRT 视觉流水线。</summary>
+        public TensorRtVisualPipeline(
+            VisualModelProfile profile,
+            string enginePath,
+            VisualPreprocessingOptions preprocessing,
+            TensorRtBackendOptions backendOptions,
+            TensorRtCudaVisualPostprocessingMode postprocessingMode = TensorRtCudaVisualPostprocessingMode.WhenSupported)
+            : this(profile, enginePath, preprocessing == null ? throw new ArgumentNullException(nameof(preprocessing)) : preprocessing.ToOpenCvOptions(), backendOptions, postprocessingMode)
+        {
+        }
+
+        /// <summary>Initializes a TensorRT visual pipeline from preprocessing declared by the profile. / 根据 Profile 声明的预处理合同初始化 TensorRT 视觉流水线。</summary>
+        public TensorRtVisualPipeline(
+            VisualModelProfile profile,
+            string enginePath,
+            TensorRtBackendOptions backendOptions,
+            TensorRtCudaVisualPostprocessingMode postprocessingMode = TensorRtCudaVisualPostprocessingMode.WhenSupported)
+            : this(
+                profile ?? throw new ArgumentNullException(nameof(profile)),
+                enginePath,
+                profile.Preprocessing ?? throw new NotSupportedException("The visual profile must declare preprocessing before the TensorRT visual pipeline can prepare images."),
+                backendOptions,
+                postprocessingMode)
+        {
+        }
+
         /// <summary>Gets the immutable visual model contract used for decoding. / 获取用于解码的不可变视觉模型合同。</summary>
         public VisualModelProfile Profile => _profile;
 
@@ -113,14 +141,28 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
         /// <summary>Runs one compact BGR frame; output arrays and fixed device allocations are reused by subsequent calls. / 运行一个紧凑 BGR 帧；后续调用会复用输出数组与固定设备分配。</summary>
         public VisualInferenceResult Run(OpenCvBgrImage image, CancellationToken cancellationToken = default)
         {
+            return RunCore(image, null, cancellationToken);
+        }
+
+        /// <summary>Runs one axis-aligned ROI without copying pixels back to the CPU. / 在不将像素复制回 CPU 的情况下运行一个轴对齐 ROI。</summary>
+        /// <remarks>The full compact BGR frame is uploaded once and the fused CUDA preprocessing kernel samples the ROI by offset/stride. Rotated, polygon, mask, and perspective ROIs should use <c>OpenCvVisualInputFactory</c> until a projective CUDA kernel is admitted. / 完整紧凑 BGR 帧只上传一次，融合 CUDA 预处理内核通过偏移/步长直接采样 ROI；旋转、多边形、Mask 和透视 ROI 在投影 CUDA 内核准入前应使用 OpenCvVisualInputFactory。</remarks>
+        public VisualInferenceResult RunRoi(OpenCvBgrImage image, JYPPX.DeploySharp.Geometry.RectangleF roi, CancellationToken cancellationToken = default)
+        {
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            CropRegion crop = NormalizeCrop(roi, image.Width, image.Height);
+            return RunCore(image, crop, cancellationToken);
+        }
+
+        private VisualInferenceResult RunCore(OpenCvBgrImage image, CropRegion? crop, CancellationToken cancellationToken)
+        {
             if (image == null) throw new ArgumentNullException(nameof(image));
             lock (_gate.SyncRoot)
             {
                 ThrowIfDisposed();
                 cancellationToken.ThrowIfCancellationRequested();
                 EnsureSourceBuffer(image);
-                PreparedVisualInput decodeInput = GetDecodeInput(image);
-                EnsurePreprocessPlan(image);
+                PreparedVisualInput decodeInput = GetDecodeInput(image, crop);
+                EnsurePreprocessPlan(image, crop);
 
                 var uploadWatch = Stopwatch.StartNew();
                 _sourceMemory!.CopyFrom(image.GetReadOnlyInteropBuffer());
@@ -128,7 +170,7 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
 
                 TensorRtCudaKernelLaunch? preprocessLaunch = null;
                 TensorRtCudaKernelLaunch? postprocessLaunch = null;
-                TensorRtCudaKernelLaunch? yoloCandidateLaunch = null;
+                IDisposable? yoloCandidateLaunch = null;
                 TensorRtDeviceInferenceExecution? execution = null;
                 try
                 {
@@ -138,7 +180,7 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                     execution = _deviceSession.RunDevice(_deviceInputs, _deviceOutputs, _stream, cancellationToken);
                     _inferenceEndEvent.Record(_stream);
                     if (_mapPostprocessor != null) postprocessLaunch = _mapPostprocessor.Enqueue(decodeInput, _stream);
-                    else if (_yoloMaskPostprocessor != null) yoloCandidateLaunch = _yoloMaskPostprocessor.EnqueueCandidateFilter(_stream);
+                    else if (_yoloMaskPostprocessor != null) yoloCandidateLaunch = _yoloMaskPostprocessor.EnqueueCandidateFilter(decodeInput, _stream);
                     execution.Synchronize();
                 }
                 finally
@@ -241,42 +283,43 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             _preprocessPlan = null;
         }
 
-        private void EnsurePreprocessPlan(OpenCvBgrImage image)
+        private void EnsurePreprocessPlan(OpenCvBgrImage image, CropRegion? crop)
         {
-            if (_preprocessPlan != null) return;
+            // _decodeCrop describes the cached decode transform and is updated by
+            // GetDecodeInput before this method runs. Keep a separate key for the
+            // CUDA launch plan; otherwise switching ROI A -> ROI B would reuse
+            // ROI A's device offsets while the decoder reports ROI B coordinates.
+            if (_preprocessPlan != null && Nullable.Equals(_preprocessCrop, crop)) return;
             Geometry geometry = _decodeGeometry;
-            _preprocessPlan = TensorRtCudaVisualKernels.CreateNormalizeBgrNchwPlan(
-                _preprocessKernel,
-                _sourceBuffer!,
-                _kernelInput,
-                image.Width,
-                image.Height,
-                _preprocessing.ModelSize.Width,
-                _preprocessing.ModelSize.Height,
-                geometry.ResizedWidth,
-                geometry.ResizedHeight,
-                geometry.Left,
-                geometry.Top,
-                _preprocessing.PaddingColor.Blue,
-                _preprocessing.PaddingColor.Green,
-                _preprocessing.PaddingColor.Red,
-                _normalization.Mean0,
-                _normalization.Mean1,
-                _normalization.Mean2,
-                _normalization.Scale0,
-                _normalization.Scale1,
-                _normalization.Scale2,
-                _preprocessing.ColorOrder == VisualColorOrder.Rgb);
+            _preprocessPlan = crop.HasValue
+                ? TensorRtCudaVisualKernels.CreateNormalizeBgrNchwPlan(
+                    _preprocessKernel, _sourceBuffer!, _kernelInput, image.Width, image.Height,
+                    crop.Value.X, crop.Value.Y, crop.Value.Width, crop.Value.Height,
+                    _preprocessing.ModelSize.Width, _preprocessing.ModelSize.Height, geometry.ResizedWidth, geometry.ResizedHeight,
+                    geometry.Left, geometry.Top, _preprocessing.PaddingColor.Blue, _preprocessing.PaddingColor.Green, _preprocessing.PaddingColor.Red,
+                    _normalization.Mean0, _normalization.Mean1, _normalization.Mean2, _normalization.Scale0, _normalization.Scale1, _normalization.Scale2,
+                    _preprocessing.ColorOrder == VisualColorOrder.Rgb)
+                : TensorRtCudaVisualKernels.CreateNormalizeBgrNchwPlan(
+                    _preprocessKernel, _sourceBuffer!, _kernelInput, image.Width, image.Height,
+                    _preprocessing.ModelSize.Width, _preprocessing.ModelSize.Height, geometry.ResizedWidth, geometry.ResizedHeight,
+                    geometry.Left, geometry.Top, _preprocessing.PaddingColor.Blue, _preprocessing.PaddingColor.Green, _preprocessing.PaddingColor.Red,
+                    _normalization.Mean0, _normalization.Mean1, _normalization.Mean2, _normalization.Scale0, _normalization.Scale1, _normalization.Scale2,
+                    _preprocessing.ColorOrder == VisualColorOrder.Rgb);
+            _preprocessCrop = crop;
         }
 
-        private PreparedVisualInput GetDecodeInput(OpenCvBgrImage image)
+        private PreparedVisualInput GetDecodeInput(OpenCvBgrImage image, CropRegion? crop)
         {
             var sourceSize = new VisualSize(image.Width, image.Height);
-            if (_decodeInput != null && _decodeSourceSize == sourceSize) return _decodeInput;
+            if (_decodeInput != null && _decodeSourceSize == sourceSize && Nullable.Equals(_decodeCrop, crop)) return _decodeInput;
             _decodeInput?.Dispose();
-            Geometry geometry = ResolveGeometry(image.Width, image.Height, _preprocessing);
+            VisualSize localSize = crop.HasValue ? new VisualSize(crop.Value.Width, crop.Value.Height) : sourceSize;
+            Geometry geometry = ResolveGeometry(localSize.Width, localSize.Height, _preprocessing);
             _decodeGeometry = geometry;
-            ImageTransform transform = geometry.ToTransform(sourceSize, _preprocessing.ModelSize);
+            ImageTransform localTransform = geometry.ToTransform(localSize, _preprocessing.ModelSize);
+            ImageTransform transform = crop.HasValue
+                ? ImageTransform.Compose(ImageTransform.Crop(sourceSize, localSize, new JYPPX.DeploySharp.Geometry.RectangleF(crop.Value.X, crop.Value.Y, crop.Value.Width, crop.Value.Height)), localTransform)
+                : localTransform;
             var means = Expand(_preprocessing.Means, 0f);
             var scales = Expand(_preprocessing.StandardDeviations, 1f).Select(value => 1f / value).ToArray();
             var descriptor = new VisualPreprocessingDescriptor(_preprocessing.ColorOrder, means, scales, "CUDA fused BGR resize/pad/channel-convert/normalize; compact UInt8 upload.");
@@ -291,19 +334,29 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 descriptor,
                 image.InputId);
             _decodeSourceSize = sourceSize;
+            _decodeCrop = crop;
             return _decodeInput;
         }
 
         private static Geometry ResolveGeometry(int sourceWidth, int sourceHeight, OpenCvPreprocessOptions options)
         {
             if (options.ResizeMode == OpenCvResizeMode.Resize) return new Geometry(options.ModelSize.Width, options.ModelSize.Height, 0, 0, ImageTransformKind.Resize);
-            double scale = Math.Min((double)options.ModelSize.Width / sourceWidth, (double)options.ModelSize.Height / sourceHeight);
+            bool centerCrop = options.ResizeMode == OpenCvResizeMode.CenterCrop || options.ResizeMode == OpenCvResizeMode.ShortestEdgeCenterCrop;
+            double scale = centerCrop
+                ? Math.Max((double)options.ModelSize.Width / sourceWidth, (double)options.ModelSize.Height / sourceHeight)
+                : Math.Min((double)options.ModelSize.Width / sourceWidth, (double)options.ModelSize.Height / sourceHeight);
+            if (!centerCrop && !options.ScaleUp) scale = Math.Min(1d, scale);
             int resizedWidth = Math.Max(1, Math.Min(options.ModelSize.Width, Round(sourceWidth * scale, options.LetterboxRounding)));
             int resizedHeight = Math.Max(1, Math.Min(options.ModelSize.Height, Round(sourceHeight * scale, options.LetterboxRounding)));
+            if (centerCrop)
+            {
+                resizedWidth = Math.Max(options.ModelSize.Width, Round(sourceWidth * scale, options.LetterboxRounding));
+                resizedHeight = Math.Max(options.ModelSize.Height, Round(sourceHeight * scale, options.LetterboxRounding));
+            }
             bool bottomRight = options.ResizeMode == OpenCvResizeMode.LongestSidePadBottomRight;
             int left = bottomRight ? 0 : (options.ModelSize.Width - resizedWidth) / 2;
             int top = bottomRight ? 0 : (options.ModelSize.Height - resizedHeight) / 2;
-            return new Geometry(resizedWidth, resizedHeight, left, top, ImageTransformKind.Letterbox);
+            return new Geometry(resizedWidth, resizedHeight, left, top, centerCrop ? ImageTransformKind.Crop : ImageTransformKind.Letterbox);
         }
 
         private static int Round(double value, OpenCvLetterboxRounding rounding)
@@ -330,6 +383,19 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             else if (values.Count == 1) { result[0] = result[1] = result[2] = values[0]; }
             else { result[0] = values[0]; result[1] = values[1]; result[2] = values[2]; }
             return result;
+        }
+
+        private static CropRegion NormalizeCrop(JYPPX.DeploySharp.Geometry.RectangleF roi, int sourceWidth, int sourceHeight)
+        {
+            if (float.IsNaN(roi.X) || float.IsInfinity(roi.X) || float.IsNaN(roi.Y) || float.IsInfinity(roi.Y) || float.IsNaN(roi.Width) || float.IsInfinity(roi.Width) || float.IsNaN(roi.Height) || float.IsInfinity(roi.Height)) throw new ArgumentOutOfRangeException(nameof(roi));
+            if (roi.Width <= 0 || roi.Height <= 0) throw new ArgumentOutOfRangeException(nameof(roi));
+            if (roi.Right <= 0 || roi.Bottom <= 0 || roi.X >= sourceWidth || roi.Y >= sourceHeight) throw new ArgumentOutOfRangeException(nameof(roi));
+            int left = Math.Max(0, Math.Min(sourceWidth - 1, (int)Math.Floor(roi.X)));
+            int top = Math.Max(0, Math.Min(sourceHeight - 1, (int)Math.Floor(roi.Y)));
+            int right = Math.Max(left + 1, Math.Min(sourceWidth, (int)Math.Ceiling(roi.Right)));
+            int bottom = Math.Max(top + 1, Math.Min(sourceHeight, (int)Math.Ceiling(roi.Bottom)));
+            if (right <= left || bottom <= top) throw new ArgumentOutOfRangeException(nameof(roi));
+            return new CropRegion(left, top, right - left, bottom - top);
         }
 
         private static int ByteLength(TensorDescriptor descriptor) => checked((int)(descriptor.Shape.GetElementCount() * ElementSize(descriptor.ElementType)));
@@ -379,7 +445,19 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             public ImageTransformKind Kind { get; }
             public ImageTransform ToTransform(VisualSize source, VisualSize model) => Kind == ImageTransformKind.Resize
                 ? ImageTransform.Resize(source, model)
-                : new ImageTransform(ImageTransformKind.Letterbox, source, model, (float)ResizedWidth / source.Width, (float)ResizedHeight / source.Height, Left, Top);
+                : new ImageTransform(Kind, source, model, (float)ResizedWidth / source.Width, (float)ResizedHeight / source.Height, Left, Top);
+        }
+
+        private readonly struct CropRegion : IEquatable<CropRegion>
+        {
+            public CropRegion(int x, int y, int width, int height) { X = x; Y = y; Width = width; Height = height; }
+            public int X { get; }
+            public int Y { get; }
+            public int Width { get; }
+            public int Height { get; }
+            public bool Equals(CropRegion other) => X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
+            public override bool Equals(object? obj) => obj is CropRegion other && Equals(other);
+            public override int GetHashCode() => unchecked((((X * 397) ^ Y) * 397 ^ Width) * 397 ^ Height);
         }
 
         private readonly struct ChannelNormalization
@@ -406,10 +484,12 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
 
         private sealed class YoloMaskPostprocessor : IDisposable
         {
+            private const int MaximumDeviceNmsCandidates = 32768;
             private readonly YoloInstanceSegmentationDecoder _decoder;
             private readonly TensorRtCudaCompiledKernel _filterKernel;
             private readonly TensorRtCudaCompiledKernel _combineKernel;
             private readonly TensorRtCudaCompiledKernel _restoreKernel;
+            private readonly TensorRtCudaCompiledKernel? _nmsKernel;
             private readonly TensorRtCudaDeviceBuffer _prototypes;
             private readonly CudaMemory _invalidMemory = new CudaMemory(sizeof(int));
             private readonly TensorRtCudaDeviceBuffer _invalidFlag;
@@ -432,6 +512,11 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             private readonly float[] _candidateBoxes;
             private readonly float[] _candidateCoefficients;
             private readonly TensorRtCudaYoloCandidatePlan _candidatePlan;
+            private TensorRtCudaYoloNmsPlan? _nmsPlan;
+            private PreparedVisualInput? _nmsInput;
+            private readonly CudaMemory? _nmsKeepMemory;
+            private readonly CudaPinnedMemory? _nmsKeepPinned;
+            private readonly byte[]? _nmsKeepFlags;
             private readonly CudaEvent _candidateStart = new CudaEvent();
             private readonly CudaEvent _candidateEnd = new CudaEvent();
             private CudaMemory? _coefficientMemory;
@@ -476,7 +561,8 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 _candidateCoefficientPinned = new CudaPinnedMemory(checked(_candidateCoefficients.Length * sizeof(float)));
                 _prototypes = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor(prototypeSlot.Name, TensorElementType.Float32, prototypeSlot.DeviceTensor.Shape, TensorRtCudaBufferAccess.Read), prototypeSlot.Memory);
                 _invalidFlag = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-invalid", TensorElementType.Int32, new TensorShape(1), TensorRtCudaBufferAccess.ReadWrite), _invalidMemory);
-                var compileOptions = new TensorRtCudaRtcCompileOptions(architecture, TensorRtCudaRtcArtifactKind.Ptx, useFastMath: false);
+                // Match separately rounded CPU mask arithmetic at ROI boundaries.
+                var compileOptions = new TensorRtCudaRtcCompileOptions(architecture, TensorRtCudaRtcArtifactKind.Ptx, useFastMath: false, additionalOptions: new[] { "--fmad=false" });
                 _filterKernel = TensorRtCudaCompiledKernel.Load(TensorRtCudaRtcCompiler.Compile(TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition, compileOptions), deviceOrdinal);
                 try
                 {
@@ -495,6 +581,27 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                     _filterKernel, packed, flags, classes, scores, boxes, coefficientValues, _invalidFlag,
                     candidates, decoder.Contract.FieldCount, decoder.Contract.ClassCount, coefficients,
                     decoder.Contract.Layout == YoloPackedTensorLayout.AttributeMajor, decoder.Contract.HasObjectness, decoder.Contract.IsEndToEnd, decoder.Options.ScoreThreshold);
+
+                // Parallel candidate selection/suppression preserves greedy score and
+                // source-index ties. End-to-end exports already applied their own NMS.
+                if (!decoder.Contract.IsEndToEnd && candidates <= MaximumDeviceNmsCandidates)
+                {
+                    try
+                    {
+                        _nmsKernel = TensorRtCudaCompiledKernel.Load(TensorRtCudaRtcCompiler.Compile(TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition, compileOptions), deviceOrdinal);
+                        _nmsKeepMemory = new CudaMemory(candidates);
+                        _nmsKeepPinned = new CudaPinnedMemory(candidates);
+                        _nmsKeepFlags = new byte[candidates];
+                    }
+                    catch
+                    {
+                        _nmsKeepPinned?.Dispose();
+                        _nmsKeepMemory?.Dispose();
+                        _nmsKernel?.Dispose();
+                        _nmsKeepFlags = null;
+                        _nmsPlan = null;
+                    }
+                }
             }
 
             public TimeSpan LastCandidateFilterDuration => TimeSpan.FromMilliseconds(_candidateEnd.ElapsedTimeSince(_candidateStart));
@@ -512,9 +619,23 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 return new YoloMaskPostprocessor(decoder, packed, prototypes, architecture, deviceOrdinal);
             }
 
-            public TensorRtCudaKernelLaunch EnqueueCandidateFilter(CudaStream stream)
+            public IDisposable EnqueueCandidateFilter(PreparedVisualInput input, CudaStream stream)
             {
                 if (_disposed) throw new ObjectDisposedException(nameof(YoloMaskPostprocessor));
+                if (_nmsKeepFlags != null && !ReferenceEquals(_nmsInput, input))
+                {
+                    int candidates = _decoder.Contract.CandidateCount;
+                    var flags = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-selected", TensorElementType.UInt8, new TensorShape(candidates), TensorRtCudaBufferAccess.Read), _selectedFlagMemory);
+                    var classes = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-classes", TensorElementType.Int32, new TensorShape(candidates), TensorRtCudaBufferAccess.Read), _classIndexMemory);
+                    var scores = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-scores", TensorElementType.Float32, new TensorShape(candidates), TensorRtCudaBufferAccess.Read), _scoreMemory);
+                    var boxes = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-boxes", TensorElementType.Float32, new TensorShape(candidates, 4), TensorRtCudaBufferAccess.Read), _candidateBoxMemory);
+                    var keep = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("visual-yolo-nms-keep", TensorElementType.UInt8, new TensorShape(candidates), TensorRtCudaBufferAccess.Write), _nmsKeepMemory!);
+                    _nmsPlan = TensorRtCudaVisualKernels.CreateYoloCandidateNmsPlan(_nmsKernel!, flags, classes, scores, boxes, keep, candidates,
+                        0, input.SourceSize.Width, input.SourceSize.Height,
+                        _decoder.Options.NmsMode == DetectionNmsMode.ClassAware, _decoder.Options.IouThreshold,
+                        input.Transform.ScaleX, input.Transform.ScaleY, input.Transform.OffsetX, input.Transform.OffsetY);
+                    _nmsInput = input;
+                }
                 _candidateStart.Record(stream);
                 _invalidMemory.FillAsync(0, stream);
                 TensorRtCudaKernelLaunch launch = _candidatePlan.Launch(stream);
@@ -524,8 +645,14 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 _candidateBoxMemory.CopyToAsync(_candidateBoxPinned, stream);
                 _candidateCoefficientMemory.CopyToAsync(_candidateCoefficientPinned, stream);
                 _invalidMemory.CopyToAsync(_invalidPinned, stream);
+                TensorRtCudaKernelLaunch? nmsLaunch = null;
+                if (_nmsPlan != null)
+                {
+                    nmsLaunch = _nmsPlan.Launch(stream);
+                    _nmsKeepMemory!.CopyToAsync(_nmsKeepPinned!, stream);
+                }
                 _candidateEnd.Record(stream);
-                return launch;
+                return new CandidateFilterLaunch(launch, nmsLaunch);
             }
 
             public object? TryRun(VisualDecodeContext context, CudaStream stream)
@@ -534,6 +661,11 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 _invalidPinned.CopyTo(_invalidBytes);
                 if (BitConverter.ToInt32(_invalidBytes, 0) != 0) return null;
                 _selectedFlagPinned.CopyTo(_selectedFlags);
+                if (_nmsPlan != null)
+                {
+                    _nmsKeepPinned!.CopyTo(_nmsKeepFlags!);
+                    Buffer.BlockCopy(_nmsKeepFlags!, 0, _selectedFlags, 0, _selectedFlags.Length);
+                }
                 _classIndexPinned.CopyTo(_classIndexBytes);
                 Buffer.BlockCopy(_classIndexBytes, 0, _classIndices, 0, _classIndexBytes.Length);
                 _scorePinned.CopyTo(_scores);
@@ -575,7 +707,28 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 _candidateCoefficientPinned.Dispose(); _candidateBoxPinned.Dispose(); _scorePinned.Dispose(); _classIndexPinned.Dispose(); _selectedFlagPinned.Dispose();
                 _candidateCoefficientMemory.Dispose(); _candidateBoxMemory.Dispose(); _scoreMemory.Dispose(); _classIndexMemory.Dispose(); _selectedFlagMemory.Dispose();
                 _invalidPinned.Dispose(); _invalidMemory.Dispose();
+                _nmsKeepPinned?.Dispose(); _nmsKeepMemory?.Dispose(); _nmsKernel?.Dispose();
                 _restoreKernel.Dispose(); _combineKernel.Dispose(); _filterKernel.Dispose();
+            }
+
+            private sealed class CandidateFilterLaunch : IDisposable
+            {
+                private TensorRtCudaKernelLaunch? _filter;
+                private TensorRtCudaKernelLaunch? _nms;
+
+                public CandidateFilterLaunch(TensorRtCudaKernelLaunch filter, TensorRtCudaKernelLaunch? nms)
+                {
+                    _filter = filter;
+                    _nms = nms;
+                }
+
+                public void Dispose()
+                {
+                    _nms?.Dispose();
+                    _nms = null;
+                    _filter?.Dispose();
+                    _filter = null;
+                }
             }
 
             private void EnsurePlan(PreparedVisualInput input, YoloCudaInstanceSegmentationPlan plan)

@@ -13,6 +13,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <DefineConstants Condition="'$(TargetFramework)' == 'net46' Or '$(TargetFramework)' == 'net461'">$(DefineConstants);DEPLOYSHARP_LEGACY_NO_ROI</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
@@ -22,6 +23,10 @@
   <ItemGroup>
     <ProjectReference Include="..\DeploySharp.Visual\DeploySharp.Visual.csproj" />
     <PackageReference Include="JYPPX.OpenCV.CSharp.API" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46' Or '$(TargetFramework)' == 'net461'">
+    <Compile Remove="OpenCvDecodedRoiImage.cs" />
   </ItemGroup>
 
   <ItemGroup>

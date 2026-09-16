@@ -57,7 +57,8 @@ namespace JYPPX.DeploySharp.Visual
                 decoder,
                 sourceVisual.RequiredCapabilities,
                 sourceVisual.MinimumBackendVersion,
-                sourceVisual.AuxiliaryInputs);
+                sourceVisual.AuxiliaryInputs,
+                sourceVisual.Preprocessing);
             var detectorProfile = new YoloDetectionProfile(
                 baseProfile.Family,
                 baseProfile.UpstreamRepository,

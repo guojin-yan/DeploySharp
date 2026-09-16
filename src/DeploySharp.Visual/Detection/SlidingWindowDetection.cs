@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Geometry;
@@ -23,15 +25,40 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class SlidingWindow
     {
         internal SlidingWindow(int index, RectangleF bounds)
+            : this(index, bounds, null)
+        {
+        }
+
+        internal SlidingWindow(int index, RectangleF bounds, string? roiId)
         {
             Index = index;
             Bounds = bounds;
+            RoiId = string.IsNullOrWhiteSpace(roiId) ? null : roiId;
         }
 
         /// <summary>Gets the deterministic zero-based tile index. / 获取确定性的从零开始切片索引。</summary>
         public int Index { get; }
         /// <summary>Gets the half-open source-image tile bounds. / 获取半开区间源图切片边界。</summary>
         public RectangleF Bounds { get; }
+        /// <summary>Gets the originating ROI identifier, or null for an unrestricted sliding-window run. / 获取来源 ROI 标识；非 ROI 限定运行时为 null。</summary>
+        public string? RoiId { get; }
+    }
+
+    /// <summary>Associates a source-space detection with its originating sliding window and ROI. / 将源图检测与其来源滑动窗口和 ROI 关联。</summary>
+    public sealed class SlidingWindowDetectionItem
+    {
+        internal SlidingWindowDetectionItem(Detection detection, SlidingWindow window)
+        {
+            Detection = detection ?? throw new ArgumentNullException(nameof(detection));
+            Window = window ?? throw new ArgumentNullException(nameof(window));
+        }
+
+        /// <summary>Gets the mapped source-space detection. / 获取映射到源图空间的检测。</summary>
+        public Detection Detection { get; }
+        /// <summary>Gets the source window that produced the detection. / 获取产生检测的源图窗口。</summary>
+        public SlidingWindow Window { get; }
+        /// <summary>Gets the source ROI identifier, when this was a ROI-limited run. / 获取来源 ROI 标识；ROI 限定运行时存在。</summary>
+        public string? RoiId => Window.RoiId;
     }
 
     /// <summary>Controls tile geometry, overlap, and global suppression for large-image detection. / 控制大图检测的切片几何、重叠和全局抑制。</summary>
@@ -48,7 +75,9 @@ namespace JYPPX.DeploySharp.Visual
             bool includeFullImagePass = false,
             float? horizontalOverlap = null,
             float? verticalOverlap = null,
-            SlidingWindowCoordinateMode coordinateMode = SlidingWindowCoordinateMode.Auto)
+            SlidingWindowCoordinateMode coordinateMode = SlidingWindowCoordinateMode.Auto,
+            float minimumRoiCoverage = 0f,
+            long maximumPreparedPixels = 1L * 1024 * 1024 * 1024)
         {
             if (!Enum.IsDefined(typeof(DetectionNmsMode), nmsMode)) throw new ArgumentOutOfRangeException(nameof(nmsMode));
             if (!Enum.IsDefined(typeof(SlidingWindowCoordinateMode), coordinateMode)) throw new ArgumentOutOfRangeException(nameof(coordinateMode));
@@ -59,6 +88,8 @@ namespace JYPPX.DeploySharp.Visual
             if (float.IsNaN(globalIouThreshold) || float.IsInfinity(globalIouThreshold) || globalIouThreshold < 0 || globalIouThreshold > 1) throw new ArgumentOutOfRangeException(nameof(globalIouThreshold));
             if (maximumWindows <= 0) throw new ArgumentOutOfRangeException(nameof(maximumWindows));
             if (maximumDetections <= 0) throw new ArgumentOutOfRangeException(nameof(maximumDetections));
+            if (float.IsNaN(minimumRoiCoverage) || float.IsInfinity(minimumRoiCoverage) || minimumRoiCoverage < 0 || minimumRoiCoverage > 1) throw new ArgumentOutOfRangeException(nameof(minimumRoiCoverage));
+            if (maximumPreparedPixels <= 0) throw new ArgumentOutOfRangeException(nameof(maximumPreparedPixels));
             WindowSize = windowSize;
             Overlap = overlap;
             HorizontalOverlap = horizontalOverlap ?? overlap;
@@ -69,6 +100,8 @@ namespace JYPPX.DeploySharp.Visual
             MaximumDetections = maximumDetections;
             IncludeFullImagePass = includeFullImagePass;
             CoordinateMode = coordinateMode;
+            MinimumRoiCoverage = minimumRoiCoverage;
+            MaximumPreparedPixels = maximumPreparedPixels;
         }
 
         /// <summary>Gets the requested tile width and height. / 获取请求的切片宽高。</summary>
@@ -91,6 +124,11 @@ namespace JYPPX.DeploySharp.Visual
         public bool IncludeFullImagePass { get; }
         /// <summary>Gets how callback detection coordinates are interpreted. / 获取回调检测坐标的解释方式。</summary>
         public SlidingWindowCoordinateMode CoordinateMode { get; }
+        /// <summary>Gets the minimum fraction of each tile that must be covered by the ROI. / 获取每个切片必须被 ROI 覆盖的最小比例。</summary>
+        public float MinimumRoiCoverage { get; }
+        /// <summary>Gets the maximum sum of source pixels across all windows in one run. / 获取一次运行所有窗口源像素面积之和的上限。</summary>
+        /// <remarks>This bounds preprocessing allocations before the first callback starts; it is independent of the per-window model input size. / 该限制在第一个准备回调启动前生效，且独立于每个窗口的模型输入尺寸。</remarks>
+        public long MaximumPreparedPixels { get; }
 
         private static void ValidateOverlap(float? value, string parameterName)
         {
@@ -104,10 +142,11 @@ namespace JYPPX.DeploySharp.Visual
     {
         private readonly IReadOnlyList<SlidingWindow> _windows;
 
-        internal SlidingWindowDetectionResult(DetectionResult detections, IReadOnlyList<SlidingWindow> windows)
+        internal SlidingWindowDetectionResult(DetectionResult detections, IReadOnlyList<SlidingWindow> windows, IReadOnlyList<SlidingWindowDetectionItem>? detectionsWithProvenance = null)
         {
             Detections = detections ?? throw new ArgumentNullException(nameof(detections));
             _windows = windows ?? throw new ArgumentNullException(nameof(windows));
+            DetectionsWithProvenance = detectionsWithProvenance ?? Array.Empty<SlidingWindowDetectionItem>();
         }
 
         /// <summary>Gets globally suppressed detections in full source-image coordinates. / 获取全局抑制后的完整源图坐标检测结果。</summary>
@@ -116,6 +155,8 @@ namespace JYPPX.DeploySharp.Visual
         public IReadOnlyList<SlidingWindow> Windows => _windows;
         /// <summary>Gets the number of evaluated windows. / 获取评估的窗口数量。</summary>
         public int WindowCount => _windows.Count;
+        /// <summary>Gets retained detections with deterministic source-window provenance. / 获取带确定性来源窗口追溯的保留检测。</summary>
+        public IReadOnlyList<SlidingWindowDetectionItem> DetectionsWithProvenance { get; }
     }
 
     /// <summary>Runs batch-one detection over overlapping tiles and merges them in source coordinates. / 在重叠切片上运行 batch-one 检测并在源坐标中合并结果。</summary>
@@ -149,7 +190,9 @@ namespace JYPPX.DeploySharp.Visual
                     TaskCreationOptions.DenyChildAttach,
                     TaskScheduler.Default),
                 executionOptions,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                null,
+                null).ConfigureAwait(false);
         }
 
         /// <summary>Runs tiled detection with asynchronous tile preparation. / 使用异步切片准备运行切片检测。</summary>
@@ -172,7 +215,90 @@ namespace JYPPX.DeploySharp.Visual
                     TaskCreationOptions.DenyChildAttach,
                     TaskScheduler.Default).Unwrap(),
                 executionOptions,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                null,
+                null).ConfigureAwait(false);
+        }
+
+        /// <summary>Runs overlapping windows restricted to one resolved ROI geometry. / 在一个已解析 ROI 几何范围内运行重叠窗口。</summary>
+        /// <remarks>Windows are generated from the ROI bounds and retained only when they touch the ROI. The callback must crop the requested window and remains responsible for exact polygon masking. / 窗口根据 ROI 边界生成并仅保留与 ROI 相交的窗口；回调负责精确裁剪和多边形 mask。</remarks>
+        public Task<SlidingWindowDetectionResult> RunRoiAsync(
+            VisualSize sourceSize,
+            VisualRoi roi,
+            IVisualRoiGeometry geometry,
+            SlidingWindowDetectionOptions options,
+            Func<SlidingWindow, CancellationToken, Task<PreparedVisualInput>> prepareAsync,
+            VisualExecutionOptions? executionOptions = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (roi == null) throw new ArgumentNullException(nameof(roi));
+            if (geometry == null) throw new ArgumentNullException(nameof(geometry));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (prepareAsync == null) throw new ArgumentNullException(nameof(prepareAsync));
+            return RunCoreAsync(
+                sourceSize,
+                options,
+                (window, token) => Task.Factory.StartNew(
+                    () => prepareAsync(window, token),
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default).Unwrap(),
+                executionOptions,
+                cancellationToken,
+                geometry,
+                roi.Id);
+        }
+
+        /// <summary>Runs every enabled sliding-window ROI in one snapshot and performs cross-ROI global suppression. / 运行快照中所有启用的滑窗 ROI，并执行跨 ROI 全局抑制。</summary>
+        public async Task<SlidingWindowDetectionResult> RunRoisAsync(
+            VisualRoiSnapshot snapshot,
+            SlidingWindowDetectionOptions options,
+            Func<VisualRoi, IVisualRoiGeometry, SlidingWindow, CancellationToken, Task<PreparedVisualInput>> prepareAsync,
+            VisualExecutionOptions? executionOptions = null,
+            int maximumRois = 4096,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (prepareAsync == null) throw new ArgumentNullException(nameof(prepareAsync));
+            if (maximumRois <= 0) throw new ArgumentOutOfRangeException(nameof(maximumRois));
+
+            var selected = new List<(VisualRoi Roi, IVisualRoiGeometry Geometry)>();
+            int totalWindows = 0;
+            long totalPreparedPixels = 0;
+            foreach (VisualRoi roi in snapshot.Rois)
+            {
+                if (!roi.Enabled || roi.InclusionMode != RoiInclusionMode.Include || roi.ExecutionMode != RoiExecutionMode.SlidingWindow || !roi.AppliesTo(VisualTaskId.ObjectDetection)) continue;
+                if (selected.Count >= maximumRois) throw new VisualException(VisualErrorCodes.InputInvalid, "The sliding-window ROI count exceeds the configured limit.", technicalDetails: "maximumRois=" + maximumRois);
+                IVisualRoiGeometry geometry = snapshot.Resolve(roi);
+                List<SlidingWindow> planned = CreateWindows(snapshot.SourceSize, options, geometry, roi.Id);
+                int windowCount = planned.Count;
+                totalWindows = checked(totalWindows + windowCount);
+                if (totalWindows > options.MaximumWindows) throw new VisualException(VisualErrorCodes.DecodeFailed, "Sliding-window generation exceeded the configured cross-ROI window limit.", technicalDetails: "maximumWindows=" + options.MaximumWindows);
+                totalPreparedPixels = checked(totalPreparedPixels + EstimatePreparedPixels(planned));
+                if (totalPreparedPixels > options.MaximumPreparedPixels) throw new VisualException(VisualErrorCodes.InputInvalid, "Sliding-window preparation exceeds the configured cross-ROI pixel budget.", technicalDetails: "pixels=" + totalPreparedPixels + ";limit=" + options.MaximumPreparedPixels);
+                selected.Add((roi, geometry));
+            }
+
+            var allWindows = new List<SlidingWindow>(totalWindows);
+            var allDetections = new List<SlidingWindowDetectionItem>();
+            foreach ((VisualRoi Roi, IVisualRoiGeometry Geometry) entry in selected)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                SlidingWindowDetectionResult result = await RunRoiAsync(
+                    snapshot.SourceSize,
+                    entry.Roi,
+                    entry.Geometry,
+                    options,
+                    (window, token) => prepareAsync(entry.Roi, entry.Geometry, window, token),
+                    executionOptions,
+                    cancellationToken).ConfigureAwait(false);
+                allWindows.AddRange(result.Windows);
+                allDetections.AddRange(result.DetectionsWithProvenance);
+            }
+
+            IReadOnlyList<SlidingWindowDetectionItem> suppressed = SuppressGlobally(allDetections, options, cancellationToken);
+            return new SlidingWindowDetectionResult(new DetectionResult(suppressed.Select(value => value.Detection)), allWindows.AsReadOnly(), suppressed);
         }
 
         private async Task<SlidingWindowDetectionResult> RunCoreAsync(
@@ -180,11 +306,14 @@ namespace JYPPX.DeploySharp.Visual
             SlidingWindowDetectionOptions options,
             Func<SlidingWindow, CancellationToken, Task<PreparedVisualInput>> prepareAsync,
             VisualExecutionOptions? executionOptions,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            IVisualRoiGeometry? roiGeometry,
+            string? roiId)
         {
-            List<SlidingWindow> windows = CreateWindows(sourceSize, options);
+            List<SlidingWindow> windows = CreateWindows(sourceSize, options, roiGeometry, roiId);
+            EnsurePreparedPixelBudget(windows, options);
             int chunkSize = Math.Max(1, _pipeline.MaximumConcurrency * 2);
-            var allDetections = new List<Detection>();
+            var allDetections = new List<SlidingWindowDetectionItem>();
             Task<PreparedVisualInput[]>? prefetched = null;
             VisualExecutionOptions requested = executionOptions ?? VisualExecutionOptions.Default;
             // The runner owns only explicitly owned prepared resources. Borrowed tensors
@@ -211,6 +340,7 @@ namespace JYPPX.DeploySharp.Visual
                     try
                     {
                         IReadOnlyList<VisualInferenceResult> results = await _pipeline.RunManyAsync(prepared, runOptions, cancellationToken).ConfigureAwait(false);
+                        if (results.Count != count) throw new VisualException(VisualErrorCodes.DecodeFailed, "The Visual pipeline returned a result count different from the sliding-window batch.", profileId: _pipeline.Selection.Profile.ProfileId, modelId: _pipeline.Selection.Profile.ModelId, technicalDetails: "expected=" + count + ";actual=" + results.Count);
                         for (int index = 0; index < results.Count; index++)
                         {
                             object value = results[index].Value;
@@ -233,7 +363,8 @@ namespace JYPPX.DeploySharp.Visual
                 throw;
             }
 
-            return new SlidingWindowDetectionResult(new DetectionResult(SuppressGlobally(allDetections, options, cancellationToken)), windows.AsReadOnly());
+            IReadOnlyList<SlidingWindowDetectionItem> suppressed = SuppressGlobally(allDetections, options, cancellationToken);
+            return new SlidingWindowDetectionResult(new DetectionResult(suppressed.Select(value => value.Detection)), windows.AsReadOnly(), suppressed);
         }
 
         private static void DisposeOwned(IReadOnlyList<PreparedVisualInput> prepared)
@@ -241,7 +372,7 @@ namespace JYPPX.DeploySharp.Visual
             for (int index = 0; index < prepared.Count; index++) if (prepared[index].Ownership == PreparedInputOwnership.Owned) prepared[index].Dispose();
         }
 
-        private static IReadOnlyList<Detection> MapDetections(
+        private static IReadOnlyList<SlidingWindowDetectionItem> MapDetections(
             IReadOnlyList<Detection> detections,
             SlidingWindow window,
             PreparedVisualInput prepared,
@@ -265,7 +396,7 @@ namespace JYPPX.DeploySharp.Visual
                 // full source size and is therefore already globally mapped.
                 local = prepared.SourceSize == tileSize;
             }
-            var mapped = new List<Detection>(detections.Count);
+            var mapped = new List<SlidingWindowDetectionItem>(detections.Count);
             RectangleF sourceBounds = new RectangleF(0, 0, sourceSize.Width, sourceSize.Height);
             for (int index = 0; index < detections.Count; index++)
             {
@@ -282,7 +413,7 @@ namespace JYPPX.DeploySharp.Visual
                 float bottom = Math.Max(top, Math.Min(sourceBounds.Bottom, translated.Bottom));
                 if (right > left && bottom > top)
                 {
-                    mapped.Add(new Detection(new RectangleF(left, top, right - left, bottom - top), detection.Label));
+                    mapped.Add(new SlidingWindowDetectionItem(new Detection(new RectangleF(left, top, right - left, bottom - top), detection.Label), window));
                 }
             }
             return mapped;
@@ -334,58 +465,99 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        private static List<SlidingWindow> CreateWindows(VisualSize sourceSize, SlidingWindowDetectionOptions options)
+        private static List<SlidingWindow> CreateWindows(VisualSize sourceSize, SlidingWindowDetectionOptions options, IVisualRoiGeometry? roiGeometry, string? roiId)
         {
-            int width = Math.Min(sourceSize.Width, options.WindowSize.Width);
-            int height = Math.Min(sourceSize.Height, options.WindowSize.Height);
+            RectangleF region = roiGeometry?.Bounds ?? new RectangleF(0, 0, sourceSize.Width, sourceSize.Height);
+            int regionLeft = Math.Max(0, (int)Math.Floor(region.X));
+            int regionTop = Math.Max(0, (int)Math.Floor(region.Y));
+            int regionRight = Math.Min(sourceSize.Width, (int)Math.Ceiling(region.Right));
+            int regionBottom = Math.Min(sourceSize.Height, (int)Math.Ceiling(region.Bottom));
+            if (regionRight <= regionLeft || regionBottom <= regionTop) throw new VisualException(VisualErrorCodes.InputInvalid, "The ROI does not intersect the source image.");
+            int width = Math.Min(regionRight - regionLeft, options.WindowSize.Width);
+            int height = Math.Min(regionBottom - regionTop, options.WindowSize.Height);
             int stepX = Math.Max(1, (int)Math.Round(width * (1f - options.HorizontalOverlap), MidpointRounding.AwayFromZero));
             int stepY = Math.Max(1, (int)Math.Round(height * (1f - options.VerticalOverlap), MidpointRounding.AwayFromZero));
-            int lastX = sourceSize.Width - width;
-            int lastY = sourceSize.Height - height;
+            int lastX = regionRight - width;
+            int lastY = regionBottom - height;
             var windows = new List<SlidingWindow>();
-            if (options.IncludeFullImagePass && (lastX != 0 || lastY != 0))
+            if (options.IncludeFullImagePass && (lastX != regionLeft || lastY != regionTop))
             {
-                windows.Add(new SlidingWindow(windows.Count, new RectangleF(0, 0, sourceSize.Width, sourceSize.Height)));
+                windows.Add(new SlidingWindow(windows.Count, new RectangleF(regionLeft, regionTop, regionRight - regionLeft, regionBottom - regionTop), roiId));
             }
-            for (int y = 0; ; y = Math.Min(lastY, checked(y + stepY)))
+            for (int y = regionTop; ; y = Math.Min(lastY, checked(y + stepY)))
             {
-                for (int x = 0; ; x = Math.Min(lastX, checked(x + stepX)))
+                for (int x = regionLeft; ; x = Math.Min(lastX, checked(x + stepX)))
                 {
                     if (windows.Count >= options.MaximumWindows) throw new VisualException(VisualErrorCodes.DecodeFailed, "Sliding-window generation exceeded the configured maximum window count.", technicalDetails: "maximumWindows=" + options.MaximumWindows);
-                    windows.Add(new SlidingWindow(windows.Count, new RectangleF(x, y, width, height)));
+                    var candidate = new SlidingWindow(windows.Count, new RectangleF(x, y, width, height), roiId);
+                    if (roiGeometry == null || MeetsRoiCoverage(candidate.Bounds, roiGeometry, options.MinimumRoiCoverage)) windows.Add(candidate);
                     if (x == lastX) break;
                 }
                 if (y == lastY) break;
             }
+            for (int index = 0; index < windows.Count; index++) windows[index] = new SlidingWindow(index, windows[index].Bounds, roiId);
             return windows;
         }
 
-        private static IReadOnlyList<Detection> SuppressGlobally(List<Detection> detections, SlidingWindowDetectionOptions options, CancellationToken cancellationToken)
+        private static void EnsurePreparedPixelBudget(IReadOnlyList<SlidingWindow> windows, SlidingWindowDetectionOptions options)
+        {
+            long pixels = EstimatePreparedPixels(windows);
+            if (pixels > options.MaximumPreparedPixels) throw new VisualException(VisualErrorCodes.InputInvalid, "Sliding-window preparation exceeds the configured pixel budget.", technicalDetails: "pixels=" + pixels + ";limit=" + options.MaximumPreparedPixels);
+        }
+
+        internal static long EstimatePreparedPixels(IReadOnlyList<SlidingWindow> windows)
+        {
+            long total = 0;
+            for (int index = 0; index < windows.Count; index++)
+            {
+                SlidingWindow window = windows[index];
+                long pixels = checked((long)Math.Ceiling(window.Bounds.Width) * (long)Math.Ceiling(window.Bounds.Height));
+                total = checked(total + pixels);
+            }
+            return total;
+        }
+
+        // Shared by task-specific ROI sliding-window runners. The detection runner
+        // remains the owner of the geometry rules so other tasks cannot silently
+        // diverge on overlap, bounds, coverage, or window-budget semantics.
+        internal static IReadOnlyList<SlidingWindow> PlanWindows(VisualSize sourceSize, SlidingWindowDetectionOptions options, IVisualRoiGeometry? roiGeometry, string? roiId)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            List<SlidingWindow> windows = CreateWindows(sourceSize, options, roiGeometry, roiId);
+            EnsurePreparedPixelBudget(windows, options);
+            return windows;
+        }
+
+        private static IReadOnlyList<SlidingWindowDetectionItem> SuppressGlobally(List<SlidingWindowDetectionItem> detections, SlidingWindowDetectionOptions options, CancellationToken cancellationToken)
         {
             detections.Sort((left, right) =>
             {
-                int score = right.Label.Score.CompareTo(left.Label.Score);
+                int score = right.Detection.Label.Score.CompareTo(left.Detection.Label.Score);
                 if (score != 0) return score;
-                int label = left.Label.Index.CompareTo(right.Label.Index);
+                int label = left.Detection.Label.Index.CompareTo(right.Detection.Label.Index);
                 if (label != 0) return label;
-                int x = left.Box.X.CompareTo(right.Box.X);
+                int x = left.Detection.Box.X.CompareTo(right.Detection.Box.X);
                 if (x != 0) return x;
-                int y = left.Box.Y.CompareTo(right.Box.Y);
+                int y = left.Detection.Box.Y.CompareTo(right.Detection.Box.Y);
                 if (y != 0) return y;
-                int width = left.Box.Width.CompareTo(right.Box.Width);
-                return width != 0 ? width : left.Box.Height.CompareTo(right.Box.Height);
+                int width = left.Detection.Box.Width.CompareTo(right.Detection.Box.Width);
+                if (width != 0) return width;
+                int height = left.Detection.Box.Height.CompareTo(right.Detection.Box.Height);
+                if (height != 0) return height;
+                int roi = string.Compare(left.RoiId, right.RoiId, StringComparison.Ordinal);
+                return roi != 0 ? roi : left.Window.Index.CompareTo(right.Window.Index);
             });
-            var kept = new List<Detection>(Math.Min(detections.Count, options.MaximumDetections));
+            var kept = new List<SlidingWindowDetectionItem>(Math.Min(detections.Count, options.MaximumDetections));
             for (int index = 0; index < detections.Count && kept.Count < options.MaximumDetections; index++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                Detection candidate = detections[index];
+                SlidingWindowDetectionItem candidate = detections[index];
                 bool suppressed = false;
                 for (int keptIndex = 0; keptIndex < kept.Count; keptIndex++)
                 {
-                    Detection existing = kept[keptIndex];
-                    if (options.NmsMode == DetectionNmsMode.ClassAware && existing.Label.Index != candidate.Label.Index) continue;
-                    if (DetectionDecoder.IntersectionOverUnion(existing.Box, candidate.Box) > options.GlobalIouThreshold)
+                    SlidingWindowDetectionItem existing = kept[keptIndex];
+                    if (options.NmsMode == DetectionNmsMode.ClassAware && existing.Detection.Label.Index != candidate.Detection.Label.Index) continue;
+                    if (DetectionDecoder.IntersectionOverUnion(existing.Detection.Box, candidate.Detection.Box) > options.GlobalIouThreshold)
                     {
                         suppressed = true;
                         break;
@@ -394,6 +566,14 @@ namespace JYPPX.DeploySharp.Visual
                 if (!suppressed) kept.Add(candidate);
             }
             return kept;
+        }
+
+        private static bool MeetsRoiCoverage(RectangleF window, IVisualRoiGeometry geometry, float minimumCoverage)
+        {
+            float area = window.Width * window.Height;
+            if (area <= 0) return false;
+            float intersection = VisualRoiDetectionFilter.CalculateIntersectionArea(window, geometry);
+            return intersection > 0 && intersection / area >= minimumCoverage;
         }
     }
 }

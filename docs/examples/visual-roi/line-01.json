@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.0",
+  "source": {
+    "width": 4096,
+    "height": 2160
+  },
+  "version": 1,
+  "rois": [
+    {
+      "id": "inspection-zone-a",
+      "name": "检测区域 A",
+      "enabled": true,
+      "priority": 10,
+      "coordinateSpace": "SourcePixels",
+      "inclusionMode": "Include",
+      "executionMode": "CropAndInfer",
+      "hitTestMode": "IntersectionOverResult",
+      "hitThreshold": 0.5,
+      "margin": 8,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [
+        "inspection",
+        "line-01"
+      ],
+      "metadata": {
+        "camera": "cam-01",
+        "station": "line-01"
+      },
+      "geometry": {
+        "type": "Rectangle",
+        "x": 320,
+        "y": 180,
+        "width": 1800,
+        "height": 1200
+      }
+    },
+    {
+      "id": "ignore-border",
+      "name": "边界排除区",
+      "enabled": true,
+      "priority": 100,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Exclude",
+      "executionMode": "FilterResults",
+      "hitTestMode": "IntersectionOverRoi",
+      "hitThreshold": 0.2,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [
+        "ignore"
+      ],
+      "metadata": {},
+      "geometry": {
+        "type": "Polygon",
+        "points": [
+          { "x": 0.0, "y": 0.0 },
+          { "x": 1.0, "y": 0.0 },
+          { "x": 1.0, "y": 0.04 },
+          { "x": 0.0, "y": 0.04 }
+        ]
+      }
+    }
+  ]
+}

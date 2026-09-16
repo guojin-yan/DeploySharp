@@ -16,6 +16,25 @@ namespace DeploySharp.Visual.TensorRT.Tests
     public sealed class TensorRtVisualContractTests
     {
         [TestMethod]
+        public void CropBeforeResizePreservesInterpolatedEdgesAndMatchesProjectiveReference()
+        {
+            var size = new VisualSize(8, 8);
+            var tensor = new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[192]);
+            ImageTransform resize = ImageTransform.Resize(size, size);
+            using var affine = new PreparedVisualInput("images", tensor, size, size, 1, VisualTensorLayout.Nchw, resize);
+            using var projective = new PreparedVisualInput("images", tensor, size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Compose(resize, resize));
+            var box = new JYPPX.DeploySharp.Geometry.RectangleF(1.8f, 1.8f, 2.4f, 4.4f);
+            byte[] Restore(PreparedVisualInput input) => InstanceMaskRestorer.Restore(
+                new[] { 10f, 10f, 10f, 10f }, 0, 2, 2, input, box,
+                InstanceMaskValueKind.Logits, InstanceMaskActivation.Sigmoid, InstanceMaskInterpolationMode.BilinearHalfPixel,
+                InstanceMaskThresholdOrder.AfterResize, InstanceMaskCropSpace.ModelInput, InstanceMaskCropOrder.BeforeResize,
+                .5f, CancellationToken.None).ToArray();
+            byte[] actual = Restore(affine);
+            CollectionAssert.AreEqual(Restore(projective), actual);
+            Assert.AreEqual((byte)1, actual[0], "BeforeResize must not also crop the restored mask to the box.");
+        }
+
+        [TestMethod]
         public void StaticBatchOneFloat32NchwContractIsAccepted()
         {
             VisualModelProfile profile = Profile(new TensorShape(1, 3, 224, 224));
@@ -23,6 +42,22 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
             TensorRtVisualContracts.ValidatePreprocessing(profile, options);
             TensorRtVisualContracts.ValidateMetadata(Metadata(profile), profile);
+        }
+
+        [TestMethod]
+        public void SharedResizeLetterboxAndCenterCropContractsAreAccepted()
+        {
+            VisualModelProfile profile = Profile(new TensorShape(1, 3, 224, 224));
+            foreach (VisualResizeMode mode in new[] { VisualResizeMode.Resize, VisualResizeMode.Letterbox, VisualResizeMode.CenterCrop })
+            {
+                var preprocessing = new VisualPreprocessingOptions(
+                    new VisualSize(224, 224),
+                    mode,
+                    VisualColorOrder.Rgb,
+                    VisualNormalizationOptions.ImageNet,
+                    VisualTensorLayout.Nchw);
+                TensorRtVisualContracts.ValidatePreprocessing(profile, preprocessing.ToOpenCvOptions());
+            }
         }
 
         [TestMethod]
