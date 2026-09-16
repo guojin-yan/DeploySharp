@@ -339,17 +339,29 @@ namespace JYPPX.DeploySharp.Visual
                     }
 
                     stage = OcrPipelineStage.CropAndBatch;
+                    var cropWatch = Stopwatch.StartNew();
                     var requests = new List<IndexedRequest>(regions.Count);
+                    var windowPlans = _cropProfile.OverflowMode == RecognitionOverflowMode.SlidingWindow ? new IReadOnlyList<OcrRecognitionWindow>?[regions.Count] : null;
+                    var windowOffsets = windowPlans == null ? null : new int[regions.Count];
                     for (int index = 0; index < regions.Count; index++)
                     {
                         operationToken.ThrowIfCancellationRequested();
                         regionIndex = regions[index].SourceIndex;
-                        requests.Add(new IndexedRequest(index, new TextCropRequest(regions[index], _cropProfile)));
+                        if (windowOffsets != null) windowOffsets[index] = requests.Count;
+                        if (windowPlans != null && regions[index].CropQuadrilateral != null
+                            && _cropProfile.DescribeWidth(regions[index].CropQuadrilateral!, regions[index].Orientation).WidthClamped)
+                        {
+                            IReadOnlyList<OcrRecognitionWindow> windows = OcrRecognitionWindowPlanner.Plan(regions[index], _cropProfile, operationToken);
+                            windowPlans[index] = windows;
+                            foreach (OcrRecognitionWindow window in windows) requests.Add(new IndexedRequest(requests.Count, window.Crop));
+                        }
+                        else requests.Add(new IndexedRequest(requests.Count, new TextCropRequest(regions[index], _cropProfile)));
+                        if (windowPlans != null && requests.Count > _cropProfile.RecognitionWindows.MaximumWindowsPerImage)
+                            throw Limit("OCR recognition windows exceed the per-image limit.", stage, regionIndex: regionIndex);
                     }
                     regionIndex = null;
-                    var recognized = new RecognizedText[regions.Count];
-                    var recognitionWidths = new OcrRecognitionWidthInfo[regions.Count];
-                    var cropWatch = Stopwatch.StartNew();
+                    var recognized = new RecognizedText[requests.Count];
+                    var recognitionWidths = new OcrRecognitionWidthInfo[requests.Count];
                     List<OcrBatchDescriptor> recognitionBatches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, operationToken);
                     cropWatch.Stop();
                     TimeSpan cropDuration = cropWatch.Elapsed;
@@ -357,10 +369,28 @@ namespace JYPPX.DeploySharp.Visual
                     TimeSpan recognitionPreparationWork = TimeSpan.Zero;
                     TimeSpan recognitionInferenceWork = TimeSpan.Zero;
                     TimeSpan recognitionPostprocessingWork = TimeSpan.Zero;
+                    long retainedRecognitionBytes = 0;
                     try
                     {
                         stage = OcrPipelineStage.Recognition;
-                        BatchExecution<VisualInferenceResult>[] recognitionResults = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, recognitionBatches, _recognizer.MaximumConcurrency, (prepared, token) => _recognizer.RunAsync(prepared, new VisualExecutionOptions(correlationId: execution.CorrelationId), token), operationToken).ConfigureAwait(false);
+                        BatchExecution<VisualInferenceResult>[] recognitionResults = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, recognitionBatches, _recognizer.MaximumConcurrency, async (prepared, token) =>
+                        {
+                            if (windowPlans != null && Interlocked.Read(ref retainedRecognitionBytes) > _options.MaximumResultBytes)
+                                throw Limit("OCR window results exceed their retained byte budget.", OcrPipelineStage.Recognition);
+                            VisualInferenceResult inference = await _recognizer.RunAsync(prepared, new VisualExecutionOptions(correlationId: execution.CorrelationId), token).ConfigureAwait(false);
+                            if (windowPlans != null)
+                            {
+                                long batchBytes = 0;
+                                foreach (RecognizedText row in inference.GetValue<TextRecognitionBatchResult>().Items)
+                                    batchBytes = checked(batchBytes + 40L + EncodingBytes(row.Text) + checked((long)row.Tokens.Count * 40));
+                                // Include minimum-batch duplicate rows conservatively; accepted rows stay bounded
+                                // while the remaining independent sessions finish or observe cancellation.
+                                // 保守计入最小 batch 重复行；其余独立 Session 完成或观察取消时，已接收行保持有界。
+                                if (Interlocked.Add(ref retainedRecognitionBytes, batchBytes) > _options.MaximumResultBytes)
+                                    throw Limit("OCR window results exceed their retained byte budget.", OcrPipelineStage.Recognition);
+                            }
+                            return inference;
+                        }, operationToken).ConfigureAwait(false);
                         for (int batchIndex = 0; batchIndex < recognitionBatches.Count; batchIndex++)
                         {
                             OcrBatchDescriptor prepared = recognitionResults[batchIndex].Batch;
@@ -385,13 +415,31 @@ namespace JYPPX.DeploySharp.Visual
                     var mergeWatch = Stopwatch.StartNew();
                     var results = new List<OcrRegionResult>(regions.Count);
                     long resultBytes = 0;
+                    CtcConfidenceAggregation aggregation = (RecognitionSelection.Profile.Decoder as GreedyCtcDecoder)?.Options.ConfidenceAggregation ?? CtcConfidenceAggregation.Mean;
                     for (int index = 0; index < regions.Count; index++)
                     {
                         operationToken.ThrowIfCancellationRequested();
-                        RecognizedText text = recognized[index] ?? throw Failure("OCR recognition did not produce every detected region.", stage, regionIndex: regions[index].SourceIndex);
-                        results.Add(new OcrRegionResult(regions[index], text, recognitionWidths[index]));
-                        resultBytes = checked(resultBytes + 32L + EncodingBytes(text.Text) + checked((long)text.Tokens.Count * 40) + checked((long)regions[index].Polygon.Vertices.Count * 8));
+                        int offset = windowOffsets == null ? index : windowOffsets[index];
+                        IReadOnlyList<OcrRecognitionWindow>? windows = windowPlans?[index];
+                        int windowCount = windows?.Count ?? 1;
+                        // Account for retained raw traces and the merged trace before allocating the latter.
+                        // 分配合并追踪前，同时计入保留的原始追踪与合并追踪预算。
+                        for (int item = 0; item < windowCount; item++)
+                        {
+                            RecognizedText raw = recognized[offset + item] ?? throw Failure("OCR recognition did not produce every detected region.", stage, regionIndex: regions[index].SourceIndex);
+                            long bytes = 40L + EncodingBytes(raw.Text) + checked((long)raw.Tokens.Count * 40);
+                            resultBytes = checked(resultBytes + bytes * (windowCount > 1 ? 2 : 1));
+                        }
+                        resultBytes = checked(resultBytes + checked((long)regions[index].Polygon.Vertices.Count * 8));
                         if (resultBytes > _options.MaximumResultBytes) throw Limit("OCR owned result exceeds its byte limit.", stage, regionIndex: regions[index].SourceIndex, technicalDetails: "bytes=" + resultBytes);
+                        if (windows == null || windows.Count == 1)
+                            results.Add(new OcrRegionResult(regions[index], recognized[offset], recognitionWidths[offset]));
+                        else
+                        {
+                            var rawWindows = new List<OcrRecognitionWindowResult>(windows.Count);
+                            for (int item = 0; item < windows.Count; item++) rawWindows.Add(new OcrRecognitionWindowResult(windows[item], recognized[offset + item], recognitionWidths[offset + item]));
+                            results.Add(OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, operationToken));
+                        }
                     }
                     mergeWatch.Stop();
                     var detailedTiming = new OcrDetailedStageTiming(

@@ -140,7 +140,7 @@ namespace JYPPX.DeploySharp.Visual
                     source.Script,
                     source.ExternalId,
                     source.Metadata);
-                regions.Add(new OcrRegionResult(projectedRegion, item.Recognition, item.RecognitionWidth));
+                regions.Add(item.WithRegion(projectedRegion));
             }
 
             return new OcrResult(

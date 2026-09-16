@@ -8,11 +8,11 @@ Pipeline 只处理模型张量，图像解码和几何裁剪由可选的 <code>J
 
 1. 图像适配器只解码一次源图，并准备检测器输入。
 2. 检测 Decoder 校验 polygon 和 score，执行阈值过滤、精确 polygon NMS，并把保留区域按阅读顺序排列。
-3. 每个区域生成一个裁剪请求，完成透视裁剪、直角旋转、resize、padding、颜色转换和归一化。
+3. 每个区域生成裁剪请求；显式启用超长行滑窗时生成多个有界窗口。适配器完成透视裁剪、直角旋转、resize、padding、颜色转换和归一化。
 4. 文本行按目标宽度分组，以有界 batch 提交识别器；CTC Decoder 执行 argmax、repeat collapse、blank 移除和置信度计算。
 5. 结果中的坐标通过同一个 <code>ImageTransform</code> 还原到原图，并带有阶段耗时和模型来源信息。
 
-Alpha.1 的方向策略由 Profile 或调用方配置提供，仅支持 0、90、180、270 度直角旋转。Pipeline 不会偷偷运行方向分类器，也不会猜测 polygon 的点顺序。
+方向校正可以来自显式的 0、90、180、270 度配置、可选 CLS Pipeline，或竖排长宽比策略。任意角度的自动诊断与重试仍在完善；已有四边形透视裁剪可处理显式倾斜角点。方向来源和 polygon 角点顺序必须明确。
 
 ## 快速使用
 
@@ -96,24 +96,75 @@ foreach (OcrRegionResult item in result.Regions)
 | `NaturalWidth` | 按已定向四边形长宽比计算的 `ceil(TargetHeight × width / height)`；在最小宽度、对齐和上限之前 |
 | `TargetWidth` | 当前区域经最小值、对齐和上限处理后的规划宽度；固定宽度模式采用 `FixedWidth` |
 | `TensorWidth` | 实际提交的 Batch 张量宽度，可能包含与其他更宽文本行共同补齐的 padding |
-| `WidthClamped` | 自然宽度大于该区域受限宽度，意味着水平压缩；仅增加 padding 不算压缩 |
+| `WidthClamped` | 单窗口自然宽度超过受限宽度时为 true；滑窗合并结果为 false，逐窗口都通过宽度检查 |
 | `BatchPadded` | `TensorWidth > TargetWidth`，仅表示 Batch 补齐 |
+| `WindowCount` | 普通行是 1；大于 1 时，`TargetWidth`/`TensorWidth` 分别报告所有窗口中的最大值，完整信息在 `RecognitionWindows` |
 
 这些值由几何合同计算；OpenCV 透视中间图的边长会先取整，因此不是逐像素测得的 crop 栅格宽度。90°/270°方向先交换长宽，再做计算。宽度对齐产生的额外 padding 被上限裁掉时，只要原始内容仍可放下，就不会误报压缩。
 
 - **Clamp（兼容默认）**：超长行仍缩放到上限，结果的 `RecognitionWidth.WidthClamped=true`。它不是切分或无损长文本识别。
 - **Reject（显式启用）**：在识别 crop 分配和 REC 调用之前抛出 `OcrPipelineException`，错误码 `DS-VISUAL-4103`，阶段 `CropAndBatch`；包含 crop Profile、原 `RegionIndex` 和自然/受限宽度。DET 和可选 CLS 此时可能已经执行。一个区域超宽会使本次完整 OCR 调用失败，不静默丢掉该行；输入释放与取消语义不变。
-- **Split / SlidingWindow**：属于下一实施步骤，目前没有可用的公开枚举值或自动拼接能力，不能当作已支持。
+- **SlidingWindow（显式启用）**：在校正并定向后的文字行中规划重叠窗口，逐窗口执行有界识别，再合并回原检测区域。不会增加 `OcrResult.Regions` 中的行数。
+- **Split**：基于文字间隙的切分尚未提供，不含占位枚举值。
 
 `crop.DescribeWidth(quadrilateral, orientation)` 只返回诊断，即使是 Reject 也不抛超宽异常，便于应用先规划；`CalculateWidth`、`TextCropRequest` 和实际 Pipeline 会执行 Reject。固定宽度模型的有效限制是 `FixedWidth`，不能通过更大的 `MaximumWidth` 绕过。
 
 既有构造函数和默认策略保留；手工使用旧 `OcrRegionResult(region, recognition)` 构造结果时，`RecognitionWidth=null` 表示诊断未知，不代表没有压缩。方向恢复及 ROI 投影/合并保留宽度来源。既有 `OcrResult.ComputeSha256()` 继续针对识别内容与几何，不加入这些诊断，以便与历史结果对照。
 
-基准工具可设置 `DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE=Clamp/Reject`、`DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH` 和 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR`。报告在计时外导出输入/模型/程序集 SHA、每行文字、polygon、字典 SHA 和宽度信息；完整操作见[基准工具说明](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark)。
+基准工具可设置 `DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE=Clamp/Reject/SlidingWindow`、`DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH` 和 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR`。报告在计时外导出输入/模型/程序集 SHA、每行文字、polygon、字典 SHA、宽度和窗口来源信息；完整操作见[基准工具说明](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark)。
+
+## 超长行滑窗识别
+
+优先在模型支持范围内选择合适的动态宽度。确实超过上限的 URL、订单号或长句可以启用滑窗。滑窗会增加 REC 工作量，适合解决宽度约束，不能作为普通行必然提速的开关。
+
+```csharp
+TextCropProfile crop = recognitionProfile.CropProfile!.WithRecognitionWindows(
+    new OcrRecognitionWindowOptions(
+        overlapRatio: 0.2,
+        maximumWindowsPerRegion: 32,
+        maximumWindowsPerImage: 1024,
+        maximumMergedCharacters: 16384,
+        maximumOverlapTokens: 64,
+        minimumOverlapTokens: 2,
+        maximumMergedTimesteps: 65536));
+
+// 仍通过现有 OcrPipeline 构造函数传入 crop。
+// REC Batch 和独立 Session 数量继续由既有参数控制。
+foreach (OcrRegionResult line in result.Regions)
+{
+    bool needsReview = line.RecognitionWindows.Any(window => window.SeamUncertain);
+    Console.WriteLine($"{line.Region.SourceIndex}: {line.Recognition.Text}, review={needsReview}");
+    foreach (OcrRecognitionWindowResult window in line.RecognitionWindows)
+        Console.WriteLine($"  window={window.Index}, range={window.Start:F3}..{window.End:F3}, " +
+            $"raw={window.Recognition.Text}, removed={window.RemovedPrefixTokens}");
+}
+```
+
+### 裁剪、Batch 和坐标
+
+`OcrRecognitionWindowPlanner.Plan(region, crop)` 可在创建任何图像或张量之前预览窗口。`Start`/`End` 是**定向后校正行的归一化水平区间**，不是原图 x 像素。规划器用单应变换把窗口角点映回源图，并将 90°/180°/270°校正编码到角点角色中，避免后续重复旋转。透视明显的区域会根据局部宽度缩小窗口；无法在几何和数量限制内覆盖时明确失败。
+
+每个窗口使用原 `SourceIndex`，经过既有按宽度分组、Batch padding 和独立 Session 调度。原始 DET polygon、方向元数据和阅读顺序保留在最终行中。`RecognitionWindows` 只保留区间、逐窗口宽度、原始识别结果及接缝决策，不持有图像或张量。普通行的窗口列表为空，仍执行单次识别。
+
+直接用超宽区域构造 `TextCropRequest` 不会自动生成多个请求：在 SlidingWindow 模式下会抛出 `DS-VISUAL-4103`；应使用规划器或 `OcrPipeline`。`DescribeWidth` 始终只规划；固定模型仍以 `FixedWidth` 为上限，不能绕过 engine shape 限制。
+
+### 接缝匹配及不确定结果
+
+`OcrRecognitionWindowMerger` 仅合并相邻窗口的完全匹配 token 后缀/前缀，并检查近似 CTC 位置是否位于共享几何范围。映射会扣除输入填充，并容纳半个时间步的离散定位误差。token 可能是一个中文字符、emoji，或包含多个 Unicode 标量的字典项；比较和删除都以完整 token 为单位。
+
+默认至少要求 2 个匹配 token。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，匹配属于保守启发式，必须结合应用样本评估。
+
+无法匹配时保留两侧文字，并设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用可以据此人工复核、增加兼容宽度或采用另一组窗口参数重试；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被匹配移除的前缀在合并 trace 中改为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
+
+### 资源与失败行为
+
+窗口数、UTF-16 字符数、原始 CTC 时间步和 `OcrPipelineOptions.MaximumResultBytes` 都有边界。窗口总数超限在 REC 分配前失败；结果超限不会返回部分文本，错误码为 `DS-VISUAL-4102`（`OcrLimitExceeded`）。识别时对已保留结果预算进行检查，合并前再预算原始 trace 与合并 trace；最小 Batch 的补齐行按保守预算计入。结果字节数是近似托管开销，不等于整个进程的内存硬限额。
+
+所有窗口使用同一次调用的取消和超时 token。一个窗口失败使该次调用失败，已创建的准备输入由调度器释放。Windows/OpenCV 的四方向真实像素裁剪已加入单元回归；TensorRT 和其他后端仍需各自验证模型 shape、CTC 合同及窗口后的吞吐，不能从 CPU/CUDA 的通过结果推断全部后端完成验收。
 
 ## 性能测量建议
 
-### 本步正确性验证（2026-09-16）
+### 宽度诊断与兼容性验证（2026-09-16）
 
 使用同一 `demo_1.jpg`、v4 mobile/v5 mobile/v6 tiny，在 ONNX Runtime 1.23.2 CPU 与 CUDA 上验证了以下行为。设备为 Windows x64 / RTX3060 Laptop；这不是所有模型/后端的完整验收。
 
@@ -125,6 +176,22 @@ foreach (OcrRegionResult item in result.Regions)
 | Reject/3200，各 6 组 | 完整流水线通过；压缩区域为 0，同版本 CPU/CUDA 文本 SHA 一致 |
 
 将宽度从 320 改为 3200 后，本图实际规划的最大宽度是 859～973，而不是给每行都分配 3200。文本指纹有变化，但目前没有人工标注真值，不能将变化直接称为准确率提升。warmup=1/iterations=3 的短测用于验证行为，不作为性能结论；性能调优与长文本完整性指标将在后续步骤单独验收。
+
+### 滑窗调用与接缝诊断验证（2026-09-16）
+
+同一 Windows x64 / RTX3060 Laptop 6 GB、驱动 576.02，使用 ORT 1.23.2 CPU/CUDA、OpenCV 5.0、完整流水线 Batch=4、独立通道=1、warmup=1、iterations=3。输入仍为 `demo_1.jpg`，SHA-256 为 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`。先验证 Clamp/320：6 组文本 SHA 和完整结果 SHA 与加入滑窗前相同。
+
+SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都成功，原检测行仍为 16 个；同一版本 CPU/CUDA 的文本 SHA、切片数和接缝诊断一致。中间 crop 宽度不超过配置上限，几何诊断压缩数为 0。
+
+| 模型 | 切片行数 | 总 REC 窗口（含普通行） | 不确定接缝 / 接缝总数 | CPU / CUDA 完整流水线 P50（ms） |
+| --- | --- | --- | --- | --- |
+| v4 mobile | 13/16 | 40 | 18/24 | 1005.012 / 531.559 |
+| v5 mobile | 12/16 | 37 | 15/21 | 776.414 / 596.205 |
+| v6 tiny | 12/16 | 35 | 11/19 | 224.065 / 359.944 |
+
+将重叠调到 35% 后，6 组调用再次成功且同版本 CPU/CUDA 文字一致；v4/v5/v6 tiny 的总窗口变成 45/40/38，不确定接缝分别为 13/12/11。该图仍存在未匹配接缝，不能把诊断减少直接当作准确率提升。重复字、截断字符和相邻窗口识别分歧需要结合人工真值评估。
+
+上表是繁忙开发设备上的短测，含构建与其他负载干扰，**不是最优性能记录**。SlidingWindow 增加了识别工作量；支持更大动态宽度的模型应同时对照 Reject/3200。当前验证覆盖 v4 mobile、v5 mobile、v6 tiny 的 CPU/CUDA；v6 small/medium、TensorRT/OpenVINO/OpenCV DNN 的滑窗矩阵和标注长文本 CER/WER 仍待补齐。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。

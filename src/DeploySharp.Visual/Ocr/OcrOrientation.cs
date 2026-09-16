@@ -382,7 +382,7 @@ namespace JYPPX.DeploySharp.Visual
                 TextPolygon polygon = TextPolygon.Canonicalize(vertices, OrientedVertexOrder.CounterClockwise);
                 // Crop-corner roles describe the corrected upright image. The final result keeps the authoritative polygon in original coordinates instead of relabeling rotated corners. / 裁剪角点角色描述纠正后的正向图像；最终结果保留原图坐标中的权威 polygon，不错误重标旋转后的角点角色。
                 var region = new TextRegion(item.Region.SourceIndex, item.Region.Score, polygon, orientation: item.Region.Orientation, angleRadians: item.Region.AngleRadians, language: item.Region.Language, script: item.Region.Script, externalId: item.Region.ExternalId, metadata: item.Region.Metadata);
-                restored.Add(new OcrRegionResult(region, item.Recognition, item.RecognitionWidth));
+                restored.Add(item.WithRegion(region));
             }
             return new OcrResult(restored, orientation.InputSize, corrected.DetectionProfileId, corrected.DetectionModelId, corrected.RecognitionProfileId, corrected.RecognitionModelId, corrected.Timing, orientation);
         }

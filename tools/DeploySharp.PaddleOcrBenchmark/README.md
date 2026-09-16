@@ -8,20 +8,33 @@ The library default is **MaximumWidth=3200**. This benchmark retains **320** as 
 
 ```powershell
 $env:DEPLOYSHARP_PADDLEOCR_AUTOTUNE = '0'
-$env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = 'Clamp' # or Reject
+$env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = 'Clamp' # or Reject / SlidingWindow
 $env:DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH = '320'
 $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-widths'
 $env:DEPLOYSHARP_BENCHMARK_SOURCE_REVISION = '<actual-commit>+dirty'
 dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- E:\Model\paddleocr artifacts/ocr-widths/full.csv
 ```
 
-`Clamp` preserves existing resizing and reports compressed rows. `Reject` fails the complete OCR call at `CropAndBatch` with `DS-VISUAL-4103`, before REC crop allocation/inference; DET/CLS may already have run. The policy applies to recognition only, not the fixed-width orientation classifier. Split and SlidingWindow recognition are not implemented in this step.
+`Clamp` preserves existing resizing and reports compressed rows. `Reject` fails the complete OCR call at `CropAndBatch` with `DS-VISUAL-4103`, before REC crop allocation/inference; DET/CLS may already have run. `SlidingWindow` recognizes bounded overlapping crops and merges them back into each original detected line. These policies apply to recognition, not the fixed-width orientation classifier. Gap-based Split is not implemented.
 
 The tool exits with code 3 when there are no successful rows, including when all calls are intentionally rejected by the width policy. A mixed-backend run with at least one success still requires inspection of every CSV status; exit code 0 is not a claim that all combinations passed.
 
 JSON sidecars are exported **outside measured spans** and contain the last measured result's text/polygons, dictionary SHA, natural/target/tensor widths, compression and batch-padding flags, input/model/assembly hashes and protocol. Existing CSV text/contract hashes are unchanged. A null width diagnostic means unknown, not uncompressed. Successful repeated configurations overwrite their same-named report; use a fresh output directory per experiment and retain failure rows/logs (failed calls have no successful width sidecar).
 
-主库默认上限仍为 3200，基准工具的 320 仅用于保持历史协议。自然宽度、区域受限宽度和实际批张量宽度分别记录，不能把补齐 padding 当成压缩。`Reject` 是显式正确性检查，不是失败后静默删行或退回 CPU；后续切分、滑窗拼接另行实施。
+主库默认上限仍为 3200，基准工具的 320 仅用于保持历史协议。自然宽度、区域受限宽度和实际批张量宽度分别记录，不能把补齐 padding 当成压缩。`SlidingWindow` 保留原检测行和阅读顺序；逐窗口原文、token、宽度和接缝不确定信息导出到 JSON，不能仅凭 `status=pass` 判断文字准确。
+
+Window controls / 滑窗配置（只在 SlidingWindow 时生效）：
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `DEPLOYSHARP_PADDLEOCR_WINDOW_OVERLAP` | `0.2` | Shared window fraction, greater than 0 and at most 0.5 / 重叠比例 |
+| `DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_REGION` | `32` | Maximum windows per detected line, 2–256 / 单行窗口限制 |
+| `DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_IMAGE` | `1024` | Total including unsliced lines, 1–4096 / 全图窗口限制 |
+| `DEPLOYSHARP_PADDLEOCR_WINDOW_MIN_MATCH` | `2` | Minimum exact overlap tokens; 1 enables single-token matching / 最小完全匹配 token 数 |
+
+Unmatched seams retain both sides and set `SeamUncertain`; duplicates may remain. A larger overlap supplies context but costs more inference. Keep model width, batch, sessions, overlap and minimum match fixed for comparisons. CPU/GPU text agreement is reproducibility evidence, not annotated accuracy. Full API details: [OCR windows](../../docs/articles/visual-ocr.md#超长行滑窗识别).
+
+匹配以完整字典 token 和近似 CTC 位置为依据，未匹配接缝保留双侧文本并标记不确定。增大重叠或允许单 token 匹配都应结合真实样本评估；当前工具只记录结果，不自动选择准确率更好的组合。
 
 ## Portable Windows x64 package
 

@@ -148,6 +148,47 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(7, padded.ModelSize.Height);
         }
 
+        [TestMethod]
+        public void SlidingWindowsCropCorrectColorAxesAfterEveryRightAngleOrientation()
+        {
+            foreach (TextOrientation orientation in Enum.GetValues<TextOrientation>())
+            {
+                bool vertical = orientation == TextOrientation.Clockwise90 || orientation == TextOrientation.CounterClockwise90;
+                int width = vertical ? 40 : 160;
+                int height = vertical ? 160 : 40;
+                byte[] header = Encoding.ASCII.GetBytes("P6\n" + width + " " + height + "\n255\n");
+                var ppm = new byte[header.Length + width * height * 3];
+                Buffer.BlockCopy(header, 0, ppm, 0, header.Length);
+                for (int y = 0; y < height; y++)
+                    for (int x = 0; x < width; x++)
+                    {
+                        int offset = header.Length + (y * width + x) * 3;
+                        ppm[offset] = (byte)(x * 200 / (width - 1));
+                        ppm[offset + 1] = 100;
+                        ppm[offset + 2] = (byte)(y * 200 / (height - 1));
+                    }
+                using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().Create(OpenCvImageSource.FromBytes(ppm), "images",
+                    new OpenCvPreprocessOptions(new VisualSize(32, 16)));
+                var quad = new TextQuadrilateral(new PointF(0, 0), new PointF(width - 1, 0), new PointF(width - 1, height - 1), new PointF(0, height - 1), TextCornerOrder.TopLeftClockwise);
+                var region = new TextRegion(0, .9f, quad.Polygon, quad, orientation);
+                var profile = new TextCropProfile("tests/native-windows", 40, OcrRecognitionWidthMode.Dynamic, 64, 64,
+                    interpolation: TextCropInterpolation.Nearest).WithRecognitionOverflowMode(RecognitionOverflowMode.SlidingWindow);
+                foreach (OcrRecognitionWindow window in OcrRecognitionWindowPlanner.Plan(region, profile))
+                {
+                    using PreparedVisualInput batch = input.PrepareRecognitionBatch("crops", new[] { window.Crop }, CancellationToken.None);
+                    float[] data = ((Tensor<float>)batch.Tensor).ToArray();
+                    int pixels = window.Crop.TargetWidth * window.Crop.TargetHeight;
+                    int center = (window.Crop.TargetHeight / 2) * window.Crop.TargetWidth + window.Crop.TargetWidth / 2;
+                    double u = (window.Start + window.End) * .5;
+                    double expectedX = orientation == TextOrientation.Degrees0 ? u : orientation == TextOrientation.Degrees180 ? 1 - u : .5;
+                    double expectedY = orientation == TextOrientation.Clockwise90 ? 1 - u : orientation == TextOrientation.CounterClockwise90 ? u : .5;
+                    Assert.AreEqual(expectedX * 200, data[center], 8, orientation + "/red");
+                    Assert.AreEqual(100f, data[pixels + center]);
+                    Assert.AreEqual(expectedY * 200, data[2 * pixels + center], 8, orientation + "/blue");
+                }
+            }
+        }
+
         private static TextCropRequest Request(TextOrientation orientation, TextCropProfile profile)
         {
             var corners = new TextQuadrilateral(new PointF(2,2), new PointF(14,2), new PointF(14,6), new PointF(2,6), TextCornerOrder.TopLeftClockwise);

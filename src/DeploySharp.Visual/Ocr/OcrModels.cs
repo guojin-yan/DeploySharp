@@ -489,6 +489,13 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets the recognition overflow policy; existing constructors retain Clamp. / 获取识别超宽策略；既有构造函数保持 Clamp。</summary>
         public RecognitionOverflowMode OverflowMode { get; }
 
+        /// <summary>Gets immutable bounds for overlapping recognition windows. / 获取重叠识别窗口的不可变边界。</summary>
+        public OcrRecognitionWindowOptions RecognitionWindows { get; } = new OcrRecognitionWindowOptions();
+
+        /// <summary>Enables bounded overlapping recognition windows without changing model input limits. / 启用有界重叠识别窗口，不改变模型输入限制。</summary>
+        public TextCropProfile WithRecognitionWindows(OcrRecognitionWindowOptions options)
+            => new TextCropProfile(this, RecognitionOverflowMode.SlidingWindow, options ?? throw new ArgumentNullException(nameof(options)));
+
         /// <summary>Creates an immutable copy with an explicit overflow policy, without changing model tensor contracts. / 创建显式指定超宽策略的不可变副本，不改变模型张量合同。</summary>
         public TextCropProfile WithRecognitionOverflowMode(RecognitionOverflowMode mode)
         {
@@ -496,12 +503,13 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
         {
             OverflowMode = mode;
+            RecognitionWindows = windows ?? source.RecognitionWindows;
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
@@ -544,12 +552,12 @@ namespace JYPPX.DeploySharp.Visual
 
         internal void ValidateWidth(OcrRecognitionWidthInfo width, int? regionIndex)
         {
-            if (OverflowMode == RecognitionOverflowMode.Reject && width.WidthClamped)
+            if (OverflowMode != RecognitionOverflowMode.Clamp && width.WidthClamped)
                 throw new OcrPipelineException(VisualErrorCodes.OcrRecognitionWidthExceeded,
-                    "The OCR region requires horizontal compression. Increase the compatible recognition width or explicitly select Clamp.",
+                    "The OCR region requires horizontal compression. Increase recognition width, use the window planner, or explicitly select Clamp.",
                     OcrPipelineStage.CropAndBatch, profileId: ProfileId, regionIndex: regionIndex,
                     technicalDetails: "naturalWidth=" + width.NaturalWidth.ToString(CultureInfo.InvariantCulture)
-                        + ";targetWidth=" + width.TargetWidth.ToString(CultureInfo.InvariantCulture) + ";overflowMode=Reject");
+                        + ";targetWidth=" + width.TargetWidth.ToString(CultureInfo.InvariantCulture) + ";overflowMode=" + OverflowMode);
         }
 
         internal int ChannelCount => ColorOrder == VisualColorOrder.Gray ? 1 : 3;
@@ -640,12 +648,32 @@ namespace JYPPX.DeploySharp.Visual
 
         /// <summary>Initializes an OCR region with optional recognition-width provenance. / 初始化含可选识别宽度来源信息的 OCR 区域。</summary>
         public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth)
+            : this(region, recognition, recognitionWidth, Array.Empty<OcrRecognitionWindowResult>())
+        {
+        }
+
+        /// <summary>Initializes a region with recognition-window provenance; windows are not additional detected lines. / 使用识别窗口来源信息初始化区域；窗口不是额外的检测行。</summary>
+        public OcrRegionResult(TextRegion region, RecognizedText recognition, OcrRecognitionWidthInfo? recognitionWidth, IEnumerable<OcrRecognitionWindowResult> recognitionWindows)
         {
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition));
             if (region.SourceIndex != recognition.SourceRegionIndex) throw new ArgumentException("Detection and recognition source indexes must match.", nameof(recognition));
             if (recognitionWidth.HasValue && recognitionWidth.Value.TargetWidth <= 0) throw new ArgumentException("Recognition width diagnostics must be initialized.", nameof(recognitionWidth));
             RecognitionWidth = recognitionWidth;
+            if (recognitionWindows == null) throw new ArgumentNullException(nameof(recognitionWindows));
+            if (recognitionWindows is IReadOnlyCollection<OcrRecognitionWindowResult> collection && collection.Count == 0)
+            {
+                RecognitionWindows = Array.Empty<OcrRecognitionWindowResult>();
+                return;
+            }
+            var windows = new List<OcrRecognitionWindowResult>();
+            foreach (OcrRecognitionWindowResult window in recognitionWindows)
+            {
+                if (window == null || window.Recognition.SourceRegionIndex != region.SourceIndex) throw new ArgumentException("Recognition windows must belong to the source region.", nameof(recognitionWindows));
+                if (windows.Count >= 256) throw new ArgumentOutOfRangeException(nameof(recognitionWindows));
+                windows.Add(window);
+            }
+            RecognitionWindows = windows.AsReadOnly();
         }
 
         /// <summary>Gets detected region. / 获取检测区域。</summary>
@@ -654,6 +682,17 @@ namespace JYPPX.DeploySharp.Visual
         public RecognizedText Recognition { get; }
         /// <summary>Gets optional width diagnostics; null means the producing pipeline did not provide them, not that no compression occurred. / 获取可选宽度诊断；null 表示生成方未提供，不代表没有压缩。</summary>
         public OcrRecognitionWidthInfo? RecognitionWidth { get; }
+        /// <summary>Gets ordered raw recognition windows and seam diagnostics; empty for the unsliced path. / 获取有序原始识别窗口与接缝诊断；未切片路径为空。</summary>
+        public IReadOnlyList<OcrRecognitionWindowResult> RecognitionWindows { get; }
+
+        internal OcrRegionResult WithRegion(TextRegion region)
+        {
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows);
+            var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
+            foreach (OcrRecognitionWindowResult window in RecognitionWindows)
+                windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows);
+        }
     }
 
     /// <summary>Contains detailed OCR work timings for backend and adapter profiling. / 包含用于后端与适配器分析的 OCR 详细工作时长。</summary>

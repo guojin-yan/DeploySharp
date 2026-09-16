@@ -103,7 +103,7 @@ namespace JYPPX.DeploySharp.Visual
                 OcrRegionResult region = candidate.Region;
                 TextRegion sourceRegion = region.Region;
                 var canonicalTextRegion = new TextRegion(index, sourceRegion.Score, sourceRegion.Polygon, sourceRegion.CropQuadrilateral, sourceRegion.Orientation, sourceRegion.AngleRadians, sourceRegion.Language, sourceRegion.Script, sourceRegion.ExternalId, sourceRegion.Metadata);
-                var canonicalRegion = new OcrRegionResult(canonicalTextRegion, region.Recognition.WithSourceRegionIndex(index), region.RecognitionWidth);
+                OcrRegionResult canonicalRegion = region.WithRegion(canonicalTextRegion);
                 canonicalRegions.Add(canonicalRegion);
                 wrappedRegions.Add(new RoiOcrRegion(canonicalRegion, candidate.ContributingRoiIds));
             }

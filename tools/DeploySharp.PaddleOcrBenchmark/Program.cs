@@ -226,6 +226,12 @@ internal static class Program
             VisualModelProfile recProfile = rec.VisualProfile;
             VisualModelProfile? clsProfile = cls?.VisualProfile;
             TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode());
+            if (recognitionCrop.OverflowMode == RecognitionOverflowMode.SlidingWindow)
+                recognitionCrop = recognitionCrop.WithRecognitionWindows(new OcrRecognitionWindowOptions(
+                    overlapRatio: ReadWindowOverlap(),
+                    maximumWindowsPerRegion: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_REGION", 32),
+                    maximumWindowsPerImage: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_IMAGE", 1024),
+                    minimumOverlapTokens: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOW_MIN_MATCH", 2)));
             if (backend == "onnxruntime" || backend == "onnxruntime-cuda")
             {
                 OnnxRuntimeExecutionProvider executionProvider = backend == "onnxruntime-cuda" ? OnnxRuntimeExecutionProvider.Cuda : OnnxRuntimeExecutionProvider.Cpu;
@@ -395,6 +401,23 @@ internal static class Program
         return false;
     }
 
+    private static double ReadWindowOverlap()
+    {
+        const string name = "DEPLOYSHARP_PADDLEOCR_WINDOW_OVERLAP";
+        string? configured = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrWhiteSpace(configured)) return 0.2;
+        if (double.TryParse(configured, NumberStyles.Float, Invariant, out double value) && value > 0 && value <= 0.5) return value;
+        throw new ArgumentException(name + " must be greater than 0 and at most 0.5.");
+    }
+
+    private static int ReadWindowInt(string name, int fallback)
+    {
+        string? configured = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrWhiteSpace(configured)) return fallback;
+        if (int.TryParse(configured, NumberStyles.Integer, Invariant, out int value)) return value;
+        throw new ArgumentException(name + " must be an integer within OcrRecognitionWindowOptions bounds.");
+    }
+
     private static RecognitionOverflowMode ReadRecognitionOverflowMode()
     {
         string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE")?.Trim().ToLowerInvariant() ?? "clamp";
@@ -402,7 +425,8 @@ internal static class Program
         {
             "clamp" => RecognitionOverflowMode.Clamp,
             "reject" => RecognitionOverflowMode.Reject,
-            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE currently accepts only Clamp or Reject. Split/SlidingWindow are not implemented yet.")
+            "slidingwindow" => RecognitionOverflowMode.SlidingWindow,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE accepts Clamp, Reject or SlidingWindow.")
         };
     }
 
@@ -425,13 +449,13 @@ internal static class Program
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             Regions = result.Regions.Select(item => new
             {
                 item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
-                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows
             }).ToArray()
         };
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions
