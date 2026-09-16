@@ -223,7 +223,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     "The consumer-owned CUDA Driver kernel launch failed.",
                     exception,
                     operation: "cuda-kernel-launch",
-                    technicalDetails: "kernel=" + Artifact.KernelName + ";artifact=" + Artifact.ArtifactSha256 + ";exception=" + exception.GetType().FullName);
+                    technicalDetails: "kernel=" + Artifact.KernelName + ";artifact=" + Artifact.ArtifactSha256 + ";exception=" + DescribeException(exception));
             }
         }
 
@@ -265,6 +265,20 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             {
                 return CudaDevice.Current;
             }
+        }
+
+        private static string DescribeException(Exception exception)
+        {
+            var parts = new List<string>();
+            for (Exception? current = exception; current != null; current = current.InnerException)
+            {
+                string message = current.Message.Replace((char)13, ' ').Replace((char)10, ' ').Trim();
+                string bridge = current is NativeBridgeException native
+                    ? ";status=" + native.StatusCode + ";category=" + native.ErrorCategory
+                    : string.Empty;
+                parts.Add(current.GetType().FullName + bridge + (string.IsNullOrWhiteSpace(message) ? string.Empty : ": " + message));
+            }
+            return string.Join(" <- ", parts);
         }
     }
 

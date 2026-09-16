@@ -4,9 +4,9 @@
     ".NETCoreApp,Version=v3.1": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -21,9 +21,9 @@
     ".NETFramework,Version=v4.6": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -52,9 +52,9 @@
     ".NETFramework,Version=v4.6.1": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -83,9 +83,9 @@
     ".NETFramework,Version=v4.6.2": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -114,9 +114,9 @@
     ".NETFramework,Version=v4.7": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -145,9 +145,9 @@
     ".NETFramework,Version=v4.7.1": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -176,9 +176,9 @@
     ".NETFramework,Version=v4.7.2": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -207,9 +207,9 @@
     ".NETFramework,Version=v4.8": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -238,9 +238,9 @@
     ".NETFramework,Version=v4.8.1": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -269,9 +269,9 @@
     "net10.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "OnnxSharp": {
         "type": "Direct",
@@ -300,9 +300,9 @@
     ".NETCoreApp,Version=v5.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -317,9 +317,9 @@
     "net6.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -334,9 +334,9 @@
     "net7.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "JYPPX.DeploySharp.Core": {
         "type": "Project"
@@ -351,9 +351,9 @@
     "net8.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "OnnxSharp": {
         "type": "Direct",
@@ -382,9 +382,9 @@
     "net9.0": {
       "JYPPX.OpenCV.CSharp.API": {
         "type": "Direct",
-        "requested": "[5.0.0-preview.1, )",
-        "resolved": "5.0.0-preview.1",
-        "contentHash": "ZXO9o02RI5PwYLlUukg4dgLrxdQn9unXCPx0MOg0jOtziHJIAYaJkoNfHL7aih6qO0++jt1zYLvWFQgedlTTkw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "OnnxSharp": {
         "type": "Direct",

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using JYPPX.DeploySharp.Backends.OnnxRuntime.Internal;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Extensibility;
@@ -9,7 +10,7 @@ using CoreSessionOptions = JYPPX.DeploySharp.Models.SessionOptions;
 
 namespace JYPPX.DeploySharp.Backends.OnnxRuntime
 {
-    /// <summary>Creates Core tensor-inference sessions through ONNX Runtime 1.28 managed APIs. / 通过 ONNX Runtime 1.28 托管 API 创建 Core 张量推理会话。</summary>
+    /// <summary>Creates Core tensor-inference sessions through the selected ONNX Runtime managed API line. / 通过选定的 ONNX Runtime 托管 API 线创建 Core 张量推理会话。</summary>
     public sealed class OnnxRuntimeBackendProvider : IBackendProvider
     {
         private readonly OnnxRuntimeOptions _options;
@@ -22,10 +23,13 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         public OnnxRuntimeBackendProvider(OnnxRuntimeOptions? options = null)
         {
             _options = options ?? OnnxRuntimeOptions.Default;
+            string managedVersion = OnnxRuntimeNativePreflight.ManagedVersion;
+            string gpuPackageId = GpuPackageId();
+            string gpuRid = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
             Descriptor = new BackendDescriptor(
                 BackendId,
                 "ONNX Runtime",
-                "1.28.0",
+                managedVersion,
                 BackendCapabilities.TensorInference | BackendCapabilities.AsynchronousExecution | BackendCapabilities.DynamicShapes,
                 new[] { "onnx" },
                 description: "ONNX Runtime managed adapter with explicit CPU or CUDA execution-provider selection.",
@@ -33,14 +37,14 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 supportedTargetFrameworks: new[] { "netstandard2.0", "net8.0" },
                 supportedRuntimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" },
                 supportedDevices: new[] { "cpu", "cuda" },
-                providerPackageId: _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? "Microsoft.ML.OnnxRuntime.Gpu.Windows" : "Microsoft.ML.OnnxRuntime.Managed",
-                providerPackageVersion: "1.28.0",
+                providerPackageId: _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? gpuPackageId : "Microsoft.ML.OnnxRuntime.Managed",
+                providerPackageVersion: managedVersion,
                 preferredExecutionMode: _options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda ? BackendExecutionMode.Worker : BackendExecutionMode.InProcessOrWorker,
                 runtimeDependencies: new IBackendRuntimeDependency[]
                 {
-                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Managed", "1.28.0"),
-                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime", "1.28.0", downloadable: true, licenseExpression: "MIT"),
-                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Gpu.Windows", "1.28.0", "win-x64", downloadable: true, licenseExpression: "MIT", condition: "executionProvider == cuda")
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Managed", managedVersion),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime", managedVersion, downloadable: true, licenseExpression: "MIT"),
+                    new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, gpuPackageId, managedVersion, gpuRid, downloadable: true, licenseExpression: "MIT", condition: "executionProvider == cuda")
                 },
                 nativeProbeId: "onnxruntime-native",
                 optionsSchema: new BackendOptionsSchema("onnxruntime.options.v1", new[]
@@ -91,6 +95,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             }
             string modelPath = OnnxModelArtifactValidator.Validate(artifact);
             OnnxRuntimeNativePreflight.Validate(artifact);
+            if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda)
+                OnnxRuntimeNativePreflight.ValidateCudaProvider(artifact);
             try
             {
                 if (options.MaxConcurrency == 1) return CreateSingleSession(modelPath, artifact, options);
@@ -190,6 +196,13 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         private static bool IsCuda(string? device)
         {
             return !string.IsNullOrWhiteSpace(device) && string.Equals(device!.Trim(), "cuda", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GpuPackageId()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return "Microsoft.ML.OnnxRuntime.Gpu.Windows";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return "Microsoft.ML.OnnxRuntime.Gpu.Linux";
+            return "Microsoft.ML.OnnxRuntime.Gpu";
         }
 
         private void ThrowIfDisposed()

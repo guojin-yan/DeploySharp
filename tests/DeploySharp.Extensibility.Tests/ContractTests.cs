@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Diagnostics;
@@ -107,6 +108,35 @@ namespace DeploySharp.Extensibility.Tests
             Assert.AreEqual(BackendRuntimeState.MissingNative, status.State);
             CollectionAssert.Contains(status.MissingItems.ToArray(), "native.opencv");
             await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => probe.ProbeAsync(descriptor, new CancellationToken(true)));
+        }
+
+        [TestMethod]
+        public async Task FileSystemProbeFindsUbuntuDistroRidNativeAsset()
+        {
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-probe-" + Guid.NewGuid().ToString("N"));
+            string native = Path.Combine(root, "runtimes", "ubuntu.22.04-x64", "native");
+            Directory.CreateDirectory(native);
+            File.WriteAllText(Path.Combine(native, "libopencv_core.so"), string.Empty);
+            try
+            {
+                var backend = new BackendDescriptor(new BackendId("probe-ubuntu"), "Probe Ubuntu", "1.0.0", BackendCapabilities.None);
+                var descriptor = new BackendPluginDescriptor(
+                    "probe-ubuntu",
+                    "Probe Ubuntu",
+                    "1.0.0",
+                    backend,
+                    runtimeIdentifiers: new[] { "win-x64", "linux-x64" },
+                    nativeRequirements: new[] { new NativeRuntimeRequirement(NativeRuntimeKind.OpenCV, environmentVariables: new[] { "DEPLOYSHARP_PROBE_UBUNTU_ROOT" }) });
+                Environment.SetEnvironmentVariable("DEPLOYSHARP_PROBE_UBUNTU_ROOT", root);
+                BackendRuntimeStatus status = await new FileSystemBackendRuntimeProbe().ProbeAsync(descriptor);
+                Assert.AreEqual(BackendRuntimeState.Available, status.State);
+                Assert.IsTrue(status.IsAvailable);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("DEPLOYSHARP_PROBE_UBUNTU_ROOT", null);
+                if (Directory.Exists(root)) Directory.Delete(root, true);
+            }
         }
 
         private sealed class TestPluginFactory : IBackendPluginFactory

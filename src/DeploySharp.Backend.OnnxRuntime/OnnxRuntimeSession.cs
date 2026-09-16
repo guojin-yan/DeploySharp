@@ -103,7 +103,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 await _operationGate.WaitAsync(operationToken).ConfigureAwait(false);
                 entered = true;
                 EnsureUsable();
-                // ORT 1.28's native RunAsync callback can remain incomplete on Windows CPU
+                // Some ORT native RunAsync implementations can leave their callback incomplete on Windows CPU
                 // even for a non-cancellable static graph. Keep the public async contract,
                 // but execute the cancellation-aware synchronous native path on the pool;
                 // independent session-pool slots still overlap requests without relying on

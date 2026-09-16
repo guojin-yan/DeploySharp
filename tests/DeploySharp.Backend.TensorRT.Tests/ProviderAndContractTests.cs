@@ -494,6 +494,10 @@ namespace DeploySharp.Backend.TensorRT.Tests
             Assert.AreEqual("deploysharp_visual_normalize_bgr_nchw", TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.KernelName);
             Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("inverseScaleX", StringComparison.Ordinal));
             Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("scale2", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("sourceOffsetX", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("sourceOffsetY + y0", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("cropWidth", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NormalizeBgrNchwDefinition.Source.Contains("cropHeight", StringComparison.Ordinal));
             Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.Role);
             Assert.AreEqual("deploysharp_visual_restore_single_channel_map", TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.KernelName);
             Assert.IsTrue(TensorRtCudaVisualKernels.RestoreSingleChannelMapDefinition.Source.Contains("atomicAdd(positiveCount", StringComparison.Ordinal));
@@ -507,6 +511,11 @@ namespace DeploySharp.Backend.TensorRT.Tests
             Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.Role);
             Assert.AreEqual("deploysharp_visual_filter_yolo_candidates", TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.KernelName);
             Assert.IsTrue(TensorRtCudaVisualKernels.FilterYoloCandidatesDefinition.Source.Contains("selectedFlags[candidate]", StringComparison.Ordinal));
+            Assert.AreEqual(TensorRtCudaKernelRole.Postprocessing, TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition.Role);
+            Assert.AreEqual("deploysharp_visual_nms_yolo_candidates", TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition.KernelName);
+            Assert.IsTrue(TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition.Source.Contains("deploysharp_visual_yolo_iou", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition.Source.Contains("classAware", StringComparison.Ordinal));
+            Assert.IsTrue(TensorRtCudaVisualKernels.NmsYoloCandidatesDefinition.Source.Contains("keepFlags[index] = keepFlags[index] == 2 ? 1 : 0", StringComparison.Ordinal));
         }
 
 

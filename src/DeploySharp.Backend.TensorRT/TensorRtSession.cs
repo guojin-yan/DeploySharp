@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.TensorRtSharp;
+using JYPPX.TensorRtSharp.Shared.Interop;
 using JYPPX.CudaSharp;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
@@ -149,7 +150,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
             catch (Exception exception)
             {
-                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT device inference failed.", exception, _artifact.ModelId, operation: "device-run", technicalDetails: exception.GetType().FullName);
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT device inference failed.", exception, _artifact.ModelId, operation: "device-run", technicalDetails: DescribeException(exception));
             }
             finally
             {
@@ -197,7 +198,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
             catch (Exception exception)
             {
-                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference failed.", exception, _artifact.ModelId, operation: "run", technicalDetails: exception.GetType().FullName);
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT inference failed.", exception, _artifact.ModelId, operation: "run", technicalDetails: DescribeException(exception));
             }
             finally
             {
@@ -243,7 +244,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
             catch (Exception exception)
             {
-                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT sequence argmax inference failed.", exception, _artifact.ModelId, request.OutputName, operation: "sequence-argmax", technicalDetails: exception.GetType().FullName);
+                throw new TensorRtBackendException(TensorRtErrorCodes.InferenceFailed, "TensorRT sequence argmax inference failed.", exception, _artifact.ModelId, request.OutputName, operation: "sequence-argmax", technicalDetails: DescribeException(exception));
             }
             finally
             {
@@ -337,8 +338,13 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
 
         private SequenceArgMaxResult RunSequenceArgMaxCore(InferenceInputs inputs, SequenceArgMaxRequest request, CancellationToken cancellationToken)
         {
+            string phase = "prepare-inputs";
+            int batch = 0;
+            int time = 0;
+            int classes = 0;
             PrepareHostInputs(inputs, cancellationToken);
 
+            phase = "shape-inference";
             TensorRtExecutionContextReadiness shapeReadiness = _bindings.GetReadiness(runShapeInference: true);
             if (shapeReadiness.ShapeInferenceMissingTensorCount.GetValueOrDefault(0) != 0)
             {
@@ -355,7 +361,9 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 _bindings.AllocateDeviceBuffer(output.Name, runtimeShape, output.EstimateByteSize(runtimeShape));
             }
 
+            phase = "cuda-ctc-kernel-initialize";
             EnsureCtcTraceKernel(cancellationToken);
+            phase = "bind";
             _bindings.BindAll();
             TensorRtExecutionContextReadiness readiness = _bindings.GetReadiness(runShapeInference: true);
             if (!readiness.IsReadyForEnqueue)
@@ -366,18 +374,21 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             bool enqueued = false;
             try
             {
+                phase = "enqueue";
                 _bindings.EnqueueAsync(_stream, synchronize: false, runShapeInference: false);
                 enqueued = true;
+                phase = "resolve-output-shape";
                 TensorRtDims shape = ResolveOutputShapeAfterEnqueue(reducedOutput);
                 if (shape.Values.Length != 3) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax requires a rank-three output.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: shape.ToString());
-                int batch = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[0] : shape.Values[1];
-                int time = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[1] : shape.Values[0];
-                int classes = shape.Values[2];
+                batch = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[0] : shape.Values[1];
+                time = request.Layout == SequenceTensorLayout.BatchTimeClasses ? shape.Values[1] : shape.Values[0];
+                classes = shape.Values[2];
                 if (batch <= 0 || batch > request.MaximumBatch) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax batch exceeds its configured bound.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "batch=" + batch);
                 if (time <= 0 || time > request.MaximumTime) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax time dimension exceeds its configured bound.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "time=" + time);
                 if (classes != request.ExpectedClasses) throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "Sequence argmax class dimension does not match the requested contract.", modelId: _artifact.ModelId, tensorName: request.OutputName, operation: "sequence-shape", technicalDetails: "classes=" + classes + ";expected=" + request.ExpectedClasses);
 
                 int traceLength = checked(batch * time);
+                phase = "allocate-ctc-buffers";
                 EnsureDeviceMemory(ref _ctcClassIndices, checked(traceLength * sizeof(int)));
                 EnsureDeviceMemory(ref _ctcConfidences, checked(traceLength * sizeof(float)));
                 EnsureDeviceMemory(ref _ctcInvalidOffsets, checked(batch * sizeof(int)));
@@ -386,6 +397,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 var classBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.class-indices", TensorElementType.Int32, new TensorShape(batch, time), TensorRtCudaBufferAccess.Write), _ctcClassIndices!);
                 var confidenceBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.confidences", TensorElementType.Float32, new TensorShape(batch, time), TensorRtCudaBufferAccess.Write), _ctcConfidences!);
                 var invalidBuffer = new TensorRtCudaDeviceBuffer(new TensorRtCudaBufferDescriptor("sequence.invalid-offsets", TensorElementType.Int32, new TensorShape(batch), TensorRtCudaBufferAccess.Write), _ctcInvalidOffsets!);
+                phase = "launch-ctc-kernel";
                 using (TensorRtCudaKernelLaunch launch = TensorRtCudaOcrKernels.LaunchCtcTrace(
                     _ctcTraceKernel!,
                     _stream,
@@ -400,8 +412,10 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     request.ApplySoftmax,
                     request.RequireUnitInterval))
                 {
+                    phase = "synchronize-ctc-kernel";
                     launch.Synchronize();
                 }
+                phase = "read-ctc-result";
                 cancellationToken.ThrowIfCancellationRequested();
                 return new SequenceArgMaxResult(
                     batch,
@@ -411,7 +425,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     _ctcConfidences!.ToSingleArray(traceLength),
                     ReadInt32(_ctcInvalidOffsets!, batch));
             }
-            catch
+            catch (TensorRtBackendException)
             {
                 if (enqueued)
                 {
@@ -419,6 +433,29 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     catch { }
                 }
                 throw;
+            }
+            catch (Exception exception)
+            {
+                if (enqueued)
+                {
+                    try { _stream.Synchronize(); }
+                    catch { }
+                }
+                string technicalDetails =
+                    "phase=" + phase +
+                    ";batch=" + batch +
+                    ";time=" + time +
+                    ";classes=" + classes +
+                    ";architecture=" + (_cudaTargetArchitecture ?? "disabled") +
+                    ";exception=" + DescribeException(exception);
+                throw new TensorRtBackendException(
+                    TensorRtErrorCodes.InferenceFailed,
+                    "TensorRT sequence argmax inference failed during '" + phase + "'.",
+                    exception,
+                    _artifact.ModelId,
+                    request.OutputName,
+                    operation: "sequence-argmax-" + phase,
+                    technicalDetails: technicalDetails);
             }
         }
 
@@ -447,6 +484,20 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             var values = new int[count];
             Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
             return values;
+        }
+
+        private static string DescribeException(Exception exception)
+        {
+            var parts = new List<string>();
+            for (Exception? current = exception; current != null; current = current.InnerException)
+            {
+                string message = current.Message.Replace((char)13, ' ').Replace((char)10, ' ').Trim();
+                string bridge = current is NativeBridgeException native
+                    ? ";status=" + native.StatusCode + ";category=" + native.ErrorCategory
+                    : string.Empty;
+                parts.Add(current.GetType().FullName + bridge + (string.IsNullOrWhiteSpace(message) ? string.Empty : ": " + message));
+            }
+            return string.Join(" <- ", parts);
         }
 
         private void ValidateInputCollection(InferenceInputs inputs)

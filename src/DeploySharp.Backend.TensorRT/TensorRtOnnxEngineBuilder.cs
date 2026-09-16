@@ -37,6 +37,11 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             string outputPath = ValidateOutputPath(onnxArtifact, enginePath, options.Overwrite);
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Engine conversion also enters the native TensorRT bridge. Run the
+            // same driver/NVML preflight used by inference so a broken host is
+            // reported as DS-TRT-5005 instead of terminating the converter.
+            TensorRtNativePreflight.Validate(onnxArtifact.ModelId);
+
             string temporaryPath = Path.Combine(
                 Path.GetDirectoryName(outputPath)!,
                 "." + Path.GetFileName(outputPath) + "." + Guid.NewGuid().ToString("N") + ".tmp");

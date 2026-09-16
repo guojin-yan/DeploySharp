@@ -120,6 +120,26 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         }
     }
 
+    /// <summary>Owns a bounded device-side greedy NMS launch for packed YOLO candidates. / 拥有有界的设备端打包 YOLO 候选贪心 NMS 启动。</summary>
+    public sealed class TensorRtCudaYoloNmsPlan
+    {
+        private readonly TensorRtCudaCompiledKernel _kernel;
+        private readonly TensorRtCudaPreparedLaunch _prepared;
+
+        internal TensorRtCudaYoloNmsPlan(TensorRtCudaCompiledKernel kernel, TensorRtCudaPreparedLaunch prepared)
+        {
+            _kernel = kernel;
+            _prepared = prepared;
+        }
+
+        /// <summary>Enqueues deterministic greedy NMS on the caller-owned stream. / 在调用方拥有的 stream 上入队确定性的贪心 NMS。</summary>
+        public TensorRtCudaKernelLaunch Launch(CudaStream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            return _kernel.LaunchPrepared(stream, _prepared);
+        }
+    }
+
     /// <summary>Provides fused CUDA preprocessing for TensorRT visual pipelines. / 为 TensorRT 视觉流水线提供融合 CUDA 预处理。</summary>
     public static class TensorRtCudaVisualKernels
     {
@@ -159,6 +179,13 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             YoloCandidateFilterSource,
             "deploysharp_visual_filter_yolo_candidates",
             "deploysharp-visual-yolo-candidate-filter.cu");
+
+        /// <summary>Gets the bounded device-side greedy NMS definition. / 获取有界设备端贪心 NMS 定义。</summary>
+        public static TensorRtCudaRtcKernelDefinition NmsYoloCandidatesDefinition { get; } = new TensorRtCudaRtcKernelDefinition(
+            TensorRtCudaKernelRole.Postprocessing,
+            YoloCandidateNmsSource,
+            "deploysharp_visual_nms_yolo_candidates",
+            "deploysharp-visual-yolo-nms.cu");
 
         /// <summary>Enqueues fused visual preprocessing without synchronizing the caller-owned stream. / 在不同步调用方 stream 的情况下将融合视觉预处理入队。</summary>
         public static TensorRtCudaKernelLaunch LaunchNormalizeBgrNchw(
@@ -216,11 +243,46 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             float scale2,
             bool swapRedBlue)
         {
+            return CreateNormalizeBgrNchwPlan(kernel, sourceBgr, destinationNchw, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight,
+                destinationWidth, destinationHeight, resizedWidth, resizedHeight, paddingLeft, paddingTop, paddingBlue, paddingGreen, paddingRed,
+                mean0, mean1, mean2, scale0, scale1, scale2, swapRedBlue);
+        }
+
+        /// <summary>Creates a fused preprocessing plan that samples a rectangular ROI directly from a full packed-BGR device buffer. / 创建直接从完整紧凑 BGR 设备缓冲区采样矩形 ROI 的融合预处理计划。</summary>
+        /// <remarks>The source image remains resident on the device; no CPU crop or intermediate ROI copy is required. Rotated, polygon, and perspective ROIs must use the OpenCV adapter until a projective CUDA kernel is admitted. / 源图像继续驻留设备端，不需要 CPU 裁剪或中间 ROI 拷贝；旋转、多边形和透视 ROI 在投影 CUDA 内核准入前使用 OpenCV 适配器。</remarks>
+        public static TensorRtCudaVisualPreprocessPlan CreateNormalizeBgrNchwPlan(
+            TensorRtCudaCompiledKernel kernel,
+            TensorRtCudaDeviceBuffer sourceBgr,
+            TensorRtCudaDeviceBuffer destinationNchw,
+            int sourceWidth,
+            int sourceHeight,
+            int sourceOffsetX,
+            int sourceOffsetY,
+            int cropWidth,
+            int cropHeight,
+            int destinationWidth,
+            int destinationHeight,
+            int resizedWidth,
+            int resizedHeight,
+            int paddingLeft,
+            int paddingTop,
+            float paddingBlue,
+            float paddingGreen,
+            float paddingRed,
+            float mean0,
+            float mean1,
+            float mean2,
+            float scale0,
+            float scale1,
+            float scale2,
+            bool swapRedBlue)
+        {
             if (kernel == null) throw new ArgumentNullException(nameof(kernel));
             if (sourceBgr == null) throw new ArgumentNullException(nameof(sourceBgr));
             if (destinationNchw == null) throw new ArgumentNullException(nameof(destinationNchw));
             if (sourceWidth <= 0 || sourceHeight <= 0 || destinationWidth <= 0 || destinationHeight <= 0) throw new ArgumentOutOfRangeException(nameof(sourceWidth));
-            if (resizedWidth <= 0 || resizedHeight <= 0 || paddingLeft < 0 || paddingTop < 0 || paddingLeft + resizedWidth > destinationWidth || paddingTop + resizedHeight > destinationHeight) throw new ArgumentOutOfRangeException(nameof(resizedWidth));
+            if (sourceOffsetX < 0 || sourceOffsetY < 0 || cropWidth <= 0 || cropHeight <= 0 || sourceOffsetX > sourceWidth - cropWidth || sourceOffsetY > sourceHeight - cropHeight) throw new ArgumentOutOfRangeException(nameof(cropWidth));
+            if (resizedWidth <= 0 || resizedHeight <= 0 || paddingLeft < -resizedWidth || paddingTop < -resizedHeight || paddingLeft > destinationWidth || paddingTop > destinationHeight) throw new ArgumentOutOfRangeException(nameof(resizedWidth));
             if (!string.Equals(kernel.Artifact.KernelName, NormalizeBgrNchwDefinition.KernelName, StringComparison.Ordinal))
             {
                 throw new TensorRtBackendException(TensorRtErrorCodes.CudaContractInvalid, "The loaded CUDA kernel does not match visual preprocessing.", operation: "cuda-visual-kernel", technicalDetails: "actual=" + kernel.Artifact.KernelName);
@@ -235,14 +297,18 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             EnsureFinitePositive(scale1, nameof(scale1));
             EnsureFinitePositive(scale2, nameof(scale2));
 
-            float inverseScaleX = (float)sourceWidth / resizedWidth;
-            float inverseScaleY = (float)sourceHeight / resizedHeight;
+            float inverseScaleX = (float)cropWidth / resizedWidth;
+            float inverseScaleY = (float)cropHeight / resizedHeight;
             var arguments = new[]
             {
                 TensorRtCudaKernelArgument.FromDeviceBuffer(sourceBgr),
                 TensorRtCudaKernelArgument.FromDeviceBuffer(destinationNchw),
                 TensorRtCudaKernelArgument.FromInt32(sourceWidth),
                 TensorRtCudaKernelArgument.FromInt32(sourceHeight),
+                TensorRtCudaKernelArgument.FromInt32(sourceOffsetX),
+                TensorRtCudaKernelArgument.FromInt32(sourceOffsetY),
+                TensorRtCudaKernelArgument.FromInt32(cropWidth),
+                TensorRtCudaKernelArgument.FromInt32(cropHeight),
                 TensorRtCudaKernelArgument.FromInt32(destinationWidth),
                 TensorRtCudaKernelArgument.FromInt32(destinationHeight),
                 TensorRtCudaKernelArgument.FromInt32(resizedWidth),
@@ -486,6 +552,71 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             return new TensorRtCudaYoloCandidatePlan(kernel, kernel.PrepareLaunch(options, arguments));
         }
 
+        /// <summary>Creates a bounded device-side greedy NMS plan. The output is one byte per candidate (1 = keep). / 创建有界设备端贪心 NMS 计划；输出每个候选一个字节（1 表示保留）。</summary>
+        /// <remarks>Boxes are inverse-transformed by scale/offset before clipping and IoU. The legacy modelWidth/modelHeight arguments specify clipping-space extents (source dimensions for ROI inference). / 框按 scale/offset 逆变换后裁剪并计算 IoU；为兼容保留的 modelWidth/modelHeight 参数名实际表示裁剪空间尺寸，ROI 推理时应传源图尺寸。</remarks>
+        public static TensorRtCudaYoloNmsPlan CreateYoloCandidateNmsPlan(
+            TensorRtCudaCompiledKernel kernel,
+            TensorRtCudaDeviceBuffer selectedFlags,
+            TensorRtCudaDeviceBuffer classIndices,
+            TensorRtCudaDeviceBuffer scores,
+            TensorRtCudaDeviceBuffer boxes,
+            TensorRtCudaDeviceBuffer keepFlags,
+            int candidateCount,
+            int boxFormat,
+            int modelWidth,
+            int modelHeight,
+            bool classAware,
+            float iouThreshold,
+            float scaleX = 1f,
+            float scaleY = 1f,
+            float offsetX = 0f,
+            float offsetY = 0f)
+        {
+            if (kernel == null) throw new ArgumentNullException(nameof(kernel));
+            if (selectedFlags == null) throw new ArgumentNullException(nameof(selectedFlags));
+            if (classIndices == null) throw new ArgumentNullException(nameof(classIndices));
+            if (scores == null) throw new ArgumentNullException(nameof(scores));
+            if (boxes == null) throw new ArgumentNullException(nameof(boxes));
+            if (keepFlags == null) throw new ArgumentNullException(nameof(keepFlags));
+            if (candidateCount <= 0 || candidateCount > 32768) throw new ArgumentOutOfRangeException(nameof(candidateCount), "Device-side greedy NMS is bounded to 32768 candidates.");
+            if (boxFormat != 0 && boxFormat != 1) throw new ArgumentOutOfRangeException(nameof(boxFormat));
+            if (modelWidth <= 0 || modelHeight <= 0) throw new ArgumentOutOfRangeException(nameof(modelWidth));
+            EnsureFinite(iouThreshold, nameof(iouThreshold));
+            if (iouThreshold < 0 || iouThreshold > 1) throw new ArgumentOutOfRangeException(nameof(iouThreshold));
+            EnsureFinite(scaleX, nameof(scaleX)); EnsureFinite(scaleY, nameof(scaleY));
+            EnsureFinite(offsetX, nameof(offsetX)); EnsureFinite(offsetY, nameof(offsetY));
+            if (scaleX <= 0 || scaleY <= 0) throw new ArgumentOutOfRangeException(nameof(scaleX));
+            if (!string.Equals(kernel.Artifact.KernelName, NmsYoloCandidatesDefinition.KernelName, StringComparison.Ordinal))
+            {
+                throw new TensorRtBackendException(TensorRtErrorCodes.CudaContractInvalid, "The loaded CUDA kernel does not match YOLO candidate NMS.", operation: "cuda-visual-kernel", technicalDetails: "actual=" + kernel.Artifact.KernelName);
+            }
+            EnsureElements(selectedFlags, TensorElementType.UInt8, candidateCount, TensorRtCudaBufferAccess.Read, nameof(selectedFlags));
+            EnsureElements(classIndices, TensorElementType.Int32, candidateCount, TensorRtCudaBufferAccess.Read, nameof(classIndices));
+            EnsureElements(scores, TensorElementType.Float32, candidateCount, TensorRtCudaBufferAccess.Read, nameof(scores));
+            EnsureElements(boxes, TensorElementType.Float32, checked((long)candidateCount * 4), TensorRtCudaBufferAccess.Read, nameof(boxes));
+            EnsureElements(keepFlags, TensorElementType.UInt8, candidateCount, TensorRtCudaBufferAccess.Write, nameof(keepFlags));
+            var arguments = new[]
+            {
+                TensorRtCudaKernelArgument.FromDeviceBuffer(selectedFlags),
+                TensorRtCudaKernelArgument.FromDeviceBuffer(classIndices),
+                TensorRtCudaKernelArgument.FromDeviceBuffer(scores),
+                TensorRtCudaKernelArgument.FromDeviceBuffer(boxes),
+                TensorRtCudaKernelArgument.FromDeviceBuffer(keepFlags),
+                TensorRtCudaKernelArgument.FromInt32(candidateCount),
+                TensorRtCudaKernelArgument.FromInt32(boxFormat),
+                TensorRtCudaKernelArgument.FromInt32(modelWidth),
+                TensorRtCudaKernelArgument.FromInt32(modelHeight),
+                TensorRtCudaKernelArgument.FromInt32(classAware ? 1 : 0),
+                TensorRtCudaKernelArgument.FromSingle(iouThreshold),
+                TensorRtCudaKernelArgument.FromSingle(scaleX),
+                TensorRtCudaKernelArgument.FromSingle(scaleY),
+                TensorRtCudaKernelArgument.FromSingle(offsetX),
+                TensorRtCudaKernelArgument.FromSingle(offsetY)
+            };
+            var options = new TensorRtCudaKernelLaunchOptions(1, 256, TensorRtCudaSynchronizationMode.CallerManaged);
+            return new TensorRtCudaYoloNmsPlan(kernel, kernel.PrepareLaunch(options, arguments));
+        }
+
         private static void EnsureElements(TensorRtCudaDeviceBuffer buffer, TensorElementType elementType, long elements, TensorRtCudaBufferAccess access, string name)
         {
             TensorRtCudaBufferDescriptor descriptor = buffer.Descriptor;
@@ -518,7 +649,8 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private const string NormalizeBgrNchwSource = @"
 extern ""C"" __global__ void deploysharp_visual_normalize_bgr_nchw(
     const unsigned char* source, float* destination,
-    int sourceWidth, int sourceHeight, int destinationWidth, int destinationHeight,
+    int sourceWidth, int sourceHeight, int sourceOffsetX, int sourceOffsetY, int cropWidth, int cropHeight,
+    int destinationWidth, int destinationHeight,
     int resizedWidth, int resizedHeight, int paddingLeft, int paddingTop,
     float inverseScaleX, float inverseScaleY,
     float paddingBlue, float paddingGreen, float paddingRed,
@@ -535,19 +667,19 @@ extern ""C"" __global__ void deploysharp_visual_normalize_bgr_nchw(
     if (inside) {
         float sx = ((float)(x - paddingLeft) + 0.5f) * inverseScaleX - 0.5f;
         float sy = ((float)(y - paddingTop) + 0.5f) * inverseScaleY - 0.5f;
-        sx = fmaxf(0.0f, fminf((float)(sourceWidth - 1), sx));
-        sy = fmaxf(0.0f, fminf((float)(sourceHeight - 1), sy));
-        int x0 = max(0, min(sourceWidth - 1, (int)floorf(sx)));
-        int y0 = max(0, min(sourceHeight - 1, (int)floorf(sy)));
-        int x1 = min(sourceWidth - 1, x0 + 1);
-        int y1 = min(sourceHeight - 1, y0 + 1);
+        sx = fmaxf(0.0f, fminf((float)(cropWidth - 1), sx));
+        sy = fmaxf(0.0f, fminf((float)(cropHeight - 1), sy));
+        int x0 = max(0, min(cropWidth - 1, (int)floorf(sx)));
+        int y0 = max(0, min(cropHeight - 1, (int)floorf(sy)));
+        int x1 = min(cropWidth - 1, x0 + 1);
+        int y1 = min(cropHeight - 1, y0 + 1);
         float ax = sx - (float)x0;
         float ay = sy - (float)y0;
         for (int channel = 0; channel < 3; ++channel) {
-            float p00 = (float)source[(y0 * sourceWidth + x0) * 3 + channel];
-            float p01 = (float)source[(y0 * sourceWidth + x1) * 3 + channel];
-            float p10 = (float)source[(y1 * sourceWidth + x0) * 3 + channel];
-            float p11 = (float)source[(y1 * sourceWidth + x1) * 3 + channel];
+            float p00 = (float)source[((sourceOffsetY + y0) * sourceWidth + sourceOffsetX + x0) * 3 + channel];
+            float p01 = (float)source[((sourceOffsetY + y0) * sourceWidth + sourceOffsetX + x1) * 3 + channel];
+            float p10 = (float)source[((sourceOffsetY + y1) * sourceWidth + sourceOffsetX + x0) * 3 + channel];
+            float p11 = (float)source[((sourceOffsetY + y1) * sourceWidth + sourceOffsetX + x1) * 3 + channel];
             float top = p00 + (p01 - p00) * ax;
             float bottom = p10 + (p11 - p10) * ax;
             values[channel] = top + (bottom - top) * ay;
@@ -675,9 +807,9 @@ extern ""C"" __global__ void deploysharp_visual_restore_yolo_masks(
         int y = sourceIndex / sourceWidth;
         float modelX = ((float)x + 0.5f) * scaleX + offsetX;
         float modelY = ((float)y + 0.5f) * scaleY + offsetY;
-        const float* box = boxes + instance * 4;
-        if (modelX >= 0.0f && modelX < (float)modelWidth && modelY >= 0.0f && modelY < (float)modelHeight
-            && modelX >= box[0] && modelX < box[2] && modelY >= box[1] && modelY < box[3]) {
+        // Crop-before-resize is applied once on the prototype grid. Preserve
+        // the bilinear edge contributions when restoring source pixels.
+        if (modelX >= 0.0f && modelX < (float)modelWidth && modelY >= 0.0f && modelY < (float)modelHeight) {
             float gridX = modelX * (float)prototypeWidth / (float)modelWidth - 0.5f;
             float gridY = modelY * (float)prototypeHeight / (float)modelHeight - 0.5f;
             int lowerX = (int)floorf(gridX);
@@ -752,6 +884,85 @@ extern ""C"" __global__ void deploysharp_visual_filter_yolo_candidates(
     scores[candidate] = score;
     for (int field = 0; field < 4; ++field) boxes[candidate * 4 + field] = deploysharp_visual_yolo_value(packed, candidates, fields, candidate, field, attributeMajor);
     for (int channel = 0; channel < coefficientCount; ++channel) coefficients[candidate * coefficientCount + channel] = deploysharp_visual_yolo_value(packed, candidates, fields, candidate, coefficientOffset + channel, attributeMajor);
+}
+";
+
+        private const string YoloCandidateNmsSource = @"
+__device__ __forceinline__ float deploysharp_visual_yolo_iou(const float* boxes, int left, int right, int boxFormat,
+    int width, int height, float scaleX, float scaleY, float offsetX, float offsetY)
+{
+    float ax1 = boxes[left * 4 + 0];
+    float ay1 = boxes[left * 4 + 1];
+    float ax2 = boxes[left * 4 + 2];
+    float ay2 = boxes[left * 4 + 3];
+    float bx1 = boxes[right * 4 + 0];
+    float by1 = boxes[right * 4 + 1];
+    float bx2 = boxes[right * 4 + 2];
+    float by2 = boxes[right * 4 + 3];
+    if (boxFormat == 0) {
+        float aw = max(0.0f, ax2); float ah = max(0.0f, ay2);
+        float bw = max(0.0f, bx2); float bh = max(0.0f, by2);
+        float acx = ax1; float acy = ay1; float bcx = bx1; float bcy = by1;
+        ax1 = acx - aw * 0.5f; ay1 = acy - ah * 0.5f; ax2 = acx + aw * 0.5f; ay2 = acy + ah * 0.5f;
+        bx1 = bcx - bw * 0.5f; by1 = bcy - bh * 0.5f; bx2 = bcx + bw * 0.5f; by2 = bcy + bh * 0.5f;
+    }
+    // Match the managed decoder's source-space clipping before greedy NMS.
+    ax1 = min((float)width, max(0.0f, (ax1 - offsetX) / scaleX));
+    ay1 = min((float)height, max(0.0f, (ay1 - offsetY) / scaleY));
+    ax2 = max(ax1, min((float)width, (ax2 - offsetX) / scaleX));
+    ay2 = max(ay1, min((float)height, (ay2 - offsetY) / scaleY));
+    bx1 = min((float)width, max(0.0f, (bx1 - offsetX) / scaleX));
+    by1 = min((float)height, max(0.0f, (by1 - offsetY) / scaleY));
+    bx2 = max(bx1, min((float)width, (bx2 - offsetX) / scaleX));
+    by2 = max(by1, min((float)height, (by2 - offsetY) / scaleY));
+    float leftX = max(ax1, bx1); float topY = max(ay1, by1);
+    float rightX = min(ax2, bx2); float bottomY = min(ay2, by2);
+    float intersection = max(0.0f, rightX - leftX) * max(0.0f, bottomY - topY);
+    float areaA = max(0.0f, ax2 - ax1) * max(0.0f, ay2 - ay1);
+    float areaB = max(0.0f, bx2 - bx1) * max(0.0f, by2 - by1);
+    float denominator = areaA + areaB - intersection;
+    return denominator > 0.0f ? intersection / denominator : 0.0f;
+}
+
+extern ""C"" __global__ void deploysharp_visual_nms_yolo_candidates(
+    const unsigned char* selectedFlags, const int* classIndices, const float* scores, const float* boxes,
+    unsigned char* keepFlags, int candidates, int boxFormat, int modelWidth, int modelHeight,
+    int classAware, float iouThreshold, float scaleX, float scaleY, float offsetX, float offsetY)
+{
+    if (blockIdx.x != 0 || blockDim.x != 256) return;
+    __shared__ int bestIndices[256];
+    int lane = threadIdx.x;
+    for (int index = lane; index < candidates; index += blockDim.x) keepFlags[index] = 0;
+    __syncthreads();
+    for (int step = 0; step < candidates; ++step) {
+        int best = -1;
+        for (int index = lane; index < candidates; index += blockDim.x) {
+            if (selectedFlags[index] == 0 || keepFlags[index] != 0) continue;
+            if (best < 0 || scores[index] > scores[best] || (scores[index] == scores[best] && index < best)) best = index;
+        }
+        bestIndices[lane] = best;
+        __syncthreads();
+        for (int stride = 128; stride > 0; stride >>= 1) {
+            if (lane < stride) {
+                int other = bestIndices[lane + stride];
+                int current = bestIndices[lane];
+                if (other >= 0 && (current < 0 || scores[other] > scores[current] ||
+                    (scores[other] == scores[current] && other < current))) bestIndices[lane] = other;
+            }
+            __syncthreads();
+        }
+        best = bestIndices[0];
+        if (best < 0) break;
+        if (lane == 0) keepFlags[best] = 2;
+        __syncthreads();
+        for (int index = lane; index < candidates; index += blockDim.x) {
+            if (selectedFlags[index] == 0 || keepFlags[index] != 0) continue;
+            if (classAware != 0 && classIndices[index] != classIndices[best]) continue;
+            if (deploysharp_visual_yolo_iou(boxes, best, index, boxFormat, modelWidth, modelHeight, scaleX, scaleY, offsetX, offsetY) > iouThreshold) keepFlags[index] = 3;
+        }
+        __syncthreads();
+    }
+    for (int index = lane; index < candidates; index += blockDim.x) keepFlags[index] = keepFlags[index] == 2 ? 1 : 0;
 }
 ";
     }

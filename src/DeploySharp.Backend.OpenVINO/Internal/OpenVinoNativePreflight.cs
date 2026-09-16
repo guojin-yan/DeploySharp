@@ -7,7 +7,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
 {
     internal static class OpenVinoNativePreflight
     {
-        private const string RequiredVersionPrefix = "2026.2";
+        private const string RequiredVersionPrefix = "2026.";
 
         public static string Validate(ModelArtifact artifact)
         {
@@ -25,7 +25,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
                 {
                     throw new OpenVinoBackendException(
                         DeploySharpErrorCodes.NativeRuntimeUnavailable,
-                        "The loaded OpenVINO native runtime is incompatible. Install an OpenVINO 2026.2.x runtime package that matches JYPPX.OpenVINO.CSharp.API 3.3.1.",
+                        "The loaded OpenVINO native runtime is incompatible. Install the matching OpenVINO 2026.x runtime package for JYPPX.OpenVINO.CSharp.API 3.3.1.",
                         modelId: artifact.ModelId,
                         operation: "native-preflight",
                         technicalDetails: "required=" + RequiredVersionPrefix + ";loaded=" + build);
@@ -37,7 +37,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO.Internal
             {
                 throw new OpenVinoBackendException(
                     DeploySharpErrorCodes.NativeRuntimeUnavailable,
-                    "No compatible OpenVINO native runtime is available. Install OpenVINO.runtime.win 2026.2.1 on Windows x64 or the matching platform runtime package.",
+                    "No compatible OpenVINO native runtime is available. Install the matching OpenVINO 2026.x platform runtime package.",
                     exception,
                     artifact.ModelId,
                     operation: "native-preflight",

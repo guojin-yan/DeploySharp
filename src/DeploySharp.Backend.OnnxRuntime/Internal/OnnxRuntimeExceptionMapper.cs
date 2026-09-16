@@ -17,7 +17,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime.Internal
             }
             if (ContainsNativeFailure(exception))
             {
-                return new OnnxRuntimeBackendException(DeploySharpErrorCodes.NativeRuntimeUnavailable, "No compatible ONNX Runtime native library is available. Install Microsoft.ML.OnnxRuntime 1.28.0 or another matching official runtime package for the current RID.", exception, artifact.ModelId, tensorName, operation, exception.ToString());
+                return new OnnxRuntimeBackendException(DeploySharpErrorCodes.NativeRuntimeUnavailable, "No compatible ONNX Runtime native library is available. Install a matching official Microsoft.ML.OnnxRuntime package for the current RID.", exception, artifact.ModelId, tensorName, operation, exception.ToString());
             }
             if (IsProviderFailure(exception))
             {

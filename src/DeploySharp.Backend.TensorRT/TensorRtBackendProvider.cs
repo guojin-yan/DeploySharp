@@ -102,6 +102,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     operation: "configure");
             }
 
+            // A driver/NVML mismatch can abort inside the native bridge before
+            // managed exception handling runs. Check it before loading the
+            // TensorRT logger/runtime; set DEPLOYSHARP_TENSORRT_SKIP_DRIVER_PREFLIGHT=1
+            // only for containers where nvidia-smi is intentionally unavailable.
+            TensorRtNativePreflight.Validate(artifact.ModelId);
+
             byte[] serializedEngine = TensorRtModelArtifactValidator.ReadValidatedBytes(artifact, _options.MaximumEngineBytes);
             if (options.MaxConcurrency == 1) return CreateSingleSession(artifact, serializedEngine);
 

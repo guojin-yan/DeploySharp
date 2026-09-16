@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using JYPPX.DeploySharp.Backends.OnnxRuntime.Internal;
 using JYPPX.DeploySharp.Extensibility;
 
 namespace JYPPX.DeploySharp.Backends.OnnxRuntime
@@ -16,6 +18,9 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             using (var provider = new OnnxRuntimeBackendProvider(_options))
             {
                 BackendDescriptor backend = provider.Descriptor;
+                string managedVersion = OnnxRuntimeNativePreflight.ManagedVersion;
+                string gpuPackageId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Microsoft.ML.OnnxRuntime.Gpu.Windows" : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Microsoft.ML.OnnxRuntime.Gpu.Linux" : "Microsoft.ML.OnnxRuntime.Gpu";
+                string gpuRid = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
                 Descriptor = new BackendPluginDescriptor(
                     "onnxruntime",
                     backend.DisplayName,
@@ -27,13 +32,13 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                     formats: backend.SupportedFormats,
                     runtimeDependencies: new[]
                     {
-                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Managed", "1.28.0"),
-                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime", "1.28.0", downloadable: true, licenseExpression: "MIT"),
-                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Gpu.Windows", "1.28.0", "win-x64", downloadable: true, licenseExpression: "MIT", condition: "executionProvider == cuda")
+                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime.Managed", managedVersion),
+                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "Microsoft.ML.OnnxRuntime", managedVersion, downloadable: true, licenseExpression: "MIT"),
+                        new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, gpuPackageId, managedVersion, gpuRid, downloadable: true, licenseExpression: "MIT", condition: "executionProvider == cuda")
                     },
                     nativeRequirements: new[]
                     {
-                        new NativeRuntimeRequirement(NativeRuntimeKind.OnnxRuntimeNative, minimumVersion: "1.28.0", runtimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" })
+                        new NativeRuntimeRequirement(NativeRuntimeKind.OnnxRuntimeNative, minimumVersion: managedVersion, runtimeIdentifiers: new[] { "win-x64", "linux-x64", "linux-arm64" })
                     },
                     optionsSchema: backend.OptionsSchema as BackendOptionsSchema,
                     probeId: backend.NativeProbeId,

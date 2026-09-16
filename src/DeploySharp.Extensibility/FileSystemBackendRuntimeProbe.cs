@@ -205,6 +205,7 @@ namespace JYPPX.DeploySharp.Extensibility
                         Path.Combine(candidate, "native", names[nameIndex]),
                         Path.Combine(candidate, "runtimes", "win-x64", "native", names[nameIndex]),
                         Path.Combine(candidate, "runtimes", "linux-x64", "native", names[nameIndex]),
+                        Path.Combine(candidate, "runtimes", "ubuntu.22.04-x64", "native", names[nameIndex]),
                         Path.Combine(candidate, "runtimes", "linux-arm64", "native", names[nameIndex])
                     };
                     for (int locationIndex = 0; locationIndex < locations.Length; locationIndex++) if (File.Exists(locations[locationIndex])) return Path.GetFullPath(locations[locationIndex]);
