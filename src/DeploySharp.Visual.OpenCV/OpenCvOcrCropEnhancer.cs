@@ -27,6 +27,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
             bool adaptiveThreshold = options.Mode == OcrCropEnhancementMode.AdaptiveThreshold;
             bool unsharpMask = options.Mode == OcrCropEnhancementMode.UnsharpMask;
+            bool requiresGray = adaptiveThreshold || (!linear && !denoise && !unsharpMask);
             if (linear)
             {
                 double gain = Math.Min(options.MaximumGain, options.TargetStandardDeviation / quality.LuminanceStandardDeviation!.Value);
@@ -34,8 +35,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 for (int i = 0; i < 256; i++) _lookup[i] = (byte)Math.Max(0, Math.Min(255, Math.Floor(mean + gain * (i - mean) + .5)));
                 _enhanced.Create(source.Rows, source.Cols, source.Type);
             }
-            else if (!denoise) _gray.Create(source.Rows, source.Cols, MatType.CV_8UC1);
-            Mat destination = linear || denoise ? _enhanced : _gray;
+            else if (requiresGray) _gray.Create(source.Rows, source.Cols, MatType.CV_8UC1);
+            Mat destination = linear || denoise || unsharpMask ? _enhanced : _gray;
             if (denoise)
             {
                 _enhanced.Create(source.Rows, source.Cols, source.Type);
@@ -61,10 +62,16 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                             if (channels > 1) { dst[offset + 1] = _lookup[src[offset + 1]]; dst[offset + 2] = _lookup[src[offset + 2]]; }
                             if (channels == 4) dst[offset + 3] = src[offset + 3];
                         }
-                        else dst[x] = channels == 1 ? src[x] : (byte)((77 * src[offset + 2] + 150 * src[offset + 1] + 29 * src[offset] + 128) >> 8);
+                        else if (requiresGray) dst[x] = channels == 1 ? src[x] : (byte)((77 * src[offset + 2] + 150 * src[offset + 1] + 29 * src[offset] + 128) >> 8);
                     }
                 }
-                if (!linear)
+                if (unsharpMask)
+                {
+                    _blurred.Create(source.Rows, source.Cols, source.Type);
+                    ImageProcessing.GaussianBlur(source, _blurred, new Size(options.SharpenKernelSize, options.SharpenKernelSize), options.SharpenSigma, options.SharpenSigma, BorderTypes.Reflect101);
+                    CoreOperations.AddWeighted(source, 1 + options.SharpenAmount, _blurred, -options.SharpenAmount, 0, _enhanced);
+                }
+                else if (!linear)
                 {
                     if (adaptiveThreshold)
                     {
