@@ -288,6 +288,48 @@ coverage.EnsureCovered();
 
 本次使用的 v4 文件含 28 个重复项，工具已统一使用主库加载器保留原索引和文字。示例里的中文样本、ASCII 大小写、数字和 URL/邮箱/电话/编号字符在五份字典中均有独立 token。`¥` 与 `￥`、`㎏` 与两个字符 `kg` 是不同需求，报告不会擅自替换。
 
+## 文本规范化（可选、保留原文）
+
+OCR 解码器只负责还原模型输出，不应在 CTC 阶段偷偷改变字符。业务需要统一 Unicode、全角/半角、空白或领域别名时，可以在 OCR 完成后显式调用 `OcrTextNormalizer`。该层不修改 `OcrResult`、`OcrRegionResult` 或 `RecognizedText`，因此原始文本、token trace、置信度和既有 `OcrResult.ComputeSha256()` 始终可回看。
+
+```csharp
+var normalization = new OcrTextNormalizationOptions(
+    unicodeForm: OcrUnicodeNormalizationForm.Nfc,
+    convertFullWidthAscii: true,
+    normalizeLineEndings: true,
+    collapseWhitespace: true,
+    trimWhitespace: true,
+    replacements: new[]
+    {
+        // id 必须稳定且唯一；替换按声明顺序、Ordinal 精确匹配。
+        new OcrTextReplacementRule("invoice-prefix", "发票号：", "发票号码:")
+    },
+    maximumLength: 512,
+    overflowMode: OcrTextNormalizationOverflowMode.Reject);
+
+OcrNormalizedResult view = OcrTextNormalizer.Normalize(result, normalization, cancellationToken);
+foreach (OcrNormalizedRegionResult line in view.Regions)
+{
+    Console.WriteLine($"raw={line.Text.RawText}; normalized={line.Text.NormalizedText}; " +
+        $"rules={string.Join(",", line.Text.AppliedRules)}");
+}
+```
+
+### 执行顺序和规则
+
+每一行按固定顺序执行：Unicode NFC/NFKC → 全角 ASCII 与 U+3000 转换 → CRLF/CR 转 LF → 控制字符清理 → 空白折叠 → 首尾空白裁剪 → 自定义精确替换 → Unicode 标量长度限制。只有实际改变文本的规则才出现在 `AppliedRules`；配置中未命中的替换仍包含在 `ConfigurationSha256`，避免“看起来相同但配置不同”的结果无法复现。
+
+- `Nfc` 只做规范组合；`Nfkc` 还会执行 Unicode 兼容折叠，可能改变单位、圈号或格式字符，需先在业务样本上确认。
+- `convertFullWidthAscii` 将 U+FF01～U+FF5E 和全角空格 U+3000 映射为半角；不会转换大小写、中文标点或货币符号。
+- `collapseWhitespace` 将连续 Unicode 空白（包括换行、制表符）压成一个 ASCII 空格；`trimWhitespace` 单独控制首尾裁剪。需要保留段落时不要启用折叠。
+- `removeControlCharacters` 移除控制字符，但保留 `CR`、`LF` 和制表符，便于后续选择是否折叠。
+- 自定义规则不是正则表达式，不会执行代码；最多 64 条，按 Ordinal 精确替换。若规则互相重叠，应显式排列顺序并在结果中检查应用记录。
+- `maximumLength` 按 Unicode 标量计数，零表示不限制；`Reject` 抛出 `DS-VISUAL-4108`，`Truncate` 在标量边界截断并记录 `length:truncate`。默认不设长度上限，不会静默截断。
+
+`OcrTextNormalizationResult` 同时保存 `RawText`、`NormalizedText`、原始/规范化标量长度、`SourceRegionIndex`、应用规则、配置 SHA 和结果 SHA。`OcrNormalizedResult.Source` 指向原始不可变结果，规范化视图的 hash 额外包含源结果 hash 和配置 hash；它不是新的检测或识别结果，不应把规范化后的字符串回写到原 token trace 中。空文本也会经过相同规则和长度策略，取消令牌在每个阶段检查。
+
+规范化不是准确率或字段合法性判断：全角转半角可能不适合中文地址，NFKC 可能合并业务上有意义的符号，自定义替换也可能掩盖模型错误。日期、金额、电话、URL、发票号等格式校验应放在独立字段验证器中；先保留原文和规范化视图，再由业务决定采用哪一个。默认不调用 `OcrTextNormalizer` 时，现有 OCR 行为和结果指纹完全不变。
+
 ## 长文本宽度诊断与超宽策略
 
 本节新增接口以当前开发源码为准；旧 NuGet 包不会自动获得这些 API，使用前应确认所安装版本包含此能力。
