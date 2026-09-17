@@ -168,7 +168,7 @@ These checks are heuristics, not CER/WER or measured text truncation. Small angl
 | --- | --- | --- |
 | `DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM` | `Perspective` | `Perspective` keeps the four-corner projective warp; `AffineWhenEquivalent` enables the OpenCV affine fast path only for a numerically safe parallelogram. Other adapters keep their existing sampling path. |
 
-The sidecar schema is now 5 and records the requested `Crop.TransformMode`. The OpenCV preprocessing descriptor also reports the actual batch decision as `cropTransform=Perspective`, `Affine`, or `Mixed`; a requested affine mode can therefore be audited when a batch contains both safe and perspective crops. The affine path is a sampling optimization, not an accuracy change: the default remains perspective and the policy never selects affine from angle alone. / sidecar schema 8 会记录请求模式；OpenCV 描述符还会报告批次实际选择。默认仍为透视，不能仅按角度切换。
+The sidecar schema is now 8 and records the requested `Crop.TransformMode`. The OpenCV preprocessing descriptor also reports the actual batch decision as `cropTransform=Perspective`, `Affine`, or `Mixed`; a requested affine mode can therefore be audited when a batch contains both safe and perspective crops. The affine path is a sampling optimization, not an accuracy change: the default remains perspective and the policy never selects affine from angle alone. / sidecar schema 8 会记录请求模式；OpenCV 描述符还会报告批次实际选择。默认仍为透视，不能仅按角度切换。
 
 ## Bounded orientation retries / 有界方向重试
 
