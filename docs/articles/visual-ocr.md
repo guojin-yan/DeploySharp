@@ -111,7 +111,7 @@ foreach (OcrRegionResult item in result.Regions)
 
 既有构造函数和默认策略保留；手工使用旧 `OcrRegionResult(region, recognition)` 构造结果时，`RecognitionWidth=null` 表示诊断未知，不代表没有压缩。方向恢复及 ROI 投影/合并保留宽度来源。既有 `OcrResult.ComputeSha256()` 继续针对识别内容与几何，不加入这些诊断，以便与历史结果对照。
 
-基准工具可设置 `DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE=Clamp/Reject/SlidingWindow`、`DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH` 和 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR`。报告在计时外导出输入/模型/程序集 SHA、每行文字、polygon、字典 SHA、宽度和窗口来源信息；完整操作见[基准工具说明](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark)。
+基准工具可设置 `DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE=Clamp/Reject/SlidingWindow`、`DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH`、`DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM=Perspective/AffineWhenEquivalent` 和 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR`。报告在计时外导出输入/模型/程序集 SHA、每行文字、polygon、字典 SHA、宽度和窗口来源信息；完整操作见[基准工具说明](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark)。
 
 ## 超长行滑窗识别
 
@@ -225,9 +225,15 @@ var strictCrop = cropProfile.WithGeometryValidation(new OcrGeometryOptions(
 
 结果 `OcrRegionResult.Geometry` 保留上述来源。若使用全图方向校正，`InputPolygon` 位于纠正后空间，而最终 `Region.Polygon` 在原图；若经过 ROI 投影，前者仍在该 ROI 的 OCR 输入空间。绘制最终检测框必须使用 `Region.Polygon`。CLS 之后的直角校正仍由 `Region.Orientation` 和方向 metadata 说明，不覆盖校正前基线角度。
 
-### 为什么没有仅按角度切换仿射
+### 可选仿射快路径和为什么不能仅按角度切换
 
-上下边几乎水平的梯形仍可能具有明显透视变化。仅按“小于 5°”选择仿射会破坏四角对应关系，因此当前保持**四角透视校正 → 可选直角旋转 → resize/padding**。`ParallelogramError` 为后续经验证的仿射快路径提供可观察依据，但本版本没有自动启用该快路径，也没有任意角度搜索或图像增强链。下面的方向重试只处理显式配置的直角候选。
+上下边几乎水平的梯形仍可能具有明显透视变化。仅按“小于 5°”选择仿射会破坏四角对应关系，因此默认保持**四角透视校正 → 可选直角旋转 → resize/padding**。如明确接受平行四边形近似，可用 `WithTransformMode(OcrCropTransformMode.AffineWhenEquivalent)` 开启 OpenCV 的 `GetAffineTransform/WarpAffine` 路径；策略会同时检查归一化闭合误差和仿射基底条件数。梯形、非平行四边形或病态基底自动回退到透视，绝不只按角度切换。`ParallelogramError` 与 `OcrCropTransformPolicy.GetParallelogramError(...)` 提供可观察依据，但无法证明不同插值实现逐像素相同。OpenCV 批次的 `VisualPreprocessingDescriptor.Notes` 会记录实际的 `cropTransform=Perspective/Affine/Mixed`，便于在启用后确认是否真的命中快路径。
+
+```csharp
+var affineWhenSafe = cropProfile.WithTransformMode(OcrCropTransformMode.AffineWhenEquivalent);
+```
+
+该模式只改变 OpenCV OCR 适配器的采样算子；ONNX Runtime、OpenVINO 和 TensorRT 仍接收相同的识别张量合同。默认 `Perspective` 可用于跨后端逐像素回归；启用仿射时应固定插值、目标尺寸和输入图像，并对文本结果与 `cropTransform` 诊断分别验收。仿射判断使用平移/缩放不变的闭合误差与基底条件，不会为低角度梯形强行降级。
 
 自交、重复顶点、非有限坐标及不符合声明顺序的几何在 `TextPolygon`/`TextQuadrilateral` 构造时拒绝，不会伪装成可识别区域。检查只读取少量顶点，不复制图片或张量；诊断工作计入 `CropAndBatch`，持有诊断的近似空间计入 `MaximumResultBytes`。超出预算报 `DS-VISUAL-4102`。既有文本/结果 SHA 不加入诊断，允许与关闭检查时对照。
 
@@ -292,7 +298,7 @@ ROI 投影、合并重新编号、全图方向恢复都保留记录并同步原�
 - 将 `minimumArea` 故意设为 100000000 后，6 组调用均按预期返回 `DS-VISUAL-4104`，并非后端不支持。
 - 原生像素测试覆盖 0°、±5°、±15°、±30°、±45°、90°、180°和梯形透视；检查采样坐标、颜色通道、ROI 投影及方向恢复后的诊断来源。
 
-这是正确性和兼容性回归，不是最佳性能或 CER/WER 测试。本轮 Report 的 `crop_ms`（几何检查加分组）约 0.037～0.237 ms，但开发机有其他任务且样本仅 3 次，不能由此做稳定性能结论。尚未完成真实文字的多角度标注集、其他后端几何模式矩阵及仿射快路径；后续方向重试验证见下节。
+这是正确性和兼容性回归，不是最佳性能或 CER/WER 测试。本轮 Report 的 `crop_ms`（几何检查加分组）约 0.037～0.237 ms，但开发机有其他任务且样本仅 3 次，不能由此做稳定性能结论。真实文字的多角度标注集和其他后端几何模式矩阵仍未完成；仿射快路径的安全策略及 OpenCV 适配器回归已在本轮补齐，仍需在目标设备上独立测量收益。后续方向重试验证见下节。
 
 ### 方向重试验证（2026-09-17）
 

@@ -225,7 +225,7 @@ internal static class Program
             VisualModelProfile detProfile = det.VisualProfile;
             VisualModelProfile recProfile = rec.VisualProfile;
             VisualModelProfile? clsProfile = cls?.VisualProfile;
-            TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode()).WithGeometryValidation(ReadGeometryOptions());
+            TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode()).WithGeometryValidation(ReadGeometryOptions()).WithTransformMode(ReadCropTransformMode());
             OcrOrientationRetryOptions? orientationRetry = ReadOrientationRetryOptions();
             if (orientationRetry != null) recognitionCrop = recognitionCrop.WithOrientationRetry(orientationRetry);
             if (recognitionCrop.OverflowMode == RecognitionOverflowMode.SlidingWindow)
@@ -370,7 +370,8 @@ internal static class Program
                 WriteWidthReport(widthReportDirectory!, version, detector.Variant, backend, widthReportResult, recognitionCrop,
                     imagePath, detectorPath, recognizerPath, classifierPath, warmup, iterations, effectiveBatchSize, stageConcurrency, reusePreparedInput);
             accelerationDetail = (accelerationDetail == null ? string.Empty : accelerationDetail + "; ")
-                + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant);
+                + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant)
+                + ";cropTransform=" + recognitionCrop.TransformMode;
             return FullResultRow.Pass(version, detector.Variant, backend, device, imagePath, FullTiming.Average(values), reusePreparedInput, stageConcurrency, effectiveBatchSize, accelerationDetail);
         }
         catch (OcrPipelineException ex) when (ex.InnerException is OperationCanceledException || ex.Message.Contains("cancel", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
@@ -475,6 +476,17 @@ internal static class Program
         };
     }
 
+    private static OcrCropTransformMode ReadCropTransformMode()
+    {
+        string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM")?.Trim().ToLowerInvariant() ?? "perspective";
+        return mode switch
+        {
+            "perspective" => OcrCropTransformMode.Perspective,
+            "affine" or "affinewhenequivalent" => OcrCropTransformMode.AffineWhenEquivalent,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM accepts Perspective or AffineWhenEquivalent.")
+        };
+    }
+
     private static void WriteWidthReport(string directory, string version, string variant, string backend, OcrResult result, TextCropProfile crop,
         string image, string detector, string recognizer, string? classifier, int warmup, int iterations, int batch, int sessions, bool reusePreparedInput)
     {
@@ -488,13 +500,13 @@ internal static class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 3, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 4, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             Regions = result.Regions.Select(item => new

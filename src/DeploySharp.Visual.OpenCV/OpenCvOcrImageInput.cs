@@ -108,6 +108,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         // arrays instead of allocating them for every crop.
         private readonly ThreadLocal<Point2f[]> _sourcePoints = new ThreadLocal<Point2f[]>(() => new Point2f[4]);
         private readonly ThreadLocal<Point2f[]> _targetPoints = new ThreadLocal<Point2f[]>(() => new Point2f[4]);
+        private readonly ThreadLocal<Point2f[]> _affineSourcePoints = new ThreadLocal<Point2f[]>(() => new Point2f[3]);
+        private readonly ThreadLocal<Point2f[]> _affineTargetPoints = new ThreadLocal<Point2f[]>(() => new Point2f[3]);
         // Warp and resize destinations are scratch-only and never escape the worker.
         // Keeping one pair per worker avoids native Mat allocation/release for every
         // detected text region while preserving isolation between concurrent batches.
@@ -207,17 +209,23 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     // Crop pixels are read directly from native Mat rows. WriteTensor initializes
                     // only the trailing padding, avoiding a full tensor fill that would immediately
                     // be overwritten by valid content.
+                    bool usedAffine = false;
+                    bool usedPerspective = false;
                     for (int batch = 0; batch < requests.Count; batch++)
                     {
                         ObserveCancellation(cancellationToken);
-                        Mat crop = PrepareCropContent(requests[batch], cancellationToken);
+                        bool cropUsedAffine;
+                        Mat crop = PrepareCropContent(requests[batch], cancellationToken, out cropUsedAffine);
+                        usedAffine |= cropUsedAffine;
+                        usedPerspective |= !cropUsedAffine;
                         WriteTensor(crop, values, batch, width, height, profile, cancellationToken);
                     }
                     TensorShape shape = profile.Layout == VisualTensorLayout.Nchw
                         ? new TensorShape(requests.Count, channels, height, width)
                         : new TensorShape(requests.Count, height, width, channels);
                     var tensor = new Tensor<float>(shape, values, TensorBufferOwnership.Borrow);
-                    var descriptor = new VisualPreprocessingDescriptor(profile.ColorOrder, profile.Means, profile.Scales, "OpenCV 5 preview perspective warp; explicit corners and configured right-angle orientation; no automatic orientation classifier.");
+                    string cropTransform = usedAffine && usedPerspective ? "Mixed" : usedAffine ? "Affine" : "Perspective";
+                    var descriptor = new VisualPreprocessingDescriptor(profile.ColorOrder, profile.Means, profile.Scales, "OpenCV 5 preview cropTransform=" + cropTransform + "; affine fast path only for proven near-parallelograms; explicit corners and configured right-angle orientation; no automatic orientation classifier.");
                     var modelSize = new VisualSize(width, height);
                     var prepared = new PreparedVisualInput(inputName, tensor, modelSize, modelSize, requests.Count, profile.Layout, ImageTransform.Resize(modelSize, modelSize), descriptor, "ocr-recognition-batch", PreparedInputOwnership.Owned, tensorLease);
                     tensorLease = null;
@@ -244,12 +252,14 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             finally { _gate.ExitWriteLock(); }
             _sourcePoints.Dispose();
             _targetPoints.Dispose();
+            _affineSourcePoints.Dispose();
+            _affineTargetPoints.Dispose();
             foreach (CropScratch scratch in _cropScratch.Values) scratch.Dispose();
             _cropScratch.Dispose();
             _recognitionTensorPool.Dispose();
         }
 
-        private Mat PrepareCropContent(TextCropRequest request, CancellationToken cancellationToken)
+        private Mat PrepareCropContent(TextCropRequest request, CancellationToken cancellationToken, out bool usedAffine)
         {
             TextQuadrilateral corners = request.Quadrilateral;
             int naturalWidth = Math.Max(2, checked((int)Math.Ceiling(Math.Max(Distance(corners.TopLeft, corners.TopRight), Distance(corners.BottomLeft, corners.BottomRight)))));
@@ -265,12 +275,28 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             targetPoints[1] = new Point2f(naturalWidth - 1, 0);
             targetPoints[2] = new Point2f(naturalWidth - 1, naturalHeight - 1);
             targetPoints[3] = new Point2f(0, naturalHeight - 1);
-            using (Mat transform = ImageProcessing.GetPerspectiveTransform(sourcePoints, targetPoints, DecompTypes.LU))
+            bool useAffine = request.Profile.TransformMode == OcrCropTransformMode.AffineWhenEquivalent
+                && OcrCropTransformPolicy.IsAffineEquivalent(corners);
+            usedAffine = useAffine;
+            Point2f[] affineSourcePoints = _affineSourcePoints.Value!;
+            Point2f[] affineTargetPoints = _affineTargetPoints.Value!;
+            affineSourcePoints[0] = sourcePoints[0];
+            affineSourcePoints[1] = sourcePoints[1];
+            affineSourcePoints[2] = sourcePoints[3];
+            affineTargetPoints[0] = targetPoints[0];
+            affineTargetPoints[1] = targetPoints[1];
+            affineTargetPoints[2] = targetPoints[3];
+            using (Mat transform = useAffine
+                ? ImageProcessing.GetAffineTransform(affineSourcePoints, affineTargetPoints)
+                : ImageProcessing.GetPerspectiveTransform(sourcePoints, targetPoints, DecompTypes.LU))
             {
                 ObserveCancellation(cancellationToken);
                 Mat source = _source ?? throw new OpenCvVisualException(OpenCvErrorCodes.ObjectDisposed, "The decoded source Mat is no longer available.");
                 CropScratch scratch = _cropScratch.Value!;
-                ImageProcessing.WarpPerspective(source, scratch.Warped, transform, new Size(naturalWidth, naturalHeight), ToInterpolation(request.Profile.Interpolation), BorderTypes.Constant, PaddingScalar(request.Profile.PaddingColor, source.Channels));
+                if (useAffine)
+                    ImageProcessing.WarpAffine(source, scratch.Warped, transform, new Size(naturalWidth, naturalHeight), ToInterpolation(request.Profile.Interpolation), BorderTypes.Constant, PaddingScalar(request.Profile.PaddingColor, source.Channels));
+                else
+                    ImageProcessing.WarpPerspective(source, scratch.Warped, transform, new Size(naturalWidth, naturalHeight), ToInterpolation(request.Profile.Interpolation), BorderTypes.Constant, PaddingScalar(request.Profile.PaddingColor, source.Channels));
                 Mat oriented = scratch.Warped;
                 if (request.Region.Orientation != TextOrientation.Degrees0)
                 {

@@ -236,6 +236,28 @@ namespace DeploySharp.Visual.OpenCV.Tests
             }
         }
 
+        [TestMethod]
+        public void AffineCropModeReportsTheSelectedSafeFastPathAndFallsBackForPerspective()
+        {
+            var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(Fixture("ocr.png"), "images", detectorOptions);
+            TextCropProfile affineProfile = CropProfile().WithTransformMode(OcrCropTransformMode.AffineWhenEquivalent);
+
+            var parallelogram = new TextQuadrilateral(new PointF(2, 2), new PointF(14, 2), new PointF(16, 8), new PointF(4, 8), TextCornerOrder.TopLeftClockwise);
+            using (PreparedVisualInput affine = input.PrepareRecognitionBatch("crops", new[] { new TextCropRequest(new TextRegion(0, 1, parallelogram.Polygon, parallelogram), affineProfile) }, CancellationToken.None))
+            {
+                StringAssert.Contains(affine.Preprocessing.Notes, "cropTransform=Affine");
+                Assert.IsTrue(((Tensor<float>)affine.Tensor).ToArray().Any(value => value != 0));
+            }
+
+            var trapezoid = new TextQuadrilateral(new PointF(2, 2), new PointF(14, 2), new PointF(15, 8), new PointF(4, 8), TextCornerOrder.TopLeftClockwise);
+            using (PreparedVisualInput perspective = input.PrepareRecognitionBatch("crops", new[] { new TextCropRequest(new TextRegion(1, 1, trapezoid.Polygon, trapezoid), affineProfile) }, CancellationToken.None))
+            {
+                StringAssert.Contains(perspective.Preprocessing.Notes, "cropTransform=Perspective");
+                Assert.IsTrue(((Tensor<float>)perspective.Tensor).ToArray().Any(value => value != 0));
+            }
+        }
+
         private static TextCropRequest Request(TextOrientation orientation, TextCropProfile profile)
         {
             var corners = new TextQuadrilateral(new PointF(2,2), new PointF(14,2), new PointF(14,6), new PointF(2,6), TextCornerOrder.TopLeftClockwise);

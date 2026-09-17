@@ -492,6 +492,16 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets immutable bounds for overlapping recognition windows. / 获取重叠识别窗口的不可变边界。</summary>
         public OcrRecognitionWindowOptions RecognitionWindows { get; } = new OcrRecognitionWindowOptions();
 
+        /// <summary>Gets crop transform mode; existing profiles retain four-corner perspective. / 获取裁剪变换模式；既有 Profile 保持四角透视。</summary>
+        public OcrCropTransformMode TransformMode { get; } = OcrCropTransformMode.Perspective;
+
+        /// <summary>Enables the affine fast path only for geometry proven near-parallel. / 仅为已证明接近平行的几何启用仿射快速路径。</summary>
+        public TextCropProfile WithTransformMode(OcrCropTransformMode mode)
+        {
+            if (!Enum.IsDefined(typeof(OcrCropTransformMode), mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+            return new TextCropProfile(this, OverflowMode, transformMode: mode);
+        }
+
         /// <summary>Gets optional geometry checks; existing constructors disable them. / 获取可选几何检查；既有构造函数默认禁用。</summary>
         public OcrGeometryOptions Geometry { get; } = OcrGeometryOptions.Disabled;
 
@@ -517,7 +527,7 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
@@ -526,6 +536,7 @@ namespace JYPPX.DeploySharp.Visual
             RecognitionWindows = windows ?? source.RecognitionWindows;
             Geometry = geometry ?? source.Geometry;
             OrientationRetry = retry ?? source.OrientationRetry;
+            TransformMode = transformMode ?? source.TransformMode;
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>

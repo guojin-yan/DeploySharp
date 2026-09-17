@@ -56,9 +56,15 @@ $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-geometry/report'
 # Run the benchmark with the same model/input/batch settings as the Disabled baseline.
 ```
 
-Sidecar schema 2 adds `Crop.Geometry` options and per-region `Geometry` evidence, including the evaluated input polygon, angle, exact outside-area fraction, condition number and risk flags. Export remains outside timed spans. `crop_ms` includes enabled geometry checks; `recognition_ms` includes actual crop materialization. Null diagnostics mean not collected. ROI/global orientation projection preserves the diagnostic input space; use the final `Region.Polygon` for drawing. / JSON 仍在计时外写入，但几何检查本身计入流水线耗时；null 不表示已证明安全。
+Sidecar schema 4 includes `Crop.Geometry` options and per-region `Geometry` evidence, including the evaluated input polygon, angle, exact outside-area fraction, condition number and risk flags. It also records the requested `Crop.TransformMode` and bounded orientation-retry configuration. Export remains outside timed spans. `crop_ms` includes enabled geometry checks; `recognition_ms` includes actual crop materialization. Null diagnostics mean not collected. ROI/global orientation projection preserves the diagnostic input space; use the final `Region.Polygon` for drawing. / JSON 仍在计时外写入；schema 4 同时记录几何、裁剪变换和方向重试配置。几何检查本身计入流水线耗时；null 不表示已证明安全。
 
-These checks are heuristics, not CER/WER or measured text truncation. Small angles do not imply affine equivalence: this version retains four-corner perspective rectification and does not enable an automatic affine fast path. Right-angle recognition retries are separately opt-in below. Details and API configuration: [OCR geometry](../../docs/articles/visual-ocr.md#几何质量倾斜角度与边界风险).
+These checks are heuristics, not CER/WER or measured text truncation. Small angles do not imply affine equivalence. The default remains four-corner perspective rectification; `OcrCropTransformMode.AffineWhenEquivalent` is an explicit OpenCV-only opt-in with closure and condition checks, and unsafe trapezoids fall back to perspective. Right-angle recognition retries are separately opt-in below. Details and API configuration: [OCR geometry](../../docs/articles/visual-ocr.md#几何质量倾斜角度与边界风险).
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM` | `Perspective` | `Perspective` keeps the four-corner projective warp; `AffineWhenEquivalent` enables the OpenCV affine fast path only for a numerically safe parallelogram. Other adapters keep their existing sampling path. |
+
+The sidecar schema is now 4 and records the requested `Crop.TransformMode`. The OpenCV preprocessing descriptor also reports the actual batch decision as `cropTransform=Perspective`, `Affine`, or `Mixed`; a requested affine mode can therefore be audited when a batch contains both safe and perspective crops. The affine path is a sampling optimization, not an accuracy change: the default remains perspective and the policy never selects affine from angle alone. / sidecar schema 4 会记录请求模式；OpenCV 描述符还会报告批次实际选择。默认仍为透视，不能仅按角度切换。
 
 ## Bounded orientation retries / 有界方向重试
 
@@ -73,7 +79,7 @@ These checks are heuristics, not CER/WER or measured text truncation. Small angl
 
 Enable with `DEPLOYSHARP_PADDLEOCR_ORIENTATION_RETRY=1`; use the same image, model, width, batch and channel settings for a Disabled baseline. Retry thresholds are REC scores, not CLS scores. Initial DET/CLS and image decode are not repeated. Candidate angles are relative to the initial post-CLS crop and do not accumulate. Ties retain the initial/current winner; high-confidence accepted lines stop early. / 低分或空文本行可重试；不要把置信度提高等同于准确率提高。
 
-Sidecar schema 3 adds `Crop.OrientationRetry` and per-line `OrientationRetry.Attempts`, `SelectedIndex`, `SkippedByRegionLimit`. Each attempt retains original text, CTC trace, effective rotation, width and windows; null means disabled/not triggered. Enable `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` to export outside timed spans. Extra planning/crop/REC/merge is included in `recognition_ms`, and detailed work/batch counters include all rounds. / 导出保留初次结果与候选，不只写胜出的文字。
+Sidecar schema 4 adds `Crop.OrientationRetry`, `Crop.TransformMode` and per-line `OrientationRetry.Attempts`, `SelectedIndex`, `SkippedByRegionLimit`. Each attempt retains original text, CTC trace, effective rotation, width and windows; null means disabled/not triggered. Enable `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` to export outside timed spans. Extra planning/crop/REC/merge is included in `recognition_ms`, and detailed work/batch counters include all rounds. / 导出保留初次结果与候选，不只写胜出的文字。
 
 The line admission limit explicitly skips later eligible rows with provenance; crop/result hard limits, backend failures, cancellation and the shared timeout fail the whole call. Retry respects Clamp/Reject/SlidingWindow and model shape limits. With sliding windows, keep overlap/seam parameters fixed as well. Full selection and resource semantics: [OCR retries](../../docs/articles/visual-ocr.md#低置信度方向重试).
 
