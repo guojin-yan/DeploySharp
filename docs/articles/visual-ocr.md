@@ -330,6 +330,46 @@ foreach (OcrNormalizedRegionResult line in view.Regions)
 
 规范化不是准确率或字段合法性判断：全角转半角可能不适合中文地址，NFKC 可能合并业务上有意义的符号，自定义替换也可能掩盖模型错误。日期、金额、电话、URL、发票号等格式校验应放在独立字段验证器中；先保留原文和规范化视图，再由业务决定采用哪一个。默认不调用 `OcrTextNormalizer` 时，现有 OCR 行为和结果指纹完全不变。
 
+## 结构化字段校验（独立于 OCR）
+
+字段校验不嵌入检测、CTC 解码或模型字典。先选择业务需要的规范化视图，再把同一个 `OcrTextNormalizationResult` 交给一个或多个 `IOcrFieldValidator`；校验器只读文本，不回写 `OcrResult`。
+
+```csharp
+OcrNormalizedRegionResult line = view.Regions[0];
+IOcrFieldValidator invoice = new InvoiceNumberOcrFieldValidator();
+OcrFieldValidationResult check = invoice.Validate(line.Text, cancellationToken);
+
+if (!check.IsValid)
+    Console.WriteLine($"region={check.SourceRegionIndex}, code={check.Code}, reason={check.Message}");
+else
+    Console.WriteLine($"invoice={check.CanonicalValue}");
+
+// 需要同时检查多个候选字段时，结果顺序与声明顺序一致，并且每个结果都保留原文。
+OcrFieldValidationReport report = OcrFieldValidators.ValidateAll(
+    line.Text,
+    new IOcrFieldValidator[] { new DateOcrFieldValidator(), new AmountOcrFieldValidator() },
+    cancellationToken);
+```
+
+当前内置校验器及其边界如下：
+
+| 类型 | 默认规则 | 规范值/限制 |
+| --- | --- | --- |
+| `Date` | `yyyy-MM-dd`、斜线/点分隔、中文年月日和 `yyyyMMdd` | 输出 `yyyy-MM-dd`；只校验日期存在性 |
+| `Amount` | 可带 `¥ ￥ $ € £`、千分位、正负号，最多两位小数 | 输出不带货币符号的 InvariantCulture 十进制；不解析中文大写金额 |
+| `Phone` | 中国大陆手机、区号座机和可选 `+86`/空格/括号 | 保留可识别格式；不查询运营商或号码归属 |
+| `ChineseIdCard` | 18 位或旧 15 位身份证，生日和 MOD-11 校验码 | 输出 18 位大写 `X`；不验证行政区划真实性 |
+| `Url` | 绝对 `http`/`https`，非空主机，最长 2048 | 输出 `Uri.AbsoluteUri`；不发起网络请求 |
+| `Email` | 常规 `local@host.tld` 形状，最长 254 且无连续点 | 保留原大小写；不做 DNS/SMTP 验证 |
+| `Identifier` | 字母/数字及 `._-/`，可配置标量长度和 Unicode 字母 | 默认 ASCII 工业编号；必须含字母或数字 |
+| `Address` | 有界长度、至少含字母/数字/CJK、无控制字符 | 仅启发式，不验证地址是否真实存在 |
+| `InvoiceNumber` | 8 或 20 位 ASCII 字母数字 | 输出大写；不包含发票真伪或校验码验证 |
+| `DeviceSerialNumber` | `Identifier` 规则，默认至少 4 个标量 | 可自定义最大长度和 Unicode 字母 |
+
+每个 `OcrFieldValidationResult` 都提供 `Status`（`Valid`/`Invalid`/`Empty`）、稳定 `Code`、消息、可选 `CanonicalValue`、`RawText`、`NormalizedText`、`SourceRegionIndex`、规范化结果哈希和校验结果哈希。`OcrFieldValidators.CreateDefault()` 返回 10 个独立校验器；应用也可以继承 `OcrFieldValidatorBase` 或直接实现 `IOcrFieldValidator`，为设备号、订单号等项目定义自己的规则。校验器集合最多 64 个且 ID 不可重复，调用共享取消令牌。
+
+格式通过不等于业务事实成立：OCR 误识别后的字符串可能恰好满足日期、身份证或金额格式，规范值也不应覆盖原文。生产流程应同时保存 OCR 原始/规范化文本、字段校验 `Code` 和人工或数据库复核结果；需要跨行一致性、金额合计、地址库或发票平台验证时，在应用层组合这些结果。
+
 ## 长文本宽度诊断与超宽策略
 
 本节新增接口以当前开发源码为准；旧 NuGet 包不会自动获得这些 API，使用前应确认所安装版本包含此能力。
