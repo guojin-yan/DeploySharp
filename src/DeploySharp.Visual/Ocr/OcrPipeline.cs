@@ -524,6 +524,17 @@ namespace JYPPX.DeploySharp.Visual
                         recognitionInferenceWork += retry.Inference;
                         recognitionPostprocessingWork += retry.Postprocessing;
                         recognitionBatchCount += retry.BatchCount;
+                        resultBytes = retry.RetainedBytes;
+                    }
+                    if (_cropProfile.EnhancementRetry != null)
+                    {
+                        stage = OcrPipelineStage.Recognition;
+                        RetryWork retry = await RunEnhancementRetryAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget!).ConfigureAwait(false);
+                        recognitionDuration += retry.Elapsed;
+                        recognitionPreparationWork += retry.Preparation;
+                        recognitionInferenceWork += retry.Inference;
+                        recognitionPostprocessingWork += retry.Postprocessing;
+                        recognitionBatchCount += retry.BatchCount;
                     }
                     var detailedTiming = new OcrDetailedStageTiming(
                         detectionInference.Timing.Inference,

@@ -130,13 +130,16 @@ namespace DeploySharp.Visual.Tests
             internal FakeOcrImageInput Inner { get; } = new FakeOcrImageInput();
             internal Action? BeforePrepare { get; set; }
             internal bool WrongRegion { get; set; }
-            internal int PhysicalCrops { get; private set; }
+            private int _physicalCrops;
+            internal int PhysicalCrops => Volatile.Read(ref _physicalCrops);
+            internal int QualityStep { get; set; }
+            internal Func<int, int>? RegionQualityStep { get; set; }
             public VisualSize SourceSize => Inner.SourceSize;
             public PreparedVisualInput DetectionInput => Inner.DetectionInput;
             public PreparedVisualInput PrepareRecognitionBatch(string name, IReadOnlyList<TextCropRequest> requests, CancellationToken token) => Inner.PrepareRecognitionBatch(name, requests, token);
             public OcrPreparedCropBatch PrepareProcessedRecognitionBatch(string name, IReadOnlyList<TextCropRequest> requests, CancellationToken token)
             {
-                BeforePrepare?.Invoke(); token.ThrowIfCancellationRequested(); PhysicalCrops += requests.Count;
+                BeforePrepare?.Invoke(); token.ThrowIfCancellationRequested(); Interlocked.Add(ref _physicalCrops, requests.Count);
                 PreparedVisualInput prepared = Inner.PrepareRecognitionBatch(name, requests, token);
                 try
                 {
@@ -146,9 +149,11 @@ namespace DeploySharp.Visual.Tests
                         TextCropRequest source = request;
                         if (WrongRegion) source = new TextCropRequest(new TextRegion(99, 1, request.Region.Polygon, request.Quadrilateral), request.Profile);
                         var quality = new OcrPixelQualityOptions(request.Profile.CropProcessing!.MaximumSamplesPerStage);
-                        rows.Add(new OcrCropDiagnostics(source,
-                            OcrPixelQualityAnalyzer.Analyze(new VisualSize(40, 20), (_, _) => 100, quality),
-                            OcrPixelQualityAnalyzer.Analyze(new VisualSize(request.TargetWidth, request.TargetHeight), (_, _) => 100, quality)));
+                        int qualityStep = RegionQualityStep?.Invoke(request.Region.SourceIndex) ?? QualityStep;
+                        OcrPixelQualityDiagnostics rectified = OcrPixelQualityAnalyzer.Analyze(new VisualSize(40, 20), (x, _) => (byte)(100 + (x % 2 == 0 ? -qualityStep : qualityStep)), quality);
+                        bool apply = OcrCropEnhancementPolicy.Decide(rectified, request.Profile.CropProcessing.Enhancement) == OcrCropEnhancementDecision.Applied;
+                        rows.Add(new OcrCropDiagnostics(source, rectified,
+                            OcrPixelQualityAnalyzer.Analyze(new VisualSize(request.TargetWidth, request.TargetHeight), (_, _) => 100, quality), apply ? rectified : null));
                     }
                     return new OcrPreparedCropBatch(prepared, rows);
                 }

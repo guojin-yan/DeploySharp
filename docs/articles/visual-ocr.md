@@ -171,9 +171,57 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 
 门限是可配置启发式，不是通用质量判据。默认32/1只是起始参数，白底小文字可能因空白占比高而被判低对比度；噪声也可能被增强。请在自己的标注集上比较逐行准确率、CER/WER和端到端P50/P95，不能只看锐度/置信度上升。最大增益8，CLAHE clip≤16、每轴分块2～16，每裁剪增强像素数默认1048576、最大16777216，超限 `DS-VISUAL-4102`，不静默漏处理。像素循环检查取消；单次 native CLAHE 调用在前后检查取消，不能中断其内部执行。
 
-当前尚无自动噪声/JPEG识别、去噪/锐化/阈值/阴影消除配方、低置信度增强候选选择或换模型重试；这些不能由 `GrayClahe` 冒充。已实现的是显式低对比度门限路径，保持默认关闭。
+当前尚无自动噪声/JPEG识别、去噪/锐化/阈值/阴影消除配方或换模型重试；这些不能由 `GrayClahe` 冒充。已实现显式低对比度门限路径，以及下面的单候选低置信度增强重试，两者均默认关闭。
 
 功能回归示例：2026-09-17，在 Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA 下，使用同一 `demo_1.jpg`，v4 mobile/v5 mobile/v6 tiny、B4/单通道、Clamp320，对 Report/ContrastNormalize/GrayClahe 共18组运行成功。Report 的文字和完整合同SHA与关闭增强基线一致；本图各模型均仅第12号区域触发默认门限。线性方式文字不变但置信度/token使合同SHA改变；v5 CLAHE 将 `(成品包材)` 变成 `（成品包材）`，置信度从CPU基线0.848219升到0.9010367，不能据此判断更准确。该轮只有1次预热/3次采样且存在开发负载，不作为稳定性能或准确率结论；复现时请保存 sidecar 和原文差异，而非仅比较置信度。
+
+### 低置信度单候选增强重试
+
+需要“先保留原始识别，再检查局部增强是否值得采用”时，不要在首轮 `CropProcessing` 中设置增强，而应显式启用：
+
+```csharp
+var retry = new OcrEnhancementRetryOptions(
+    new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe),
+    confidenceThreshold: 0.9f,
+    selectionPolicy: OcrEnhancementSelectionPolicy.PreserveOriginal,
+    minimumConfidenceGain: 0.05f,
+    maximumRegionsPerImage: 16,
+    maximumCropsPerImage: 128);
+
+TextCropProfile crop = recognitionProfile.CropProfile!
+    .WithCropProcessing(new OcrCropProcessingOptions(1024, 1024))
+    .WithEnhancementRetry(retry);
+// 将 crop 传给 OcrPipeline。通过结果行的 EnhancementRetry 查看对照。
+```
+
+`WithEnhancementRetry` 在未配置 `CropProcessing` 时自动启用默认有界裁剪诊断，首轮仍不增强。可以先设置诊断预算，但首轮直接增强与增强重试不能组合，任一配置顺序都明确抛出 `ArgumentException`，避免把已经增强的结果称为“原始结果”。没有调用此方法时，不引入重试或额外诊断。
+
+执行顺序为 `DET → CLS/初次REC → 可选方向重试 → 单次增强候选 → 最终结果`。只考虑当前所选识别结果为空或置信度低于阈值的行；默认阈值0.8，示例0.9是业务配置，不是通用推荐值。再读取该行已有的 `Rectified` 统计，至少一个裁剪满足增强质量门限才生成候选。没有合格裁剪就标记 `NoEligibleCrop`，不再跑REC。对于滑窗行，重试整行窗口，只有质量合格的窗口应用增强；其他窗口保持原像素，以保证完整行合并与接缝上下文。候选从原图重新裁剪，不在上次增强像素上叠加处理，也不重新解码、DET或CLS。
+
+候选保留每个原始窗口的实际 `TensorWidth`，只与相同宽度候选组批，不因单行重试而缩小或扩大原始补边上下文；模型的batch维仍可能变化，minimum-batch仍需补齐。这样避免把宽度改变导致的分数变化误当作增强效果，但不同batch/backend数值仍不保证逐位一致。固定宽度引擎合同不变。
+
+每行最多一个候选，不尝试所有增强组合或不断循环。`PreserveOriginal` 是默认选择策略：实际运行候选并留下结果，但最终文字和原始合同SHA不变。选择 `ConfidenceGain` 后，非空候选仅在严格优于当前非空结果且增量达到 `minimumConfidenceGain` 时替换；平局、增量不足和空候选保留原结果，非空候选可以替换空原文。它只是可选启发式，不能保证准确率，尤其不能保证全角/半角和业务字段符合预期。
+
+结果行 `EnhancementRetry` 为 null 表示未启用或当前识别置信度足够；非空时保存：
+
+| 字段/决策 | 含义 |
+|---|---|
+| `Options` | 实际门限、操作、选择策略和资源上限 |
+| `Original` | 增强前所选结果，位于可选方向重试之后；包括原文、token、置信度、宽度、窗口和裁剪诊断 |
+| `Candidate` | 唯一候选的相同字段；null表示未运行额外REC |
+| `NoEligibleCrop` | 没有裁剪满足质量门限 |
+| `RegionLimit` | 前面的合格行用完接收额度；不丢原文 |
+| `PreservedByPolicy` | 已运行候选，按显式策略保留原文 |
+| `InsufficientGain` | 候选为空、平局或增量不足 |
+| `CandidateSelected` | 按配置启发式选中候选，不是正确性判定 |
+
+若先做方向重试，顶层 `OrientationRetry` 仍保留该阶段的全部尝试，其 `SelectedIndex` 表示增强之前的方向胜者；最终文字是否来自增强，应看 `EnhancementRetry.Decision`。顶层 `CropDiagnostics` 对应最终选中的识别。ROI重新编号同步更新两份识别结果和窗口的SourceRegionIndex，但诊断四角/旋转/评估索引保持原来源；全图方向恢复也不将旧证据冒充恢复后的坐标。
+
+资源上限有两层：`maximumRegionsPerImage` 按阅读顺序接收质量合格的低分行；超出保留原文并标记。`maximumCropsPerImage` 限制增强阶段额外物理行，包含滑窗和模型minimum-batch重复补齐，超限整次调用报 `DS-VISUAL-4102`。此外，初次REC、方向重试、增强重试共享 `CropProcessing.MaximumCropsPerCall`、`MaximumResultBytes`、取消和超时。原始和全部候选诊断/识别trace一并计入保守结果预算，错误不返回部分成功；Batch/Session池复用现有模型并发边界，不创建无上限的任务或新模型会话。
+
+候选规划、采样、增强、REC、合并计入 `Recognition` 墙钟和端到端总时间；各批次准备/推理/后处理累计到详细work计时，`RecognitionBatchCount`包含额外批次。阶段work在并发时可能大于墙钟。启用重试即使选择保留原文，也会产生真实计算成本；不要把它当作免费精度开关。当前只实现单增强候选，不包含动态扩大模型宽度、换模型或多配方候选链，真实准确率仍需标注集验证。
+
+验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
 
 ## 字符集覆盖审计
 

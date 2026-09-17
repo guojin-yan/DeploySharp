@@ -511,6 +511,16 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional per-crop pixel processing; null retains the original adapter path. / 获取可选逐裁剪像素处理，null 保持原适配器路径。</summary>
         public OcrCropProcessingOptions? CropProcessing { get; }
 
+        /// <summary>Gets optional single enhancement retry; null disables it. / 获取可选单次增强重试，null禁用。</summary>
+        public OcrEnhancementRetryOptions? EnhancementRetry { get; }
+
+        /// <summary>Enables baseline diagnostics and one low-confidence enhancement candidate; direct first-pass enhancement cannot be combined. / 启用基线诊断及一个低置信度增强候选，不能与首轮直接增强组合。</summary>
+        public TextCropProfile WithEnhancementRetry(OcrEnhancementRetryOptions options)
+            => new TextCropProfile(this, OverflowMode, enhancementRetry: options ?? throw new ArgumentNullException(nameof(options)), cropProcessing: CropProcessing ?? new OcrCropProcessingOptions());
+
+        internal TextCropProfile ForEnhancementCandidate(OcrCropEnhancementOptions enhancement)
+            => new TextCropProfile(this, OverflowMode, cropProcessing: CropProcessing!.WithEnhancement(enhancement), clearEnhancementRetry: true);
+
         /// <summary>Enables bounded crop diagnostics and any configured enhancement without changing input shape. / 启用有界裁剪诊断及配置的增强，不修改输入形状。</summary>
         public TextCropProfile WithCropProcessing(OcrCropProcessingOptions options)
             => new TextCropProfile(this, OverflowMode, cropProcessing: options ?? throw new ArgumentNullException(nameof(options)));
@@ -534,7 +544,7 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, bool clearEnhancementRetry = false)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
@@ -545,6 +555,9 @@ namespace JYPPX.DeploySharp.Visual
             OrientationRetry = retry ?? source.OrientationRetry;
             TransformMode = transformMode ?? source.TransformMode;
             CropProcessing = cropProcessing ?? source.CropProcessing;
+            EnhancementRetry = clearEnhancementRetry ? null : enhancementRetry ?? source.EnhancementRetry;
+            if (EnhancementRetry != null && CropProcessing?.Enhancement != null)
+                throw new ArgumentException("Enhancement retry requires an unenhanced first pass; configure enhancement on the retry options only.");
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
@@ -745,6 +758,15 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets ordered recognition-crop evidence for the selected attempt; empty means disabled. / 获取所选尝试的有序识别裁剪证据，空列表表示禁用。</summary>
         public IReadOnlyList<OcrCropDiagnostics> CropDiagnostics { get; private set; } = Array.Empty<OcrCropDiagnostics>();
 
+        /// <summary>Gets optional enhancement retry evidence; null means disabled or sufficient initial confidence. / 获取可选增强重试证据，null表示禁用或初次置信度足够。</summary>
+        public OcrEnhancementRetryResult? EnhancementRetry { get; private set; }
+
+        internal OcrRegionResult WithEnhancementRetry(OcrEnhancementRetryResult? retry)
+        {
+            if (retry == null) return this;
+            var copy = (OcrRegionResult)MemberwiseClone(); copy.EnhancementRetry = retry; return copy;
+        }
+
         internal OcrRegionResult WithCropDiagnostics(IReadOnlyList<OcrCropDiagnostics> diagnostics)
         {
             if (diagnostics.Count == 0) return this;
@@ -758,18 +780,18 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         internal OcrRegionResult WithOrientationRetry(OcrOrientationRetryResult retry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry);
 
         internal OcrRegionResult WithGeometry(OcrGeometryDiagnostics geometry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry);
 
         internal OcrRegionResult WithRegion(TextRegion region)
         {
-            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
-            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry?.WithSourceIndex(region.SourceIndex));
         }
     }
 

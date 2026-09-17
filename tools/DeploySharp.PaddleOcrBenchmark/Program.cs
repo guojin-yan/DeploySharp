@@ -233,6 +233,12 @@ internal static partial class Program
             if (cropProcessing != null) recognitionCrop = recognitionCrop.WithCropProcessing(cropProcessing);
             OcrOrientationRetryOptions? orientationRetry = ReadOrientationRetryOptions();
             if (orientationRetry != null) recognitionCrop = recognitionCrop.WithOrientationRetry(orientationRetry);
+            OcrEnhancementRetryOptions? enhancementRetry = ReadEnhancementRetryOptions();
+            if (enhancementRetry != null)
+            {
+                if (recognitionCrop.CropProcessing == null) recognitionCrop = recognitionCrop.WithCropProcessing(ReadCropDiagnosticBounds());
+                recognitionCrop = recognitionCrop.WithEnhancementRetry(enhancementRetry);
+            }
             if (recognitionCrop.OverflowMode == RecognitionOverflowMode.SlidingWindow)
                 recognitionCrop = recognitionCrop.WithRecognitionWindows(new OcrRecognitionWindowOptions(
                     overlapRatio: ReadWindowOverlap(),
@@ -439,12 +445,42 @@ internal static partial class Program
     {
         string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING")?.Trim().ToLowerInvariant() ?? "disabled";
         if (mode == "disabled") return null;
-        var options = new OcrCropProcessingOptions(ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES", 1024), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_LIMIT", 1024));
+        var options = ReadCropDiagnosticBounds();
         if (mode == "report") return options;
+        return options.WithEnhancement(ReadCropEnhancementOptions(mode));
+    }
+
+    private static OcrCropProcessingOptions ReadCropDiagnosticBounds() => new OcrCropProcessingOptions(
+        ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES", 1024), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_LIMIT", 1024));
+
+    private static OcrEnhancementRetryOptions? ReadEnhancementRetryOptions()
+    {
+        string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY")?.Trim().ToLowerInvariant() ?? "disabled";
+        if (mode == "disabled") return null;
+        string policy = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_SELECTION")?.Trim().ToLowerInvariant() ?? "preserveoriginal";
+        OcrEnhancementSelectionPolicy selection = policy switch
+        {
+            "preserveoriginal" => OcrEnhancementSelectionPolicy.PreserveOriginal, "confidencegain" => OcrEnhancementSelectionPolicy.ConfidenceGain,
+            _ => throw new ArgumentException("Enhancement retry selection accepts PreserveOriginal or ConfidenceGain.")
+        };
+        static float Score(string suffix, float fallback)
+        {
+            string name = "DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_" + suffix;
+            string? value = Environment.GetEnvironmentVariable(name);
+            if (value == null) return fallback;
+            if (float.TryParse(value, NumberStyles.Float, Invariant, out float score) && float.IsFinite(score)) return score;
+            throw new ArgumentException(name + " must be a finite score.");
+        }
+        return new OcrEnhancementRetryOptions(ReadCropEnhancementOptions(mode), Score("CONFIDENCE", .8f), selection, Score("MIN_GAIN", .05f),
+            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_REGIONS", 16), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_CROPS", 128));
+    }
+
+    private static OcrCropEnhancementOptions ReadCropEnhancementOptions(string mode)
+    {
         OcrCropEnhancementMode operation = mode switch
         {
             "contrastnormalize" => OcrCropEnhancementMode.ContrastNormalize, "grayclahe" => OcrCropEnhancementMode.GrayClahe,
-            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING accepts Disabled, Report, ContrastNormalize or GrayClahe.")
+            _ => throw new ArgumentException("Unknown crop enhancement; use ContrastNormalize or GrayClahe (Disabled/Report are handled by their feature switches).")
         };
         static double Number(string suffix, double fallback)
         {
@@ -454,9 +490,9 @@ internal static partial class Program
             if (double.TryParse(value, NumberStyles.Float, Invariant, out double parsed) && double.IsFinite(parsed)) return parsed;
             throw new ArgumentException(name + " must be finite and within OcrCropEnhancementOptions bounds.");
         }
-        return options.WithEnhancement(new OcrCropEnhancementOptions(operation, Number("THRESHOLD", 32), Number("MIN_CONTRAST", 1),
+        return new OcrCropEnhancementOptions(operation, Number("THRESHOLD", 32), Number("MIN_CONTRAST", 1),
             Number("TARGET_STD", 64), Number("MAX_GAIN", 3), Number("CLAHE_CLIP", 2),
-            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_CLAHE_GRID", 8), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_MAX_PIXELS", 1048576)));
+            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_CLAHE_GRID", 8), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_MAX_PIXELS", 1048576));
     }
 
     private static OcrPixelQualityOptions? ReadPixelQualityOptions()
@@ -548,20 +584,20 @@ internal static partial class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 7, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 8, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             PixelQualityOptions = ReadPixelQualityOptions(), result.PixelQuality,
             Regions = result.Regions.Select(item => new
             {
                 item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
-                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry, item.PixelQuality, item.CropDiagnostics
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry, item.PixelQuality, item.CropDiagnostics, item.EnhancementRetry
             }).ToArray()
         };
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions

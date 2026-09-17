@@ -25,7 +25,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private static string Model(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", "onnx", name);
 
         [TestMethod]
-        public void SingleDecodeRotatesOnceAndFeedsExistingOcrPipeline()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void SingleDecodeRotatesOnceAndFeedsExistingOcrPipeline(bool enhancementRetry)
         {
             using var registry = new BackendRegistry(); registry.UseOnnxRuntime();
             var profiles = new VisualProfileRegistry(); profiles.Register(OrientationProfile()); profiles.Register(DetectorProfile()); profiles.Register(RecognizerProfile()); profiles.Freeze();
@@ -34,7 +36,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var detectorArtifact = new ModelArtifact(new ModelId("tests/opencv-ocr-detector"), "onnx", Model("text-detection.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
             var recognizerArtifact = new ModelArtifact(new ModelId("tests/opencv-ocr-recognizer"), "onnx", Model("text-recognition-ctc.onnx"), preferredBackend: OnnxRuntimeBackendProvider.BackendId);
             using var orientation = new OcrOrientationPipeline(registry, profiles.Select(orientationArtifact, registry, request, VisualTaskId.TextOrientationClassification), request);
-            using var ocr = new OcrPipeline(registry, profiles.Select(detectorArtifact, registry, request, VisualTaskId.TextDetection), request, profiles.Select(recognizerArtifact, registry, request, VisualTaskId.TextRecognition), request, CropProfile().WithGeometryValidation(new OcrGeometryOptions()).WithOrientationRetry(new OcrOrientationRetryOptions(1)), new OcrPipelineOptions(maximumRecognitionBatch: 2));
+            TextCropProfile crop = CropProfile().WithGeometryValidation(new OcrGeometryOptions()).WithOrientationRetry(new OcrOrientationRetryOptions(1));
+            if (enhancementRetry) crop = crop.WithEnhancementRetry(new OcrEnhancementRetryOptions(new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe,
+                lowContrastThreshold: 128, targetStandardDeviation: 128), 1));
+            using var ocr = new OcrPipeline(registry, profiles.Select(detectorArtifact, registry, request, VisualTaskId.TextDetection), request, profiles.Select(recognizerArtifact, registry, request, VisualTaskId.TextRecognition), request, crop, new OcrPipelineOptions(maximumRecognitionBatch: 2));
             using var workflow = new OcrOrientationWorkflow(orientation, ocr);
             var factory = new OpenCvOcrImageInputFactory();
             var orientationOptions = new OpenCvPreprocessOptions(new VisualSize(2, 2), OpenCvResizeMode.Resize, VisualColorOrder.Gray, layout: VisualTensorLayout.Nchw, outputType: OpenCvOutputType.Float32);
@@ -52,6 +57,13 @@ namespace DeploySharp.Visual.OpenCV.Tests
             foreach (OcrRegionResult region in result.Regions)
             {
                 Assert.AreEqual(result.CorrectedSourceSize, region.Geometry!.InputSize);
+                if (enhancementRetry)
+                {
+                    Assert.IsNotNull(region.EnhancementRetry);
+                    Assert.AreSame(region.CropDiagnostics[0], region.EnhancementRetry.Original.CropDiagnostics[0]);
+                    Assert.AreEqual(region.Region.SourceIndex, region.EnhancementRetry.Original.Recognition.SourceRegionIndex);
+                    Assert.AreEqual(region.Geometry.InputPolygon.AxisAlignedBounds, region.EnhancementRetry.Original.CropDiagnostics[0].InputQuadrilateral.Polygon.AxisAlignedBounds);
+                }
                 Assert.IsNotNull(region.PixelQuality);
                 Assert.AreEqual(result.CorrectedSourceSize, region.PixelQuality.InputSize);
                 CollectionAssert.AreEqual(region.Geometry.InputPolygon.Vertices.ToArray(), region.PixelQuality.InputPolygon!.Vertices.ToArray());

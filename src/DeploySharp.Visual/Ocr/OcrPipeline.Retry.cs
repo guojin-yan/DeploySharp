@@ -24,7 +24,7 @@ namespace JYPPX.DeploySharp.Visual
                 budget.Reserve(128);
                 states.Add(new RetryState(index, results[index], admitted++ >= options.MaximumRegionsPerImage));
             }
-            if (states.Count == 0) { watch.Stop(); work.Elapsed = watch.Elapsed; return work; }
+            if (states.Count == 0) { watch.Stop(); work.Elapsed = watch.Elapsed; work.RetainedBytes = budget.Used; return work; }
             foreach (TextOrientation relative in options.Rotations)
             {
                 token.ThrowIfCancellationRequested();
@@ -106,7 +106,7 @@ namespace JYPPX.DeploySharp.Visual
             foreach (RetryState state in states)
                 results[state.Position] = state.Best.WithOrientationRetry(new OcrOrientationRetryResult(state.Attempts, state.Selected, state.Skipped));
             token.ThrowIfCancellationRequested();
-            watch.Stop(); work.Elapsed = watch.Elapsed;
+            watch.Stop(); work.Elapsed = watch.Elapsed; work.RetainedBytes = budget.Used;
             return work;
         }
 
@@ -117,6 +117,7 @@ namespace JYPPX.DeploySharp.Visual
             private long _used;
             private readonly long _maximum;
             internal RetryBudget(long used, long maximum) { _used = used; _maximum = maximum; }
+            internal long Used => Interlocked.Read(ref _used);
             internal void Reserve(long bytes)
             {
                 if (Interlocked.Add(ref _used, bytes) > _maximum) throw Limit("OCR original and retry results exceed their retained byte budget.", OcrPipelineStage.Recognition);
@@ -152,6 +153,7 @@ namespace JYPPX.DeploySharp.Visual
             internal TimeSpan Inference { get; set; }
             internal TimeSpan Postprocessing { get; set; }
             internal int BatchCount { get; set; }
+            internal long RetainedBytes { get; set; }
         }
     }
 }

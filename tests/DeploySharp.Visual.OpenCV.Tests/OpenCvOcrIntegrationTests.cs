@@ -26,9 +26,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private static string Onnx(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", "onnx", name);
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline(bool cropDiagnostics)
+        [DataRow(false, false)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline(bool cropDiagnostics, bool enhancementRetry)
         {
             using var registry = new BackendRegistry();
             registry.UseOnnxRuntime();
@@ -39,11 +40,14 @@ namespace DeploySharp.Visual.OpenCV.Tests
             profiles.Register(RecognizerProfile());
             profiles.Freeze();
             var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            TextCropProfile crop = cropDiagnostics ? CropProfile().WithCropProcessing(new OcrCropProcessingOptions()) : CropProfile();
+            if (enhancementRetry) crop = crop.WithEnhancementRetry(new OcrEnhancementRetryOptions(new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe,
+                lowContrastThreshold: 128, targetStandardDeviation: 128), confidenceThreshold: 1));
             using var pipeline = new OcrPipeline(
                 registry,
                 profiles.Select(detector, registry, request, VisualTaskId.TextDetection), request,
                 profiles.Select(recognizer, registry, request, VisualTaskId.TextRecognition), request,
-                cropDiagnostics ? CropProfile().WithCropProcessing(new OcrCropProcessingOptions()) : CropProfile(), new OcrPipelineOptions(maximumRecognitionBatch: 2));
+                crop, new OcrPipelineOptions(maximumRecognitionBatch: 2));
             var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
             using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(Fixture("ocr.png"), "images", detectorOptions);
 
@@ -54,6 +58,15 @@ namespace DeploySharp.Visual.OpenCV.Tests
             CollectionAssert.AreEqual(new[] { 0, 2 }, result.Regions.Select(item => item.Region.SourceIndex).ToArray());
             Assert.AreEqual(64, result.ComputeSha256().Length);
             Assert.IsTrue(result.Regions.All(item => item.CropDiagnostics.Count == (cropDiagnostics ? 1 : 0)));
+            if (enhancementRetry)
+            {
+                Assert.IsTrue(result.Regions.Any(item => item.EnhancementRetry?.Candidate != null));
+                foreach (OcrRegionResult item in result.Regions.Where(item => item.EnhancementRetry?.Candidate != null))
+                {
+                    Assert.AreEqual(OcrEnhancementRetryDecision.PreservedByPolicy, item.EnhancementRetry!.Decision);
+                    Assert.IsNull(item.CropDiagnostics[0].Enhanced); Assert.IsNotNull(item.EnhancementRetry.Candidate!.CropDiagnostics[0].Enhanced);
+                }
+            }
             OcrResult diagnosed = pipeline.Run(input, new OcrExecutionOptions().WithPixelQuality(new OcrPixelQualityOptions()));
             Assert.AreEqual(result.ComputeSha256(), diagnosed.ComputeSha256());
             Assert.IsNotNull(diagnosed.PixelQuality);

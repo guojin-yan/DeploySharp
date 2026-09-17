@@ -4,13 +4,13 @@ This console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\
 
 ## Recognition crop diagnostics / 识别裁剪诊断
 
-Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optionally `DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES=1024` and `DEPLOYSHARP_PADDLEOCR_CROP_LIMIT=1024`. Samples are bounded per stage; the crop limit includes minimum-batch duplicate rows, windows and retries. Report preserves pixels and recognition SHA. Width sidecar schema 7 records `Crop.CropProcessing`, each region's `CropDiagnostics`, and all orientation attempts' diagnostics. `Rectified` is after warp/rotation, `Content` after resize but before padding/normalization; these are not directly comparable quality scores. Actual sampling work is included in recognition preparation and total time. Unsupported input adapters fail explicitly.
+Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optionally `DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES=1024` and `DEPLOYSHARP_PADDLEOCR_CROP_LIMIT=1024`. Samples are bounded per stage; the crop limit includes minimum-batch duplicate rows, windows and retries. Report preserves pixels and recognition SHA. Width sidecar schema 8 records `Crop.CropProcessing`, each region's `CropDiagnostics`, and all orientation attempts' diagnostics. `Rectified` is after warp/rotation, `Content` after resize but before padding/normalization; these are not directly comparable quality scores. Actual sampling work is included in recognition preparation and total time. Unsupported input adapters fail explicitly.
 
 通过上述变量显式启用，默认不采集。用 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` 指定 JSON 目录；源区域诊断与裁剪诊断可独立开启。裁剪来源在 ROI/方向映射后不被改写，滑窗角点已包含父行方向。每阶段采样上限 1～65536、每调用物理裁剪上限 1～4096；超限失败而非漏记，诊断不保留图像。Report 不表示增强或准确率提高。
 
 ## Opt-in crop enhancement / 显式裁剪增强
 
-`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe` selects one quality-gated pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 7 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe deliberately removes color; its gray pixels are replicated for RGB models before normal model normalization. No first-pass confidence-based enhancement retry is implemented yet.
+`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe` selects one quality-gated pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 8 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe deliberately removes color; its gray pixels are replicated for RGB models before normal model normalization. For an unenhanced first pass followed by one candidate, use the separate enhancement-retry switch below instead.
 
 配置变量如下，均以 `DEPLOYSHARP_PADDLEOCR_ENHANCE_` 为前缀：
 
@@ -25,6 +25,25 @@ Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optiona
 | MAX_PIXELS | 1048576 | 每个待增强裁剪的硬像素上限，最大16777216 |
 
 启用后不修改原文件、DET/CLS、字典或补边；操作发生在裁剪内部，额外处理计入REC准备和总耗时。应先固定 `Report` 基线，再分别运行两种增强。对照JSON里的逐行文字、门限决策、原始/增强指标以及CSV端到端分位数。增强可能降低准确率，置信度/对比度提升不是CER/WER改善的替代证据；无标注集时只报告行为与一致性，不能发布准确率提升结论。
+
+## Single enhancement retry / 单次增强重试
+
+```powershell
+$env:DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING = 'Disabled' # Report also works; no direct first-pass enhancement
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY = 'GrayClahe'
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_CONFIDENCE = '0.9'
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_SELECTION = 'PreserveOriginal'
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MIN_GAIN = '0.05'
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_REGIONS = '16'
+$env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_CROPS = '128'
+$env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-enhancement-retry/preserve'
+```
+
+Retry is `Disabled` by default; other valid modes are `ContrastNormalize` and `GrayClahe`. It reuses `ENHANCE_*` quality/operation parameters and `CROP_SAMPLES/CROP_LIMIT` diagnostics budgets, automatically enabling unenhanced crop diagnostics if necessary. Default confidence threshold is 0.8; the example deliberately uses 0.9. It runs after orientation retries, never repeats DET/CLS, and creates at most one candidate per eligible line. Low confidence alone is insufficient: at least one existing rectified-crop measurement must pass the operation's quality gate. A windowed candidate reruns all windows while only eligible crops are enhanced.
+
+`PreserveOriginal` is default and retains original final text even when candidate confidence is higher. Explicit `ConfidenceGain` can select a nonempty candidate by the minimum-gain heuristic; it can change punctuation or make accuracy worse. Schema 8 records `Crop.EnhancementRetry` and per-row `EnhancementRetry.Options/Original/Candidate/Decision`, keeping all original/candidate text, scores, CTC traces and crop evidence. Null Candidate means no extra REC was run; decisions distinguish quality gate, admission limit, preserved policy, insufficient gain and selection. Original means the orientation-selected result before enhancement, not necessarily the first REC.
+
+区域上限按阅读顺序接收质量合格行；额外crop上限含minimum-batch重复行。候选保持原窗口实际TensorWidth并只按同宽分批，避免补边宽度变化混入增强效果；batch维仍可能变化。初次、方向重试、增强重试还共用CROP_LIMIT与结果字节预算、取消、超时，超限失败而非截断。直接首轮增强与重试不能混用，非法配置明确失败。规划/采样/增强/额外REC均计入总耗时和recognition work/batch计数；导出JSON仍在计时外。请分别跑Disabled、PreserveOriginal和ConfidenceGain并保存原文差异；无标注集时不得把置信度上升称为准确率改善。
 
 ## Source-pixel quality diagnostics / 源像素质量诊断
 
@@ -41,7 +60,7 @@ $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-quality/report'
 
 The three numeric values above are defaults. Per-area centers accept 1–1,048,576; region count 1–4096; per-call centers must be at least the per-area budget and no more than 16,777,216. The conservative `(detectedRegions + 1) * samplesPerArea` bound includes the whole source; budget violations fail the complete call with `DS-VISUAL-4102`. Each center reads at most five luminance values. Quality work is included in `crop_ms` and total latency, with the same cancellation/deadline as inference. No per-pixel work occurs when disabled.
 
-Sidecar **schema 7** adds `PixelQualityOptions`, whole-source `PixelQuality`, and per-region `PixelQuality`. Evidence includes mean/stddev luminance, dark/light fractions, native one-pixel Laplacian variance and central gradient, accepted/attempted sample counts, evaluation size/polygon/index and shortest polygon edge. No samples means null pixel metrics; fewer than two valid neighborhoods means null Laplacian variance. Existing text/contract hashes exclude diagnostics.
+Sidecar **schema 8** adds `PixelQualityOptions`, whole-source `PixelQuality`, and per-region `PixelQuality`. Evidence includes mean/stddev luminance, dark/light fractions, native one-pixel Laplacian variance and central gradient, accepted/attempted sample counts, evaluation size/polygon/index and shortest polygon edge. No samples means null pixel metrics; fewer than two valid neighborhoods means null Laplacian variance. Existing text/contract hashes exclude diagnostics.
 
 这里采样的是原 DET 区域内的源像素，不是 resize/padding 后的 REC crop。规则采样可能漏掉小结构；噪声也会提高拉普拉斯方差，黑字白纸也会有大量极暗/极亮像素。当前不输出通用质量总分，不自动增强、拒绝或分类 JPEG/噪声；最短区域边不是字形高度。固定输入、模型、宽度、采样预算和后端后再比较。详见 [OCR quality diagnostics](../../docs/articles/visual-ocr.md#可选源像素质量诊断)。
 
@@ -141,7 +160,7 @@ $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-geometry/report'
 # Run the benchmark with the same model/input/batch settings as the Disabled baseline.
 ```
 
-Sidecar schema 7 includes `Crop.Geometry` options and per-region `Geometry` evidence, including the evaluated input polygon, angle, exact outside-area fraction, condition number and risk flags. It also records the requested `Crop.TransformMode` and bounded orientation-retry configuration. Export remains outside timed spans. `crop_ms` includes enabled geometry checks; `recognition_ms` includes actual crop materialization. Null diagnostics mean not collected. ROI/global orientation projection preserves the diagnostic input space; use the final `Region.Polygon` for drawing. / JSON 仍在计时外写入；schema 7 同时记录几何、裁剪变换和方向重试配置。几何检查本身计入流水线耗时；null 不表示已证明安全。
+Sidecar schema 8 includes `Crop.Geometry` options and per-region `Geometry` evidence, including the evaluated input polygon, angle, exact outside-area fraction, condition number and risk flags. It also records the requested `Crop.TransformMode` and bounded orientation-retry configuration. Export remains outside timed spans. `crop_ms` includes enabled geometry checks; `recognition_ms` includes actual crop materialization. Null diagnostics mean not collected. ROI/global orientation projection preserves the diagnostic input space; use the final `Region.Polygon` for drawing. / JSON 仍在计时外写入；schema 8 同时记录几何、裁剪变换和方向重试配置。几何检查本身计入流水线耗时；null 不表示已证明安全。
 
 These checks are heuristics, not CER/WER or measured text truncation. Small angles do not imply affine equivalence. The default remains four-corner perspective rectification; `OcrCropTransformMode.AffineWhenEquivalent` is an explicit OpenCV-only opt-in with closure and condition checks, and unsafe trapezoids fall back to perspective. Right-angle recognition retries are separately opt-in below. Details and API configuration: [OCR geometry](../../docs/articles/visual-ocr.md#几何质量倾斜角度与边界风险).
 
@@ -149,7 +168,7 @@ These checks are heuristics, not CER/WER or measured text truncation. Small angl
 | --- | --- | --- |
 | `DEPLOYSHARP_PADDLEOCR_CROP_TRANSFORM` | `Perspective` | `Perspective` keeps the four-corner projective warp; `AffineWhenEquivalent` enables the OpenCV affine fast path only for a numerically safe parallelogram. Other adapters keep their existing sampling path. |
 
-The sidecar schema is now 5 and records the requested `Crop.TransformMode`. The OpenCV preprocessing descriptor also reports the actual batch decision as `cropTransform=Perspective`, `Affine`, or `Mixed`; a requested affine mode can therefore be audited when a batch contains both safe and perspective crops. The affine path is a sampling optimization, not an accuracy change: the default remains perspective and the policy never selects affine from angle alone. / sidecar schema 7 会记录请求模式；OpenCV 描述符还会报告批次实际选择。默认仍为透视，不能仅按角度切换。
+The sidecar schema is now 5 and records the requested `Crop.TransformMode`. The OpenCV preprocessing descriptor also reports the actual batch decision as `cropTransform=Perspective`, `Affine`, or `Mixed`; a requested affine mode can therefore be audited when a batch contains both safe and perspective crops. The affine path is a sampling optimization, not an accuracy change: the default remains perspective and the policy never selects affine from angle alone. / sidecar schema 8 会记录请求模式；OpenCV 描述符还会报告批次实际选择。默认仍为透视，不能仅按角度切换。
 
 ## Bounded orientation retries / 有界方向重试
 
@@ -164,7 +183,7 @@ The sidecar schema is now 5 and records the requested `Crop.TransformMode`. The 
 
 Enable with `DEPLOYSHARP_PADDLEOCR_ORIENTATION_RETRY=1`; use the same image, model, width, batch and channel settings for a Disabled baseline. Retry thresholds are REC scores, not CLS scores. Initial DET/CLS and image decode are not repeated. Candidate angles are relative to the initial post-CLS crop and do not accumulate. Ties retain the initial/current winner; high-confidence accepted lines stop early. / 低分或空文本行可重试；不要把置信度提高等同于准确率提高。
 
-Sidecar schema 7 adds `Crop.OrientationRetry`, `Crop.TransformMode` and per-line `OrientationRetry.Attempts`, `SelectedIndex`, `SkippedByRegionLimit`. Each attempt retains original text, CTC trace, effective rotation, width and windows; null means disabled/not triggered. Enable `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` to export outside timed spans. Extra planning/crop/REC/merge is included in `recognition_ms`, and detailed work/batch counters include all rounds. / 导出保留初次结果与候选，不只写胜出的文字。
+Sidecar schema 8 adds `Crop.OrientationRetry`, `Crop.TransformMode` and per-line `OrientationRetry.Attempts`, `SelectedIndex`, `SkippedByRegionLimit`. Each attempt retains original text, CTC trace, effective rotation, width and windows; null means disabled/not triggered. Enable `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` to export outside timed spans. Extra planning/crop/REC/merge is included in `recognition_ms`, and detailed work/batch counters include all rounds. / 导出保留初次结果与候选，不只写胜出的文字。
 
 The line admission limit explicitly skips later eligible rows with provenance; crop/result hard limits, backend failures, cancellation and the shared timeout fail the whole call. Retry respects Clamp/Reject/SlidingWindow and model shape limits. With sliding windows, keep overlap/seam parameters fixed as well. Full selection and resource semantics: [OCR retries](../../docs/articles/visual-ocr.md#低置信度方向重试).
 
