@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace JYPPX.DeploySharp.Visual
 {
-    /// <summary>Enables bounded diagnostics of rectified and resized recognition content. / 启用校正后与缩放后识别内容的有界诊断。</summary>
+    /// <summary>Enables bounded crop diagnostics and optional quality-gated enhancement. / 启用有界裁剪诊断及可选质量门控增强。</summary>
     public sealed class OcrCropProcessingOptions
     {
         /// <summary>Initializes per-stage sampling and physical-crop limits including padded rows and retries. / 初始化每阶段采样与物理裁剪限制，包含填充行和重试。</summary>
@@ -18,6 +18,11 @@ namespace JYPPX.DeploySharp.Visual
         public int MaximumSamplesPerStage { get; }
         /// <summary>Gets physical crops across the original recognition and retries. / 获取初次识别及重试的物理裁剪总上限。</summary>
         public int MaximumCropsPerCall { get; }
+        /// <summary>Gets the optional quality-gated enhancement; null leaves pixels unchanged. / 获取可选质量门控增强，null不修改像素。</summary>
+        public OcrCropEnhancementOptions? Enhancement { get; private set; }
+        /// <summary>Creates an immutable copy with one enhancement; the source remains unchanged. / 创建包含一种增强的不可变副本，源配置不变。</summary>
+        public OcrCropProcessingOptions WithEnhancement(OcrCropEnhancementOptions options)
+            => new OcrCropProcessingOptions(MaximumSamplesPerStage, MaximumCropsPerCall) { Enhancement = options ?? throw new ArgumentNullException(nameof(options)) };
     }
 
     /// <summary>Records crop-local evidence with its original source request; no pixel buffers are retained. / 记录裁剪局部证据及原始源请求，不持有像素缓冲。</summary>
@@ -25,6 +30,10 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes evidence before normalization and tensor padding. / 初始化归一化及张量补齐之前的证据。</summary>
         public OcrCropDiagnostics(TextCropRequest request, OcrPixelQualityDiagnostics rectified, OcrPixelQualityDiagnostics content)
+            : this(request, rectified, content, null) { }
+
+        /// <summary>Initializes evidence including an enhanced pre-resize stage only when the quality gate applies. / 初始化证据，仅质量门限触发时包含增强后缩放前阶段。</summary>
+        public OcrCropDiagnostics(TextCropRequest request, OcrPixelQualityDiagnostics rectified, OcrPixelQualityDiagnostics content, OcrPixelQualityDiagnostics? enhanced)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             Rectified = rectified ?? throw new ArgumentNullException(nameof(rectified));
@@ -34,6 +43,14 @@ namespace JYPPX.DeploySharp.Visual
                 throw new ArgumentException("Crop diagnostics must use local full-content coordinates before padding.");
             InputRegionIndex = request.Region.SourceIndex; InputQuadrilateral = request.Quadrilateral;
             Orientation = request.Region.Orientation; TensorSize = new VisualSize(request.TargetWidth, request.TargetHeight);
+            Enhancement = request.Profile.CropProcessing?.Enhancement;
+            EnhancementDecision = OcrCropEnhancementPolicy.Decide(rectified, Enhancement);
+            if ((EnhancementDecision == OcrCropEnhancementDecision.Applied) != (enhanced != null) ||
+                (enhanced != null && (enhanced.InputSize != rectified.InputSize || enhanced.InputPolygon != null || enhanced.InputRegionIndex != null)))
+                throw new ArgumentException("Enhanced evidence must match the gate and rectified crop dimensions.", nameof(enhanced));
+            Enhanced = enhanced;
+            if (enhanced != null && Enhancement!.Mode == OcrCropEnhancementMode.ContrastNormalize)
+                AppliedGain = Math.Min(Enhancement.MaximumGain, Enhancement.TargetStandardDeviation / rectified.LuminanceStandardDeviation!.Value);
         }
         /// <summary>Gets the evaluation source index, unchanged after ROI renumbering. / 获取评估源索引，ROI 重新编号后不变。</summary>
         public int InputRegionIndex { get; }
@@ -47,6 +64,14 @@ namespace JYPPX.DeploySharp.Visual
         public OcrPixelQualityDiagnostics Rectified { get; }
         /// <summary>Gets statistics after resize, excluding tensor padding/normalization. / 获取缩放后统计，不含张量补齐及归一化。</summary>
         public OcrPixelQualityDiagnostics Content { get; }
+        /// <summary>Gets the requested enhancement, or null. / 获取请求的增强，或null。</summary>
+        public OcrCropEnhancementOptions? Enhancement { get; }
+        /// <summary>Gets the gate's decision, not proof of OCR improvement. / 获取门限决策，不代表OCR改善证明。</summary>
+        public OcrCropEnhancementDecision EnhancementDecision { get; }
+        /// <summary>Gets statistics after enhancement before resize, or null if unchanged. / 获取增强后缩放前统计，未修改则为null。</summary>
+        public OcrPixelQualityDiagnostics? Enhanced { get; }
+        /// <summary>Gets the applied linear gain; null for skipped crops or CLAHE. / 获取应用的线性增益，跳过或CLAHE时为null。</summary>
+        public double? AppliedGain { get; }
     }
 
     /// <summary>Owns a prepared recognition batch and immutable per-row crop evidence. / 拥有准备好的识别批次与不可变逐行裁剪证据。</summary>
@@ -70,7 +95,7 @@ namespace JYPPX.DeploySharp.Visual
         public void Dispose() => Input.Dispose();
     }
 
-    /// <summary>Optionally prepares recognition crops with bounded diagnostics. / 可选准备带有界诊断的识别裁剪。</summary>
+    /// <summary>Optionally prepares recognition crops with bounded diagnostics and configured enhancement. / 可选准备带有界诊断及配置增强的识别裁剪。</summary>
     public interface IOcrCropProcessingInput : IOcrImageInput
     {
         /// <summary>Returns an owned batch with one evidence item per request; callers must dispose it. / 返回每请求一份证据的自有批次，调用方必须释放。</summary>

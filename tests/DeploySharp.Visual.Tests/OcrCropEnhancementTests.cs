@@ -1,0 +1,57 @@
+using System;
+using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.Visual;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace DeploySharp.Visual.Tests
+{
+    [TestClass]
+    public sealed class OcrCropEnhancementTests
+    {
+        [TestMethod]
+        public void EnhancementGatesConstantLowAndSufficientContrastAndBoundsWork()
+        {
+            var options = new OcrCropEnhancementOptions(OcrCropEnhancementMode.ContrastNormalize);
+            OcrPixelQualityDiagnostics Analyze(int step) => OcrPixelQualityAnalyzer.Analyze(new VisualSize(20,20), (x, _) => (byte)(128 + (x % 2 == 0 ? -step : step)));
+            Assert.AreEqual(OcrCropEnhancementDecision.NotConfigured, OcrCropEnhancementPolicy.Decide(Analyze(4), null));
+            Assert.AreEqual(OcrCropEnhancementDecision.InsufficientVariation, OcrCropEnhancementPolicy.Decide(Analyze(0), options));
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), options));
+            Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(32), options));
+            var limited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 399);
+            Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), limited)).ErrorCode);
+            Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(64), limited));
+        }
+
+        [TestMethod]
+        public void EnhancementOptionsAreOptInImmutableAndRejectUnsafeValues()
+        {
+            var initial = new OcrCropProcessingOptions();
+            var enhanced = initial.WithEnhancement(new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe));
+            Assert.IsNull(initial.Enhancement); Assert.AreEqual(OcrCropEnhancementMode.GrayClahe, enhanced.Enhancement!.Mode);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions((OcrCropEnhancementMode)8));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, lowContrastThreshold: double.NaN));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, minimumContrast: 0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.ContrastNormalize, targetStandardDeviation: 8));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.ContrastNormalize, maximumGain: double.PositiveInfinity));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, claheClipLimit: 0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, claheGridSize: 32));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 0));
+        }
+
+        [TestMethod]
+        public void EvidenceRejectsMissingUnexpectedOrWrongSizedEnhancement()
+        {
+            var profile = new TextCropProfile("enhance.test", 8, OcrRecognitionWidthMode.Fixed, 16, 16);
+            var quad = new TextQuadrilateral(new PointF(0,0), new PointF(16,0), new PointF(16,8), new PointF(0,8), TextCornerOrder.TopLeftClockwise);
+            var region = new TextRegion(0, 1, quad.Polygon, quad);
+            var low = OcrPixelQualityAnalyzer.Analyze(new VisualSize(16,8), (x, _) => (byte)(120 + x));
+            var enabled = profile.WithCropProcessing(new OcrCropProcessingOptions().WithEnhancement(new OcrCropEnhancementOptions(OcrCropEnhancementMode.ContrastNormalize)));
+            Assert.ThrowsExactly<ArgumentException>(() => new OcrCropDiagnostics(new TextCropRequest(region, enabled), low, low));
+            Assert.ThrowsExactly<ArgumentException>(() => new OcrCropDiagnostics(new TextCropRequest(region, profile), low, low, low));
+            var wrong = OcrPixelQualityAnalyzer.Analyze(new VisualSize(4,4), (_, _) => 100);
+            Assert.ThrowsExactly<ArgumentException>(() => new OcrCropDiagnostics(new TextCropRequest(region, enabled), low, low, wrong));
+            var valid = new OcrCropDiagnostics(new TextCropRequest(region, enabled), low, low, low);
+            Assert.AreEqual(3d, valid.AppliedGain); Assert.AreEqual(OcrCropEnhancementDecision.Applied, valid.EnhancementDecision);
+        }
+    }
+}

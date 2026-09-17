@@ -108,6 +108,23 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(0, first.Inner.ActivePreparedBatches); Assert.AreEqual(0, second.Inner.ActivePreparedBatches);
         }
 
+        [TestMethod]
+        public void ProcessedBatchTransfersOwnershipOnlyOnSuccessAndCopiesEvidence()
+        {
+            using var input = new CropInput();
+            var quad = new TextQuadrilateral(new PointF(0,0), new PointF(16,0), new PointF(16,8), new PointF(0,8), TextCornerOrder.TopLeftClockwise);
+            var request = new TextCropRequest(new TextRegion(0, 1, quad.Polygon, quad), new TextCropProfile("ownership.crop", 8, OcrRecognitionWidthMode.Fixed, 16, 16).WithCropProcessing(new OcrCropProcessingOptions()));
+            using OcrPreparedCropBatch sample = input.PrepareProcessedRecognitionBatch("crops", new[] { request }, CancellationToken.None);
+            PreparedVisualInput prepared = input.Inner.PrepareRecognitionBatch("crops", new[] { request }, CancellationToken.None);
+            Assert.AreEqual(2, input.Inner.ActivePreparedBatches);
+            Assert.ThrowsExactly<ArgumentException>(() => new OcrPreparedCropBatch(prepared, Array.Empty<OcrCropDiagnostics>()));
+            Assert.AreEqual(2, input.Inner.ActivePreparedBatches, "Failed construction leaves ownership with the caller.");
+            var mutable = new List<OcrCropDiagnostics>(sample.Diagnostics);
+            using var owned = new OcrPreparedCropBatch(prepared, mutable); mutable.Clear();
+            Assert.AreEqual(1, owned.Diagnostics.Count); owned.Dispose(); owned.Dispose();
+            Assert.AreEqual(1, input.Inner.ActivePreparedBatches); Assert.AreSame(sample.Diagnostics[0], owned.Diagnostics[0]);
+        }
+
         private sealed class CropInput : IOcrCropProcessingInput
         {
             internal FakeOcrImageInput Inner { get; } = new FakeOcrImageInput();

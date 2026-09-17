@@ -654,7 +654,8 @@ namespace JYPPX.DeploySharp.Visual
                             item.InputQuadrilateral.TopLeft != request.Quadrilateral.TopLeft || item.InputQuadrilateral.TopRight != request.Quadrilateral.TopRight ||
                             item.InputQuadrilateral.BottomLeft != request.Quadrilateral.BottomLeft || item.InputQuadrilateral.BottomRight != request.Quadrilateral.BottomRight ||
                             item.TensorSize != new VisualSize(request.TargetWidth, request.TargetHeight) ||
-                            item.Rectified.PlannedSampleCount > request.Profile.CropProcessing!.MaximumSamplesPerStage || item.Content.PlannedSampleCount > request.Profile.CropProcessing.MaximumSamplesPerStage)
+                            item.Rectified.PlannedSampleCount > request.Profile.CropProcessing!.MaximumSamplesPerStage || item.Content.PlannedSampleCount > request.Profile.CropProcessing.MaximumSamplesPerStage ||
+                            item.Enhancement != request.Profile.CropProcessing.Enhancement || item.Enhanced?.PlannedSampleCount > request.Profile.CropProcessing.MaximumSamplesPerStage)
                             throw Failure("Crop diagnostic provenance or sampling bounds mismatch.", OcrPipelineStage.CropAndBatch);
                     }
                 }

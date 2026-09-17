@@ -439,8 +439,24 @@ internal static partial class Program
     {
         string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING")?.Trim().ToLowerInvariant() ?? "disabled";
         if (mode == "disabled") return null;
-        if (mode != "report") throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING accepts Disabled or Report.");
-        return new OcrCropProcessingOptions(ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES", 1024), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_LIMIT", 1024));
+        var options = new OcrCropProcessingOptions(ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES", 1024), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_LIMIT", 1024));
+        if (mode == "report") return options;
+        OcrCropEnhancementMode operation = mode switch
+        {
+            "contrastnormalize" => OcrCropEnhancementMode.ContrastNormalize, "grayclahe" => OcrCropEnhancementMode.GrayClahe,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING accepts Disabled, Report, ContrastNormalize or GrayClahe.")
+        };
+        static double Number(string suffix, double fallback)
+        {
+            string name = "DEPLOYSHARP_PADDLEOCR_ENHANCE_" + suffix;
+            string? value = Environment.GetEnvironmentVariable(name);
+            if (value == null) return fallback;
+            if (double.TryParse(value, NumberStyles.Float, Invariant, out double parsed) && double.IsFinite(parsed)) return parsed;
+            throw new ArgumentException(name + " must be finite and within OcrCropEnhancementOptions bounds.");
+        }
+        return options.WithEnhancement(new OcrCropEnhancementOptions(operation, Number("THRESHOLD", 32), Number("MIN_CONTRAST", 1),
+            Number("TARGET_STD", 64), Number("MAX_GAIN", 3), Number("CLAHE_CLIP", 2),
+            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_CLAHE_GRID", 8), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_MAX_PIXELS", 1048576)));
     }
 
     private static OcrPixelQualityOptions? ReadPixelQualityOptions()
@@ -532,7 +548,7 @@ internal static partial class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 6, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 7, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),

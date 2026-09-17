@@ -511,7 +511,7 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional per-crop pixel processing; null retains the original adapter path. / 获取可选逐裁剪像素处理，null 保持原适配器路径。</summary>
         public OcrCropProcessingOptions? CropProcessing { get; }
 
-        /// <summary>Enables bounded crop diagnostics without changing input shape. / 启用有界裁剪诊断，不修改输入形状。</summary>
+        /// <summary>Enables bounded crop diagnostics and any configured enhancement without changing input shape. / 启用有界裁剪诊断及配置的增强，不修改输入形状。</summary>
         public TextCropProfile WithCropProcessing(OcrCropProcessingOptions options)
             => new TextCropProfile(this, OverflowMode, cropProcessing: options ?? throw new ArgumentNullException(nameof(options)));
 

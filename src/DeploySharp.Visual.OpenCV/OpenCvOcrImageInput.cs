@@ -335,6 +335,13 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     oriented = scratch.Rotated;
                 }
                 OcrPixelQualityDiagnostics? rectified = quality == null ? null : OpenCvOcrPixelQuality.Analyze(oriented, quality, cancellationToken: cancellationToken);
+                OcrPixelQualityDiagnostics? enhanced = null;
+                OcrCropEnhancementOptions? enhancement = request.Profile.CropProcessing?.Enhancement;
+                if (quality != null && OcrCropEnhancementPolicy.Decide(rectified!, enhancement) == OcrCropEnhancementDecision.Applied)
+                {
+                    oriented = scratch.Enhancer.Apply(oriented, rectified!, enhancement!, cancellationToken);
+                    enhanced = OpenCvOcrPixelQuality.Analyze(oriented, quality, cancellationToken: cancellationToken);
+                }
                 int contentWidth = CalculateContentWidth(oriented.Cols, oriented.Rows, request.TargetHeight, request.TargetWidth);
                 // Dynamic PaddleOCR recognition profiles require at least one full
                 // character-height of horizontal content. Scale narrow crops up to the
@@ -342,7 +349,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 if (request.Profile.WidthMode == OcrRecognitionWidthMode.Dynamic)
                     contentWidth = Math.Max(contentWidth, request.Profile.MinimumWidth);
                 ImageProcessing.Resize(oriented, scratch.Resized, new Size(contentWidth, request.TargetHeight), interpolation: ToInterpolation(request.Profile.Interpolation));
-                if (quality != null) evidence!.Add(new OcrCropDiagnostics(request, rectified!, OpenCvOcrPixelQuality.Analyze(scratch.Resized, quality, cancellationToken: cancellationToken)));
+                if (quality != null) evidence!.Add(new OcrCropDiagnostics(request, rectified!, OpenCvOcrPixelQuality.Analyze(scratch.Resized, quality, cancellationToken: cancellationToken), enhanced));
                 return scratch.Resized;
             }
         }
@@ -352,12 +359,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             internal readonly Mat Warped = new Mat();
             internal readonly Mat Rotated = new Mat();
             internal readonly Mat Resized = new Mat();
+            private OpenCvOcrCropEnhancer? _enhancer;
+            internal OpenCvOcrCropEnhancer Enhancer => _enhancer ?? (_enhancer = new OpenCvOcrCropEnhancer());
 
             public void Dispose()
             {
                 Warped.Dispose();
                 Rotated.Dispose();
                 Resized.Dispose();
+                _enhancer?.Dispose();
             }
         }
 
