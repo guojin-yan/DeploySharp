@@ -13,6 +13,8 @@ namespace JYPPX.DeploySharp.Visual
         GaussianDenoise,
         /// <summary>Applies Gaussian adaptive binarization to a low-contrast crop with a bounded neighborhood. / 对低对比度裁剪使用有界邻域执行高斯自适应二值化。</summary>
         AdaptiveThreshold,
+        /// <summary>Applies a bounded unsharp mask only when sampled sharpness is below the configured gate. / 仅在采样清晰度低于配置门限时执行有界反遮罩锐化。</summary>
+        UnsharpMask,
     }
 
     /// <summary>Explains whether a requested crop enhancement was applied. / 说明请求的裁剪增强是否应用。</summary>
@@ -36,9 +38,10 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Initializes contrast gates, gain, CLAHE, denoise, adaptive threshold and per-crop bounds. / 初始化对比度门限、增益、CLAHE、去噪、自适应阈值及逐裁剪限制。</summary>
         public OcrCropEnhancementOptions(OcrCropEnhancementMode mode, double lowContrastThreshold = 32, double minimumContrast = 1,
             double targetStandardDeviation = 64, double maximumGain = 3, double claheClipLimit = 2, int claheGridSize = 8, int maximumPixelsPerCrop = 1048576,
-            double noiseThreshold = 512, int denoiseKernelSize = 3, double denoiseSigma = 0, int adaptiveBlockSize = 15, double adaptiveConstant = 5)
+            double noiseThreshold = 512, int denoiseKernelSize = 3, double denoiseSigma = 0, int adaptiveBlockSize = 15, double adaptiveConstant = 5,
+            double sharpnessThreshold = 512, int sharpenKernelSize = 3, double sharpenAmount = .5, double sharpenSigma = 1)
         {
-            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise && mode != OcrCropEnhancementMode.AdaptiveThreshold) throw new ArgumentOutOfRangeException(nameof(mode));
+            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise && mode != OcrCropEnhancementMode.AdaptiveThreshold && mode != OcrCropEnhancementMode.UnsharpMask) throw new ArgumentOutOfRangeException(nameof(mode));
             if (!(lowContrastThreshold > 0 && lowContrastThreshold <= 128)) throw new ArgumentOutOfRangeException(nameof(lowContrastThreshold));
             if (!(minimumContrast > 0 && minimumContrast < lowContrastThreshold)) throw new ArgumentOutOfRangeException(nameof(minimumContrast));
             if (!(targetStandardDeviation >= lowContrastThreshold && targetStandardDeviation <= 128)) throw new ArgumentOutOfRangeException(nameof(targetStandardDeviation));
@@ -51,11 +54,16 @@ namespace JYPPX.DeploySharp.Visual
             if (double.IsNaN(denoiseSigma) || double.IsInfinity(denoiseSigma) || denoiseSigma < 0 || denoiseSigma > 32) throw new ArgumentOutOfRangeException(nameof(denoiseSigma));
             if (adaptiveBlockSize < 3 || adaptiveBlockSize > 31 || (adaptiveBlockSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(adaptiveBlockSize));
             if (double.IsNaN(adaptiveConstant) || double.IsInfinity(adaptiveConstant) || adaptiveConstant < -64 || adaptiveConstant > 64) throw new ArgumentOutOfRangeException(nameof(adaptiveConstant));
+            if (double.IsNaN(sharpnessThreshold) || double.IsInfinity(sharpnessThreshold) || sharpnessThreshold <= 0 || sharpnessThreshold > 1048576) throw new ArgumentOutOfRangeException(nameof(sharpnessThreshold));
+            if (sharpenKernelSize < 3 || sharpenKernelSize > 9 || (sharpenKernelSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(sharpenKernelSize));
+            if (double.IsNaN(sharpenAmount) || double.IsInfinity(sharpenAmount) || sharpenAmount <= 0 || sharpenAmount > 4) throw new ArgumentOutOfRangeException(nameof(sharpenAmount));
+            if (double.IsNaN(sharpenSigma) || double.IsInfinity(sharpenSigma) || sharpenSigma <= 0 || sharpenSigma > 32) throw new ArgumentOutOfRangeException(nameof(sharpenSigma));
             Mode = mode; LowContrastThreshold = lowContrastThreshold; MinimumContrast = minimumContrast;
             TargetStandardDeviation = targetStandardDeviation; MaximumGain = maximumGain; ClaheClipLimit = claheClipLimit;
             ClaheGridSize = claheGridSize; MaximumPixelsPerCrop = maximumPixelsPerCrop;
             NoiseThreshold = noiseThreshold; DenoiseKernelSize = denoiseKernelSize; DenoiseSigma = denoiseSigma;
             AdaptiveBlockSize = adaptiveBlockSize; AdaptiveConstant = adaptiveConstant;
+            SharpnessThreshold = sharpnessThreshold; SharpenKernelSize = sharpenKernelSize; SharpenAmount = sharpenAmount; SharpenSigma = sharpenSigma;
         }
         /// <summary>Gets the explicit operation. / 获取显式操作。</summary>
         public OcrCropEnhancementMode Mode { get; }
@@ -83,6 +91,14 @@ namespace JYPPX.DeploySharp.Visual
         public int AdaptiveBlockSize { get; }
         /// <summary>Gets the constant subtracted from the local Gaussian mean. / 获取从局部高斯均值中减去的常数。</summary>
         public double AdaptiveConstant { get; }
+        /// <summary>Gets the Laplacian-variance upper gate for unsharp masking; it is not a calibrated blur score. / 获取反遮罩锐化使用的拉普拉斯方差上限；它不是标定的模糊分数。</summary>
+        public double SharpnessThreshold { get; }
+        /// <summary>Gets the odd Gaussian kernel width used by unsharp masking. / 获取反遮罩锐化使用的奇数高斯核宽度。</summary>
+        public int SharpenKernelSize { get; }
+        /// <summary>Gets the positive detail amount used by unsharp masking. / 获取反遮罩锐化使用的正细节增益。</summary>
+        public double SharpenAmount { get; }
+        /// <summary>Gets the positive Gaussian sigma used by unsharp masking. / 获取反遮罩锐化使用的正高斯 sigma。</summary>
+        public double SharpenSigma { get; }
     }
 
     /// <summary>Shares deterministic quality gates between crop adapters and result validation. / 在裁剪适配器与结果验证间共享确定性质量门限。</summary>
@@ -103,6 +119,16 @@ namespace JYPPX.DeploySharp.Visual
             if (options.Mode == OcrCropEnhancementMode.AdaptiveThreshold &&
                 (rectified.InputSize.Width < options.AdaptiveBlockSize || rectified.InputSize.Height < options.AdaptiveBlockSize))
                 return OcrCropEnhancementDecision.SufficientQuality;
+            if (options.Mode == OcrCropEnhancementMode.UnsharpMask)
+            {
+                double? laplacian = rectified.LaplacianVariance;
+                if (!rectified.LuminanceStandardDeviation.HasValue || rectified.LuminanceStandardDeviation.Value < options.MinimumContrast ||
+                    !laplacian.HasValue || laplacian.Value >= options.SharpnessThreshold)
+                    return OcrCropEnhancementDecision.SufficientQuality;
+                if ((long)rectified.InputSize.Width * rectified.InputSize.Height > options.MaximumPixelsPerCrop)
+                    throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Enhanced crop exceeds its pixel limit.", OcrPipelineStage.CropAndBatch);
+                return OcrCropEnhancementDecision.Applied;
+            }
             double? deviation = rectified.LuminanceStandardDeviation;
             if (!deviation.HasValue || deviation.Value < options.MinimumContrast) return OcrCropEnhancementDecision.InsufficientVariation;
             if (deviation.Value >= options.LowContrastThreshold) return OcrCropEnhancementDecision.SufficientContrast;

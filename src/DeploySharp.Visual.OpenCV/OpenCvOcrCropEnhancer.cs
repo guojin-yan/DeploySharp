@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using JYPPX.OpenCvSharp.Core;
 using JYPPX.OpenCvSharp.ImgProc;
+using CoreOperations = JYPPX.OpenCvSharp.Core.Cv2;
 using ImageProcessing = JYPPX.OpenCvSharp.ImgProc.Cv2;
 
 namespace JYPPX.DeploySharp.Visual.OpenCV
@@ -12,6 +13,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     {
         private readonly Mat _enhanced = new Mat();
         private readonly Mat _gray = new Mat();
+        private readonly Mat _blurred = new Mat();
         private readonly byte[] _lookup = new byte[256];
         private CLAHE? _clahe;
         private OcrCropEnhancementOptions? _claheOptions;
@@ -24,6 +26,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             bool linear = options.Mode == OcrCropEnhancementMode.ContrastNormalize;
             bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
             bool adaptiveThreshold = options.Mode == OcrCropEnhancementMode.AdaptiveThreshold;
+            bool unsharpMask = options.Mode == OcrCropEnhancementMode.UnsharpMask;
             if (linear)
             {
                 double gain = Math.Min(options.MaximumGain, options.TargetStandardDeviation / quality.LuminanceStandardDeviation!.Value);
@@ -68,6 +71,12 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                         ImageProcessing.AdaptiveThreshold(_gray, _enhanced, 255, AdaptiveThresholdTypes.GaussianC,
                             ThresholdTypes.Binary, options.AdaptiveBlockSize, options.AdaptiveConstant);
                     }
+                    else if (unsharpMask)
+                    {
+                        _blurred.Create(source.Rows, source.Cols, source.Type);
+                        ImageProcessing.GaussianBlur(source, _blurred, new Size(options.SharpenKernelSize, options.SharpenKernelSize), options.SharpenSigma, options.SharpenSigma, BorderTypes.Reflect101);
+                        CoreOperations.AddWeighted(source, 1 + options.SharpenAmount, _blurred, -options.SharpenAmount, 0, _enhanced);
+                    }
                     else
                     {
                         if (_clahe == null || _claheOptions != options)
@@ -85,6 +94,6 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             finally { GC.KeepAlive(source); GC.KeepAlive(destination); }
         }
 
-        public void Dispose() { _clahe?.Dispose(); _enhanced.Dispose(); _gray.Dispose(); }
+        public void Dispose() { _clahe?.Dispose(); _blurred.Dispose(); _enhanced.Dispose(); _gray.Dispose(); }
     }
 }

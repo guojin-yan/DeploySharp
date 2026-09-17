@@ -84,6 +84,24 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void UnsharpMaskUsesLowSharpnessGateAndLeavesSourceUnchanged()
+        {
+            using OpenCvOcrImageInput input = Image(6, colored: true);
+            TextCropProfile profile = Profile().WithCropProcessing(new OcrCropProcessingOptions(1024)
+                .WithEnhancement(new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask,
+                    sharpnessThreshold: 1000000, sharpenKernelSize: 3, sharpenAmount: 1, sharpenSigma: 1)));
+            using PreparedVisualInput plain = input.PrepareRecognitionBatch("crops", new[] { Request(Profile()) }, CancellationToken.None);
+            using OcrPreparedCropBatch actual = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(profile) }, CancellationToken.None);
+            OcrCropDiagnostics row = actual.Diagnostics[0];
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, row.EnhancementDecision);
+            Assert.IsNotNull(row.Enhanced);
+            Assert.IsNull(row.AppliedGain);
+            Assert.IsFalse(((float[])plain.Tensor.Buffer).SequenceEqual((float[])actual.Input.Tensor.Buffer));
+            using PreparedVisualInput after = input.PrepareRecognitionBatch("crops", new[] { Request(Profile()) }, CancellationToken.None);
+            CollectionAssert.AreEqual((float[])plain.Tensor.Buffer, (float[])after.Tensor.Buffer);
+        }
+
+        [TestMethod]
         public void FlatAndHighContrastAreExactNoOpsAndLimitsAndCancellationRecover()
         {
             foreach (int step in new[] { 0, 64 })
@@ -96,7 +114,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     using OcrPreparedCropBatch actual = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(configured) }, CancellationToken.None);
                     OcrCropEnhancementDecision expected = mode == OcrCropEnhancementMode.GaussianDenoise
                         ? (step == 0 ? OcrCropEnhancementDecision.SufficientQuality : OcrCropEnhancementDecision.Applied)
-                        : (step == 0 ? OcrCropEnhancementDecision.InsufficientVariation : OcrCropEnhancementDecision.SufficientContrast);
+                        : mode == OcrCropEnhancementMode.UnsharpMask
+                            ? OcrCropEnhancementDecision.SufficientQuality
+                            : (step == 0 ? OcrCropEnhancementDecision.InsufficientVariation : OcrCropEnhancementDecision.SufficientContrast);
                     Assert.AreEqual(expected, actual.Diagnostics[0].EnhancementDecision);
                     Assert.AreEqual(step == 0 || mode != OcrCropEnhancementMode.GaussianDenoise, actual.Diagnostics[0].Enhanced == null);
                     if (step == 0 || mode != OcrCropEnhancementMode.GaussianDenoise)
