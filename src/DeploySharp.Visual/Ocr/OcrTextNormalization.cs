@@ -223,14 +223,15 @@ namespace JYPPX.DeploySharp.Visual
     {
         private readonly IReadOnlyList<OcrNormalizedRegionResult> _regions;
 
-        internal OcrNormalizedResult(OcrResult source, IEnumerable<OcrNormalizedRegionResult> regions, string configurationSha256)
+        internal OcrNormalizedResult(OcrResult source, IEnumerable<OcrNormalizedRegionResult> regions, OcrTextNormalizationOptions options)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             if (regions == null) throw new ArgumentNullException(nameof(regions));
+            Options = options ?? throw new ArgumentNullException(nameof(options));
             var copy = new List<OcrNormalizedRegionResult>();
             foreach (OcrNormalizedRegionResult region in regions) copy.Add(region ?? throw new ArgumentException("Normalized regions cannot contain null.", nameof(regions)));
             _regions = new ReadOnlyCollection<OcrNormalizedRegionResult>(copy);
-            ConfigurationSha256 = configurationSha256 ?? throw new ArgumentNullException(nameof(configurationSha256));
+            ConfigurationSha256 = Options.ConfigurationSha256;
         }
 
         /// <summary>Gets the original immutable OCR result. / 获取原始不可变 OCR 结果。</summary>
@@ -239,6 +240,8 @@ namespace JYPPX.DeploySharp.Visual
         public IReadOnlyList<OcrNormalizedRegionResult> Regions => _regions;
         /// <summary>Gets the policy configuration hash. / 获取策略配置哈希。</summary>
         public string ConfigurationSha256 { get; }
+        /// <summary>Gets the immutable policy used to create this view. / 获取创建此视图所使用的不可变策略。</summary>
+        public OcrTextNormalizationOptions Options { get; }
 
         /// <summary>Computes a stable hash over the source OCR result and normalized view. / 对源 OCR 结果与规范化视图计算稳定哈希。</summary>
         public string ComputeSha256()
@@ -283,7 +286,7 @@ namespace JYPPX.DeploySharp.Visual
                 cancellationToken.ThrowIfCancellationRequested();
                 regions.Add(new OcrNormalizedRegionResult(region, Normalize(region.Recognition, options, cancellationToken)));
             }
-            return new OcrNormalizedResult(result, regions, options.ConfigurationSha256);
+            return new OcrNormalizedResult(result, regions, options);
         }
 
         private static OcrTextNormalizationResult NormalizeCore(string rawText, OcrTextNormalizationOptions options, int? sourceRegionIndex, CancellationToken cancellationToken)

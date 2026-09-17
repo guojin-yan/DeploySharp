@@ -370,6 +370,35 @@ OcrFieldValidationReport report = OcrFieldValidators.ValidateAll(
 
 格式通过不等于业务事实成立：OCR 误识别后的字符串可能恰好满足日期、身份证或金额格式，规范值也不应覆盖原文。生产流程应同时保存 OCR 原始/规范化文本、字段校验 `Code` 和人工或数据库复核结果；需要跨行一致性、金额合计、地址库或发票平台验证时，在应用层组合这些结果。
 
+## 行、段落与多栏布局视图
+
+检测器返回的是带 polygon 的文本行；当页面还需要段落或多栏阅读顺序时，可以在 OCR 完成后使用 `OcrTextLayoutBuilder`。它只读取源图边界和文本，不重新裁剪、不重新推理，也不修改 `OcrResult`。如果已经创建 C1 规范化视图，可将它一并传入，版面结果会使用规范化字符串，同时保留 `OcrTextLayoutResult.Source` 供追溯。
+
+```csharp
+OcrTextLayoutOptions layoutOptions = new OcrTextLayoutOptions(
+    readingOrder: TextReadingOrder.LeftToRightThenTopToBottom,
+    lineCenterToleranceRatio: .5f,
+    paragraphGapRatio: 1.5f,
+    columnGapRatio: 2.5f,
+    regionSeparator: " ");
+
+OcrTextLayoutResult layout = OcrTextLayoutBuilder.Build(
+    result,
+    normalized,
+    layoutOptions,
+    cancellationToken);
+
+foreach (OcrTextColumn column in layout.Columns)
+    foreach (OcrTextParagraph paragraph in column.Paragraphs)
+        Console.WriteLine(paragraph.Text);
+```
+
+布局器先用文本 polygon 的轴对齐边界按垂直重叠/中心距离聚类成行，再用横向重叠和间隙聚类成栏，最后在每栏内按垂直间距聚类成段落。`LineCenterToleranceRatio`、`MinimumVerticalOverlapRatio`、`MaximumInlineGapRatio`、`ParagraphGapRatio` 和 `ColumnGapRatio` 都是显式有界参数；默认值适合规则文档起步，不会自动学习页面版式。行内区域按 X 排序并插入 `RegionSeparator`，段落行和段落之间分别使用 `ParagraphLineSeparator`/`ParagraphSeparator`。
+
+`Lines` 和 `Paragraphs` 按 `TextReadingOrder` 返回，`Columns` 始终按从左到右保存，且每个行/段落/栏都带源坐标 `Bounds`。默认的 `TopToBottomThenLeftToRight` 适合单栏或跨栏逐行读取；双栏文档通常应选择 `LeftToRightThenTopToBottom`，并在自己的页面样本上确认栏间隙。跨栏标题、表格、竖排文本、复杂阅读顺序和真正的版面语义仍需要专用 layout/table 模型，不能仅靠几何阈值推断。
+
+所有集合和拼接文本都受 `MaximumLines`、`MaximumParagraphs`、`MaximumColumns` 限制，超限返回 `DS-VISUAL-4102`；输入为空时返回空视图，取消令牌在分组循环中生效。`OcrTextLayoutResult.ComputeSha256()` 包含源 OCR hash、布局配置 hash、文本和来源索引，规范化视图的配置也会纳入；它是布局证据，不是新的模型推理指纹。不要把按几何启发式拼出的段落当作字段、表格或语义实体。
+
 ## 长文本宽度诊断与超宽策略
 
 本节新增接口以当前开发源码为准；旧 NuGet 包不会自动获得这些 API，使用前应确认所安装版本包含此能力。
