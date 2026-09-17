@@ -481,7 +481,8 @@ internal static partial class Program
         {
             "contrastnormalize" => OcrCropEnhancementMode.ContrastNormalize, "grayclahe" => OcrCropEnhancementMode.GrayClahe,
             "gaussiandenoise" or "denoise" => OcrCropEnhancementMode.GaussianDenoise,
-            _ => throw new ArgumentException("Unknown crop enhancement; use ContrastNormalize, GrayClahe or GaussianDenoise (Disabled/Report are handled by their feature switches).")
+            "adaptivethreshold" or "adaptive" => OcrCropEnhancementMode.AdaptiveThreshold,
+            _ => throw new ArgumentException("Unknown crop enhancement; use ContrastNormalize, GrayClahe, GaussianDenoise or AdaptiveThreshold (Disabled/Report are handled by their feature switches).")
         };
         static double Number(string suffix, double fallback)
         {
@@ -494,7 +495,8 @@ internal static partial class Program
         return new OcrCropEnhancementOptions(operation, Number("THRESHOLD", 32), Number("MIN_CONTRAST", 1),
             Number("TARGET_STD", 64), Number("MAX_GAIN", 3), Number("CLAHE_CLIP", 2),
             ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_CLAHE_GRID", 8), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_MAX_PIXELS", 1048576),
-            Number("NOISE_THRESHOLD", 512), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_DENOISE_KERNEL", 3), Number("DENOISE_SIGMA", 0));
+            Number("NOISE_THRESHOLD", 512), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_DENOISE_KERNEL", 3), Number("DENOISE_SIGMA", 0),
+            ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_ADAPTIVE_BLOCK", 15), Number("ADAPTIVE_C", 5));
     }
 
     private static OcrPixelQualityOptions? ReadPixelQualityOptions()

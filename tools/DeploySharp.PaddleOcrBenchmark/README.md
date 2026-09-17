@@ -10,7 +10,7 @@ Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optiona
 
 ## Opt-in crop enhancement / 显式裁剪增强
 
-`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe|GaussianDenoise` selects one quality-gated pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 8 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe deliberately removes color; its gray pixels are replicated for RGB models before normal model normalization. GaussianDenoise applies OpenCV GaussianBlur only when the sampled Laplacian variance exceeds `ENHANCE_NOISE_THRESHOLD`; this metric is not a calibrated noise classifier. For an unenhanced first pass followed by one candidate, use the separate enhancement-retry switch below instead.
+`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe|GaussianDenoise|AdaptiveThreshold` selects one quality-gated pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 8 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe and AdaptiveThreshold deliberately remove color; their gray pixels are replicated for RGB models before normal model normalization. GaussianDenoise applies OpenCV GaussianBlur only when the sampled Laplacian variance exceeds `ENHANCE_NOISE_THRESHOLD`; this metric is not a calibrated noise classifier. AdaptiveThreshold applies Gaussian local binarization only to a low-contrast crop whose dimensions meet `ADAPTIVE_BLOCK`; it is intentionally opt-in because it can remove grayscale and fine strokes. For an unenhanced first pass followed by one candidate, use the separate enhancement-retry switch below instead.
 
 配置变量如下，均以 `DEPLOYSHARP_PADDLEOCR_ENHANCE_` 为前缀：
 
@@ -26,6 +26,8 @@ Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optiona
 | NOISE_THRESHOLD | 512 | GaussianDenoise 的拉普拉斯方差门限；不是标定噪声分数 |
 | DENOISE_KERNEL | 3 | GaussianDenoise 的奇数核尺寸3～9 |
 | DENOISE_SIGMA | 0 | GaussianDenoise 的 sigma，0表示交由 OpenCV 根据核尺寸选择 |
+| ADAPTIVE_BLOCK | 15 | AdaptiveThreshold 的奇数邻域3～31；裁剪任一边更小时跳过 |
+| ADAPTIVE_C | 5 | AdaptiveThreshold 从局部高斯均值中减去的常数，范围-64～64 |
 
 启用后不修改原文件、DET/CLS、字典或补边；操作发生在裁剪内部，额外处理计入REC准备和总耗时。应先固定 `Report` 基线，再分别运行两种增强。对照JSON里的逐行文字、门限决策、原始/增强指标以及CSV端到端分位数。增强可能降低准确率，置信度/对比度提升不是CER/WER改善的替代证据；无标注集时只报告行为与一致性，不能发布准确率提升结论。
 
@@ -42,7 +44,7 @@ $env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_CROPS = '128'
 $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-enhancement-retry/preserve'
 ```
 
-Retry is `Disabled` by default; other valid modes are `ContrastNormalize`, `GrayClahe` and `GaussianDenoise`. It reuses `ENHANCE_*` quality/operation parameters and `CROP_SAMPLES/CROP_LIMIT` diagnostics budgets, automatically enabling unenhanced crop diagnostics if necessary. Default confidence threshold is 0.8; the example deliberately uses 0.9. It runs after orientation retries, never repeats DET/CLS, and creates at most one candidate per eligible line. Low confidence alone is insufficient: at least one existing rectified-crop measurement must pass the operation's quality gate. A windowed candidate reruns all windows while only eligible crops are enhanced.
+Retry is `Disabled` by default; other valid modes are `ContrastNormalize`, `GrayClahe`, `GaussianDenoise` and `AdaptiveThreshold`. It reuses `ENHANCE_*` quality/operation parameters and `CROP_SAMPLES/CROP_LIMIT` diagnostics budgets, automatically enabling unenhanced crop diagnostics if necessary. Default confidence threshold is 0.8; the example deliberately uses 0.9. It runs after orientation retries, never repeats DET/CLS, and creates at most one candidate per eligible line. Low confidence alone is insufficient: at least one existing rectified-crop measurement must pass the operation's quality gate. A windowed candidate reruns all windows while only eligible crops are enhanced.
 
 `PreserveOriginal` is default and retains original final text even when candidate confidence is higher. Explicit `ConfidenceGain` can select a nonempty candidate by the minimum-gain heuristic; it can change punctuation or make accuracy worse. Schema 8 records `Crop.EnhancementRetry` and per-row `EnhancementRetry.Options/Original/Candidate/Decision`, keeping all original/candidate text, scores, CTC traces and crop evidence. Null Candidate means no extra REC was run; decisions distinguish quality gate, admission limit, preserved policy, insufficient gain and selection. Original means the orientation-selected result before enhancement, not necessarily the first REC.
 

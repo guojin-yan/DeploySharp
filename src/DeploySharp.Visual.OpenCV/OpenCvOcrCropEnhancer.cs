@@ -23,6 +23,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             int channels = source.Channels;
             bool linear = options.Mode == OcrCropEnhancementMode.ContrastNormalize;
             bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
+            bool adaptiveThreshold = options.Mode == OcrCropEnhancementMode.AdaptiveThreshold;
             if (linear)
             {
                 double gain = Math.Min(options.MaximumGain, options.TargetStandardDeviation / quality.LuminanceStandardDeviation!.Value);
@@ -62,13 +63,21 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 }
                 if (!linear)
                 {
-                    if (_clahe == null || _claheOptions != options)
+                    if (adaptiveThreshold)
                     {
-                        _clahe?.Dispose(); _clahe = null;
-                        _clahe = ImageProcessing.CreateCLAHE(options.ClaheClipLimit, new Size(options.ClaheGridSize, options.ClaheGridSize));
-                        _claheOptions = options;
+                        ImageProcessing.AdaptiveThreshold(_gray, _enhanced, 255, AdaptiveThresholdTypes.GaussianC,
+                            ThresholdTypes.Binary, options.AdaptiveBlockSize, options.AdaptiveConstant);
                     }
-                    _clahe.Apply(_gray, _enhanced);
+                    else
+                    {
+                        if (_clahe == null || _claheOptions != options)
+                        {
+                            _clahe?.Dispose(); _clahe = null;
+                            _clahe = ImageProcessing.CreateCLAHE(options.ClaheClipLimit, new Size(options.ClaheGridSize, options.ClaheGridSize));
+                            _claheOptions = options;
+                        }
+                        _clahe.Apply(_gray, _enhanced);
+                    }
                 }
                 token.ThrowIfCancellationRequested();
                 return _enhanced;

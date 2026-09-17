@@ -56,6 +56,34 @@ namespace DeploySharp.Visual.OpenCV.Tests
         }
 
         [TestMethod]
+        public void AdaptiveThresholdProducesBinaryGrayContentAndPreservesSource()
+        {
+            using OpenCvOcrImageInput input = AdaptiveImage();
+            TextCropProfile profile = Profile().WithCropProcessing(new OcrCropProcessingOptions(1024)
+                .WithEnhancement(new OcrCropEnhancementOptions(OcrCropEnhancementMode.AdaptiveThreshold, adaptiveBlockSize: 15, adaptiveConstant: 5)));
+            using PreparedVisualInput plain = input.PrepareRecognitionBatch("crops", new[] { Request(Profile()) }, CancellationToken.None);
+            using OcrPreparedCropBatch actual = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(profile) }, CancellationToken.None);
+            OcrCropDiagnostics row = actual.Diagnostics[0];
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, row.EnhancementDecision);
+            Assert.IsNotNull(row.Enhanced);
+            Assert.IsNull(row.AppliedGain);
+            float[] values = (float[])actual.Input.Tensor.Buffer;
+            bool sawLow = false, sawHigh = false;
+            int contentWidth = row.Content.InputSize.Width;
+            for (int y = 0; y < row.Content.InputSize.Height; y++) for (int x = 0; x < contentWidth; x++)
+            {
+                int offset = y * 64 + x;
+                Assert.AreEqual(values[offset], values[1024 + offset]);
+                Assert.AreEqual(values[offset], values[2048 + offset]);
+                sawLow |= values[offset] <= 0;
+                sawHigh |= values[offset] > 0;
+            }
+            Assert.IsTrue(sawLow && sawHigh, "Adaptive threshold should retain both binary levels in the fixture.");
+            using PreparedVisualInput after = input.PrepareRecognitionBatch("crops", new[] { Request(Profile()) }, CancellationToken.None);
+            CollectionAssert.AreEqual((float[])plain.Tensor.Buffer, (float[])after.Tensor.Buffer);
+        }
+
+        [TestMethod]
         public void FlatAndHighContrastAreExactNoOpsAndLimitsAndCancellationRecover()
         {
             foreach (int step in new[] { 0, 64 })
@@ -104,6 +132,20 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 byte value = (byte)(128 + ((x / 4 + y / 4) % 2 == 0 ? -step : step));
                 int offset = header.Length + (y * 64 + x) * 3;
                 bytes[offset] = (byte)(value + (colored ? 12 : 0)); bytes[offset + 1] = value; bytes[offset + 2] = (byte)(value - (colored ? 12 : 0));
+            }
+            return new OpenCvOcrImageInputFactory().Create(OpenCvImageSource.FromBytes(bytes), "images", new OpenCvPreprocessOptions(new VisualSize(32,16)));
+        }
+
+        private static OpenCvOcrImageInput AdaptiveImage()
+        {
+            byte[] header = Encoding.ASCII.GetBytes("P6\n64 32\n255\n");
+            var bytes = new byte[header.Length + 64 * 32 * 3]; Buffer.BlockCopy(header, 0, bytes, 0, header.Length);
+            for (int y = 0; y < 32; y++) for (int x = 0; x < 64; x++)
+            {
+                bool darkStroke = (x >= 8 && x < 16) || (y >= 12 && y < 20);
+                byte value = darkStroke ? (byte)80 : (byte)128;
+                int offset = header.Length + (y * 64 + x) * 3;
+                bytes[offset] = value; bytes[offset + 1] = value; bytes[offset + 2] = value;
             }
             return new OpenCvOcrImageInputFactory().Create(OpenCvImageSource.FromBytes(bytes), "images", new OpenCvPreprocessOptions(new VisualSize(32,16)));
         }
