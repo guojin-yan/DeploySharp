@@ -526,6 +526,17 @@ namespace JYPPX.DeploySharp.Visual
                         recognitionBatchCount += retry.BatchCount;
                         resultBytes = retry.RetainedBytes;
                     }
+                    if (_cropProfile.WidthRetry != null)
+                    {
+                        stage = OcrPipelineStage.Recognition;
+                        RetryWork retry = await RunWidthRetryAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget).ConfigureAwait(false);
+                        recognitionDuration += retry.Elapsed;
+                        recognitionPreparationWork += retry.Preparation;
+                        recognitionInferenceWork += retry.Inference;
+                        recognitionPostprocessingWork += retry.Postprocessing;
+                        recognitionBatchCount += retry.BatchCount;
+                        resultBytes = retry.RetainedBytes;
+                    }
                     if (_cropProfile.EnhancementRetry != null)
                     {
                         stage = OcrPipelineStage.Recognition;
@@ -723,6 +734,13 @@ namespace JYPPX.DeploySharp.Visual
             long profileWidth = recognition.Input.ShapePattern[widthIndex];
             if (profileHeight >= 0 && profileHeight != crop.TargetHeight) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition profile height does not match crop profile.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
             if (crop.WidthMode == OcrRecognitionWidthMode.Fixed && profileWidth >= 0 && profileWidth != crop.FixedWidth) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition profile width does not match fixed crop width.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
+            if (crop.WidthRetry != null)
+            {
+                if (crop.WidthMode != OcrRecognitionWidthMode.Dynamic || crop.WidthRetry.CandidateMaximumWidth <= crop.MaximumWidth)
+                    throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Wider OCR retry requires a dynamic crop profile and a larger candidate maximum width.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
+                if (profileWidth > 0 && crop.WidthRetry.CandidateMaximumWidth > profileWidth)
+                    throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The wider OCR retry exceeds the recognizer fixed input width.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId, technicalDetails: "candidateMaximumWidth=" + crop.WidthRetry.CandidateMaximumWidth + ";profileWidth=" + profileWidth);
+            }
             if (recognition.Input.MinimumBatch > options.MaximumRecognitionBatch) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "Recognition minimum batch exceeds OCR batch limit.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
         }
 

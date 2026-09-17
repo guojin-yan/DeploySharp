@@ -529,12 +529,12 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(0, bounded.RecognitionProvider.LastSession!.RunCount + bounded.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
         }
 
-        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null)
+        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null)
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .3f, maximumCandidates: 3, maximumRegions: 3));
             VisualModelProfile detectorProfile = DetectionProfile(detectorDecoder, TensorElementType.Float32, 3, "fake-detector");
             var recognizerDecoder = new GreedyCtcDecoder(new CtcOutputSchema("logits", CtcTensorLayout.BatchTimeClasses), new OcrCharacterSet("tests.abc", "1", "ABC"), new CtcDecoderOptions(0, applySoftmax: false));
-            VisualModelProfile recognizerProfile = RecognitionProfile(recognizerDecoder, TensorElementType.Float32, 2, 6, 4, format: "fake-recognizer", width: recognitionWidth);
+            VisualModelProfile recognizerProfile = RecognitionProfile(recognizerDecoder, TensorElementType.Float32, 2, 6, 4, format: "fake-recognizer", width: recognitionWidth, dynamicWidth: widthRetry != null);
             var detectionProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(detectorProfile, new TensorShape(1, 3, 4, 2)), detectionFactory ?? (_ => DetectionOutputs()), "fake-detector", new BackendId("fake-ocr-detector"));
             var recognitionProvider = new FakeVisualBackendProvider(VisualTestData.Metadata(recognizerProfile, new TensorShape(2, 6, 4)), recognitionFactory ?? (_ => RecognitionOutputs()), "fake-recognizer", new BackendId("fake-ocr-recognizer"));
             var registry = new BackendRegistry();
@@ -557,6 +557,7 @@ namespace DeploySharp.Visual.Tests
             if (retryOptions != null) crop = crop.WithOrientationRetry(retryOptions);
             if (cropProcessing != null) crop = crop.WithCropProcessing(cropProcessing);
             if (enhancementRetry != null) crop = crop.WithEnhancementRetry(enhancementRetry);
+            if (widthRetry != null) crop = crop.WithWidthRetry(widthRetry);
             var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2, maximumRecognitionPaddingRatio: 2, maximumResultBytes: maximumResultBytes, maximumConcurrency: maximumConcurrency), new SessionOptions(1), new SessionOptions(maximumConcurrency));
             return new OcrFixture(registry, detectionProvider, recognitionProvider, pipeline);
         }
@@ -569,11 +570,11 @@ namespace DeploySharp.Visual.Tests
                 Array.Empty<VisualLabel>(), decoder);
         }
 
-        private static VisualModelProfile RecognitionProfile(IVisualDecoder decoder, TensorElementType type, int batch, int time, int classes, CtcTensorLayout layout = CtcTensorLayout.BatchTimeClasses, string format = "fake", int width = 16)
+        private static VisualModelProfile RecognitionProfile(IVisualDecoder decoder, TensorElementType type, int batch, int time, int classes, CtcTensorLayout layout = CtcTensorLayout.BatchTimeClasses, string format = "fake", int width = 16, bool dynamicWidth = false)
         {
             TensorShape output = layout == CtcTensorLayout.BatchTimeClasses ? new TensorShape(batch, time, classes) : new TensorShape(time, batch, classes);
             return new VisualModelProfile("tests/text-recognition.v1", new ModelId("tests/text-recognizer"), VisualTaskId.TextRecognition, "1", format,
-                new VisualInputBinding("crops", TensorElementType.Float32, new TensorShape(batch, 3, 8, width), VisualTensorLayout.Nchw, batch, batch),
+                new VisualInputBinding("crops", TensorElementType.Float32, new TensorShape(batch, 3, 8, dynamicWidth ? -1 : width), VisualTensorLayout.Nchw, batch, batch),
                 new[] { new VisualOutputBinding("logits", type, output) }, Array.Empty<VisualLabel>(), decoder);
         }
 

@@ -229,6 +229,30 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
 
+### 动态宽度低置信度重试（B3b-width）
+
+长文本在首轮 `MaximumWidth` 限制下可能被压缩。对于声明了动态宽度输入的识别器，可以在首轮结果为空或置信度低于阈值时，**有界地再跑一次更宽的 REC 候选**：
+
+```csharp
+var widthRetry = new OcrWidthRetryOptions(
+    candidateMaximumWidth: 1280,
+    confidenceThreshold: 0.8f,
+    selectionPolicy: OcrWidthRetrySelectionPolicy.PreserveOriginal,
+    minimumConfidenceGain: 0.05f,
+    maximumRegionsPerImage: 8,
+    maximumCropsPerImage: 64);
+
+TextCropProfile crop = recognitionProfile.CropProfile!
+    .WithWidthRetry(widthRetry);
+// 识别器的输入宽度必须是动态 shape；将 crop 传给 OcrPipeline。
+```
+
+`WithWidthRetry` 只接受 `OcrRecognitionWidthMode.Dynamic`，并要求候选上限严格大于首轮 `MaximumWidth`。Pipeline 会复用现有的宽度分组、minimum-batch 补齐、Session 池和取消/结果预算；不会创建新的模型会话，也不会修改 DET、CLS 或首轮裁剪。滑窗区域会按候选宽度重新规划窗口，窗口数和 batch padding 都计入 `MaximumCropsPerImage`。固定宽度模型、固定 TensorRT engine 或超出模型 Profile 的候选会在输入合同阶段以 `DS-VISUAL-4103`/`ProfileInvalid` 拒绝，不能通过配置掩盖 engine shape 限制。
+
+候选默认只做证据收集，不改变业务结果：`PreserveOriginal` 会保留首轮文本，同时在 `OcrRegionResult.WidthRetry` 中保存候选。若明确选择 `ConfidenceGain`，只有候选非空、置信度严格更高且增益达到 `MinimumConfidenceGain` 时才替换；这仍是启发式选择，不是准确率判定。`WidthRetry.Original`、`Candidate` 都包含文本、CTC trace、实际 `TensorWidth`、窗口和裁剪诊断，但不持有图像或 GPU 缓冲。`Candidate=null` 且决策为 `RegionLimit` 表示因行数预算未执行候选，不表示候选失败。
+
+重试最多发生一次，不包含局部放大、换模型、多配方候选链或自动准确率评估；这些属于后续 B3b 工作。启用后即使最终保留原文也会增加裁剪、REC 和合并耗时，必须在带标注的业务集上比较 CER/WER、召回率及端到端 P50/P95，不能仅根据置信度上涨宣称优化有效。当前单元测试覆盖候选选择、动态/固定 shape 合同、行数与物理 crop 限制；真实模型和各后端的收益矩阵仍需单独测量。
+
 ## 字符集覆盖审计
 
 在创建推理会话前，先检查模型字典能否表示业务所需的字符。`OcrCharacterSetAuditor` 位于 `JYPPX.DeploySharp.Visual`，可复用同一个只读索引检查多个业务字符范围，无需图片或推理后端。以下接口以当前源码为准。
