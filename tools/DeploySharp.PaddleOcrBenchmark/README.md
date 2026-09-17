@@ -2,6 +2,48 @@
 
 This console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
 
+## Character dictionary audit / 字符集覆盖检查
+
+Build once, then audit a dictionary without loading models, images, CUDA or other native runtimes:
+
+```powershell
+dotnet build tools/DeploySharp.PaddleOcrBenchmark -c Release -p:DeploySharpPaddleOcrCuda12=true
+dotnet tools/DeploySharp.PaddleOcrBenchmark/bin/Release/net10.0/DeploySharp.PaddleOcrBenchmark.dll `
+  --audit-characters E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt `
+  tools/DeploySharp.PaddleOcrBenchmark/character-requirements.example.json artifacts/ocr-characters/v5.json
+```
+
+The command appends the model's space class by default; pass `--no-space` only when the model's dictionary contract does not append it. Exit codes: **0** covers every nonempty group; **4** completes the audit and reports missing independent characters; **2** indicates invalid input/encoding/limits or an I/O error. A code 4 is expected for some symbols in the example, and its JSON report remains available.
+
+需求 JSON 是“组名 → 原始需求文本”的对象，例如：
+
+```json
+{
+  "serial-number": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_",
+  "invoice": "订单金额人民币￥€㎡"
+}
+```
+
+Use UTF-8 (an initial BOM is accepted), 1–64 uniquely named groups, and 1–65,536 total UTF-16 units of requirement text within a 1 MiB file. Invalid UTF-8, unpaired surrogate escapes, empty strings and duplicate group names are rejected. Newlines inside values are actual requirements, not delimiters. Dictionary audit input is bounded to 16 MiB; the library audit index defaults to 4 Mi UTF-16 units. Reports must have a different path from the input dictionary and requirements.
+
+The example includes 47 Chinese business characters and representative punctuation/units; it is not a complete standard Chinese character list. Replace it with your business repertoire. The audit checks **independent Unicode scalar tokens**, with no normalization: a dictionary token `AB` does not certify standalone `A` or `B`; a missing scalar that occurs in compound tokens is flagged explicitly. This measures dictionary coverage, not model accuracy, language support, or compound-token segmentation.
+
+Report schema 1 records requirement groups/file SHA, dictionary file SHA, append-space behavior, expected CTC class count (blank at zero), repeated dictionary indexes, multi-scalar token count, a length-framed ordered-token hash, and per-group missing scalars (`CodePoint`, text, occurrence count, first UTF-16 offset, compound-token flag). The existing character-set SHA remains for result compatibility. The ordered-token hash distinguishes token boundaries without changing existing result hashing.
+
+To audit the selected v4/v5/v6 recognition dictionaries before a full pipeline benchmark:
+
+```powershell
+$env:DEPLOYSHARP_PADDLEOCR_CHARACTER_AUDIT = 'Report' # Disabled (default), Report, Require
+$env:DEPLOYSHARP_PADDLEOCR_CHARACTER_REQUIREMENTS = 'tools/DeploySharp.PaddleOcrBenchmark/character-requirements.example.json'
+# Run the normal benchmark command with the desired versions/backends.
+```
+
+`Report` writes `<output.csv>.characters.json` and proceeds with missing-character evidence. `Require` writes the same report, then exits 4 with `DS-VISUAL-4105` if any selected dictionary misses a requirement, **before image loading or session creation**. Invalid input exits 2 in either mode. Auditing occurs once before all warmups/timed calls and does not enter the timing columns; a fresh report path is recommended per experiment. Standalone audits need no model ONNX files. Startup audits use the same dictionary loader and space policy as the full pipeline.
+
+重复字典项必须保留原类别索引。工具此前给重复项追加控制字符/数字的行为已修复，改为统一调用主库 `PaddleOcrProfiles.LoadCharacterSet`。含重复词条的 v4 字符表哈希会改变；新报告应作为修复后的基线，不能把哈希变化直接当作识别回归。核心 CTC 解码仍按类别折叠重复，并保留显式 unknown 的 trace。
+
+API semantics and local dictionary findings: [OCR character coverage](../../docs/articles/visual-ocr.md#字符集覆盖审计). Command regression can be run with `pwsh -NoProfile -File eng/ocr/Test-CharacterAudit.ps1` after building the tool.
+
 ## Recognition width correctness / 识别宽度正确性
 
 The library default is **MaximumWidth=3200**. This benchmark retains **320** as its historical performance setting; it is not a library limitation. Increase it only when the model/backend/engine profile admits the requested shape.

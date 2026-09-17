@@ -18,13 +18,14 @@ using JYPPX.OpenCvSharp.Core;
 using JYPPX.OpenCvSharp.Dnn;
 using DnnCv2 = JYPPX.OpenCvSharp.Dnn.Cv2;
 
-internal static class Program
+internal static partial class Program
 {
     private const string FallbackRoot = @"E:\Model\paddleocr";
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
     private static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "--audit-characters") return RunCharacterAuditCommand(args);
         string root = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? DefaultModelRoot();
         int warmup = ReadInt("DEPLOYSHARP_PADDLEOCR_WARMUP", 3);
         int iterations = ReadInt("DEPLOYSHARP_PADDLEOCR_ITERATIONS", 15);
@@ -52,6 +53,8 @@ internal static class Program
             Console.Error.WriteLine("PADDLEOCR_BENCHMARK_ERROR no-onnx-models-found=" + root);
             return 2;
         }
+        int auditExit = RunStartupCharacterAudit(models, output);
+        if (auditExit != 0) return auditExit;
         return RunFullPipeline(root, models, output, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, interTestDelayMs, autoTune);
     }
 
@@ -580,7 +583,7 @@ internal static class Program
 
     private static PaddleOcrProfile CreateRecognitionProfile(string version, ModelCase model, string modelFormat = "onnx")
     {
-        string dictionary = version == "v4" ? Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, "ppocrv4_keys.txt") : version == "v5" ? Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, "ppocrv5_dict.txt") : Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, model.Variant == "tiny" ? "PP-OCRv6_tiny_rec_dict.txt" : "PP-OCRv6_" + model.Variant + "_rec_dict.txt");
+        string dictionary = RecognitionDictionaryPath(model);
         OcrCharacterSet chars = LoadBenchmarkCharacterSet(dictionary, "external." + version + ".dict", version);
         // The benchmark application intentionally caps recognition crops at 320 pixels.
         // The reusable DeploySharp library keeps its broader default (3200); this
@@ -615,23 +618,11 @@ internal static class Program
 
     private static OcrCharacterSet LoadBenchmarkCharacterSet(string path, string id, string version)
     {
-        var tokens = new List<string>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (string raw in File.ReadAllLines(path))
-        {
-            string token = raw;
-            if (token.Length == 0) continue;
-            if (!seen.Add(token))
-            {
-                int suffix = 2; string candidate;
-                do { candidate = token + "\u0001" + suffix++; } while (!seen.Add(candidate));
-                token = candidate;
-            }
-            tokens.Add(token);
-        }
-        tokens.Add(" ");
-        return new OcrCharacterSet(id, version, tokens);
+        return PaddleOcrProfiles.LoadCharacterSet(path, id, version, useSpaceCharacter: true);
     }
+
+    private static string RecognitionDictionaryPath(ModelCase model)
+        => Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, model.Version == "v4" ? "ppocrv4_keys.txt" : model.Version == "v5" ? "ppocrv5_dict.txt" : "PP-OCRv6_" + model.Variant + "_rec_dict.txt");
 
     private static PaddleOcrProfile CreateClassificationProfile(string version, ModelCase model, int maximumBatch, string modelFormat = "onnx")
         => version == "v4" ? PaddleOcrProfiles.CreateLegacyClassification(new ModelId("external/paddleocr/v4/cls"), Artifact(model, modelFormat), outputName: "softmax_0.tmp_0", rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true) : PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/paddleocr/" + version + "/cls"), Artifact(model, modelFormat), outputName: "fetch_name_0", rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true);

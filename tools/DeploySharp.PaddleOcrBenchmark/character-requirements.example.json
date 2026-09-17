@@ -1,0 +1,10 @@
+{
+  "chinese-business-sample": "订单编号日期时间金额数量单价合计地址电话邮箱名称规格型号生产批次检验合格设备序列号温度压力电压功率年月日人民币",
+  "latin-upper": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  "latin-lower": "abcdefghijklmnopqrstuvwxyz",
+  "digits": "0123456789",
+  "punctuation": " ，。！？；：、‘’“”（）【】《》…—,.!?;:'\"()[]{}-_",
+  "fullwidth-sample": "ＡＢＣａｂｃ０１２３４５６７８９，．！？：；（）＋－＝％＠　",
+  "currency-math-units": "¥￥$€£¢+-×÷=<>≤≥±%‰°℃Ωμ㎡㎏√∞",
+  "url-email-phone-industrial": "https://user.name+tag@example.com/path?id=123&v=2#part_tel:+86(010)5555-1234_SN:A09_B7%20"
+}

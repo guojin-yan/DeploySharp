@@ -71,6 +71,65 @@ foreach (OcrRegionResult region in result.Regions)
 
 一个 ModelPack 可以同时携带检测和识别 ONNX，或对应的 OpenVINO IR XML/BIN，并通过 <code>deploysharp.ocr.*</code> 扩展键绑定 Profile、字符集和预处理版本。字符表的 blank、unknown、Unicode 顺序必须和 logits 导出一致。
 
+## 字符集覆盖审计
+
+在创建推理会话前，先检查模型字典能否表示业务所需的字符。`OcrCharacterSetAuditor` 位于 `JYPPX.DeploySharp.Visual`，可复用同一个只读索引检查多个业务字符范围，无需图片或推理后端。以下接口以当前源码为准。
+
+```csharp
+OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(
+    dictionaryPath, "my-ocr/dictionary", "1", useSpaceCharacter: true);
+var auditor = new OcrCharacterSetAuditor(characters);
+OcrCharacterCoverageReport coverage = auditor.Audit("订单编号ABCabc0123456789-_/￥€㎡");
+foreach (OcrMissingCharacter missing in coverage.MissingCharacters)
+    Console.WriteLine($"{missing.CodePoint} '{missing.Text}', count={missing.Occurrences}, " +
+        $"firstUtf16Offset={missing.FirstUtf16Offset}, inCompound={missing.AppearsInCompoundToken}");
+
+// 业务要求每个字符均可独立输出时，在创建 Pipeline 前执行。
+coverage.EnsureCovered();
+// 把同一个 characters 传给 PaddleOcrProfiles.CreateRecognition(...)。
+```
+
+### 覆盖的含义
+
+审计按 **Unicode 标量**逐个匹配独立字典 token。`😀` 或扩展区汉字各算一个标量；报告偏移使用 .NET 字符串的 UTF-16 索引。重复需求按标量去重后计算覆盖率，同时保留出现次数。缺失列表按 Unicode 值排序，便于稳定比较。
+
+- 字典只有 `"AB"` 时，`A`、`B` 标记为缺少独立 token，`AppearsInCompoundToken=true`；完整词条仍可作为模型输出。这个接口不做词条分词，也不判定一个完整短语能否由多个词条组合出来。
+- `A`、`a`、`Ａ` 分开检查，`é` 与 `e` 加组合重音也分开检查。空格、全角空格、换行和制表符均保留；不会自动 trim、转大小写、NFC/NFKC 或全半角替换。
+- `Coverage` 是不同需求标量的覆盖比例。空需求的 `Coverage=null`、`IsCovered=false`；`EnsureCovered()` 对空需求或缺失字符抛出 `DS-VISUAL-4105`。
+- 字典覆盖只是必要条件，不是实际识别准确率。模型缺少某字符时可能输出另一个已知字符，不能依靠预测结果反推完整字典覆盖。
+
+常用汉字应从业务文本、人工标注或业务自选字表导入。仓库示例中的 47 个中文业务字符是演示样本，不代表覆盖全部常用汉字。
+
+### 字典索引、重复项和身份
+
+`PaddleOcrProfiles.LoadCharacterSet` 接受严格 UTF-8，可带文件头 BOM；首个 BOM 不计入第一项，非法 UTF-8 或内部空行明确失败。它保留重复词条、原始顺序和词条空白，不能通过去重或给重复项加后缀“修复”字典，否则模型类别映射会发生变化。`useSpaceCharacter` 必须与模型导出一致；启用时追加一个空格类别，即使文件已含空格也不自行去重。
+
+`DuplicateTokens` 列出重复项的原始文本、首次索引及重复索引。索引从 0 开始，属于字典，不包含 CTC blank/unknown 保留类别。两个类别可合法映射为同一文字；CTC 仍按类别索引折叠相邻重复。
+
+报告同时保留现有 `CharacterSetId/Version/Sha256`，并增加 `TokenMappingSha256`。新指纹区分词条边界、顺序和重复次数，例如 `["AB","C"]` 与 `["A","BC"]` 会得到不同指纹；身份名称不参与新指纹。其序列格式为 .NET `BinaryWriter` 的 UTF-8 字符串前缀 `DeploySharp.OcrTokenMapping/v1`、小端 Int32 词条数、逐项长度前缀 UTF-8 字符串。原文件 SHA 单独记录，三种哈希用途不同。
+
+`GreedyCtcDecoder.ExpectedClassCount` 继续严格校验模型输出类别数。显式 unknown 类别的 `Throw/Skip/Replace` 仍按配置执行，trace 的 `IsUnknown` 可查；unknown 替换文字不会因此成为字典支持的独立字符。审计不会改写 CTC 输出或原 OCR 结果哈希。
+
+### 资源边界和运行工具
+
+审计默认最多索引 4,194,304 个字典 UTF-16 单元，每次需求最多 65,536 个 UTF-16 单元，超限抛出 `ArgumentOutOfRangeException`，无截断或部分成功。两个限制可在审计器构造时配置；取消抛出 `OperationCanceledException`。索引只保留字符和字典信息，可并发调用 `Audit`，不接触图片、张量或 GPU 缓冲。把审计放在启动阶段，避免逐帧重复创建索引。
+
+现有 [PaddleOCR Benchmark](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark) 提供 `--audit-characters` 命令，以及推理前的 `Report/Require` 模式。需求 JSON 将分组名映射为所需原始字符，覆盖汉字样本、大小写、数字、标点、全半角、单位和业务编号；缺失信息与字典文件 SHA 全部导出。完整运行时，审计在加载图片和创建后端会话之前完成，不计入推理时间。
+
+### 本机字典样例（2026-09-17）
+
+使用工具的 `character-requirements.example.json` 对本机五份字典检查，均按模型约定追加空格。表中只列该示例涉及的缺失项，不表示完整字符覆盖矩阵：
+
+| 本机字典 | token 数（含追加空格） | 重复项数 | 示例中缺少的独立字符 |
+| --- | ---: | ---: | --- |
+| v4 | 6624 | 28 | `＠` U+FF20、`¢` U+00A2、`£` U+00A3、`¥` U+00A5、`€` U+20AC |
+| v5 | 18384 | 0 | `‘` U+2018、`‰` U+2030、`㎏` U+338F、`㎡` U+33A1 |
+| v6 tiny | 6905 | 0 | `㎏` U+338F、`㎡` U+33A1 |
+| v6 small | 18709 | 0 | `㎏` U+338F、`㎡` U+33A1 |
+| v6 medium | 18709 | 0 | `㎏` U+338F、`㎡` U+33A1 |
+
+本次使用的 v4 文件含 28 个重复项，工具已统一使用主库加载器保留原索引和文字。示例里的中文样本、ASCII 大小写、数字和 URL/邮箱/电话/编号字符在五份字典中均有独立 token。`¥` 与 `￥`、`㎏` 与两个字符 `kg` 是不同需求，报告不会擅自替换。
+
 ## 长文本宽度诊断与超宽策略
 
 本节新增接口以当前开发源码为准；旧 NuGet 包不会自动获得这些 API，使用前应确认所安装版本包含此能力。

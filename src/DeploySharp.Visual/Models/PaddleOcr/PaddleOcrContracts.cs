@@ -715,7 +715,13 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             string fileSha;
             using (SHA256 sha = SHA256.Create()) fileSha = OcrCharacterSet.Hex(sha.ComputeHash(bytes));
             if (!string.IsNullOrEmpty(expectedFileSha256) && !string.Equals(expectedFileSha256, fileSha, StringComparison.OrdinalIgnoreCase)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "The Paddle dictionary SHA256 does not match the expected artifact binding.");
-            string[] lines = Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n").Replace('\r', '\n').Split(new[] { '\n' }, StringSplitOptions.None);
+            // A leading UTF-8 BOM is a file marker, not part of the first class.
+            // UTF-8 BOM 是文件标记，不属于首个类别；非法编码不能静默替换为字符。
+            int offset = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+            string text;
+            try { text = new UTF8Encoding(false, true).GetString(bytes, offset, bytes.Length - offset); }
+            catch (DecoderFallbackException exception) { throw new VisualException(VisualErrorCodes.ProfileInvalid, "The Paddle dictionary must contain valid UTF-8.", exception); }
+            string[] lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split(new[] { '\n' }, StringSplitOptions.None);
             var tokens = new List<string>();
             for (int index = 0; index < lines.Length; index++)
             {
