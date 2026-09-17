@@ -118,6 +118,33 @@ OpenCV 适配器使用 `Y=(77R+150G+29B+128)>>8`，支持 8 位 Gray/BGR/BGRA �
 
 当前没有通用质量总分、默认模糊阈值、噪声/JPEG 退化分类、精确字高或自动增强。需要在自己的图像分辨率、采样配置与标注数据上确定业务阈值。检查对文本/坐标/token 指纹没有影响；报告属于诊断而不是识别准确率证明。
 
+## 识别裁剪的分阶段质量诊断
+
+源图 `PixelQuality` 只描述原 DET 区域，不能代表透视校正与缩放后真正送入 REC 的内容。需要比较这两者时，在识别裁剪 Profile 上显式配置：
+
+```csharp
+TextCropProfile crop = recognitionProfile.CropProfile!
+    .WithCropProcessing(new OcrCropProcessingOptions(
+        maximumSamplesPerStage: 1024,
+        maximumCropsPerCall: 1024));
+// 将 crop 传给 OcrPipeline；图像输入使用 OpenCvOcrImageInputFactory。
+```
+
+每行 `OcrRegionResult.CropDiagnostics` 按实际识别窗口顺序保存：
+
+- `Rectified`：透视/仿射校正与直角旋转完成后的局部图像，尚未 resize。
+- `Content`：resize 后的有效内容，不包含右侧 tensor padding，也未做归一化。
+- `TensorSize`：实际补齐张量的宽高，可能宽于 `Content.InputSize`。
+- `InputRegionIndex`、`InputQuadrilateral`、`Orientation`：评估当时的区域、实际裁剪四角和附加旋转。滑窗四角已编码父行方向，因此窗口自身的附加旋转可为 0；不能再次套用父行旋转。
+
+这些统计采用与源像素诊断相同的定义，但坐标是 crop 局部空间；其内部 `InputPolygon/InputRegionIndex` 为 null，不是缺少来源。ROI 投影、结果重新编号、全图方向恢复不改写已采集的证据。启用方向重试时，每个 `OrientationRetry.Attempts` 都保留自身诊断，最终行只引用获选尝试；不把多个窗口的统计平均后冒充一个真实裁剪。
+
+默认 `CropProcessing=null`，不增加采样。只启用诊断不会改变张量、文字或既有结果 SHA。适配器复用既有 warp/resize 缓冲，不再次裁剪或保存像素；结果仅持有不可变数值。物理裁剪上限包含初次 REC、滑窗、重试以及 minimum-batch 重复补齐行，超限报 `DS-VISUAL-4102`，不静默截断。逐裁剪保守内存预算也计入 `MaximumResultBytes`，采样计入 `RecognitionPreparationWork` 与流水线总时间，不藏在计时外。
+
+自定义输入可实现 `IOcrCropProcessingInput`，返回 `OcrPreparedCropBatch`，一条物理输入对应一份诊断。成功构造后 wrapper 拥有 `PreparedVisualInput`，调用方必须释放；诊断不允许持有 native/GPU 缓冲。未实现可选接口时显式开启返回 `DS-VISUAL-4107`。OpenCV 输入的 `PrepareRecognitionBatch` 只接受未启用该功能的 Profile，启用后应使用 `PrepareProcessedRecognitionBatch`，防止直接调用时静默丢弃配置。TensorRT device-only 输入尚未实现该可选接口；OpenCV 输入与推理后端是独立选择。
+
+采样上限每阶段 1～65536、每调用物理 crop 1～4096。使用固定图像、插值、角点、采样预算与尺寸做对照；resize 本身就会改变锐度和方差，因此不能直接把两阶段数值之差等同于识别质量损失。当前没有经过标注数据标定的噪声/JPEG 分类、精确字高或通用拒绝分数。
+
 ## 字符集覆盖审计
 
 在创建推理会话前，先检查模型字典能否表示业务所需的字符。`OcrCharacterSetAuditor` 位于 `JYPPX.DeploySharp.Visual`，可复用同一个只读索引检查多个业务字符范围，无需图片或推理后端。以下接口以当前源码为准。

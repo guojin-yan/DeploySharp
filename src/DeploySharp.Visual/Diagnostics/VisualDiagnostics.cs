@@ -42,6 +42,8 @@ namespace JYPPX.DeploySharp.Visual
 
         /// <summary>Source-pixel quality assessment is unavailable on this input. / 此输入不支持源像素质量评估。</summary>
         public const string OcrPixelQualityUnavailable = "DS-VISUAL-4106";
+        /// <summary>The input cannot provide requested crop processing. / 输入无法提供请求的裁剪处理。</summary>
+        public const string OcrCropProcessingUnavailable = "DS-VISUAL-4107";
         /// <summary>An anomaly tensor or result contract is invalid. / 异常张量或结果契约无效。</summary>
         public const string AnomalyContractInvalid = "DS-VISUAL-4201";
         /// <summary>An anomaly map, workspace, or output limit was exceeded. / 异常图、工作区或输出超出限制。</summary>

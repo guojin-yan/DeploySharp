@@ -229,6 +229,8 @@ internal static partial class Program
             VisualModelProfile recProfile = rec.VisualProfile;
             VisualModelProfile? clsProfile = cls?.VisualProfile;
             TextCropProfile recognitionCrop = rec.CropProfile!.WithRecognitionOverflowMode(ReadRecognitionOverflowMode()).WithGeometryValidation(ReadGeometryOptions()).WithTransformMode(ReadCropTransformMode());
+            OcrCropProcessingOptions? cropProcessing = ReadCropProcessingOptions();
+            if (cropProcessing != null) recognitionCrop = recognitionCrop.WithCropProcessing(cropProcessing);
             OcrOrientationRetryOptions? orientationRetry = ReadOrientationRetryOptions();
             if (orientationRetry != null) recognitionCrop = recognitionCrop.WithOrientationRetry(orientationRetry);
             if (recognitionCrop.OverflowMode == RecognitionOverflowMode.SlidingWindow)
@@ -433,6 +435,14 @@ internal static partial class Program
             ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_REGIONS", 16), angles, ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_CROPS", 1024));
     }
 
+    private static OcrCropProcessingOptions? ReadCropProcessingOptions()
+    {
+        string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING")?.Trim().ToLowerInvariant() ?? "disabled";
+        if (mode == "disabled") return null;
+        if (mode != "report") throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING accepts Disabled or Report.");
+        return new OcrCropProcessingOptions(ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES", 1024), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_CROP_LIMIT", 1024));
+    }
+
     private static OcrPixelQualityOptions? ReadPixelQualityOptions()
     {
         string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_PIXEL_QUALITY")?.Trim().ToLowerInvariant() ?? "disabled";
@@ -522,20 +532,20 @@ internal static partial class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 5, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 6, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             PixelQualityOptions = ReadPixelQualityOptions(), result.PixelQuality,
             Regions = result.Regions.Select(item => new
             {
                 item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
-                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry, item.PixelQuality
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry, item.PixelQuality, item.CropDiagnostics
             }).ToArray()
         };
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions

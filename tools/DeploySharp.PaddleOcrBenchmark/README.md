@@ -2,6 +2,12 @@
 
 This console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
 
+## Recognition crop diagnostics / 识别裁剪诊断
+
+Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optionally `DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES=1024` and `DEPLOYSHARP_PADDLEOCR_CROP_LIMIT=1024`. Samples are bounded per stage; the crop limit includes minimum-batch duplicate rows, windows and retries. Report preserves pixels and recognition SHA. Width sidecar schema 6 records `Crop.CropProcessing`, each region's `CropDiagnostics`, and all orientation attempts' diagnostics. `Rectified` is after warp/rotation, `Content` after resize but before padding/normalization; these are not directly comparable quality scores. Actual sampling work is included in recognition preparation and total time. Unsupported input adapters fail explicitly.
+
+通过上述变量显式启用，默认不采集。用 `DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR` 指定 JSON 目录；源区域诊断与裁剪诊断可独立开启。裁剪来源在 ROI/方向映射后不被改写，滑窗角点已包含父行方向。每阶段采样上限 1～65536、每调用物理裁剪上限 1～4096；超限失败而非漏记，诊断不保留图像。Report 不表示增强或准确率提高。
+
 ## Source-pixel quality diagnostics / 源像素质量诊断
 
 Set `DEPLOYSHARP_PADDLEOCR_PIXEL_QUALITY=Report` to measure the decoded source image and each original detected polygon once. The default is `Disabled`; other values fail explicitly. Pixels, crop policy and OCR results remain unchanged. This is CPU-side sampling of the OpenCV input, even with a GPU inference backend, not GPU preprocessing.

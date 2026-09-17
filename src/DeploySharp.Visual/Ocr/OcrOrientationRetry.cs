@@ -56,7 +56,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class OcrOrientationAttempt
     {
         internal OcrOrientationAttempt(OcrRegionResult result)
-        { Orientation = result.Region.Orientation; Recognition = result.Recognition; RecognitionWidth = result.RecognitionWidth; RecognitionWindows = result.RecognitionWindows; }
+        { Orientation = result.Region.Orientation; Recognition = result.Recognition; RecognitionWidth = result.RecognitionWidth; RecognitionWindows = result.RecognitionWindows; CropDiagnostics = result.CropDiagnostics; }
         private OcrOrientationAttempt(OcrOrientationAttempt source, int index)
         {
             Orientation = source.Orientation; Recognition = source.Recognition.WithSourceRegionIndex(index); RecognitionWidth = source.RecognitionWidth;
@@ -64,6 +64,7 @@ namespace JYPPX.DeploySharp.Visual
             foreach (OcrRecognitionWindowResult window in source.RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(index), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
             RecognitionWindows = windows.AsReadOnly();
+            CropDiagnostics = source.CropDiagnostics;
         }
         /// <summary>Gets the effective absolute crop rotation. / 获取生效的绝对裁剪旋转。</summary>
         public TextOrientation Orientation { get; }
@@ -73,6 +74,8 @@ namespace JYPPX.DeploySharp.Visual
         public OcrRecognitionWidthInfo? RecognitionWidth { get; }
         /// <summary>Gets any underlying recognition windows and uncertain seams. / 获取底层识别窗口及不确定接缝。</summary>
         public IReadOnlyList<OcrRecognitionWindowResult> RecognitionWindows { get; }
+        /// <summary>Gets crop-local evidence for this attempt, not just the selected attempt. / 获取本次尝试的裁剪局部证据，而非仅所选尝试。</summary>
+        public IReadOnlyList<OcrCropDiagnostics> CropDiagnostics { get; }
         internal OcrOrientationAttempt WithSourceIndex(int index) => index == Recognition.SourceRegionIndex ? this : new OcrOrientationAttempt(this, index);
     }
 

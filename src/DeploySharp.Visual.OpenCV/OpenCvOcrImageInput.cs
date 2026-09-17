@@ -93,7 +93,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     }
 
     /// <summary>Owns a decoded OpenCV Mat and its prepared detector tensor for one OCR source image. / 为一张 OCR 源图拥有解码 OpenCV Mat 及其已准备检测张量。</summary>
-    public sealed class OpenCvOcrImageInput : IOcrOrientationImageInput, IOcrPixelQualityInput
+    public sealed class OpenCvOcrImageInput : IOcrOrientationImageInput, IOcrPixelQualityInput, IOcrCropProcessingInput
     {
         // Recognition batches only read the decoded source Mat. A reader/writer lock
         // lets independent batches warp and normalize crops concurrently while keeping
@@ -195,7 +195,19 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
 
         /// <summary>Creates an owned managed Float32 recognition tensor from explicit perspective crops. / 根据显式透视裁剪创建自有托管 Float32 识别张量。</summary>
         public PreparedVisualInput PrepareRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken)
+            => PrepareRecognitionBatchCore(inputName, requests, cancellationToken, false, out _);
+
+        /// <summary>Prepares owned crops with bounded rectified/content diagnostics, excluding tensor padding. / 准备自有裁剪及有界校正后和内容诊断，不含张量填充。</summary>
+        public OcrPreparedCropBatch PrepareProcessedRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken)
         {
+            PreparedVisualInput prepared = PrepareRecognitionBatchCore(inputName, requests, cancellationToken, true, out IReadOnlyList<OcrCropDiagnostics> diagnostics);
+            try { return new OcrPreparedCropBatch(prepared, diagnostics); }
+            catch { prepared.Dispose(); throw; }
+        }
+
+        private PreparedVisualInput PrepareRecognitionBatchCore(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken, bool collect, out IReadOnlyList<OcrCropDiagnostics> diagnostics)
+        {
+            diagnostics = Array.Empty<OcrCropDiagnostics>();
             if (string.IsNullOrWhiteSpace(inputName)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A recognizer input name is required.");
             if (requests == null) throw new ArgumentNullException(nameof(requests));
             if (requests.Count == 0 || requests.Count > 64) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Recognition batch must contain 1 through 64 requests.");
@@ -205,11 +217,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 EnsureUsable();
                 ObserveCancellation(cancellationToken);
                 TextCropProfile profile = requests[0].Profile;
+                if (collect != (profile.CropProcessing != null)) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Use PrepareProcessedRecognitionBatch with an explicit CropProcessing profile, or PrepareRecognitionBatch without one.");
+                if (collect && requests.Count > profile.CropProcessing!.MaximumCropsPerCall) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "Physical crop count exceeds the processing budget.");
+                var evidence = collect ? new List<OcrCropDiagnostics>(requests.Count) : null;
+                var quality = collect ? new OcrPixelQualityOptions(profile.CropProcessing!.MaximumSamplesPerStage) : null;
                 int width = requests[0].TargetWidth;
                 int height = requests[0].TargetHeight;
                 for (int index = 1; index < requests.Count; index++)
                 {
-                    if (requests[index].Profile.ProfileId != profile.ProfileId || requests[index].TargetWidth != width || requests[index].TargetHeight != height) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A recognition batch must share crop profile and target dimensions.");
+                    if (requests[index].Profile.ProfileId != profile.ProfileId || requests[index].Profile.CropProcessing != profile.CropProcessing || requests[index].TargetWidth != width || requests[index].TargetHeight != height) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "A recognition batch must share crop profile, processing options and target dimensions.");
                 }
 
                 int channels = ChannelCount(profile);
@@ -229,7 +245,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     {
                         ObserveCancellation(cancellationToken);
                         bool cropUsedAffine;
-                        Mat crop = PrepareCropContent(requests[batch], cancellationToken, out cropUsedAffine);
+                        Mat crop = PrepareCropContent(requests[batch], cancellationToken, out cropUsedAffine, quality, evidence);
                         usedAffine |= cropUsedAffine;
                         usedPerspective |= !cropUsedAffine;
                         WriteTensor(crop, values, batch, width, height, profile, cancellationToken);
@@ -243,6 +259,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     var modelSize = new VisualSize(width, height);
                     var prepared = new PreparedVisualInput(inputName, tensor, modelSize, modelSize, requests.Count, profile.Layout, ImageTransform.Resize(modelSize, modelSize), descriptor, "ocr-recognition-batch", PreparedInputOwnership.Owned, tensorLease);
                     tensorLease = null;
+                    diagnostics = evidence == null ? Array.Empty<OcrCropDiagnostics>() : evidence.AsReadOnly();
                     return prepared;
                 }
                 finally { tensorLease?.Dispose(); }
@@ -273,7 +290,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             _recognitionTensorPool.Dispose();
         }
 
-        private Mat PrepareCropContent(TextCropRequest request, CancellationToken cancellationToken, out bool usedAffine)
+        private Mat PrepareCropContent(TextCropRequest request, CancellationToken cancellationToken, out bool usedAffine, OcrPixelQualityOptions? quality, List<OcrCropDiagnostics>? evidence)
         {
             TextQuadrilateral corners = request.Quadrilateral;
             int naturalWidth = Math.Max(2, checked((int)Math.Ceiling(Math.Max(Distance(corners.TopLeft, corners.TopRight), Distance(corners.BottomLeft, corners.BottomRight)))));
@@ -317,6 +334,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     CoreOperations.Rotate(scratch.Warped, scratch.Rotated, ToRotation(request.Region.Orientation));
                     oriented = scratch.Rotated;
                 }
+                OcrPixelQualityDiagnostics? rectified = quality == null ? null : OpenCvOcrPixelQuality.Analyze(oriented, quality, cancellationToken: cancellationToken);
                 int contentWidth = CalculateContentWidth(oriented.Cols, oriented.Rows, request.TargetHeight, request.TargetWidth);
                 // Dynamic PaddleOCR recognition profiles require at least one full
                 // character-height of horizontal content. Scale narrow crops up to the
@@ -324,6 +342,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 if (request.Profile.WidthMode == OcrRecognitionWidthMode.Dynamic)
                     contentWidth = Math.Max(contentWidth, request.Profile.MinimumWidth);
                 ImageProcessing.Resize(oriented, scratch.Resized, new Size(contentWidth, request.TargetHeight), interpolation: ToInterpolation(request.Profile.Interpolation));
+                if (quality != null) evidence!.Add(new OcrCropDiagnostics(request, rectified!, OpenCvOcrPixelQuality.Analyze(scratch.Resized, quality, cancellationToken: cancellationToken)));
                 return scratch.Resized;
             }
         }

@@ -529,7 +529,7 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(0, bounded.RecognitionProvider.LastSession!.RunCount + bounded.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
         }
 
-        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null)
+        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null, OcrCropProcessingOptions? cropProcessing = null)
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .3f, maximumCandidates: 3, maximumRegions: 3));
             VisualModelProfile detectorProfile = DetectionProfile(detectorDecoder, TensorElementType.Float32, 3, "fake-detector");
@@ -555,6 +555,7 @@ namespace DeploySharp.Visual.Tests
             if (windowOptions != null) crop = crop.WithRecognitionWindows(windowOptions);
             if (geometryOptions != null) crop = crop.WithGeometryValidation(geometryOptions);
             if (retryOptions != null) crop = crop.WithOrientationRetry(retryOptions);
+            if (cropProcessing != null) crop = crop.WithCropProcessing(cropProcessing);
             var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2, maximumRecognitionPaddingRatio: 2, maximumResultBytes: maximumResultBytes, maximumConcurrency: maximumConcurrency), new SessionOptions(1), new SessionOptions(maximumConcurrency));
             return new OcrFixture(registry, detectionProvider, recognitionProvider, pipeline);
         }

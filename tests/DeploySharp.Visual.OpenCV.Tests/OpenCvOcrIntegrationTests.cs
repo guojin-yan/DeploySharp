@@ -26,7 +26,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private static string Onnx(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", "onnx", name);
 
         [TestMethod]
-        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline(bool cropDiagnostics)
         {
             using var registry = new BackendRegistry();
             registry.UseOnnxRuntime();
@@ -41,7 +43,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 registry,
                 profiles.Select(detector, registry, request, VisualTaskId.TextDetection), request,
                 profiles.Select(recognizer, registry, request, VisualTaskId.TextRecognition), request,
-                CropProfile(), new OcrPipelineOptions(maximumRecognitionBatch: 2));
+                cropDiagnostics ? CropProfile().WithCropProcessing(new OcrCropProcessingOptions()) : CropProfile(), new OcrPipelineOptions(maximumRecognitionBatch: 2));
             var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
             using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(Fixture("ocr.png"), "images", detectorOptions);
 
@@ -51,6 +53,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             CollectionAssert.AreEqual(new[] { "AB", "CA" }, result.Regions.Select(item => item.Recognition.Text).ToArray());
             CollectionAssert.AreEqual(new[] { 0, 2 }, result.Regions.Select(item => item.Region.SourceIndex).ToArray());
             Assert.AreEqual(64, result.ComputeSha256().Length);
+            Assert.IsTrue(result.Regions.All(item => item.CropDiagnostics.Count == (cropDiagnostics ? 1 : 0)));
             OcrResult diagnosed = pipeline.Run(input, new OcrExecutionOptions().WithPixelQuality(new OcrPixelQualityOptions()));
             Assert.AreEqual(result.ComputeSha256(), diagnosed.ComputeSha256());
             Assert.IsNotNull(diagnosed.PixelQuality);
@@ -264,6 +267,32 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 StringAssert.Contains(perspective.Preprocessing.Notes, "cropTransform=Perspective");
                 Assert.IsTrue(((Tensor<float>)perspective.Tensor).ToArray().Any(value => value != 0));
             }
+        }
+
+        [TestMethod]
+        public void CropDiagnosticsExcludePaddingAndPreserveTensorForEveryOrientation()
+        {
+            var detection = new OpenCvPreprocessOptions(new VisualSize(32,16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, outputType: OpenCvOutputType.Float32);
+            using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(Fixture("ocr.png"), "images", detection);
+            var options = new OcrCropProcessingOptions(32);
+            foreach (TextOrientation orientation in new[] { TextOrientation.Degrees0, TextOrientation.Clockwise90, TextOrientation.Degrees180, TextOrientation.CounterClockwise90 })
+            {
+                using PreparedVisualInput expected = input.PrepareRecognitionBatch("crops", new[] { Request(orientation, CropProfile()) }, CancellationToken.None);
+                using OcrPreparedCropBatch processed = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(orientation, CropProfile().WithCropProcessing(options)) }, CancellationToken.None);
+                CollectionAssert.AreEqual((float[])expected.Tensor.Buffer, (float[])processed.Input.Tensor.Buffer);
+                OcrCropDiagnostics row = processed.Diagnostics[0];
+                Assert.AreEqual(orientation, row.Orientation); Assert.AreEqual(new VisualSize(16,8), row.TensorSize);
+                Assert.AreEqual(8, row.Content.InputSize.Height); Assert.IsTrue(row.Content.InputSize.Width <= 16);
+                Assert.IsTrue(row.Rectified.SampleCount <= 32); Assert.IsTrue(row.Content.SampleCount <= 32);
+                Assert.IsNull(row.Rectified.InputPolygon); Assert.IsNull(row.Content.InputRegionIndex);
+                if (orientation == TextOrientation.Clockwise90 || orientation == TextOrientation.CounterClockwise90)
+                    Assert.IsTrue(row.Content.InputSize.Width < row.TensorSize.Width, "Padding must not affect quality statistics.");
+            }
+            var requests = new[] { Request(TextOrientation.Degrees0, CropProfile().WithCropProcessing(options)) };
+            Assert.ThrowsExactly<OpenCvVisualException>(() => input.PrepareRecognitionBatch("crops", requests, CancellationToken.None));
+            Assert.ThrowsExactly<OpenCvVisualException>(() => input.PrepareProcessedRecognitionBatch("crops", requests, new CancellationToken(true)));
+            using OcrPreparedCropBatch last = input.PrepareProcessedRecognitionBatch("crops", requests, CancellationToken.None);
+            input.Dispose(); last.Dispose(); last.Dispose(); Assert.IsTrue(last.Diagnostics[0].Content.SampleCount > 0);
         }
 
         private static TextCropRequest Request(TextOrientation orientation, TextCropProfile profile)

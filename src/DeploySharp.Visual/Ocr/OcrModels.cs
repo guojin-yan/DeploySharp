@@ -508,6 +508,13 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional bounded orientation retries; null disables them. / 获取可选的有界方向重试；null 表示禁用。</summary>
         public OcrOrientationRetryOptions? OrientationRetry { get; }
 
+        /// <summary>Gets optional per-crop pixel processing; null retains the original adapter path. / 获取可选逐裁剪像素处理，null 保持原适配器路径。</summary>
+        public OcrCropProcessingOptions? CropProcessing { get; }
+
+        /// <summary>Enables bounded crop diagnostics without changing input shape. / 启用有界裁剪诊断，不修改输入形状。</summary>
+        public TextCropProfile WithCropProcessing(OcrCropProcessingOptions options)
+            => new TextCropProfile(this, OverflowMode, cropProcessing: options ?? throw new ArgumentNullException(nameof(options)));
+
         /// <summary>Enables bounded low-confidence REC retries without changing DET/CLS or model input contracts. / 启用有界低置信度 REC 重试，不改变 DET/CLS 或模型输入合同。</summary>
         public TextCropProfile WithOrientationRetry(OcrOrientationRetryOptions options)
             => new TextCropProfile(this, OverflowMode, retry: options ?? throw new ArgumentNullException(nameof(options)));
@@ -527,7 +534,7 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null)
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null)
             : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
@@ -537,6 +544,7 @@ namespace JYPPX.DeploySharp.Visual
             Geometry = geometry ?? source.Geometry;
             OrientationRetry = retry ?? source.OrientationRetry;
             TransformMode = transformMode ?? source.TransformMode;
+            CropProcessing = cropProcessing ?? source.CropProcessing;
         }
 
         /// <summary>Calculates aligned output width from explicit quadrilateral geometry and orientation. / 根据显式四边形几何与方向计算对齐输出宽度。</summary>
@@ -734,6 +742,15 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional initial source-region pixel evidence, retained in its evaluation coordinate space. / 获取可选初始源区域像素证据，保留其评估坐标空间。</summary>
         public OcrPixelQualityDiagnostics? PixelQuality { get; private set; }
 
+        /// <summary>Gets ordered recognition-crop evidence for the selected attempt; empty means disabled. / 获取所选尝试的有序识别裁剪证据，空列表表示禁用。</summary>
+        public IReadOnlyList<OcrCropDiagnostics> CropDiagnostics { get; private set; } = Array.Empty<OcrCropDiagnostics>();
+
+        internal OcrRegionResult WithCropDiagnostics(IReadOnlyList<OcrCropDiagnostics> diagnostics)
+        {
+            if (diagnostics.Count == 0) return this;
+            var copy = (OcrRegionResult)MemberwiseClone(); copy.CropDiagnostics = new List<OcrCropDiagnostics>(diagnostics).AsReadOnly(); return copy;
+        }
+
         internal OcrRegionResult WithPixelQuality(OcrPixelQualityDiagnostics? quality)
         {
             if (quality == null) return this;
@@ -741,18 +758,18 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         internal OcrRegionResult WithOrientationRetry(OcrOrientationRetryResult retry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry).WithPixelQuality(PixelQuality);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
 
         internal OcrRegionResult WithGeometry(OcrGeometryDiagnostics geometry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry).WithPixelQuality(PixelQuality);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
 
         internal OcrRegionResult WithRegion(TextRegion region)
         {
-            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality);
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
-            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality);
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics);
         }
     }
 

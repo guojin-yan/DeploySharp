@@ -292,6 +292,9 @@ namespace JYPPX.DeploySharp.Visual
 
                     if (execution.PixelQuality != null && !(input is IOcrPixelQualityInput))
                         throw new OcrPipelineException(VisualErrorCodes.OcrPixelQualityUnavailable, "The input does not expose source-pixel quality assessment.", stage);
+                    if (_cropProfile.CropProcessing != null && !(input is IOcrCropProcessingInput))
+                        throw new OcrPipelineException(VisualErrorCodes.OcrCropProcessingUnavailable, "The input does not expose crop processing.", stage);
+                    var cropBudget = _cropProfile.CropProcessing == null ? null : new CropWorkBudget(_cropProfile.CropProcessing);
                     stage = OcrPipelineStage.Detection;
                     var detectionWatch = Stopwatch.StartNew();
                     VisualInferenceResult detectionInference = await _detector.RunAsync(input.DetectionInput, new VisualExecutionOptions(correlationId: execution.CorrelationId), operationToken).ConfigureAwait(false);
@@ -423,22 +426,28 @@ namespace JYPPX.DeploySharp.Visual
                     var recognized = new RecognizedText[requests.Count];
                     var recognitionWidths = new OcrRecognitionWidthInfo[requests.Count];
                     List<OcrBatchDescriptor> recognitionBatches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, operationToken);
+                    OcrCropDiagnostics[]? cropDiagnostics = cropBudget == null ? null : new OcrCropDiagnostics[requests.Count];
+                    if (cropBudget != null)
+                    {
+                        geometryBytes = checked(geometryBytes + cropBudget.Reserve(recognitionBatches));
+                        if (geometryBytes > _options.MaximumResultBytes) throw Limit("Crop diagnostics exceed their retained result budget.", OcrPipelineStage.CropAndBatch);
+                    }
                     cropWatch.Stop();
                     TimeSpan cropDuration = cropWatch.Elapsed + geometryDuration;
                     var recognitionWatch = Stopwatch.StartNew();
                     TimeSpan recognitionPreparationWork = TimeSpan.Zero;
                     TimeSpan recognitionInferenceWork = TimeSpan.Zero;
                     TimeSpan recognitionPostprocessingWork = TimeSpan.Zero;
-                    long retainedRecognitionBytes = 0;
+                    long retainedRecognitionBytes = geometryBytes;
                     try
                     {
                         stage = OcrPipelineStage.Recognition;
                         BatchExecution<VisualInferenceResult>[] recognitionResults = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, recognitionBatches, _recognizer.MaximumConcurrency, async (prepared, token) =>
                         {
-                            if (windowPlans != null && Interlocked.Read(ref retainedRecognitionBytes) > _options.MaximumResultBytes)
+                            if ((windowPlans != null || cropBudget != null) && Interlocked.Read(ref retainedRecognitionBytes) > _options.MaximumResultBytes)
                                 throw Limit("OCR window results exceed their retained byte budget.", OcrPipelineStage.Recognition);
                             VisualInferenceResult inference = await _recognizer.RunAsync(prepared, new VisualExecutionOptions(correlationId: execution.CorrelationId), token).ConfigureAwait(false);
-                            if (windowPlans != null)
+                            if (windowPlans != null || cropBudget != null)
                             {
                                 long batchBytes = 0;
                                 foreach (RecognizedText row in inference.GetValue<TextRecognitionBatchResult>().Items)
@@ -464,6 +473,7 @@ namespace JYPPX.DeploySharp.Visual
                                 IndexedRequest request = prepared.Requests[index];
                                 recognized[request.Position] = batch.Items[index].WithSourceRegionIndex(request.Request.Region.SourceIndex);
                                 recognitionWidths[request.Position] = prepared.Crops[index].WidthInfo;
+                                if (cropDiagnostics != null) cropDiagnostics[request.Position] = recognitionResults[batchIndex].Diagnostics[index];
                             }
                         }
                     }
@@ -501,13 +511,14 @@ namespace JYPPX.DeploySharp.Visual
                             OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, operationToken);
                             results.Add(geometry == null ? merged : merged.WithGeometry(geometry[index]));
                         }
+                        if (cropDiagnostics != null) results[index] = results[index].WithCropDiagnostics(CropEvidenceRange(cropDiagnostics, offset, windowCount));
                     }
                     mergeWatch.Stop();
                     int recognitionBatchCount = recognitionBatches.Count;
                     if (_cropProfile.OrientationRetry != null)
                     {
                         stage = OcrPipelineStage.Recognition;
-                        RetryWork retry = await RunOrientationRetriesAsync(input, results, resultBytes, execution, aggregation, operationToken).ConfigureAwait(false);
+                        RetryWork retry = await RunOrientationRetriesAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget).ConfigureAwait(false);
                         recognitionDuration += retry.Elapsed;
                         recognitionPreparationWork += retry.Preparation;
                         recognitionInferenceWork += retry.Inference;
@@ -626,13 +637,31 @@ namespace JYPPX.DeploySharp.Visual
         private static async Task<BatchExecution<T>> ExecuteBatchAsync<T>(IOcrImageInput input, string inputName, OcrBatchDescriptor batch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken, SemaphoreSlim gate)
         {
             PreparedVisualInput? prepared = null;
+            OcrPreparedCropBatch? processed = null;
             try
             {
                 long preparationStarted = Stopwatch.GetTimestamp();
-                prepared = input.PrepareRecognitionBatch(inputName, batch.Crops, cancellationToken) ?? throw new InvalidOperationException("The OCR image input returned a null prepared batch.");
+                if (batch.Crops[0].Profile.CropProcessing != null)
+                {
+                    if (!(input is IOcrCropProcessingInput processor)) throw new OcrPipelineException(VisualErrorCodes.OcrCropProcessingUnavailable, "The input cannot process recognition crops.", OcrPipelineStage.CropAndBatch);
+                    processed = processor.PrepareProcessedRecognitionBatch(inputName, batch.Crops, cancellationToken) ?? throw new InvalidOperationException("Null processed crop batch.");
+                    prepared = processed.Input;
+                    if (processed.Diagnostics.Count != batch.Crops.Count) throw Failure("Crop diagnostic row count mismatch.", OcrPipelineStage.CropAndBatch);
+                    for (int i = 0; i < batch.Crops.Count; i++)
+                    {
+                        OcrCropDiagnostics item = processed.Diagnostics[i]; TextCropRequest request = batch.Crops[i];
+                        if (item.InputRegionIndex != request.Region.SourceIndex || item.Orientation != request.Region.Orientation ||
+                            item.InputQuadrilateral.TopLeft != request.Quadrilateral.TopLeft || item.InputQuadrilateral.TopRight != request.Quadrilateral.TopRight ||
+                            item.InputQuadrilateral.BottomLeft != request.Quadrilateral.BottomLeft || item.InputQuadrilateral.BottomRight != request.Quadrilateral.BottomRight ||
+                            item.TensorSize != new VisualSize(request.TargetWidth, request.TargetHeight) ||
+                            item.Rectified.PlannedSampleCount > request.Profile.CropProcessing!.MaximumSamplesPerStage || item.Content.PlannedSampleCount > request.Profile.CropProcessing.MaximumSamplesPerStage)
+                            throw Failure("Crop diagnostic provenance or sampling bounds mismatch.", OcrPipelineStage.CropAndBatch);
+                    }
+                }
+                else prepared = input.PrepareRecognitionBatch(inputName, batch.Crops, cancellationToken) ?? throw new InvalidOperationException("The OCR image input returned a null prepared batch.");
                 TimeSpan preparation = ElapsedSince(preparationStarted);
                 T result = await run(prepared, cancellationToken).ConfigureAwait(false);
-                return new BatchExecution<T>(batch, result, preparation);
+                return new BatchExecution<T>(batch, result, preparation, processed?.Diagnostics);
             }
             finally
             {
@@ -757,10 +786,30 @@ namespace JYPPX.DeploySharp.Visual
 
         private sealed class BatchExecution<T>
         {
-            public BatchExecution(OcrBatchDescriptor batch, T result, TimeSpan preparation) { Batch = batch; Result = result; Preparation = preparation; }
+            public BatchExecution(OcrBatchDescriptor batch, T result, TimeSpan preparation, IReadOnlyList<OcrCropDiagnostics>? diagnostics = null) { Batch = batch; Result = result; Preparation = preparation; Diagnostics = diagnostics ?? Array.Empty<OcrCropDiagnostics>(); }
             public OcrBatchDescriptor Batch { get; }
             public T Result { get; }
             public TimeSpan Preparation { get; }
+            public IReadOnlyList<OcrCropDiagnostics> Diagnostics { get; }
+        }
+
+        private static IReadOnlyList<OcrCropDiagnostics> CropEvidenceRange(OcrCropDiagnostics[] evidence, int offset, int count)
+        {
+            var result = new OcrCropDiagnostics[count]; Array.Copy(evidence, offset, result, 0, count); return result;
+        }
+
+        private sealed class CropWorkBudget
+        {
+            private readonly OcrCropProcessingOptions _options;
+            private int _crops;
+            internal CropWorkBudget(OcrCropProcessingOptions options) { _options = options; }
+            internal long Reserve(IReadOnlyList<OcrBatchDescriptor> batches)
+            {
+                int count = 0; foreach (OcrBatchDescriptor batch in batches) count = checked(count + batch.Crops.Count);
+                _crops = checked(_crops + count);
+                if (_crops > _options.MaximumCropsPerCall) throw Limit("Crop processing exceeds its physical crop budget including padding and retries.", OcrPipelineStage.CropAndBatch);
+                return checked(1024L * count);
+            }
         }
     }
 }

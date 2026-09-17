@@ -9,7 +9,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed partial class OcrPipeline
     {
         private async Task<RetryWork> RunOrientationRetriesAsync(IOcrImageInput input, List<OcrRegionResult> results, long initialBytes,
-            OcrExecutionOptions execution, CtcConfidenceAggregation aggregation, CancellationToken token)
+            OcrExecutionOptions execution, CtcConfidenceAggregation aggregation, CancellationToken token, CropWorkBudget? cropBudget)
         {
             var watch = Stopwatch.StartNew();
             var work = new RetryWork();
@@ -46,6 +46,7 @@ namespace JYPPX.DeploySharp.Visual
                 if (requests.Count == 0) break;
                 List<OcrBatchDescriptor> batches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch,
                     EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, token);
+                if (cropBudget != null) budget.Reserve(cropBudget.Reserve(batches));
                 BatchExecution<VisualInferenceResult>[] executed = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, batches,
                     _recognizer.MaximumConcurrency, async (prepared, cancellation) =>
                     {
@@ -60,6 +61,7 @@ namespace JYPPX.DeploySharp.Visual
                     }, token).ConfigureAwait(false);
                 var texts = new RecognizedText[requests.Count];
                 var widths = new OcrRecognitionWidthInfo[requests.Count];
+                OcrCropDiagnostics[]? diagnostics = cropBudget == null ? null : new OcrCropDiagnostics[requests.Count];
                 foreach (BatchExecution<VisualInferenceResult> batch in executed)
                 {
                     work.Preparation += batch.Preparation; work.Inference += batch.Result.Timing.Inference; work.Postprocessing += batch.Result.Timing.Postprocessing;
@@ -71,6 +73,7 @@ namespace JYPPX.DeploySharp.Visual
                         IndexedRequest request = batch.Batch.Requests[index];
                         texts[request.Position] = decoded.Items[index].WithSourceRegionIndex(request.Request.Region.SourceIndex);
                         widths[request.Position] = batch.Batch.Crops[index].WidthInfo;
+                        if (diagnostics != null) diagnostics[request.Position] = batch.Diagnostics[index];
                     }
                 }
                 foreach (RetryPlan plan in plans)
@@ -94,6 +97,7 @@ namespace JYPPX.DeploySharp.Visual
                         if (plan.State.Initial.Geometry != null) candidate = candidate.WithGeometry(plan.State.Initial.Geometry);
                     }
                     budget.Reserve(64L + plan.Windows.Count * 48L);
+                    if (diagnostics != null) candidate = candidate.WithCropDiagnostics(CropEvidenceRange(diagnostics, plan.Offset, plan.Windows.Count));
                     plan.State.Attempts.Add(new OcrOrientationAttempt(candidate));
                     if (options.Prefer(candidate.Recognition, plan.State.Best.Recognition))
                     { plan.State.Best = candidate; plan.State.Selected = plan.State.Attempts.Count - 1; }
