@@ -370,6 +370,35 @@ OcrFieldValidationReport report = OcrFieldValidators.ValidateAll(
 
 格式通过不等于业务事实成立：OCR 误识别后的字符串可能恰好满足日期、身份证或金额格式，规范值也不应覆盖原文。生产流程应同时保存 OCR 原始/规范化文本、字段校验 `Code` 和人工或数据库复核结果；需要跨行一致性、金额合计、地址库或发票平台验证时，在应用层组合这些结果。
 
+## 跨字段一致性（独立于 OCR）
+
+字段格式通过后，票据和设备表单通常还需要检查日期先后、明细金额合计或两个字段是否相同。`OcrFieldConsistencyContext` 将应用字段名绑定到已有的 `OcrFieldValidationResult`，规则只读取规范值，不回写 `OcrResult`，也不会把业务不一致误报为模型推理失败：
+
+```csharp
+OcrFieldConsistencyContext fields = new OcrFieldConsistencyContext(new[]
+{
+    new OcrFieldBinding("start", startValidation),
+    new OcrFieldBinding("end", endValidation),
+    new OcrFieldBinding("line_1", line1Validation),
+    new OcrFieldBinding("line_2", line2Validation),
+    new OcrFieldBinding("total", totalValidation)
+});
+
+OcrFieldConsistencyReport report = OcrFieldConsistency.EvaluateAll(fields, new IOcrFieldConsistencyRule[]
+{
+    new DateOrderOcrFieldConsistencyRule("start", "end"),
+    new AmountTotalOcrFieldConsistencyRule(new[] { "line_1", "line_2" }, "total", tolerance: .01m)
+});
+
+if (!report.IsConsistent)
+    foreach (OcrFieldConsistencyResult item in report.Results)
+        Console.WriteLine(item.Code + ": " + item.Message);
+```
+
+内置规则包括 `EqualOcrFieldConsistencyRule`、`DateOrderOcrFieldConsistencyRule` 和有界的 `AmountTotalOcrFieldConsistencyRule`。结果会保留规则 ID、字段顺序、观察到的规范值、上下文哈希和结果哈希；`Consistent` 表示关系成立，`Inconsistent` 表示值存在但关系不成立，`Missing` 表示字段没有绑定，`InvalidDependency` 表示依赖字段未通过格式校验。字段和规则 ID 均会规范化且分别限制为 128 个字段、64 个字段引用和 64 条规则，规则集合中的 ID 必须唯一。
+
+这些规则只验证文本之间的可计算关系，不查询数据库、不验证发票真伪、不判断地址或设备归属，也不替代金额税率、币种、跨页合计和人工审核。需要更多业务关系时，继承 `OcrFieldConsistencyRuleBase`，在自定义规则中返回稳定原因码并保留同一上下文即可。
+
 ## 行、段落与多栏布局视图
 
 检测器返回的是带 polygon 的文本行；当页面还需要段落或多栏阅读顺序时，可以在 OCR 完成后使用 `OcrTextLayoutBuilder`。它只读取源图边界和文本，不重新裁剪、不重新推理，也不修改 `OcrResult`。如果已经创建 C1 规范化视图，可将它一并传入，版面结果会使用规范化字符串，同时保留 `OcrTextLayoutResult.Source` 供追溯。
