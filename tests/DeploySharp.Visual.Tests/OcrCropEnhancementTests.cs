@@ -27,6 +27,11 @@ namespace DeploySharp.Visual.Tests
             var sharpen = new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask, sharpnessThreshold: 1000000);
             Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(OcrPixelQualityAnalyzer.Analyze(new VisualSize(20, 20), (x, _) => (byte)(100 + x)), sharpen));
             Assert.AreEqual(OcrCropEnhancementDecision.SufficientQuality, OcrCropEnhancementPolicy.Decide(Analyze(64), new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask)));
+            var upscale = new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2);
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), upscale));
+            Assert.AreEqual(new VisualSize(40, 40), upscale.CalculateUpscaledSize(new VisualSize(20, 20)));
+            var upscaleLimited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, maximumPixelsPerCrop: 399);
+            Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), upscaleLimited)).ErrorCode);
             var limited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 399);
             Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), limited)).ErrorCode);
             Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(64), limited));
@@ -57,6 +62,9 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask, sharpenKernelSize: 4));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask, sharpenAmount: 0));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask, sharpenSigma: double.PositiveInfinity));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 1));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 4.1));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleInterpolation: (TextCropInterpolation)8));
         }
 
         [TestMethod]

@@ -112,6 +112,14 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 {
                     var configured = Profile().WithCropProcessing(new OcrCropProcessingOptions().WithEnhancement(new OcrCropEnhancementOptions(mode)));
                     using OcrPreparedCropBatch actual = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(configured) }, CancellationToken.None);
+                    if (mode == OcrCropEnhancementMode.LocalUpscale)
+                    {
+                        Assert.AreEqual(OcrCropEnhancementDecision.Applied, actual.Diagnostics[0].EnhancementDecision);
+                        Assert.IsNotNull(actual.Diagnostics[0].Enhanced);
+                        Assert.AreEqual(actual.Diagnostics[0].Rectified.InputSize.Width * 2, actual.Diagnostics[0].Enhanced!.InputSize.Width);
+                        Assert.AreEqual(actual.Diagnostics[0].Rectified.InputSize.Height * 2, actual.Diagnostics[0].Enhanced!.InputSize.Height);
+                        continue;
+                    }
                     OcrCropEnhancementDecision expected = mode == OcrCropEnhancementMode.GaussianDenoise
                         ? (step == 0 ? OcrCropEnhancementDecision.SufficientQuality : OcrCropEnhancementDecision.Applied)
                         : mode == OcrCropEnhancementMode.UnsharpMask

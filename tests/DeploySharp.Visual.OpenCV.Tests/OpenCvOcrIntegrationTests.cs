@@ -26,10 +26,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private static string Onnx(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", "onnx", name);
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline(bool cropDiagnostics, bool enhancementRetry)
+        [DataRow(false, false, false)]
+        [DataRow(true, false, false)]
+        [DataRow(true, true, false)]
+        [DataRow(true, true, true)]
+        public void RealPngOpenCvAndOnnxRuntimeExecuteCompleteOcrPipeline(bool cropDiagnostics, bool enhancementRetry, bool localUpscale)
         {
             using var registry = new BackendRegistry();
             registry.UseOnnxRuntime();
@@ -41,7 +42,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             profiles.Freeze();
             var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
             TextCropProfile crop = cropDiagnostics ? CropProfile().WithCropProcessing(new OcrCropProcessingOptions()) : CropProfile();
-            if (enhancementRetry) crop = crop.WithEnhancementRetry(new OcrEnhancementRetryOptions(new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe,
+            if (enhancementRetry) crop = crop.WithEnhancementRetry(new OcrEnhancementRetryOptions(new OcrCropEnhancementOptions(localUpscale ? OcrCropEnhancementMode.LocalUpscale : OcrCropEnhancementMode.GrayClahe,
                 lowContrastThreshold: 128, targetStandardDeviation: 128), confidenceThreshold: 1));
             using var pipeline = new OcrPipeline(
                 registry,
@@ -65,6 +66,12 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 {
                     Assert.AreEqual(OcrEnhancementRetryDecision.PreservedByPolicy, item.EnhancementRetry!.Decision);
                     Assert.IsNull(item.CropDiagnostics[0].Enhanced); Assert.IsNotNull(item.EnhancementRetry.Candidate!.CropDiagnostics[0].Enhanced);
+                    if (localUpscale)
+                    {
+                        OcrPixelQualityDiagnostics candidateEnhanced = item.EnhancementRetry.Candidate.CropDiagnostics[0].Enhanced!;
+                        Assert.IsTrue(candidateEnhanced.InputSize.Width > item.EnhancementRetry.Candidate.CropDiagnostics[0].Rectified.InputSize.Width);
+                        Assert.IsTrue(candidateEnhanced.InputSize.Height > item.EnhancementRetry.Candidate.CropDiagnostics[0].Rectified.InputSize.Height);
+                    }
                 }
             }
             OcrResult diagnosed = pipeline.Run(input, new OcrExecutionOptions().WithPixelQuality(new OcrPixelQualityOptions()));

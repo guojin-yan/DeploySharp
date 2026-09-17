@@ -45,9 +45,15 @@ namespace JYPPX.DeploySharp.Visual
             Orientation = request.Region.Orientation; TensorSize = new VisualSize(request.TargetWidth, request.TargetHeight);
             Enhancement = request.Profile.CropProcessing?.Enhancement;
             EnhancementDecision = OcrCropEnhancementPolicy.Decide(rectified, Enhancement);
+            OcrCropEnhancementOptions? configuredEnhancement = Enhancement;
+            bool validEnhancedSize = enhanced == null ||
+                (configuredEnhancement != null && configuredEnhancement.Mode == OcrCropEnhancementMode.LocalUpscale
+                    ? enhanced.InputSize == configuredEnhancement.CalculateUpscaledSize(rectified.InputSize)
+                    : enhanced.InputSize == rectified.InputSize);
             if ((EnhancementDecision == OcrCropEnhancementDecision.Applied) != (enhanced != null) ||
-                (enhanced != null && (enhanced.InputSize != rectified.InputSize || enhanced.InputPolygon != null || enhanced.InputRegionIndex != null)))
-                throw new ArgumentException("Enhanced evidence must match the gate and rectified crop dimensions.", nameof(enhanced));
+                !validEnhancedSize ||
+                (enhanced != null && (enhanced.InputPolygon != null || enhanced.InputRegionIndex != null)))
+                throw new ArgumentException("Enhanced evidence must match the gate and configured crop dimensions.", nameof(enhanced));
             Enhanced = enhanced;
             if (enhanced != null && Enhancement!.Mode == OcrCropEnhancementMode.ContrastNormalize)
                 AppliedGain = Math.Min(Enhancement.MaximumGain, Enhancement.TargetStandardDeviation / rectified.LuminanceStandardDeviation!.Value);

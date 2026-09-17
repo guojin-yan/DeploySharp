@@ -15,6 +15,8 @@ namespace JYPPX.DeploySharp.Visual
         AdaptiveThreshold,
         /// <summary>Applies a bounded unsharp mask only when sampled sharpness is below the configured gate. / 仅在采样清晰度低于配置门限时执行有界反遮罩锐化。</summary>
         UnsharpMask,
+        /// <summary>Upscales the rectified crop with a bounded interpolation candidate before the final resize. / 在最终缩放前使用有界插值候选放大校正裁剪。</summary>
+        LocalUpscale,
     }
 
     /// <summary>Explains whether a requested crop enhancement was applied. / 说明请求的裁剪增强是否应用。</summary>
@@ -39,9 +41,10 @@ namespace JYPPX.DeploySharp.Visual
         public OcrCropEnhancementOptions(OcrCropEnhancementMode mode, double lowContrastThreshold = 32, double minimumContrast = 1,
             double targetStandardDeviation = 64, double maximumGain = 3, double claheClipLimit = 2, int claheGridSize = 8, int maximumPixelsPerCrop = 1048576,
             double noiseThreshold = 512, int denoiseKernelSize = 3, double denoiseSigma = 0, int adaptiveBlockSize = 15, double adaptiveConstant = 5,
-            double sharpnessThreshold = 512, int sharpenKernelSize = 3, double sharpenAmount = .5, double sharpenSigma = 1)
+            double sharpnessThreshold = 512, int sharpenKernelSize = 3, double sharpenAmount = .5, double sharpenSigma = 1,
+            double upscaleFactor = 2, TextCropInterpolation upscaleInterpolation = TextCropInterpolation.Cubic)
         {
-            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise && mode != OcrCropEnhancementMode.AdaptiveThreshold && mode != OcrCropEnhancementMode.UnsharpMask) throw new ArgumentOutOfRangeException(nameof(mode));
+            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise && mode != OcrCropEnhancementMode.AdaptiveThreshold && mode != OcrCropEnhancementMode.UnsharpMask && mode != OcrCropEnhancementMode.LocalUpscale) throw new ArgumentOutOfRangeException(nameof(mode));
             if (!(lowContrastThreshold > 0 && lowContrastThreshold <= 128)) throw new ArgumentOutOfRangeException(nameof(lowContrastThreshold));
             if (!(minimumContrast > 0 && minimumContrast < lowContrastThreshold)) throw new ArgumentOutOfRangeException(nameof(minimumContrast));
             if (!(targetStandardDeviation >= lowContrastThreshold && targetStandardDeviation <= 128)) throw new ArgumentOutOfRangeException(nameof(targetStandardDeviation));
@@ -58,12 +61,15 @@ namespace JYPPX.DeploySharp.Visual
             if (sharpenKernelSize < 3 || sharpenKernelSize > 9 || (sharpenKernelSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(sharpenKernelSize));
             if (double.IsNaN(sharpenAmount) || double.IsInfinity(sharpenAmount) || sharpenAmount <= 0 || sharpenAmount > 4) throw new ArgumentOutOfRangeException(nameof(sharpenAmount));
             if (double.IsNaN(sharpenSigma) || double.IsInfinity(sharpenSigma) || sharpenSigma <= 0 || sharpenSigma > 32) throw new ArgumentOutOfRangeException(nameof(sharpenSigma));
+            if (double.IsNaN(upscaleFactor) || double.IsInfinity(upscaleFactor) || upscaleFactor <= 1 || upscaleFactor > 4) throw new ArgumentOutOfRangeException(nameof(upscaleFactor));
+            if (!Enum.IsDefined(typeof(TextCropInterpolation), upscaleInterpolation)) throw new ArgumentOutOfRangeException(nameof(upscaleInterpolation));
             Mode = mode; LowContrastThreshold = lowContrastThreshold; MinimumContrast = minimumContrast;
             TargetStandardDeviation = targetStandardDeviation; MaximumGain = maximumGain; ClaheClipLimit = claheClipLimit;
             ClaheGridSize = claheGridSize; MaximumPixelsPerCrop = maximumPixelsPerCrop;
             NoiseThreshold = noiseThreshold; DenoiseKernelSize = denoiseKernelSize; DenoiseSigma = denoiseSigma;
             AdaptiveBlockSize = adaptiveBlockSize; AdaptiveConstant = adaptiveConstant;
             SharpnessThreshold = sharpnessThreshold; SharpenKernelSize = sharpenKernelSize; SharpenAmount = sharpenAmount; SharpenSigma = sharpenSigma;
+            UpscaleFactor = upscaleFactor; UpscaleInterpolation = upscaleInterpolation;
         }
         /// <summary>Gets the explicit operation. / 获取显式操作。</summary>
         public OcrCropEnhancementMode Mode { get; }
@@ -99,6 +105,19 @@ namespace JYPPX.DeploySharp.Visual
         public double SharpenAmount { get; }
         /// <summary>Gets the positive Gaussian sigma used by unsharp masking. / 获取反遮罩锐化使用的正高斯 sigma。</summary>
         public double SharpenSigma { get; }
+        /// <summary>Gets the bounded local-upscale factor; it is used only by <see cref="OcrCropEnhancementMode.LocalUpscale"/>. / 获取有界局部放大倍数；仅用于 LocalUpscale。</summary>
+        public double UpscaleFactor { get; }
+        /// <summary>Gets interpolation used by the local-upscale candidate. / 获取局部放大候选使用的插值方式。</summary>
+        public TextCropInterpolation UpscaleInterpolation { get; }
+
+        /// <summary>Calculates the bounded intermediate size for a local-upscale crop. / 计算局部放大裁剪的有界中间尺寸。</summary>
+        public VisualSize CalculateUpscaledSize(VisualSize input)
+        {
+            int width = checked((int)Math.Ceiling(input.Width * UpscaleFactor));
+            int height = checked((int)Math.Ceiling(input.Height * UpscaleFactor));
+            if (width <= 0 || height <= 0) throw new ArgumentOutOfRangeException(nameof(input));
+            return new VisualSize(width, height);
+        }
     }
 
     /// <summary>Shares deterministic quality gates between crop adapters and result validation. / 在裁剪适配器与结果验证间共享确定性质量门限。</summary>
@@ -109,6 +128,13 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (rectified == null) throw new ArgumentNullException(nameof(rectified));
             if (options == null) return OcrCropEnhancementDecision.NotConfigured;
+            if (options.Mode == OcrCropEnhancementMode.LocalUpscale)
+            {
+                VisualSize upscaled = options.CalculateUpscaledSize(rectified.InputSize);
+                if (checked((long)upscaled.Width * upscaled.Height) > options.MaximumPixelsPerCrop)
+                    throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Upscaled crop exceeds its pixel limit.", OcrPipelineStage.CropAndBatch);
+                return OcrCropEnhancementDecision.Applied;
+            }
             if (options.Mode == OcrCropEnhancementMode.GaussianDenoise)
             {
                 double? laplacian = rectified.LaplacianVariance;

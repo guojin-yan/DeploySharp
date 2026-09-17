@@ -23,6 +23,14 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             token.ThrowIfCancellationRequested();
             if (OcrCropEnhancementPolicy.Decide(quality, options) != OcrCropEnhancementDecision.Applied) return source;
             int channels = source.Channels;
+            if (options.Mode == OcrCropEnhancementMode.LocalUpscale)
+            {
+                VisualSize upscaled = options.CalculateUpscaledSize(new VisualSize(source.Cols, source.Rows));
+                _enhanced.Create(upscaled.Height, upscaled.Width, source.Type);
+                ImageProcessing.Resize(source, _enhanced, new Size(upscaled.Width, upscaled.Height), interpolation: ToInterpolation(options.UpscaleInterpolation));
+                token.ThrowIfCancellationRequested();
+                return _enhanced;
+            }
             bool linear = options.Mode == OcrCropEnhancementMode.ContrastNormalize;
             bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
             bool adaptiveThreshold = options.Mode == OcrCropEnhancementMode.AdaptiveThreshold;
@@ -99,6 +107,13 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 return _enhanced;
             }
             finally { GC.KeepAlive(source); GC.KeepAlive(destination); }
+        }
+
+        private static InterpolationFlags ToInterpolation(TextCropInterpolation interpolation)
+        {
+            if (interpolation == TextCropInterpolation.Nearest) return InterpolationFlags.Nearest;
+            if (interpolation == TextCropInterpolation.Cubic) return InterpolationFlags.Cubic;
+            return InterpolationFlags.Linear;
         }
 
         public void Dispose() { _clahe?.Dispose(); _blurred.Dispose(); _enhanced.Dispose(); _gray.Dispose(); }

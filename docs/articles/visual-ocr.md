@@ -147,7 +147,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 ### 可选低对比度增强
 
-诊断与增强独立：不配置 `WithEnhancement` 就不改像素。当前提供五种局部操作，每个 Profile 选择一种。对比度类操作和自适应阈值仅在校正后 crop 的亮度标准差处于 `[minimumContrast, lowContrastThreshold)` 时应用；高斯去噪使用独立的拉普拉斯方差门限，反遮罩锐化使用相反的低清晰度门限：
+诊断与增强独立：不配置 `WithEnhancement` 就不改像素。当前提供六种局部操作，每个 Profile 选择一种。对比度类操作和自适应阈值仅在校正后 crop 的亮度标准差处于 `[minimumContrast, lowContrastThreshold)` 时应用；高斯去噪使用独立的拉普拉斯方差门限，反遮罩锐化使用相反的低清晰度门限；局部放大只在明确配置或作为重试候选时执行：
 
 ```csharp
 var processing = new OcrCropProcessingOptions(1024, 1024)
@@ -163,6 +163,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 // 含脉冲/高频噪声的候选可改用 GaussianDenoise，并设置 noiseThreshold/denoiseKernelSize。
 // 光照不均且对比度不足的候选可改用 AdaptiveThreshold，并配置 adaptiveBlockSize/adaptiveConstant。
 // 低清晰度候选可改用 UnsharpMask，并设置 sharpnessThreshold/sharpenAmount。
+// 小字候选可改用 LocalUpscale，并设置 upscaleFactor/upscaleInterpolation。
 ```
 
 - `ContrastNormalize`：`gain=min(maximumGain, targetStandardDeviation/实测标准差)`，以实测亮度均值为中心对颜色通道执行线性映射、四舍五入和 0～255 饱和。保留 RGB/BGR 的通道关系，不转换成灰度；BGRA 的 alpha 不变且仍不参与 REC。颜色饱和可能改变色差，输出标准差不保证等于目标。
@@ -170,6 +171,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 - `GaussianDenoise`：当 `Rectified.LaplacianVariance > noiseThreshold` 且中间裁剪像素不超限时，使用 OpenCV `GaussianBlur` 在原通道数上执行一次轻度平滑；默认 `denoiseKernelSize=3`、`denoiseSigma=0`（由 OpenCV 根据核尺寸选择）。低于或缺少该指标时不修改像素并报告 `SufficientQuality`。拉普拉斯方差同时受文字边缘、纹理、采样和分辨率影响，不是经过标定的噪声分类器；默认不启用，建议只作为保留原文的重试候选。
 - `AdaptiveThreshold`：低对比度且校正 crop 的宽高都不小于 `adaptiveBlockSize` 时，先按 OCR 亮度系数转灰度，再使用 OpenCV Gaussian adaptive threshold 输出二值图；默认 `adaptiveBlockSize=15`、`adaptiveConstant=5`，奇数邻域范围3～31。灰度结果会按模型通道数复制，颜色和细灰笔画可能丢失；尺寸不足或对比度已足够时报告 `SufficientQuality`/`SufficientContrast`，不修改像素。
 - `UnsharpMask`：当校正 crop 的亮度标准差不低于 `minimumContrast` 且 `Rectified.LaplacianVariance < sharpnessThreshold` 时，使用一次 GaussianBlur 和 `AddWeighted` 恢复局部边缘；默认 `sharpnessThreshold=512`、`sharpenKernelSize=3`、`sharpenAmount=0.5`、`sharpenSigma=1`。低于最小变化、缺少指标或已经超过清晰度门限时报告 `SufficientQuality`，不修改像素；该指标不是标定的模糊分类器。
+- `LocalUpscale`：使用 `upscaleFactor`（1～4 之间的有界倍数，默认2）和独立的 `upscaleInterpolation`（默认 `Cubic`）将校正后的中间 crop 放大，再进入原有 resize、padding 和归一化。放大后的像素数受 `maximumPixelsPerCrop` 限制，超限报告 `DS-VISUAL-4102`；这是插值候选，不是超分辨率模型，也不保证增加信息量或准确率。`Enhanced.InputSize` 会记录放大后的尺寸，便于与原始 `Rectified` 对照。
 
 执行顺序是 `warp/rotate → Rectified采样 → 质量门限 → 可选增强/Enhanced采样 → resize → Content采样 → 原有padding/normalize`。不重复 DET/CLS、不改变检测区域、识别宽度、坐标或字典。超低变化（纯色等）和已达到阈值的裁剪不增强，也不分配增强像素缓冲。OpenCV 延迟创建线程本地工作区，复用 LUT、Mat 和 CLAHE 对象；不产生每像素托管对象，输入销毁时释放工作区。应用增强多一次 crop 内处理和可选灰度缓冲，并非零开销。
 
@@ -177,7 +179,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 
 门限是可配置启发式，不是通用质量判据。默认32/1只是起始参数，白底小文字可能因空白占比高而被判低对比度；噪声也可能被增强。请在自己的标注集上比较逐行准确率、CER/WER和端到端P50/P95，不能只看锐度/置信度上升。最大增益8，CLAHE clip≤16、每轴分块2～16，每裁剪增强像素数默认1048576、最大16777216，超限 `DS-VISUAL-4102`，不静默漏处理。像素循环检查取消；单次 native CLAHE 调用在前后检查取消，不能中断其内部执行。
 
-当前尚无自动噪声/JPEG识别、阴影消除配方或换模型重试；`GaussianDenoise`、`AdaptiveThreshold` 和 `UnsharpMask` 都是有界、显式的门控操作，不能冒充噪声/光照/模糊分类器或准确率保证。已实现显式低对比度/高频/低清晰度门限路径，以及下面的单候选低置信度增强重试，两者均默认关闭。
+当前尚无自动噪声/JPEG识别、阴影消除配方或换模型重试；`GaussianDenoise`、`AdaptiveThreshold`、`UnsharpMask` 和 `LocalUpscale` 都是有界、显式的操作，不能冒充噪声/光照/模糊分类器、超分辨率模型或准确率保证。已实现显式低对比度/高频/低清晰度门限路径，以及下面的单候选低置信度增强重试，两者均默认关闭。
 
 功能回归示例：2026-09-17，在 Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA 下，使用同一 `demo_1.jpg`，v4 mobile/v5 mobile/v6 tiny、B4/单通道、Clamp320，对 Report/ContrastNormalize/GrayClahe 共18组运行成功。Report 的文字和完整合同SHA与关闭增强基线一致；本图各模型均仅第12号区域触发默认门限。线性方式文字不变但置信度/token使合同SHA改变；v5 CLAHE 将 `(成品包材)` 变成 `（成品包材）`，置信度从CPU基线0.848219升到0.9010367，不能据此判断更准确。该轮只有1次预热/3次采样且存在开发负载，不作为稳定性能或准确率结论；复现时请保存 sidecar 和原文差异，而非仅比较置信度。
 
@@ -251,7 +253,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 候选默认只做证据收集，不改变业务结果：`PreserveOriginal` 会保留首轮文本，同时在 `OcrRegionResult.WidthRetry` 中保存候选。若明确选择 `ConfidenceGain`，只有候选非空、置信度严格更高且增益达到 `MinimumConfidenceGain` 时才替换；这仍是启发式选择，不是准确率判定。`WidthRetry.Original`、`Candidate` 都包含文本、CTC trace、实际 `TensorWidth`、窗口和裁剪诊断，但不持有图像或 GPU 缓冲。`Candidate=null` 且决策为 `RegionLimit` 表示因行数预算未执行候选，不表示候选失败。
 
-重试最多发生一次，不包含局部放大、换模型、多配方候选链或自动准确率评估；这些属于后续 B3b 工作。启用后即使最终保留原文也会增加裁剪、REC 和合并耗时，必须在带标注的业务集上比较 CER/WER、召回率及端到端 P50/P95，不能仅根据置信度上涨宣称优化有效。当前单元测试覆盖候选选择、动态/固定 shape 合同、行数与物理 crop 限制；真实模型和各后端的收益矩阵仍需单独测量。
+重试最多发生一次；现已可将 `LocalUpscale` 作为该单候选增强策略，但仍不包含换模型、多配方候选链或自动准确率评估，这些属于后续 B3b 工作。启用后即使最终保留原文也会增加裁剪、REC 和合并耗时，必须在带标注的业务集上比较 CER/WER、召回率及端到端 P50/P95，不能仅根据置信度上涨宣称优化有效。当前单元测试覆盖候选选择、动态/固定 shape 合同、行数与物理 crop 限制，以及 OpenCV 局部放大尺寸和全流程候选证据；真实模型和各后端的收益矩阵仍需单独测量。
 
 ## 字符集覆盖审计
 
