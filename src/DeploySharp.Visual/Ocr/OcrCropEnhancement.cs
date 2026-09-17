@@ -9,6 +9,8 @@ namespace JYPPX.DeploySharp.Visual
         ContrastNormalize,
         /// <summary>Applies contrast-limited local histogram equalization to grayscale content. / 对灰度内容执行限制对比度的局部直方图均衡。</summary>
         GrayClahe,
+        /// <summary>Applies a bounded Gaussian denoise only when the sampled Laplacian variance exceeds the noise gate. / 仅在采样拉普拉斯方差超过噪声门限时执行有界高斯去噪。</summary>
+        GaussianDenoise,
     }
 
     /// <summary>Explains whether a requested crop enhancement was applied. / 说明请求的裁剪增强是否应用。</summary>
@@ -18,6 +20,8 @@ namespace JYPPX.DeploySharp.Visual
         NotConfigured,
         /// <summary>Contrast already meets the configured threshold. / 对比度已达到配置阈值。</summary>
         SufficientContrast,
+        /// <summary>The sampled high-frequency variation does not exceed the denoise gate. / 采样高频变化未超过去噪门限。</summary>
+        SufficientQuality,
         /// <summary>Too little variation exists to enhance safely. / 变化太少，不执行增强。</summary>
         InsufficientVariation,
         /// <summary>The selected low-contrast operation was applied. / 已应用所选低对比度操作。</summary>
@@ -29,9 +33,10 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes contrast gates, gain, CLAHE and per-crop pixel bounds. / 初始化对比度门限、增益、CLAHE 及逐裁剪像素限制。</summary>
         public OcrCropEnhancementOptions(OcrCropEnhancementMode mode, double lowContrastThreshold = 32, double minimumContrast = 1,
-            double targetStandardDeviation = 64, double maximumGain = 3, double claheClipLimit = 2, int claheGridSize = 8, int maximumPixelsPerCrop = 1048576)
+            double targetStandardDeviation = 64, double maximumGain = 3, double claheClipLimit = 2, int claheGridSize = 8, int maximumPixelsPerCrop = 1048576,
+            double noiseThreshold = 512, int denoiseKernelSize = 3, double denoiseSigma = 0)
         {
-            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe) throw new ArgumentOutOfRangeException(nameof(mode));
+            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise) throw new ArgumentOutOfRangeException(nameof(mode));
             if (!(lowContrastThreshold > 0 && lowContrastThreshold <= 128)) throw new ArgumentOutOfRangeException(nameof(lowContrastThreshold));
             if (!(minimumContrast > 0 && minimumContrast < lowContrastThreshold)) throw new ArgumentOutOfRangeException(nameof(minimumContrast));
             if (!(targetStandardDeviation >= lowContrastThreshold && targetStandardDeviation <= 128)) throw new ArgumentOutOfRangeException(nameof(targetStandardDeviation));
@@ -39,9 +44,13 @@ namespace JYPPX.DeploySharp.Visual
             if (!(claheClipLimit > 0 && claheClipLimit <= 16)) throw new ArgumentOutOfRangeException(nameof(claheClipLimit));
             if (claheGridSize < 2 || claheGridSize > 16) throw new ArgumentOutOfRangeException(nameof(claheGridSize));
             if (maximumPixelsPerCrop < 1 || maximumPixelsPerCrop > 16777216) throw new ArgumentOutOfRangeException(nameof(maximumPixelsPerCrop));
+            if (double.IsNaN(noiseThreshold) || double.IsInfinity(noiseThreshold) || noiseThreshold <= 0 || noiseThreshold > 1048576) throw new ArgumentOutOfRangeException(nameof(noiseThreshold));
+            if (denoiseKernelSize < 3 || denoiseKernelSize > 9 || (denoiseKernelSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(denoiseKernelSize));
+            if (double.IsNaN(denoiseSigma) || double.IsInfinity(denoiseSigma) || denoiseSigma < 0 || denoiseSigma > 32) throw new ArgumentOutOfRangeException(nameof(denoiseSigma));
             Mode = mode; LowContrastThreshold = lowContrastThreshold; MinimumContrast = minimumContrast;
             TargetStandardDeviation = targetStandardDeviation; MaximumGain = maximumGain; ClaheClipLimit = claheClipLimit;
             ClaheGridSize = claheGridSize; MaximumPixelsPerCrop = maximumPixelsPerCrop;
+            NoiseThreshold = noiseThreshold; DenoiseKernelSize = denoiseKernelSize; DenoiseSigma = denoiseSigma;
         }
         /// <summary>Gets the explicit operation. / 获取显式操作。</summary>
         public OcrCropEnhancementMode Mode { get; }
@@ -59,6 +68,12 @@ namespace JYPPX.DeploySharp.Visual
         public int ClaheGridSize { get; }
         /// <summary>Gets the hard bound on each enhanced rectified image; exceeding it fails. / 获取每个增强校正图像的硬上限，超限失败。</summary>
         public int MaximumPixelsPerCrop { get; }
+        /// <summary>Gets the Laplacian-variance gate used by Gaussian denoise; it is not a calibrated noise score. / 获取高斯去噪使用的拉普拉斯方差门限；它不是标定噪声分数。</summary>
+        public double NoiseThreshold { get; }
+        /// <summary>Gets the odd Gaussian kernel width used by Gaussian denoise. / 获取高斯去噪使用的奇数高斯核宽度。</summary>
+        public int DenoiseKernelSize { get; }
+        /// <summary>Gets the Gaussian sigma; zero delegates scale selection to OpenCV. / 获取高斯 sigma；零表示交由 OpenCV 根据核尺寸选择。</summary>
+        public double DenoiseSigma { get; }
     }
 
     /// <summary>Shares deterministic quality gates between crop adapters and result validation. / 在裁剪适配器与结果验证间共享确定性质量门限。</summary>
@@ -69,6 +84,13 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (rectified == null) throw new ArgumentNullException(nameof(rectified));
             if (options == null) return OcrCropEnhancementDecision.NotConfigured;
+            if (options.Mode == OcrCropEnhancementMode.GaussianDenoise)
+            {
+                double? laplacian = rectified.LaplacianVariance;
+                return laplacian.HasValue && laplacian.Value > options.NoiseThreshold
+                    ? OcrCropEnhancementDecision.Applied
+                    : OcrCropEnhancementDecision.SufficientQuality;
+            }
             double? deviation = rectified.LuminanceStandardDeviation;
             if (!deviation.HasValue || deviation.Value < options.MinimumContrast) return OcrCropEnhancementDecision.InsufficientVariation;
             if (deviation.Value >= options.LowContrastThreshold) return OcrCropEnhancementDecision.SufficientContrast;

@@ -17,6 +17,9 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(OcrCropEnhancementDecision.InsufficientVariation, OcrCropEnhancementPolicy.Decide(Analyze(0), options));
             Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), options));
             Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(32), options));
+            var denoise = new OcrCropEnhancementOptions(OcrCropEnhancementMode.GaussianDenoise, noiseThreshold: 1);
+            Assert.AreEqual(OcrCropEnhancementDecision.SufficientQuality, OcrCropEnhancementPolicy.Decide(Analyze(0), denoise));
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), denoise));
             var limited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 399);
             Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), limited)).ErrorCode);
             Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(64), limited));
@@ -36,6 +39,10 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, claheClipLimit: 0));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, claheGridSize: 32));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GaussianDenoise, noiseThreshold: 0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GaussianDenoise, denoiseKernelSize: 4));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GaussianDenoise, denoiseKernelSize: 11));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.GaussianDenoise, denoiseSigma: double.NaN));
         }
 
         [TestMethod]

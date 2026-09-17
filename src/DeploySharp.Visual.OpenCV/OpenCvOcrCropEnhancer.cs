@@ -22,6 +22,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (OcrCropEnhancementPolicy.Decide(quality, options) != OcrCropEnhancementDecision.Applied) return source;
             int channels = source.Channels;
             bool linear = options.Mode == OcrCropEnhancementMode.ContrastNormalize;
+            bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
             if (linear)
             {
                 double gain = Math.Min(options.MaximumGain, options.TargetStandardDeviation / quality.LuminanceStandardDeviation!.Value);
@@ -29,8 +30,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 for (int i = 0; i < 256; i++) _lookup[i] = (byte)Math.Max(0, Math.Min(255, Math.Floor(mean + gain * (i - mean) + .5)));
                 _enhanced.Create(source.Rows, source.Cols, source.Type);
             }
-            else _gray.Create(source.Rows, source.Cols, MatType.CV_8UC1);
-            Mat destination = linear ? _enhanced : _gray;
+            else if (!denoise) _gray.Create(source.Rows, source.Cols, MatType.CV_8UC1);
+            Mat destination = linear || denoise ? _enhanced : _gray;
+            if (denoise)
+            {
+                _enhanced.Create(source.Rows, source.Cols, source.Type);
+                ImageProcessing.GaussianBlur(source, _enhanced, new Size(options.DenoiseKernelSize, options.DenoiseKernelSize), options.DenoiseSigma, options.DenoiseSigma, BorderTypes.Reflect101);
+                token.ThrowIfCancellationRequested();
+                return _enhanced;
+            }
             long sourceStep = checked((long)source.Step.ToUInt64()), destinationStep = checked((long)destination.Step.ToUInt64());
             byte* input = (byte*)source.Data.ToPointer(); byte* output = (byte*)destination.Data.ToPointer();
             try

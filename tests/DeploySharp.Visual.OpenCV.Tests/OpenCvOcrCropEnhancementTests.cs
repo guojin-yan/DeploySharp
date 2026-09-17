@@ -66,8 +66,15 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 {
                     var configured = Profile().WithCropProcessing(new OcrCropProcessingOptions().WithEnhancement(new OcrCropEnhancementOptions(mode)));
                     using OcrPreparedCropBatch actual = input.PrepareProcessedRecognitionBatch("crops", new[] { Request(configured) }, CancellationToken.None);
-                    Assert.AreEqual(step == 0 ? OcrCropEnhancementDecision.InsufficientVariation : OcrCropEnhancementDecision.SufficientContrast, actual.Diagnostics[0].EnhancementDecision);
-                    Assert.IsNull(actual.Diagnostics[0].Enhanced); CollectionAssert.AreEqual((float[])plain.Tensor.Buffer, (float[])actual.Input.Tensor.Buffer);
+                    OcrCropEnhancementDecision expected = mode == OcrCropEnhancementMode.GaussianDenoise
+                        ? (step == 0 ? OcrCropEnhancementDecision.SufficientQuality : OcrCropEnhancementDecision.Applied)
+                        : (step == 0 ? OcrCropEnhancementDecision.InsufficientVariation : OcrCropEnhancementDecision.SufficientContrast);
+                    Assert.AreEqual(expected, actual.Diagnostics[0].EnhancementDecision);
+                    Assert.AreEqual(step == 0 || mode != OcrCropEnhancementMode.GaussianDenoise, actual.Diagnostics[0].Enhanced == null);
+                    if (step == 0 || mode != OcrCropEnhancementMode.GaussianDenoise)
+                        CollectionAssert.AreEqual((float[])plain.Tensor.Buffer, (float[])actual.Input.Tensor.Buffer);
+                    else
+                        Assert.IsFalse(((float[])plain.Tensor.Buffer).SequenceEqual((float[])actual.Input.Tensor.Buffer), "Gaussian denoise should change the high-frequency fixture.");
                 }
             }
             using OpenCvOcrImageInput low = Image(6);
