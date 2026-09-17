@@ -511,13 +511,13 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets optional per-crop pixel processing; null retains the original adapter path. / 获取可选逐裁剪像素处理，null 保持原适配器路径。</summary>
         public OcrCropProcessingOptions? CropProcessing { get; }
 
-        /// <summary>Gets optional single enhancement retry; null disables it. / 获取可选单次增强重试，null禁用。</summary>
+        /// <summary>Gets optional bounded enhancement retry candidates; null disables them. / 获取可选的有界增强重试候选，null禁用。</summary>
         public OcrEnhancementRetryOptions? EnhancementRetry { get; }
 
         /// <summary>Gets optional wider-recognition retry; null disables it. / 获取可选更宽识别重试，null禁用。</summary>
         public OcrWidthRetryOptions? WidthRetry { get; }
 
-        /// <summary>Enables baseline diagnostics and one low-confidence enhancement candidate; direct first-pass enhancement cannot be combined. / 启用基线诊断及一个低置信度增强候选，不能与首轮直接增强组合。</summary>
+        /// <summary>Enables baseline diagnostics and bounded low-confidence enhancement candidates; direct first-pass enhancement cannot be combined. / 启用基线诊断及有界低置信度增强候选，不能与首轮直接增强组合。</summary>
         public TextCropProfile WithEnhancementRetry(OcrEnhancementRetryOptions options)
             => new TextCropProfile(this, OverflowMode, enhancementRetry: options ?? throw new ArgumentNullException(nameof(options)), cropProcessing: CropProcessing ?? new OcrCropProcessingOptions());
 

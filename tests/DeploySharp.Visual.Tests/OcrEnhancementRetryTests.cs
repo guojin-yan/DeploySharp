@@ -32,6 +32,152 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void EnhancementRetryManyCopiesOrderedRecipesAndKeepsTheLegacyFirstRecipe()
+        {
+            OcrCropEnhancementOptions first = RetryEnhancement();
+            OcrCropEnhancementOptions second = new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2.5);
+            var source = new[] { first, second };
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(source, maximumRegionsPerImage: 3, maximumCropsPerImage: 12);
+
+            Assert.AreSame(first, retry.Enhancement);
+            Assert.AreEqual(2, retry.Enhancements.Count);
+            Assert.AreSame(first, retry.Enhancements[0]);
+            Assert.AreSame(second, retry.Enhancements[1]);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => OcrEnhancementRetryOptions.CreateMany(Array.Empty<OcrCropEnhancementOptions>()));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => OcrEnhancementRetryOptions.CreateMany(new[] { first, second, first, second, first }));
+            Assert.ThrowsExactly<ArgumentException>(() => OcrEnhancementRetryOptions.CreateMany(new[] { first, (OcrCropEnhancementOptions)null! }));
+            Assert.ThrowsExactly<ArgumentNullException>(() => OcrEnhancementRetryOptions.CreateMany(null!));
+        }
+
+        [TestMethod]
+        public async Task EnhancementRetryManyRunsRecipesInOrderAndSelectsTheBestCandidate()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[]
+                {
+                    RetryEnhancement(),
+                    new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2)
+                },
+                confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConfidenceGain,
+                minimumConfidenceGain: .05f,
+                maximumRegionsPerImage: 2,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : calls == 2 ? .85f : .95f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(3, calls, "The original pass and each ordered recipe should run once.");
+            Assert.AreEqual(6, input.PhysicalCrops, "Two regions are processed by the original pass and two recipe candidates; each batch has no extra padding.");
+            Assert.AreEqual(1, fixture.DetectionProvider.LastSession!.RunCount, "Recipe retries must not repeat detection.");
+            Assert.AreEqual(3, result.Timing.Details!.RecognitionBatchCount);
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                OcrEnhancementRetryResult evidence = item.EnhancementRetry!;
+                Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, evidence.Decision);
+                Assert.AreEqual(2, evidence.Candidates.Count);
+                CollectionAssert.AreEqual(new[] { 0, 1 }, evidence.CandidateRecipeIndices.ToArray());
+                Assert.AreEqual(1, evidence.SelectedCandidateIndex);
+                Assert.AreSame(evidence.Candidates[1], evidence.Candidate);
+                Assert.AreEqual(.85f, evidence.Candidates[0].Recognition.Confidence, .00001);
+                Assert.AreEqual(.95f, evidence.Candidates[1].Recognition.Confidence, .00001);
+                Assert.AreSame(evidence.Candidates[1].Recognition, item.Recognition);
+                Assert.IsNotNull(evidence.Candidates[0].CropDiagnostics[0].Enhanced);
+                Assert.IsNotNull(evidence.Candidates[1].CropDiagnostics[0].Enhanced);
+            }
+            Assert.AreEqual(0, input.Inner.ActivePreparedBatches);
+        }
+
+        [TestMethod]
+        public async Task EnhancementRetryManyPreservesOriginalButRetainsAllCandidates()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[] { RetryEnhancement(), new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale) },
+                confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.PreserveOriginal,
+                maximumRegionsPerImage: 2,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : calls == 2 ? .9f : .95f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                OcrEnhancementRetryResult evidence = item.EnhancementRetry!;
+                Assert.AreEqual(OcrEnhancementRetryDecision.PreservedByPolicy, evidence.Decision);
+                Assert.IsNull(evidence.SelectedCandidateIndex);
+                Assert.AreEqual(2, evidence.Candidates.Count);
+                CollectionAssert.AreEqual(new[] { 0, 1 }, evidence.CandidateRecipeIndices.ToArray());
+                Assert.AreSame(evidence.Candidates[0], evidence.Candidate);
+                Assert.AreSame(evidence.Original.Recognition, item.Recognition);
+            }
+            Assert.AreEqual(3, calls);
+            Assert.AreEqual(0, input.Inner.ActivePreparedBatches);
+        }
+
+        [TestMethod]
+        public async Task EnhancementRetryManyReportsRecipeIndexWhenAnEarlierRecipeIsIneligible()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[] { RetryEnhancement(), new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale) },
+                confidenceThreshold: 1,
+                maximumRegionsPerImage: 2,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : .9f));
+            using var input = new CropInput { QualityStep = 0 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(2, calls, "The ineligible contrast recipe must be skipped without a recognizer call.");
+            Assert.AreEqual(4, input.PhysicalCrops);
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                OcrEnhancementRetryResult evidence = item.EnhancementRetry!;
+                Assert.AreEqual(1, evidence.Candidates.Count);
+                CollectionAssert.AreEqual(new[] { 1 }, evidence.CandidateRecipeIndices.ToArray());
+                Assert.AreSame(evidence.Candidates[0], evidence.Candidate);
+            }
+            Assert.AreEqual(0, input.Inner.ActivePreparedBatches);
+        }
+
+        [TestMethod]
+        public async Task EnhancementSelectionPreservesEarlierWidthRetryEvidence()
+        {
+            int calls = 0;
+            var widthRetry = new OcrWidthRetryOptions(32, confidenceThreshold: .8f,
+                selectionPolicy: OcrWidthRetrySelectionPolicy.ConfidenceGain, minimumConfidenceGain: .01f,
+                maximumRegionsPerImage: 2, maximumCropsPerImage: 8);
+            var enhancementRetry = new OcrEnhancementRetryOptions(RetryEnhancement(), confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConfidenceGain, minimumConfidenceGain: .01f,
+                maximumRegionsPerImage: 2, maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(dynamicWidth: true, widthRetry: widthRetry, enhancementRetry: enhancementRetry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : calls == 2 ? .95f : .99f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(3, calls);
+            Assert.AreEqual(6, input.PhysicalCrops);
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                Assert.IsNotNull(item.WidthRetry, "An enhancement-selected result must retain the earlier width retry trace.");
+                Assert.IsNotNull(item.WidthRetry!.Candidate);
+                Assert.IsTrue(item.WidthRetry.Candidate!.RecognitionWidth!.Value.TargetWidth > 8);
+                Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, item.EnhancementRetry!.Decision);
+                Assert.AreSame(item.EnhancementRetry.Candidate!.Recognition, item.Recognition);
+            }
+            Assert.AreEqual(0, input.Inner.ActivePreparedBatches);
+        }
+
+        [TestMethod]
         public async Task EnhancementRetryDefaultKeepsOriginalAndPreservesBetterCandidateWithoutRepeatingDetector()
         {
             int calls = 0;

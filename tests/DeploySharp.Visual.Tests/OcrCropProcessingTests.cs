@@ -151,9 +151,18 @@ namespace DeploySharp.Visual.Tests
                         var quality = new OcrPixelQualityOptions(request.Profile.CropProcessing!.MaximumSamplesPerStage);
                         int qualityStep = RegionQualityStep?.Invoke(request.Region.SourceIndex) ?? QualityStep;
                         OcrPixelQualityDiagnostics rectified = OcrPixelQualityAnalyzer.Analyze(new VisualSize(40, 20), (x, _) => (byte)(100 + (x % 2 == 0 ? -qualityStep : qualityStep)), quality);
-                        bool apply = OcrCropEnhancementPolicy.Decide(rectified, request.Profile.CropProcessing.Enhancement) == OcrCropEnhancementDecision.Applied;
+                        OcrCropEnhancementOptions? enhancement = request.Profile.CropProcessing.Enhancement;
+                        bool apply = OcrCropEnhancementPolicy.Decide(rectified, enhancement) == OcrCropEnhancementDecision.Applied;
+                        OcrPixelQualityDiagnostics? enhanced = null;
+                        if (apply)
+                        {
+                            VisualSize enhancedSize = enhancement!.Mode == OcrCropEnhancementMode.LocalUpscale
+                                ? enhancement.CalculateUpscaledSize(rectified.InputSize)
+                                : rectified.InputSize;
+                            enhanced = OcrPixelQualityAnalyzer.Analyze(enhancedSize, (x, _) => (byte)(100 + (x % 2 == 0 ? -qualityStep : qualityStep)), quality);
+                        }
                         rows.Add(new OcrCropDiagnostics(source, rectified,
-                            OcrPixelQualityAnalyzer.Analyze(new VisualSize(request.TargetWidth, request.TargetHeight), (_, _) => 100, quality), apply ? rectified : null));
+                            OcrPixelQualityAnalyzer.Analyze(new VisualSize(request.TargetWidth, request.TargetHeight), (_, _) => 100, quality), enhanced));
                     }
                     return new OcrPreparedCropBatch(prepared, rows);
                 }

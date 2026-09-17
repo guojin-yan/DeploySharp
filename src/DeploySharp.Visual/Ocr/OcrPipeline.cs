@@ -540,7 +540,9 @@ namespace JYPPX.DeploySharp.Visual
                     if (_cropProfile.EnhancementRetry != null)
                     {
                         stage = OcrPipelineStage.Recognition;
-                        RetryWork retry = await RunEnhancementRetryAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget!).ConfigureAwait(false);
+                        RetryWork retry = _cropProfile.EnhancementRetry.Enhancements.Count == 1
+                            ? await RunEnhancementRetryAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget!).ConfigureAwait(false)
+                            : await RunEnhancementRecipeRetryAsync(input, results, resultBytes, execution, aggregation, operationToken, cropBudget!).ConfigureAwait(false);
                         recognitionDuration += retry.Elapsed;
                         recognitionPreparationWork += retry.Preparation;
                         recognitionInferenceWork += retry.Inference;
@@ -833,6 +835,7 @@ namespace JYPPX.DeploySharp.Visual
             private readonly OcrCropProcessingOptions _options;
             private int _crops;
             internal CropWorkBudget(OcrCropProcessingOptions options) { _options = options; }
+            internal int CropsUsed => _crops;
             internal long Reserve(IReadOnlyList<OcrBatchDescriptor> batches)
             {
                 int count = 0; foreach (OcrBatchDescriptor batch in batches) count = checked(count + batch.Crops.Count);

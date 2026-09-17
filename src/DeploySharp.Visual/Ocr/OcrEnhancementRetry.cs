@@ -27,25 +27,58 @@ namespace JYPPX.DeploySharp.Visual
         CandidateSelected,
     }
 
-    /// <summary>Bounds one quality-gated enhancement retry after any orientation retries. / 限制方向重试之后的一次质量门控增强重试。</summary>
+    /// <summary>Bounds one or more quality-gated enhancement candidates after any orientation retries. / 限制方向重试之后一个或多个质量门控增强候选。</summary>
     public sealed class OcrEnhancementRetryOptions
     {
-        /// <summary>Initializes a single candidate and admission/resource bounds; defaults never replace text. / 初始化单候选及接收和资源限制，默认不替换文字。</summary>
+        /// <summary>Initializes one candidate and admission/resource bounds; defaults never replace text. / 初始化单候选及接收和资源限制，默认不替换文字。</summary>
         public OcrEnhancementRetryOptions(OcrCropEnhancementOptions enhancement, float confidenceThreshold = .8f,
             OcrEnhancementSelectionPolicy selectionPolicy = OcrEnhancementSelectionPolicy.PreserveOriginal,
             float minimumConfidenceGain = .05f, int maximumRegionsPerImage = 16, int maximumCropsPerImage = 128)
         {
-            Enhancement = enhancement ?? throw new ArgumentNullException(nameof(enhancement));
+            if (enhancement == null) throw new ArgumentNullException(nameof(enhancement));
+            Enhancement = enhancement;
+            Enhancements = new List<OcrCropEnhancementOptions> { enhancement }.AsReadOnly();
+            Validate(confidenceThreshold, selectionPolicy, minimumConfidenceGain, maximumRegionsPerImage, maximumCropsPerImage);
+            ConfidenceThreshold = confidenceThreshold; SelectionPolicy = selectionPolicy; MinimumConfidenceGain = minimumConfidenceGain;
+            MaximumRegionsPerImage = maximumRegionsPerImage; MaximumCropsPerImage = maximumCropsPerImage;
+        }
+
+        private OcrEnhancementRetryOptions(IReadOnlyList<OcrCropEnhancementOptions> enhancements, float confidenceThreshold,
+            OcrEnhancementSelectionPolicy selectionPolicy, float minimumConfidenceGain, int maximumRegionsPerImage, int maximumCropsPerImage)
+        {
+            if (enhancements == null) throw new ArgumentNullException(nameof(enhancements));
+            if (enhancements.Count == 0 || enhancements.Count > 4) throw new ArgumentOutOfRangeException(nameof(enhancements));
+            var copy = new List<OcrCropEnhancementOptions>(enhancements.Count);
+            foreach (OcrCropEnhancementOptions enhancement in enhancements)
+                copy.Add(enhancement ?? throw new ArgumentException("Enhancement recipes cannot contain null.", nameof(enhancements)));
+            Enhancement = copy[0];
+            Enhancements = copy.AsReadOnly();
+            Validate(confidenceThreshold, selectionPolicy, minimumConfidenceGain, maximumRegionsPerImage, maximumCropsPerImage);
+            ConfidenceThreshold = confidenceThreshold; SelectionPolicy = selectionPolicy; MinimumConfidenceGain = minimumConfidenceGain;
+            MaximumRegionsPerImage = maximumRegionsPerImage; MaximumCropsPerImage = maximumCropsPerImage;
+        }
+
+        /// <summary>Creates a bounded ordered set of enhancement candidates. The first candidate keeps the legacy <see cref="Enhancement"/> property. / 创建一组有序的有界增强候选；首个候选保持兼容的 Enhancement 属性。</summary>
+        public static OcrEnhancementRetryOptions CreateMany(IEnumerable<OcrCropEnhancementOptions> enhancements, float confidenceThreshold = .8f,
+            OcrEnhancementSelectionPolicy selectionPolicy = OcrEnhancementSelectionPolicy.PreserveOriginal,
+            float minimumConfidenceGain = .05f, int maximumRegionsPerImage = 16, int maximumCropsPerImage = 128)
+        {
+            if (enhancements == null) throw new ArgumentNullException(nameof(enhancements));
+            return new OcrEnhancementRetryOptions(new List<OcrCropEnhancementOptions>(enhancements), confidenceThreshold, selectionPolicy, minimumConfidenceGain, maximumRegionsPerImage, maximumCropsPerImage);
+        }
+
+        private static void Validate(float confidenceThreshold, OcrEnhancementSelectionPolicy selectionPolicy, float minimumConfidenceGain, int maximumRegionsPerImage, int maximumCropsPerImage)
+        {
             if (!(confidenceThreshold > 0 && confidenceThreshold <= 1)) throw new ArgumentOutOfRangeException(nameof(confidenceThreshold));
             if (!(minimumConfidenceGain >= 0 && minimumConfidenceGain <= 1)) throw new ArgumentOutOfRangeException(nameof(minimumConfidenceGain));
             if (selectionPolicy != OcrEnhancementSelectionPolicy.PreserveOriginal && selectionPolicy != OcrEnhancementSelectionPolicy.ConfidenceGain) throw new ArgumentOutOfRangeException(nameof(selectionPolicy));
             if (maximumRegionsPerImage < 1 || maximumRegionsPerImage > 4096) throw new ArgumentOutOfRangeException(nameof(maximumRegionsPerImage));
             if (maximumCropsPerImage < 1 || maximumCropsPerImage > 4096) throw new ArgumentOutOfRangeException(nameof(maximumCropsPerImage));
-            ConfidenceThreshold = confidenceThreshold; SelectionPolicy = selectionPolicy; MinimumConfidenceGain = minimumConfidenceGain;
-            MaximumRegionsPerImage = maximumRegionsPerImage; MaximumCropsPerImage = maximumCropsPerImage;
         }
-        /// <summary>Gets the single candidate operation and quality gates. / 获取单个候选操作及质量门限。</summary>
+        /// <summary>Gets the first candidate operation for backward compatibility. / 获取首个候选操作，用于保持向后兼容。</summary>
         public OcrCropEnhancementOptions Enhancement { get; }
+        /// <summary>Gets ordered enhancement candidates; at most four recipes are allowed. / 获取有序增强候选，最多允许四种配方。</summary>
+        public IReadOnlyList<OcrCropEnhancementOptions> Enhancements { get; }
         /// <summary>Gets the exclusive confidence threshold; empty text always qualifies. / 获取排他置信度阈值，空文字始终符合条件。</summary>
         public float ConfidenceThreshold { get; }
         /// <summary>Gets the explicit selection policy. / 获取显式选择策略。</summary>
@@ -81,20 +114,69 @@ namespace JYPPX.DeploySharp.Visual
         internal OcrEnhancementAttempt WithSourceIndex(int index) => new OcrEnhancementAttempt(_value.WithSourceIndex(index));
     }
 
-    /// <summary>Records a low-confidence enhancement decision with original and optional candidate. / 记录低置信度增强决策及原始和可选候选结果。</summary>
+    /// <summary>Records a low-confidence enhancement decision with original and ordered candidates. / 记录低置信度增强决策及原始和有序候选结果。</summary>
     public sealed class OcrEnhancementRetryResult
     {
         internal OcrEnhancementRetryResult(OcrEnhancementRetryOptions options, OcrEnhancementAttempt original, OcrEnhancementAttempt? candidate, OcrEnhancementRetryDecision decision)
-        { Options = options; Original = original; Candidate = candidate; Decision = decision; }
+            : this(options, original, candidate == null ? Array.Empty<OcrEnhancementAttempt>() : new[] { candidate },
+                candidate == null ? Array.Empty<int>() : new[] { 0 }, decision == OcrEnhancementRetryDecision.CandidateSelected ? 0 : (int?)null, decision) { }
+
+        internal OcrEnhancementRetryResult(OcrEnhancementRetryOptions options, OcrEnhancementAttempt original, IReadOnlyList<OcrEnhancementAttempt> candidates, int? selectedCandidateIndex, OcrEnhancementRetryDecision decision)
+            : this(options, original, candidates, CreateSequentialRecipeIndices(candidates), selectedCandidateIndex, decision) { }
+
+        internal OcrEnhancementRetryResult(OcrEnhancementRetryOptions options, OcrEnhancementAttempt original, IReadOnlyList<OcrEnhancementAttempt> candidates,
+            IReadOnlyList<int> candidateRecipeIndices, int? selectedCandidateIndex, OcrEnhancementRetryDecision decision)
+        {
+            Options = options ?? throw new ArgumentNullException(nameof(options));
+            Original = original ?? throw new ArgumentNullException(nameof(original));
+            if (candidates == null) throw new ArgumentNullException(nameof(candidates));
+            if (candidateRecipeIndices == null) throw new ArgumentNullException(nameof(candidateRecipeIndices));
+            if (candidateRecipeIndices.Count != candidates.Count) throw new ArgumentException("One recipe index is required per enhancement candidate.", nameof(candidateRecipeIndices));
+            if (selectedCandidateIndex.HasValue && (selectedCandidateIndex.Value < 0 || selectedCandidateIndex.Value >= candidates.Count)) throw new ArgumentOutOfRangeException(nameof(selectedCandidateIndex));
+            var copy = new List<OcrEnhancementAttempt>(candidates.Count);
+            foreach (OcrEnhancementAttempt candidate in candidates) copy.Add(candidate ?? throw new ArgumentException("Enhancement candidates cannot contain null.", nameof(candidates)));
+            var recipeIndices = new List<int>(candidateRecipeIndices.Count);
+            foreach (int recipeIndex in candidateRecipeIndices)
+            {
+                if (recipeIndex < 0 || recipeIndex >= Options.Enhancements.Count) throw new ArgumentOutOfRangeException(nameof(candidateRecipeIndices));
+                recipeIndices.Add(recipeIndex);
+            }
+            Candidates = copy.AsReadOnly();
+            CandidateRecipeIndices = recipeIndices.AsReadOnly();
+            SelectedCandidateIndex = selectedCandidateIndex;
+            Candidate = selectedCandidateIndex.HasValue ? Candidates[selectedCandidateIndex.Value] : Candidates.Count == 0 ? null : Candidates[0];
+            Decision = decision;
+        }
         /// <summary>Gets configured thresholds, selection policy and limits. / 获取配置的阈值、选择策略及限制。</summary>
         public OcrEnhancementRetryOptions Options { get; }
         /// <summary>Gets the selected pre-enhancement result, after any orientation retries. / 获取增强前所选结果，位于可选方向重试之后。</summary>
         public OcrEnhancementAttempt Original { get; }
-        /// <summary>Gets the single candidate; null means no additional recognition ran. / 获取唯一候选，null表示没有执行额外识别。</summary>
+        /// <summary>Gets the selected candidate, or the first candidate for a preserved multi-recipe result; null means no additional recognition ran. / 获取所选候选；多配方保留结果返回首个候选；null表示没有执行额外识别。</summary>
         public OcrEnhancementAttempt? Candidate { get; }
+        /// <summary>Gets all executed candidates in recipe order. / 获取按配方顺序执行的全部候选。</summary>
+        public IReadOnlyList<OcrEnhancementAttempt> Candidates { get; }
+        /// <summary>Gets the configured recipe index for each candidate; it aligns with <see cref="Candidates"/> even when a recipe was ineligible for a line. / 获取每个候选对应的配置配方索引；即使某个配方对该行不适用，也与 Candidates 一一对应。</summary>
+        public IReadOnlyList<int> CandidateRecipeIndices { get; }
+        /// <summary>Gets the candidate index selected by confidence policy, or null when the original was preserved. / 获取置信度策略选中的候选索引；保留原文时为 null。</summary>
+        public int? SelectedCandidateIndex { get; }
         /// <summary>Gets the explicit outcome, not a correctness judgment. / 获取显式结果，不表示正确性判断。</summary>
         public OcrEnhancementRetryDecision Decision { get; }
         internal OcrEnhancementRetryResult WithSourceIndex(int index) => Original.Recognition.SourceRegionIndex == index ? this
-            : new OcrEnhancementRetryResult(Options, Original.WithSourceIndex(index), Candidate?.WithSourceIndex(index), Decision);
+            : new OcrEnhancementRetryResult(Options, Original.WithSourceIndex(index), WithSourceIndex(Candidates, index), CandidateRecipeIndices, SelectedCandidateIndex, Decision);
+
+        private static IReadOnlyList<int> CreateSequentialRecipeIndices(IReadOnlyList<OcrEnhancementAttempt> candidates)
+        {
+            if (candidates == null) throw new ArgumentNullException(nameof(candidates));
+            var indices = new int[candidates.Count];
+            for (int index = 0; index < indices.Length; index++) indices[index] = index;
+            return indices;
+        }
+
+        private static IReadOnlyList<OcrEnhancementAttempt> WithSourceIndex(IReadOnlyList<OcrEnhancementAttempt> source, int index)
+        {
+            var copy = new List<OcrEnhancementAttempt>(source.Count);
+            foreach (OcrEnhancementAttempt candidate in source) copy.Add(candidate.WithSourceIndex(index));
+            return copy;
+        }
     }
 }

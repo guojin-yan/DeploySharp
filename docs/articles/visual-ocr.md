@@ -227,7 +227,37 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 资源上限有两层：`maximumRegionsPerImage` 按阅读顺序接收质量合格的低分行；超出保留原文并标记。`maximumCropsPerImage` 限制增强阶段额外物理行，包含滑窗和模型minimum-batch重复补齐，超限整次调用报 `DS-VISUAL-4102`。此外，初次REC、方向重试、增强重试共享 `CropProcessing.MaximumCropsPerCall`、`MaximumResultBytes`、取消和超时。原始和全部候选诊断/识别trace一并计入保守结果预算，错误不返回部分成功；Batch/Session池复用现有模型并发边界，不创建无上限的任务或新模型会话。
 
-候选规划、采样、增强、REC、合并计入 `Recognition` 墙钟和端到端总时间；各批次准备/推理/后处理累计到详细work计时，`RecognitionBatchCount`包含额外批次。阶段work在并发时可能大于墙钟。启用重试即使选择保留原文，也会产生真实计算成本；不要把它当作免费精度开关。当前只实现单增强候选，不包含动态扩大模型宽度、换模型或多配方候选链，真实准确率仍需标注集验证。
+候选规划、采样、增强、REC、合并计入 `Recognition` 墙钟和端到端总时间；各批次准备/推理/后处理累计到详细work计时，`RecognitionBatchCount`包含额外批次。阶段work在并发时可能大于墙钟。启用重试即使选择保留原文，也会产生真实计算成本；不要把它当作免费精度开关。单候选与多配方都不改变 DET/CLS 或模型会话合同，真实准确率仍需标注集验证。
+
+### 有界多配方候选（B3b）
+
+当一种增强无法覆盖全部现场退化时，可以把最多四种**彼此独立**的增强操作声明为有序候选。每种配方都从原始裁剪重新取样；不会把第一种配方的输出再交给第二种配方，也不会产生无限重试链：
+
+```csharp
+var retry = OcrEnhancementRetryOptions.CreateMany(
+    new OcrCropEnhancementOptions[]
+    {
+        new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe),
+        new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2),
+        new OcrCropEnhancementOptions(OcrCropEnhancementMode.UnsharpMask, sharpnessThreshold: 768)
+    },
+    confidenceThreshold: 0.9f,
+    selectionPolicy: OcrEnhancementSelectionPolicy.PreserveOriginal,
+    maximumRegionsPerImage: 8,
+    maximumCropsPerImage: 32);
+
+TextCropProfile crop = recognitionProfile.CropProfile!
+    .WithCropProcessing(new OcrCropProcessingOptions(1024, 1024))
+    .WithEnhancementRetry(retry);
+```
+
+`CreateMany` 会复制输入集合，拒绝空集合、空元素和超过四种配方；第一个配方仍通过兼容属性 `Enhancement` 暴露。Pipeline 先按阅读顺序接收低置信度行，再按配方顺序批量执行。每个配方只提交本行真正通过该配方质量门限的裁剪，空配方不会创建 REC batch；每个配方内部继续复用现有宽度分组、minimum-batch 补齐、Session 池和取消令牌。所有配方共享同一 `maximumRegionsPerImage`、`maximumCropsPerImage`、`MaximumCropsPerCall` 与结果字节预算，任何物理 crop 或结果预算超限都整次失败，不返回部分成功。
+
+结果行的 `EnhancementRetry.Candidates` 按实际执行顺序保存候选，`CandidateRecipeIndices` 给出对应的 `Options.Enhancements` 索引。某行不满足第一种配方而只满足第二种时，索引仍为 `[1]`，不能假定候选列表位置就是配置位置。`Candidate` 为兼容快捷属性：选择策略替换成功时返回被选候选；`PreserveOriginal` 时返回第一个已执行候选；没有候选时为 `null`。`SelectedCandidateIndex` 只有 `ConfidenceGain` 真的替换原文时才有值。
+
+`PreserveOriginal` 适合先收集真实现场证据，最终文字保持首轮结果但保留每个候选的文字、token、置信度、窗口和裁剪诊断。`ConfidenceGain` 会在所有候选完成后，从非空且超过原文 `MinimumConfidenceGain` 的候选中选择置信度最高者；这只是启发式，不是准确率判定，也不理解业务字段语义。多配方按顺序串行执行以保持确定性，墙钟 `Recognition` 只记录一次外层耗时，详细 work 计时和 `RecognitionBatchCount` 累加每个配方的真实 batch；即使保留原文，也应将额外成本纳入 P50/P95 基准。
+
+多配方目前只覆盖已有 `OcrCropEnhancementMode`（包括 `LocalUpscale`），不自动识别阴影、JPEG 或噪声，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain`。
 
 验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
 
@@ -253,7 +283,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 候选默认只做证据收集，不改变业务结果：`PreserveOriginal` 会保留首轮文本，同时在 `OcrRegionResult.WidthRetry` 中保存候选。若明确选择 `ConfidenceGain`，只有候选非空、置信度严格更高且增益达到 `MinimumConfidenceGain` 时才替换；这仍是启发式选择，不是准确率判定。`WidthRetry.Original`、`Candidate` 都包含文本、CTC trace、实际 `TensorWidth`、窗口和裁剪诊断，但不持有图像或 GPU 缓冲。`Candidate=null` 且决策为 `RegionLimit` 表示因行数预算未执行候选，不表示候选失败。
 
-重试最多发生一次；现已可将 `LocalUpscale` 作为该单候选增强策略，但仍不包含换模型、多配方候选链或自动准确率评估，这些属于后续 B3b 工作。启用后即使最终保留原文也会增加裁剪、REC 和合并耗时，必须在带标注的业务集上比较 CER/WER、召回率及端到端 P50/P95，不能仅根据置信度上涨宣称优化有效。当前单元测试覆盖候选选择、动态/固定 shape 合同、行数与物理 crop 限制，以及 OpenCV 局部放大尺寸和全流程候选证据；真实模型和各后端的收益矩阵仍需单独测量。
+重试最多发生一次；现已可将 `LocalUpscale` 作为该单候选增强策略。启用后即使最终保留原文也会增加裁剪、REC 和合并耗时，必须在带标注的业务集上比较 CER/WER、召回率及端到端 P50/P95，不能仅根据置信度上涨宣称优化有效。当前单元测试覆盖候选选择、动态/固定 shape 合同、行数与物理 crop 限制，以及 OpenCV 局部放大尺寸和全流程候选证据；真实模型和各后端的收益矩阵仍需单独测量。
 
 ## 字符集覆盖审计
 

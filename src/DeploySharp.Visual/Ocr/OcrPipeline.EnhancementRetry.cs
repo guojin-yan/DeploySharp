@@ -8,11 +8,11 @@ namespace JYPPX.DeploySharp.Visual
     public sealed partial class OcrPipeline
     {
         private async Task<RetryWork> RunEnhancementRetryAsync(IOcrImageInput input, List<OcrRegionResult> results, long initialBytes,
-            OcrExecutionOptions execution, CtcConfidenceAggregation aggregation, CancellationToken token, CropWorkBudget cropBudget)
+            OcrExecutionOptions execution, CtcConfidenceAggregation aggregation, CancellationToken token, CropWorkBudget cropBudget, OcrEnhancementRetryOptions? overrideOptions = null)
         {
             var watch = Stopwatch.StartNew();
             var work = new RetryWork();
-            OcrEnhancementRetryOptions options = _cropProfile.EnhancementRetry!;
+            OcrEnhancementRetryOptions options = overrideOptions ?? _cropProfile.EnhancementRetry!;
             TextCropProfile candidateProfile = _cropProfile.ForEnhancementCandidate(options.Enhancement);
             var budget = new RetryBudget(initialBytes, _options.MaximumResultBytes);
             var requests = new List<IndexedRequest>();
@@ -89,7 +89,8 @@ namespace JYPPX.DeploySharp.Visual
                     token.ThrowIfCancellationRequested();
                     OcrRegionResult candidate;
                     if (plan.Windows.Count == 1)
-                        candidate = new OcrRegionResult(plan.Original.Region, texts[plan.Offset], widths[plan.Offset], System.Array.Empty<OcrRecognitionWindowResult>(), plan.Original.Geometry);
+                        candidate = new OcrRegionResult(plan.Original.Region, texts[plan.Offset], widths[plan.Offset], System.Array.Empty<OcrRecognitionWindowResult>(), plan.Original.Geometry, plan.Original.OrientationRetry)
+                            .WithPixelQuality(plan.Original.PixelQuality).WithWidthRetry(plan.Original.WidthRetry);
                     else
                     {
                         var windows = new List<OcrRecognitionWindowResult>(plan.Windows.Count);
@@ -102,6 +103,7 @@ namespace JYPPX.DeploySharp.Visual
                         budget.Reserve(mergedBytes);
                         candidate = OcrRecognitionWindowMerger.Merge(plan.Original.Region, candidateProfile, windows, aggregation, token);
                         if (plan.Original.Geometry != null) candidate = candidate.WithGeometry(plan.Original.Geometry);
+                        candidate = PreserveRetryContext(candidate, plan.Original);
                     }
                     budget.Reserve(128L + plan.Windows.Count * 48L);
                     candidate = candidate.WithCropDiagnostics(CropEvidenceRange(diagnostics, plan.Offset, plan.Windows.Count));
@@ -116,6 +118,14 @@ namespace JYPPX.DeploySharp.Visual
             token.ThrowIfCancellationRequested();
             watch.Stop(); work.Elapsed = watch.Elapsed; work.RetainedBytes = budget.Used;
             return work;
+        }
+
+        private static OcrRegionResult PreserveRetryContext(OcrRegionResult candidate, OcrRegionResult original)
+        {
+            if (original.PixelQuality != null) candidate = candidate.WithPixelQuality(original.PixelQuality);
+            if (original.WidthRetry != null) candidate = candidate.WithWidthRetry(original.WidthRetry);
+            if (original.OrientationRetry != null) candidate = candidate.WithOrientationRetry(original.OrientationRetry);
+            return candidate;
         }
 
         private sealed class EnhancementPlan
