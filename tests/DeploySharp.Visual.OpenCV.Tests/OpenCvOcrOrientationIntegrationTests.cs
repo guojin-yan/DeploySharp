@@ -41,15 +41,20 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var detectorOptions = new OpenCvPreprocessOptions(new VisualSize(32, 16), OpenCvResizeMode.Resize, VisualColorOrder.Rgb, layout: VisualTensorLayout.Nchw, outputType: OpenCvOutputType.Float32);
             using OpenCvOcrImageInput input = factory.CreateOrientationInput(OpenCvImageSource.FromFile(Fixture("ocr-orientation-180.png")), "images", orientationOptions, "images", detectorOptions);
 
-            OcrResult result = workflow.Run(input);
+            OcrResult result = workflow.Run(input, ocrOptions: new OcrExecutionOptions().WithPixelQuality(new OcrPixelQualityOptions()));
 
             Assert.AreEqual(TextOrientation.Degrees180, result.Orientation?.AcceptedOrientation);
             Assert.AreEqual(new VisualSize(2, 2), result.OriginalSourceSize);
             CollectionAssert.AreEqual(new[] { "AB", "CA" }, result.Regions.Select(value => value.Recognition.Text).ToArray());
             Assert.AreEqual(64, result.ComputeSha256().Length);
+            Assert.IsNotNull(result.PixelQuality);
+            Assert.AreEqual(result.CorrectedSourceSize, result.PixelQuality.InputSize);
             foreach (OcrRegionResult region in result.Regions)
             {
                 Assert.AreEqual(result.CorrectedSourceSize, region.Geometry!.InputSize);
+                Assert.IsNotNull(region.PixelQuality);
+                Assert.AreEqual(result.CorrectedSourceSize, region.PixelQuality.InputSize);
+                CollectionAssert.AreEqual(region.Geometry.InputPolygon.Vertices.ToArray(), region.PixelQuality.InputPolygon!.Vertices.ToArray());
                 var restored = TextPolygon.Canonicalize(region.Geometry.InputPolygon.Vertices.Select(result.Orientation!.ToOriginalPoint).ToArray(), OrientedVertexOrder.CounterClockwise);
                 CollectionAssert.AreEqual(restored.Vertices.ToArray(), region.Region.Polygon.Vertices.ToArray());
                 Assert.AreEqual(2, region.OrientationRetry!.Attempts.Count);

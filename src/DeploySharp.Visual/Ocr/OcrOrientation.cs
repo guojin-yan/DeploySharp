@@ -384,7 +384,7 @@ namespace JYPPX.DeploySharp.Visual
                 var region = new TextRegion(item.Region.SourceIndex, item.Region.Score, polygon, orientation: item.Region.Orientation, angleRadians: item.Region.AngleRadians, language: item.Region.Language, script: item.Region.Script, externalId: item.Region.ExternalId, metadata: item.Region.Metadata);
                 restored.Add(item.WithRegion(region));
             }
-            return new OcrResult(restored, orientation.InputSize, corrected.DetectionProfileId, corrected.DetectionModelId, corrected.RecognitionProfileId, corrected.RecognitionModelId, corrected.Timing, orientation);
+            return new OcrResult(restored, orientation.InputSize, corrected.DetectionProfileId, corrected.DetectionModelId, corrected.RecognitionProfileId, corrected.RecognitionModelId, corrected.Timing, orientation).WithPixelQuality(corrected.PixelQuality);
         }
     }
 }

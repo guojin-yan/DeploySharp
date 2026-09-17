@@ -39,7 +39,7 @@ namespace JYPPX.DeploySharp.Visual
             SourceSize = result.SourceSize;
             SnapshotVersion = snapshotVersion;
             _regions = new ReadOnlyCollection<RoiOcrRegion>(regions.ToList());
-            Result = new OcrResult(_regions.Select(value => value.Region), result.SourceSize, result.DetectionProfileId, result.DetectionModelId, result.RecognitionProfileId, result.RecognitionModelId, result.Timing, result.Orientation);
+            Result = new OcrResult(_regions.Select(value => value.Region), result.SourceSize, result.DetectionProfileId, result.DetectionModelId, result.RecognitionProfileId, result.RecognitionModelId, result.Timing, result.Orientation).WithPixelQuality(result.PixelQuality);
         }
 
         /// <summary>Gets the source image dimensions. / 获取源图尺寸。</summary>

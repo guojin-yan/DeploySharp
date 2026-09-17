@@ -311,6 +311,9 @@ internal static partial class Program
                     new OcrPipelineOptions(maximumRegions: maximumRegions, maximumRecognitionBatch: effectiveBatchSize, maximumRecognitionPaddingRatio: maximumPaddingRatio, autoRotateVerticalText: true), new SessionOptions(1), new SessionOptions(stageConcurrency), new SessionOptions(stageConcurrency), OcrOrientationRejectionPolicy.UseZeroDegrees);
             if (reusePreparedInput) reusableInput = new OpenCvOcrImageInputFactory().CreateFromFile(imagePath, det.VisualProfile.Input.Name, detOptions);
             string? widthReportDirectory = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR");
+            OcrExecutionOptions execution = new OcrExecutionOptions(TimeSpan.FromMilliseconds(pipelineTimeoutMs));
+            OcrPixelQualityOptions? pixelQuality = ReadPixelQualityOptions();
+            if (pixelQuality != null) execution = execution.WithPixelQuality(pixelQuality);
             OcrResult? widthReportResult = null;
             FullTiming MeasureOne()
             {
@@ -325,7 +328,7 @@ internal static partial class Program
                     // Backend calls may complete on worker threads. Use the process-wide allocation
                     // counter for the pipeline span so the CSV still captures their managed work.
                     long pipelineAllocatedBefore = GC.GetTotalAllocatedBytes(false);
-                    OcrResult result = pipeline.Run(ownedInput, new OcrExecutionOptions(TimeSpan.FromMilliseconds(pipelineTimeoutMs)));
+                    OcrResult result = pipeline.Run(ownedInput, execution);
                     long pipelineAllocated = GC.GetTotalAllocatedBytes(false) - pipelineAllocatedBefore;
                     if (!string.IsNullOrWhiteSpace(widthReportDirectory)) widthReportResult = result;
                     double preprocessing = reusePreparedInput ? 0d : prep.Elapsed.TotalMilliseconds;
@@ -430,6 +433,22 @@ internal static partial class Program
             ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_REGIONS", 16), angles, ReadWindowInt("DEPLOYSHARP_PADDLEOCR_RETRY_MAX_CROPS", 1024));
     }
 
+    private static OcrPixelQualityOptions? ReadPixelQualityOptions()
+    {
+        string mode = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_PIXEL_QUALITY")?.Trim().ToLowerInvariant() ?? "disabled";
+        if (mode == "disabled") return null;
+        if (mode != "report") throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_PIXEL_QUALITY accepts Disabled or Report.");
+        int Read(string suffix, int fallback)
+        {
+            string name = "DEPLOYSHARP_PADDLEOCR_QUALITY_" + suffix;
+            string? value = Environment.GetEnvironmentVariable(name);
+            if (value == null) return fallback;
+            if (int.TryParse(value, NumberStyles.Integer, Invariant, out int parsed)) return parsed;
+            throw new ArgumentException(name + " must be an integer within OcrPixelQualityOptions bounds.");
+        }
+        return new OcrPixelQualityOptions(Read("SAMPLES_PER_AREA", 4096), Read("MAX_REGIONS", 128), Read("SAMPLES_PER_CALL", 1048576));
+    }
+
     private static OcrGeometryOptions ReadGeometryOptions()
     {
         string configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_GEOMETRY_MODE")?.Trim().ToLowerInvariant() ?? "disabled";
@@ -503,7 +522,7 @@ internal static partial class Program
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var report = new
         {
-            SchemaVersion = 4, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
+            SchemaVersion = 5, GeneratedAtUtc = DateTimeOffset.UtcNow, Version = version, Variant = variant, Backend = backend,
             SourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
@@ -512,10 +531,11 @@ internal static partial class Program
             Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
+            PixelQualityOptions = ReadPixelQualityOptions(), result.PixelQuality,
             Regions = result.Regions.Select(item => new
             {
                 item.Region.SourceIndex, item.Region.Orientation, item.Recognition.Text, item.Recognition.Confidence,
-                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry
+                item.Recognition.CharacterSetSha256, Polygon = item.Region.Polygon.Vertices, item.RecognitionWidth, item.RecognitionWindows, item.Geometry, item.OrientationRetry, item.PixelQuality
             }).ToArray()
         };
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions

@@ -93,7 +93,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     }
 
     /// <summary>Owns a decoded OpenCV Mat and its prepared detector tensor for one OCR source image. / 为一张 OCR 源图拥有解码 OpenCV Mat 及其已准备检测张量。</summary>
-    public sealed class OpenCvOcrImageInput : IOcrOrientationImageInput
+    public sealed class OpenCvOcrImageInput : IOcrOrientationImageInput, IOcrPixelQualityInput
     {
         // Recognition batches only read the decoded source Mat. A reader/writer lock
         // lets independent batches warp and normalize crops concurrently while keeping
@@ -134,6 +134,20 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public VisualSize SourceSize { get; }
         /// <summary>Gets prepared detector input. / 获取已准备检测器输入。</summary>
         public PreparedVisualInput DetectionInput { get; }
+
+        /// <summary>Reads bounded source-pixel diagnostics under the image lifetime lock without another decode, crop or copy. / 在图像生命周期锁内读取有界源像素诊断，不再次解码、裁剪或复制。</summary>
+        public OcrPixelQualityDiagnostics AssessPixelQuality(TextRegion? region, OcrPixelQualityOptions options, CancellationToken cancellationToken)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            _gate.EnterReadLock();
+            try
+            {
+                EnsureUsable();
+                Mat source = _source ?? throw new OpenCvVisualException(OpenCvErrorCodes.ObjectDisposed, "The decoded source Mat has already been transferred.");
+                return OpenCvOcrPixelQuality.Analyze(source, options, region, cancellationToken);
+            }
+            finally { _gate.ExitReadLock(); }
+        }
 
         /// <summary>Creates a new owned OCR input after one native right-angle rotation; zero degrees transfers the decoded Mat without a pixel copy. / 一次 native 直角旋转后创建新的自有 OCR 输入；零度直接转移已解码 Mat，不复制像素。</summary>
         public IOcrImageInput CreateOriented(OcrOrientationResult orientation, CancellationToken cancellationToken = default(CancellationToken))

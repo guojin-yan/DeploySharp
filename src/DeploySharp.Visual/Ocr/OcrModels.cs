@@ -731,19 +731,28 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets original/retry evidence; null means retries were disabled or this line did not qualify. / 获取初始与重试证据；null 表示禁用重试或该行不符合触发条件。</summary>
         public OcrOrientationRetryResult? OrientationRetry { get; }
 
+        /// <summary>Gets optional initial source-region pixel evidence, retained in its evaluation coordinate space. / 获取可选初始源区域像素证据，保留其评估坐标空间。</summary>
+        public OcrPixelQualityDiagnostics? PixelQuality { get; private set; }
+
+        internal OcrRegionResult WithPixelQuality(OcrPixelQualityDiagnostics? quality)
+        {
+            if (quality == null) return this;
+            var copy = (OcrRegionResult)MemberwiseClone(); copy.PixelQuality = quality; return copy;
+        }
+
         internal OcrRegionResult WithOrientationRetry(OcrOrientationRetryResult retry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, retry).WithPixelQuality(PixelQuality);
 
         internal OcrRegionResult WithGeometry(OcrGeometryDiagnostics geometry)
-            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry);
+            => new OcrRegionResult(Region, Recognition, RecognitionWidth, RecognitionWindows, geometry, OrientationRetry).WithPixelQuality(PixelQuality);
 
         internal OcrRegionResult WithRegion(TextRegion region)
         {
-            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry);
+            if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
                 windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
-            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex));
+            return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality);
         }
     }
 
@@ -855,6 +864,15 @@ namespace JYPPX.DeploySharp.Visual
         public OcrStageTiming Timing { get; }
         /// <summary>Gets optional orientation provenance used before OCR. / 获取 OCR 前使用的可选方向来源信息。</summary>
         public OcrOrientationResult? Orientation { get; }
+
+        /// <summary>Gets source-image pixel evidence in its original evaluation space; null means uncollected or no single source after merge. / 获取原评估空间的源图像素证据，null 表示未采集或合并后没有单一来源。</summary>
+        public OcrPixelQualityDiagnostics? PixelQuality { get; private set; }
+
+        internal OcrResult WithPixelQuality(OcrPixelQualityDiagnostics? quality)
+        {
+            if (quality == null) return this;
+            var copy = (OcrResult)MemberwiseClone(); copy.PixelQuality = quality; return copy;
+        }
 
         /// <summary>Computes canonical SHA256 over provenance, ordered geometry, tokens, confidence, and text. Width and quality diagnostics are excluded to preserve the existing recognition fingerprint. / 对来源、顺序几何、token、置信度和文本计算规范 SHA256；不包含宽度与质量诊断，以保持既有识别结果指纹。</summary>
         public string ComputeSha256()

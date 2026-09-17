@@ -108,6 +108,13 @@ namespace JYPPX.DeploySharp.Visual
         public string? CorrelationId { get; }
         /// <summary>Gets defaults. / 获取默认值。</summary>
         public static OcrExecutionOptions Default { get; } = new OcrExecutionOptions();
+
+        /// <summary>Gets optional source-pixel diagnostics; null disables all sampling. / 获取可选源像素诊断配置，null 禁用全部采样。</summary>
+        public OcrPixelQualityOptions? PixelQuality { get; private set; }
+
+        /// <summary>Returns a copy enabling bounded diagnostics without modifying pixels or recognition policy. / 返回启用有界诊断的副本，不修改像素或识别策略。</summary>
+        public OcrExecutionOptions WithPixelQuality(OcrPixelQualityOptions options)
+            => new OcrExecutionOptions(Timeout, DisposeInputOnCompletion, CorrelationId) { PixelQuality = options ?? throw new ArgumentNullException(nameof(options)) };
     }
 
     /// <summary>Runs bounded detector, perspective-crop, recognizer, and CTC stages through two Core-backed Visual pipelines. / 通过两个 Core 支持的 Visual Pipeline 运行有界检测、透视裁剪、识别和 CTC 阶段。</summary>
@@ -283,6 +290,8 @@ namespace JYPPX.DeploySharp.Visual
                     entered = true;
                     EnsureUsable();
 
+                    if (execution.PixelQuality != null && !(input is IOcrPixelQualityInput))
+                        throw new OcrPipelineException(VisualErrorCodes.OcrPixelQualityUnavailable, "The input does not expose source-pixel quality assessment.", stage);
                     stage = OcrPipelineStage.Detection;
                     var detectionWatch = Stopwatch.StartNew();
                     VisualInferenceResult detectionInference = await _detector.RunAsync(input.DetectionInput, new VisualExecutionOptions(correlationId: execution.CorrelationId), operationToken).ConfigureAwait(false);
@@ -295,6 +304,33 @@ namespace JYPPX.DeploySharp.Visual
                     OcrGeometryDiagnostics[]? geometry = null;
                     TimeSpan geometryDuration = TimeSpan.Zero;
                     long geometryBytes = 0;
+                    OcrPixelQualityDiagnostics? sourceQuality = null;
+                    OcrPixelQualityDiagnostics[]? regionQuality = null;
+                    if (execution.PixelQuality != null)
+                    {
+                        stage = OcrPipelineStage.CropAndBatch;
+                        var qualityWatch = Stopwatch.StartNew();
+                        OcrPixelQualityOptions qualityOptions = execution.PixelQuality;
+                        if (regions.Count > qualityOptions.MaximumRegions || ((long)regions.Count + 1) * qualityOptions.MaximumSamplesPerArea > qualityOptions.MaximumSamplesPerCall)
+                            throw Limit("OCR pixel-quality sampling exceeds its region or conservative center budget.", stage);
+                        geometryBytes = checked(256L * (regions.Count + 1));
+                        foreach (TextRegion region in regions) geometryBytes = checked(geometryBytes + region.Polygon.Vertices.Count * 8L);
+                        if (geometryBytes > _options.MaximumResultBytes) throw Limit("OCR pixel-quality diagnostics exceed the result budget.", stage);
+                        var qualityInput = (IOcrPixelQualityInput)input;
+                        sourceQuality = qualityInput.AssessPixelQuality(null, qualityOptions, operationToken);
+                        ValidatePixelQuality(sourceQuality, input.SourceSize, null, qualityOptions);
+                        regionQuality = new OcrPixelQualityDiagnostics[regions.Count];
+                        for (int index = 0; index < regions.Count; index++)
+                        {
+                            operationToken.ThrowIfCancellationRequested();
+                            regionIndex = regions[index].SourceIndex;
+                            regionQuality[index] = qualityInput.AssessPixelQuality(regions[index], qualityOptions, operationToken);
+                            ValidatePixelQuality(regionQuality[index], input.SourceSize, regions[index], qualityOptions);
+                        }
+                        regionIndex = null;
+                        qualityWatch.Stop();
+                        geometryDuration = qualityWatch.Elapsed;
+                    }
                     if (_cropProfile.Geometry.Mode != OcrGeometryValidationMode.Disabled)
                     {
                         stage = OcrPipelineStage.CropAndBatch;
@@ -314,7 +350,7 @@ namespace JYPPX.DeploySharp.Visual
                         }
                         regionIndex = null;
                         geometryWatch.Stop();
-                        geometryDuration = geometryWatch.Elapsed;
+                        geometryDuration += geometryWatch.Elapsed;
                     }
                     if (_regionOrientation != null || _options.AutoRotateVerticalText)
                     {
@@ -485,7 +521,9 @@ namespace JYPPX.DeploySharp.Visual
                         recognitionInferenceWork,
                         recognitionPostprocessingWork,
                         recognitionBatchCount);
-                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed, orientationDuration, detailedTiming), orientation);
+                    if (regionQuality != null)
+                        for (int index = 0; index < results.Count; index++) results[index] = results[index].WithPixelQuality(regionQuality[index]);
+                    return new OcrResult(results, input.SourceSize, DetectionSelection.Profile.ProfileId, DetectionSelection.Profile.ModelId, RecognitionSelection.Profile.ProfileId, RecognitionSelection.Profile.ModelId, new OcrStageTiming(detectionWatch.Elapsed, cropDuration, recognitionDuration, mergeWatch.Elapsed, orientationDuration, detailedTiming), orientation).WithPixelQuality(sourceQuality);
                 }
                 catch (OperationCanceledException exception) { throw MapCancellation(exception, callerToken, stage, regionIndex); }
                 catch (OcrPipelineException) { throw; }
@@ -507,6 +545,20 @@ namespace JYPPX.DeploySharp.Visual
                 linked?.Dispose();
                 timeoutSource?.Dispose();
             }
+        }
+
+        private static void ValidatePixelQuality(OcrPixelQualityDiagnostics? diagnostic, VisualSize size, TextRegion? region, OcrPixelQualityOptions options)
+        {
+            bool samePolygon = diagnostic != null && ReferenceEquals(diagnostic.InputPolygon, region?.Polygon);
+            if (!samePolygon && diagnostic?.InputPolygon != null && region != null && diagnostic.InputPolygon.Vertices.Count == region.Polygon.Vertices.Count)
+            {
+                samePolygon = true;
+                for (int index = 0; index < region.Polygon.Vertices.Count; index++)
+                    if (diagnostic.InputPolygon.Vertices[index] != region.Polygon.Vertices[index]) { samePolygon = false; break; }
+            }
+            if (diagnostic == null || diagnostic.InputSize != size || diagnostic.InputRegionIndex != region?.SourceIndex ||
+                !samePolygon || diagnostic.PlannedSampleCount > options.MaximumSamplesPerArea)
+                throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Pixel-quality adapter returned mismatched provenance or sampling bounds.", OcrPipelineStage.CropAndBatch);
         }
 
         private int EffectiveMaximumBatch(VisualProfileSelection selection)

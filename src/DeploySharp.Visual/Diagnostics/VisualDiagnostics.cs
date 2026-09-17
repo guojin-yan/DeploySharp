@@ -39,6 +39,9 @@ namespace JYPPX.DeploySharp.Visual
         public const string OcrGeometryRejected = "DS-VISUAL-4104";
         /// <summary>The dictionary does not cover a nonempty required character repertoire. / 字典无法覆盖非空的需求字符范围。</summary>
         public const string OcrCharacterCoverageMissing = "DS-VISUAL-4105";
+
+        /// <summary>Source-pixel quality assessment is unavailable on this input. / 此输入不支持源像素质量评估。</summary>
+        public const string OcrPixelQualityUnavailable = "DS-VISUAL-4106";
         /// <summary>An anomaly tensor or result contract is invalid. / 异常张量或结果契约无效。</summary>
         public const string AnomalyContractInvalid = "DS-VISUAL-4201";
         /// <summary>An anomaly map, workspace, or output limit was exceeded. / 异常图、工作区或输出超出限制。</summary>

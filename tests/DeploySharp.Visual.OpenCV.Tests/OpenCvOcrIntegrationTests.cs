@@ -51,6 +51,14 @@ namespace DeploySharp.Visual.OpenCV.Tests
             CollectionAssert.AreEqual(new[] { "AB", "CA" }, result.Regions.Select(item => item.Recognition.Text).ToArray());
             CollectionAssert.AreEqual(new[] { 0, 2 }, result.Regions.Select(item => item.Region.SourceIndex).ToArray());
             Assert.AreEqual(64, result.ComputeSha256().Length);
+            OcrResult diagnosed = pipeline.Run(input, new OcrExecutionOptions().WithPixelQuality(new OcrPixelQualityOptions()));
+            Assert.AreEqual(result.ComputeSha256(), diagnosed.ComputeSha256());
+            Assert.IsNotNull(diagnosed.PixelQuality);
+            Assert.IsTrue(diagnosed.Regions.All(item => item.PixelQuality?.SampleCount > 0));
+            OcrPixelQualityDiagnostics retained = diagnosed.PixelQuality;
+            input.Dispose();
+            Assert.AreEqual(512, retained.SampleCount);
+            Assert.ThrowsExactly<OpenCvVisualException>(() => input.AssessPixelQuality(null, new OcrPixelQualityOptions(), CancellationToken.None));
         }
 
         [TestMethod]

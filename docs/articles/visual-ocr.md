@@ -71,6 +71,53 @@ foreach (OcrRegionResult region in result.Regions)
 
 一个 ModelPack 可以同时携带检测和识别 ONNX，或对应的 OpenVINO IR XML/BIN，并通过 <code>deploysharp.ocr.*</code> 扩展键绑定 Profile、字符集和预处理版本。字符表的 blank、unknown、Unicode 顺序必须和 logits 导出一致。
 
+## 可选源像素质量诊断
+
+质量诊断用于定位低对比度、小区域或采样清晰度不足等线索，不自动增强图像、不拒绝低分行、不改变识别配置。当前源码提供 `OcrExecutionOptions.WithPixelQuality(...)`，默认关闭；旧 NuGet 包需升级到包含该接口的版本。
+
+```csharp
+var execution = new OcrExecutionOptions(timeout: TimeSpan.FromSeconds(10))
+    .WithPixelQuality(new OcrPixelQualityOptions(
+        maximumSamplesPerArea: 4096,
+        maximumRegions: 128,
+        maximumSamplesPerCall: 1048576));
+OcrResult result = await ocr.RunAsync(input, execution, cancellationToken);
+Console.WriteLine($"源图亮度均值: {result.PixelQuality?.MeanLuminance}");
+foreach (OcrRegionResult line in result.Regions)
+{
+    OcrPixelQualityDiagnostics? q = line.PixelQuality;
+    Console.WriteLine($"{line.Region.SourceIndex}: samples={q?.SampleCount}, " +
+        $"contrast={q?.LuminanceStandardDeviation}, laplacianVariance={q?.LaplacianVariance}");
+}
+```
+
+### 采样对象与结果含义
+
+整图与每个原 DET 多边形各评估一次，直接读取解码后的**源像素**，不是 REC resize、padding 或归一化后的张量。区域指标保留原始清晰度信息，但不代表校正后的 crop 质量，更不是单字质量；滑窗和方向重试不会反复采样。
+
+| 字段 | 定义与限制 |
+| --- | --- |
+| `MeanLuminance` | 8 位亮度均值，范围 0～255 |
+| `LuminanceStandardDeviation` | 亮度总体标准差，反映采样对比度，不是识别率 |
+| `DarkPixelFraction` / `LightPixelFraction` | 亮度 ≤8 / ≥247 的比例；黑字白纸也可能很高，不能据此断言欠曝或过曝 |
+| `LaplacianVariance` | `L+R+U+D−4C` 的总体方差；使用原始相邻 1 像素，不把采样间距当作像素尺度；噪声也可能使其升高 |
+| `MeanAbsoluteGradient` | `(|R−L|+|D−U|)/4` 的均值；是纹理/边缘线索，不区分文字、噪声和背景 |
+| `RegionMinimumEdgePixels` | DET 多边形最短边；整图为 null，不应冒充字形或笔画高度 |
+| `PlannedSampleCount` / `SampleCount` / `NeighborhoodCount` | 计划网格中心数、在区域内的有效中心数、四邻域均有效的中心数 |
+
+中心以有界规则网格分布在多边形与图像边界相交的包围框内，只接受像素中心落在多边形中的样本；不创建 mask 或整图灰度副本。邻域只在四个相邻像素也属于区域时参与计算。没有有效中心时像素指标为 null；不足两个有效邻域时拉普拉斯方差为 null，不把缺失数据记为“质量好”。规则采样可能漏掉窄小结构或与周期纹理重合，不能与不同采样预算/分辨率的报告直接比较。
+
+OpenCV 适配器使用 `Y=(77R+150G+29B+128)>>8`，支持 8 位 Gray/BGR/BGRA 和非连续 Mat，Alpha 与现有 OCR 预处理一致被忽略。`OpenCvOcrPixelQuality.Analyze(mat, ...)` 可独立检查借用的 Mat；调用期间必须防止其他线程修改或释放它。对 `OpenCvOcrImageInput` 的调用在其读锁内执行，复用已解码图像，不读取 GPU 张量。
+
+### 资源、坐标和后端
+
+- 每区域最多 4096 个中心，每中心最多读取 5 个亮度值。默认每次最多 128 个 DET 区域，另加整图；保守预算为 `(区域数+1)×maximumSamplesPerArea`。超出区域/总中心/结果内存限制返回 `DS-VISUAL-4102`，不静默漏报后面的区域。
+- 检查与推理共享取消、超时、输入所有权和调用并发限制。统计计入 `CropAndBatch` 及端到端总时间，不藏在计时之外。不开启时不产生逐像素工作。
+- `InputSize/InputPolygon/InputRegionIndex` 表示**评估时**的输入坐标与索引。整图方向恢复、ROI 投影和区域重新编号仍保留原证据，不将旧统计冒充新坐标的重新测量。多 ROI 合并保留各获选行的证据，合并后的整图 `PixelQuality` 为 null；可查看各原 ROI 结果的整图指标。
+- `IOcrPixelQualityInput` 是可选输入能力，自定义适配器可调用纯托管 `OcrPixelQualityAnalyzer.Analyze` 提供亮度读取器。原 `IOcrImageInput` 接口不变；显式启用但适配器不支持时返回 `DS-VISUAL-4106`，不静默忽略。使用 OpenCV 输入时可配合不同推理后端；这不表示纯 CUDA 输入已经实现设备端质量分析。
+
+当前没有通用质量总分、默认模糊阈值、噪声/JPEG 退化分类、精确字高或自动增强。需要在自己的图像分辨率、采样配置与标注数据上确定业务阈值。检查对文本/坐标/token 指纹没有影响；报告属于诊断而不是识别准确率证明。
+
 ## 字符集覆盖审计
 
 在创建推理会话前，先检查模型字典能否表示业务所需的字符。`OcrCharacterSetAuditor` 位于 `JYPPX.DeploySharp.Visual`，可复用同一个只读索引检查多个业务字符范围，无需图片或推理后端。以下接口以当前源码为准。

@@ -150,7 +150,7 @@ namespace JYPPX.DeploySharp.Visual
                 result.DetectionModelId,
                 result.RecognitionProfileId,
                 result.RecognitionModelId,
-                result.Timing);
+                result.Timing).WithPixelQuality(result.PixelQuality);
         }
 
         private static TextQuadrilateral CreateQuadrilateral(IReadOnlyList<PointF> points)
