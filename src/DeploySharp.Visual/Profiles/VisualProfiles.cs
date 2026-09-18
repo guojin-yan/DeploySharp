@@ -50,6 +50,24 @@ namespace JYPPX.DeploySharp.Visual
         public static VisualTaskId VisualQuestionAnswering { get; } = new VisualTaskId("visual-question-answering");
         /// <summary>Gets image-conditioned instruction generation. / 获取图像条件指令生成任务。</summary>
         public static VisualTaskId ConditionalTextGeneration { get; } = new VisualTaskId("conditional-text-generation");
+        /// <summary>Gets document orientation classification. / 获取文档方向分类任务。</summary>
+        public static VisualTaskId DocumentOrientation { get; } = new VisualTaskId("document-orientation");
+        /// <summary>Gets document text-image unwarping. / 获取文档文本图像矫正任务。</summary>
+        public static VisualTaskId DocumentUnwarping { get; } = new VisualTaskId("document-unwarping");
+        /// <summary>Gets document layout region detection. / 获取文档版面区域检测任务。</summary>
+        public static VisualTaskId LayoutDetection { get; } = new VisualTaskId("layout-detection");
+        /// <summary>Gets table type classification. / 获取表格类型分类任务。</summary>
+        public static VisualTaskId TableClassification { get; } = new VisualTaskId("table-classification");
+        /// <summary>Gets table cell detection. / 获取表格单元格检测任务。</summary>
+        public static VisualTaskId TableCellDetection { get; } = new VisualTaskId("table-cell-detection");
+        /// <summary>Gets table structure recognition. / 获取表格结构识别任务。</summary>
+        public static VisualTaskId TableStructureRecognition { get; } = new VisualTaskId("table-structure-recognition");
+        /// <summary>Gets mathematical formula recognition. / 获取公式识别任务。</summary>
+        public static VisualTaskId FormulaRecognition { get; } = new VisualTaskId("formula-recognition");
+        /// <summary>Gets seal text detection. / 获取印章文本检测任务。</summary>
+        public static VisualTaskId SealTextDetection { get; } = new VisualTaskId("seal-text-detection");
+        /// <summary>Gets chart parsing. / 获取图表解析任务。</summary>
+        public static VisualTaskId ChartParsing { get; } = new VisualTaskId("chart-parsing");
         /// <inheritdoc />
         /// <remarks>Uses ordinal task equality. / 使用序号任务相等性。</remarks>
         public bool Equals(VisualTaskId other) => StringComparer.Ordinal.Equals(Value, other.Value);

@@ -53,6 +53,8 @@
     href: visual-ocr.md
   - name: PaddleOCR 三模型流水线
     href: visual-paddle-ocr3.md
+  - name: PaddleOCR / PP-Structure 文档智能
+    href: visual-paddle-structure.md
   - name: 异常检测
     href: visual-anomaly-detection.md
   - name: 背景移除（RMBG）

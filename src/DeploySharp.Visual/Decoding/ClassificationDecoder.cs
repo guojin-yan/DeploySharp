@@ -20,7 +20,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class ClassificationDecoder : IVisualDecoder
     {
         /// <summary>Initializes a classification decoder. / 初始化分类解码器。</summary>
-        public ClassificationDecoder(string outputName, ClassificationScoreMode scoreMode = ClassificationScoreMode.Logits, int topK = 5, float threshold = 0)
+        public ClassificationDecoder(string outputName, ClassificationScoreMode scoreMode = ClassificationScoreMode.Logits, int topK = 5, float threshold = 0, VisualTaskId? task = null)
         {
             if (string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("An output tensor name is required.", nameof(outputName));
             if (!Enum.IsDefined(typeof(ClassificationScoreMode), scoreMode)) throw new ArgumentOutOfRangeException(nameof(scoreMode));
@@ -30,11 +30,15 @@ namespace JYPPX.DeploySharp.Visual
             ScoreMode = scoreMode;
             TopK = topK;
             Threshold = threshold;
+            TaskId = task ?? VisualTaskId.ImageClassification;
+            if (TaskId.IsEmpty) throw new ArgumentException("A decoder task is required.", nameof(task));
         }
 
         /// <inheritdoc />
         /// <remarks>Classification decoder task is immutable. / 分类解码器任务不可变。</remarks>
-        public VisualTaskId Task => VisualTaskId.ImageClassification;
+        public VisualTaskId Task => TaskId;
+        /// <summary>Gets the logical task exposed by this reusable score decoder. / 获取此可复用分数解码器公开的逻辑任务。</summary>
+        public VisualTaskId TaskId { get; }
         /// <summary>Gets the bound output tensor name. / 获取绑定的输出张量名称。</summary>
         public string OutputName { get; }
         /// <summary>Gets score interpretation mode. / 获取分数解释模式。</summary>

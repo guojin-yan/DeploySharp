@@ -108,15 +108,19 @@ namespace JYPPX.DeploySharp.Visual
     public sealed class DetectionDecoder : IVisualDecoder
     {
         /// <summary>Initializes a generic detection decoder. / 初始化通用检测解码器。</summary>
-        public DetectionDecoder(DetectionOutputSchema schema, DetectionDecoderOptions? options = null)
+        public DetectionDecoder(DetectionOutputSchema schema, DetectionDecoderOptions? options = null, VisualTaskId? task = null)
         {
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
             Options = options ?? new DetectionDecoderOptions();
+            TaskId = task ?? VisualTaskId.ObjectDetection;
+            if (TaskId.IsEmpty) throw new ArgumentException("A decoder task is required.", nameof(task));
         }
 
         /// <inheritdoc />
         /// <remarks>Detection decoder task is immutable. / 检测解码器任务不可变。</remarks>
-        public VisualTaskId Task => VisualTaskId.ObjectDetection;
+        public VisualTaskId Task => TaskId;
+        /// <summary>Gets the logical task exposed by this reusable detection decoder. / 获取此可复用检测解码器公开的逻辑任务。</summary>
+        public VisualTaskId TaskId { get; }
         /// <summary>Gets the output schema. / 获取输出 Schema。</summary>
         public DetectionOutputSchema Schema { get; }
         /// <summary>Gets decoder and NMS options. / 获取解码器和 NMS 选项。</summary>
