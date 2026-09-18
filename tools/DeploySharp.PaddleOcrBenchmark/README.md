@@ -10,7 +10,7 @@ Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optiona
 
 ## Opt-in crop enhancement / 显式裁剪增强
 
-`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe|GaussianDenoise|AdaptiveThreshold|UnsharpMask` selects one quality-gated pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 8 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe and AdaptiveThreshold deliberately remove color; their gray pixels are replicated for RGB models before normal model normalization. GaussianDenoise applies OpenCV GaussianBlur only when the sampled Laplacian variance exceeds `ENHANCE_NOISE_THRESHOLD`; this metric is not a calibrated noise classifier. AdaptiveThreshold applies Gaussian local binarization only to a low-contrast crop whose dimensions meet `ADAPTIVE_BLOCK`; it is intentionally opt-in because it can remove grayscale and fine strokes. UnsharpMask applies one Gaussian blur plus `AddWeighted` only when sampled Laplacian variance is below `SHARPNESS_THRESHOLD`; that metric is not a calibrated blur score. For an unenhanced first pass followed by one candidate, use the separate enhancement-retry switch below instead.
+`DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=ContrastNormalize|GrayClahe|GaussianDenoise|AdaptiveThreshold|UnsharpMask|LocalUpscale|ShadowNormalize|JpegArtifactSuppress` selects one bounded pre-resize operation. `Report` collects evidence only; default `Disabled` retains the original path. Sidecar schema 8 includes requested enhancement, gate decision, enhanced-stage statistics and applied linear gain. GrayClahe and AdaptiveThreshold deliberately remove color; their gray pixels are replicated for RGB models before normal model normalization. GaussianDenoise applies OpenCV GaussianBlur only when the sampled Laplacian variance exceeds `ENHANCE_NOISE_THRESHOLD`; this metric is not a calibrated noise classifier. AdaptiveThreshold applies Gaussian local binarization only to a low-contrast crop whose dimensions meet `ADAPTIVE_BLOCK`; it is intentionally opt-in because it can remove grayscale and fine strokes. UnsharpMask applies one Gaussian blur plus `AddWeighted` only when sampled Laplacian variance is below `SHARPNESS_THRESHOLD`; that metric is not a calibrated blur score. ShadowNormalize subtracts a Gaussian illumination background when sampled luminance variation crosses its explicit gate. JpegArtifactSuppress applies a bounded median-filter candidate behind a Laplacian-variance gate; neither gate detects a semantic degradation type. For an unenhanced first pass followed by one candidate, use the separate enhancement-retry switch below instead.
 
 配置变量如下，均以 `DEPLOYSHARP_PADDLEOCR_ENHANCE_` 为前缀：
 
@@ -32,8 +32,14 @@ Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optiona
 | SHARPEN_KERNEL | 3 | UnsharpMask 的奇数高斯核尺寸3～9 |
 | SHARPEN_AMOUNT | 0.5 | UnsharpMask 细节增益，范围(0,4] |
 | SHARPEN_SIGMA | 1 | UnsharpMask 的正高斯 sigma，范围(0,32] |
+| UPSCALE_FACTOR | 2 | LocalUpscale 中间放大倍数，范围(1,4] |
+| UPSCALE_INTERPOLATION | Cubic | LocalUpscale 插值：Nearest/Linear/Cubic |
+| SHADOW_THRESHOLD | 16 | ShadowNormalize 的亮度标准差门限；不是阴影分类器 |
+| SHADOW_KERNEL | 31 | ShadowNormalize 的奇数背景高斯核，范围3～127 |
+| JPEG_THRESHOLD | 256 | JpegArtifactSuppress 的拉普拉斯方差门限；不是 JPEG 检测器 |
+| JPEG_KERNEL | 3 | JpegArtifactSuppress 的奇数中值核，范围3～7 |
 
-启用后不修改原文件、DET/CLS、字典或补边；操作发生在裁剪内部，额外处理计入REC准备和总耗时。应先固定 `Report` 基线，再分别运行两种增强。对照JSON里的逐行文字、门限决策、原始/增强指标以及CSV端到端分位数。增强可能降低准确率，置信度/对比度提升不是CER/WER改善的替代证据；无标注集时只报告行为与一致性，不能发布准确率提升结论。
+启用后不修改原文件、DET/CLS、字典或补边；操作发生在裁剪内部，额外处理计入REC准备和总耗时。应先固定 `Report` 基线，再分别运行需要评估的候选。对照JSON里的逐行文字、门限决策、原始/增强指标以及CSV端到端分位数。增强可能降低准确率，置信度/对比度提升不是CER/WER改善的替代证据；无标注集时只报告行为与一致性，不能发布准确率提升结论。
 
 ## Single enhancement retry / 单次增强重试
 
@@ -48,7 +54,7 @@ $env:DEPLOYSHARP_PADDLEOCR_ENHANCEMENT_RETRY_MAX_CROPS = '128'
 $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-enhancement-retry/preserve'
 ```
 
-Retry is `Disabled` by default; other valid modes are `ContrastNormalize`, `GrayClahe`, `GaussianDenoise`, `AdaptiveThreshold` and `UnsharpMask`. It reuses `ENHANCE_*` quality/operation parameters and `CROP_SAMPLES/CROP_LIMIT` diagnostics budgets, automatically enabling unenhanced crop diagnostics if necessary. Default confidence threshold is 0.8; the example deliberately uses 0.9. It runs after orientation retries, never repeats DET/CLS, and creates at most one candidate per eligible line. Low confidence alone is insufficient: at least one existing rectified-crop measurement must pass the operation's quality gate. A windowed candidate reruns all windows while only eligible crops are enhanced.
+Retry is `Disabled` by default; every crop enhancement mode listed above is valid. It reuses `ENHANCE_*` quality/operation parameters and `CROP_SAMPLES/CROP_LIMIT` diagnostics budgets, automatically enabling unenhanced crop diagnostics if necessary. Default confidence threshold is 0.8; the example deliberately uses 0.9. It runs after orientation retries, never repeats DET/CLS, and creates at most one candidate per eligible line. Low confidence alone is insufficient: at least one existing rectified-crop measurement must pass the operation's quality gate. A windowed candidate reruns all windows while only eligible crops are enhanced.
 
 `PreserveOriginal` is default and retains original final text even when candidate confidence is higher. Explicit `ConfidenceGain` can select a nonempty candidate by the minimum-gain heuristic; it can change punctuation or make accuracy worse. Schema 8 records `Crop.EnhancementRetry` and per-row `EnhancementRetry.Options/Original/Candidate/Decision`, keeping all original/candidate text, scores, CTC traces and crop evidence. Null Candidate means no extra REC was run; decisions distinguish quality gate, admission limit, preserved policy, insufficient gain and selection. Original means the orientation-selected result before enhancement, not necessarily the first REC.
 

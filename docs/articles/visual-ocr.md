@@ -145,9 +145,9 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 采样上限每阶段 1～65536、每调用物理 crop 1～4096。使用固定图像、插值、角点、采样预算与尺寸做对照；resize 本身就会改变锐度和方差，因此不能直接把两阶段数值之差等同于识别质量损失。当前没有经过标注数据标定的噪声/JPEG 分类、精确字高或通用拒绝分数。
 
-### 可选低对比度增强
+### 可选局部增强
 
-诊断与增强独立：不配置 `WithEnhancement` 就不改像素。当前提供六种局部操作，每个 Profile 选择一种。对比度类操作和自适应阈值仅在校正后 crop 的亮度标准差处于 `[minimumContrast, lowContrastThreshold)` 时应用；高斯去噪使用独立的拉普拉斯方差门限，反遮罩锐化使用相反的低清晰度门限；局部放大只在明确配置或作为重试候选时执行：
+诊断与增强独立：不配置 `WithEnhancement` 就不改像素。当前提供八种局部操作，每个 Profile 选择一种。对比度类操作和自适应阈值仅在校正后 crop 的亮度标准差处于 `[minimumContrast, lowContrastThreshold)` 时应用；高斯去噪、反遮罩锐化、阴影归一化和 JPEG 伪影抑制各自使用显式质量门限；局部放大只在明确配置或作为重试候选时执行：
 
 ```csharp
 var processing = new OcrCropProcessingOptions(1024, 1024)
@@ -164,6 +164,8 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 // 光照不均且对比度不足的候选可改用 AdaptiveThreshold，并配置 adaptiveBlockSize/adaptiveConstant。
 // 低清晰度候选可改用 UnsharpMask，并设置 sharpnessThreshold/sharpenAmount。
 // 小字候选可改用 LocalUpscale，并设置 upscaleFactor/upscaleInterpolation。
+// 缓慢变化光照候选可改用 ShadowNormalize，并设置 shadowVariationThreshold/shadowKernelSize。
+// 块边界或孤立高频伪影候选可改用 JpegArtifactSuppress，并设置 jpegArtifactThreshold/jpegKernelSize。
 ```
 
 - `ContrastNormalize`：`gain=min(maximumGain, targetStandardDeviation/实测标准差)`，以实测亮度均值为中心对颜色通道执行线性映射、四舍五入和 0～255 饱和。保留 RGB/BGR 的通道关系，不转换成灰度；BGRA 的 alpha 不变且仍不参与 REC。颜色饱和可能改变色差，输出标准差不保证等于目标。
@@ -172,6 +174,8 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 - `AdaptiveThreshold`：低对比度且校正 crop 的宽高都不小于 `adaptiveBlockSize` 时，先按 OCR 亮度系数转灰度，再使用 OpenCV Gaussian adaptive threshold 输出二值图；默认 `adaptiveBlockSize=15`、`adaptiveConstant=5`，奇数邻域范围3～31。灰度结果会按模型通道数复制，颜色和细灰笔画可能丢失；尺寸不足或对比度已足够时报告 `SufficientQuality`/`SufficientContrast`，不修改像素。
 - `UnsharpMask`：当校正 crop 的亮度标准差不低于 `minimumContrast` 且 `Rectified.LaplacianVariance < sharpnessThreshold` 时，使用一次 GaussianBlur 和 `AddWeighted` 恢复局部边缘；默认 `sharpnessThreshold=512`、`sharpenKernelSize=3`、`sharpenAmount=0.5`、`sharpenSigma=1`。低于最小变化、缺少指标或已经超过清晰度门限时报告 `SufficientQuality`，不修改像素；该指标不是标定的模糊分类器。
 - `LocalUpscale`：使用 `upscaleFactor`（1～4 之间的有界倍数，默认2）和独立的 `upscaleInterpolation`（默认 `Cubic`）将校正后的中间 crop 放大，再进入原有 resize、padding 和归一化。放大后的像素数受 `maximumPixelsPerCrop` 限制，超限报告 `DS-VISUAL-4102`；这是插值候选，不是超分辨率模型，也不保证增加信息量或准确率。`Enhanced.InputSize` 会记录放大后的尺寸，便于与原始 `Rectified` 对照。
+- `ShadowNormalize`：当校正 crop 的亮度标准差不低于 `shadowVariationThreshold`（默认16）时，以奇数 `shadowKernelSize`（默认31，范围3～127）做 Gaussian 背景估计，再以 `source-background+128` 的饱和高通形式削弱缓慢变化光照。操作保持原通道和尺寸，复用线程本地 Mat；背景核可能同时削弱大字笔画或低频纹理，亮度标准差也不能证明图中存在阴影。
+- `JpegArtifactSuppress`：当 `Rectified.LaplacianVariance > jpegArtifactThreshold`（默认256）时，在原通道上应用一次奇数 `jpegKernelSize`（默认3，范围3～7）中值滤波，作为块边界、振铃或孤立高频伪影的保守候选。某些输入执行后可能逐值不变；拉普拉斯门限不是 JPEG 编码检测，滤波也可能损失细字，必须通过原文保留重试和标注数据决定是否采用。
 
 执行顺序是 `warp/rotate → Rectified采样 → 质量门限 → 可选增强/Enhanced采样 → resize → Content采样 → 原有padding/normalize`。不重复 DET/CLS、不改变检测区域、识别宽度、坐标或字典。超低变化（纯色等）和已达到阈值的裁剪不增强，也不分配增强像素缓冲。OpenCV 延迟创建线程本地工作区，复用 LUT、Mat 和 CLAHE 对象；不产生每像素托管对象，输入销毁时释放工作区。应用增强多一次 crop 内处理和可选灰度缓冲，并非零开销。
 
@@ -179,7 +183,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 
 门限是可配置启发式，不是通用质量判据。默认32/1只是起始参数，白底小文字可能因空白占比高而被判低对比度；噪声也可能被增强。请在自己的标注集上比较逐行准确率、CER/WER和端到端P50/P95，不能只看锐度/置信度上升。最大增益8，CLAHE clip≤16、每轴分块2～16，每裁剪增强像素数默认1048576、最大16777216，超限 `DS-VISUAL-4102`，不静默漏处理。像素循环检查取消；单次 native CLAHE 调用在前后检查取消，不能中断其内部执行。
 
-当前尚无自动噪声/JPEG识别、阴影消除配方或换模型重试；`GaussianDenoise`、`AdaptiveThreshold`、`UnsharpMask` 和 `LocalUpscale` 都是有界、显式的操作，不能冒充噪声/光照/模糊分类器、超分辨率模型或准确率保证。已实现显式低对比度/高频/低清晰度门限路径，以及下面的单候选低置信度增强重试，两者均默认关闭。
+当前仍无经过标定的自动噪声、阴影或 JPEG 退化分类，也没有换模型重试；八种操作都是有界、显式候选，不能冒充退化分类器、超分辨率模型或准确率保证。已实现对应门限路径和下面的有限低置信度增强重试，全部默认关闭。
 
 功能回归示例：2026-09-17，在 Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA 下，使用同一 `demo_1.jpg`，v4 mobile/v5 mobile/v6 tiny、B4/单通道、Clamp320，对 Report/ContrastNormalize/GrayClahe 共18组运行成功。Report 的文字和完整合同SHA与关闭增强基线一致；本图各模型均仅第12号区域触发默认门限。线性方式文字不变但置信度/token使合同SHA改变；v5 CLAHE 将 `(成品包材)` 变成 `（成品包材）`，置信度从CPU基线0.848219升到0.9010367，不能据此判断更准确。该轮只有1次预热/3次采样且存在开发负载，不作为稳定性能或准确率结论；复现时请保存 sidecar 和原文差异，而非仅比较置信度。
 
@@ -257,7 +261,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 `PreserveOriginal` 适合先收集真实现场证据，最终文字保持首轮结果但保留每个候选的文字、token、置信度、窗口和裁剪诊断。`ConfidenceGain` 会在所有候选完成后，从非空且超过原文 `MinimumConfidenceGain` 的候选中选择置信度最高者；这只是启发式，不是准确率判定，也不理解业务字段语义。多配方按顺序串行执行以保持确定性，墙钟 `Recognition` 只记录一次外层耗时，详细 work 计时和 `RecognitionBatchCount` 累加每个配方的真实 batch；即使保留原文，也应将额外成本纳入 P50/P95 基准。
 
-多配方目前只覆盖已有 `OcrCropEnhancementMode`（包括 `LocalUpscale`），不自动识别阴影、JPEG 或噪声，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain`。
+多配方覆盖全部 `OcrCropEnhancementMode`，包括 `LocalUpscale`、`ShadowNormalize` 和 `JpegArtifactSuppress`；每种模式仍只按自身显式统计门限决定是否执行，不自动判断真实退化类别，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain`。
 
 验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
 

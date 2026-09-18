@@ -35,7 +35,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             bool denoise = options.Mode == OcrCropEnhancementMode.GaussianDenoise;
             bool adaptiveThreshold = options.Mode == OcrCropEnhancementMode.AdaptiveThreshold;
             bool unsharpMask = options.Mode == OcrCropEnhancementMode.UnsharpMask;
-            bool requiresGray = adaptiveThreshold || (!linear && !denoise && !unsharpMask);
+            bool shadowNormalize = options.Mode == OcrCropEnhancementMode.ShadowNormalize;
+            bool jpegArtifactSuppress = options.Mode == OcrCropEnhancementMode.JpegArtifactSuppress;
+            bool requiresGray = adaptiveThreshold || (!linear && !denoise && !unsharpMask && !shadowNormalize && !jpegArtifactSuppress);
             if (linear)
             {
                 double gain = Math.Min(options.MaximumGain, options.TargetStandardDeviation / quality.LuminanceStandardDeviation!.Value);
@@ -44,11 +46,29 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 _enhanced.Create(source.Rows, source.Cols, source.Type);
             }
             else if (requiresGray) _gray.Create(source.Rows, source.Cols, MatType.CV_8UC1);
-            Mat destination = linear || denoise || unsharpMask ? _enhanced : _gray;
+            Mat destination = linear || denoise || unsharpMask || shadowNormalize || jpegArtifactSuppress ? _enhanced : _gray;
             if (denoise)
             {
                 _enhanced.Create(source.Rows, source.Cols, source.Type);
                 ImageProcessing.GaussianBlur(source, _enhanced, new Size(options.DenoiseKernelSize, options.DenoiseKernelSize), options.DenoiseSigma, options.DenoiseSigma, BorderTypes.Reflect101);
+                token.ThrowIfCancellationRequested();
+                return _enhanced;
+            }
+            if (shadowNormalize)
+            {
+                _enhanced.Create(source.Rows, source.Cols, source.Type);
+                _blurred.Create(source.Rows, source.Cols, source.Type);
+                ImageProcessing.GaussianBlur(source, _blurred, new Size(options.ShadowKernelSize, options.ShadowKernelSize), 0, 0, BorderTypes.Reflect101);
+                // High-pass subtraction with a mid-gray offset removes gradual
+                // illumination while retaining the original channel contract.
+                CoreOperations.AddWeighted(source, 1, _blurred, -1, 128, _enhanced);
+                token.ThrowIfCancellationRequested();
+                return _enhanced;
+            }
+            if (jpegArtifactSuppress)
+            {
+                _enhanced.Create(source.Rows, source.Cols, source.Type);
+                ImageProcessing.MedianBlur(source, _enhanced, options.JpegKernelSize);
                 token.ThrowIfCancellationRequested();
                 return _enhanced;
             }

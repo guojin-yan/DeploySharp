@@ -483,7 +483,10 @@ internal static partial class Program
             "gaussiandenoise" or "denoise" => OcrCropEnhancementMode.GaussianDenoise,
             "adaptivethreshold" or "adaptive" => OcrCropEnhancementMode.AdaptiveThreshold,
             "unsharpmask" or "sharpen" => OcrCropEnhancementMode.UnsharpMask,
-            _ => throw new ArgumentException("Unknown crop enhancement; use ContrastNormalize, GrayClahe, GaussianDenoise, AdaptiveThreshold or UnsharpMask (Disabled/Report are handled by their feature switches).")
+            "localupscale" or "upscale" => OcrCropEnhancementMode.LocalUpscale,
+            "shadownormalize" or "shadow" => OcrCropEnhancementMode.ShadowNormalize,
+            "jpegartifactsuppress" or "jpeg" => OcrCropEnhancementMode.JpegArtifactSuppress,
+            _ => throw new ArgumentException("Unknown crop enhancement; use ContrastNormalize, GrayClahe, GaussianDenoise, AdaptiveThreshold, UnsharpMask, LocalUpscale, ShadowNormalize or JpegArtifactSuppress (Disabled/Report are handled by their feature switches).")
         };
         static double Number(string suffix, double fallback)
         {
@@ -493,12 +496,20 @@ internal static partial class Program
             if (double.TryParse(value, NumberStyles.Float, Invariant, out double parsed) && double.IsFinite(parsed)) return parsed;
             throw new ArgumentException(name + " must be finite and within OcrCropEnhancementOptions bounds.");
         }
+        string interpolationName = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ENHANCE_UPSCALE_INTERPOLATION")?.Trim().ToLowerInvariant() ?? "cubic";
+        TextCropInterpolation interpolation = interpolationName switch
+        {
+            "nearest" => TextCropInterpolation.Nearest, "linear" => TextCropInterpolation.Linear, "cubic" => TextCropInterpolation.Cubic,
+            _ => throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_ENHANCE_UPSCALE_INTERPOLATION accepts Nearest, Linear or Cubic.")
+        };
         return new OcrCropEnhancementOptions(operation, Number("THRESHOLD", 32), Number("MIN_CONTRAST", 1),
             Number("TARGET_STD", 64), Number("MAX_GAIN", 3), Number("CLAHE_CLIP", 2),
             ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_CLAHE_GRID", 8), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_MAX_PIXELS", 1048576),
             Number("NOISE_THRESHOLD", 512), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_DENOISE_KERNEL", 3), Number("DENOISE_SIGMA", 0),
             ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_ADAPTIVE_BLOCK", 15), Number("ADAPTIVE_C", 5),
-            Number("SHARPNESS_THRESHOLD", 512), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_SHARPEN_KERNEL", 3), Number("SHARPEN_AMOUNT", .5), Number("SHARPEN_SIGMA", 1));
+            Number("SHARPNESS_THRESHOLD", 512), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_SHARPEN_KERNEL", 3), Number("SHARPEN_AMOUNT", .5), Number("SHARPEN_SIGMA", 1),
+            Number("UPSCALE_FACTOR", 2), interpolation, Number("SHADOW_THRESHOLD", 16), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_SHADOW_KERNEL", 31),
+            Number("JPEG_THRESHOLD", 256), ReadWindowInt("DEPLOYSHARP_PADDLEOCR_ENHANCE_JPEG_KERNEL", 3));
     }
 
     private static OcrPixelQualityOptions? ReadPixelQualityOptions()

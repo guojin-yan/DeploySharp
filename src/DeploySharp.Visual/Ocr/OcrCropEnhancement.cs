@@ -17,6 +17,10 @@ namespace JYPPX.DeploySharp.Visual
         UnsharpMask,
         /// <summary>Upscales the rectified crop with a bounded interpolation candidate before the final resize. / 在最终缩放前使用有界插值候选放大校正裁剪。</summary>
         LocalUpscale,
+        /// <summary>Removes gradual illumination variation with a bounded background subtraction candidate. / 使用有界背景相减候选消除渐变光照。</summary>
+        ShadowNormalize,
+        /// <summary>Suppresses block-like high-frequency artifacts with a bounded median filter candidate. / 使用有界中值滤波候选抑制块状高频伪影。</summary>
+        JpegArtifactSuppress,
     }
 
     /// <summary>Explains whether a requested crop enhancement was applied. / 说明请求的裁剪增强是否应用。</summary>
@@ -42,9 +46,10 @@ namespace JYPPX.DeploySharp.Visual
             double targetStandardDeviation = 64, double maximumGain = 3, double claheClipLimit = 2, int claheGridSize = 8, int maximumPixelsPerCrop = 1048576,
             double noiseThreshold = 512, int denoiseKernelSize = 3, double denoiseSigma = 0, int adaptiveBlockSize = 15, double adaptiveConstant = 5,
             double sharpnessThreshold = 512, int sharpenKernelSize = 3, double sharpenAmount = .5, double sharpenSigma = 1,
-            double upscaleFactor = 2, TextCropInterpolation upscaleInterpolation = TextCropInterpolation.Cubic)
+            double upscaleFactor = 2, TextCropInterpolation upscaleInterpolation = TextCropInterpolation.Cubic,
+            double shadowVariationThreshold = 16, int shadowKernelSize = 31, double jpegArtifactThreshold = 256, int jpegKernelSize = 3)
         {
-            if (mode != OcrCropEnhancementMode.ContrastNormalize && mode != OcrCropEnhancementMode.GrayClahe && mode != OcrCropEnhancementMode.GaussianDenoise && mode != OcrCropEnhancementMode.AdaptiveThreshold && mode != OcrCropEnhancementMode.UnsharpMask && mode != OcrCropEnhancementMode.LocalUpscale) throw new ArgumentOutOfRangeException(nameof(mode));
+            if (!Enum.IsDefined(typeof(OcrCropEnhancementMode), mode)) throw new ArgumentOutOfRangeException(nameof(mode));
             if (!(lowContrastThreshold > 0 && lowContrastThreshold <= 128)) throw new ArgumentOutOfRangeException(nameof(lowContrastThreshold));
             if (!(minimumContrast > 0 && minimumContrast < lowContrastThreshold)) throw new ArgumentOutOfRangeException(nameof(minimumContrast));
             if (!(targetStandardDeviation >= lowContrastThreshold && targetStandardDeviation <= 128)) throw new ArgumentOutOfRangeException(nameof(targetStandardDeviation));
@@ -63,6 +68,10 @@ namespace JYPPX.DeploySharp.Visual
             if (double.IsNaN(sharpenSigma) || double.IsInfinity(sharpenSigma) || sharpenSigma <= 0 || sharpenSigma > 32) throw new ArgumentOutOfRangeException(nameof(sharpenSigma));
             if (double.IsNaN(upscaleFactor) || double.IsInfinity(upscaleFactor) || upscaleFactor <= 1 || upscaleFactor > 4) throw new ArgumentOutOfRangeException(nameof(upscaleFactor));
             if (!Enum.IsDefined(typeof(TextCropInterpolation), upscaleInterpolation)) throw new ArgumentOutOfRangeException(nameof(upscaleInterpolation));
+            if (double.IsNaN(shadowVariationThreshold) || double.IsInfinity(shadowVariationThreshold) || shadowVariationThreshold <= 0 || shadowVariationThreshold > 128) throw new ArgumentOutOfRangeException(nameof(shadowVariationThreshold));
+            if (shadowKernelSize < 3 || shadowKernelSize > 127 || (shadowKernelSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(shadowKernelSize));
+            if (double.IsNaN(jpegArtifactThreshold) || double.IsInfinity(jpegArtifactThreshold) || jpegArtifactThreshold <= 0 || jpegArtifactThreshold > 1048576) throw new ArgumentOutOfRangeException(nameof(jpegArtifactThreshold));
+            if (jpegKernelSize < 3 || jpegKernelSize > 7 || (jpegKernelSize & 1) == 0) throw new ArgumentOutOfRangeException(nameof(jpegKernelSize));
             Mode = mode; LowContrastThreshold = lowContrastThreshold; MinimumContrast = minimumContrast;
             TargetStandardDeviation = targetStandardDeviation; MaximumGain = maximumGain; ClaheClipLimit = claheClipLimit;
             ClaheGridSize = claheGridSize; MaximumPixelsPerCrop = maximumPixelsPerCrop;
@@ -70,6 +79,8 @@ namespace JYPPX.DeploySharp.Visual
             AdaptiveBlockSize = adaptiveBlockSize; AdaptiveConstant = adaptiveConstant;
             SharpnessThreshold = sharpnessThreshold; SharpenKernelSize = sharpenKernelSize; SharpenAmount = sharpenAmount; SharpenSigma = sharpenSigma;
             UpscaleFactor = upscaleFactor; UpscaleInterpolation = upscaleInterpolation;
+            ShadowVariationThreshold = shadowVariationThreshold; ShadowKernelSize = shadowKernelSize;
+            JpegArtifactThreshold = jpegArtifactThreshold; JpegKernelSize = jpegKernelSize;
         }
         /// <summary>Gets the explicit operation. / 获取显式操作。</summary>
         public OcrCropEnhancementMode Mode { get; }
@@ -109,6 +120,14 @@ namespace JYPPX.DeploySharp.Visual
         public double UpscaleFactor { get; }
         /// <summary>Gets interpolation used by the local-upscale candidate. / 获取局部放大候选使用的插值方式。</summary>
         public TextCropInterpolation UpscaleInterpolation { get; }
+        /// <summary>Gets the sampled luminance variation required before shadow normalization is applied; it is not a shadow classifier. / 获取应用阴影归一化所需的亮度变化门限；它不是阴影分类器。</summary>
+        public double ShadowVariationThreshold { get; }
+        /// <summary>Gets the odd Gaussian background-kernel width used by shadow normalization. / 获取阴影归一化使用的奇数高斯背景核宽度。</summary>
+        public int ShadowKernelSize { get; }
+        /// <summary>Gets the sampled Laplacian-variance gate for JPEG-artifact suppression; it is not a JPEG detector. / 获取 JPEG 伪影抑制使用的拉普拉斯方差门限；它不是 JPEG 检测器。</summary>
+        public double JpegArtifactThreshold { get; }
+        /// <summary>Gets the odd median-filter kernel width used by JPEG-artifact suppression. / 获取 JPEG 伪影抑制使用的奇数中值滤波核宽度。</summary>
+        public int JpegKernelSize { get; }
 
         /// <summary>Calculates the bounded intermediate size for a local-upscale crop. / 计算局部放大裁剪的有界中间尺寸。</summary>
         public VisualSize CalculateUpscaledSize(VisualSize input)
@@ -133,6 +152,22 @@ namespace JYPPX.DeploySharp.Visual
                 VisualSize upscaled = options.CalculateUpscaledSize(rectified.InputSize);
                 if (checked((long)upscaled.Width * upscaled.Height) > options.MaximumPixelsPerCrop)
                     throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Upscaled crop exceeds its pixel limit.", OcrPipelineStage.CropAndBatch);
+                return OcrCropEnhancementDecision.Applied;
+            }
+            if (options.Mode == OcrCropEnhancementMode.ShadowNormalize)
+            {
+                double? shadowDeviation = rectified.LuminanceStandardDeviation;
+                if (!shadowDeviation.HasValue || shadowDeviation.Value < options.ShadowVariationThreshold) return OcrCropEnhancementDecision.SufficientQuality;
+                if ((long)rectified.InputSize.Width * rectified.InputSize.Height > options.MaximumPixelsPerCrop)
+                    throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Shadow-normalized crop exceeds its pixel limit.", OcrPipelineStage.CropAndBatch);
+                return OcrCropEnhancementDecision.Applied;
+            }
+            if (options.Mode == OcrCropEnhancementMode.JpegArtifactSuppress)
+            {
+                double? laplacian = rectified.LaplacianVariance;
+                if (!laplacian.HasValue || laplacian.Value <= options.JpegArtifactThreshold) return OcrCropEnhancementDecision.SufficientQuality;
+                if ((long)rectified.InputSize.Width * rectified.InputSize.Height > options.MaximumPixelsPerCrop)
+                    throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "JPEG-artifact-suppressed crop exceeds its pixel limit.", OcrPipelineStage.CropAndBatch);
                 return OcrCropEnhancementDecision.Applied;
             }
             if (options.Mode == OcrCropEnhancementMode.GaussianDenoise)

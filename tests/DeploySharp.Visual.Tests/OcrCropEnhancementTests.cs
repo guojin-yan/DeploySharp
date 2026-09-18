@@ -32,6 +32,16 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(new VisualSize(40, 40), upscale.CalculateUpscaledSize(new VisualSize(20, 20)));
             var upscaleLimited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, maximumPixelsPerCrop: 399);
             Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), upscaleLimited)).ErrorCode);
+            var shadow = new OcrCropEnhancementOptions(OcrCropEnhancementMode.ShadowNormalize, shadowVariationThreshold: 3);
+            Assert.AreEqual(OcrCropEnhancementDecision.SufficientQuality, OcrCropEnhancementPolicy.Decide(Analyze(0), shadow));
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), shadow));
+            var shadowLimited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.ShadowNormalize, shadowVariationThreshold: 3, maximumPixelsPerCrop: 399);
+            Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), shadowLimited)).ErrorCode);
+            var jpeg = new OcrCropEnhancementOptions(OcrCropEnhancementMode.JpegArtifactSuppress, jpegArtifactThreshold: 1);
+            Assert.AreEqual(OcrCropEnhancementDecision.SufficientQuality, OcrCropEnhancementPolicy.Decide(Analyze(0), jpeg));
+            Assert.AreEqual(OcrCropEnhancementDecision.Applied, OcrCropEnhancementPolicy.Decide(Analyze(4), jpeg));
+            var jpegLimited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.JpegArtifactSuppress, jpegArtifactThreshold: 1, maximumPixelsPerCrop: 399);
+            Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), jpegLimited)).ErrorCode);
             var limited = new OcrCropEnhancementOptions(OcrCropEnhancementMode.GrayClahe, maximumPixelsPerCrop: 399);
             Assert.AreEqual(VisualErrorCodes.OcrLimitExceeded, Assert.ThrowsExactly<OcrPipelineException>(() => OcrCropEnhancementPolicy.Decide(Analyze(4), limited)).ErrorCode);
             Assert.AreEqual(OcrCropEnhancementDecision.SufficientContrast, OcrCropEnhancementPolicy.Decide(Analyze(64), limited));
@@ -65,6 +75,10 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 1));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 4.1));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleInterpolation: (TextCropInterpolation)8));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.ShadowNormalize, shadowVariationThreshold: double.NaN));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.ShadowNormalize, shadowKernelSize: 4));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.JpegArtifactSuppress, jpegArtifactThreshold: 0));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrCropEnhancementOptions(OcrCropEnhancementMode.JpegArtifactSuppress, jpegKernelSize: 9));
         }
 
         [TestMethod]
