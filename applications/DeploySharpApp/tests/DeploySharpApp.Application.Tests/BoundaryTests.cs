@@ -103,6 +103,31 @@ namespace DeploySharpApp.Application.Tests
             StringAssert.Contains(adapter, "PaddleOcrProfiles.LoadCharacterSet");
             StringAssert.Contains(adapter, "value is OcrOrientationResult orientation");
             StringAssert.Contains(adapter, "prediction.Segmentation");
+            StringAssert.Contains(adapter, "paddleProbabilityThreshold");
+            StringAssert.Contains(adapter, "paddleMaximumRegions");
+            StringAssert.Contains(adapter, "DSAPP-PADDLEOCR-PACKAGE-UPGRADE-REQUIRED");
+            StringAssert.Contains(adapter, "RunPaddleOcrWorkflowAsync");
+            StringAssert.Contains(adapter, "new OcrPipeline(");
+            StringAssert.Contains(adapter, "PP-OCRv5 DET + CLS + REC");
+            StringAssert.Contains(adapter, "kind = \"ocr\"");
+            StringAssert.Contains(adapter, "paddleDictionarySha256");
+        }
+
+        [TestMethod]
+        public void WebExposesDedicatedRoiAndDocumentOcrWorkspace()
+        {
+            string appRoot = Path.GetFullPath(Path.Combine(TestContext?.TestRunDirectory ?? Directory.GetCurrentDirectory(), "..", "..", "..", "..", ".."));
+            string page = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.Web", "Components", "Pages", "RoiOcr.razor"));
+            string navigation = File.ReadAllText(Path.Combine(appRoot, "src", "DeploySharpApp.Web", "Components", "Layout", "MainLayout.razor"));
+
+            StringAssert.Contains(page, "@page \"/roi-ocr\"");
+            StringAssert.Contains(page, "schemaVersion 1.0");
+            StringAssert.Contains(page, "PADDLE DOCUMENT PIPELINE");
+            StringAssert.Contains(page, "等待新版 NuGet");
+            StringAssert.Contains(page, "DET + CLS + REC");
+            StringAssert.Contains(page, "paddleWorkflowVariant");
+            StringAssert.Contains(page, "recognizedLines");
+            StringAssert.Contains(navigation, "href=\"/roi-ocr\"");
         }
 
         public TestContext? TestContext { get; set; }

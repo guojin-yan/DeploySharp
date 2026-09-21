@@ -488,6 +488,41 @@ namespace DeploySharpApp.Application.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public async Task LocalPaddleOcrV5WorkflowRunsDetClsRecAndReturnsSourceSpaceText()
+        {
+            if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages Windows native runtimes.");
+            string root = Path.Combine("E:\\Model", "paddleocr", "PP-OCRv5");
+            string imagePath = Path.Combine("E:\\Data", "ocr", "demo_1.jpg");
+            string detectorPath = Path.Combine(root, "PP-OCRv5_mobile_det.onnx");
+            string classifierPath = Path.Combine(root, "PP-OCRv5_mobile_cls.onnx");
+            string recognizerPath = Path.Combine(root, "PP-OCRv5_mobile_rec.onnx");
+            string dictionaryPath = Path.Combine(root, "ppocrv5_dict.txt");
+            if (!File.Exists(imagePath) || !File.Exists(detectorPath) || !File.Exists(classifierPath) || !File.Exists(recognizerPath) || !File.Exists(dictionaryPath))
+                Assert.Inconclusive("The local PP-OCRv5 mobile DET/CLS/REC bundle or demo_1.jpg is not installed.");
+            var options = new Dictionary<string, string>
+            {
+                ["executionMode"] = "worker", ["paddleWorkflowVariant"] = "mobile",
+                ["paddleDetectorModelId"] = "paddleocr/ppocrv5/mobile-det", ["paddleClassifierModelId"] = "paddleocr/ppocrv5/mobile-cls", ["paddleRecognizerModelId"] = "paddleocr/ppocrv5/mobile-rec",
+                ["paddleDetectorPath"] = detectorPath, ["paddleClassifierPath"] = classifierPath, ["paddleRecognizerPath"] = recognizerPath, ["paddleDictionaryPath"] = dictionaryPath,
+                ["paddleDetectorSha256"] = "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", ["paddleClassifierSha256"] = "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", ["paddleRecognizerSha256"] = "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", ["paddleDictionarySha256"] = "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+                ["paddleDetectorOpset"] = "11", ["paddleClassifierOpset"] = "7", ["paddleRecognizerOpset"] = "7", ["paddleMaximumRecognitionBatch"] = "16",
+                ["paddleProbabilityThreshold"] = "0.30", ["paddleBoxThreshold"] = "0.60", ["paddleUnclipRatio"] = "1.50", ["paddleMaximumRegions"] = "128", ["paddleMaximumCandidates"] = "1000", ["paddleOrientationThreshold"] = "0.90",
+                ["visualAssetPathsJson"] = JsonSerializer.Serialize(new Dictionary<string, string> { ["labels"] = dictionaryPath, ["vocabulary"] = dictionaryPath }),
+                ["visualUpstreamRepository"] = "https://github.com/PaddlePaddle/PaddleOCR", ["visualUpstreamRevision"] = "local-verified", ["visualExporter"] = "Paddle2ONNX", ["visualExporterVersion"] = "2.0.2rc3", ["visualLicense"] = "Apache-2.0"
+            };
+            var request = new ModelRunRequest(AppOperationKind.Vision, "paddleocr/workflow/ppocrv5/mobile", "deploysharp.backend.onnxruntime", inputPath: imagePath, modelPath: detectorPath, modelFormat: "onnx", modelSha256: options["paddleDetectorSha256"], options: options, timeout: TimeSpan.FromMinutes(3));
+            ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
+            if (!result.Succeeded && result.ErrorCode == AppErrorCode.NativeDependencyMissing) Assert.Inconclusive(result.Message);
+            Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
+            using JsonDocument output = JsonDocument.Parse(result.Output!);
+            Assert.AreEqual("ocr", output.RootElement.GetProperty("kind").GetString());
+            Assert.AreEqual("PP-OCRv5 DET + CLS + REC", output.RootElement.GetProperty("pipeline").GetString());
+            Assert.IsTrue(output.RootElement.GetProperty("regions").GetArrayLength() > 0);
+            Assert.IsTrue(output.RootElement.GetProperty("regions")[0].TryGetProperty("text", out _));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public async Task ConfiguredTensorRtEngineRejectsBadIdentityThenRunsRealGpuInference()
         {
             string? enginePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_APP_TENSORRT_ENGINE");
@@ -619,6 +654,45 @@ namespace DeploySharpApp.Application.Tests
             StringAssert.Contains(svg, "<image href=\"data:image/png;base64,AA==\" x=\"230\" y=\"20\" width=\"180\" height=\"360\"");
             StringAssert.Contains(svg, "<rect x=\"230\" y=\"20\" width=\"180\" height=\"360\" fill=\"none\"");
             StringAssert.Contains(svg, "<rect x=\"230\" y=\"20\" width=\"180.75\" height=\"360.75\" fill=\"#4d7cff\"");
+        }
+
+        [TestMethod]
+        public void RoiWorkspaceSchemaRoundTripsNormalizedRectangle()
+        {
+            var regions = new[]
+            {
+                new RoiWorkspaceRegion("main", "正文", true, 10, RoiWorkspaceInclusionMode.Include, RoiWorkspaceExecutionMode.FilterResults, RoiWorkspaceHitTestMode.IoU, .25, .7, .1, .2, .6, .5)
+            };
+
+            string json = RoiWorkspace.Serialize(regions, 1920, 1080);
+            IReadOnlyList<RoiWorkspaceRegion> restored = RoiWorkspace.Deserialize(json);
+
+            Assert.AreEqual(1, restored.Count);
+            Assert.AreEqual("main", restored[0].Id);
+            Assert.AreEqual(RoiWorkspaceHitTestMode.IoU, restored[0].HitTestMode);
+            Assert.AreEqual(.7, restored[0].ConfidenceOverride);
+            using JsonDocument document = JsonDocument.Parse(json);
+            Assert.AreEqual("1.0", document.RootElement.GetProperty("schemaVersion").GetString());
+            Assert.AreEqual("Normalized", document.RootElement.GetProperty("rois")[0].GetProperty("coordinateSpace").GetString());
+        }
+
+        [TestMethod]
+        public void RoiWorkspaceFiltersCanonicalOcrRegionsInSourceCoordinates()
+        {
+            const string output = """
+                {"schema":"deploysharp.visual.result.v1","kind":"ocr-detection","sourceWidth":100,"sourceHeight":100,"regions":[
+                  {"sourceIndex":0,"score":0.95,"points":[{"x":20,"y":20},{"x":40,"y":20},{"x":40,"y":40},{"x":20,"y":40}]},
+                  {"sourceIndex":1,"score":0.90,"points":[{"x":75,"y":75},{"x":95,"y":75},{"x":95,"y":95},{"x":75,"y":95}]}
+                ]}
+                """;
+            var regions = new[] { RoiWorkspaceRegion.Rectangle("正文", .1, .1, .5, .5) };
+
+            string filtered = RoiWorkspace.FilterCanonicalOcrResult(output, regions);
+
+            using JsonDocument document = JsonDocument.Parse(filtered);
+            Assert.AreEqual(1, document.RootElement.GetProperty("regions").GetArrayLength());
+            Assert.AreEqual(2, document.RootElement.GetProperty("roiEvaluation").GetProperty("inputCount").GetInt32());
+            Assert.AreEqual(1, document.RootElement.GetProperty("roiEvaluation").GetProperty("outputCount").GetInt32());
         }
 
         [TestMethod]

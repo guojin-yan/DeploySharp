@@ -1,0 +1,427 @@
+@page "/roi-ocr"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@using System.Globalization
+@using System.Security.Cryptography
+@using System.Text.Json
+@inject DeploySharpAppService Service
+@inject VisualReleaseCatalogService ReleaseCatalog
+@inject VisualTestImageCatalogService TestImageCatalog
+
+<PageTitle>ROI 与文档 OCR · DeploySharpApp</PageTitle>
+
+<div class="section-head roi-page-head">
+    <div><span class="eyebrow">ROI / DOCUMENT OCR</span><h3>区域管理与 PaddleOCR 工作台</h3></div>
+    <span class="status-tag @(busy ? "orange-tag" : "")">@(busy ? "Worker 运行中" : "Server-side Worker")</span>
+</div>
+
+<section class="roi-status-band">
+    <article><b>ROI schema 1.0</b><span>矩形 / 多边形 · 归一化坐标 · 导入导出</span><i class="ready">页面可用</i></article>
+    <article><b>PP-OCR Release</b><span>检测 / 方向分类 / 字典识别</span><i class="ready">Worker 可执行</i></article>
+    <article><b>原生 ROI 执行</b><span>CropAndInfer / SlidingWindow / 视频事件</span><i>等待新版 NuGet</i></article>
+    <article><b>PP-Structure</b><span>版面 / 表格 / 公式 / 印章 / 图表</span><i>等待新版 NuGet</i></article>
+</section>
+
+<div class="roi-workbench">
+    <section class="panel roi-controls">
+        <div class="panel-head"><div><span class="eyebrow">01 · OCR RUNTIME</span><h3>模型与输入</h3></div><span class="status-tag">@paddleModels.Count 个 Release 资产</span></div>
+        <label>PP-OCRv5 工作流
+            <select value="@selectedVariant" @onchange="HandleModelChanged">
+                <option value="mobile">PP-OCRv5 Mobile · DET + CLS + REC</option>
+                <option value="server">PP-OCRv5 Server · DET + CLS + REC</option>
+            </select>
+        </label>
+        @if (selectedModel is not null && selectedClassifier is not null && selectedRecognizer is not null)
+        {
+            <div class="selected-model-meta"><b>DET</b><span>@selectedModel.Size · opset @(selectedModel.Opset?.ToString() ?? "未声明")</span><b>CLS</b><span>@selectedClassifier.Size · opset @(selectedClassifier.Opset?.ToString() ?? "未声明")</span><b>REC</b><span>@selectedRecognizer.Size · opset @(selectedRecognizer.Opset?.ToString() ?? "未声明")</span><span>@selectedRecognizer.ValidationStatus</span></div>
+        }
+        <div class="two-col">
+            <label>后端<select @bind="backendId"><option value="deploysharp.backend.onnxruntime">ONNX Runtime CPU</option><option value="deploysharp.backend.openvino">OpenVINO CPU</option></select></label>
+            <label>超时（秒）<input type="number" min="10" max="3600" @bind="timeoutSeconds" /></label>
+        </div>
+        <label class="file-input">本地输入图像<InputFile OnChange="UploadImageAsync" accept="image/jpeg,image/png,image/webp" /></label>
+        <div class="control-actions"><button class="ghost small light" disabled="@(busy || defaultOcrImage is null)" @onclick="UseDefaultImageAsync">使用 OCR 测试图</button><span>@(string.IsNullOrWhiteSpace(imageName) ? "尚未选择图像" : imageName)</span></div>
+        @if (downloading || downloadingImage) { <progress value="@downloadProgress" max="1"></progress><div class="hint">首次运行正在下载并校验 Release 资产，请等待。</div> }
+
+        <details open class="roi-settings"><summary>PaddleOCR 后处理参数</summary>
+            <div class="two-col"><label>概率图阈值<input type="number" min="0" max="1" step="0.01" @bind="probabilityThreshold" /></label><label>文本框阈值<input type="number" min="0" max="1" step="0.01" @bind="boxThreshold" /></label></div>
+            <div class="two-col"><label>Unclip 比例<input type="number" min="0.01" max="20" step="0.1" @bind="unclipRatio" /></label><label>最大区域数<input type="number" min="1" max="1000" @bind="maximumRegions" /></label></div>
+            <label>方向接受阈值<input type="number" min="0" max="1" step="0.01" @bind="orientationThreshold" /></label>
+            <p class="hint">检测参数只作用于 det 模型，方向阈值只作用于 cls 模型；rec 模型使用 Release 内随附并经 SHA256 校验的字典。</p>
+        </details>
+        <button class="primary wide" disabled="@(busy || !WorkflowAvailable)" @onclick="RunAsync">@(busy ? "运行中…" : "下载、校验并运行 PP-OCRv5")</button>
+        <button class="ghost wide light" disabled="@(!busy)" @onclick="Cancel">取消当前运行</button>
+        <progress value="@operationProgress" max="1"></progress>
+    </section>
+
+    <section class="panel roi-canvas-panel">
+        <div class="panel-head"><div><span class="eyebrow">02 · REVIEW</span><h3>原图坐标叠加结果</h3></div><span class="status-tag @(succeeded ? "" : "orange-tag")">@runtimeState</span></div>
+        @if (!string.IsNullOrWhiteSpace(displayImageUrl))
+        {
+            <div class="roi-image-stage">
+                <img src="@displayImageUrl" alt="OCR 与 ROI 叠加结果" />
+            </div>
+        }
+        else
+        {
+            <div class="roi-empty"><span>▣</span><b>选择图片后在此审阅 ROI 与 OCR 结果</b></div>
+        }
+        <div class="roi-result-summary"><b>@resultHeadline</b><span>@resultSummary</span></div>
+        <div class="metric-row"><div class="metric"><small>预处理</small><strong>@Metric(preprocessMs)</strong></div><div class="metric"><small>推理</small><strong>@Metric(inferenceMs)</strong></div><div class="metric"><small>后处理</small><strong>@Metric(postprocessMs)</strong></div><div class="metric accent"><small>端到端</small><strong>@Metric(totalMs)</strong></div></div>
+        @if (recognizedLines.Count > 0)
+        {
+            <div class="ocr-lines"><div class="ocr-lines-head"><b>识别文本</b><span>@recognizedLines.Count 个区域 · 已应用 ROI 过滤</span></div>@foreach (OcrLine line in recognizedLines) { <div class="ocr-line"><span>@line.Text</span><small>@line.Confidence.ToString("0.000", CultureInfo.InvariantCulture)</small></div>}</div>
+        }
+        @if (diagnostics.Count > 0) { <div class="diagnostics">@foreach (RuntimeDiagnostic diagnostic in diagnostics) { <div><b>@diagnostic.Code</b><span>@diagnostic.Message</span></div> }</div> }
+    </section>
+</div>
+
+<div class="roi-lower-grid">
+    <section class="panel roi-editor">
+        <div class="panel-head"><div><span class="eyebrow">03 · ROI MANAGER</span><h3>区域规则</h3></div><button class="primary small" @onclick="AddRegion">＋ 添加矩形</button></div>
+        <div class="roi-mode-row"><b>执行模式</b><select @bind="executionMode"><option value="FilterResults">FilterResults · 当前可执行</option><option value="CropAndInfer" disabled>CropAndInfer · 等待新版 NuGet</option><option value="SlidingWindow" disabled>SlidingWindow · 等待新版 NuGet</option></select></div>
+        @for (int index = 0; index < regions.Count; index++)
+        {
+            int current = index;
+            RoiWorkspaceRegion roi = regions[current];
+            <article class="roi-row">
+                <div class="roi-row-head"><label class="check-label"><input type="checkbox" checked="@roi.Enabled" @onchange="eventArgs => UpdateEnabled(current, eventArgs.Value)" />@roi.Name</label><button class="icon-remove" title="删除 ROI" @onclick="() => RemoveRegion(current)">×</button></div>
+                <div class="roi-row-options">
+                    <select value="@roi.InclusionMode" @onchange="eventArgs => UpdateInclusion(current, eventArgs.Value)"><option value="Include">包含</option><option value="Exclude">排除</option></select>
+                    <select value="@roi.HitTestMode" @onchange="eventArgs => UpdateHitMode(current, eventArgs.Value)"><option value="CenterPoint">中心点</option><option value="AnyIntersection">任意相交</option><option value="IntersectionOverResult">结果覆盖率</option><option value="IntersectionOverRoi">ROI 覆盖率</option><option value="IoU">IoU</option></select>
+                </div>
+                <div class="roi-coordinates"><label>X<input type="number" min="0" max="1" step="0.01" value="@N(roi.X)" @onchange="eventArgs => UpdateCoordinate(current, nameof(roi.X), eventArgs.Value)" /></label><label>Y<input type="number" min="0" max="1" step="0.01" value="@N(roi.Y)" @onchange="eventArgs => UpdateCoordinate(current, nameof(roi.Y), eventArgs.Value)" /></label><label>宽<input type="number" min="0.01" max="1" step="0.01" value="@N(roi.Width)" @onchange="eventArgs => UpdateCoordinate(current, nameof(roi.Width), eventArgs.Value)" /></label><label>高<input type="number" min="0.01" max="1" step="0.01" value="@N(roi.Height)" @onchange="eventArgs => UpdateCoordinate(current, nameof(roi.Height), eventArgs.Value)" /></label></div>
+            </article>
+        }
+        @if (regions.Count == 0) { <div class="hint">未配置 ROI 时保留全部 OCR 结果。</div> }
+    </section>
+
+    <section class="panel roi-schema-panel">
+        <div class="panel-head"><div><span class="eyebrow">04 · PORTABLE SCHEMA</span><h3>ROI JSON</h3></div><span class="status-tag">schemaVersion 1.0</span></div>
+        <textarea @bind="roiJson" spellcheck="false"></textarea>
+        <div class="schema-actions"><button class="ghost small light" @onclick="ExportRoi">从编辑器导出</button><button class="ghost small light" @onclick="ImportRoi">校验并导入</button></div>
+        <p class="hint">导入有 1 MiB、256 区域、唯一 ID 和归一化坐标边界限制。当前 Web 投影接受 Rectangle 与 Polygon；运行结果默认只展示文本框、文本和置信度，不输出原始 mask/tensor。</p>
+        @if (!string.IsNullOrWhiteSpace(roiMessage)) { <div class="schema-message">@roiMessage</div> }
+    </section>
+</div>
+
+<section class="panel document-capabilities">
+    <div class="panel-head"><div><span class="eyebrow">PADDLE DOCUMENT PIPELINE</span><h3>主库新增文档能力发布状态</h3></div><span class="status-tag orange-tag">源代码已具备 · NuGet 待发布</span></div>
+    <div class="document-grid">
+        @foreach ((string Name, string Detail) capability in documentCapabilities)
+        {
+            <article><b>@capability.Name</b><span>@capability.Detail</span><i>尚未在此 Worker 启用</i></article>
+        }
+    </div>
+</section>
+
+@code {
+    private readonly List<VisualReleaseModel> paddleModels = new();
+    private readonly List<VisualTestImage> testImages = new();
+    private readonly List<RoiWorkspaceRegion> regions = new() { RoiWorkspaceRegion.Rectangle("正文区域", .08, .08, .84, .84) };
+    private readonly (string Name, string Detail)[] documentCapabilities =
+    {
+        ("文档方向", "整页方向分类与纠正"), ("文档展平", "弯曲页面几何恢复"), ("版面分析", "段落、标题、图片与区域"),
+        ("表格理解", "表格分类、单元格与结构"), ("公式识别", "公式区域与内容"), ("印章 / 图表", "印章文本与图表分析")
+    };
+    private string selectedVariant = "mobile";
+    private string selectedModelId = "paddleocr/ppocrv5/mobile-det";
+    private string backendId = "deploysharp.backend.onnxruntime";
+    private string timeoutSeconds = "600";
+    private string probabilityThreshold = "0.30";
+    private string boxThreshold = "0.60";
+    private string unclipRatio = "1.50";
+    private string maximumRegions = "128";
+    private string orientationThreshold = "0.90";
+    private string executionMode = "FilterResults";
+    private string? imagePath;
+    private string? ownedImagePath;
+    private string? originalImageUrl;
+    private string? resultImageUrl;
+    private string? rawOutputJson;
+    private string? previewOutputJson;
+    private string imageName = string.Empty;
+    private string roiJson = string.Empty;
+    private string roiMessage = string.Empty;
+    private string resultHeadline = "等待运行";
+    private string resultSummary = "可先调整 ROI，再选择 Release OCR 模型运行。";
+    private string runtimeState = "Ready";
+    private bool busy;
+    private bool downloading;
+    private bool downloadingImage;
+    private bool succeeded;
+    private double downloadProgress;
+    private double operationProgress;
+    private double preprocessMs;
+    private double inferenceMs;
+    private double postprocessMs;
+    private double totalMs;
+    private IReadOnlyList<OcrLine> recognizedLines = Array.Empty<OcrLine>();
+    private IReadOnlyList<RuntimeDiagnostic> diagnostics = Array.Empty<RuntimeDiagnostic>();
+    private CancellationTokenSource? cancellation;
+
+    private VisualReleaseModel? selectedModel => FindStage("det");
+    private VisualReleaseModel? selectedClassifier => FindStage("cls");
+    private VisualReleaseModel? selectedRecognizer => FindStage("rec");
+    private bool WorkflowAvailable => selectedModel is not null && selectedClassifier is not null && selectedRecognizer is not null;
+    private VisualTestImage? defaultOcrImage => TestImageCatalog.FindDefault(testImages, "ocr", selectedModel?.DisplayName);
+    private string? displayImageUrl => resultImageUrl ?? originalImageUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        roiJson = RoiWorkspace.Serialize(regions);
+        try
+        {
+            IReadOnlyList<VisualReleaseModel> models = await ReleaseCatalog.GetModelsAsync();
+            paddleModels.AddRange(models.Where(model => model.LogicalModelId.StartsWith("paddleocr/", StringComparison.OrdinalIgnoreCase)).OrderBy(model => model.LogicalModelId));
+            selectedModelId = selectedModel?.Id ?? string.Empty;
+            testImages.AddRange(await TestImageCatalog.GetImagesAsync());
+        }
+        catch (Exception exception)
+        {
+            runtimeState = "CatalogUnavailable";
+            resultSummary = "Release 目录读取失败：" + exception.Message;
+        }
+    }
+
+    private void HandleModelChanged(ChangeEventArgs args)
+    {
+        selectedVariant = args.Value?.ToString()?.ToLowerInvariant() is "server" ? "server" : "mobile";
+        selectedModelId = selectedModel?.Id ?? string.Empty;
+        RefreshResultPreview();
+        resultHeadline = "PP-OCRv5 工作流已切换";
+        resultSummary = WorkflowAvailable ? $"{selectedVariant} DET + CLS + REC 三阶段将由 Worker 编排执行。" : $"Release 中缺少 {selectedVariant} 工作流的一个或多个资产。";
+    }
+
+    private static string StageLabel(VisualReleaseModel model)
+    {
+        string id = model.LogicalModelId.ToLowerInvariant();
+        if (id.Contains("-det")) return "文本检测";
+        if (id.Contains("-cls")) return "方向分类";
+        if (id.Contains("-rec")) return "字典识别";
+        return model.Task;
+    }
+
+    private VisualReleaseModel? FindStage(string stage)
+        => paddleModels.FirstOrDefault(model => model.LogicalModelId.Equals($"paddleocr/ppocrv5/{selectedVariant}-{stage}", StringComparison.OrdinalIgnoreCase));
+
+    private async Task UploadImageAsync(InputFileChangeEventArgs args)
+    {
+        const long maximumBytes = 20L * 1024 * 1024;
+        IBrowserFile file = args.File;
+        if (file.Size <= 0 || file.Size > maximumBytes) { resultSummary = "图像必须大于 0 且不超过 20 MiB。"; return; }
+        string extension = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (extension is not ".jpg" and not ".jpeg" and not ".png" and not ".webp") { resultSummary = "仅接受 JPEG、PNG 或 WebP 图像。"; return; }
+        string directory = Path.Combine(Path.GetTempPath(), "DeploySharpApp", "roi-ocr");
+        Directory.CreateDirectory(directory);
+        string target = Path.Combine(directory, Guid.NewGuid().ToString("N") + extension);
+        await using (Stream source = file.OpenReadStream(maximumBytes))
+        await using (var destination = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None, 128 * 1024, true)) await source.CopyToAsync(destination);
+        DeleteOwnedImage();
+        ownedImagePath = target;
+        await SetImageAsync(target, file.Name, file.ContentType);
+    }
+
+    private Task UseDefaultImageAsync() => UseDefaultImageAsync(CancellationToken.None);
+
+    private async Task UseDefaultImageAsync(CancellationToken cancellationToken)
+    {
+        if (defaultOcrImage is not VisualTestImage image || downloadingImage) return;
+        downloadingImage = true; downloadProgress = 0;
+        try
+        {
+            VisualTestImageDownloadResult downloaded = await TestImageCatalog.DownloadAsync(image, new Progress<double>(value => { downloadProgress = value; InvokeAsync(StateHasChanged); }), cancellationToken);
+            await SetImageAsync(downloaded.Path, downloaded.Image.FileName, downloaded.Image.MediaType);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception exception) { resultSummary = "测试图下载失败：" + exception.Message; }
+        finally { downloadingImage = false; }
+    }
+
+    private async Task SetImageAsync(string path, string name, string mediaType)
+    {
+        imagePath = path;
+        imageName = name;
+        originalImageUrl = "data:" + mediaType + ";base64," + Convert.ToBase64String(await File.ReadAllBytesAsync(path));
+        rawOutputJson = null;
+        SixLabors.ImageSharp.ImageInfo? imageInfo = SixLabors.ImageSharp.Image.Identify(path);
+        previewOutputJson = JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "roi-preview", sourceWidth = imageInfo?.Width ?? 1, sourceHeight = imageInfo?.Height ?? 1 });
+        RefreshResultPreview();
+        resultHeadline = "输入已准备";
+        resultSummary = "ROI 使用归一化坐标，可在不同尺寸输入之间复用。";
+    }
+
+    private async Task RunAsync()
+    {
+        if (busy || !WorkflowAvailable) return;
+        busy = true; succeeded = false; operationProgress = 0; downloadProgress = 0; diagnostics = Array.Empty<RuntimeDiagnostic>();
+        cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(ParseInt(timeoutSeconds, 600, 10, 3600)));
+        try
+        {
+            if (imagePath is null) await UseDefaultImageAsync(cancellation.Token);
+            if (imagePath is null) { resultHeadline = "缺少输入图像"; resultSummary = "请上传图片或使用 Release OCR 测试图。"; runtimeState = "ModelUnavailable"; return; }
+            VisualReleaseModel[] workflow = new[] { selectedModel!, selectedClassifier!, selectedRecognizer! };
+            var downloaded = new List<(VisualReleaseModel Model, VisualModelDownloadResult Result)>();
+            downloading = true;
+            for (int index = 0; index < workflow.Length; index++)
+            {
+                int stageIndex = index;
+                VisualModelDownloadResult result = await ReleaseCatalog.DownloadAsync(workflow[index], new Progress<double>(value => { downloadProgress = (stageIndex + value) / workflow.Length; InvokeAsync(StateHasChanged); }), cancellation.Token);
+                VisualReleaseModel verifiedStage = result.Model with { Cached = true };
+                ReplaceModel(verifiedStage);
+                downloaded.Add((verifiedStage, result));
+            }
+            downloading = false;
+            VisualReleaseModel detector = downloaded[0].Model;
+            VisualReleaseModel classifier = downloaded[1].Model;
+            VisualReleaseModel recognizer = downloaded[2].Model;
+            string detectorPath = downloaded[0].Result.PrimaryModelPath;
+            string classifierPath = downloaded[1].Result.PrimaryModelPath;
+            string recognizerPath = downloaded[2].Result.PrimaryModelPath;
+            VisualReleaseFile dictionaryFile = recognizer.Files.FirstOrDefault(file => file.Role.Contains("label", StringComparison.OrdinalIgnoreCase) || file.Role.Contains("vocab", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(file.AssetName).Equals(".txt", StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidDataException("The selected PP-OCRv5 recognizer has no dictionary asset.");
+            string dictionaryPath = ReleaseCatalog.GetCachedFilePath(recognizer, dictionaryFile);
+            string modelBundleRoot = Path.GetDirectoryName(Path.GetDirectoryName(detectorPath) ?? detectorPath) ?? Path.GetDirectoryName(detectorPath) ?? detectorPath;
+            var assetPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var modelAssets = new List<ModelAssetReference>();
+            foreach ((VisualReleaseModel stageModel, VisualModelDownloadResult stageResult) in downloaded)
+            {
+                string stage = stageModel.LogicalModelId.EndsWith("-det", StringComparison.OrdinalIgnoreCase) ? "detector" : stageModel.LogicalModelId.EndsWith("-cls", StringComparison.OrdinalIgnoreCase) ? "classifier" : "recognizer";
+                foreach (VisualReleaseFile file in stageModel.Files)
+                {
+                    string path = ReleaseCatalog.GetCachedFilePath(stageModel, file);
+                    assetPaths[stage + ":" + file.Role] = path; assetPaths[stage + ":" + file.AssetName] = path; assetPaths[stage + ":" + file.RelativePath] = path;
+                    if (stage == "recognizer" && (file.Role.Contains("vocab", StringComparison.OrdinalIgnoreCase) || file.Role.Contains("label", StringComparison.OrdinalIgnoreCase))) { assetPaths["labels"] = path; assetPaths["vocabulary"] = path; }
+                    modelAssets.Add(new ModelAssetReference(Path.GetRelativePath(modelBundleRoot, path), path, stage + ":" + file.Role, file.Sha256, file.Size));
+                }
+            }
+            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["executionProvider"] = "cpu",
+                ["visualAssetPathsJson"] = JsonSerializer.Serialize(assetPaths),
+                ["modelBundleRoot"] = modelBundleRoot,
+                ["modelAssetsJson"] = JsonSerializer.Serialize(modelAssets),
+                ["visualPostprocessingKind"] = detector.PostprocessingProfile.Kind.ToString(),
+                ["visualUpstreamRepository"] = detector.UpstreamRepository,
+                ["visualUpstreamRevision"] = detector.UpstreamRevision,
+                ["visualExporter"] = detector.Exporter,
+                ["visualExporterVersion"] = detector.ExporterVersion,
+                ["visualLicense"] = detector.License,
+                ["paddleWorkflowVariant"] = selectedVariant,
+                ["paddleDetectorModelId"] = detector.LogicalModelId,
+                ["paddleClassifierModelId"] = classifier.LogicalModelId,
+                ["paddleRecognizerModelId"] = recognizer.LogicalModelId,
+                ["paddleDetectorPath"] = detectorPath,
+                ["paddleClassifierPath"] = classifierPath,
+                ["paddleRecognizerPath"] = recognizerPath,
+                ["paddleDictionaryPath"] = dictionaryPath,
+                ["paddleDetectorSha256"] = detector.PrimaryFile.Sha256,
+                ["paddleClassifierSha256"] = classifier.PrimaryFile.Sha256,
+                ["paddleRecognizerSha256"] = recognizer.PrimaryFile.Sha256,
+                ["paddleDictionarySha256"] = dictionaryFile.Sha256,
+                ["paddleDetectorOpset"] = (detector.Opset ?? 11).ToString(CultureInfo.InvariantCulture),
+                ["paddleClassifierOpset"] = (classifier.Opset ?? 7).ToString(CultureInfo.InvariantCulture),
+                ["paddleRecognizerOpset"] = (recognizer.Opset ?? (selectedVariant == "server" ? 10 : 7)).ToString(CultureInfo.InvariantCulture),
+                ["paddleMaximumRecognitionBatch"] = "16",
+                ["paddleProbabilityThreshold"] = ParseNumber(probabilityThreshold, .3, 0, 1).ToString(CultureInfo.InvariantCulture),
+                ["paddleBoxThreshold"] = ParseNumber(boxThreshold, .6, 0, 1).ToString(CultureInfo.InvariantCulture),
+                ["paddleUnclipRatio"] = ParseNumber(unclipRatio, 1.5, .01, 20).ToString(CultureInfo.InvariantCulture),
+                ["paddleMaximumRegions"] = ParseInt(maximumRegions, 128, 1, 1000).ToString(CultureInfo.InvariantCulture),
+                ["paddleMaximumCandidates"] = Math.Max(1000, ParseInt(maximumRegions, 128, 1, 1000)).ToString(CultureInfo.InvariantCulture),
+                ["paddleOrientationThreshold"] = ParseNumber(orientationThreshold, .9, 0, 1).ToString(CultureInfo.InvariantCulture),
+                ["roiWorkspaceJson"] = RoiWorkspace.Serialize(regions)
+            };
+            options["visualOpset"] = (detector.Opset ?? 11).ToString(CultureInfo.InvariantCulture);
+            string workflowId = "paddleocr/workflow/ppocrv5/" + selectedVariant;
+            var request = new ModelRunRequest(AppOperationKind.Vision, workflowId, backendId, "cpu", imagePath, options: options, timeout: TimeSpan.FromSeconds(ParseInt(timeoutSeconds, 600, 10, 3600)), modelPath: detectorPath, modelFormat: detector.Format, modelSha256: detector.PrimaryFile.Sha256, modelAssets: modelAssets);
+            ModelRunResult output = await Service.RunAsync(request, new Progress<double>(value => { operationProgress = value; InvokeAsync(StateHasChanged); }), cancellation.Token);
+            succeeded = output.Succeeded; runtimeState = output.RuntimeStatus?.State.ToString() ?? (output.Succeeded ? "Available" : output.ErrorCode.ToString()); diagnostics = output.Diagnostics;
+            preprocessMs = output.PreprocessMs; inferenceMs = output.InferenceMs; postprocessMs = output.PostprocessMs; totalMs = output.TotalMs;
+            resultHeadline = output.Succeeded ? $"PP-OCRv5 {selectedVariant} DET + CLS + REC 完成" : output.ErrorCode.ToString();
+            resultSummary = output.Message;
+            if (output.Succeeded && !string.IsNullOrWhiteSpace(output.Output) && originalImageUrl is not null)
+            {
+                rawOutputJson = output.Output;
+                string filtered = RoiWorkspace.FilterCanonicalOcrResult(rawOutputJson, regions);
+                recognizedLines = ReadOcrLines(filtered);
+                resultImageUrl = VisionResultRenderer.Render(originalImageUrl, filtered, detector.Task, detector.PostprocessingProfile, regions);
+                resultSummary += " · " + RoiWorkspace.FormatCanonicalOcrSummary(filtered);
+            }
+        }
+        catch (OperationCanceledException) { runtimeState = "Unavailable"; resultHeadline = "操作已取消"; resultSummary = "下载或推理已取消。"; }
+        catch (Exception exception) { runtimeState = "Unavailable"; resultHeadline = "运行失败"; resultSummary = exception.Message; }
+        finally { downloading = false; busy = false; cancellation?.Dispose(); cancellation = null; }
+    }
+
+    private void ReplaceModel(VisualReleaseModel model)
+    {
+        int index = paddleModels.FindIndex(item => string.Equals(item.Id, model.Id, StringComparison.OrdinalIgnoreCase));
+        if (index >= 0) paddleModels[index] = model;
+    }
+
+    private void AddRegion()
+    {
+        regions.Add(RoiWorkspaceRegion.Rectangle("区域 " + (regions.Count + 1), .15, .15, .4, .3));
+        ExportRoi();
+    }
+
+    private void RemoveRegion(int index) { if (index >= 0 && index < regions.Count) regions.RemoveAt(index); ExportRoi(); }
+    private void UpdateEnabled(int index, object? value) { bool enabled = value is bool state && state; regions[index] = regions[index] with { Enabled = enabled }; ExportRoi(); }
+    private void UpdateInclusion(int index, object? value) { if (Enum.TryParse(value?.ToString(), true, out RoiWorkspaceInclusionMode parsed)) regions[index] = regions[index] with { InclusionMode = parsed }; ExportRoi(); }
+    private void UpdateHitMode(int index, object? value) { if (Enum.TryParse(value?.ToString(), true, out RoiWorkspaceHitTestMode parsed)) regions[index] = regions[index] with { HitTestMode = parsed }; ExportRoi(); }
+    private void UpdateCoordinate(int index, string property, object? value)
+    {
+        if (!double.TryParse(value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double number)) return;
+        RoiWorkspaceRegion item = regions[index];
+        item = property switch { "X" => item with { X = number }, "Y" => item with { Y = number }, "Width" => item with { Width = number }, "Height" => item with { Height = number }, _ => item };
+        regions[index] = item;
+        try { ExportRoi(); } catch (InvalidDataException exception) { roiMessage = exception.Message; }
+    }
+
+    private void ExportRoi()
+    {
+        for (int index = 0; index < regions.Count; index++) regions[index] = regions[index] with { ExecutionMode = RoiWorkspaceExecutionMode.FilterResults };
+        roiJson = RoiWorkspace.Serialize(regions);
+        roiMessage = "已生成可移植 ROI schema 1.0 JSON。";
+        RefreshResultPreview();
+    }
+
+    private void ImportRoi()
+    {
+        try { regions.Clear(); regions.AddRange(RoiWorkspace.Deserialize(roiJson)); roiMessage = $"已校验并导入 {regions.Count} 个 ROI。"; RefreshResultPreview(); }
+        catch (Exception exception) when (exception is InvalidDataException or JsonException) { roiMessage = "导入失败：" + exception.Message; }
+    }
+
+    private void Cancel() => cancellation?.Cancel();
+    private void RefreshResultPreview()
+    {
+        if (originalImageUrl is null || selectedModel is not VisualReleaseModel model || (rawOutputJson ?? previewOutputJson) is not string source) return;
+        string filtered = rawOutputJson is null ? source : RoiWorkspace.FilterCanonicalOcrResult(source, regions);
+        recognizedLines = rawOutputJson is null ? Array.Empty<OcrLine>() : ReadOcrLines(filtered);
+        resultImageUrl = VisionResultRenderer.Render(originalImageUrl, filtered, model.Task, model.PostprocessingProfile, regions);
+    }
+    private static IReadOnlyList<OcrLine> ReadOcrLines(string json)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 64 });
+            JsonElement root = document.RootElement;
+            if (!root.TryGetProperty("kind", out JsonElement kind) || !string.Equals(kind.GetString(), "ocr", StringComparison.OrdinalIgnoreCase) || !root.TryGetProperty("regions", out JsonElement regions) || regions.ValueKind != JsonValueKind.Array) return Array.Empty<OcrLine>();
+            return regions.EnumerateArray().Select(region => new OcrLine(region.TryGetProperty("text", out JsonElement text) ? text.GetString() ?? string.Empty : string.Empty, region.TryGetProperty("confidence", out JsonElement confidence) && confidence.TryGetDouble(out double value) ? value : 0)).Where(line => line.Text.Length > 0).Take(256).ToArray();
+        }
+        catch (JsonException) { return Array.Empty<OcrLine>(); }
+    }
+    private static int ParseInt(string value, int fallback, int minimum, int maximum) => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
+    private static double ParseNumber(string value, double fallback, double minimum, double maximum) => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed) && double.IsFinite(parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
+    private static string N(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
+    private static string Metric(double value) => value <= 0 ? "—" : value.ToString("F1", CultureInfo.InvariantCulture) + " ms";
+    private sealed record OcrLine(string Text, double Confidence);
+
+    private void DeleteOwnedImage()
+    {
+        if (!string.IsNullOrWhiteSpace(ownedImagePath) && File.Exists(ownedImagePath)) { try { File.Delete(ownedImagePath); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+        ownedImagePath = null;
+    }
+
+    public ValueTask DisposeAsync() { cancellation?.Cancel(); cancellation?.Dispose(); DeleteOwnedImage(); return ValueTask.CompletedTask; }
+}

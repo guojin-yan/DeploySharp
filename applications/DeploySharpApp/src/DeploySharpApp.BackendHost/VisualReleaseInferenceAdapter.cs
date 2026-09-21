@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using System.Text.Json;
 using DeploySharpApp.Contracts;
 using JYPPX.DeploySharp;
@@ -16,6 +17,7 @@ using JYPPX.DeploySharp.Visual.Models.Detr;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 using JYPPX.DeploySharp.Visual.Models.Yolo;
 using JYPPX.DeploySharp.Visual.OpenCV;
+using VisualOcrResult = JYPPX.DeploySharp.Visual.OcrResult;
 
 namespace DeploySharpApp.BackendHost;
 
@@ -32,6 +34,8 @@ internal static class VisualReleaseInferenceAdapter
         if (!useOnnxRuntime && !useOpenVino && !useTensorRt) return null;
         string id = request.ModelId ?? string.Empty;
         if (!IsReleaseVisualId(id)) return null;
+        if (id.StartsWith("paddleocr/", StringComparison.OrdinalIgnoreCase) && !id.Contains("ppocrv5", StringComparison.OrdinalIgnoreCase))
+            return Error(request, "DSAPP-PADDLEOCR-PACKAGE-UPGRADE-REQUIRED", "This PaddleOCR generation is present in the updated main-library source but is not executable with the currently published DeploySharp.Visual 2.0.0-alpha.1 Worker package.", AppRuntimeState.Unsupported, id);
         string requestedDevice = Value(request.Payload, "device") ?? "cpu";
         if (useTensorRt && !string.Equals(requestedDevice, "cuda", StringComparison.OrdinalIgnoreCase))
             return Error(request, "DSAPP-TENSORRT-DEVICE-INVALID", "TensorRT visual inference requires the CUDA device; it never falls back to CPU.", AppRuntimeState.Unavailable, "requestedDevice=" + requestedDevice);
@@ -49,6 +53,12 @@ internal static class VisualReleaseInferenceAdapter
         try
         {
             progress?.Invoke(.5);
+            if (IsPaddleOcrWorkflowId(id))
+            {
+                if (useTensorRt)
+                    return Error(request, "DSAPP-PADDLEOCR-TENSORRT-UNSUPPORTED", "The PP-OCRv5 DET+CLS+REC workflow requires three independently selected ONNX/OpenVINO sessions; TensorRT conversion is not silently substituted for one stage.", AppRuntimeState.Unsupported, id);
+                return await RunPaddleOcrWorkflowAsync(request, imagePath, useOpenVino, cancellationToken, progress).ConfigureAwait(false);
+            }
             object? profile = CreateProfile(id, request);
             if (profile is null) return Error(request, "DSAPP-VISUAL-PROFILE-UNSUPPORTED", "The Release manifest has no executable visual profile in this Worker build.", AppRuntimeState.Unsupported, id);
             if (useTensorRt && profile is PromptableSegmentationProfile)
@@ -148,6 +158,131 @@ internal static class VisualReleaseInferenceAdapter
         catch (JYPPX.DeploySharp.Errors.DeploySharpException exception) { return Error(request, exception.ErrorCode, exception.Message, AppRuntimeState.Unavailable, exception.TechnicalDetails); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return Error(request, "DSAPP-VISUAL-CANCELLED", "Release visual inference was cancelled.", AppRuntimeState.Unavailable); }
         catch (Exception exception) { return Error(request, "DSAPP-VISUAL-INFERENCE-FAILED", "Release visual inference failed.", AppRuntimeState.Unavailable, exception.ToString()); }
+    }
+
+    private static async Task<WorkerResponse> RunPaddleOcrWorkflowAsync(WorkerRequest request, string imagePath, bool useOpenVino, CancellationToken cancellationToken, Action<double>? progress)
+    {
+        string variant = Value(request.Payload, "paddleWorkflowVariant")?.Trim().ToLowerInvariant() ?? "mobile";
+        if (variant is not ("mobile" or "server"))
+            return Error(request, "DSAPP-PADDLEOCR-WORKFLOW-INVALID", "PP-OCRv5 workflow variant must be mobile or server.", AppRuntimeState.Unsupported, variant);
+
+        string detectorId = Value(request.Payload, "paddleDetectorModelId") ?? $"paddleocr/ppocrv5/{variant}-det";
+        string classifierId = Value(request.Payload, "paddleClassifierModelId") ?? $"paddleocr/ppocrv5/{variant}-cls";
+        string recognizerId = Value(request.Payload, "paddleRecognizerModelId") ?? $"paddleocr/ppocrv5/{variant}-rec";
+        string detectorPath = RequireWorkflowFile(request, "paddleDetectorPath", "detector");
+        string classifierPath = RequireWorkflowFile(request, "paddleClassifierPath", "classifier");
+        string recognizerPath = RequireWorkflowFile(request, "paddleRecognizerPath", "recognizer");
+        string dictionaryPath = Value(request.Payload, "paddleDictionaryPath") ?? AssetPath(request, "labels") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(dictionaryPath) || !File.Exists(dictionaryPath))
+            return Error(request, "DSAPP-PADDLEOCR-DICTIONARY-NOT-FOUND", "The PP-OCRv5 recognition dictionary is missing; the workflow will not emit undecoded logits.", AppRuntimeState.Unavailable, dictionaryPath);
+        dictionaryPath = Path.GetFullPath(dictionaryPath);
+
+        string detectorSha = RequiredSha(request, "paddleDetectorSha256", "detector");
+        string classifierSha = RequiredSha(request, "paddleClassifierSha256", "classifier");
+        string recognizerSha = RequiredSha(request, "paddleRecognizerSha256", "recognizer");
+        string dictionarySha = RequiredSha(request, "paddleDictionarySha256", "dictionary");
+        int detectorOpset = IntOption(request.Payload, "paddleDetectorOpset", 11, 1, 20);
+        int classifierOpset = IntOption(request.Payload, "paddleClassifierOpset", 7, 1, 20);
+        int recognizerOpset = IntOption(request.Payload, "paddleRecognizerOpset", variant == "server" ? 10 : 7, 1, 20);
+        int maximumRegions = IntOption(request.Payload, "paddleMaximumRegions", 128, 1, 1000);
+        int maximumBatch = IntOption(request.Payload, "paddleMaximumRecognitionBatch", 16, 1, 64);
+
+        var detectorPostprocess = new PaddleDbPostprocessOptions(
+            FloatOption(request.Payload, "paddleProbabilityThreshold", .3f, 0f, 1f),
+            FloatOption(request.Payload, "paddleBoxThreshold", .6f, 0f, 1f),
+            FloatOption(request.Payload, "paddleUnclipRatio", 1.5f, .01f, 20f),
+            maximumCandidates: IntOption(request.Payload, "paddleMaximumCandidates", 1000, 1, 10000),
+            maximumRegions: maximumRegions);
+        PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(
+            new ModelId(detectorId),
+            PaddleArtifact(detectorSha, request, detectorOpset),
+            postprocess: detectorPostprocess);
+        PaddleOcrProfile classifier = PaddleOcrProfiles.CreateTextLineOrientationClassification(
+            new ModelId(classifierId),
+            PaddleArtifact(classifierSha, request, classifierOpset),
+            rejectionThreshold: FloatOption(request.Payload, "paddleOrientationThreshold", .9f, 0f, 1f),
+            maximumBatch: maximumBatch,
+            allowDynamicBatch: true);
+        OcrCharacterSet characterSet = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "release.ppocrv5." + variant, "v5", true, dictionarySha);
+        PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(
+            new ModelId(recognizerId),
+            PaddleArtifact(recognizerSha, request, recognizerOpset, dictionarySha),
+            characterSet,
+            maximumBatch: maximumBatch);
+
+        using var registry = new BackendRegistry();
+        BackendId backendId;
+        string device;
+        if (useOpenVino)
+        {
+            registry.UseOpenVino();
+            backendId = OpenVinoBackendProvider.BackendId;
+            device = "CPU";
+        }
+        else
+        {
+            registry.UseOnnxRuntime();
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+            device = "cpu";
+        }
+        var profiles = new VisualProfileRegistry();
+        profiles.Register(detector.VisualProfile);
+        profiles.Register(classifier.VisualProfile);
+        profiles.Register(recognizer.VisualProfile);
+        profiles.Freeze();
+        var backendRequest = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
+        using var pipeline = new OcrPipeline(
+            registry,
+            profiles.Select(detector.CreateArtifact(detectorPath, backendId), registry, backendRequest, VisualTaskId.TextDetection), backendRequest,
+            profiles.Select(classifier.CreateArtifact(classifierPath, backendId), registry, backendRequest, VisualTaskId.TextOrientationClassification), backendRequest,
+            classifier.CropProfile ?? throw new InvalidOperationException("The PP-OCRv5 orientation crop profile is missing."),
+            profiles.Select(recognizer.CreateArtifact(recognizerPath, backendId), registry, backendRequest, VisualTaskId.TextRecognition), backendRequest,
+            recognizer.CropProfile ?? throw new InvalidOperationException("The PP-OCRv5 recognition crop profile is missing."),
+            new OcrPipelineOptions(maximumRegions: maximumRegions, maximumRecognitionBatch: maximumBatch, maximumConcurrency: 1),
+            orientationRejectionPolicy: OcrOrientationRejectionPolicy.UseZeroDegrees);
+
+        using var probe = new OpenCvOcrImageInputFactory().CreateFromFile(imagePath, "probe", new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr));
+        VisualSize sourceSize = probe.SourceSize;
+        using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(
+            imagePath,
+            detector.VisualProfile.Input.Name,
+            OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize));
+        progress?.Invoke(.65);
+        VisualOcrResult result = await pipeline.RunAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
+        progress?.Invoke(.94);
+        string output = VisualResultJson.Serialize(result, sourceSize.Width, sourceSize.Height);
+        var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["output"] = output,
+            ["backendId"] = backendId.Value,
+            ["device"] = device,
+            ["execution"] = "worker",
+            ["visualProfileId"] = "paddle-ocr-workflow.ppocrv5-" + variant,
+            ["ocrPipeline"] = "PP-OCRv5 DET + CLS + REC",
+            ["ocrVariant"] = variant,
+            ["ocrRegionCount"] = result.Regions.Count.ToString(CultureInfo.InvariantCulture),
+            ["preprocessMs"] = result.Timing.CropAndBatch.TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["inferenceMs"] = (result.Timing.Detection + result.Timing.OrientationClassification + result.Timing.Recognition).TotalMilliseconds.ToString(CultureInfo.InvariantCulture),
+            ["postprocessMs"] = result.Timing.Orchestration.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
+        };
+        progress?.Invoke(1);
+        return new WorkerResponse(WorkerResponseKind.Result, request.RequestId, true, $"PP-OCRv5 {variant} DET+CLS+REC workflow completed with dictionary decoding on {backendId.Value}.", payload);
+    }
+
+    private static bool IsPaddleOcrWorkflowId(string id) => id.StartsWith("paddleocr/workflow/ppocrv5/", StringComparison.OrdinalIgnoreCase);
+
+    private static string RequireWorkflowFile(WorkerRequest request, string key, string stage)
+    {
+        string path = Value(request.Payload, key) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) throw new FileNotFoundException("The PP-OCRv5 " + stage + " model file is missing.", path);
+        return Path.GetFullPath(path);
+    }
+
+    private static string RequiredSha(WorkerRequest request, string key, string stage)
+    {
+        string value = Value(request.Payload, key) ?? string.Empty;
+        if (value.Length != 64 || value.Any(character => !Uri.IsHexDigit(character))) throw new InvalidDataException("The PP-OCRv5 " + stage + " SHA256 binding is missing or invalid.");
+        return value;
     }
 
     private static VisualInferenceResult RunPipeline(BackendRegistry registry, ModelArtifact artifact, VisualModelProfile profile, PreparedVisualInput input, BackendRequest request, TensorRtPreparedEngine? preparedEngine = null)
@@ -266,7 +401,16 @@ internal static class VisualReleaseInferenceAdapter
             return raw ? PortableDetectorProfiles.CreateRTDETRRaw(new ModelId(id), options) : PortableDetectorProfiles.CreateRTDETR(new ModelId(id), options);
         }
         if (lower.StartsWith("pp-yoloe/")) return PortableDetectorProfiles.CreatePPYOLOE(new ModelId(id), PortableOptions(id, hash, PortableDetectorFamily.PPYOLOEDet, "image", new VisualSize(640, 640), YoloLabelSets.Coco80, Opset(request, 11), request, boxes: "save_infer_model/scale_0.tmp_0", count: "save_infer_model/scale_1.tmp_0", countShape: PortableDetectorCountShape.BatchVector));
-        if (lower.StartsWith("paddleocr/") && lower.Contains("-det")) return PaddleOcrProfiles.CreateDetection(new ModelId(id), PaddleArtifact(hash, request, Opset(request, 11)));
+        if (lower.StartsWith("paddleocr/") && lower.Contains("-det"))
+        {
+            var postprocess = new PaddleDbPostprocessOptions(
+                FloatOption(request.Payload, "paddleProbabilityThreshold", .3f, 0f, 1f),
+                FloatOption(request.Payload, "paddleBoxThreshold", .6f, 0f, 1f),
+                FloatOption(request.Payload, "paddleUnclipRatio", 1.5f, .01f, 20f),
+                maximumCandidates: IntOption(request.Payload, "paddleMaximumCandidates", 1000, 1, 10000),
+                maximumRegions: IntOption(request.Payload, "paddleMaximumRegions", 128, 1, 1000));
+            return PaddleOcrProfiles.CreateDetection(new ModelId(id), PaddleArtifact(hash, request, Opset(request, 11)), postprocess: postprocess);
+        }
         if (lower.StartsWith("paddleocr/") && lower.Contains("-rec"))
         {
             string? dictionary = AssetPath(request, "labels");
@@ -275,7 +419,7 @@ internal static class VisualReleaseInferenceAdapter
             string dictionarySha = Value(request.Payload, "paddleDictionarySha256") ?? "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b";
             return PaddleOcrProfiles.CreateRecognition(new ModelId(id), PaddleArtifact(hash, request, Opset(request, lower.Contains("server-rec") ? 10 : 7), dictionarySha), PaddleOcrProfiles.LoadCharacterSet(dictionary, "release.ppocr", "v5", true, dictionarySha));
         }
-        if (lower.StartsWith("paddleocr/") && lower.Contains("-cls")) return PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId(id), PaddleArtifact(hash, request, Opset(request, 7)), rejectionThreshold: 0f);
+        if (lower.StartsWith("paddleocr/") && lower.Contains("-cls")) return PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId(id), PaddleArtifact(hash, request, Opset(request, 7)), rejectionThreshold: FloatOption(request.Payload, "paddleOrientationThreshold", 0f, 0f, 1f));
         if (lower.StartsWith("anomalib/")) return AnomalibProfiles.CreatePadim(new ModelId(id), new AnomalibArtifactContract(Opset(request, 14), hash, UpstreamRevision(request), Exporter(request)));
         if (lower.StartsWith("bria/rmbg-"))
         {
@@ -357,6 +501,19 @@ internal static class VisualReleaseInferenceAdapter
     private static bool BoolOption(WorkerRequest request, string key, bool fallback) => bool.TryParse(Value(request.Payload, key), out bool value) ? value : fallback;
     private static bool BoolOption(IReadOnlyDictionary<string, string> values, string key, bool fallback) => bool.TryParse(Value(values, key), out bool value) ? value : fallback;
     private static int IntOption(IReadOnlyDictionary<string, string> values, string key, int fallback) => int.TryParse(Value(values, key), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) ? value : fallback;
+    private static int IntOption(IReadOnlyDictionary<string, string> values, string key, int fallback, int minimum, int maximum)
+    {
+        int value = IntOption(values, key, fallback);
+        if (value < minimum || value > maximum) throw new ArgumentOutOfRangeException(key, value, $"{key} must be in [{minimum},{maximum}].");
+        return value;
+    }
+    private static float FloatOption(IReadOnlyDictionary<string, string> values, string key, float fallback, float minimum, float maximum)
+    {
+        string? text = Value(values, key);
+        if (text is null) return fallback;
+        if (!float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float value) || !float.IsFinite(value) || value < minimum || value > maximum) throw new ArgumentOutOfRangeException(key, text, $"{key} must be a finite number in [{minimum.ToString(CultureInfo.InvariantCulture)},{maximum.ToString(CultureInfo.InvariantCulture)}].");
+        return value;
+    }
     private static long LongOption(IReadOnlyDictionary<string, string> values, string key, long fallback) => long.TryParse(Value(values, key), NumberStyles.Integer, CultureInfo.InvariantCulture, out long value) ? value : fallback;
     private static string? Value(IReadOnlyDictionary<string, string> values, string key) => values.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : null;
     private static WorkerResponse Error(WorkerRequest request, string code, string message, AppRuntimeState state, string? detail = null)
@@ -377,6 +534,39 @@ internal static class VisualResultJson
         if (value is InstanceSegmentationResult segmentation) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "segmentation", sourceWidth, sourceHeight, instances = segmentation.Instances.Select(item => new { item.SourceIndex, item.ClassIndex, item.Label, item.Score, box = new { x = item.BoundingBox.X, y = item.BoundingBox.Y, width = item.BoundingBox.Width, height = item.BoundingBox.Height }, mask = Downsample(item.Mask.ToArray(), item.Mask.Width, item.Mask.Height, item.Mask.CoordinateSpace.ToString(), item.Mask.OriginX, item.Mask.OriginY) }) }, JsonOptions);
         if (value is PoseEstimationResult pose) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "pose", sourceWidth, sourceHeight, instances = pose.Instances.Select(item => new { item.SourceIndex, item.Score, box = item.BoundingBox, keypoints = item.Keypoints.Select(point => new { point.Index, x = point.Point.X, y = point.Point.Y, score = point.Score }) }) }, JsonOptions);
         if (value is JYPPX.DeploySharp.Visual.OrientedDetectionResult oriented) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "obb", sourceWidth, sourceHeight, detections = oriented.Detections.Select(item => new { item.SourceIndex, item.ClassIndex, item.Label, item.Score, points = new[] { item.Quadrilateral.First, item.Quadrilateral.Second, item.Quadrilateral.Third, item.Quadrilateral.Fourth } }) }, JsonOptions);
+        if (value is VisualOcrResult ocr) return JsonSerializer.Serialize(new
+        {
+            schema = "deploysharp.visual.result.v1",
+            kind = "ocr",
+            sourceWidth,
+            sourceHeight,
+            pipeline = "PP-OCRv5 DET + CLS + REC",
+            detectionProfileId = ocr.DetectionProfileId,
+            detectionModelId = ocr.DetectionModelId.Value,
+            recognitionProfileId = ocr.RecognitionProfileId,
+            recognitionModelId = ocr.RecognitionModelId.Value,
+            regions = ocr.Regions.Select(item => new
+            {
+                sourceIndex = item.Region.SourceIndex,
+                score = item.Region.Score,
+                orientation = item.Region.Orientation.ToString(),
+                points = item.Region.Polygon.Vertices.Select(point => new { x = point.X, y = point.Y }),
+                text = item.Recognition.Text,
+                confidence = item.Recognition.Confidence,
+                characterSetId = item.Recognition.CharacterSetId,
+                characterSetVersion = item.Recognition.CharacterSetVersion,
+                characterSetSha256 = item.Recognition.CharacterSetSha256
+            }),
+            timing = new
+            {
+                detectionMs = ocr.Timing.Detection.TotalMilliseconds,
+                cropAndBatchMs = ocr.Timing.CropAndBatch.TotalMilliseconds,
+                orientationClassificationMs = ocr.Timing.OrientationClassification.TotalMilliseconds,
+                recognitionMs = ocr.Timing.Recognition.TotalMilliseconds,
+                orchestrationMs = ocr.Timing.Orchestration.TotalMilliseconds,
+                totalMs = ocr.Timing.Total.TotalMilliseconds
+            }
+        }, JsonOptions);
         if (value is TextDetectionResult ocrDetection) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "ocr-detection", sourceWidth, sourceHeight, regions = ocrDetection.Regions.Select(region => new { region.SourceIndex, score = region.Score, points = region.Polygon.Vertices.Select(point => new { x = point.X, y = point.Y }) }) }, JsonOptions);
         if (value is TextRecognitionBatchResult ocrRecognition) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "ocr-recognition", sourceWidth, sourceHeight, items = ocrRecognition.Items.Select(item => new { item.SourceRegionIndex, item.Text, item.Confidence, item.CharacterSetId, item.CharacterSetVersion, item.CharacterSetSha256, tokens = item.Tokens.Select(token => new { token.Timestep, token.ClassIndex, token.Confidence, token.Text, token.IsBlank, token.IsCollapsedRepeat, token.IsUnknown, token.Emitted }) }) }, JsonOptions);
         if (value is OcrOrientationResult orientation) return JsonSerializer.Serialize(new { schema = "deploysharp.visual.result.v1", kind = "ocr-orientation", sourceWidth, sourceHeight, orientation = orientation.Orientation.ToString(), acceptedOrientation = orientation.AcceptedOrientation?.ToString(), orientation.ClassIndex, orientation.Confidence, orientation.Scores, orientation.Rejected, correctedWidth = orientation.CorrectedImageSize.Width, correctedHeight = orientation.CorrectedImageSize.Height, orientation.Warnings }, JsonOptions);

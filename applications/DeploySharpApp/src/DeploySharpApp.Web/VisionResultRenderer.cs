@@ -13,7 +13,7 @@ namespace DeploySharpApp.Web;
 /// <summary>Renders generic, contract-driven visual overlays without pretending to decode an unknown model format.</summary>
 public static class VisionResultRenderer
 {
-    public static string Render(string originalImage, string? outputJson, string? task, VisualPostprocessingProfile? profile = null)
+    public static string Render(string originalImage, string? outputJson, string? task, VisualPostprocessingProfile? profile = null, IReadOnlyList<RoiWorkspaceRegion>? roiRegions = null)
     {
         JsonDocument? document = null;
         JsonElement root = default;
@@ -56,6 +56,7 @@ public static class VisionResultRenderer
         }
         catch (JsonException) { labels.Add("输出不是可解析的 tensor JSON"); }
         finally { document?.Dispose(); }
+        if (roiRegions is { Count: > 0 }) RenderRois(roiRegions, layout, overlays, labels);
         if (overlays.Count == 0) labels.Add("未发现可绘制的后处理契约");
         string title = string.IsNullOrWhiteSpace(task) ? "视觉结果" : task!;
         if (profile is not null) labels.Insert(0, profile.Kind + " · " + profile.Coordinates);
@@ -64,6 +65,27 @@ public static class VisionResultRenderer
         svg.Append(SecurityElement.Escape(title + " · " + string.Join("；", labels.Take(3))));
         svg.Append("</text></svg>");
         return "data:image/svg+xml;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(svg.ToString()));
+    }
+
+    private static void RenderRois(IReadOnlyList<RoiWorkspaceRegion> regions, CanvasLayout layout, List<string> overlays, List<string> labels)
+    {
+        int count = 0;
+        foreach (RoiWorkspaceRegion region in regions.Where(item => item.Enabled))
+        {
+            string color = region.InclusionMode == RoiWorkspaceInclusionMode.Include ? "#20c997" : "#ff6b6b";
+            if (region.IsPolygon)
+            {
+                var polygon = new StringBuilder("<polygon points=\"");
+                foreach (RoiWorkspacePoint point in region.Points!) polygon.Append(F(layout.X + point.X * layout.Width)).Append(',').Append(F(layout.Y + point.Y * layout.Height)).Append(' ');
+                overlays.Add(polygon.Append("\" fill=\"none\" stroke=\"").Append(color).Append("\" stroke-width=\"2\" stroke-dasharray=\"7 4\"/>").ToString());
+            }
+            else
+            {
+                overlays.Add("<rect x=\"" + F(layout.X + region.X * layout.Width) + "\" y=\"" + F(layout.Y + region.Y * layout.Height) + "\" width=\"" + F(region.Width * layout.Width) + "\" height=\"" + F(region.Height * layout.Height) + "\" fill=\"none\" stroke=\"" + color + "\" stroke-width=\"2\" stroke-dasharray=\"7 4\"/>");
+            }
+            count++;
+        }
+        if (count > 0) labels.Add("ROI schema 1.0 · " + count.ToString(CultureInfo.InvariantCulture) + " 个活动区域");
     }
 
     public static string FormatForDisplay(string? outputJson)
@@ -145,6 +167,30 @@ public static class VisionResultRenderer
         if (string.Equals(kind, "classification", StringComparison.OrdinalIgnoreCase))
         {
             if (root.TryGetProperty("predictions", out JsonElement predictions) && predictions.ValueKind == JsonValueKind.Array) labels.Add("主库 Classification · " + string.Join(", ", predictions.EnumerateArray().Take(5).Select(item => (StringValue(item, "label") ?? "class") + "=" + F(Number(item, "score"))))); return;
+        }
+        if (string.Equals(kind, "ocr", StringComparison.OrdinalIgnoreCase))
+        {
+            int count = 0;
+            if (root.TryGetProperty("regions", out JsonElement regions) && regions.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement region in regions.EnumerateArray())
+            {
+                if (region.TryGetProperty("points", out JsonElement points) && points.ValueKind == JsonValueKind.Array)
+                {
+                    var polygon = new StringBuilder("<polygon points=\"");
+                    foreach (JsonElement point in points.EnumerateArray()) if (TryNumber(point, "x", out double x) && TryNumber(point, "y", out double y)) polygon.Append(F(layout.MapX(x))).Append(',').Append(F(layout.MapY(y))).Append(' ');
+                    overlays.Add(polygon.Append("\" fill=\"none\" stroke=\"#00b894\" stroke-width=\"2\"/>").ToString());
+                }
+                string text = StringValue(region, "text") ?? string.Empty;
+                double confidence = Number(region, "confidence");
+                if (region.TryGetProperty("points", out JsonElement labelPoints) && labelPoints.ValueKind == JsonValueKind.Array && labelPoints.GetArrayLength() > 0)
+                {
+                    JsonElement first = labelPoints[0];
+                    if (TryNumber(first, "x", out double x) && TryNumber(first, "y", out double y) && text.Length > 0)
+                        overlays.Add("<text x=\"" + F(layout.MapX(x) + 3) + "\" y=\"" + F(layout.MapY(y) - 3) + "\" fill=\"#007a63\" font-size=\"12\">" + SecurityElement.Escape(text + " · " + F(confidence)) + "</text>");
+                }
+                count++;
+            }
+            labels.Add("主库 PaddleOCR DET + CLS + REC · " + count.ToString(CultureInfo.InvariantCulture) + " 个文本区域"); return;
         }
         if (string.Equals(kind, "ocr-detection", StringComparison.OrdinalIgnoreCase))
         {
