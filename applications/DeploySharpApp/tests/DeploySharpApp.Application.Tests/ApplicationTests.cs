@@ -488,7 +488,9 @@ namespace DeploySharpApp.Application.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
-        public async Task LocalPaddleOcrV5WorkflowRunsDetClsRecAndReturnsSourceSpaceText()
+        [DataRow("deploysharp.backend.onnxruntime")]
+        [DataRow("deploysharp.backend.openvino")]
+        public async Task LocalPaddleOcrV5WorkflowRunsDetClsRecAndReturnsSourceSpaceText(string backendId)
         {
             if (!OperatingSystem.IsWindows()) Assert.Inconclusive("The application Worker currently packages Windows native runtimes.");
             string root = Path.Combine("E:\\Model", "paddleocr", "PP-OCRv5");
@@ -510,7 +512,7 @@ namespace DeploySharpApp.Application.Tests
                 ["visualAssetPathsJson"] = JsonSerializer.Serialize(new Dictionary<string, string> { ["labels"] = dictionaryPath, ["vocabulary"] = dictionaryPath }),
                 ["visualUpstreamRepository"] = "https://github.com/PaddlePaddle/PaddleOCR", ["visualUpstreamRevision"] = "local-verified", ["visualExporter"] = "Paddle2ONNX", ["visualExporterVersion"] = "2.0.2rc3", ["visualLicense"] = "Apache-2.0"
             };
-            var request = new ModelRunRequest(AppOperationKind.Vision, "paddleocr/workflow/ppocrv5/mobile", "deploysharp.backend.onnxruntime", inputPath: imagePath, modelPath: detectorPath, modelFormat: "onnx", modelSha256: options["paddleDetectorSha256"], options: options, timeout: TimeSpan.FromMinutes(3));
+            var request = new ModelRunRequest(AppOperationKind.Vision, "paddleocr/workflow/ppocrv5/mobile", backendId, inputPath: imagePath, modelPath: detectorPath, modelFormat: "onnx", modelSha256: options["paddleDetectorSha256"], options: options, timeout: TimeSpan.FromMinutes(3));
             ModelRunResult result = await new BackendHostWorkerClient(LocateBackendHost()).RunAsync(request, null, CancellationToken.None);
             if (!result.Succeeded && result.ErrorCode == AppErrorCode.NativeDependencyMissing) Assert.Inconclusive(result.Message);
             Assert.IsTrue(result.Succeeded, result.Message + Environment.NewLine + string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Code + ": " + item.Message)));
