@@ -115,6 +115,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 return new { structuredData = chart.StructuredData, tokenIds = chart.TokenIds.ToArray() };
             if (result is PaddleDocumentSealResult seal)
                 return new { maskWidth = seal.MaskWidth, maskHeight = seal.MaskHeight };
+            if (result is PaddleDocumentTextResult text)
+                return new { items = text.Items.Select(item => new { item.RegionIndex, item.Text, item.Confidence, bounds = new { x = item.Bounds.X, y = item.Bounds.Y, width = item.Bounds.Width, height = item.Bounds.Height }, metadata = item.Metadata }).ToArray() };
             return null;
         }
 
@@ -132,6 +134,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 builder.Append("- Chart data: ").AppendLine(chart.StructuredData);
             else if (result is PaddleDocumentSealResult seal)
                 builder.Append("- Seal mask: ").Append(seal.MaskWidth).Append('x').AppendLine(seal.MaskHeight.ToString());
+            else if (result is PaddleDocumentTextResult text)
+                foreach (PaddleDocumentTextItem item in text.Items) builder.Append("- [").Append(item.RegionIndex).Append("] ").Append(item.Text).Append(" (score ").Append(item.Confidence.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)).AppendLine(")");
         }
     }
 }

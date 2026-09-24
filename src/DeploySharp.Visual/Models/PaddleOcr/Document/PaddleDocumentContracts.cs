@@ -18,7 +18,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         FormulaRecognition = 6,
         SealTextDetection = 7,
         ChartParsing = 8,
-        StructurePipeline = 9
+        StructurePipeline = 9,
+        TextRecognition = 10
     }
 
     /// <summary>Describes the artifact format currently available for a Paddle document model. / 描述 Paddle 文档模型当前可用的工件格式。</summary>
@@ -42,19 +43,26 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (string.IsNullOrWhiteSpace(sourceUrl)) throw new ArgumentException("A source URL is required.", nameof(sourceUrl));
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
             if (!Enum.IsDefined(typeof(PaddleDocumentArtifactStatus), status)) throw new ArgumentOutOfRangeException(nameof(status));
-            if (status >= PaddleDocumentArtifactStatus.OnnxConverted && string.IsNullOrWhiteSpace(artifactPath)) throw new ArgumentException("A converted artifact path is required for converted status.", nameof(artifactPath));
+            // A conversion-blocked source row is intentionally not executable and therefore has
+            // no artifact path. Other post-conversion states must carry the concrete artifact.
+            if (status == PaddleDocumentArtifactStatus.ConversionBlocked && !string.IsNullOrWhiteSpace(artifactPath)) throw new ArgumentException("A conversion-blocked model cannot carry an executable artifact path.", nameof(artifactPath));
+            if (status >= PaddleDocumentArtifactStatus.OnnxConverted && status != PaddleDocumentArtifactStatus.ConversionBlocked && string.IsNullOrWhiteSpace(artifactPath)) throw new ArgumentException("A converted artifact path is required for converted status.", nameof(artifactPath));
             if (sha256 != null && (sha256.Length != 64 || !IsHex(sha256))) throw new ArgumentException("SHA-256 must be 64 hexadecimal characters.", nameof(sha256));
-            ModelId = modelId; OfficialName = officialName; Module = module; SourceUrl = sourceUrl; ModelFormat = modelFormat;
+            ModelId = modelId; OfficialName = officialName; Module = module; SourceUrl = sourceUrl; _sourceModelFormat = modelFormat;
             Status = status; ArtifactPath = artifactPath; Sha256 = sha256?.ToLowerInvariant();
         }
         public string ModelId { get; }
         public string OfficialName { get; }
         public PaddleDocumentModule Module { get; }
         public string SourceUrl { get; }
-        public string ModelFormat { get; }
+        private readonly string _sourceModelFormat;
+        /// <summary>Gets the executable format: published converted assets are ONNX, while source-only catalog rows retain their source format. / 获取可执行格式：已发布转换资产为 ONNX，仅源模型目录项保留源格式。</summary>
+        public string ModelFormat => ReleaseArtifact != null ? "onnx" : _sourceModelFormat;
         public PaddleDocumentArtifactStatus Status { get; }
         public string? ArtifactPath { get; }
         public string? Sha256 { get; }
+        /// <summary>Gets the independently downloadable models-paddleocr asset metadata, when a converted ONNX asset is published. / 获取已发布的 models-paddleocr 独立 ONNX 资产元数据。</summary>
+        public PaddleDocumentReleaseArtifact? ReleaseArtifact => PaddleDocumentReleaseArtifacts.TryGet(ModelId, out PaddleDocumentReleaseArtifact? artifact) ? artifact : null;
         private static bool IsHex(string value) { foreach (char c in value) if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F')) return false; return true; }
     }
 
@@ -124,6 +132,56 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         }
         public string Label { get; }
         public int RotationDegrees { get; }
+    }
+
+    /// <summary>Stores generic page regions emitted by layout or table-cell detection. / 保存版面或表格单元格检测输出的页面区域。</summary>
+    public sealed class PaddleDocumentRegionResult : PaddleDocumentModuleResult
+    {
+        public PaddleDocumentRegionResult(PaddleDocumentModule module, PaddleDocumentResultMetadata metadata, IEnumerable<PaddleDocumentRegion> regions, IReadOnlyList<string>? warnings = null)
+            : base(module, metadata, regions == null ? null : new List<PaddleDocumentRegion>(regions), warnings)
+        {
+            if (module != PaddleDocumentModule.LayoutDetection && module != PaddleDocumentModule.TableCellDetection)
+                throw new ArgumentException("Region result module must be layout detection or table-cell detection.", nameof(module));
+            if (regions == null) throw new ArgumentNullException(nameof(regions));
+        }
+    }
+
+    /// <summary>Stores one recognized text item bound to a page-space region. / 保存绑定到页面区域的一条识别文本。</summary>
+    public sealed class PaddleDocumentTextItem
+    {
+        public PaddleDocumentTextItem(int regionIndex, string text, float confidence, RectangleF bounds, IReadOnlyDictionary<string, string>? metadata = null)
+        {
+            if (regionIndex < 0) throw new ArgumentOutOfRangeException(nameof(regionIndex));
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (float.IsNaN(confidence) || float.IsInfinity(confidence) || confidence < 0 || confidence > 1) throw new ArgumentOutOfRangeException(nameof(confidence));
+            if (bounds.Width < 0 || bounds.Height < 0) throw new ArgumentOutOfRangeException(nameof(bounds));
+            RegionIndex = regionIndex;
+            Text = text;
+            Confidence = confidence;
+            Bounds = bounds;
+            var values = new Dictionary<string, string>();
+            if (metadata != null) foreach (KeyValuePair<string, string> item in metadata) values.Add(item.Key, item.Value);
+            Metadata = values;
+        }
+
+        public int RegionIndex { get; }
+        public string Text { get; }
+        public float Confidence { get; }
+        public RectangleF Bounds { get; }
+        public IReadOnlyDictionary<string, string> Metadata { get; }
+    }
+
+    /// <summary>Stores region OCR outputs while retaining page and model provenance. / 保存区域 OCR 输出并保留页面和模型来源。</summary>
+    public sealed class PaddleDocumentTextResult : PaddleDocumentModuleResult
+    {
+        public PaddleDocumentTextResult(PaddleDocumentResultMetadata metadata, IEnumerable<PaddleDocumentTextItem> items, IReadOnlyList<string>? warnings = null)
+            : base(PaddleDocumentModule.TextRecognition, metadata, warnings: warnings)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            Items = new List<PaddleDocumentTextItem>(items).AsReadOnly();
+        }
+
+        public IReadOnlyList<PaddleDocumentTextItem> Items { get; }
     }
 
     /// <summary>Stores a document unwarping result and its optional transform provenance. / 保存文档图像矫正结果及可选变换来源。</summary>
@@ -219,13 +277,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Stores chart-to-table output in a caller-selected structured representation. / 以调用方选择的结构化表示保存图表转表格输出。</summary>
     public sealed class PaddleDocumentChartResult : PaddleDocumentModuleResult
     {
-        public PaddleDocumentChartResult(PaddleDocumentResultMetadata metadata, string structuredData, IReadOnlyList<PaddleDocumentRegion>? regions = null, IReadOnlyList<string>? warnings = null)
+        public PaddleDocumentChartResult(PaddleDocumentResultMetadata metadata, string structuredData, IReadOnlyList<PaddleDocumentRegion>? regions = null, IReadOnlyList<string>? warnings = null, IEnumerable<int>? tokenIds = null)
             : base(PaddleDocumentModule.ChartParsing, metadata, regions, warnings)
         {
             if (structuredData == null) throw new ArgumentNullException(nameof(structuredData));
             StructuredData = structuredData;
+            TokenIds = tokenIds == null ? Array.Empty<int>() : new List<int>(tokenIds).AsReadOnly();
         }
         public string StructuredData { get; }
+        public IReadOnlyList<int> TokenIds { get; }
     }
 
     /// <summary>Stores connected seal regions and the output mask dimensions. / 保存连通印章区域及输出掩码尺寸。</summary>
