@@ -9,7 +9,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | 模块 | 官方模型族 | DeploySharp 任务/结果合同 | 当前状态 |
 | --- | --- | --- | --- |
 | 文档方向 | `PP-LCNet_x1_0_doc_ori` | `VisualTaskId.DocumentOrientation`、四分类结果 | ORT CPU、OpenVINO CPU 和 TensorRT 11 smoke 已完成；分类预处理为短边 256 后中心裁剪 224 |
-| 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`，属于有界数值差异观察，不是像素等价或视觉质量通过 |
+| 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`。TensorRT 11 engine 也已构建、加载并用 `trtexec` 执行，GPU compute mean/P95 `8.55564/9.9389 ms`；OpenCV 5.0 importer 在 `PaddingLayerImpl` 处确认阻断，TensorRT decoder/跨后端 tensor parity 仍待补 |
 | 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；`pp-doclayout-l` 另有 OpenVINO、OpenCV DNN 和 TensorRT 11 NMS 实测，其余后端仍按矩阵逐工件记录 |
 | 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
 | 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO 目前仅 wired 有通过证据 |
@@ -363,7 +363,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 | TensorRT CUDA | PP-LCNet 文档方向、PP-LCNet 表格分类、`pp-doclayout-l` Paddle NMS、mobile/server 印章概率图；均有 ORT 对照和预热后 P50/P95 | TRT 11 bridge + TRT 11.0.0.114-cu12 + CUDA 12.9 + cuDNN 9.22；server 印章已显式关闭 TF32，当前样本逐元素误差通过合同，不外推其它模型 |
 | Chart2Table 四图 Bundle | ORT CPU/OpenVINO CPU/TensorRT CUDA：官方样例生成完整 2018–2023 表格；额外 4 张 ChartQA human 图到 EOS、精确匹配 golden table，关联 QA 8/8 匹配。TensorRT device path 的官方样例最好 10.12 s，Decode P50/P95 66.47/73.48 ms | 库 Builder 已构建四图并通过完整生成回归；ChartQA 本次严格 FP32 Builder 计划运行 29m19s，耗时异常且原因待 profiling，不是性能基准；OpenCV DNN、跨数据集准确率仍未验证 |
 
-完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
+完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。UVDoc TensorRT 运行记录见 [`uvdoc-tensorrt11-20260924.json`](../../eng/models/paddle-document/verification/uvdoc-tensorrt11-20260924.json)。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
 
 ### Chart2Table 完整 Bundle 技术验证
 
