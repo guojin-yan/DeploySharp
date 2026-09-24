@@ -65,3 +65,9 @@ PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(
 ```
 
 For PP-Structure, call `GetModelAsync` with the corresponding `paddle-doc/`, `paddle-table/`, `paddle-formula/`, or `paddle-seal/` ID, then pass `model.ModelPath` to the matching `PaddleDocumentProfiles` profile. The Release client does not silently convert Paddle archives and does not claim backend support; backend selection and execution remain the responsibility of the Visual/Backend packages.
+
+## Public annotated OCR evaluation
+
+The checked-in runner and scorer evaluate complete-page OCR against the local public-source manifests maintained in `F:\OCRBenchmarkTesting`. The 2026-09-25 HierText CPU run covers 34 validation images with line-level labels on ONNX Runtime, OpenVINO and OpenCV DNN; metrics, SHA-256 provenance, licensing limits and exact reproduction commands are in [the validation record](verification/hiertext-v5-mobile-public-ocr-20260925.md).
+
+Dataset images, labels, predictions and per-image reports are not copied into this repository or a model Release. This local HierText selection is marked smoke-only until each image landing page and redistribution terms have been reviewed; it must not be presented as a leaderboard result. This is quality evidence, not a performance benchmark: each page had one measured iteration, so the recorded timings do not establish P50/P95 performance.
