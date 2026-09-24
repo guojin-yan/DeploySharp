@@ -139,6 +139,19 @@ PP-Structure 的模型组合依赖具体业务：有的页面只需要方向和 
 - 校验阶段返回的模块类型与页码来源，记录每个阶段和整页墙钟时间；
 - 支持同步/异步调用、取消、按模块获取结果，并保留阶段结果的独立后端/模型元数据。
 
+### 可复现的方向 → 版面案例
+
+仓库中的 `PaddleDocumentPipelineSemanticIntegrationTests` 是一个完整的真实案例：它从 `E:\Data\image\bus.jpg` 准备页面，使用 `pp-lcnet-x1-0-doc-ori` 进行方向分类，再把同一页交给 `pp-doclayout-l` 做 23 类版面区域检测。两个阶段都通过 ONNX Runtime CPU Session，版面阶段读取前一阶段的方向结果，最终输出页码、区域列表和分段计时。
+
+```powershell
+$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
+dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
+  -f net10.0 --no-restore --verbosity quiet `
+  --filter FullyQualifiedName~PaddleDocumentPipelineSemanticIntegrationTests
+```
+
+该案例验证的是可运行的方向→版面任务链和结果来源，不代表版面区域已经与人工标注集完成精度评测，也不自动包含版面区域内的 OCR、表格或公式任务。后续阶段应从 `context.GetRegions()` 显式接收区域并创建局部输入，再将局部坐标映射回页面坐标。
+
 如果阶段已经由 `VisualPipeline` 管理，Visual 包还提供
 `PaddleDocumentVisualPipelineStage` 适配器。它把“准备 `PreparedVisualInput` → 调用所选后端 →
 把 `VisualInferenceResult` 映射为文档结果”固定成一个可复用阶段，同时遵守输入所有权：`Owned`
