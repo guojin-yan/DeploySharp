@@ -27,6 +27,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             return JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = indented });
         }
 
+        /// <summary>Serializes multiple pages while preserving input order. / 按输入顺序序列化多页结果。</summary>
+        public static string ToJson(IEnumerable<PaddleDocumentPipelineResult> results, bool indented = true)
+        {
+            if (results == null) throw new ArgumentNullException(nameof(results));
+            var values = results.ToArray();
+            if (values.Any(value => value == null)) throw new ArgumentException("Pipeline results cannot contain null values.", nameof(results));
+            return JsonSerializer.Serialize(values.Select(value => JsonSerializer.Deserialize<object>(ToJson(value, false))).ToArray(), new JsonSerializerOptions { WriteIndented = indented });
+        }
+
         /// <summary>Creates a compact human-readable page summary with stage timings and task payloads. / 创建包含阶段耗时和任务载荷的紧凑可读页面摘要。</summary>
         public static string ToMarkdown(PaddleDocumentPipelineResult result)
         {
@@ -57,6 +66,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 builder.AppendLine();
             }
             return builder.ToString();
+        }
+
+        /// <summary>Concatenates page reports with explicit page separators. / 使用明确页分隔符拼接多页报告。</summary>
+        public static string ToMarkdown(IEnumerable<PaddleDocumentPipelineResult> results)
+        {
+            if (results == null) throw new ArgumentNullException(nameof(results));
+            var values = results.ToArray();
+            if (values.Any(value => value == null)) throw new ArgumentException("Pipeline results cannot contain null values.", nameof(results));
+            return string.Join(Environment.NewLine + "---" + Environment.NewLine, values.Select(ToMarkdown));
         }
 
         private static object ToResultObject(PaddleDocumentModuleResult result)

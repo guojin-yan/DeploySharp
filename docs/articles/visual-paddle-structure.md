@@ -200,6 +200,17 @@ await File.WriteAllTextAsync("page.md", markdown, cancellationToken);
 
 JSON 适合保存机器可读结果和后续多页聚合，Markdown 适合调试报告和人工复核。导出器不会补齐缺失阶段，也不会把通用 stage runner 描述成自动可用的 PP-StructureV3 产品流水线。
 
+多页输入保持调用顺序和页码来源，阶段按页顺序执行：
+
+```csharp
+IReadOnlyList<PaddleDocumentPipelineResult> pages = await documentPipeline.RunManyAsync(
+    decodedPages, cancellationToken);
+string bookJson = PaddleDocumentPipelineExport.ToJson(pages);
+string bookMarkdown = PaddleDocumentPipelineExport.ToMarkdown(pages);
+```
+
+`RunManyAsync` 不并行复用 stage；需要并发时应由应用创建独立的 pipeline/session 通道，再自行合并结果，以免把非线程安全的视觉会话隐式共享。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
