@@ -114,7 +114,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (result is PaddleDocumentFormulaResult formula)
                 return new { latex = formula.Latex, tokenIds = formula.TokenIds.ToArray() };
             if (result is PaddleDocumentChartResult chart)
-                return new { structuredData = chart.StructuredData, tokenIds = chart.TokenIds.ToArray() };
+                return new { structuredData = chart.StructuredData, tokenIds = chart.TokenIds.ToArray(), finishReason = chart.FinishReason };
             if (result is PaddleDocumentSealResult seal)
                 return new { maskWidth = seal.MaskWidth, maskHeight = seal.MaskHeight };
             if (result is PaddleDocumentTextResult text)

@@ -294,15 +294,17 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Stores chart-to-table output in a caller-selected structured representation. / 以调用方选择的结构化表示保存图表转表格输出。</summary>
     public sealed class PaddleDocumentChartResult : PaddleDocumentModuleResult
     {
-        public PaddleDocumentChartResult(PaddleDocumentResultMetadata metadata, string structuredData, IReadOnlyList<PaddleDocumentRegion>? regions = null, IReadOnlyList<string>? warnings = null, IEnumerable<int>? tokenIds = null)
+        public PaddleDocumentChartResult(PaddleDocumentResultMetadata metadata, string structuredData, IReadOnlyList<PaddleDocumentRegion>? regions = null, IReadOnlyList<string>? warnings = null, IEnumerable<int>? tokenIds = null, string? finishReason = null)
             : base(PaddleDocumentModule.ChartParsing, metadata, regions, warnings)
         {
             if (structuredData == null) throw new ArgumentNullException(nameof(structuredData));
             StructuredData = structuredData;
             TokenIds = tokenIds == null ? Array.Empty<int>() : new List<int>(tokenIds).AsReadOnly();
+            FinishReason = finishReason ?? string.Empty;
         }
         public string StructuredData { get; }
         public IReadOnlyList<int> TokenIds { get; }
+        public string FinishReason { get; }
     }
 
     /// <summary>Stores connected seal regions and the output mask dimensions. / 保存连通印章区域及输出掩码尺寸。</summary>

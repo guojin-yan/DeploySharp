@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -11,6 +12,7 @@ using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 using JYPPX.DeploySharp.Visual.OpenCV;
+using JYPPX.DeploySharp.Results.Language;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.OpenCV.Tests;
@@ -20,6 +22,8 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 [DoNotParallelize]
 public sealed class PaddleDocumentChartPipelineIntegrationTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     [TestCategory("ExternalModels")]
     public async Task ChartParsingStageProducesStructuredDataOnOrtCpu()
@@ -45,16 +49,38 @@ public sealed class PaddleDocumentChartPipelineIntegrationTests
         var descriptor = PaddleDocumentModelCatalog.Get("paddle-chart/pp-chart2table");
         var stage = new PaddleDocumentDependentStage(PaddleDocumentModule.ChartParsing, Array.Empty<PaddleDocumentModule>(), async (context, token) =>
         {
-            PaddleChart2TableGenerationResult generation = await session.GenerateAsync(input, tokenizer, 3, cancellationToken: token).ConfigureAwait(false);
+            PaddleChart2TableGenerationResult generation = await session.GenerateAsync(input, tokenizer, ParseMaximumNewTokens(), cancellationToken: token).ConfigureAwait(false);
             return new PaddleDocumentChartResult(
-                new PaddleDocumentResultMetadata(descriptor, OnnxRuntimeBackendProvider.BackendId.Value, generation.DecodeSteps.Count == 0 ? TimeSpan.Zero : generation.DecodeSteps.Aggregate(TimeSpan.Zero, (sum, value) => sum + value), Sha256(image), context.Page.PageIndex),
+                new PaddleDocumentResultMetadata(descriptor, OnnxRuntimeBackendProvider.BackendId.Value, generation.VisionTime + generation.EmbeddingTime + generation.PrefillTime + generation.DecodeSteps.Aggregate(TimeSpan.Zero, (sum, value) => sum + value), Sha256(image), context.Page.PageIndex),
                 generation.Text,
-                tokenIds: generation.TokenIds);
+                tokenIds: generation.TokenIds,
+                finishReason: generation.FinishReason.ToString());
         });
         PaddleDocumentPipelineResult page = await new PaddleDocumentPipeline(new[] { stage }).RunAsync(new PaddleDocumentPage(image, new VisualSize(1024, 1024), 0), CancellationToken.None).ConfigureAwait(false);
         PaddleDocumentChartResult result = page.GetRequired<PaddleDocumentChartResult>(PaddleDocumentModule.ChartParsing);
-        Assert.IsTrue(result.TokenIds.Count >= 3);
+        Assert.AreEqual(GenerationFinishReason.EndOfSequence.ToString(), result.FinishReason);
+        Assert.IsTrue(result.TokenIds.Count >= 100);
         Assert.IsFalse(string.IsNullOrWhiteSpace(result.StructuredData));
+        Assert.IsTrue(result.StructuredData.Contains("2018", StringComparison.Ordinal));
+        string reportDirectory = Path.Combine(TestContext.TestResultsDirectory!, "paddle-document");
+        Directory.CreateDirectory(reportDirectory);
+        string report = Path.Combine(reportDirectory, "chart2table-document-stage.json");
+        File.WriteAllText(report, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            model = descriptor.ModelId,
+            backend = OnnxRuntimeBackendProvider.BackendId.Value,
+            image,
+            imageSha256 = Sha256(image),
+            pageIndex = page.Page.PageIndex,
+            finish = result.FinishReason,
+            tokenCount = result.TokenIds.Count,
+            totalMs = page.Elapsed.TotalMilliseconds,
+            stageMs = page.Timings.Select(item => new { module = item.Module.ToString(), elapsedMs = item.Elapsed.TotalMilliseconds }).ToArray(),
+            result.StructuredData,
+            tokenIds = result.TokenIds
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        TestContext.AddResultFile(report);
     }
 
     private static string Required(string name)
@@ -62,6 +88,14 @@ public sealed class PaddleDocumentChartPipelineIntegrationTests
         string? value = Environment.GetEnvironmentVariable(name);
         if (string.IsNullOrWhiteSpace(value)) Assert.Inconclusive("Required external integration variable is missing: " + name);
         return value!;
+    }
+
+    private static int ParseMaximumNewTokens()
+    {
+        string? value = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_PIPELINE_MAX_NEW_TOKENS");
+        if (string.IsNullOrWhiteSpace(value)) return 256;
+        if (!int.TryParse(value, out int parsed) || parsed < 100 || parsed > 2048) Assert.Fail("DEPLOYSHARP_CHART2TABLE_PIPELINE_MAX_NEW_TOKENS must be from 100 to 2048.");
+        return parsed;
     }
 
     private static string GraphPath(string root, string stem)
