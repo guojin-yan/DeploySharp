@@ -254,7 +254,7 @@ var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[]
 
 该 stage 不假定裁剪库、颜色顺序、归一化或模型后端，因此不会把四边形裁剪误报为曲线展开，也不会把“区域有文本结果”误报成版面或 OCR 精度通过。图像裁剪和 OCR 结果的真实证据仍应在具体后端测试中记录。
 
-对于 Windows/OpenCV，`OpenCvPaddleDocumentRegionOcrStage` 已提供真实图像裁剪案例：它只解码页面一次，按版面区域创建 PNG crop，再为每个 crop 创建 `OpenCvOcrImageInput` 并调用现有 `OcrPipeline`。输出会保留父区域页面坐标和局部 OCR 区域数量；该示例会在每个 crop 内再次执行 OCR 检测和识别，适合验证链路和结果合同，生产环境可按实际模型改成只运行识别器。
+对于 Windows/OpenCV，`OpenCvPaddleDocumentRegionOcrStage` 已提供真实图像裁剪案例：它只解码和准备页面一次，按版面区域创建识别请求，直接调用现有 `OcrPipeline.RecognizeOnlyAsync`，不会在每个区域 crop 内重复执行 DET。输出会保留父区域页面坐标和识别文本。`OcrPipeline` 的识别器-only 合同测试还验证了 detector session 调用次数为 0。
 
 ```csharp
 var regionOcrStage = new OpenCvPaddleDocumentRegionOcrStage(
@@ -266,6 +266,16 @@ var regionOcrStage = new OpenCvPaddleDocumentRegionOcrStage(
         PaddleDocumentModule.TextRecognition, "https://github.com/PaddlePaddle/PaddleOCR",
         "caller-owned-onnx"));
 ```
+
+多页综合结果可以把同一组阶段按页顺序运行后一次导出：
+
+```csharp
+IReadOnlyList<PaddleDocumentPipelineResult> pages = await pipeline.RunManyAsync(decodedPages, cancellationToken);
+await File.WriteAllTextAsync("document.json", PaddleDocumentPipelineExport.ToJson(pages), cancellationToken);
+await File.WriteAllTextAsync("document.md", PaddleDocumentPipelineExport.ToMarkdown(pages), cancellationToken);
+```
+
+`PaddleDocumentPipelineTests.OrderedMultiPagePipelineExportsEachPageWithModuleProvenance` 覆盖方向→公式依赖、多页页码顺序和 JSON/Markdown 导出。真实模型综合案例仍需在目标设备上按模型资产和后端重新运行。
 
 ### 表格、公式、印章和图表任务链
 

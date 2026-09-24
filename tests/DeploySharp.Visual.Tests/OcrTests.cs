@@ -259,6 +259,23 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RecognitionOnlyUsesCallerRegionsWithoutRunningDetector()
+        {
+            using OcrFixture fixture = CreateOcrFixture();
+            using var input = new FakeOcrImageInput();
+            TextRegion first = Region(0, 0, 0, 20, 10);
+            TextRegion second = Region(1, 30, 0, 20, 10);
+
+            IReadOnlyList<OcrRegionResult> results = await fixture.Pipeline.RecognizeOnlyAsync(input, new[] { first, second });
+
+            Assert.AreEqual(2, results.Count);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount, "Recognition-only execution must not invoke the detector session.");
+            Assert.AreEqual(1, fixture.RecognitionProvider.LastSession!.RunCount);
+            CollectionAssert.AreEqual(new[] { 0, 1 }, results.Select(value => value.Region.SourceIndex).ToArray());
+            Assert.IsTrue(results.All(value => value.Recognition.Text.Length > 0));
+        }
+
+        [TestMethod]
         public async Task OneImageDispatchesCompactRecognitionBatchesAcrossIndependentSessionsAndRestoresOrder()
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .1f, maximumCandidates: 4, maximumRegions: 4));
@@ -645,6 +662,12 @@ namespace DeploySharp.Visual.Tests
         private static InferenceOutputs Outputs(params (string Name, ITensor Tensor)[] values)
         {
             return new InferenceOutputs(values.Select(value => new NamedTensor(value.Name, value.Tensor)));
+        }
+
+        private static TextRegion Region(int index, float x, float y, float width, float height)
+        {
+            var quad = new TextQuadrilateral(new PointF(x, y), new PointF(x + width, y), new PointF(x + width, y + height), new PointF(x, y + height), TextCornerOrder.TopLeftClockwise);
+            return new TextRegion(index, .9f, quad.Polygon, quad);
         }
 
         private sealed class FakeOcrImageInput : IOcrImageInput

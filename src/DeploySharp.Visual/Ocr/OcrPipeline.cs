@@ -231,6 +231,56 @@ namespace JYPPX.DeploySharp.Visual
             return ExecuteAsync(input, orientation, options ?? OcrExecutionOptions.Default, cancellationToken);
         }
 
+        /// <summary>Runs only the recognizer on caller-provided text regions, reusing the same crop/session pool without detector execution. / 仅对调用方提供的文本区域运行识别，复用同一裁剪和 Session 池且不执行检测器。</summary>
+        public Task<IReadOnlyList<OcrRegionResult>> RecognizeOnlyAsync(IOcrRecognitionImageInput input, IReadOnlyList<TextRegion> regions, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (regions == null) throw new ArgumentNullException(nameof(regions));
+            if (regions.Count == 0) return Task.FromResult<IReadOnlyList<OcrRegionResult>>(Array.Empty<OcrRegionResult>());
+            return RecognizeOnlyCoreAsync(input, regions, cancellationToken);
+        }
+
+        private async Task<IReadOnlyList<OcrRegionResult>> RecognizeOnlyCoreAsync(IOcrRecognitionImageInput input, IReadOnlyList<TextRegion> regions, CancellationToken callerToken)
+        {
+            CancellationToken disposeToken = CaptureDisposeToken();
+            using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(callerToken, disposeToken);
+            CancellationToken token = linked.Token;
+            bool entered = false;
+            try
+            {
+                await _operationGate.WaitAsync(token).ConfigureAwait(false);
+                entered = true;
+                EnsureUsable();
+                if (regions.Count > _options.MaximumRegions) throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only region count exceeds the configured limit.", OcrPipelineStage.Input);
+                var requests = new List<IndexedRequest>(regions.Count);
+                for (int index = 0; index < regions.Count; index++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    requests.Add(new IndexedRequest(index, new TextCropRequest(regions[index], _cropProfile)));
+                }
+                List<OcrBatchDescriptor> batches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, token);
+                BatchExecution<VisualInferenceResult>[] executed = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, batches, _recognizer.MaximumConcurrency, async (prepared, ct) =>
+                    await _recognizer.RunAsync(prepared, new VisualExecutionOptions(), ct).ConfigureAwait(false), token).ConfigureAwait(false);
+                var recognized = new RecognizedText[regions.Count];
+                var widths = new OcrRecognitionWidthInfo[regions.Count];
+                foreach (BatchExecution<VisualInferenceResult> batchExecution in executed)
+                {
+                    TextRecognitionBatchResult result = batchExecution.Result.GetValue<TextRecognitionBatchResult>();
+                    if (result.Items.Count != batchExecution.Batch.Requests.Count) throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only result count does not match the submitted crop batch.", OcrPipelineStage.Recognition);
+                    for (int index = 0; index < batchExecution.Batch.ActualCount; index++)
+                    {
+                        IndexedRequest request = batchExecution.Batch.Requests[index];
+                        recognized[request.Position] = result.Items[index].WithSourceRegionIndex(request.Request.Region.SourceIndex);
+                        widths[request.Position] = batchExecution.Batch.Crops[index].WidthInfo;
+                    }
+                }
+                var output = new List<OcrRegionResult>(regions.Count);
+                for (int index = 0; index < regions.Count; index++) output.Add(new OcrRegionResult(regions[index], recognized[index] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only output is missing a region.", OcrPipelineStage.Recognition), widths[index]));
+                return output.AsReadOnly();
+            }
+            finally { if (entered) _operationGate.Release(); }
+        }
+
         /// <inheritdoc />
         /// <remarks>Cancels active calls, waits for every orchestration slot, then idempotently releases recognizer and detector sessions. / 取消活动调用、等待全部编排槽位，然后幂等释放识别器与检测器会话。</remarks>
         public void Dispose()
@@ -636,7 +686,7 @@ namespace JYPPX.DeploySharp.Visual
             return batches;
         }
 
-        private static async Task<BatchExecution<T>[]> RunBatchesAsync<T>(IOcrImageInput input, string inputName, IReadOnlyList<OcrBatchDescriptor> batches, int maximumConcurrency, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken)
+        private static async Task<BatchExecution<T>[]> RunBatchesAsync<T>(IOcrRecognitionImageInput input, string inputName, IReadOnlyList<OcrBatchDescriptor> batches, int maximumConcurrency, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken)
         {
             if (batches.Count == 0) return Array.Empty<BatchExecution<T>>();
             int concurrency = Math.Min(batches.Count, Math.Max(1, maximumConcurrency));
@@ -658,7 +708,7 @@ namespace JYPPX.DeploySharp.Visual
             }
         }
 
-        private static async Task<BatchExecution<T>> ExecuteBatchAsync<T>(IOcrImageInput input, string inputName, OcrBatchDescriptor batch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken, SemaphoreSlim gate)
+        private static async Task<BatchExecution<T>> ExecuteBatchAsync<T>(IOcrRecognitionImageInput input, string inputName, OcrBatchDescriptor batch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken, SemaphoreSlim gate)
         {
             PreparedVisualInput? prepared = null;
             OcrPreparedCropBatch? processed = null;

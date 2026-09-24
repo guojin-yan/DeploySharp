@@ -695,15 +695,20 @@ namespace JYPPX.DeploySharp.Visual
         public int TargetHeight { get; }
     }
 
-    /// <summary>Provides one detection tensor and image-library-specific recognition crops without leaking vendor types. / 提供一个检测张量和图像库特定识别裁剪，同时不泄漏 vendor 类型。</summary>
-    public interface IOcrImageInput : IDisposable
+    /// <summary>Provides source dimensions and image-library-specific recognition crops without leaking vendor types. / 提供源尺寸和图像库特定识别裁剪，同时不泄漏 vendor 类型。</summary>
+    public interface IOcrRecognitionImageInput : IDisposable
     {
         /// <summary>Gets source image size. / 获取源图尺寸。</summary>
         public VisualSize SourceSize { get; }
-        /// <summary>Gets the prepared detector input. / 获取已准备检测器输入。</summary>
-        public PreparedVisualInput DetectionInput { get; }
         /// <summary>Creates one owned recognition batch for requests that share target dimensions. / 为目标尺寸相同的请求创建一个自有识别批输入。</summary>
         public PreparedVisualInput PrepareRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken);
+    }
+
+    /// <summary>Provides a detector tensor plus image-library-specific recognition crops. / 提供检测张量及图像库特定识别裁剪。</summary>
+    public interface IOcrImageInput : IOcrRecognitionImageInput
+    {
+        /// <summary>Gets the prepared detector input. / 获取已准备检测器输入。</summary>
+        public PreparedVisualInput DetectionInput { get; }
     }
 
     /// <summary>Combines one detected region with its recognized text. / 将一个检测区域与其识别文本组合。</summary>

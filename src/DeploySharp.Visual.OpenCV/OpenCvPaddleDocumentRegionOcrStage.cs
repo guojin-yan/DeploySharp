@@ -5,15 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
-using JYPPX.OpenCvSharp;
-using JYPPX.OpenCvSharp.Core;
-using JYPPX.OpenCvSharp.ImgCodecs;
-using ImageCodecs = JYPPX.OpenCvSharp.ImgCodecs.Cv2;
 
 namespace JYPPX.DeploySharp.Visual.OpenCV
 {
-    /// <summary>Runs the existing OcrPipeline on one encoded crop per layout region and maps text back to page bounds. / 对每个版面区域创建真实图像裁剪，调用现有 OcrPipeline，并将文本映射回页面区域。</summary>
+    /// <summary>Runs the existing recognizer-only OcrPipeline on layout regions while decoding/preparing the page once. / 仅对版面区域运行已有 OcrPipeline 识别器，页面只解码和准备一次。</summary>
     public sealed class OpenCvPaddleDocumentRegionOcrStage : IPaddleDocumentPipelineStage
     {
         private readonly OcrPipeline _ocrPipeline;
@@ -45,7 +42,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         /// <summary>Gets the text-recognition module. / 获取文本识别模块。</summary>
         public PaddleDocumentModule Module { get; }
 
-        /// <summary>Decodes the source once, crops each layout region, and runs the caller-owned OCR pipeline. / 解码源图一次，裁剪每个版面区域并运行调用方拥有的 OCR Pipeline。</summary>
+        /// <summary>Decodes/prepares the source once, submits all layout regions to recognition-only OCR, and maps text back to page bounds. / 解码并准备源图一次，将所有版面区域送入识别器-only OCR，并将文本映射回页面区域。</summary>
         public async Task<PaddleDocumentModuleResult> RunAsync(PaddleDocumentPipelineContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
@@ -54,30 +51,27 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OpenCvImageSource source = _sourceFactory(context.Page) ?? throw new InvalidOperationException("The OpenCV source callback returned null.");
             Stopwatch watch = Stopwatch.StartNew();
             var items = new List<PaddleDocumentTextItem>(layout.Regions.Count);
-            using (Mat decoded = OpenCvImageLoader.Decode(source))
+            using (OpenCvOcrImageInput input = _inputFactory.Create(source, _ocrPipeline.DetectionSelection.Profile.Input.Name, _detectionOptions, source.Sha256, cancellationToken))
             {
-                OpenCvImageLoader.Validate(decoded, source);
+                var textRegions = new List<TextRegion>(layout.Regions.Count);
                 for (int index = 0; index < layout.Regions.Count; index++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     PaddleDocumentRegion region = layout.Regions[index];
-                    RectangleF clipped = Clip(region.Bounds, decoded.Cols, decoded.Rows);
-                    using Mat view = decoded.SubMat(new Rect((int)clipped.X, (int)clipped.Y, (int)clipped.Width, (int)clipped.Height));
-                    byte[] encoded = ImageCodecs.ImEncode(".png", view);
-                    using var input = _inputFactory.Create(
-                        OpenCvImageSource.FromBytes(encoded),
-                        _ocrPipeline.DetectionSelection.Profile.Input.Name,
-                        _detectionOptions,
-                        inputId: source.Sha256 + ":layout-region:" + index);
-                    OcrResult local = await _ocrPipeline.RunAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    string text = string.Join(" ", local.Regions.Select(item => item.Recognition.Text).Where(value => !string.IsNullOrWhiteSpace(value)));
-                    float confidence = local.Regions.Count == 0 ? 0f : local.Regions.Average(item => item.Recognition.Confidence);
-                    var metadata = new Dictionary<string, string>
-                    {
-                        ["localRegionCount"] = local.Regions.Count.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        ["cropSourceSha256"] = OpenCvImageSource.FromBytes(encoded).Sha256
-                    };
-                    items.Add(new PaddleDocumentTextItem(index, text, confidence, clipped, metadata));
+                    RectangleF clipped = Clip(region.Bounds, input.SourceSize.Width, input.SourceSize.Height);
+                    PointF topLeft = new PointF(clipped.X, clipped.Y);
+                    PointF topRight = new PointF(clipped.Right, clipped.Y);
+                    PointF bottomRight = new PointF(clipped.Right, clipped.Bottom);
+                    PointF bottomLeft = new PointF(clipped.X, clipped.Bottom);
+                    TextQuadrilateral quad = new TextQuadrilateral(topLeft, topRight, bottomRight, bottomLeft, TextCornerOrder.TopLeftClockwise);
+                    textRegions.Add(new TextRegion(index, region.Score, quad.Polygon, quad));
+                }
+                IReadOnlyList<OcrRegionResult> recognized = await _ocrPipeline.RecognizeOnlyAsync(input, textRegions, cancellationToken).ConfigureAwait(false);
+                for (int index = 0; index < recognized.Count; index++)
+                {
+                    OcrRegionResult value = recognized[index];
+                    var metadata = new Dictionary<string, string> { ["recognizerOnly"] = "true" };
+                    items.Add(new PaddleDocumentTextItem(index, value.Recognition.Text, value.Recognition.Confidence, layout.Regions[index].Bounds, metadata));
                 }
             }
             watch.Stop();
