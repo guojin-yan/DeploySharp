@@ -350,6 +350,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 公式案例校验 `\\frac` 和 token 输出，印章案例校验 mask 尺寸；两者仍属于官方代表样本执行合同，不等同于公式识别或印章检测数据集精度。
 
+印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。公式当前有六个模型在官方公式样本上完成 token/LaTeX 语义回归，仍缺多公式人工真值集。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
