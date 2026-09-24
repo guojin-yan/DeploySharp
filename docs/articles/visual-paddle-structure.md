@@ -316,6 +316,19 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 这条案例证明了阶段依赖、真实模型执行和 HTML 结果传递；300 个候选是阈值 0 的执行观察，不是单元格检测准确率，HTML 结构也不代表数据集级表格识别指标。
 
+Chart2Table 也可挂接到同一 Pipeline。`PaddleDocumentChartPipelineIntegrationTests` 使用四图 ONNX Bundle、官方 tokenizer 和 `chart_parsing_02.png`，在 ORT CPU 上把生成结果封装为 `PaddleDocumentChartResult.StructuredData`。测试要求显式提供 Bundle、模型源目录和导出目录：
+
+```powershell
+$env:DEPLOYSHARP_CHART2TABLE_PIPELINE_RUN_EXTERNAL = '1'
+$env:DEPLOYSHARP_CHART2TABLE_MODEL_ROOT = 'E:\Model\PaddleDocument\source\pp-chart2table\PP-Chart2Table'
+$env:DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT = 'E:\Model\PaddleDocument\chart2table-export-repro-20260923'
+dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
+  -f net10.0 --no-restore --verbosity quiet `
+  --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
+```
+
+公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
