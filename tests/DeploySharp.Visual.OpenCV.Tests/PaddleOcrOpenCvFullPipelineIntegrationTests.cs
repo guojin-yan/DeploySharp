@@ -118,6 +118,25 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Console.WriteLine("PADDLEOCR_OPENCV_FULL_PIPELINE image=" + imagePath + ";imageSha=" + Sha256(imagePath) + ";detectorSha=" + Sha256(detectorPath) + ";classifierSha=" + Sha256(classifierPath) + ";recognizerSha=" + Sha256(recognizerPath) + ";dictionarySha=" + DictionarySha + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";ortRegions=" + ortResult.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + result.ComputeSha256() + ";ortResultSha=" + ortResult.ComputeSha256());
         }
 
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialPpOcrV5MobileMatchesOrtAcrossThreeLocalImages()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENCV_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_OPENCV_RUN_EXTERNAL=1 to run the multi-image OpenCV/ORT parity test.");
+            string? previous = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENCV_IMAGE");
+            try
+            {
+                foreach (string image in new[] { @"E:\Data\ocr\demo_1.jpg", @"E:\Data\ocr\demo_2.jpg", @"E:\Data\ocr\demo_3.jpg" })
+                {
+                    if (!File.Exists(image)) Assert.Inconclusive("Missing multi-image OCR input: " + image);
+                    Environment.SetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENCV_IMAGE", image);
+                    OfficialPpOcrV5MobileRunsCompleteOpenCvPipeline();
+                }
+            }
+            finally { Environment.SetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENCV_IMAGE", previous); }
+        }
+
         private static void LogDetectorBackendParity(OpenCvOcrImageInput input, PaddleOcrProfile detector, string detectorPath, OpenCvDnnModelContract detectorContract, string sourceImagePath)
         {
             BackendRequest openCvRequest = new BackendRequest(BackendCapabilities.TensorInference, OpenCvBackend, "cpu");
