@@ -105,9 +105,41 @@ internal static partial class Program
             writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_min_ms,total_max_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,image_path,detail");
             foreach (FullResultRow row in rows) writer.WriteLine(row.ToCsv());
         }
+        WriteRunMetadata(output, root, imagePath, selectedBackends, selectedVersions, warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion, reusePreparedInput);
         Console.WriteLine("PADDLEOCR_FULL_REPORT=" + Path.GetFullPath(output));
+        Console.WriteLine("PADDLEOCR_FULL_METADATA=" + Path.GetFullPath(output + ".environment.json"));
         Console.WriteLine("PADDLEOCR_FULL_ROWS=" + rows.Count.ToString(Invariant));
         return rows.Any(row => row.Status == "pass") ? 0 : 3;
+    }
+
+    private static void WriteRunMetadata(string output, string modelRoot, string imagePath, IReadOnlyCollection<string> backends, IReadOnlyCollection<string> versions, int warmup, int iterations, int stageConcurrency, int batchSize, int tensorRtBatchSize, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput)
+    {
+        var metadata = new
+        {
+            schemaVersion = 1,
+            generatedUtc = DateTimeOffset.UtcNow,
+            machine = Environment.MachineName,
+            os = Environment.OSVersion.ToString(),
+            framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+            processorCount = Environment.ProcessorCount,
+            sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION") ?? "unrecorded",
+            modelRoot = Path.GetFullPath(modelRoot),
+            image = Path.GetFullPath(imagePath),
+            imageSha256 = File.Exists(imagePath) ? Sha256(imagePath) : null,
+            backends = backends.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
+            versions = versions.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
+            protocol = new { warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion = (int)tensorRtApiVersion, reusePreparedInput },
+            runtime = new { cudaRoot = Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT"), cudnnRoot = Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT"), tensorRtRoot = Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT"), bridge = Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH") }
+        };
+        string metadataPath = Path.GetFullPath(output + ".environment.json");
+        File.WriteAllText(metadataPath, System.Text.Json.JsonSerializer.Serialize(metadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private static string Sha256(string path)
+    {
+        using FileStream stream = File.OpenRead(path);
+        return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
     }
 
     private static string DefaultModelRoot()
