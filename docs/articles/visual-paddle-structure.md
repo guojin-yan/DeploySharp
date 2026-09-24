@@ -9,7 +9,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | 模块 | 官方模型族 | DeploySharp 任务/结果合同 | 当前状态 |
 | --- | --- | --- | --- |
 | 文档方向 | `PP-LCNet_x1_0_doc_ori` | `VisualTaskId.DocumentOrientation`、四分类结果 | ORT CPU、OpenVINO CPU 和 TensorRT 11 smoke 已完成；分类预处理为短边 256 后中心裁剪 224 |
-| 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU 已完成真实图片 + 专用矫正图 Decoder smoke；视觉质量指标和其它后端仍待验收 |
+| 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`，属于有界数值差异观察，不是像素等价或视觉质量通过 |
 | 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；`pp-doclayout-l` 另有 OpenVINO、OpenCV DNN 和 TensorRT 11 NMS 实测，其余后端仍按矩阵逐工件记录 |
 | 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
 | 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO 目前仅 wired 有通过证据 |

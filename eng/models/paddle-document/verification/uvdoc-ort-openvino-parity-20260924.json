@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "model": "paddle-doc/uvdoc",
+  "modelSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+  "image": "E:\\Data\\image\\bus.jpg",
+  "imageSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+  "inputShape": "[1,3,640,640]",
+  "outputShape": "[1,3,640,640]",
+  "ort": {
+    "elapsedMs": 274.1746,
+    "min": 0,
+    "max": 255,
+    "mean": 115.84342688850796,
+    "stdDev": 68.35932039214347
+  },
+  "openvino": {
+    "elapsedMs": 360.315,
+    "min": 0,
+    "max": 255,
+    "mean": 115.84340690859474,
+    "stdDev": 68.3593336826835
+  },
+  "parity": {
+    "maxAbs": 0.07305908203125,
+    "meanAbs": 0.001760658342064782,
+    "maxAbsDiagnosticThreshold": 0.1,
+    "meanAbsDiagnosticThreshold": 0.01,
+    "status": "ranged-difference",
+    "interpretation": "Both backends execute and produce finite 640x640x3 tensors. The current sample has a bounded numeric difference; this is not a pixel-equivalence or visual-quality pass."
+  },
+  "protocol": "Same prepared tensor, CPU ORT/OpenVINO sessions, one warm execution, excludes model load and image decode."
+}
