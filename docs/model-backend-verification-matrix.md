@@ -40,14 +40,14 @@
 | `paddleocr/ppocrv4/legacy-cls` | ✓ | ✓ | △ | △ | — |
 | `paddleocr/ppocrv4/mobile-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv4/mobile-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/server-det` | ✓ | ✓ | △ | △ | — |
-| `paddleocr/ppocrv4/server-rec` | ✓ | ✓ | △ | △ | — |
+| `paddleocr/ppocrv4/server-det` | ✓ | ✓ | ✓ | △ | — |
+| `paddleocr/ppocrv4/server-rec` | ✓ | ✓ | ✓ | △ | — |
 | `paddleocr/ppocrv5/mobile-cls` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv5/mobile-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv5/mobile-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv5/server-cls` | ✓ | ✓ | △ | ✓ | — |
-| `paddleocr/ppocrv5/server-det` | ✓ | ✓ | △ | ✓ | — |
-| `paddleocr/ppocrv5/server-rec` | ✓ | ✓ | △ | ✓ | — |
+| `paddleocr/ppocrv5/server-cls` | ✓ | ✓ | ✓ | ✓ | — |
+| `paddleocr/ppocrv5/server-det` | ✓ | ✓ | ✓ | ✓ | — |
+| `paddleocr/ppocrv5/server-rec` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/tiny-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/tiny-rec` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/small-det` | ✓ | ✓ | ✓ | ✓ | — |
@@ -146,6 +146,6 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 
 PP-OCRv5 mobile 的真实 OpenCV DNN 全流程已与 ORT 在同一准备张量上复核：原先记录的 8/16 差异来自外部测试合同把全分辨率概率图错误声明为 `[1,1,128,-1]`，OpenCV 因而把相同元素数重解释成 `[1,1,128,2048]`；不是 OpenCV importer 或 DB 解码器漏检。合同改为从输入张量绑定输出高度后，两边均返回 16 个区域，逐区域识别文本一致，坐标误差 ≤0.5 px、分数误差 ≤0.001；原始概率图最大/平均绝对差 `4.2915344e-5` / `8.6187186e-8`。输入张量 SHA-256 为 `dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553`，最终输出 SHA-256 为 OpenCV `dd55ffdab9b595f016083c32ac53b61f964d378958409825473d65b6b4d798c1`、ORT `bcd67a98e08ee65c6fd51dd49f50a1bb3828cbc4037a57d73af64ddba416a2eb`。两次单次 OpenCV `pipeline.Run` 观察分别为 `5655.803 ms` 和 `4117.808 ms`，包含裁剪、分类、识别等流水线开销且不是稳定性能基准；此结果不替代其它后端的逐工件性能基线，也不能外推到其它 OCR 模型。
 
-上述 7 组覆盖当前本机全部 DET/REC 核心工件；v4/v5 的每个 CLS 工件也已分别完成阶段级验证，v6 的 CLS 复用策略在测试和目录中显式记录。新增 `PaddleOcrAllCorePipelineOpenVinoIntegrationTests` 已在同一张 `demo_1.jpg` 上对这 7 组逐组完成真实 `det → crop → cls → rec → merge`，OpenVINO CPU 流水线测试 1/1 通过；这是一条独立的编排证据，不把 ORT 结果自动外推到 OpenVINO。OpenCV DNN 的 v5 mobile 全流程和 TensorRT 的 v5 server 全流程已有精确工件证据；TensorRT v4 server 仍被 DeploySharp bridge 反序列化阻断，不能把任一组合结果外推到其它 PP-OCR 工件。`pp-doclayout-l` 已有 TensorRT NMS 级实测，但不能把它自动外推到其它 PP-Structure 模型。PP-Structure 目前已具备模块级合同、专用 Decoder、按需模型资产、统一编排层和 TensorRT 外部验证入口；真实多模型、多后端文档智能端到端证据仍待各运行时完成。
+上述 7 组覆盖当前本机全部 DET/REC 核心工件；v4/v5 的每个 CLS 工件也已分别完成阶段级验证，v6 的 CLS 复用策略在测试和目录中显式记录。新增 `PaddleOcrAllCorePipelineOpenVinoIntegrationTests` 已在同一张 `demo_1.jpg` 上对这 7 组逐组完成真实 `det → crop → cls → rec → merge`，OpenVINO CPU 流水线测试 1/1 通过；这是一条独立的编排证据，不把 ORT 结果自动外推到 OpenVINO。OpenCV DNN 的 v4 server、v5 mobile/server 全流程和 TensorRT 的 v5 server 全流程已有精确工件证据；v4 server TensorRT 仍被 DeploySharp bridge 反序列化阻断，不能把任一组合结果外推到其它 PP-OCR 工件。OpenCV 这三组本轮使用同一 `demo_1.jpg`、单 channel、batch 1 的诊断协议，耗时分别为 v4 server P50/P95 `6655.278/7877.100 ms`、v5 server `5087.234/5557.888 ms`；这组 CPU 数值不能与 TensorRT 的 GPU 记录直接排序。v5 server TensorRT 采用带遥测的一轮 10/50 协议，P50/P95 为 `145.284/156.248 ms`，GPU 时钟为 `1425–1972 MHz`，有 35 个功耗限制样本；不能视为锁频上限性能。`pp-doclayout-l` 已有 TensorRT NMS 级实测，但不能把它自动外推到其它 PP-Structure 模型。PP-Structure 目前已具备模块级合同、专用 Decoder、按需模型资产、统一编排层和 TensorRT 外部验证入口；真实多模型、多后端文档智能端到端证据仍待各运行时完成。
 
 本轮补充的本机证据：`E:\Model\paddleocr\paddle-ocr-onnx-smoke.json` 对 17 个核心 ONNX 图均记录了 ONNX Runtime CPU 图级 smoke；`PaddleOcrAllCorePipelineOrtIntegrationTests` 对 7 组完整流水线完成真实 ORT CPU 运行；新增 `PaddleOcrAllCorePipelineOpenVinoIntegrationTests` 对同样 7 组完成真实 OpenVINO CPU `det → crop → cls → rec → merge` 运行；阶段 19/20 集成测试补测了 PP-OCRv5 mobile/server 的 ORT CPU、OpenVINO CPU 以及 v4 legacy/v5 mobile/server CLS；`PaddleOcrOpenCvFullPipelineIntegrationTests` 使用 OpenCV DNN 对 PP-OCRv5 mobile 完成真实全流程验证。测试使用的模型路径已经统一为 `E:\Model\paddleocr\PP-OCRv4`、`PP-OCRv5`、`PP-OCRv6`，不再依赖旧的 `E:\Model\ocr` 路径。
