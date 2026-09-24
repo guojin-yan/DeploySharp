@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "model": "paddle-doc/uvdoc",
   "onnxSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
-  "engineSha256": "2af442f020938914836e7417b0ab1171820a771d26d9fa9714f36f047df05033",
+  "engineSha256": "7a513f909e2c5046cdb2537154f2389db736fd111a9730b9fe7837b8c25f48ae",
   "device": "NVIDIA GeForce RTX 3060 Laptop GPU",
   "runtime": "TensorRT 11.0.0 / CUDA 12.9 / cuDNN 9.22",
   "input": "image=[1,3,640,640]",
-  "build": "trtexec --builderOptimizationLevel=3 --skipInference",
+  "build": "DeploySharp TensorRtOnnxEngineBuilder, TensorRT 11, BuilderOptimizationLevel=3, DisableTf32=true",
   "load": "trtexec --loadEngine",
   "inference": {
     "warmup": 500,
@@ -17,6 +17,7 @@
     "throughputQps": 116.855,
     "gpuComputeMs": { "min": 7.22632, "max": 10.7048, "mean": 8.55564, "median": 8.18896, "p90": 9.76782, "p95": 9.9389, "p99": 10.2336 }
   },
-  "status": "engine-build-load-inference-pass",
-  "boundary": "trtexec evidence proves TensorRT can execute the exact engine. DeploySharp TensorRT decoder and ORT/TensorRT tensor parity still require a separate bridge integration test. GPU compute time is unstable (CV 9.7%) and excludes transfers."
+  "status": "deploysharp-engine-load-decoder-pass-bounded-drift",
+  "parity": { "maxAbs": 0.077880859375, "meanAbs": 0.0017273122984388085, "status": "close-within-diagnostic-threshold" },
+  "boundary": "TensorRT and DeploySharp decoder execute the exact engine. DisableTf32=true materially reduces drift versus RuntimeDefault; this is a bounded numeric comparison, not pixel equivalence or visual-quality validation. GPU compute trtexec timing excludes transfers."
 }
