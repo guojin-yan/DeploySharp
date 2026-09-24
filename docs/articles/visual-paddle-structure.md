@@ -254,6 +254,44 @@ var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[]
 
 该 stage 不假定裁剪库、颜色顺序、归一化或模型后端，因此不会把四边形裁剪误报为曲线展开，也不会把“区域有文本结果”误报成版面或 OCR 精度通过。图像裁剪和 OCR 结果的真实证据仍应在具体后端测试中记录。
 
+### 表格、公式、印章和图表任务链
+
+复杂任务使用 `PaddleDocumentDependentStage` 声明前置结果。下面的结构表达了推荐依赖关系；每个 handler 内部可以使用 ORT、OpenVINO、OpenCV 或 TensorRT 的 `VisualPipeline`：
+
+```csharp
+var tableClassify = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.TableClassification,
+    new[] { PaddleDocumentModule.LayoutDetection },
+    (context, token) => RunTableClassificationAsync(context, token));
+
+var cellDetect = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.TableCellDetection,
+    new[] { PaddleDocumentModule.TableClassification },
+    (context, token) => RunCellDetectionAsync(context, token));
+
+var tableStructure = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.TableStructureRecognition,
+    new[] { PaddleDocumentModule.TableCellDetection },
+    (context, token) => RunSlaNextAndBuildHtmlAsync(context, token));
+
+var formula = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.FormulaRecognition,
+    new[] { PaddleDocumentModule.LayoutDetection },
+    (context, token) => RunFormulaOnFormulaRegionsAsync(context, token));
+
+var seal = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.SealTextDetection,
+    new[] { PaddleDocumentModule.LayoutDetection },
+    (context, token) => RunSealDetectionAsync(context, token));
+
+var chart = new PaddleDocumentDependentStage(
+    PaddleDocumentModule.ChartParsing,
+    new[] { PaddleDocumentModule.LayoutDetection },
+    (context, token) => RunChart2TableAsync(context, token));
+```
+
+`PaddleDocumentTableResult.Markup` 是表格 HTML/结构化标记承载字段；公式使用 `PaddleDocumentFormulaResult.Latex`，印章使用 `PaddleDocumentSealResult` 的掩码和区域，Chart2Table 使用 `PaddleDocumentChartResult.StructuredData`。这些阶段只负责合同和依赖检查，尚未验证的精确模型/后端组合仍必须在矩阵中保持 `△`。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
