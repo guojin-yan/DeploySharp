@@ -105,6 +105,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         {
             if (result is PaddleDocumentOrientationResult orientation)
                 return new { label = orientation.Label, rotationDegrees = orientation.RotationDegrees };
+            if (result is PaddleDocumentClassificationResult classification)
+                return new { label = classification.Label, index = classification.Index, score = classification.Score };
             if (result is PaddleDocumentUnwarpingResult unwarping)
                 return new { width = unwarping.Width, height = unwarping.Height, channels = unwarping.Channels, transform = unwarping.Transform, pixelCount = unwarping.Pixels.Count };
             if (result is PaddleDocumentTableResult table)
@@ -124,6 +126,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         {
             if (result is PaddleDocumentOrientationResult orientation)
                 builder.Append("- Orientation: ").Append(orientation.Label).Append(" (").Append(orientation.RotationDegrees).AppendLine("°)");
+            else if (result is PaddleDocumentClassificationResult classification)
+                builder.Append("- Classification: ").Append(classification.Label).Append(" (").Append(classification.Score.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)).AppendLine(")");
             else if (result is PaddleDocumentUnwarpingResult unwarping)
                 builder.Append("- Unwarped image: ").Append(unwarping.Width).Append('x').Append(unwarping.Height).Append(" / ").Append(unwarping.Channels).AppendLine(" channels");
             else if (result is PaddleDocumentTableResult table)

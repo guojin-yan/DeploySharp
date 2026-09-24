@@ -305,6 +305,17 @@ var chart = new PaddleDocumentDependentStage(
 
 `PaddleDocumentTableResult.Markup` 是表格 HTML/结构化标记承载字段；公式使用 `PaddleDocumentFormulaResult.Latex`，印章使用 `PaddleDocumentSealResult` 的掩码和区域，Chart2Table 使用 `PaddleDocumentChartResult.StructuredData`。这些阶段只负责合同和依赖检查，尚未验证的精确模型/后端组合仍必须在矩阵中保持 `△`。
 
+仓库中的 `PaddleDocumentTablePipelineIntegrationTests` 已把表格链跑成一个真实 ORT CPU 案例：`table_recognition.jpg` → `pp-lcnet-x1-0-table-cls`（`wired_table`）→ `rt-detr-l-wired-cell-det`（300 个候选，阈值 0）→ `slanext-wired`（24 tokens、13 个单元格、HTML markup）。复现命令：
+
+```powershell
+$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
+dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
+  -f net10.0 --no-restore --verbosity quiet `
+  --filter FullyQualifiedName~PaddleDocumentTablePipelineIntegrationTests
+```
+
+这条案例证明了阶段依赖、真实模型执行和 HTML 结果传递；300 个候选是阈值 0 的执行观察，不是单元格检测准确率，HTML 结构也不代表数据集级表格识别指标。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。

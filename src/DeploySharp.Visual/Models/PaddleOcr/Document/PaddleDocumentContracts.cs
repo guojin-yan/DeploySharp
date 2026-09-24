@@ -134,6 +134,23 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int RotationDegrees { get; }
     }
 
+    /// <summary>Stores a document-task classification label and probability. / 保存文档任务分类标签和概率。</summary>
+    public sealed class PaddleDocumentClassificationResult : PaddleDocumentModuleResult
+    {
+        public PaddleDocumentClassificationResult(PaddleDocumentModule module, PaddleDocumentResultMetadata metadata, string label, int index, float score, IReadOnlyList<string>? warnings = null)
+            : base(module, metadata, warnings: warnings)
+        {
+            if (module != PaddleDocumentModule.TableClassification) throw new ArgumentException("Classification result is currently reserved for table classification.", nameof(module));
+            if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("A classification label is required.", nameof(label));
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+            if (float.IsNaN(score) || float.IsInfinity(score) || score < 0 || score > 1) throw new ArgumentOutOfRangeException(nameof(score));
+            Label = label; Index = index; Score = score;
+        }
+        public string Label { get; }
+        public int Index { get; }
+        public float Score { get; }
+    }
+
     /// <summary>Stores generic page regions emitted by layout or table-cell detection. / 保存版面或表格单元格检测输出的页面区域。</summary>
     public sealed class PaddleDocumentRegionResult : PaddleDocumentModuleResult
     {
