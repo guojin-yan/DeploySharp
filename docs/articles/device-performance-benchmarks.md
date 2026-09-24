@@ -101,13 +101,14 @@
 | 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
 | PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 33.194 | 32.505 | 37.394 | 通过 |
+| PP-OCRv4 server | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session；TRT11 det/rec/legacy-cls engines | 122.777 | 122.200 | 127.458 | 通过 |
 | PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 46.785 | 46.090 | 50.015 | 通过 |
 | PP-OCRv5 server | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session；TRT11 server engines | 146.530 | 145.284 | 156.248 | 通过 |
 | PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；1 个阶段 Session | 19.548 | 19.527 | 20.339 | 通过 |
 | PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 32.166 | 31.511 | 36.351 | 通过 |
 | PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 81.351 | 80.692 | 85.247 | 通过 |
 
-本轮补测还构建并加载了 PP-OCRv4 server 的 TRT11 engine。`trtexec --loadEngine` 可以反序列化该 engine，但 DeploySharp 当前 TRT11 bridge 在 `deserializeCudaEngine` 返回空对象，v4 server 完整流水线因此记为 `△`，不把 engine 构建成功写成可运行证据。v5 server 则通过了库内完整流水线，16 个区域全部产生识别结果；表中 `146.530/145.284/156.248 ms` 是本机 10 次预热、50 次计时并同步采集 GPU 遥测的一轮结果。53 个遥测样本中有效负载样本均达到至少 10% GPU 利用率，利用率均值 `66.1%`、图形时钟 `1425–1972 MHz`、P0/P3 均出现、功耗限制样本 35、最高温度 `66°C`，thermal/hardware slowdown 均为 0。此前不带遥测的单轮观测 `125.848/124.468/138.360 ms` 仅保留为历史观察，不作为当前稳态主值。两组 server 结果均使用 RTX 3060 Laptop、TensorRT 11.0.0、CUDA 12.9、cuDNN 9.22、compute_86。
+PP-OCRv4 server 的初次失败来自旧的 mobile CLS engine sidecar；重新用 TensorRT 11 构建 `PP-OCRv4_mobile_cls.onnx.engine` 后，DeploySharp bridge 对 server det、server rec 和 legacy cls 三个 engine 均加载并推理通过。表中 `122.777/122.200/127.458 ms` 是本机 10 次预热、50 次计时、batch 8、2 个阶段 Session 的带遥测结果；36 个样本中 32 个达到至少 10% GPU 利用率，活跃样本利用率均值 `77.9%`、图形时钟 `1425–1837 MHz`、功耗限制样本 26、最高温度 `64°C`，thermal/hardware slowdown 为 0。v5 server 的 `146.530/145.284/156.248 ms` 来自带 GPU 遥测的一轮 10/50；53 个遥测样本利用率均值 `66.1%`、图形时钟 `1425–1972 MHz`、功耗限制样本 35、最高温度 `66°C`，thermal/hardware slowdown 均为 0。两组 server 结果均使用 RTX 3060 Laptop、TensorRT 11.0.0、CUDA 12.9、cuDNN 9.22、compute_86。
 
 ## Windows 10 / Intel Core i7-14700KF / RTX 5060 Ti
 
