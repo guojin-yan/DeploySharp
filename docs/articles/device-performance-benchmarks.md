@@ -96,6 +96,8 @@
 
 ### PaddleOCR：TensorRT 完整流水线稳态口径
 
+三张本地 OCR 图像的 v5 mobile ORT/OpenVINO/OpenCV DNN 正式 5/50 矩阵已生成：[`paddleocr-v5-mobile-3backend-matrix-20260924.md`](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-3backend-matrix-20260924.md)。该矩阵保留每张图的区域数、结果 SHA、平均值、P50/P95 和相邻 `.environment.json` 协议；不同图片的区域数量不同，耗时不能简单横向比较。
+
 口径：动态 TensorRT 11 engine，FP32，输入 `E:\Data\ocr\demo_1.jpg`，10 次预热、50 次计时，复用已准备输入。检测阶段每张图执行一次；识别阶段按下表选择稳定的 batch 和独立 Session 数量。所有记录均返回 16 个文本区域。
 
 | 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
