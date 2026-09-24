@@ -31,6 +31,7 @@
     <Compile Remove="Configuration\Json\**" />
     <Compile Remove="Roi\**" />
     <Compile Remove="Detection\SlidingWindowDetection.cs" />
+    <Compile Remove="Models\PaddleOcr\Document\PaddleDocumentPipelineExport.cs" />
   </ItemGroup>
 
   <ItemGroup>

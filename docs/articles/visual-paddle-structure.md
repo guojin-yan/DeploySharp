@@ -186,6 +186,20 @@ PaddleDocumentPipelineResult result = await documentPipeline.RunAsync(page, canc
 `PaddleDocumentPipelineTests.VisualPipelineStageBridgesPreparedInputAndCanonicalDocumentResult` 覆盖了
 适配器的输入准备、推理、结果映射、页码来源和所有权路径；真实模型证据仍按后端矩阵单独记录。
 
+### 页面结果导出
+
+Pipeline 结果现在可以直接导出为 JSON 或 Markdown。导出内容保留页码、源尺寸、阶段计时、模型/后端、输入 SHA-256、区域坐标、警告，以及方向、矫正、表格、公式、图表和印章等已知任务载荷；调用方的原始图像对象不会被序列化。
+
+```csharp
+PaddleDocumentPipelineResult result = await documentPipeline.RunAsync(page, cancellationToken);
+string json = PaddleDocumentPipelineExport.ToJson(result);
+string markdown = PaddleDocumentPipelineExport.ToMarkdown(result);
+await File.WriteAllTextAsync("page.json", json, cancellationToken);
+await File.WriteAllTextAsync("page.md", markdown, cancellationToken);
+```
+
+JSON 适合保存机器可读结果和后续多页聚合，Markdown 适合调试报告和人工复核。导出器不会补齐缺失阶段，也不会把通用 stage runner 描述成自动可用的 PP-StructureV3 产品流水线。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
@@ -195,7 +209,7 @@ PaddleDocumentPipelineResult result = await documentPipeline.RunAsync(page, canc
 | ORT CPU | 22 个非公式工件、6 个公式 token/BPE 解码，方向→版面阶段编排 | 公式结果长度与 tokenizer 无告警不是公式准确率 |
 | OpenVINO CPU | 方向、版面、表格分类、单元格、UVDoc、mobile/server 印章 | 按精确模型记录；未外推其它工件 |
 | OpenVINO SLANeXt | wired/wireless 派生 ONNX 均通过，与原始 ORT 输出逐元素对比 | 原始 Release ONNX 仍受循环变量同名问题影响，需先执行下方兼容转换 |
-| OpenCV DNN | PP-DocLayout-L 单 batch 与 ORT 对比；两个 PP-LCNet 官方示例；PP-OCRv5 mobile 完整流水线 | PP-DocLayout-L 不请求被 importer 忽略的常量计数输出 |
+| OpenCV DNN | PP-DocLayout-L 单 batch 与 ORT 对比；两个 PP-LCNet 官方示例；PP-OCR v4/v5/v6 七组核心完整流水线 | PP-DocLayout-L 不请求被 importer 忽略的常量计数输出；Chart2Table 自回归仍未验证 |
 | TensorRT CUDA | PP-LCNet 文档方向、PP-LCNet 表格分类、`pp-doclayout-l` Paddle NMS、mobile/server 印章概率图；均有 ORT 对照和预热后 P50/P95 | TRT 11 bridge + TRT 11.0.0.114-cu12 + CUDA 12.9 + cuDNN 9.22；server 印章已显式关闭 TF32，当前样本逐元素误差通过合同，不外推其它模型 |
 | Chart2Table 四图 Bundle | ORT CPU/OpenVINO CPU/TensorRT CUDA：官方样例生成完整 2018–2023 表格；额外 4 张 ChartQA human 图到 EOS、精确匹配 golden table，关联 QA 8/8 匹配。TensorRT device path 的官方样例最好 10.12 s，Decode P50/P95 66.47/73.48 ms | 库 Builder 已构建四图并通过完整生成回归；ChartQA 本次严格 FP32 Builder 计划运行 29m19s，耗时异常且原因待 profiling，不是性能基准；OpenCV DNN、跨数据集准确率仍未验证 |
 
