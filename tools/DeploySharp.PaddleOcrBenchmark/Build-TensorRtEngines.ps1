@@ -9,6 +9,7 @@ param(
     [int]$RecognitionMinWidth = 48,
     [int]$RecognitionOptWidth = 160,
     [int]$RecognitionMaxWidth = 320,
+    [string[]]$ModelNames = @(),
     [switch]$Fp16
 )
 
@@ -45,6 +46,18 @@ $supportsBuilderOptimizationLevel = $trtexecHelp -match '(?m)^\s*--builderOptimi
 $models = Get-ChildItem -LiteralPath $sourceRoot -Recurse -Filter '*.onnx' -File
 if ($models.Count -eq 0) {
     throw "No ONNX models were found under '$sourceRoot'."
+}
+if ($ModelNames.Count -gt 0) {
+    $requestedNames = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($name in $ModelNames) {
+        if ([string]::IsNullOrWhiteSpace($name)) { throw 'ModelNames cannot contain an empty value.' }
+        [void]$requestedNames.Add([IO.Path]::GetFileName($name))
+    }
+    $availableNames = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($model in $models) { [void]$availableNames.Add($model.Name) }
+    $missingNames = @($requestedNames | Where-Object { -not $availableNames.Contains($_) })
+    if ($missingNames.Count -gt 0) { throw "Requested ONNX model(s) were not found: $($missingNames -join ', ')" }
+    $models = @($models | Where-Object { $requestedNames.Contains($_.Name) })
 }
 if ($StageOptBatch -lt 1 -or $StageMaxBatch -lt $StageOptBatch) {
     throw "StageOptBatch must be >= 1 and StageMaxBatch must be >= StageOptBatch."

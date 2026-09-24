@@ -102,9 +102,12 @@
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
 | PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 33.194 | 32.505 | 37.394 | 通过 |
 | PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 46.785 | 46.090 | 50.015 | 通过 |
+| PP-OCRv5 server | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session；TRT11 server engines | 125.848 | 124.468 | 138.360 | 通过 |
 | PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；1 个阶段 Session | 19.548 | 19.527 | 20.339 | 通过 |
 | PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 32.166 | 31.511 | 36.351 | 通过 |
 | PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 81.351 | 80.692 | 85.247 | 通过 |
+
+本轮补测还构建并加载了 PP-OCRv4 server 的 TRT11 engine。`trtexec --loadEngine` 可以反序列化该 engine，但 DeploySharp 当前 TRT11 bridge 在 `deserializeCudaEngine` 返回空对象，v4 server 完整流水线因此记为 `△`，不把 engine 构建成功写成可运行证据。v5 server 则通过了库内完整流水线，16 个区域全部产生识别结果；上述 125.848/124.468/138.360 ms 是本机单轮 10 次预热、50 次计时的结果。两组 server 结果均使用 RTX 3060 Laptop、TensorRT 11.0.0、CUDA 12.9、cuDNN 9.22、compute_86，当前 GPU 未锁频且功耗上限字段为 N/A。
 
 ## Windows 10 / Intel Core i7-14700KF / RTX 5060 Ti
 
@@ -190,6 +193,88 @@
 | PP-OCRv6 medium | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 106.863 | 未记录 | 未记录 | 通过 |
 | PP-OCRv6 medium | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 1381.233 | 未记录 | 未记录 | 通过 |
 | PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 33.983 | 未记录 | 未记录 | 通过 |
+
+## Windows 11 / Ryzen 7 5800H / RTX 3060 Laptop：PP-Structure 分类
+
+2026-09-21 本机 `JYPPX` 实测。系统 Windows 11 `10.0.26200`，16 个逻辑处理器、约 15.86 GiB 可用物理内存容量，GPU 为 RTX 3060 Laptop，驱动 `576.02`。源码基准 `f0575bbb182d2b72a0a4f542c3bb4401ed865ad7` 加本轮未提交的预处理/Decoder 修复；数字不代表该提交单独构建的结果。
+
+运行时：.NET 10，ORT `1.28.0`、OpenVINO Windows `2026.2.1`、OpenCV `5.0.0`；GPU 路径使用 TensorRT `11.0.0.114-cu12`、CUDA `12.9`、cuDNN `9.22` 和本地 TRT 11 bridge。未主动设置锁频或功耗上限；`nvidia-smi` 的功耗上限和应用时钟字段返回 N/A，因此不能确认机器没有固件/电源限制。测试期间不同时运行其它模型基准，但未隔离所有桌面负载。
+
+本节是 **PP-LCNet 单模块**，不是 OCR 或 PP-Structure 全页面时间。batch=1、Session=1；Release 构建，5 次预热、50 次测量，nearest-rank P50/P95。CPU 路径使用 `DOTNET_TieredCompilation=0` 防止短测试中途切换 JIT 层级；TensorRT 测试保留运行时默认 JIT，故也不是严格相同执行协议下的后端排名。每轮复用已解码图像并重新执行预处理、推理和后处理，包含传输、排除磁盘解码/加载/编译/Engine 构建。TensorRT 为 RuntimeDefault 精度、构建优化级别 3，不能宣称所有层均为 FP32。
+
+| 模型 / 输入 | 后端 | 预处理 P50 ms | 推理 P50 ms | 后处理 P50 ms | 总 P50 ms | 总 P95 ms |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 文档方向 / `img_rot180_demo.jpg` | ORT CPU | 1.200 | 2.906 | 0.010 | 4.105 | 6.353 |
+| 文档方向 / 同上 | OpenVINO CPU | 0.703 | 1.351 | 0.009 | 2.201 | 3.714 |
+| 文档方向 / 同上 | OpenCV DNN CPU | 0.908 | 4.679 | 0.018 | 5.651 | 6.534 |
+| 文档方向 / 同上 | TensorRT CUDA 预处理 | 见原始 TRX 分段样本 | 见原始 TRX | 见原始 TRX | 1.318 | 1.921 |
+| 表格分类 / `table_recognition.jpg` | ORT CPU | 1.006 | 2.641 | 0.009 | 3.818 | 5.867 |
+| 表格分类 / 同上 | OpenVINO CPU | 0.875 | 1.821 | 0.011 | 2.836 | 5.024 |
+| 表格分类 / 同上 | OpenCV DNN CPU | 0.764 | 4.348 | 0.017 | 5.171 | 6.353 |
+| 表格分类 / 同上 | TensorRT CUDA 预处理 | 见外部测试 JSON | 见外部测试 JSON | 见外部测试 JSON | 1.212 | 1.331 |
+
+各分段分位数不应相加后当作总分位数。上表取最后一次带完整协议记录的运行，未从不同运行中逐项挑选最小值。分类标签均与官方示例一致；CPU 文档方向分数约 `0.89236`、表格分类约 `0.844209`，CUDA 方向分数约 `0.894656`，表格分类约 `0.851693`。方向同 Engine 的 CPU 预处理分数差约 `0.002430`；表格分类 TensorRT 与 ORT 的绝对分数差为 `0.007485`，在外部测试合同规定的 `0.01` 内。TensorRT 结果使用 TRT 11 bridge（SHA `a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6`）重新测得，旧的 TRT 10/错误 bridge 记录不再作为当前基线。这些是小规模回归，不是数据集准确率。
+
+### PP-Structure 版面分析：TensorRT NMS 稳态口径
+
+`pp-doclayout-l` 在同一设备上补充了真正的 TensorRT 版面模型实测。输入为 `E:\Data\image\bus.jpg`，ONNX SHA `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，TensorRT 11 Engine SHA `c6acaedc9f3ed2996e012d1fd6b45c5eb061877d2ac3aa0f77bde34f65e9a0ba`（155,392,076 bytes）。动态 `image`、`im_shape`、`scale_factor` profile，构建优化级别 3；5 次预热、50 次测量，OpenCV CPU 准备输入，TensorRT 执行网络和图内 Paddle NMS，ORT CPU 用于结果对照。
+
+| 模型 / 输入 | 后端 | 候选 / 置信度过滤 | 结果一致性 | 总 P50 ms | 总 P95 ms |
+| --- | --- | ---: | --- | ---: | ---: |
+| `pp-doclayout-l` / `bus.jpg` | TensorRT CUDA | 300 / 9（score ≥ 0.05） | 与 ORT 高置信度结果：score ≤ 0.01、源坐标 ≤ 1.5 px | 19.414 | 25.876 |
+
+该数据是 CPU 准备输入的 TensorRT NMS 指标，不是 CUDA 端到端预处理结果；Engine 与 GPU 架构及 TensorRT/CUDA/cuDNN 版本绑定，换设备必须重新构建。当前没有把这一个工件的结果外推到其它 PP-Structure 模型。
+
+### PP-Structure 表格分类：TensorRT CUDA 稳态口径
+
+`pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。
+
+| 模型 / 输入 | 后端 | 结果 | ORT 对照 | 总 P50 ms | 总 P95 ms |
+| --- | --- | --- | --- | ---: | ---: |
+| `pp-lcnet-x1-0-table-cls` / `table_recognition.jpg` | TensorRT CUDA | `wired_table` / `0.851693` | ORT `wired_table` / `0.844208`；绝对分数差 `0.007485` ≤ `0.01` | 1.212 | 1.331 |
+
+该测试使用 TensorRT CUDA 视觉流水线，计时包含一次紧凑 BGR 上传、CUDA 预处理、引擎执行和分类 Decoder，不包含图片解码、Engine 构建或模型加载。表格分类的 TensorRT/ORT 置信度只做精确工件回归，不等价于数据集精度。
+
+### PP-Structure 印章检测：TensorRT CUDA 稳态口径
+
+`ppocrv4-mobile-seal-det.onnx` 使用 `E:\Data\ocr\demo_1.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，动态输入 profile 在本次测试中固定为 `image=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199`，本次 Engine SHA 为 `13772da4a34bd9fb3ea1e1c3cfedabf6a2fb1aace0762c6e5253904e374c9953`（7,045,964 bytes），构建耗时 `86,508.609 ms`。
+
+| 模型 / 输入 | 后端 | 结果一致性 | 总 P50 ms | 总 P95 ms |
+| --- | --- | --- | ---: | ---: |
+| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | TensorRT CUDA | ORT/TensorRT 均输出 `224x224` 概率掩码，区域数 `0/0`；掩码最大/平均绝对误差 `9.42e-8`/`1.36e-8` | 3.710 | 4.558 |
+
+该示例图片没有印章，因此区域数一致性仅证明输入绑定、TensorRT 执行和 `PaddleDocumentSealDecoder` 输出合同一致，不代表检测召回率，也不外推到 `ppocrv4-server-seal-det`。计时包含 OpenCV CPU 输入准备、TensorRT 执行和印章 Decoder，不包含图片解码、Engine 构建或模型加载。
+
+`ppocrv4-server-seal-det.onnx` 也已在同一设备、同一图片和同一 5/50 协议下完成 TensorRT 11 实测。ONNX SHA 为 `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`，Engine SHA 为 `d89b4c5cbfde1707bd486007bdf65afe481e3fcdb85c1cdf11d7c98f88332d03`（140,877,596 bytes），构建耗时 `93,150.467 ms`；构建选项显式设置 `DisableTf32=true`，同时保留 TRT11 强类型网络。
+
+| 模型 / 输入 | 后端 | 结果一致性 | 总 P50 ms | 总 P95 ms |
+| --- | --- | --- | ---: | ---: |
+| `ppocrv4-server-seal-det` / `demo_1.jpg` | TensorRT CUDA | ORT/TensorRT 都解码出 1 个区域；显式关闭 TF32 后掩码平均绝对误差 `2.4136e-6`、最大绝对误差 `8.6451e-4` | 12.221 | 24.648 |
+
+server 模型在 TensorRT 11 强类型网络下通过独立的 `DisableTf32=true` 构建选项关闭 TF32；本样本的概率图逐元素误差、区域数量和 Decoder 结果均通过自动化门槛。这是单张图的数值一致性证据，不能替代数据集级精度评估。
+
+同一 Debug 配置下，缓存 OpenCV `Mat.Channels`、消除逐像素 native 属性访问后，ORT 方向预处理 P50 从 `9.0205` 降至 `3.3705 ms`，总 P50 从 `12.4388` 降至 `6.2970 ms`。分类分数不变；Debug 比较不能与上表 Release 数字混为一个提速比。
+
+| 工件 | SHA-256 |
+| --- | --- |
+| `pp-lcnet-x1-0-doc-ori.onnx` | `96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0` |
+| `pp-lcnet-x1-0-table-cls.onnx` | `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45` |
+| `img_rot180_demo.jpg` | `c5a77e031470e13878ff4f28a06ca843fd455d95c20b1b49b486681e346209ed` |
+| `table_recognition.jpg` | `acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c` |
+
+复现前按 [PP-Structure 教程](visual-paddle-structure.md#官方预处理与示例回归)获取图片与模型。CPU 测试：
+
+```powershell
+$env:DEPLOYSHARP_PADDLE_DOCUMENT_ACCURACY = '1'
+$env:DEPLOYSHARP_SOURCE_REVISION = (git rev-parse HEAD).Trim() + '+working-tree'
+$env:DOTNET_TieredCompilation = '0'
+dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
+  -c Release -f net10.0 --filter FullyQualifiedName~PaddleDocumentOfficialExampleTests `
+  --logger 'trx;LogFileName=paddle-release-stable-50-final.trx' `
+  --results-directory artifacts/test-results/paddle-document-review
+```
+
+结果目录包含六份带原始样本的 JSON。TensorRT 先按教程配置 DLL 路径，再以 `-c Release` 执行 `PaddleDocumentTensorRtExternalIntegrationTests`，本轮原始文件为 `paddle-tensorrt-release-50.trx`；构建结果、图片哈希和全部计时样本保存在输出中。复现时请按实际工作树状态记录源码标识。
 
 ## 复现
 

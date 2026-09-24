@@ -1,6 +1,6 @@
 # PaddleOCR backend benchmark
 
-This console tool discovers PaddleOCR v4, v5, and v6 ONNX files below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
+This console tool discovers PaddleOCR v4/v5 mobile and server DET/REC ONNX files plus the v6 tiny/small/medium tiers below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. PP-OCRv5 uses the matching mobile/server classifier; PP-OCRv4 shares its legacy classifier because no separate server classifier is catalogued. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
 
 ## Recognition crop diagnostics / 识别裁剪诊断
 
@@ -84,7 +84,8 @@ Sidecar **schema 8** adds `PixelQualityOptions`, whole-source `PixelQuality`, an
 Build once, then audit a dictionary without loading models, images, CUDA or other native runtimes:
 
 ```powershell
-dotnet build tools/DeploySharp.PaddleOcrBenchmark -c Release -p:DeploySharpPaddleOcrCuda12=true
+dotnet restore tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -p:DeploySharpPaddleOcrCuda12=true --locked-mode
+dotnet build tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release --no-restore -p:DeploySharpPaddleOcrCuda12=true
 dotnet tools/DeploySharp.PaddleOcrBenchmark/bin/Release/net10.0/DeploySharp.PaddleOcrBenchmark.dll `
   --audit-characters E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt `
   tools/DeploySharp.PaddleOcrBenchmark/character-requirements.example.json artifacts/ocr-characters/v5.json
@@ -251,7 +252,7 @@ If the repository contains `.onnx.engine` sidecars built by a different TensorRT
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-TensorRtEngines.ps1 -ModelRoot .\models -OutputRoot .\models -TensorRtRoot 'C:\TensorRT-10.10.0.31'
 ~~~
 
-The script uses the v4/v5/v6 input profiles documented below and requires <code>trtexec.exe</code> from the selected TensorRT installation. It defaults to <code>BuilderOptimizationLevel=3</code>; pass <code>-BuilderOptimizationLevel 0</code> only when engine build time matters more than steady-state latency. Set <code>JYPPX_CUDA_ROOT</code> and <code>JYPPX_CUDNN_ROOT</code> to the target CUDA 12.8/cuDNN directories before building. The optional <code>-Fp16</code> switch is capability checked before any model is copied or built.
+The script uses the v4/v5/v6 input profiles documented below and requires <code>trtexec.exe</code> from the selected TensorRT installation. Use <code>-ModelNames</code> with exact ONNX basenames to build only a selected subset (for example the server detector/recognizer/classifier set); omitted names retain the all-model behavior. It defaults to <code>BuilderOptimizationLevel=3</code>; pass <code>-BuilderOptimizationLevel 0</code> only when engine build time matters more than steady-state latency. Set <code>JYPPX_CUDA_ROOT</code> and <code>JYPPX_CUDNN_ROOT</code> to the target CUDA 12.8/cuDNN directories before building. The optional <code>-Fp16</code> switch is capability checked before any model is copied or built.
 
 To measure the TensorRT sidecars, configure the consumer-owned vendor runtimes in the same PowerShell process. The runner automatically points <code>JYPPX_NATIVE_BRIDGE_PATH</code> at the bundled Windows bridge and defaults to API line <code>10</code>; pass <code>-TensorRtApiVersion 8|10|11</code> when using another engine line. NuGet does not currently publish an exact `TRT 10.10 + CUDA 12.8` bridge; the bundled bridge is the published Windows TensorRT 10 bridge (`trt10.11.cuda12.9.cudnn9.22`, v4.0.0). Because the bridge uses the TensorRT 10 major ABI, validate the target's 10.10 engine load before collecting formal data and record the exact vendor versions in `environment.json`.
 

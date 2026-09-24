@@ -76,7 +76,13 @@ internal static partial class Program
                 if (!selectedVersions.Contains(version) && !selectedVersions.Contains(version + "-" + variant)) continue;
                 ModelCase? detector = models.FirstOrDefault(x => x.Version == version && x.Variant == variant && x.Role == "det");
                 ModelCase? recognizer = models.FirstOrDefault(x => x.Version == version && x.Variant == variant && x.Role == "rec");
-                ModelCase? classifier = models.FirstOrDefault(x => x.Version == version && x.Role == "cls");
+                ModelCase? classifier = models.FirstOrDefault(x => x.Version == version && x.Variant == variant && x.Role == "cls");
+                // PP-OCRv4 does not publish a separate server classifier in the
+                // local/release set; its v4 legacy classifier is shared by both
+                // detector/recognizer sizes. Keep that reuse explicit while v5
+                // selects the exact mobile/server PP-LCNet classifier.
+                if (classifier == null && version == "v4" && variant == "server")
+                    classifier = models.FirstOrDefault(x => x.Version == "v4" && x.Variant == "mobile" && x.Role == "cls");
                 if (detector == null || recognizer == null) continue;
                 void Add(string backend, string device)
                 {
@@ -678,7 +684,10 @@ internal static partial class Program
     }
 
     private static PaddleOcrProfile CreateDetectionProfile(string version, ModelCase model, string modelFormat = "onnx")
-        => PaddleOcrProfiles.CreateDetection(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/det"), Artifact(model, modelFormat), outputName: version == "v4" ? "sigmoid_0.tmp_0" : "fetch_name_0");
+    {
+        PaddleOcrModelDescriptor descriptor = CatalogDescriptor(model);
+        return PaddleOcrProfiles.CreateDetection(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/det"), Artifact(model, modelFormat), inputName: descriptor.InputName, outputName: descriptor.OutputName);
+    }
 
     private static PaddleOcrProfile CreateRecognitionProfile(string version, ModelCase model, string modelFormat = "onnx")
     {
@@ -688,7 +697,8 @@ internal static partial class Program
         // The reusable DeploySharp library keeps its broader default (3200); this
         // application-level cap avoids measuring padded work that is not representative
         // of the bundled PaddleOCR mobile models.
-        return PaddleOcrProfiles.CreateRecognition(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/rec"), Artifact(model, modelFormat), chars, outputName: version == "v4" ? "softmax_11.tmp_0" : "fetch_name_0", maximumWidth: ReadInt("DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH", 320));
+        PaddleOcrModelDescriptor descriptor = CatalogDescriptor(model);
+        return PaddleOcrProfiles.CreateRecognition(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/rec"), Artifact(model, modelFormat), chars, inputName: descriptor.InputName, outputName: descriptor.OutputName, maximumWidth: ReadInt("DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH", 320));
     }
 
     private static VisualModelProfile WithStaticOpenCvContract(VisualModelProfile source, TensorShape inputShape, TensorShape outputShape)
@@ -724,7 +734,18 @@ internal static partial class Program
         => Path.Combine(Path.GetDirectoryName(model.OnnxPath)!, model.Version == "v4" ? "ppocrv4_keys.txt" : model.Version == "v5" ? "ppocrv5_dict.txt" : "PP-OCRv6_" + model.Variant + "_rec_dict.txt");
 
     private static PaddleOcrProfile CreateClassificationProfile(string version, ModelCase model, int maximumBatch, string modelFormat = "onnx")
-        => version == "v4" ? PaddleOcrProfiles.CreateLegacyClassification(new ModelId("external/paddleocr/v4/cls"), Artifact(model, modelFormat), outputName: "softmax_0.tmp_0", rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true) : PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/paddleocr/" + version + "/cls"), Artifact(model, modelFormat), outputName: "fetch_name_0", rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true);
+    {
+        PaddleOcrModelDescriptor descriptor = CatalogDescriptor(model);
+        return descriptor.IsLegacyClassification
+            ? PaddleOcrProfiles.CreateLegacyClassification(new ModelId("external/paddleocr/v4/cls"), Artifact(model, modelFormat), inputName: descriptor.InputName, outputName: descriptor.OutputName, rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true)
+            : PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/paddleocr/" + version + "/" + model.Variant + "/cls"), Artifact(model, modelFormat), inputName: descriptor.InputName, outputName: descriptor.OutputName, rejectionThreshold: 0f, maximumBatch: maximumBatch, allowDynamicBatch: true);
+    }
+
+    private static PaddleOcrModelDescriptor CatalogDescriptor(ModelCase model)
+    {
+        string variant = model.Version == "v4" && model.Role == "cls" ? "legacy" : model.Variant;
+        return PaddleOcrModelCatalog.Find(new ModelId("paddleocr/ppocr" + model.Version + "/" + variant + "-" + model.Role));
+    }
 
     private static PaddleOcrArtifactContract Artifact(ModelCase model, string modelFormat = "onnx")
     {
@@ -744,7 +765,9 @@ internal static partial class Program
             if (version == "unknown") continue;
             string role = file.Contains("cls") ? "cls" : file.Contains("det") ? "det" : file.Contains("rec") ? "rec" : "unknown";
             if (role == "unknown") continue;
-            string variant = version == "v6" ? new DirectoryInfo(Path.GetDirectoryName(path)!).Name : "mobile";
+            string variant = version == "v6"
+                ? new DirectoryInfo(Path.GetDirectoryName(path)!).Name
+                : file.Contains("_server", StringComparison.Ordinal) ? "server" : "mobile";
             string? engine = FindEngine(path);
             result.Add(new ModelCase(version, variant, role, path, engine, InputShape(version, role), "x"));
         }
