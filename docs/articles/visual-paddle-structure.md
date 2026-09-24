@@ -254,6 +254,19 @@ var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[]
 
 该 stage 不假定裁剪库、颜色顺序、归一化或模型后端，因此不会把四边形裁剪误报为曲线展开，也不会把“区域有文本结果”误报成版面或 OCR 精度通过。图像裁剪和 OCR 结果的真实证据仍应在具体后端测试中记录。
 
+对于 Windows/OpenCV，`OpenCvPaddleDocumentRegionOcrStage` 已提供真实图像裁剪案例：它只解码页面一次，按版面区域创建 PNG crop，再为每个 crop 创建 `OpenCvOcrImageInput` 并调用现有 `OcrPipeline`。输出会保留父区域页面坐标和局部 OCR 区域数量；该示例会在每个 crop 内再次执行 OCR 检测和识别，适合验证链路和结果合同，生产环境可按实际模型改成只运行识别器。
+
+```csharp
+var regionOcrStage = new OpenCvPaddleDocumentRegionOcrStage(
+    ocrPipeline,
+    page => OpenCvImageSource.FromFile((string)page.Source),
+    detectionOptions,
+    new PaddleDocumentModelDescriptor(
+        "application/ppocr-region-rec", "caller-selected-recognizer",
+        PaddleDocumentModule.TextRecognition, "https://github.com/PaddlePaddle/PaddleOCR",
+        "caller-owned-onnx"));
+```
+
 ### 表格、公式、印章和图表任务链
 
 复杂任务使用 `PaddleDocumentDependentStage` 声明前置结果。下面的结构表达了推荐依赖关系；每个 handler 内部可以使用 ORT、OpenVINO、OpenCV 或 TensorRT 的 `VisualPipeline`：
