@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-09-24T03:18:26Z",
+  "host": {
+    "os": "Windows x64",
+    "runtime": ".NET 10",
+    "backend": "DeploySharp OpenCV DNN",
+    "device": "CPU",
+    "protocol": {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "warmup": 2,
+      "iterations": 5,
+      "batch": 1,
+      "inferenceChannels": 1,
+      "reusePreparedInput": true,
+      "overflowMode": "Clamp",
+      "maximumRecognitionWidth": 320,
+      "cropTransform": "Perspective"
+    }
+  },
+  "interpretation": "Each row is an exact model variant and records a real det -> crop -> optional cls -> rec -> merge run. Timings exclude model load and image decode. These are short diagnostic measurements, not a locked performance baseline or an accuracy benchmark.",
+  "results": [
+    {
+      "model": "paddleocr/ppocrv4/mobile",
+      "status": "pass",
+      "modelSha256": { "det": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb", "cls": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e", "rec": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7" },
+      "regions": 16,
+      "timingMs": { "mean": 1800.841, "p50": 1678.528, "p95": 2126.792 },
+      "resultTextSha256": "75640159b90fed0a3c1d4b1c75fd65c8a5395452d251c2c9823894e4931a0003",
+      "resultContractSha256": "4ecb1d473f060d85e80fb06260293fef26be30061463118e1641142cc1dba364"
+    },
+    {
+      "model": "paddleocr/ppocrv4/server",
+      "status": "pass",
+      "modelSha256": { "det": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9", "rec": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f" },
+      "regions": 16,
+      "timingMs": { "mean": 6882.954, "p50": 6655.278, "p95": 7877.100 },
+      "resultTextSha256": "8f5eafe1fb1fa34c18532cdfd6d561aedf55424e8d361da236c8a337d45507ab",
+      "resultContractSha256": "d3a5aca7d4e062270a0fb3aa5b2cde49adce59eff6082fe301b83c0b524d2d97"
+    },
+    {
+      "model": "paddleocr/ppocrv5/mobile",
+      "status": "pass",
+      "modelSha256": { "det": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "cls": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "rec": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9" },
+      "regions": 16,
+      "parity": { "ortRegions": 16, "rawProbabilityMaxAbsDiff": 0.000042915344, "rawProbabilityMeanAbsDiff": 0.000000086187186, "textAndGeometry": "match within text exact, score 0.001, coordinates 0.5 px" },
+      "timingMs": { "observed": 4117.808 },
+      "resultTextSha256": "dd55ffdab9b595f016083c32ac53b61f964d378958409825473d65b6b4d798c1",
+      "resultContractSha256": "bcd67a98e08ee65c6fd51dd49f50a1bb3828cbc4037a57d73af64ddba416a2eb"
+    },
+    {
+      "model": "paddleocr/ppocrv5/server",
+      "status": "pass",
+      "modelSha256": { "det": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "cls": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "rec": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a" },
+      "regions": 16,
+      "timingMs": { "mean": 5219.296, "p50": 5087.234, "p95": 5557.888 },
+      "resultTextSha256": "5130db0b6ffc59f347af676133717b1692b5d1290e776e72a127c24d5cc47c56",
+      "resultContractSha256": "ddeaea10029f798677db737afad0b76002b8b877125fd0abe8e65cda730441e8"
+    },
+    {
+      "model": "paddleocr/ppocrv6/tiny",
+      "status": "pass",
+      "modelSha256": { "det": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8", "rec": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6" },
+      "regions": 16,
+      "timingMs": { "mean": 414.341, "p50": 405.736, "p95": 433.994 },
+      "resultTextSha256": "e95e3d376d700eb44dd1b7a848c624d97fae3161204b193f2495f4bc4720cc0c",
+      "resultContractSha256": "569af4de46ebbfceb8e8dd4944fa59ddb5fc4644ec77355b1041b4fd374a9d29"
+    },
+    {
+      "model": "paddleocr/ppocrv6/small",
+      "status": "pass",
+      "modelSha256": { "det": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e", "rec": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634" },
+      "regions": 16,
+      "timingMs": { "mean": 1254.572, "p50": 1214.990, "p95": 1343.970 },
+      "resultTextSha256": "538ee815a79b62453d828c1488f1a7b9c36d2477e4c6a1e5c7f5d77892c41675",
+      "resultContractSha256": "0100716c4c13e6a864c6a91e514d570b8776b492f2f3a3f67e098b121586c3b1"
+    },
+    {
+      "model": "paddleocr/ppocrv6/medium",
+      "status": "pass",
+      "modelSha256": { "det": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1", "rec": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba" },
+      "regions": 16,
+      "timingMs": { "mean": 3940.410, "p50": 3754.066, "p95": 4349.999 },
+      "resultTextSha256": "538ee815a79b62453d828c1488f1a7b9c36d2477e4c6a1e5c7f5d77892c41675",
+      "resultContractSha256": "94d7018fb821d680918631c0057a82cb5b3607aa550d0cd6e0cd85ca49b40a52"
+    }
+  ]
+}

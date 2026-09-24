@@ -47,7 +47,7 @@ python -m pip install paddlepaddle paddle2onnx
 
 `-SkipConversion` 只下载和解压源模型，用于排查网络或转换依赖；它不会把结果标记成 ONNX。转换失败的记录会标记为 `conversion-blocked`，包括具体异常，不会被静默写成可运行模型。公式、图表、矫正等模型的转换可能需要特定 Paddle/Paddle2ONNX 版本；如果官方算子不在 ONNX 导出支持范围内，应保留源模型记录并实现专用导出器，而不是篡改结果合同。
 
-本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 仍无自回归完整流程证据。
+本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 自回归流程仍无证据，但 PP-OCR 核心流水线的 OpenCV DNN 证据已覆盖 v4/v5/v6 七组，详见模型后端矩阵和核心验证 JSON。
 
 ## 在代码中创建 Profile
 
@@ -188,7 +188,7 @@ PaddleDocumentPipelineResult result = await documentPipeline.RunAsync(page, canc
 
 ## 状态和验证规则
 
-28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；OpenCV DNN 仍未验证。
+28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
 
 | 后端/模块 | 当前真实证据 | 边界 |
 | --- | --- | --- |
@@ -292,7 +292,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentOpenCvSemanticIntegrationTests
 ```
 
-需要能够加载 JYPPX OpenCV native runtime。PP-OCRv5 mobile 的 `demo_1.jpg` OpenCV 全流程已与 ORT 使用同一输入张量回归：此前 8/16 区域差异来自测试合同将概率图高度误固定为 128，现已按输入张量绑定真实输出高度；修正后两边均输出 16 个区域，逐区域文本一致，坐标误差 ≤0.5 px、分数误差 ≤0.001。OpenCV 全流程两次单次观察为 5655.803 ms、4117.808 ms，仅为诊断运行值，不是性能基准。诊断、输入/模型 SHA 和复现命令见 [PP-OCR 后端一致性记录](visual-paddle-ocr3.md#核心模型完整流水线实测)；该结果只覆盖 v5 mobile，其他模型仍需逐一验证。
+需要能够加载 JYPPX OpenCV native runtime。PP-OCR 核心流水线的 OpenCV DNN 诊断已覆盖 v4 mobile/server、v5 mobile/server、v6 tiny/small/medium 七组；同一 `demo_1.jpg` 均返回 16 个区域并产生识别文本。v5 mobile 另有同张量 ORT 对照：输出形状均为 `[1,1,512,512]`，原始概率图 max/mean 绝对差 `4.2915344e-5` / `8.6187186e-8`，逐区域文本、坐标和分数通过容差。七组的模型/输入 SHA、区域数、P50/P95 和结果指纹见 [`paddleocr-core-opencv-20260924.json`](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-20260924.json)。这些是单图短诊断，不能替代多图准确率或正式锁频性能基准；PP-Structure 生成模型和 Chart2Table 自回归仍按矩阵单独记录。
 
 ### OpenVINO SLANeXt 兼容转换
 
