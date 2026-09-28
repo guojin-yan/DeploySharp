@@ -2,7 +2,7 @@
 
 ## Status and interpretation
 
-This is an execution-compatibility check of PP-OCRv6 Tiny on the locally held FUNSD test selection. All 40 manifest images completed through the ONNX Runtime CPU pipeline with no process failures, empty outputs, or missing predictions. It is not an OCR accuracy claim or a model ranking.
+This is an execution-compatibility check of PP-OCRv6 Tiny on the locally held FUNSD test selection. All 40 manifest images completed through both the ONNX Runtime CPU and OpenVINO CPU pipelines with no process failures, empty outputs, or missing predictions. It is not an OCR accuracy claim or a model ranking.
 
 FUNSD provides word-level, axis-aligned boxes, while this pipeline detects text lines. A line prediction generally cannot achieve strict IoU against each word box, and the manifest does not provide text-line groupings. Therefore the detection and end-to-end CER/WER values below are diagnostic artifacts of this annotation mismatch. Do not compare them to line-level datasets such as HierText, and do not tune release defaults from these values.
 
@@ -12,7 +12,7 @@ The local FUNSD source audit marks this data non-commercial and rights-review-re
 
 - Device: `JYPPX`, Windows 10.0.26200, x64, 16 logical processors.
 - Dataset: local `funsd-test-full-001.jsonl`; 40 images retained by the manifest converter, 6,938 word-level instances.
-- Model: PP-OCRv6 Tiny, ORT CPU; detector SHA-256 `193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8`; recognizer SHA-256 `9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6`.
+- Model: PP-OCRv6 Tiny; detector SHA-256 `193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8`; recognizer SHA-256 `9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6`. The same model artifacts and settings were used for ORT CPU and OpenVINO CPU.
 - Settings: one warm-up and one measured iteration per page; batch 16; one inference channel; maximum 1,024 regions; `Clamp` recognition overflow.
 - Source revision: `ebadfd7d358422225bad9bcee9921a32f42fc8fe`. The worktree was dirty; status digest `28cd9b74edf5eeec829e31416b00302f7a94ce45af2e18f6188127061d6573eb`.
 - Benchmark assembly SHA-256: `61dc419e21c4202ac636c1330de0b07b1cae2043ca9aad85082c9c86f4bf1893`.
@@ -23,14 +23,23 @@ The local FUNSD source audit marks this data non-commercial and rights-review-re
 | Execution status | Images | Empty outputs | Errors | Total latency P50 (ms) | Total latency P95 (ms) |
 |---|---:|---:|---:|---:|---:|
 | ORT CPU | 40/40 | 0 | 0 | 314.50 | 587.58 |
+| OpenVINO CPU | 40/40 | 0 | 0 | 178.46 | 304.02 |
 
 The latency percentiles describe one measured pass across these 40 pages only. They are not a formal performance result; use the dedicated 5/50 performance protocol for that.
 
 The evaluator also reports word-box IoU 0.5: TP 782, FP 1,298, FN 6,156 (precision 37.60%, recall 11.27%, F1 17.34%), matched-region CER 23.88%, and end-to-end CER 147.66%. These numbers are retained for traceability only and are invalid as line-detection quality estimates because the labels and predictions represent different geometric units.
 
+## ORT/OpenVINO execution parity
+
+The same 40-page manifest was run with OpenVINO CPU under the identical model, preprocessing, batch, channel, and overflow settings. The aggregate detection, recognition, and end-to-end metrics are identical to the ORT run (TP 782, FP 1,298, FN 6,156; matched CER 23.88%; end-to-end CER 147.66%). This is expected because the FUNSD labels are word-level and the evaluator is being used here as an execution diagnostic.
+
+The per-image corrected predictions also agree at the result-contract level: all 40 image text sequences are exact matches, all 40 region counts are equal, and 39/40 images keep every compared coordinate within 0.5 px. The remaining image (`funsd-test-86230203_0206`) has a maximum coordinate drift of 0.99176 px; the maximum confidence delta across the complete set is 0.00050383. This is backend parity evidence for this model and dataset, not a claim of tensor-bitwise equality, GPU performance, or general parity for every PP-OCR model.
+
 ## Reproduction
 
 Run from the repository root. The selected manifest, raw output, predictions, and evaluation JSON are written under the ignored `artifacts/public-ocr-evaluation/` directory.
+
+The command below reproduces the ORT row. To reproduce the OpenVINO row, use the same command and replace `-Backend onnxruntime` with `-Backend openvino`, then write to a distinct output directory and pass that directory to the evaluator.
 
 ```powershell
 & .\eng\models\paddle-ocr\scripts\Invoke-PaddleOcrPublicDataset.ps1 `
