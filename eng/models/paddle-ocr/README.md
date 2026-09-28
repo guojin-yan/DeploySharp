@@ -72,6 +72,8 @@ The checked-in runner and scorer evaluate complete-page OCR against the local pu
 
 The complete local FUNSD test selection has a separate [v6 Tiny ORT/OpenVINO execution and parity record](verification/funsd-test-full-execution-20260928.md). FUNSD uses word-level boxes, so its strict line-detection scores are not valid model-quality measurements; that run is recorded only to show full-split runtime completion, compare the two CPU backends, and expose the annotation-granularity limitation.
 
+The local SROIE receipt selection has a separate [v5 Mobile three-backend smoke record](verification/sroie-v5-mobile-public-ocr-smoke-20260928.md). All 10 pages completed on ORT/OpenVINO/OpenCV DNN CPU with exact region-text and coordinate parity, but SROIE annotations are word-level and this converted train subset remains smoke-only; its CER/IoU values are not official line-level accuracy results.
+
 The selected v5 Mobile/Server component and pipeline goldens have a separate [ORT/OpenVINO golden parity record](verification/paddleocr-ort-openvino-golden-parity-20260928.md). It records the four passing external-model contract tests, fixed tensor/image hashes, exact recognition tokens and backend-specific scope limits; it is not a replacement for the public dataset evaluation or the unfinished OpenCV DNN/TensorRT matrix.
 
 For investigating low IoU without changing the release metric, `Measure-HierTextGeometryCoverage.ps1` compares each labeled quadrilateral with the union of overlapping predictions. It can distinguish merged/over-expanded boxes from genuinely uncovered text, but its coverage counts are diagnostic only and must not be presented as detection recall.
