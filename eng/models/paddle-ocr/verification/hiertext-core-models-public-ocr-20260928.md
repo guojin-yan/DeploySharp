@@ -22,9 +22,13 @@ The evaluation uses the same selected manifests, source-image SHA checks, NFC/ca
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | PP-OCRv4 Mobile / ORT CPU, Clamp | 177 | 169 | 360 | 51.16% | 32.96% | 40.09% | 47.41% | 94.11% | 799.53 | 1,988.62 |
 | PP-OCRv6 Tiny / ORT CPU, Clamp | 115 | 191 | 422 | 37.58% | 21.42% | 27.28% | 21.11% | 110.54% | 209.49 | 317.16 |
+| PP-OCRv6 Tiny / OpenVINO CPU, Clamp | 115 | 191 | 422 | 37.58% | 21.42% | 27.28% | 21.11% | 110.54% | 142.06 | 411.48 |
+| PP-OCRv6 Tiny / OpenCV DNN CPU, Clamp | 115 | 191 | 422 | 37.58% | 21.42% | 27.28% | 21.11% | 110.54% | 649.21 | 956.52 |
 | PP-OCRv6 Medium / ORT CPU, Clamp | 187 | 244 | 350 | 43.39% | 34.82% | 38.64% | 18.42% | 105.36% | 1,671.31 | 4,273.47 |
 
 The v6 medium recognizer has the lowest matched CER in this small selection, while v6 tiny is substantially faster. The detector and end-to-end scores vary by model and scene; these results do not justify selecting a default model for every domain.
+
+The v6 Tiny OpenVINO and OpenCV runs completed all 10 pages without errors or timeouts. Their per-page `result_text_sha256` values matched the ORT run on all 10 pages. This is a CPU text-output parity result for this exact model, manifest and runtime set; it is not a claim of numerical tensor parity or GPU parity. The latency values above are one-iteration observations and remain separate from the formal 5/50 performance protocol.
 
 ### 24-page long-text selection
 
