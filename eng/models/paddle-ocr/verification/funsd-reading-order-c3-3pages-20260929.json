@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "deploysharp-funsd-reading-order-c3-3pages-v1",
+  "generatedUtc": "2026-09-29T12:44:00Z",
+  "dataset": "FUNSD",
+  "manifestSha256": "5d58429c21d4df671654b8016a58d47d758ff69b7e3378c6e42b571cb360cab3",
+  "selectedManifestSha256": "f715981b5cbdbfb416989896aaf032324632fd26281be4cd4d06d6d3245e165c",
+  "predictionSha256": "a0391f2dd771c33129c7a00f05fe63268b3761e2e686aa665d5dc8309fae0780",
+  "model": "PP-OCRv5 Mobile",
+  "backend": "onnxruntime-cpu",
+  "protocol": { "warmup": 0, "iterations": 1, "batchSize": 16, "inferenceChannels": 1, "overflowMode": "SlidingWindow", "windowOverlap": 0.2 },
+  "evaluation": {
+    "pages": 3,
+    "predictedRegions": 97,
+    "groundTruthRegions": 388,
+    "matchedRegionsAtIou05": 35,
+    "detRecallAtIou05": 0.09020618556701031,
+    "matchedCaseSensitiveCer": 0.35294117647058826,
+    "endToEndCaseSensitiveCer": 2.0217176702862782,
+    "aggregateReadingOrderPairAccuracy": 0.7091836734693877,
+    "pagesWithNondecreasingMatchedOrder": 0,
+    "perPage": [
+      { "imageId": "funsd-test-82504862", "predictedRegions": 26, "groundTruthRegions": 63, "matched": 11, "readingOrderPairAccuracy": 0.8363636363636363, "nondecreasing": false, "matchedOrder": [0,7,8,1,15,16,17,18,2,22,21] },
+      { "imageId": "funsd-test-82562350", "predictedRegions": 37, "groundTruthRegions": 190, "matched": 15, "readingOrderPairAccuracy": 0.6952380952380952, "nondecreasing": false, "matchedOrder": [2,19,18,1,0,3,4,5,39,12,6,10,13,89,17] },
+      { "imageId": "funsd-test-82573104", "predictedRegions": 34, "groundTruthRegions": 135, "matched": 9, "readingOrderPairAccuracy": 0.5555555555555556, "nondecreasing": false, "matchedOrder": [114,1,2,3,130,4,131,5,0] }
+    ]
+  },
+  "boundary": "Three real FUNSD forms, word/entity labels versus text-line detector output, one short smoke protocol. Reading order is diagnostic and does not establish C3 quality or replace layout semantics."
+}
