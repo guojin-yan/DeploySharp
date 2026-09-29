@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-openvino-compatibility-v1",
+  "generatedAtUtc": "2026-09-29T07:08:59.1852433Z",
+  "generator": "eng/models/paddle-document/scripts/normalize_loop_parameters.py",
+  "sourcePolicy": "preserve-official-release-onnx-and-publish-derived-compatibility-asset-separately",
+  "importerBoundary": "The current OpenVINO Loop importer rejects the original SLANeXt graphs because Loop-body formal parameter names collide with captured outer values. The derived graph only alpha-renames local Loop parameters.",
+  "releasePolicy": {
+    "releaseTag": "models-paddleocr",
+    "originalAssets": [ "slanext-wired.onnx", "slanext-wireless.onnx" ],
+    "derivedAssets": [ "slanext-wired-openvino-compat.onnx", "slanext-wireless-openvino-compat.onnx" ],
+    "status": "planned-separate-assets",
+    "rule": "Never replace or silently relabel the original Release ONNX. Consumers select the compatibility asset explicitly for OpenVINO."
+  },
+  "artifacts": [
+    {
+      "modelId": "paddle-table/slanext-wired",
+      "compatibilityId": "paddle-table/slanext-wired-openvino-compat",
+      "sourceFile": "slanext-wired.onnx",
+      "sourceSize": 367743373,
+      "sourceSha256": "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f",
+      "derivedFile": "slanext-wired-local-parameters.onnx",
+      "derivedSize": 367743498,
+      "derivedSha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "releaseAssetName": "slanext-wired-openvino-compat.onnx",
+      "transformation": "alpha-rename Loop-body formal parameters only; source graph and weights are unchanged",
+      "openvinoStatus": "verified-by-ORT-and-decoder-parity",
+      "releaseStatus": "planned-separate-asset"
+    },
+    {
+      "modelId": "paddle-table/slanext-wireless",
+      "compatibilityId": "paddle-table/slanext-wireless-openvino-compat",
+      "sourceFile": "slanext-wireless.onnx",
+      "sourceSize": 367743373,
+      "sourceSha256": "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97",
+      "derivedFile": "slanext-wireless-local-parameters.onnx",
+      "derivedSize": 367743498,
+      "derivedSha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "releaseAssetName": "slanext-wireless-openvino-compat.onnx",
+      "transformation": "alpha-rename Loop-body formal parameters only; source graph and weights are unchanged",
+      "openvinoStatus": "verified-by-ORT-and-decoder-parity",
+      "releaseStatus": "planned-separate-asset"
+    }
+  ]
+}
