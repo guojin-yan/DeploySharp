@@ -47,7 +47,7 @@ python -m pip install paddlepaddle paddle2onnx
 
 `-SkipConversion` 只下载和解压源模型，用于排查网络或转换依赖；它不会把结果标记成 ONNX。转换失败的记录会标记为 `conversion-blocked`，包括具体异常，不会被静默写成可运行模型。公式、图表、矫正等模型的转换可能需要特定 Paddle/Paddle2ONNX 版本；如果官方算子不在 ONNX 导出支持范围内，应保留源模型记录并实现专用导出器，而不是篡改结果合同。
 
-本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 自回归流程仍无证据，但 PP-OCR 核心流水线的 OpenCV DNN 证据已覆盖 v4/v5/v6 七组，详见模型后端矩阵和核心验证 JSON。
+本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 隔离探针已确认 Vision/Embedding 可加载，但 Prefill/Decode 需要三维/四维辅助张量，当前 OpenCV DNN 适配器合同不支持，因此完整 OpenCV 自回归仍未支持。详见 [`chart2table-opencv-isolated-20260929.json`](../../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
 
 ## 在代码中创建 Profile
 

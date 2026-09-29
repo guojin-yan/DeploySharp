@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "deploysharp-paddle-chart2table-opencv-isolated-v1",
+  "generatedUtc": "2026-09-29T08:59:36.4727795Z",
+  "backend": "OpenCV DNN CPU",
+  "runtime": "JYPPX.OpenCV.CSharp.API 5.0.0 / OpenCV 5.0.0",
+  "scope": "Per-graph importer/session loading only; no autoregressive generation was attempted because all four graphs did not load under the current adapter contract.",
+  "graphs": [
+    {
+      "role": "vision-projector",
+      "status": "pass",
+      "contract": "pixel_values [1,3,1024,1024] Float32 -> fetch_name_0 [1,256,1024] Float32"
+    },
+    {
+      "role": "token-embedding",
+      "status": "pass",
+      "contract": "input_ids [1,sequence] Int64 -> fetch_name_0 [1,sequence,1024] Float32"
+    },
+    {
+      "role": "text-prefill-with-lm-head",
+      "status": "unsupported",
+      "failureClass": "adapter-contract",
+      "error": "OpenCvDnnModelContract currently admits auxiliary inputs only up to rank 2; inputs_embeds is [1,286,1024]."
+    },
+    {
+      "role": "one-token-dynamic-past-decode-with-lm-head",
+      "status": "unsupported",
+      "failureClass": "adapter-contract",
+      "error": "OpenCvDnnModelContract currently admits auxiliary inputs only up to rank 2; past_key/past_value are [1,past,16,64]."
+    }
+  ],
+  "boundary": "Vision and token-embedding graph loading does not constitute Chart2Table OpenCV generation support. Full generation remains unsupported until OpenCV N-D auxiliary tensor construction, dynamic KV inputs and output binding are implemented and verified."
+}
