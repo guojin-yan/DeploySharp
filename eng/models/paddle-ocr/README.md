@@ -92,6 +92,8 @@ The [v6 Small OpenCV DNN cross-check](verification/hiertext-v6-small-opencv-publ
 
 The [v5 Mobile ORT Session-pool comparison](verification/paddleocr-v5-mobile-ort-session-pool-20260929.md) connects the concurrency contracts to a formal device run: two independently-created stage Sessions reduced total P50/P95 from `662.330/1130.299 ms` to `422.132/548.821 ms` on the same image, with an identical result contract SHA. It remains a one-device steady-state observation; long-running soak and cross-device scaling are still open.
 
+The corresponding [OpenVINO CPU comparison](verification/paddleocr-v5-mobile-openvino-session-pool-20260929.md) shows the opposite result on the same host: two Sessions increased P50/P95 from `313.503/398.880 ms` to `371.550/527.348 ms`, while the contract stayed identical. Session-pool size must therefore be tuned per backend and device.
+
 For investigating low IoU without changing the release metric, `Measure-HierTextGeometryCoverage.ps1` compares each labeled quadrilateral with the union of overlapping predictions. It can distinguish merged/over-expanded boxes from genuinely uncovered text, but its coverage counts are diagnostic only and must not be presented as detection recall.
 
 Dataset images, labels, predictions and per-image reports are not copied into this repository or a model Release. This local HierText selection is marked smoke-only until each image landing page and redistribution terms have been reviewed; it must not be presented as a leaderboard result. This is quality evidence, not a performance benchmark: each page had one measured iteration, so the recorded timings do not establish P50/P95 performance.
