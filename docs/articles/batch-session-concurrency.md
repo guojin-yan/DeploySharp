@@ -88,6 +88,8 @@ Batch 结果按输入行索引访问；每行携带自己的源图变换。固�
 
 所有异步入口都接受 `CancellationToken`。取消会停止未开始的准备和排队工作，并等待已经进入 native 的调用安全退出；不会发布半成品结果。释放 Pipeline 前应停止新请求，等待活动调用完成，再释放拥有的 Session 池。`BackendRegistry` 由应用统一拥有，不能在 Pipeline 仍使用时释放。
 
+池的生命周期合同也覆盖失败路径：后端抛出异常后，已租用的通道会在 `finally` 中归还，后续请求可以继续租用该通道；调用开始前已经取消的令牌不会进入后端。关闭时先取消池令牌，再等待所有通道归还，最后逐个释放独立 Session，重复 `Dispose` 不会重复释放。Core 的 `BackendRegistryTests.PooledSessionReturnsChannelAfterBackendFailureAndAsyncPreCancellation` 和 Visual 的 `VisualPipelineTests.IndependentVisualSessionsRemainReusableAfterFailureAndDisposeExactlyOnce` 固定了这些边界。它们验证资源和并发合同，不替代真实设备吞吐测试。
+
 ## 测量协议
 
 报告至少记录：模型制品 SHA-256、输入尺寸和数量、真正 batch 大小、Session 数量、每 Session 线程数、预热次数、计时次数、预处理/推理/后处理/总耗时的 mean/P50/P95、托管分配，以及 GPU 驱动、CUDA/TensorRT/OpenVINO 版本和锁频/功耗状态。冷启动和稳态结果分开记录；不同输入、设备或运行时不要放在同一行比较。

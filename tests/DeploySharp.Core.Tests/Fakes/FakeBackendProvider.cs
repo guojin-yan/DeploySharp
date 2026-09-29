@@ -39,6 +39,8 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
 
         public bool SynchronousAsyncFallback { get; set; }
 
+        public Exception? Failure { get; set; }
+
         public Action? RunStarted { get; set; }
 
         public bool CanCreate(ModelArtifact artifact, BackendRequest request)
@@ -54,7 +56,7 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(FakeBackendProvider));
             CreatedSessionCount++;
-            var session = new FakeInferenceSession(Descriptor.Id, artifact, () => RunDelay, () => SynchronousAsyncFallback, () => RunStarted?.Invoke());
+            var session = new FakeInferenceSession(Descriptor.Id, artifact, () => RunDelay, () => SynchronousAsyncFallback, () => Failure, () => RunStarted?.Invoke());
             CreatedSessions.Add(session);
             CreatedSessionOptions.Add(options);
             return session;
@@ -70,14 +72,16 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
     {
         private readonly Func<TimeSpan> _runDelay;
         private readonly Func<bool> _synchronousAsyncFallback;
+        private readonly Func<Exception?> _failure;
         private readonly Action _runStarted;
         private int _runCount;
 
-        public FakeInferenceSession(BackendId backendId, ModelArtifact artifact, Func<TimeSpan>? runDelay = null, Func<bool>? synchronousAsyncFallback = null, Action? runStarted = null)
+        public FakeInferenceSession(BackendId backendId, ModelArtifact artifact, Func<TimeSpan>? runDelay = null, Func<bool>? synchronousAsyncFallback = null, Func<Exception?>? failure = null, Action? runStarted = null)
         {
             BackendId = backendId;
             _runDelay = runDelay ?? (() => TimeSpan.Zero);
             _synchronousAsyncFallback = synchronousAsyncFallback ?? (() => false);
+            _failure = failure ?? (() => null);
             _runStarted = runStarted ?? (() => { });
             Metadata = new ModelMetadata(
                 artifact.ModelId,
@@ -104,6 +108,8 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
             TimeSpan delay = _runDelay();
             if (delay > TimeSpan.Zero) Thread.Sleep(delay);
             cancellationToken.ThrowIfCancellationRequested();
+            Exception? failure = _failure();
+            if (failure != null) throw failure;
             return InferenceOutputs.Create("output", inputs[0].Tensor);
         }
 
@@ -126,6 +132,8 @@ namespace JYPPX.DeploySharp.Core.Tests.Fakes
             TimeSpan delay = _runDelay();
             if (delay > TimeSpan.Zero) await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
+            Exception? failure = _failure();
+            if (failure != null) throw failure;
             return InferenceOutputs.Create("output", inputs[0].Tensor);
         }
     }

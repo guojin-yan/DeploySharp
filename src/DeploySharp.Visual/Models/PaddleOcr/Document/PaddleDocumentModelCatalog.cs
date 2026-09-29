@@ -39,6 +39,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             new PaddleDocumentModelDescriptor("paddle-formula/unimernet", "UniMERNet", PaddleDocumentModule.FormulaRecognition, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/UniMERNet_infer.tar", "paddle-inference"),
             new PaddleDocumentModelDescriptor("paddle-seal/ppocrv4-mobile", "PP-OCRv4_mobile_seal_det", PaddleDocumentModule.SealTextDetection, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv4_mobile_seal_det_infer.tar", "paddle-inference"),
             new PaddleDocumentModelDescriptor("paddle-seal/ppocrv4-server", "PP-OCRv4_server_seal_det", PaddleDocumentModule.SealTextDetection, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv4_server_seal_det_infer.tar", "paddle-inference"),
+            new PaddleDocumentModelDescriptor("paddleocr/ppocrv5/mobile-rec", "PP-OCRv5_mobile_rec", PaddleDocumentModule.TextRecognition, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar", "paddle-inference"),
             new PaddleDocumentModelDescriptor("paddle-chart/pp-chart2table", "PP-Chart2Table", PaddleDocumentModule.ChartParsing, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-Chart2Table_infer.tar", "paddle-inference")
         };
 

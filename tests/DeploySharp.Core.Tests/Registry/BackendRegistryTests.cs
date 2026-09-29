@@ -72,6 +72,37 @@ namespace JYPPX.DeploySharp.Core.Tests.Registry
         }
 
         [TestMethod]
+        public async Task PooledSessionReturnsChannelAfterBackendFailureAndAsyncPreCancellation()
+        {
+            var provider = new FakeBackendProvider("failure-recovery");
+            using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().AddBackend(provider).Build();
+            using IInferenceSession session = runtime.CreateSession(
+                CreateArtifact("onnx"),
+                new BackendRequest(BackendCapabilities.TensorInference),
+                new SessionOptions(2));
+            var inputs = InferenceInputs.Create("input", new Tensor<float>(new TensorShape(1), new[] { 1f }));
+            var failure = new InvalidOperationException("synthetic pooled failure");
+            provider.Failure = failure;
+
+            InvalidOperationException thrown = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => session.RunAsync(inputs, CancellationToken.None));
+            Assert.AreSame(failure, thrown);
+
+            provider.Failure = null;
+            await Task.WhenAll(
+                session.RunAsync(inputs, CancellationToken.None),
+                session.RunAsync(inputs, CancellationToken.None));
+            Assert.AreEqual(3, provider.CreatedSessions.Sum(value => value.RunCount));
+            Assert.IsTrue(provider.CreatedSessions.All(value => value.RunCount > 0));
+
+            using var cancelled = new CancellationTokenSource();
+            cancelled.Cancel();
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+                () => session.RunAsync(inputs, cancelled.Token));
+            Assert.AreEqual(3, provider.CreatedSessions.Sum(value => value.RunCount));
+        }
+
+        [TestMethod]
         public void PreCancelledPooledRunDoesNotLeaseOrEnterBackend()
         {
             var provider = new FakeBackendProvider("pre-cancelled");

@@ -136,6 +136,7 @@ namespace DeploySharp.Visual.Tests
                 Assert.AreEqual(2, fixture.Provider.CreatedSessions.Count);
                 Assert.AreEqual(5, fixture.Provider.CreatedSessions.Sum(session => session.RunCount));
                 Assert.IsTrue(fixture.Provider.CreatedSessions.All(session => session.RunCount > 0));
+                Assert.IsTrue(fixture.Provider.CreatedSessions.All(session => session.MaximumActive == 1), "Each pooled backend session must remain single-writer.");
             }
             finally
             {
@@ -332,6 +333,34 @@ namespace DeploySharp.Visual.Tests
             Assert.IsTrue(input.IsDisposed);
             input.Dispose();
             Assert.AreEqual(1, resource.DisposeCount);
+        }
+
+        [TestMethod]
+        public async Task IndependentVisualSessionsRemainReusableAfterFailureAndDisposeExactlyOnce()
+        {
+            VisualModelProfile profile = VisualTestData.ClassificationProfile();
+            PipelineFixture fixture = VisualTestData.Pipeline(profile, new TensorShape(1, 3), _ =>
+                InferenceOutputs.Create("scores", new Tensor<float>(new TensorShape(1, 3), new[] { 1f, 2f, 3f })), maximumConcurrency: 2);
+            PreparedVisualInput[] inputs = Enumerable.Range(0, 4).Select(_ => VisualTestData.ClassificationInput()).ToArray();
+            try
+            {
+                fixture.Provider.Failure = new InvalidOperationException("synthetic visual pool failure");
+                await Assert.ThrowsExactlyAsync<VisualException>(() => fixture.Pipeline.RunManyAsync(inputs));
+
+                fixture.Provider.Failure = null;
+                IReadOnlyList<VisualInferenceResult> results = await fixture.Pipeline.RunManyAsync(inputs);
+                Assert.AreEqual(inputs.Length, results.Count);
+                Assert.AreEqual(2, fixture.Provider.CreatedSessions.Count);
+                Assert.IsTrue(fixture.Provider.CreatedSessions.All(session => session.MaximumActive == 1));
+
+                fixture.Pipeline.Dispose();
+                Assert.IsTrue(fixture.Provider.CreatedSessions.All(session => session.DisposeCount == 1));
+            }
+            finally
+            {
+                foreach (PreparedVisualInput input in inputs) input.Dispose();
+                fixture.Dispose();
+            }
         }
 
         [TestMethod]

@@ -56,6 +56,7 @@ namespace JYPPX.DeploySharp.Internal
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             IInferenceSession? session = null;
+            bool slotAcquired = false;
             CancellationToken disposeToken = CaptureDisposeToken();
             CancellationToken operationToken = disposeToken;
             CancellationTokenSource? linked = null;
@@ -74,13 +75,14 @@ namespace JYPPX.DeploySharp.Internal
                 // consistent when an idle channel happens to be available.
                 if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException(cancellationToken);
                 _available.Wait(operationToken);
+                slotAcquired = true;
                 session = TakeAvailable();
                 return session.Run(inputs, operationToken);
             }
             finally
             {
                 linked?.Dispose();
-                Return(session);
+                Return(session, slotAcquired);
             }
         }
 
@@ -88,6 +90,7 @@ namespace JYPPX.DeploySharp.Internal
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             IInferenceSession? session = null;
+            bool slotAcquired = false;
             CancellationToken disposeToken = CaptureDisposeToken();
             CancellationToken operationToken = disposeToken;
             CancellationTokenSource? linked = null;
@@ -100,7 +103,9 @@ namespace JYPPX.DeploySharp.Internal
                     linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeToken);
                     operationToken = linked.Token;
                 }
+                if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException(cancellationToken);
                 await _available.WaitAsync(operationToken).ConfigureAwait(false);
+                slotAcquired = true;
                 session = TakeAvailable();
                 // A backend may document RunAsync as a synchronous fallback. Each leased session is independent,
                 // so dispatching the call to a worker preserves real pool parallelism without sharing native state.
@@ -109,7 +114,7 @@ namespace JYPPX.DeploySharp.Internal
             finally
             {
                 linked?.Dispose();
-                Return(session);
+                Return(session, slotAcquired);
             }
         }
 
@@ -118,6 +123,7 @@ namespace JYPPX.DeploySharp.Internal
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
             if (request == null) throw new ArgumentNullException(nameof(request));
             IInferenceSession? session = null;
+            bool slotAcquired = false;
             CancellationToken disposeToken = CaptureDisposeToken();
             CancellationToken operationToken = disposeToken;
             CancellationTokenSource? linked = null;
@@ -128,7 +134,9 @@ namespace JYPPX.DeploySharp.Internal
                     linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeToken);
                     operationToken = linked.Token;
                 }
+                if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException(cancellationToken);
                 _available.Wait(operationToken);
+                slotAcquired = true;
                 session = TakeAvailable();
                 if (!(session is ISequenceArgMaxInferenceSession sequence) || !sequence.IsSequenceArgMaxSupported)
                 {
@@ -139,7 +147,7 @@ namespace JYPPX.DeploySharp.Internal
             finally
             {
                 linked?.Dispose();
-                Return(session);
+                Return(session, slotAcquired);
             }
         }
 
@@ -178,11 +186,10 @@ namespace JYPPX.DeploySharp.Internal
             throw new InvalidOperationException("The inference session pool lost an available session.");
         }
 
-        private void Return(IInferenceSession? session)
+        private void Return(IInferenceSession? session, bool slotAcquired)
         {
-            if (session == null) return;
-            _availableSessions.Enqueue(session);
-            _available.Release();
+            if (session != null) _availableSessions.Enqueue(session);
+            if (slotAcquired) _available.Release();
         }
 
         private CancellationToken CaptureDisposeToken()
