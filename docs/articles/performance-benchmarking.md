@@ -28,7 +28,7 @@ pwsh -NoProfile -File eng/benchmarks/Test-InferenceSpeedBenchmark.ps1
 | Managed allocation | 计时线程在一次推理中的托管分配字节数 |
 | 环境信息 | 操作系统、进程架构、.NET 版本、后端、设备和运行时版本 |
 
-计时循环不包含 Session 创建、模型解析/编译、原生库加载、模型下载、输入解码以及结果展示。稳态默认采用 5 次预热、50 次计时；冷启动另行标记。比较两次结果时，模型文件、模型 SHA-256、输入文件 SHA-256、输入尺寸、精度、线程数、构建配置、预热次数和迭代次数必须保持一致，并记录 commit SHA、运行时版本以及 GPU 锁频/功耗状态。
+计时循环不包含 Session 创建、模型解析/编译、原生库加载、模型下载、输入解码以及结果展示。稳态正式协议采用 5 次预热、50 次计时；冷启动另行标记。PaddleOCR 完整流水线可用 `eng/models/paddle-ocr/scripts/Test-PaddleOcrBenchmarkReport.ps1` 校验后再写入设备矩阵。比较两次结果时，模型文件、模型 SHA-256、输入文件 SHA-256、输入尺寸、精度、线程数、构建配置、预热次数和迭代次数必须保持一致，并记录 commit SHA、运行时版本以及 GPU 锁频/功耗状态。少量迭代只可作为诊断，不能与正式矩阵混用。
 
 ## 批量与并发
 

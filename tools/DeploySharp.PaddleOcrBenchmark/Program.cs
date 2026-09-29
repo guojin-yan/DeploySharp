@@ -105,18 +105,19 @@ internal static partial class Program
             writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_min_ms,total_max_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,image_path,detail");
             foreach (FullResultRow row in rows) writer.WriteLine(row.ToCsv());
         }
-        WriteRunMetadata(output, root, imagePath, selectedBackends, selectedVersions, warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion, reusePreparedInput);
+        WriteRunMetadata(output, root, imagePath, models, selectedBackends, selectedVersions, warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion, reusePreparedInput);
         Console.WriteLine("PADDLEOCR_FULL_REPORT=" + Path.GetFullPath(output));
         Console.WriteLine("PADDLEOCR_FULL_METADATA=" + Path.GetFullPath(output + ".environment.json"));
         Console.WriteLine("PADDLEOCR_FULL_ROWS=" + rows.Count.ToString(Invariant));
         return rows.Any(row => row.Status == "pass") ? 0 : 3;
     }
 
-    private static void WriteRunMetadata(string output, string modelRoot, string imagePath, IReadOnlyCollection<string> backends, IReadOnlyCollection<string> versions, int warmup, int iterations, int stageConcurrency, int batchSize, int tensorRtBatchSize, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput)
+    private static void WriteRunMetadata(string output, string modelRoot, string imagePath, IReadOnlyCollection<ModelCase> models, IReadOnlyCollection<string> backends, IReadOnlyCollection<string> versions, int warmup, int iterations, int stageConcurrency, int batchSize, int tensorRtBatchSize, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput)
     {
         var metadata = new
         {
-            schemaVersion = 1,
+            schemaVersion = 2,
+            protocolName = "deploysharp-paddleocr-full-5-50-v1",
             generatedUtc = DateTimeOffset.UtcNow,
             machine = Environment.MachineName,
             os = Environment.OSVersion.ToString(),
@@ -127,6 +128,21 @@ internal static partial class Program
             modelRoot = Path.GetFullPath(modelRoot),
             image = Path.GetFullPath(imagePath),
             imageSha256 = File.Exists(imagePath) ? Sha256(imagePath) : null,
+            models = models
+                .OrderBy(value => value.Version, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(value => value.Variant, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(value => value.Role, StringComparer.OrdinalIgnoreCase)
+                .Select(value => new
+                {
+                    version = value.Version,
+                    variant = value.Variant,
+                    role = value.Role,
+                    onnxPath = Path.GetFullPath(value.OnnxPath),
+                    onnxSha256 = File.Exists(value.OnnxPath) ? Sha256(value.OnnxPath) : null,
+                    enginePath = value.EnginePath == null ? null : Path.GetFullPath(value.EnginePath),
+                    engineSha256 = value.EnginePath != null && File.Exists(value.EnginePath) ? Sha256(value.EnginePath) : null
+                })
+                .ToArray(),
             backends = backends.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
             versions = versions.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
             protocol = new { warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion = (int)tensorRtApiVersion, reusePreparedInput },

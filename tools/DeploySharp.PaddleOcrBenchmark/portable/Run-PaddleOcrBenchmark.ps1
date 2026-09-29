@@ -4,7 +4,7 @@ param(
     [string]$Backends = 'onnxruntime',
     [string]$Versions = 'v4,v5,v6',
     [ValidateRange(0, 1000)][int]$Warmup = 5,
-    [ValidateRange(1, 10000)][int]$Iterations = 20,
+    [ValidateRange(1, 10000)][int]$Iterations = 50,
     [switch]$Steady,
     [switch]$FixedConfiguration,
     [ValidateRange(1, 64)][int]$BatchSize = 4,
@@ -125,6 +125,7 @@ $environment = [ordered]@{
     nvidiaSmi = $nvidiaTelemetry
     powerPlan = $powerPlan
     benchmark = [ordered]@{
+        protocolName = 'deploysharp-paddleocr-full-5-50-v1'
         deviceLabel = $resolvedDeviceLabel
         executableSha256 = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash.ToLowerInvariant()
         packageManifestSha256 = if (Test-Path -LiteralPath $manifestPath) { (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }

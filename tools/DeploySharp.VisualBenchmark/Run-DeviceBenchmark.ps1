@@ -22,7 +22,7 @@ param(
     [ValidateRange(0, 100)]
     [int]$OcrWarmup = 5,
     [ValidateRange(1, 1000)]
-    [int]$OcrIterations = 10,
+    [int]$OcrIterations = 50,
     [string]$OcrAutotuneChannels = '1,2,4',
     [string]$OcrAutotuneBatches = '1,2,4,8,16'
 )

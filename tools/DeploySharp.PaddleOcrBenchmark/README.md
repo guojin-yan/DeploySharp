@@ -4,6 +4,21 @@ This console tool discovers PaddleOCR v4/v5 mobile and server DET/REC ONNX files
 
 每次完整流水线运行除了 CSV 外还会生成同名 `.environment.json`，记录机器名、操作系统、.NET、进程架构、CPU 逻辑处理器数、源码 revision（由 `DEPLOYSHARP_BENCHMARK_SOURCE_REVISION` 提供）、输入 SHA-256、模型根目录、后端选择、warmup/iteration、batch/channel、TensorRT API 和 vendor runtime 路径。GPU 时钟、功耗和 slowdown 字段由 `Invoke-WithGpuTelemetry.ps1` 的遥测 CSV 提供，不能从单次 CSV 耗时反推。
 
+## Formal 5/50 protocol / 正式 5/50 协议
+
+可纳入设备性能矩阵的完整流水线报告必须使用 **5 次预热 + 50 次计时**，并保留输入 SHA-256、每个 ONNX/Engine 文件 SHA-256、源码 revision、batch、独立推理通道数、阶段耗时、结果文本/合同 SHA 以及 P50/P95。便携运行器和设备包现在默认采用这一协议；直接调用 DLL 时请显式设置 `DEPLOYSHARP_PADDLEOCR_WARMUP=5` 和 `DEPLOYSHARP_PADDLEOCR_ITERATIONS=50`。直接 DLL 的 3/15 默认值只适合快速诊断，不应写入正式矩阵。
+
+生成 CSV 后可用校验器拒绝缺少协议或摘要字段的报告：
+
+```powershell
+pwsh -NoProfile -File eng/models/paddle-ocr/scripts/Test-PaddleOcrBenchmarkReport.ps1 `
+  -ReportPath artifacts/local-model-benchmarks/paddleocr-v5-mobile-ort-formal-20260929.csv `
+  -RequireSourceRevision `
+  -OutputPath artifacts/local-model-benchmarks/paddleocr-v5-mobile-ort-formal-20260929.validation.json
+```
+
+校验器只接受 `pass` 行作为性能证据；`unavailable`、`unsupported` 和 `skip` 会保留在诊断报告中，但不会被算作通过。TensorRT 报告另加 `-RequireTensorRtRuntime`，要求元数据中包含匹配的 TensorRT 根目录、bridge 和 API 版本。
+
 ## Recognition crop diagnostics / 识别裁剪诊断
 
 Set `DEPLOYSHARP_PADDLEOCR_CROP_PROCESSING=Report` (default `Disabled`), optionally `DEPLOYSHARP_PADDLEOCR_CROP_SAMPLES=1024` and `DEPLOYSHARP_PADDLEOCR_CROP_LIMIT=1024`. Samples are bounded per stage; the crop limit includes minimum-batch duplicate rows, windows and retries. Report preserves pixels and recognition SHA. Width sidecar schema 8 records `Crop.CropProcessing`, each region's `CropDiagnostics`, and all orientation attempts' diagnostics. `Rectified` is after warp/rotation, `Content` after resize but before padding/normalization; these are not directly comparable quality scores. Actual sampling work is included in recognition preparation and total time. Unsupported input adapters fail explicitly.
@@ -222,7 +237,7 @@ $env:DEPLOYSHARP_PADDLEOCR_ITERATIONS = '10'
 dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release
 ~~~
 
-Keep enough warm-up calls when comparing versions. The first supported pipeline in a new process also initializes JIT-compiled preprocessing code, OpenCV native paths, and worker threads; a one-warm-up, low-sample mean can therefore attribute process cold-start cost to that model. The default runner uses three warm-ups and fifteen measured calls; the command above uses five and ten for a quicker focused check.
+Keep enough warm-up calls when comparing versions. The first supported pipeline in a new process also initializes JIT-compiled preprocessing code, OpenCV native paths, and worker threads; a one-warm-up, low-sample mean can therefore attribute process cold-start cost to that model. The direct DLL keeps three warm-ups and fifteen measured calls as a quick diagnostic default; the portable and device runners use the formal five-warm-up/fifty-call protocol.
 
 On the dedicated Win10 host, a five-warm-up/ten-call v5 mobile ORT CPU run measured about 10 ms preprocessing; a previous approximately 72 ms value came from a short noisy sample. Treat preprocessing as workload/host dependent and compare P50/P95.
 
@@ -297,7 +312,7 @@ $env:JYPPX_CUDA_ROOT = 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8
 $env:JYPPX_CUDNN_ROOT = 'C:\Program Files\NVIDIA\CUDNN\v9'
 $env:PATH = "$env:JYPPX_TENSORRT_ROOT\bin;$env:JYPPX_TENSORRT_ROOT\lib;$env:JYPPX_CUDA_ROOT\bin;$env:JYPPX_CUDNN_ROOT\bin;$env:PATH"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-TensorRtEngines.ps1 -ModelRoot .\models -OutputRoot .\models -TensorRtRoot $env:JYPPX_TENSORRT_ROOT
-.\Run-PaddleOcrBenchmark.ps1 -Backends tensorrt -Versions v4,v5,v6 -TensorRtApiVersion 10 -Warmup 5 -Iterations 20
+.\Run-PaddleOcrBenchmark.ps1 -Backends tensorrt -Versions v4,v5,v6 -TensorRtApiVersion 10 -Warmup 5 -Iterations 50
 ~~~
 
 在多台设备上复测时可给运行命令增加 `-DeviceLabel RTX2060-Win10`。便携运行器会在每个 `results/<时间戳>/environment.json` 中记录设备标签、机器名、操作系统、CPU/内存、GPU/驱动、`nvidia-smi`、电源计划、输入与程序 SHA256，以及 CUDA/cuDNN/TensorRT 路径；同目录的 `summary.md` 会显示设备标签和 Run ID，便于后续合并报告。
