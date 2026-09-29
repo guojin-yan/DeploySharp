@@ -63,6 +63,7 @@ def main() -> None:
             parent_rows[instance["instance_id"]] = (record, instance)
 
     selected = []
+    selected_parent_ids: set[str] = set()
     for line in args.crop_manifest.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -70,9 +71,12 @@ def main() -> None:
         parent = parent_rows.get(crop.get("parent_instance_id"))
         if parent is None:
             continue
+        if parent[0]["image_id"] in selected_parent_ids:
+            continue
         text = parent[1].get("text") or ""
         if 8 <= len(text) <= 32 and crop.get("quality_check") != "invalid":
             selected.append((crop, parent[0], parent[1]))
+            selected_parent_ids.add(parent[0]["image_id"])
         if len(selected) >= args.max_crops:
             break
     if len(selected) < args.max_crops:
@@ -108,6 +112,7 @@ def main() -> None:
                     "source_split": parent["source_split"],
                     "source_revision": parent["source_revision"],
                     "source_parent_image_id": parent["image_id"],
+                    "source_parent_image_sha256": parent["source_provenance"]["image_sha256"],
                     "source_instance_id": instance["instance_id"],
                     "source_crop_relpath": crop["crop_relpath"],
                     "source_crop_sha256": source_sha,

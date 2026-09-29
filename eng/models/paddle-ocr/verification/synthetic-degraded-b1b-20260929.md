@@ -1,6 +1,6 @@
 # B1b controlled OCR degradation evidence (2026-09-29)
 
-This record uses four real, parent-linked SROIE word crops from `F:\OCRBenchmarkTesting` and creates six deterministic variants per crop: `normal`, `low-contrast`, `blur`, `noise`, `shadow` and JPEG quality 35. The source text, source crop SHA, parent image/instance and pinned SROIE revision remain in every output row. The generated images are local test artifacts and are not committed or uploaded.
+This record uses four real, parent-linked SROIE word crops from four different receipt pages in `F:\OCRBenchmarkTesting` and creates six deterministic variants per crop: `normal`, `low-contrast`, `blur`, `noise`, `shadow` and JPEG quality 35. The source text, source crop SHA, parent image/instance and pinned SROIE revision remain in every output row. The generated images are local test artifacts and are not committed or uploaded.
 
 ## Protocol
 
@@ -16,16 +16,16 @@ This record uses four real, parent-linked SROIE word crops from `F:\OCRBenchmark
 
 Both backends completed `24/24` records with no empty outputs and byte-identical text per condition/crop. Mean case-folded metrics (four crops; exact source text is also retained) were:
 
-| Condition | Mean CER | Mean WER |
-| --- | ---: | ---: |
-| normal | 80.63% | 100.00% |
-| low-contrast | 80.63% | 100.00% |
-| blur | 83.75% | 125.00% |
-| noise | 80.63% | 100.00% |
-| shadow | 80.63% | 100.00% |
-| JPEG q35 | 81.46% | 104.17% |
+| Condition | Mean case-folded CER | Mean case-folded WER | Mean confidence |
+| --- | ---: | ---: | ---: |
+| normal | 0.00% | 0.00% | 0.9999 |
+| low-contrast | 0.00% | 0.00% | 0.9999 |
+| blur | 0.00% | 0.00% | 0.9999 |
+| noise | 0.00% | 0.00% | 0.9999 |
+| shadow | 0.00% | 0.00% | 0.9999 |
+| JPEG q35 | 0.00% | 0.00% | 0.9991 |
 
-These high errors are a diagnostic finding: the selected v6 Small recognizer and this small word-crop setup do not form a quality baseline suitable for claiming degradation gains. They also show that confidence remains high while text error is high, so confidence alone must not drive B2/B3 candidate acceptance. The controlled variants prove provenance, deterministic corruption, backend execution and evidence capture only.
+The four source pages were intentionally de-duplicated; both backends produced case-folded exact text for all 24 variants. Exact case-sensitive metrics still record the model's casing behavior. Confidence remained high across all conditions, so this small set does not establish robustness or justify a default enhancement policy. The controlled variants prove provenance, deterministic corruption, backend execution and evidence capture only; they do not replace a larger quality-controlled low-quality benchmark.
 
 ## Reproduction
 
