@@ -330,49 +330,30 @@ namespace JYPPX.DeploySharp.Visual
             for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
             for (int index = 0; index < rightEnd; index++) if (prefix[index].IsUnknown || prefix[index].IsBlank) return 0;
 
-            int distance = EditDistance(left, right, suffix, leftStart, leftCount, prefix, rightCount, profile,
+            int distance = SubstitutionDistance(left, right, suffix, leftStart, prefix, rightCount, profile,
                 profile.RecognitionWindows.MaximumOverlapEditDistance);
             if (distance > profile.RecognitionWindows.MaximumOverlapEditDistance) return 0;
             editDistance = distance;
             return rightCount;
         }
 
-        private static int EditDistance(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,
-            List<OcrToken> suffix, int leftStart, int leftCount, List<OcrToken> prefix, int rightCount,
+        private static int SubstitutionDistance(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,
+            List<OcrToken> suffix, int leftStart, List<OcrToken> prefix, int count,
             TextCropProfile profile, int maximumDistance)
         {
-            int infinity = maximumDistance + leftCount + rightCount + 1;
-            var previous = new int[rightCount + 1];
-            var current = new int[rightCount + 1];
-            for (int column = 0; column <= rightCount; column++) previous[column] = column;
             double maximumPositionDelta = (left.End - right.Start) * 0.5;
             double leftStep = StepWidth(left, profile);
             double rightStep = StepWidth(right, profile);
-            var leftPositions = new double[leftCount];
-            var rightPositions = new double[rightCount];
-            for (int index = 0; index < leftCount; index++) leftPositions[index] = Position(left, suffix[leftStart + index], leftStep);
-            for (int index = 0; index < rightCount; index++) rightPositions[index] = Position(right, prefix[index], rightStep);
-            for (int row = 1; row <= leftCount; row++)
+            int distance = 0;
+            for (int index = 0; index < count; index++)
             {
-                current[0] = row;
-                int rowMinimum = current[0];
-                OcrToken leftToken = suffix[leftStart + row - 1];
-                double leftPosition = leftPositions[row - 1];
-                for (int column = 1; column <= rightCount; column++)
-                {
-                    OcrToken rightToken = prefix[column - 1];
-                    double rightPosition = rightPositions[column - 1];
-                    int substitution = Math.Abs(leftPosition - rightPosition) > maximumPositionDelta
-                        ? infinity
-                        : TokenEquals(leftToken, rightToken) ? 0 : 1;
-                    int value = Math.Min(Math.Min(previous[column] + 1, current[column - 1] + 1), previous[column - 1] + substitution);
-                    current[column] = value;
-                    rowMinimum = Math.Min(rowMinimum, value);
-                }
-                if (rowMinimum > maximumDistance) return infinity;
-                int[] temporary = previous; previous = current; current = temporary;
+                OcrToken leftToken = suffix[leftStart + index];
+                OcrToken rightToken = prefix[index];
+                if (Math.Abs(Position(left, leftToken, leftStep) - Position(right, rightToken, rightStep)) > maximumPositionDelta)
+                    return maximumDistance + 1;
+                if (!TokenEquals(leftToken, rightToken) && ++distance > maximumDistance) return distance;
             }
-            return previous[rightCount];
+            return distance;
         }
 
         private static bool TokenEquals(OcrToken left, OcrToken right)
