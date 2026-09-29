@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -83,6 +84,21 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
         using var pipeline = new OcrPipeline(registry, detectorSelection, request, recognizerSelection, request, recognizer.CropProfile!,
             new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 8, maximumSourcePixels: 64L * 1024L * 1024L),
             new SessionOptions(1), new SessionOptions(1));
+        bool runEnhancement = string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SYNTHETIC_DEGRADED_ENHANCEMENT"), "1", StringComparison.Ordinal);
+        OcrPipeline? enhancementPipeline = null;
+        if (runEnhancement)
+        {
+            var recipe = new OcrCropEnhancementOptions(OcrCropEnhancementMode.ContrastNormalize,
+                lowContrastThreshold: 128, minimumContrast: 1, targetStandardDeviation: 128, maximumGain: 3);
+            var retry = new OcrEnhancementRetryOptions(recipe, confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConfidenceGain, minimumConfidenceGain: 0,
+                maximumRegionsPerImage: 2, maximumCropsPerImage: 32);
+            TextCropProfile enhancedCrop = recognizer.CropProfile!.WithEnhancementRetry(retry);
+            enhancementPipeline = new OcrPipeline(registry, detectorSelection, request, recognizerSelection, request, enhancedCrop,
+                new OcrPipelineOptions(maximumRegions: 2, maximumRecognitionBatch: 8, maximumSourcePixels: 64L * 1024L * 1024L),
+                new SessionOptions(1), new SessionOptions(1));
+        }
+        var enhancementRecords = new List<object>();
 
         var records = new List<object>();
         foreach (string json in File.ReadLines(manifestPath))
@@ -131,7 +147,52 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
                 recognitionWidth = result.RecognitionWidth,
                 resultTextSha256 = Sha256(result.Recognition.Text)
             });
+            if (enhancementPipeline != null)
+            {
+                Stopwatch watch = Stopwatch.StartNew();
+                OcrResult enhancedPage = await enhancementPipeline.RunAsync(input).ConfigureAwait(false);
+                watch.Stop();
+                if (enhancedPage.Regions.Count == 0)
+                {
+                    enhancementRecords.Add(new
+                    {
+                        imageId = item.GetProperty("image_id").GetString(), condition = item.GetProperty("condition").GetString(),
+                        originalText = string.Empty, candidateText = string.Empty, decision = "no-detected-region",
+                        originalConfidence = (float?)null, candidateConfidence = (float?)null,
+                        originalCaseFoldedCer = (double?)null, candidateCaseFoldedCer = (double?)null,
+                        originalCaseFoldedWer = (double?)null, candidateCaseFoldedWer = (double?)null,
+                        candidateSelected = false, elapsedMs = watch.Elapsed.TotalMilliseconds,
+                        sourceCropSha256 = item.GetProperty("source_crop_sha256").GetString(), degradedImageSha256 = item.GetProperty("image_sha256").GetString()
+                    });
+                    continue;
+                }
+                OcrRegionResult enhanced = enhancedPage.Regions[0];
+                OcrEnhancementRetryResult? retry = enhanced.EnhancementRetry;
+                string originalText = retry?.Original.Recognition.Text ?? enhanced.Recognition.Text;
+                string candidateText = retry?.Candidate?.Recognition.Text ?? string.Empty;
+                OcrTextAccuracyMetrics originalMetrics = OcrTextAccuracy.Compare(expected.ToLowerInvariant(), originalText.ToLowerInvariant());
+                OcrTextAccuracyMetrics candidateMetrics = OcrTextAccuracy.Compare(expected.ToLowerInvariant(), candidateText.ToLowerInvariant());
+                enhancementRecords.Add(new
+                {
+                    imageId = item.GetProperty("image_id").GetString(),
+                    condition = item.GetProperty("condition").GetString(),
+                    originalText,
+                    candidateText,
+                    decision = retry?.Decision.ToString() ?? "none",
+                    originalConfidence = retry?.Original.Recognition.Confidence ?? enhanced.Recognition.Confidence,
+                    candidateConfidence = retry?.Candidate?.Recognition.Confidence,
+                    originalCaseFoldedCer = originalMetrics.CharacterErrorRate,
+                    candidateCaseFoldedCer = candidateText.Length == 0 ? (double?)null : candidateMetrics.CharacterErrorRate,
+                    originalCaseFoldedWer = originalMetrics.WordErrorRate,
+                    candidateCaseFoldedWer = candidateText.Length == 0 ? (double?)null : candidateMetrics.WordErrorRate,
+                    candidateSelected = retry?.Decision == OcrEnhancementRetryDecision.CandidateSelected,
+                    elapsedMs = watch.Elapsed.TotalMilliseconds,
+                    sourceCropSha256 = item.GetProperty("source_crop_sha256").GetString(),
+                    degradedImageSha256 = item.GetProperty("image_sha256").GetString()
+                });
+            }
         }
+        enhancementPipeline?.Dispose();
 
         Assert.AreEqual(24, records.Count);
         string evidencePath = Path.Combine(TestContext.TestResultsDirectory!, "paddleocr-degraded-" + backend + ".json");
@@ -148,6 +209,18 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
             records
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(evidencePath);
+        if (enhancementRecords.Count > 0)
+        {
+            string enhancementPath = Path.Combine(TestContext.TestResultsDirectory!, "paddleocr-degraded-enhancement-" + backend + ".json");
+            File.WriteAllText(enhancementPath, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1, generatedUtc = DateTimeOffset.UtcNow, backend,
+                recipe = "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+                selection = "ConfidenceGain(minimumGain=0)", records = enhancementRecords,
+                boundary = "Controlled B2/B3 evidence on four parent-linked SROIE crops and six variants; not a default-policy accuracy claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(enhancementPath);
+        }
         Console.WriteLine("PADDLEOCR_SYNTHETIC_DEGRADED backend=" + backend + ";records=" + records.Count.ToString(CultureInfo.InvariantCulture));
     }
 
