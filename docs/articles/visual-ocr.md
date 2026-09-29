@@ -571,7 +571,7 @@ foreach (OcrRegionResult line in result.Regions)
 
 `OcrRecognitionWindowMerger` 先尝试在相邻窗口之间匹配完全相同的 token 后缀/前缀；失败后才会启用有界模糊匹配。模糊回退只比较各自估算位置落在共享几何区间内的 token，并使用有上限的 token 编辑距离；位置映射会扣除输入 padding，容纳半个时间步的离散定位误差。token 可能是中文字符、emoji 或含多个 Unicode 标量的字典项，比较/编辑距离/删除均以完整 token 为单位，不拆 Unicode 字符。
 
-默认至少要求 2 个重叠 token，模糊回退最多允许 2 个 token 编辑（`maximumOverlapEditDistance`，可设为 0 关闭；上限为 8）。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，模糊匹配属于保守启发式，必须结合应用样本评估。
+默认至少要求 2 个重叠 token，模糊回退最多允许 2 个 token 替换编辑（`maximumOverlapEditDistance`，可设为 0 关闭；上限为 8），并且左右重叠片段必须等长；若模型在接缝处插入或漏掉 token，则不抑制后一窗口前缀，避免静默丢字。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，模糊匹配属于保守启发式，必须结合应用样本评估。
 
 完全匹配时 `OverlapEditDistance=0` 且接缝不标记 uncertain；通过模糊回退时 `OverlapEditDistance` 记录编辑距离并设置 `SeamUncertain=true`，合并优先保留前一窗口的重叠文本，同时抑制后一窗口对应的前缀；无法通过门限时不删除后一窗口文本，也设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用应复核所有 uncertain 接缝；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被抑制前缀在合并 trace 中标记为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
 

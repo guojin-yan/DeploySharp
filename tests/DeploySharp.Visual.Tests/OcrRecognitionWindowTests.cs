@@ -227,6 +227,34 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SeamLengthMismatchKeepsTheRightPrefixInsteadOfSuppressingInsertedText()
+        {
+            TextRegion region = Region(600, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(overlapRatio: .5).WithMaximumOverlapEditDistance(2));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+
+            List<OcrToken> insertedTrace = raw[1].Recognition.Tokens.ToList();
+            int blankIndex = insertedTrace.FindIndex(token => token.IsBlank);
+            Assert.IsTrue(blankIndex >= 0);
+            OcrToken blank = insertedTrace[blankIndex];
+            insertedTrace[blankIndex] = new OcrToken(blank.Timestep, 999, .8f, "X", false, false, false, true);
+            RecognizedText insertedText = new RecognizedText(7,
+                string.Concat(insertedTrace.Where(token => token.Emitted).Select(token => token.Text)),
+                raw[1].Recognition.Confidence, insertedTrace, raw[1].Recognition.CharacterSetId,
+                raw[1].Recognition.CharacterSetVersion, raw[1].Recognition.CharacterSetSha256);
+            raw[1] = new OcrRecognitionWindowResult(plans[1], insertedText, raw[1].Width);
+
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            OcrRecognitionWindowResult seam = merged.RecognitionWindows[1];
+            Assert.IsTrue(seam.SeamUncertain);
+            Assert.AreEqual(0, seam.OverlapEditDistance);
+            Assert.AreEqual(0, seam.RemovedPrefixTokens);
+            Assert.IsTrue(merged.Recognition.Text.Contains("X", StringComparison.Ordinal));
+        }
+
+        [TestMethod]
         public void DefaultMinimumRetainsOneTokenSeamAndMarksItUncertain()
         {
             TextRegion region = Region(600, 48);

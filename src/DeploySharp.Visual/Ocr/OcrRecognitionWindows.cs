@@ -320,8 +320,11 @@ namespace JYPPX.DeploySharp.Visual
             int rightCount = rightEnd;
 
             int minimumFuzzyTokens = Math.Max(8, Math.Max(minimum, profile.RecognitionWindows.MaximumOverlapEditDistance * 2 + 1));
+            // Only equal-length overlap slices are eligible for fuzzy suppression. If
+            // recognition inserted or dropped a token at the seam, retaining the right
+            // prefix is safer than accidentally deleting newly recognized text.
             if (leftCount < minimumFuzzyTokens || rightCount < minimumFuzzyTokens || leftCount > maximum || rightCount > maximum
-                || Math.Abs(leftCount - rightCount) > profile.RecognitionWindows.MaximumOverlapEditDistance)
+                || leftCount != rightCount)
                 return 0;
 
             for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
