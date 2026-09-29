@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
@@ -17,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.OpenCV.Tests;
 
-/// <summary>Runs all four curated ChartQA human samples through ORT CPU full EOS generation. / 使用 ORT CPU 对四张精选 ChartQA human 图执行完整 EOS 生成。</summary>
+/// <summary>Runs all four curated ChartQA human samples through ORT/OpenVINO full EOS generation. / 使用 ORT/OpenVINO 对四张精选 ChartQA human 图执行完整 EOS 生成。</summary>
 [TestClass]
 [DoNotParallelize]
 public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
@@ -26,27 +27,42 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
-    public async Task FourChartQaHumanSamplesGenerateExactTablesThroughOrt()
+    [DataRow("onnxruntime")]
+    [DataRow("openvino")]
+    public async Task FourChartQaHumanSamplesGenerateExactTables(string backend)
     {
-        if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_ORT_MULTI_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
-            Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_ORT_MULTI_RUN_EXTERNAL=1 to run the four-image ORT Chart2Table regression.");
+        string gate = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase)
+            ? "DEPLOYSHARP_CHART2TABLE_OPENVINO_MULTI_RUN_EXTERNAL"
+            : "DEPLOYSHARP_CHART2TABLE_ORT_MULTI_RUN_EXTERNAL";
+        if (!string.Equals(Environment.GetEnvironmentVariable(gate), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set " + gate + "=1 to run the four-image " + backend + " Chart2Table regression.");
         string modelRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
         string exportRoot = Required("DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT");
         string sampleRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHARTQA_SAMPLE_ROOT") ?? @"E:\Model\PaddleDocument\validation\chartqa-20260924";
         string textRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TEXT_ROOT") ?? Path.Combine(exportRoot, "text-onnx-verify-20260923");
+        BackendId backendId;
+        using var registry = new BackendRegistry();
+        if (string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase))
+        {
+            registry.Register(new OpenVinoBackendProvider(new OpenVinoOptions(device: "CPU")));
+            backendId = OpenVinoBackendProvider.BackendId;
+        }
+        else
+        {
+            registry.Register(new OnnxRuntimeBackendProvider());
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+        }
         var bundle = new PaddleChart2TableOnnxBundle(
             Path.Combine(exportRoot, "chart-vision.onnx"),
             GraphPath(textRoot, "chart-token-embedding-dynamic"),
             GraphPath(textRoot, "chart-text-prefill-full"),
             GraphPath(textRoot, "chart-text-decoder-dynamic-past-full"),
-            OnnxRuntimeBackendProvider.BackendId);
-        using var registry = new BackendRegistry();
-        registry.Register(new OnnxRuntimeBackendProvider());
+            backendId);
         var tokenizer = new PaddleChart2TableTokenizer(modelRoot);
         using var session = new PaddleChart2TableOnnxSession(registry, bundle,
-            new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "CPU"));
+            new BackendRequest(BackendCapabilities.TensorInference, backendId, "CPU"));
         var inputFactory = new OpenCvPaddleChart2TableInputFactory();
-        int maximumNewTokens = ParseMaximumNewTokens();
+        int maximumNewTokens = ParseMaximumNewTokens(backend);
         var samples = new[]
         {
             new Sample("png_41699051005347.png", "Country | Long-term price index in food commodities, 1850-2015, World, 1934\nLamb | 103.7\nCorn | 103.13\nBarley | 102.46\nRye | 87.37\nBeef | 85.27\nWheat | 83.73\nCoffee | 82.2\nTea | 68.48\nPeanuts | 64.71\nPalm oil | 57.6\nPork | 55.36\nRice | 42.48\nSugar | 25.56\nCocoa | 18.81"),
@@ -82,12 +98,12 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
                 decodeP95Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .95)
             });
         }
-        string report = Path.Combine(TestContext.TestResultsDirectory!, "chart2table-ort-multi-image-evidence.json");
+        string report = Path.Combine(TestContext.TestResultsDirectory!, "chart2table-" + backend + "-multi-image-evidence.json");
         File.WriteAllText(report, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
             generatedUtc = DateTimeOffset.UtcNow,
-            backend = "onnxruntime-cpu",
+            backend = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "openvino-cpu" : "onnxruntime-cpu",
             modelId = "paddle-chart/pp-chart2table",
             maximumNewTokens,
             graphRoot = textRoot,
@@ -95,14 +111,17 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
             boundary = "Four curated ChartQA human samples; exact table reproduction is a multi-image qualitative regression, not a dataset accuracy score."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
-        Console.WriteLine("PADDLE_CHART2TABLE_ORT_MULTI samples=" + rows.Count);
+        Console.WriteLine("PADDLE_CHART2TABLE_MULTI backend=" + backend + ";samples=" + rows.Count);
     }
 
-    private static int ParseMaximumNewTokens()
+    private static int ParseMaximumNewTokens(string backend)
     {
-        string? value = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_ORT_MULTI_MAX_NEW_TOKENS");
+        string variable = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase)
+            ? "DEPLOYSHARP_CHART2TABLE_OPENVINO_MULTI_MAX_NEW_TOKENS"
+            : "DEPLOYSHARP_CHART2TABLE_ORT_MULTI_MAX_NEW_TOKENS";
+        string? value = Environment.GetEnvironmentVariable(variable);
         if (string.IsNullOrWhiteSpace(value)) return 256;
-        if (!int.TryParse(value, out int parsed) || parsed < 3 || parsed > 2048) Assert.Fail("DEPLOYSHARP_CHART2TABLE_ORT_MULTI_MAX_NEW_TOKENS must be 3..2048.");
+        if (!int.TryParse(value, out int parsed) || parsed < 3 || parsed > 2048) Assert.Fail(variable + " must be 3..2048.");
         return parsed;
     }
 
