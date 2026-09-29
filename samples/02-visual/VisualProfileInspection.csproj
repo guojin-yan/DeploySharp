@@ -9,4 +9,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DeploySharp.Visual\DeploySharp.Visual.csproj" />
   </ItemGroup>
+  <!-- Nested samples are independent executables. Without an explicit removal,
+       SDK default globs also compile their Program.cs and generated obj files. -->
+  <ItemGroup>
+    <Compile Remove="roi-workflow\**" />
+    <Compile Remove="roi-official-sam\**" />
+    <EmbeddedResource Remove="roi-workflow\**" />
+    <EmbeddedResource Remove="roi-official-sam\**" />
+    <None Remove="roi-workflow\**" />
+    <None Remove="roi-official-sam\**" />
+  </ItemGroup>
 </Project>
