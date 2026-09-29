@@ -84,6 +84,8 @@ The [dynamic REC batch record](verification/paddleocr-v5-recognition-dynamic-bat
 
 The selected v5 Mobile/Server component and pipeline goldens have a separate [ORT/OpenVINO golden parity record](verification/paddleocr-ort-openvino-golden-parity-20260928.md). It records the four passing external-model contract tests, fixed tensor/image hashes, exact recognition tokens and backend-specific scope limits; it is not a replacement for the public dataset evaluation or the unfinished OpenCV DNN/TensorRT matrix.
 
+The same 24-page HierText long-text selection has now been run with PP-OCRv6 Small and SlidingWindow. The [v6 Small cross-check](verification/hiertext-v6-small-public-ocr-20260929.md) records 24/24 completed pages, detection TP/FP/FN `436/377/584`, matched CER `12.10%`, end-to-end CER `73.65%`, and the ≥128-character bucket `100/520` edits. It remains smoke-only and contains no line over 3,200 characters.
+
 For investigating low IoU without changing the release metric, `Measure-HierTextGeometryCoverage.ps1` compares each labeled quadrilateral with the union of overlapping predictions. It can distinguish merged/over-expanded boxes from genuinely uncovered text, but its coverage counts are diagnostic only and must not be presented as detection recall.
 
 Dataset images, labels, predictions and per-image reports are not copied into this repository or a model Release. This local HierText selection is marked smoke-only until each image landing page and redistribution terms have been reviewed; it must not be presented as a leaderboard result. This is quality evidence, not a performance benchmark: each page had one measured iteration, so the recorded timings do not establish P50/P95 performance.
