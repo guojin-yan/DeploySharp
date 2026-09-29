@@ -253,16 +253,28 @@ namespace JYPPX.DeploySharp.Visual
                 EnsureUsable();
                 if (regions.Count > _options.MaximumRegions) throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only region count exceeds the configured limit.", OcrPipelineStage.Input);
                 var requests = new List<IndexedRequest>(regions.Count);
+                var windowPlans = _cropProfile.OverflowMode == RecognitionOverflowMode.SlidingWindow ? new IReadOnlyList<OcrRecognitionWindow>?[regions.Count] : null;
+                var windowOffsets = windowPlans == null ? null : new int[regions.Count];
                 for (int index = 0; index < regions.Count; index++)
                 {
                     token.ThrowIfCancellationRequested();
-                    requests.Add(new IndexedRequest(index, new TextCropRequest(regions[index], _cropProfile)));
+                    if (windowOffsets != null) windowOffsets[index] = requests.Count;
+                    TextRegion region = regions[index];
+                    if (windowPlans != null && region.CropQuadrilateral != null && _cropProfile.DescribeWidth(region.CropQuadrilateral, region.Orientation).WidthClamped)
+                    {
+                        IReadOnlyList<OcrRecognitionWindow> windows = OcrRecognitionWindowPlanner.Plan(region, _cropProfile, token);
+                        windowPlans[index] = windows;
+                        foreach (OcrRecognitionWindow window in windows) requests.Add(new IndexedRequest(requests.Count, window.Crop));
+                    }
+                    else requests.Add(new IndexedRequest(requests.Count, new TextCropRequest(region, _cropProfile)));
+                    if (requests.Count > _cropProfile.RecognitionWindows.MaximumWindowsPerImage)
+                        throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only windows exceed the per-image limit.", OcrPipelineStage.CropAndBatch, regionIndex: region.SourceIndex);
                 }
                 List<OcrBatchDescriptor> batches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, token);
                 BatchExecution<VisualInferenceResult>[] executed = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, batches, _recognizer.MaximumConcurrency, async (prepared, ct) =>
                     await _recognizer.RunAsync(prepared, new VisualExecutionOptions(), ct).ConfigureAwait(false), token).ConfigureAwait(false);
-                var recognized = new RecognizedText[regions.Count];
-                var widths = new OcrRecognitionWidthInfo[regions.Count];
+                var recognized = new RecognizedText[requests.Count];
+                var widths = new OcrRecognitionWidthInfo[requests.Count];
                 foreach (BatchExecution<VisualInferenceResult> batchExecution in executed)
                 {
                     TextRecognitionBatchResult result = batchExecution.Result.GetValue<TextRecognitionBatchResult>();
@@ -275,7 +287,24 @@ namespace JYPPX.DeploySharp.Visual
                     }
                 }
                 var output = new List<OcrRegionResult>(regions.Count);
-                for (int index = 0; index < regions.Count; index++) output.Add(new OcrRegionResult(regions[index], recognized[index] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only output is missing a region.", OcrPipelineStage.Recognition), widths[index]));
+                CtcConfidenceAggregation aggregation = (RecognitionSelection.Profile.Decoder as GreedyCtcDecoder)?.Options.ConfidenceAggregation ?? CtcConfidenceAggregation.Mean;
+                for (int index = 0; index < regions.Count; index++)
+                {
+                    int offset = windowOffsets == null ? index : windowOffsets[index];
+                    IReadOnlyList<OcrRecognitionWindow>? windows = windowPlans?[index];
+                    if (windows == null || windows.Count <= 1)
+                    {
+                        output.Add(new OcrRegionResult(regions[index], recognized[offset] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only output is missing a region.", OcrPipelineStage.Recognition), widths[offset]));
+                        continue;
+                    }
+                    var rawWindows = new List<OcrRecognitionWindowResult>(windows.Count);
+                    for (int windowIndex = 0; windowIndex < windows.Count; windowIndex++)
+                    {
+                        RecognizedText raw = recognized[offset + windowIndex] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only window output is missing.", OcrPipelineStage.Recognition, regionIndex: regions[index].SourceIndex);
+                        rawWindows.Add(new OcrRecognitionWindowResult(windows[windowIndex], raw, widths[offset + windowIndex]));
+                    }
+                    output.Add(OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, token));
+                }
                 return output.AsReadOnly();
             }
             finally { if (entered) _operationGate.Release(); }

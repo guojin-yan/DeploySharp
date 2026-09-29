@@ -276,6 +276,25 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RecognitionOnlySlidingWindowPlansAndMergesOverWidthRegions()
+        {
+            using OcrFixture fixture = CreateOcrFixture(
+                recognitionWidth: 8,
+                overflowMode: RecognitionOverflowMode.SlidingWindow,
+                windowOptions: new OcrRecognitionWindowOptions(overlapRatio: .2, maximumWindowsPerRegion: 8, maximumWindowsPerImage: 16));
+            using var input = new FakeOcrImageInput();
+            TextRegion region = Region(0, 0, 0, 40, 10);
+
+            IReadOnlyList<OcrRegionResult> results = await fixture.Pipeline.RecognizeOnlyAsync(input, new[] { region });
+
+            Assert.AreEqual(1, results.Count);
+            Assert.IsNotNull(results[0].RecognitionWidth);
+            Assert.IsTrue(results[0].RecognitionWidth!.Value.WindowCount > 1);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount, "Recognition-only SlidingWindow must not invoke detection.");
+            Assert.IsTrue(results[0].Recognition.Text.Length > 0);
+        }
+
+        [TestMethod]
         public async Task OneImageDispatchesCompactRecognitionBatchesAcrossIndependentSessionsAndRestoresOrder()
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .1f, maximumCandidates: 4, maximumRegions: 4));
