@@ -88,6 +88,46 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
 | 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | △ | ✓¶ |
 
+### PP-Structure 精确资产状态（29 个目录项 + 2 个派生兼容图）
+
+上面的模型族表用于快速浏览，下面按目录中的每个精确资产列出当前证据。`△` 表示尚未完成该精确组合的真实执行，`✗` 表示已经尝试并确认当前组合阻断；派生 SLANeXt 兼容图使用独立的 compatibility ID，不等同于原始 Release 图。
+
+| 精确资产 | ORT CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
+|---|:---:|:---:|:---:|:---:|
+| `paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ |
+| `paddle-doc/uvdoc` | ✓ | ✓ | ✗ | ✓ |
+| `paddle-doc/pp-doclayout-plus-l` | ✓ | △ | △ | △ |
+| `paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ |
+| `paddle-doc/pp-doclayout-m` | ✓ | △ | △ | △ |
+| `paddle-doc/pp-doclayout-s` | ✓ | △ | △ | △ |
+| `paddle-doc/pp-docblocklayout` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-layout-1x` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-layout-1x-table` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-s-layout-3cls` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-l-layout-3cls` | ✓ | △ | △ | △ |
+| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-s-layout-17cls` | ✓ | △ | △ | △ |
+| `paddle-doc/picodet-l-layout-17cls` | ✓ | △ | △ | △ |
+| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | △ | △ | △ |
+| `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | △ |
+| `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | △ |
+| `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
+| `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
+| `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
+| `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | △ | △ |
+| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | △ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-s` | ✓ | △¹ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-m` | ✓ | △ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-l` | ✓ | △ | △ | △ |
+| `paddle-formula/pp-formulanet-s` | ✓ | △ | △ | △ |
+| `paddle-formula/pp-formulanet-l` | ✓ | △ | △ | △ |
+| `paddle-formula/unimernet` | ✓ | △ | △ | △ |
+| `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | △ | ✓ |
+| `paddle-seal/ppocrv4-server` | ✓ | ✓ | △ | ✓ |
+| `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
+
+¹ `pp-formulanet-plus-s` 的 OpenVINO 首次加载已在 `ov_core_read_model_utf8` 发生 native access violation；其余公式工件尚未继续尝试，因此聚合状态保持 `△`。详见 [`formula-openvino-blocker-20260929.md`](../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)。
+
 ### PP-Chart2Table 四图生成 Bundle 验证
 
 验证复用了现有官方 checkpoint 和示例图片，没有重复下载。四张图分别是 Vision/Projector、动态 Token Embedding、固定 286-token 官方 Prompt Prefill（含 `lm_head` 和 KV）、单 token 动态 past Decode（含 `lm_head` 和 KV）。Tokenizer 直接读取官方 `qwen.tiktoken`、`tokenizer_config.json`、`added_tokens.json`；Prompt 为 286 token，含 256 个连续 `<imgpad>`。
