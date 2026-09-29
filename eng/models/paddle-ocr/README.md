@@ -76,6 +76,8 @@ The local SROIE receipt selection has a separate [v5 Mobile three-backend smoke 
 
 The crop-level contract has a separate [v5 Mobile REC ORT/OpenVINO parity record](verification/paddleocr-v5-recognition-crop-ort-openvino-parity-20260929.md). It covers 40 real SROIE word crops after OpenCV quadrilateral preparation: input tensor digests, output shapes and decoded text match, with maximum output absolute drift below `4.7e-4`. This is crop/REC backend evidence only, not a line-level accuracy or full DET recall result.
 
+The corresponding [v5 Mobile DET intermediate parity record](verification/paddleocr-v5-detection-intermediate-ort-openvino-parity-20260929.md) compares the raw detector probability map on all 10 SROIE pages. ORT/OpenVINO inputs and `[1,1,1024,512]` output shapes match, with maximum absolute drift below `3.5e-4`; this remains backend-contract evidence, not a detection-quality score.
+
 The selected v5 Mobile/Server component and pipeline goldens have a separate [ORT/OpenVINO golden parity record](verification/paddleocr-ort-openvino-golden-parity-20260928.md). It records the four passing external-model contract tests, fixed tensor/image hashes, exact recognition tokens and backend-specific scope limits; it is not a replacement for the public dataset evaluation or the unfinished OpenCV DNN/TensorRT matrix.
 
 For investigating low IoU without changing the release metric, `Measure-HierTextGeometryCoverage.ps1` compares each labeled quadrilateral with the union of overlapping predictions. It can distinguish merged/over-expanded boxes from genuinely uncovered text, but its coverage counts are diagnostic only and must not be presented as detection recall.
