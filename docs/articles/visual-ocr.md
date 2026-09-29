@@ -765,6 +765,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 ### 2026-09-29 受控与真实关联边界补充
 
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。
+- **可归因长文本**：从 18 个 HierText 父图选取 102 个真实 text-line crop 拼接成 3,603 字符，ORT/OpenVINO 均使用 32 个窗口并保留每窗口来源 crop/字符区间映射；两后端文本 SHA 一致，CER/WER `19.789%/50.72%`。这是来源可追溯 composition，用于验证真实字形和映射，不是自然连续行准确率。详见 [HierText 长文本记录](../../eng/models/paddle-ocr/verification/hiertext-composed-long-a2-20260929.md)。
 - **已知角度**：4 个不同 SROIE receipt 页的真实标注 crop 旋转到 8 个已知角度；0° case-folded CER/WER `0%/0%`，±12° 明显退化，±90° 全空输出，180° 仍有误差。该结果用于验证方向校正边界，不代表自然旋转分布成绩。详见 [SROIE 已知角度记录](../../eng/models/paddle-ocr/verification/sroie-known-angle-a3-20260929.md)。
 - **退化 smoke**：4 个不同 SROIE 页的真实 crop 生成 6 种退化，ORT/OpenVINO 各 24/24 通过；case-folded CER/WER 均为 `0%/0%`，说明退化强度不足以评估增强收益。详见 [B1b 记录](../../eng/models/paddle-ocr/verification/synthetic-degraded-b1b-20260929.md)。
 - **真实文档阅读顺序**：FUNSD 三页 smoke 的预测文本行与词级标注 aggregate reading-order pair accuracy `70.92%`，三页均非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 三页边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-3pages-20260929.md)。
