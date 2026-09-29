@@ -3,7 +3,7 @@
   "generatedUtc": "2026-09-29T08:59:36.4727795Z",
   "backend": "OpenCV DNN CPU",
   "runtime": "JYPPX.OpenCV.CSharp.API 5.0.0 / OpenCV 5.0.0",
-  "scope": "Per-graph importer/session loading only; no autoregressive generation was attempted because all four graphs did not load under the current adapter contract.",
+  "scope": "Per-graph importer/session loading only; no autoregressive generation was attempted because Prefill/Decode require N-D auxiliary tensors that the current OpenCV C# Mat bridge cannot construct safely.",
   "graphs": [
     {
       "role": "vision-projector",
@@ -19,13 +19,13 @@
       "role": "text-prefill-with-lm-head",
       "status": "unsupported",
       "failureClass": "adapter-contract",
-      "error": "OpenCvDnnModelContract currently admits auxiliary inputs only up to rank 2; inputs_embeds is [1,286,1024]."
+      "error": "OpenCvDnnModelContract admits auxiliary inputs only up to rank 2; inputs_embeds is [1,286,1024]. The current JYPPX OpenCV C# Mat bridge exposes 2-D allocation/reshape only, so this is a deliberate fail-closed adapter boundary."
     },
     {
       "role": "one-token-dynamic-past-decode-with-lm-head",
       "status": "unsupported",
       "failureClass": "adapter-contract",
-      "error": "OpenCvDnnModelContract currently admits auxiliary inputs only up to rank 2; past_key/past_value are [1,past,16,64]."
+      "error": "OpenCvDnnModelContract admits auxiliary inputs only up to rank 2; past_key/past_value are [1,past,16,64]. Dynamic KV would require N-D Mat construction and dynamic shape binding not exposed by the current bridge."
     }
   ],
   "boundary": "Vision and token-embedding graph loading does not constitute Chart2Table OpenCV generation support. Full generation remains unsupported until OpenCV N-D auxiliary tensor construction, dynamic KV inputs and output binding are implemented and verified."

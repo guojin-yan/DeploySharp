@@ -64,6 +64,12 @@ namespace DeploySharp.Backend.OpenCV.Tests
         public void ContractAndArtifactDriftFailClosed()
         {
             Assert.ThrowsExactly<ArgumentException>(() => new OpenCvDnnModelContract(Model, new[] { new TensorDescriptor("images", TensorElementType.Int64, new TensorShape(1, 3, 2, 2)) }, Contract().Outputs));
+            ArgumentException prefill = Assert.ThrowsExactly<ArgumentException>(() => new OpenCvDnnModelContract(Model,
+                new[] { new TensorDescriptor("inputs_embeds", TensorElementType.Float32, new TensorShape(1, 286, 1024)) }, Contract().Outputs, Array.Empty<string>()));
+            StringAssert.Contains(prefill.Message, "one- or two-dimensional");
+            ArgumentException dynamicKv = Assert.ThrowsExactly<ArgumentException>(() => new OpenCvDnnModelContract(Model,
+                new[] { new TensorDescriptor("past_key_0", TensorElementType.Float32, new TensorShape(1, -1, 16, 64)) }, Contract().Outputs, Array.Empty<string>()));
+            StringAssert.Contains(dynamicKv.Message, "one- or two-dimensional");
             OpenCvDnnModelContract dynamicImageContract = new OpenCvDnnModelContract(Model, new[] { new TensorDescriptor("images", TensorElementType.Float32, new TensorShape(-1, 3, 2, 2)) }, Contract().Outputs);
             Assert.IsTrue(dynamicImageContract.Inputs.Single().Shape.IsDynamic);
             var bad = new ModelArtifact(Model, "onnx", Fixture(), new string('a', 64));
@@ -116,6 +122,23 @@ namespace DeploySharp.Backend.OpenCV.Tests
         }
 
         [TestMethod]
+        public void InferenceBatchNormalizationTrainingModeAttributeIsRemoved()
+        {
+            GraphProto graph = new GraphProto();
+            graph.Node.Add(Node("BatchNormalization", new[] { "x", "scale", "bias", "mean", "variance" }, new[] { "y" },
+                new AttributeProto { Name = "epsilon", Type = AttributeProto.Types.AttributeType.Float, F = 0.00001f },
+                new AttributeProto { Name = "training_mode", Type = AttributeProto.Types.AttributeType.Int, I = 0 }));
+            var model = new ModelProto { IrVersion = 7, Graph = graph };
+            model.OpsetImport.Add(new OperatorSetIdProto { Version = 13 });
+
+            byte[] normalized = OpenCvDnnOnnxCompatibilityPasses.Normalize(model.ToByteArray(), out bool changed);
+
+            Assert.IsTrue(changed);
+            ModelProto output = ModelProto.Parser.ParseFrom(normalized);
+            Assert.IsFalse(output.Graph.Node.Single().Attribute.Any(attribute => attribute.Name == "training_mode"));
+        }
+
+        [TestMethod]
         public void DynamicTransformerGraphIsMarkedNativeImporterHazard()
         {
             var graph = new GraphProto { Name = "dynamic-transformer" };
@@ -128,6 +151,37 @@ namespace DeploySharp.Backend.OpenCV.Tests
             model.OpsetImport.Add(new OperatorSetIdProto { Version = 13 });
 
             Assert.IsTrue(OpenCvDnnOnnxCompatibilityPasses.IsNativeImporterHazard(model.ToByteArray()));
+        }
+
+        [TestMethod]
+        public void TrainingBatchNormalizationIsNotRewrittenAsInference()
+        {
+            var model = new ModelProto { Graph = new GraphProto() };
+            model.Graph.Node.Add(Node("BatchNormalization", new[] { "x", "scale", "bias", "mean", "variance" }, new[] { "y", "meanOut", "varianceOut" },
+                new AttributeProto { Name = "training_mode", Type = AttributeProto.Types.AttributeType.Int, I = 1 }));
+            byte[] source = model.ToByteArray();
+            CollectionAssert.AreEqual(source, OpenCvDnnOnnxCompatibilityPasses.Normalize(source, out bool changed));
+            Assert.IsFalse(changed);
+        }
+
+        [TestMethod]
+        public void ReshapeRepairsOnlyLostIntegerDepthAndIsIdempotent()
+        {
+            var model = new ModelProto { Graph = new GraphProto() };
+            var mask = new TensorProto { Name = "empty", DataType = (int)TensorProto.Types.DataType.Int64 };
+            mask.Dims.Add(0);
+            model.Graph.Initializer.Add(mask);
+            model.Graph.Node.Add(Node("Identity", new[] { "shape" }, new[] { "shape_identity" }));
+            model.Graph.Node.Add(Node("Reshape", new[] { "x", "shape_identity" }, new[] { "y" }));
+            model.Graph.Node.Add(Node("Reshape", new[] { "x", "empty" }, new[] { "scalar" }));
+            model.Graph.Node.Add(Node("Reshape", new[] { "x", "ordinary_shape" }, new[] { "unmodified" }));
+            byte[] normalized = OpenCvDnnOnnxCompatibilityPasses.Normalize(model.ToByteArray(), out bool changed);
+            Assert.IsTrue(changed);
+            var graph = ModelProto.Parser.ParseFrom(normalized).Graph;
+            Assert.AreEqual(2, graph.Node.Count(node => node.OpType == "Cast"));
+            Assert.AreEqual("ordinary_shape", graph.Node.Single(node => node.Output.Contains("unmodified")).Input[1]);
+            CollectionAssert.AreEqual(normalized, OpenCvDnnOnnxCompatibilityPasses.Normalize(normalized, out bool changedAgain));
+            Assert.IsFalse(changedAgain);
         }
 
         [TestMethod]

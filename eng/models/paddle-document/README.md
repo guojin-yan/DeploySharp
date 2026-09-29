@@ -124,7 +124,7 @@ TensorRT 10.11 on the local RTX 3060 Laptop requires FP16 vision/projector and t
   -OutputRoot D:\Model\PaddleDocument\chart2table-tensorrt-verify-20260923
 ```
 
-The published bundle is executable on ORT CPU, OpenVINO CPU and TensorRT CUDA; all three have full EOS-terminated output evidence for the same official sample. Additional ChartQA human test charts are being used for task-level qualitative validation; OpenCV DNN autoregressive execution and a labeled dataset accuracy metric remain separate, unverified boundaries.
+The published bundle is executable on ORT CPU, OpenVINO CPU and TensorRT CUDA; all three have full EOS-terminated output evidence for the same official sample. Additional ChartQA human test charts are being used for task-level qualitative validation; OpenCV DNN autoregressive execution remains unsupported by the current adapter contract: Prefill requires rank-3 `inputs_embeds`, while Decode requires rank-4 dynamic KV tensors, and the current OpenCV C# `Mat` bridge exposes only 2-D auxiliary allocation/reshape. The isolated probe therefore fails closed before inference rather than claiming partial generation support. A labeled dataset accuracy metric also remains unverified.
 
 On 2026-09-18 the repository manifest was acquired into `E:\Model\PaddleDocument` with Python 3.11, PaddlePaddle `3.0.0.dev20250613`, Paddle2ONNX `2.0.2rc3`, ONNX `1.17`, and ONNX Runtime CPU. Twenty-eight standard inference archives converted successfully and passed the structural smoke tool. The generated report is outside Git at `E:\Model\PaddleDocument\onnx-smoke.json`.
 
