@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-09-29T13:17:43.6631259+00:00",
+  "model": "paddle-doc/pp-doclayout-l",
+  "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+  "backend": "onnxruntime-cpu",
+  "labels": [
+    "paragraph_title",
+    "image",
+    "text",
+    "number",
+    "abstract",
+    "content",
+    "figure_title",
+    "formula",
+    "table",
+    "table_title",
+    "reference",
+    "doc_title",
+    "footnote",
+    "header",
+    "algorithm",
+    "footer",
+    "seal",
+    "chart_title",
+    "chart",
+    "formula_number",
+    "header_image",
+    "footer_image",
+    "aside_text"
+  ],
+  "pages": [
+    {
+      "image": "82504862.png",
+      "imageSha256": "9a66fa4013bf93b9ba4e959feef7d6b2e278b714ca9d3d347b35aeb305b92626",
+      "detectionCount": 30,
+      "modelOrderIsTopLeft": false,
+      "regions": [
+        {
+          "order": 0,
+          "modelIndex": 22,
+          "label": "header_image",
+          "score": 0.42172915,
+          "x": 240.48515,
+          "y": 79.8009,
+          "width": 24.150406,
+          "height": 22.353294
+        },
+        {
+          "order": 1,
+          "modelIndex": 19,
+          "label": "header_image",
+          "score": 0.45952424,
+          "x": 474.18817,
+          "y": 83.62579,
+          "width": 23.799438,
+          "height": 22.798065
+        },
+        {
+          "order": 2,
+          "modelIndex": 14,
+          "label": "paragraph_title",
+          "score": 0.4870246,
+          "x": 332.8877,
+          "y": 143.24184,
+          "width": 71.86124,
+          "height": 11.01236
+        },
+        {
+          "order": 3,
+          "modelIndex": 17,
+          "label": "doc_title",
+          "score": 0.47657478,
+          "x": 332.8877,
+          "y": 143.24184,
+          "width": 71.86124,
+          "height": 11.01236
+        },
+        {
+          "order": 4,
+          "modelIndex": 27,
+          "label": "text",
+          "score": 0.3289286,
+          "x": 110.91744,
+          "y": 143.99344,
+          "width": 481.1276,
+          "height": 67.65669
+        },
+        {
+          "order": 5,
+          "modelIndex": 15,
+          "label": "text",
+          "score": 0.48317114,
+          "x": 110.51242,
+          "y": 170.75359,
+          "width": 481.808,
+          "height": 39.8107
+        },
+        {
+          "order": 6,
+          "modelIndex": 24,
+          "label": "text",
+          "score": 0.38643724,
+          "x": 112.00342,
+          "y": 171.07469,
+          "width": 479.7768,
+          "height": 11.666962
+        },
+        {
+          "order": 7,
+          "modelIndex": 25,
+          "label": "text",
+          "score": 0.33347148,
+          "x": 240.21376,
+          "y": 171.09344,
+          "width": 351.3828,
+          "height": 11.1082
+        },
+        {
+          "order": 8,
+          "modelIndex": 28,
+          "label": "text",
+          "score": 0.3218717,
+          "x": 112.18357,
+          "y": 171.10497,
+          "width": 479.58353,
+          "height": 11.635666
+        },
+        {
+          "order": 9,
+          "modelIndex": 13,
+          "label": "text",
+          "score": 0.48796242,
+          "x": 112.89231,
+          "y": 171.71324,
+          "width": 76.43731,
+          "height": 10.612167
+        },
+        {
+          "order": 10,
+          "modelIndex": 21,
+          "label": "text",
+          "score": 0.43275493,
+          "x": 240.28838,
+          "y": 198.00125,
+          "width": 218.92445,
+          "height": 11.478943
+        },
+        {
+          "order": 11,
+          "modelIndex": 26,
+          "label": "text",
+          "score": 0.331745,
+          "x": 112.22128,
+          "y": 198.1391,
+          "width": 347.54483,
+          "height": 11.205673
+        },
+        {
+          "order": 12,
+          "modelIndex": 18,
+          "label": "text",
+          "score": 0.47384638,
+          "x": 112.770996,
+          "y": 198.6376,
+          "width": 48.97281,
+          "height": 10.460556
+        },
+        {
+          "order": 13,
+          "modelIndex": 5,
+          "label": "text",
+          "score": 0.66513,
+          "x": 112.03287,
+          "y": 228.41977,
+          "width": 74.93912,
+          "height": 23.851837
+        },
+        {
+          "order": 14,
+          "modelIndex": 4,
+          "label": "text",
+          "score": 0.66574574,
+          "x": 239.96552,
+          "y": 241.88231,
+          "width": 145.78326,
+          "height": 11.421005
+        },
+        {
+          "order": 15,
+          "modelIndex": 8,
+          "label": "text",
+          "score": 0.62560755,
+          "x": 112.25733,
+          "y": 268.91122,
+          "width": 78.54063,
+          "height": 9.995972
+        },
+        {
+          "order": 16,
+          "modelIndex": 11,
+          "label": "text",
+          "score": 0.49859488,
+          "x": 111.5575,
+          "y": 298.3444,
+          "width": 205.95514,
+          "height": 10.735748
+        },
+        {
+          "order": 17,
+          "modelIndex": 9,
+          "label": "text",
+          "score": 0.53380924,
+          "x": 240.92728,
+          "y": 298.4996,
+          "width": 76.11331,
+          "height": 11.339355
+        },
+        {
+          "order": 18,
+          "modelIndex": 16,
+          "label": "text",
+          "score": 0.47727495,
+          "x": 112.05251,
+          "y": 298.80948,
+          "width": 90.27152,
+          "height": 10.107758
+        },
+        {
+          "order": 19,
+          "modelIndex": 12,
+          "label": "text",
+          "score": 0.4887501,
+          "x": 112.30775,
+          "y": 325.4454,
+          "width": 72.38854,
+          "height": 9.972504
+        },
+        {
+          "order": 20,
+          "modelIndex": 20,
+          "label": "text",
+          "score": 0.44782874,
+          "x": 111.63365,
+          "y": 325.4877,
+          "width": 182.34178,
+          "height": 10.146088
+        },
+        {
+          "order": 21,
+          "modelIndex": 10,
+          "label": "text",
+          "score": 0.51892626,
+          "x": 240.20256,
+          "y": 325.8829,
+          "width": 50.042618,
+          "height": 9.90918
+        },
+        {
+          "order": 22,
+          "modelIndex": 3,
+          "label": "text",
+          "score": 0.7824708,
+          "x": 111.77601,
+          "y": 352.07632,
+          "width": 76.98148,
+          "height": 23.349396
+        },
+        {
+          "order": 23,
+          "modelIndex": 0,
+          "label": "text",
+          "score": 0.8155272,
+          "x": 239.1821,
+          "y": 365.41168,
+          "width": 245.07245,
+          "height": 63.12155
+        },
+        {
+          "order": 24,
+          "modelIndex": 2,
+          "label": "text",
+          "score": 0.7959728,
+          "x": 111.368195,
+          "y": 446.40372,
+          "width": 74.97615,
+          "height": 23.424866
+        },
+        {
+          "order": 25,
+          "modelIndex": 7,
+          "label": "text",
+          "score": 0.65023625,
+          "x": 111.80866,
+          "y": 486.39056,
+          "width": 46.214394,
+          "height": 10.104706
+        },
+        {
+          "order": 26,
+          "modelIndex": 6,
+          "label": "text",
+          "score": 0.66332555,
+          "x": 111.66892,
+          "y": 513.094,
+          "width": 79.42307,
+          "height": 9.966797
+        },
+        {
+          "order": 27,
+          "modelIndex": 23,
+          "label": "text",
+          "score": 0.4154788,
+          "x": 586.30457,
+          "y": 780.3377,
+          "width": 68.42688,
+          "height": 109.788635
+        },
+        {
+          "order": 28,
+          "modelIndex": 29,
+          "label": "aside_text",
+          "score": 0.3166203,
+          "x": 586.86285,
+          "y": 787.9097,
+          "width": 21.425049,
+          "height": 102.83124
+        },
+        {
+          "order": 29,
+          "modelIndex": 1,
+          "label": "footer",
+          "score": 0.7970042,
+          "x": 10.243518,
+          "y": 972.24866,
+          "width": 522.8033,
+          "height": 7.8935547
+        }
+      ]
+    },
+    {
+      "image": "82562350.png",
+      "imageSha256": "38330e56545f7ef03ccf67b22330388e21444b4935e058d447f42cf329f50bdb",
+      "detectionCount": 25,
+      "modelOrderIsTopLeft": false,
+      "regions": [
+        {
+          "order": 0,
+          "modelIndex": 2,
+          "label": "header",
+          "score": 0.8381699,
+          "x": 598.06793,
+          "y": 61.92578,
+          "width": 58.013733,
+          "height": 10.1914215
+        },
+        {
+          "order": 1,
+          "modelIndex": 5,
+          "label": "header",
+          "score": 0.7880217,
+          "x": 347.48132,
+          "y": 67.90923,
+          "width": 103.42804,
+          "height": 15.313644
+        },
+        {
+          "order": 2,
+          "modelIndex": 9,
+          "label": "header",
+          "score": 0.6907784,
+          "x": 44.134396,
+          "y": 72.28493,
+          "width": 234.58902,
+          "height": 13.016487
+        },
+        {
+          "order": 3,
+          "modelIndex": 16,
+          "label": "number",
+          "score": 0.46591452,
+          "x": 16.145817,
+          "y": 76.70135,
+          "width": 7.028801,
+          "height": 6.6192703
+        },
+        {
+          "order": 4,
+          "modelIndex": 17,
+          "label": "image",
+          "score": 0.43738297,
+          "x": 274.13675,
+          "y": 133.51698,
+          "width": 183.44717,
+          "height": 51.291092
+        },
+        {
+          "order": 5,
+          "modelIndex": 19,
+          "label": "text",
+          "score": 0.37245017,
+          "x": 274.13675,
+          "y": 133.51698,
+          "width": 183.44717,
+          "height": 51.291092
+        },
+        {
+          "order": 6,
+          "modelIndex": 20,
+          "label": "doc_title",
+          "score": 0.3592075,
+          "x": 274.13675,
+          "y": 133.51698,
+          "width": 183.44717,
+          "height": 51.291092
+        },
+        {
+          "order": 7,
+          "modelIndex": 21,
+          "label": "paragraph_title",
+          "score": 0.3294425,
+          "x": 274.13675,
+          "y": 133.51698,
+          "width": 183.44717,
+          "height": 51.291092
+        },
+        {
+          "order": 8,
+          "modelIndex": 24,
+          "label": "header_image",
+          "score": 0.31676966,
+          "x": 274.13675,
+          "y": 133.51698,
+          "width": 183.44717,
+          "height": 51.291092
+        },
+        {
+          "order": 9,
+          "modelIndex": 11,
+          "label": "image",
+          "score": 0.64346683,
+          "x": 122.20378,
+          "y": 254.51599,
+          "width": 108.388885,
+          "height": 45.881165
+        },
+        {
+          "order": 10,
+          "modelIndex": 3,
+          "label": "table",
+          "score": 0.80519485,
+          "x": 116.651,
+          "y": 331.3468,
+          "width": 493.77686,
+          "height": 102.78677
+        },
+        {
+          "order": 11,
+          "modelIndex": 23,
+          "label": "table",
+          "score": 0.32003242,
+          "x": 116.26052,
+          "y": 331.38528,
+          "width": 494.22745,
+          "height": 155.98865
+        },
+        {
+          "order": 12,
+          "modelIndex": 15,
+          "label": "text",
+          "score": 0.5422777,
+          "x": 116.936295,
+          "y": 449.2694,
+          "width": 482.4541,
+          "height": 15.265778
+        },
+        {
+          "order": 13,
+          "modelIndex": 7,
+          "label": "paragraph_title",
+          "score": 0.6957284,
+          "x": 117.01161,
+          "y": 496.28827,
+          "width": 79.30313,
+          "height": 11.071899
+        },
+        {
+          "order": 14,
+          "modelIndex": 22,
+          "label": "text",
+          "score": 0.32781464,
+          "x": 117.01161,
+          "y": 496.28827,
+          "width": 79.30313,
+          "height": 11.071899
+        },
+        {
+          "order": 15,
+          "modelIndex": 0,
+          "label": "text",
+          "score": 0.92973554,
+          "x": 115.42592,
+          "y": 522.56146,
+          "width": 489.91333,
+          "height": 43.61743
+        },
+        {
+          "order": 16,
+          "modelIndex": 10,
+          "label": "text",
+          "score": 0.65688896,
+          "x": 116.53772,
+          "y": 584.7517,
+          "width": 30.663773,
+          "height": 12.0772705
+        },
+        {
+          "order": 17,
+          "modelIndex": 18,
+          "label": "paragraph_title",
+          "score": 0.38813168,
+          "x": 116.53772,
+          "y": 584.7517,
+          "width": 30.663773,
+          "height": 12.0772705
+        },
+        {
+          "order": 18,
+          "modelIndex": 8,
+          "label": "paragraph_title",
+          "score": 0.6923255,
+          "x": 309.81055,
+          "y": 742.03235,
+          "width": 108.125336,
+          "height": 9.422913
+        },
+        {
+          "order": 19,
+          "modelIndex": 6,
+          "label": "aside_text",
+          "score": 0.75244814,
+          "x": 658.5337,
+          "y": 759.9032,
+          "width": 20.871521,
+          "height": 98.89752
+        },
+        {
+          "order": 20,
+          "modelIndex": 1,
+          "label": "text",
+          "score": 0.8480902,
+          "x": 115.4179,
+          "y": 764.25244,
+          "width": 491.20605,
+          "height": 53.786682
+        },
+        {
+          "order": 21,
+          "modelIndex": 14,
+          "label": "text",
+          "score": 0.57171184,
+          "x": 306.2128,
+          "y": 863.5666,
+          "width": 111.91965,
+          "height": 52.63275
+        },
+        {
+          "order": 22,
+          "modelIndex": 4,
+          "label": "text",
+          "score": 0.79918146,
+          "x": 316.96344,
+          "y": 863.7703,
+          "width": 92.184326,
+          "height": 31.084167
+        },
+        {
+          "order": 23,
+          "modelIndex": 12,
+          "label": "text",
+          "score": 0.59616387,
+          "x": 306.92465,
+          "y": 905.8175,
+          "width": 111.41223,
+          "height": 10.449036
+        },
+        {
+          "order": 24,
+          "modelIndex": 13,
+          "label": "footer",
+          "score": 0.59049845,
+          "x": 302.988,
+          "y": 969.7562,
+          "width": 321.1664,
+          "height": 10.525818
+        }
+      ]
+    },
+    {
+      "image": "82573104.png",
+      "imageSha256": "b0e9f8efecc27dd6445f849aace051078ecbb300b8c6440731d080c39697f18f",
+      "detectionCount": 19,
+      "modelOrderIsTopLeft": false,
+      "regions": [
+        {
+          "order": 0,
+          "modelIndex": 8,
+          "label": "text",
+          "score": 0.738111,
+          "x": 548.68396,
+          "y": 80.34365,
+          "width": 122.83716,
+          "height": 134.56259
+        },
+        {
+          "order": 1,
+          "modelIndex": 13,
+          "label": "doc_title",
+          "score": 0.44331092,
+          "x": 198.48987,
+          "y": 162.23253,
+          "width": 338.36157,
+          "height": 19.250748
+        },
+        {
+          "order": 2,
+          "modelIndex": 0,
+          "label": "text",
+          "score": 0.9566199,
+          "x": 248.53024,
+          "y": 206.74286,
+          "width": 238.4477,
+          "height": 80.32529
+        },
+        {
+          "order": 3,
+          "modelIndex": 9,
+          "label": "text",
+          "score": 0.64031684,
+          "x": 123.02425,
+          "y": 330.51678,
+          "width": 485.8869,
+          "height": 71.55737
+        },
+        {
+          "order": 4,
+          "modelIndex": 12,
+          "label": "abstract",
+          "score": 0.5080482,
+          "x": 123.02425,
+          "y": 330.51678,
+          "width": 485.8869,
+          "height": 71.55737
+        },
+        {
+          "order": 5,
+          "modelIndex": 4,
+          "label": "text",
+          "score": 0.82211816,
+          "x": 163.47252,
+          "y": 458.14096,
+          "width": 247.79124,
+          "height": 16.225525
+        },
+        {
+          "order": 6,
+          "modelIndex": 16,
+          "label": "text",
+          "score": 0.37976438,
+          "x": 160.08063,
+          "y": 458.70953,
+          "width": 387.6065,
+          "height": 197.96582
+        },
+        {
+          "order": 7,
+          "modelIndex": 5,
+          "label": "text",
+          "score": 0.7825701,
+          "x": 164.15912,
+          "y": 498.7369,
+          "width": 255.83237,
+          "height": 17.135284
+        },
+        {
+          "order": 8,
+          "modelIndex": 7,
+          "label": "text",
+          "score": 0.7512858,
+          "x": 159.86609,
+          "y": 539.1326,
+          "width": 318.09167,
+          "height": 36.76056
+        },
+        {
+          "order": 9,
+          "modelIndex": 15,
+          "label": "text",
+          "score": 0.41787523,
+          "x": 160.96136,
+          "y": 595.89215,
+          "width": 385.57452,
+          "height": 61.80719
+        },
+        {
+          "order": 10,
+          "modelIndex": 18,
+          "label": "text",
+          "score": 0.35055962,
+          "x": 278.16757,
+          "y": 595.99976,
+          "width": 268.83804,
+          "height": 62.51184
+        },
+        {
+          "order": 11,
+          "modelIndex": 10,
+          "label": "text",
+          "score": 0.61015487,
+          "x": 160.32222,
+          "y": 598.6777,
+          "width": 162.5714,
+          "height": 16.70575
+        },
+        {
+          "order": 12,
+          "modelIndex": 14,
+          "label": "text",
+          "score": 0.42347607,
+          "x": 278.67282,
+          "y": 623.7462,
+          "width": 268.73502,
+          "height": 35.066345
+        },
+        {
+          "order": 13,
+          "modelIndex": 3,
+          "label": "text",
+          "score": 0.8311155,
+          "x": 161.76071,
+          "y": 692.97437,
+          "width": 90.92613,
+          "height": 15.333801
+        },
+        {
+          "order": 14,
+          "modelIndex": 11,
+          "label": "aside_text",
+          "score": 0.5480634,
+          "x": 640.9375,
+          "y": 720.9294,
+          "width": 23.604187,
+          "height": 99.917114
+        },
+        {
+          "order": 15,
+          "modelIndex": 17,
+          "label": "text",
+          "score": 0.36908677,
+          "x": 640.9375,
+          "y": 720.9294,
+          "width": 23.604187,
+          "height": 99.917114
+        },
+        {
+          "order": 16,
+          "modelIndex": 2,
+          "label": "footer",
+          "score": 0.8481406,
+          "x": 546.5241,
+          "y": 947.6391,
+          "width": 120.55261,
+          "height": 9.791016
+        },
+        {
+          "order": 17,
+          "modelIndex": 1,
+          "label": "footer",
+          "score": 0.85368603,
+          "x": 289.40793,
+          "y": 948.88983,
+          "width": 118.850586,
+          "height": 9.88446
+        },
+        {
+          "order": 18,
+          "modelIndex": 6,
+          "label": "number",
+          "score": 0.77466714,
+          "x": 95.660446,
+          "y": 950.06555,
+          "width": 29.980583,
+          "height": 10.361389
+        }
+      ]
+    }
+  ],
+  "boundary": "Three real FUNSD pages; layout-model execution and deterministic regions only, not layout accuracy without aligned region labels."
+}
