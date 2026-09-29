@@ -11,6 +11,11 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes window bounds; overlap must be positive and at most one half. / 初始化窗口边界；重叠比例必须为正且最多为一半。</summary>
         public OcrRecognitionWindowOptions(double overlapRatio = 0.2, int maximumWindowsPerRegion = 32, int maximumWindowsPerImage = 1024, int maximumMergedCharacters = 16384, int maximumOverlapTokens = 64, int minimumOverlapTokens = 2, int maximumMergedTimesteps = 65536)
+            : this(overlapRatio, maximumWindowsPerRegion, maximumWindowsPerImage, maximumMergedCharacters, maximumOverlapTokens, minimumOverlapTokens, maximumMergedTimesteps, 2, true)
+        {
+        }
+
+        private OcrRecognitionWindowOptions(double overlapRatio, int maximumWindowsPerRegion, int maximumWindowsPerImage, int maximumMergedCharacters, int maximumOverlapTokens, int minimumOverlapTokens, int maximumMergedTimesteps, int maximumOverlapEditDistance, bool _)
         {
             if (!(overlapRatio > 0 && overlapRatio <= 0.5)) throw new ArgumentOutOfRangeException(nameof(overlapRatio));
             if (maximumWindowsPerRegion < 2 || maximumWindowsPerRegion > 256) throw new ArgumentOutOfRangeException(nameof(maximumWindowsPerRegion));
@@ -18,6 +23,7 @@ namespace JYPPX.DeploySharp.Visual
             if (maximumMergedCharacters < 1 || maximumMergedCharacters > 65536) throw new ArgumentOutOfRangeException(nameof(maximumMergedCharacters));
             if (minimumOverlapTokens < 1 || maximumOverlapTokens < minimumOverlapTokens || maximumOverlapTokens > 256) throw new ArgumentOutOfRangeException(nameof(maximumOverlapTokens));
             if (maximumMergedTimesteps < 1 || maximumMergedTimesteps > 262144) throw new ArgumentOutOfRangeException(nameof(maximumMergedTimesteps));
+            if (maximumOverlapEditDistance < 0 || maximumOverlapEditDistance > 8) throw new ArgumentOutOfRangeException(nameof(maximumOverlapEditDistance));
             OverlapRatio = overlapRatio;
             MaximumWindowsPerRegion = maximumWindowsPerRegion;
             MaximumWindowsPerImage = maximumWindowsPerImage;
@@ -25,6 +31,7 @@ namespace JYPPX.DeploySharp.Visual
             MaximumOverlapTokens = maximumOverlapTokens;
             MinimumOverlapTokens = minimumOverlapTokens;
             MaximumMergedTimesteps = maximumMergedTimesteps;
+            MaximumOverlapEditDistance = maximumOverlapEditDistance;
         }
 
         /// <summary>Gets the fraction of each window retained as the next window's context. / 获取保留为下一窗口上下文的窗口比例。</summary>
@@ -41,6 +48,14 @@ namespace JYPPX.DeploySharp.Visual
         public int MinimumOverlapTokens { get; }
         /// <summary>Gets the total raw timestep limit per merged line, including blank and suppressed tokens. / 获取每个合并行包括 blank 与被抑制 token 的原始时间步总数限制。</summary>
         public int MaximumMergedTimesteps { get; }
+        /// <summary>Gets the maximum token edits accepted by the bounded geometric seam fallback. / 获取有界几何接缝回退可接受的最大 token 编辑数。</summary>
+        public int MaximumOverlapEditDistance { get; }
+
+        /// <summary>Returns a copy with a bounded fuzzy-seam edit distance. / 返回设置了有界模糊接缝编辑距离的新配置。</summary>
+        public OcrRecognitionWindowOptions WithMaximumOverlapEditDistance(int maximumOverlapEditDistance)
+            => new OcrRecognitionWindowOptions(OverlapRatio, MaximumWindowsPerRegion, MaximumWindowsPerImage,
+                MaximumMergedCharacters, MaximumOverlapTokens, MinimumOverlapTokens, MaximumMergedTimesteps,
+                maximumOverlapEditDistance, true);
     }
 
     /// <summary>Describes a source-space crop and its normalized horizontal interval after orientation. / 描述源图裁剪及定向后归一化水平区间。</summary>
@@ -137,7 +152,16 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         internal OcrRecognitionWindowResult(int index, double start, double end, RecognizedText recognition, OcrRecognitionWidthInfo width, int removedPrefixTokens, bool seamUncertain)
-        { Index = index; Start = start; End = end; Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition)); Width = width; RemovedPrefixTokens = removedPrefixTokens; SeamUncertain = seamUncertain; }
+            : this(index, start, end, recognition, width, removedPrefixTokens, seamUncertain, 0)
+        {
+        }
+
+        internal OcrRecognitionWindowResult(int index, double start, double end, RecognizedText recognition, OcrRecognitionWidthInfo width, int removedPrefixTokens, bool seamUncertain, int overlapEditDistance)
+        {
+            if (removedPrefixTokens < 0) throw new ArgumentOutOfRangeException(nameof(removedPrefixTokens));
+            if (overlapEditDistance < 0) throw new ArgumentOutOfRangeException(nameof(overlapEditDistance));
+            Index = index; Start = start; End = end; Recognition = recognition ?? throw new ArgumentNullException(nameof(recognition)); Width = width; RemovedPrefixTokens = removedPrefixTokens; SeamUncertain = seamUncertain; OverlapEditDistance = overlapEditDistance;
+        }
         /// <summary>Gets the original window index. / 获取原窗口序号。</summary>
         public int Index { get; }
         /// <summary>Gets the normalized rectified start. / 获取归一化校正起点。</summary>
@@ -148,16 +172,18 @@ namespace JYPPX.DeploySharp.Visual
         public RecognizedText Recognition { get; }
         /// <summary>Gets actual per-window width and batch padding. / 获取实际逐窗口宽度与批填充。</summary>
         public OcrRecognitionWidthInfo Width { get; }
-        /// <summary>Gets emitted prefix tokens removed after exact overlap matching. / 获取完全重叠匹配后移除的已发射前缀 token 数。</summary>
+        /// <summary>Gets emitted prefix tokens removed after an accepted exact or fuzzy overlap match. / 获取精确或模糊重叠匹配通过后移除的已发射前缀 token 数。</summary>
         public int RemovedPrefixTokens { get; }
-        /// <summary>Gets whether no reliable seam match was found; unmatched text is retained, not discarded. / 获取是否未找到可靠接缝匹配；保留未匹配文本而不丢弃。</summary>
+        /// <summary>Gets whether the seam required fuzzy alignment or remained unmatched. / 获取接缝是否需要模糊对齐或仍未匹配。</summary>
         public bool SeamUncertain { get; }
+        /// <summary>Gets the bounded edit distance used for an accepted fuzzy seam, or zero for exact/unmatched seams. / 获取已接受模糊接缝使用的有界编辑距离；精确或未匹配接缝为零。</summary>
+        public int OverlapEditDistance { get; }
     }
 
     /// <summary>Merges bounded CTC windows without running CTC collapse across independent windows. / 合并有界 CTC 窗口，不跨独立窗口执行 CTC 折叠。</summary>
     public static class OcrRecognitionWindowMerger
     {
-        /// <summary>Merges exact token overlaps only inside shared geometric intervals, retaining uncertain seams for review. / 仅在共享几何区间内合并完全匹配 token 重叠，保留不确定接缝供复核。</summary>
+        /// <summary>Merges exact or tightly bounded fuzzy token overlaps inside shared geometric intervals. / 在共享几何区间内合并精确或严格有界的模糊 token 重叠。</summary>
         public static OcrRegionResult Merge(TextRegion region, TextCropProfile profile, IReadOnlyList<OcrRecognitionWindowResult> windows, CtcConfidenceAggregation confidenceAggregation = CtcConfidenceAggregation.Mean, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (region == null) throw new ArgumentNullException(nameof(region));
@@ -209,8 +235,9 @@ namespace JYPPX.DeploySharp.Visual
                     }
                 }
                 if (!string.Equals(rawText.ToString(), raw.Text, StringComparison.Ordinal)) throw new ArgumentException("CTC emissions do not reproduce the raw text.", nameof(windows));
-                int remove = index == 0 ? 0 : Match(windows[index - 1], window, previous!, current, profile);
-                bool uncertain = index > 0 && remove == 0;
+                int overlapEditDistance = 0;
+                int remove = index == 0 ? 0 : Match(windows[index - 1], window, previous!, current, profile, out overlapEditDistance);
+                bool uncertain = index > 0 && (remove == 0 || overlapEditDistance > 0);
                 int ordinal = 0;
                 int offset = trace.Count;
                 for (int tokenIndex = 0; tokenIndex < raw.Tokens.Count; tokenIndex++)
@@ -228,7 +255,7 @@ namespace JYPPX.DeploySharp.Visual
                     logSum += Math.Log(token.Confidence);
                     minimum = Math.Min(minimum, token.Confidence);
                 }
-                diagnostics.Add(new OcrRecognitionWindowResult(index, window.Start, window.End, raw, window.Width, remove, uncertain));
+                diagnostics.Add(new OcrRecognitionWindowResult(index, window.Start, window.End, raw, window.Width, remove, uncertain, overlapEditDistance));
                 previous = current;
                 targetWidth = Math.Max(targetWidth, window.Width.TargetWidth);
                 tensorWidth = Math.Max(tensorWidth, window.Width.TensorWidth);
@@ -240,12 +267,15 @@ namespace JYPPX.DeploySharp.Visual
             return new OcrRegionResult(region, merged, new OcrRecognitionWidthInfo(naturalWidth, targetWidth, tensorWidth, RecognitionOverflowMode.SlidingWindow, windows.Count), diagnostics);
         }
 
-        private static int Match(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile)
+        private static int Match(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, out int editDistance)
         {
+            editDistance = 0;
             int maximum = Math.Min(profile.RecognitionWindows.MaximumOverlapTokens, Math.Min(suffix.Count, prefix.Count));
             double overlap = left.End - right.Start;
-            double leftTolerance = StepWidth(left, profile) * 0.5;
-            double rightTolerance = StepWidth(right, profile) * 0.5;
+            double leftStep = StepWidth(left, profile);
+            double rightStep = StepWidth(right, profile);
+            double leftTolerance = leftStep * 0.5;
+            double rightTolerance = rightStep * 0.5;
             for (int count = maximum; count >= profile.RecognitionWindows.MinimumOverlapTokens; count--)
             {
                 bool match = true;
@@ -253,8 +283,8 @@ namespace JYPPX.DeploySharp.Visual
                 {
                     OcrToken a = suffix[suffix.Count - count + index];
                     OcrToken b = prefix[index];
-                    double x = Position(left, a, profile);
-                    double y = Position(right, b, profile);
+                    double x = Position(left, a, leftStep);
+                    double y = Position(right, b, rightStep);
                     if (a.IsUnknown || b.IsUnknown || a.IsBlank || b.IsBlank || a.ClassIndex != b.ClassIndex || !string.Equals(a.Text, b.Text, StringComparison.Ordinal)
                         || x < right.Start - leftTolerance || x > left.End + leftTolerance
                         || y < right.Start - rightTolerance || y > left.End + rightTolerance || Math.Abs(x - y) > overlap * 0.5)
@@ -262,11 +292,95 @@ namespace JYPPX.DeploySharp.Visual
                 }
                 if (match) return count;
             }
-            return 0;
+
+            return MatchApproximate(left, right, suffix, prefix, profile, out editDistance);
         }
 
+        private static int MatchApproximate(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, out int editDistance)
+        {
+            editDistance = 0;
+            int maximum = profile.RecognitionWindows.MaximumOverlapTokens;
+            int minimum = profile.RecognitionWindows.MinimumOverlapTokens;
+            double leftStep = StepWidth(left, profile);
+            double rightStep = StepWidth(right, profile);
+            int leftStart = suffix.Count;
+            double leftTolerance = leftStep * 0.5;
+            double leftMinimum = right.Start - leftTolerance;
+            double leftMaximum = left.End + leftTolerance;
+            if (suffix.Count > 0 && Position(left, suffix[suffix.Count - 1], leftStep) > leftMaximum) return 0;
+            while (leftStart > 0 && Position(left, suffix[leftStart - 1], leftStep) >= leftMinimum) leftStart--;
+            int leftCount = suffix.Count - leftStart;
+
+            int rightEnd = 0;
+            double rightTolerance = rightStep * 0.5;
+            double rightMinimum = right.Start - rightTolerance;
+            double rightMaximum = left.End + rightTolerance;
+            if (prefix.Count > 0 && Position(right, prefix[0], rightStep) < rightMinimum) return 0;
+            while (rightEnd < prefix.Count && Position(right, prefix[rightEnd], rightStep) <= rightMaximum) rightEnd++;
+            int rightCount = rightEnd;
+
+            int minimumFuzzyTokens = Math.Max(8, Math.Max(minimum, profile.RecognitionWindows.MaximumOverlapEditDistance * 2 + 1));
+            if (leftCount < minimumFuzzyTokens || rightCount < minimumFuzzyTokens || leftCount > maximum || rightCount > maximum
+                || Math.Abs(leftCount - rightCount) > profile.RecognitionWindows.MaximumOverlapEditDistance)
+                return 0;
+
+            for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
+            for (int index = 0; index < rightEnd; index++) if (prefix[index].IsUnknown || prefix[index].IsBlank) return 0;
+
+            int distance = EditDistance(left, right, suffix, leftStart, leftCount, prefix, rightCount, profile,
+                profile.RecognitionWindows.MaximumOverlapEditDistance);
+            if (distance > profile.RecognitionWindows.MaximumOverlapEditDistance) return 0;
+            editDistance = distance;
+            return rightCount;
+        }
+
+        private static int EditDistance(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,
+            List<OcrToken> suffix, int leftStart, int leftCount, List<OcrToken> prefix, int rightCount,
+            TextCropProfile profile, int maximumDistance)
+        {
+            int infinity = maximumDistance + leftCount + rightCount + 1;
+            var previous = new int[rightCount + 1];
+            var current = new int[rightCount + 1];
+            for (int column = 0; column <= rightCount; column++) previous[column] = column;
+            double maximumPositionDelta = (left.End - right.Start) * 0.5;
+            double leftStep = StepWidth(left, profile);
+            double rightStep = StepWidth(right, profile);
+            var leftPositions = new double[leftCount];
+            var rightPositions = new double[rightCount];
+            for (int index = 0; index < leftCount; index++) leftPositions[index] = Position(left, suffix[leftStart + index], leftStep);
+            for (int index = 0; index < rightCount; index++) rightPositions[index] = Position(right, prefix[index], rightStep);
+            for (int row = 1; row <= leftCount; row++)
+            {
+                current[0] = row;
+                int rowMinimum = current[0];
+                OcrToken leftToken = suffix[leftStart + row - 1];
+                double leftPosition = leftPositions[row - 1];
+                for (int column = 1; column <= rightCount; column++)
+                {
+                    OcrToken rightToken = prefix[column - 1];
+                    double rightPosition = rightPositions[column - 1];
+                    int substitution = Math.Abs(leftPosition - rightPosition) > maximumPositionDelta
+                        ? infinity
+                        : TokenEquals(leftToken, rightToken) ? 0 : 1;
+                    int value = Math.Min(Math.Min(previous[column] + 1, current[column - 1] + 1), previous[column - 1] + substitution);
+                    current[column] = value;
+                    rowMinimum = Math.Min(rowMinimum, value);
+                }
+                if (rowMinimum > maximumDistance) return infinity;
+                int[] temporary = previous; previous = current; current = temporary;
+            }
+            return previous[rightCount];
+        }
+
+        private static bool TokenEquals(OcrToken left, OcrToken right)
+            => !left.IsUnknown && !right.IsUnknown && !left.IsBlank && !right.IsBlank
+                && left.ClassIndex == right.ClassIndex && string.Equals(left.Text, right.Text, StringComparison.Ordinal);
+
         private static double Position(OcrRecognitionWindowResult window, OcrToken token, TextCropProfile profile)
-            => window.Start + (token.Timestep + 0.5) * StepWidth(window, profile);
+            => Position(window, token, StepWidth(window, profile));
+
+        private static double Position(OcrRecognitionWindowResult window, OcrToken token, double stepWidth)
+            => window.Start + (token.Timestep + 0.5) * stepWidth;
 
         private static double StepWidth(OcrRecognitionWindowResult window, TextCropProfile profile)
         {

@@ -62,7 +62,7 @@ namespace JYPPX.DeploySharp.Visual
             Orientation = source.Orientation; Recognition = source.Recognition.WithSourceRegionIndex(index); RecognitionWidth = source.RecognitionWidth;
             var windows = new List<OcrRecognitionWindowResult>(source.RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in source.RecognitionWindows)
-                windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(index), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
+                windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(index), window.Width, window.RemovedPrefixTokens, window.SeamUncertain, window.OverlapEditDistance));
             RecognitionWindows = windows.AsReadOnly();
             CropDiagnostics = source.CropDiagnostics;
         }

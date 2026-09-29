@@ -831,7 +831,7 @@ namespace JYPPX.DeploySharp.Visual
             if (region.SourceIndex == Region.SourceIndex) return new OcrRegionResult(region, Recognition, RecognitionWidth, RecognitionWindows, Geometry, OrientationRetry).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry).WithWidthRetry(WidthRetry);
             var windows = new List<OcrRecognitionWindowResult>(RecognitionWindows.Count);
             foreach (OcrRecognitionWindowResult window in RecognitionWindows)
-                windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain));
+                windows.Add(new OcrRecognitionWindowResult(window.Index, window.Start, window.End, window.Recognition.WithSourceRegionIndex(region.SourceIndex), window.Width, window.RemovedPrefixTokens, window.SeamUncertain, window.OverlapEditDistance));
             return new OcrRegionResult(region, Recognition.WithSourceRegionIndex(region.SourceIndex), RecognitionWidth, windows, Geometry, OrientationRetry?.WithSourceIndex(region.SourceIndex)).WithPixelQuality(PixelQuality).WithCropDiagnostics(CropDiagnostics).WithEnhancementRetry(EnhancementRetry?.WithSourceIndex(region.SourceIndex)).WithWidthRetry(WidthRetry?.WithSourceIndex(region.SourceIndex));
         }
     }

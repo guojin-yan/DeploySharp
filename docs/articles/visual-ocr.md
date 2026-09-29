@@ -543,7 +543,8 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithRecognitionWindows(
         maximumMergedCharacters: 16384,
         maximumOverlapTokens: 64,
         minimumOverlapTokens: 2,
-        maximumMergedTimesteps: 65536));
+        maximumMergedTimesteps: 65536)
+        .WithMaximumOverlapEditDistance(2));
 
 // 仍通过现有 OcrPipeline 构造函数传入 crop。
 // REC Batch 和独立 Session 数量继续由既有参数控制。
@@ -553,7 +554,8 @@ foreach (OcrRegionResult line in result.Regions)
     Console.WriteLine($"{line.Region.SourceIndex}: {line.Recognition.Text}, review={needsReview}");
     foreach (OcrRecognitionWindowResult window in line.RecognitionWindows)
         Console.WriteLine($"  window={window.Index}, range={window.Start:F3}..{window.End:F3}, " +
-            $"raw={window.Recognition.Text}, removed={window.RemovedPrefixTokens}");
+            $"raw={window.Recognition.Text}, removed={window.RemovedPrefixTokens}, " +
+            $"seamEdit={window.OverlapEditDistance}, uncertain={window.SeamUncertain}");
 }
 ```
 
@@ -567,11 +569,13 @@ foreach (OcrRegionResult line in result.Regions)
 
 ### 接缝匹配及不确定结果
 
-`OcrRecognitionWindowMerger` 仅合并相邻窗口的完全匹配 token 后缀/前缀，并检查近似 CTC 位置是否位于共享几何范围。映射会扣除输入填充，并容纳半个时间步的离散定位误差。token 可能是一个中文字符、emoji，或包含多个 Unicode 标量的字典项；比较和删除都以完整 token 为单位。
+`OcrRecognitionWindowMerger` 先尝试在相邻窗口之间匹配完全相同的 token 后缀/前缀；失败后才会启用有界模糊匹配。模糊回退只比较各自估算位置落在共享几何区间内的 token，并使用有上限的 token 编辑距离；位置映射会扣除输入 padding，容纳半个时间步的离散定位误差。token 可能是中文字符、emoji 或含多个 Unicode 标量的字典项，比较/编辑距离/删除均以完整 token 为单位，不拆 Unicode 字符。
 
-默认至少要求 2 个匹配 token。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，匹配属于保守启发式，必须结合应用样本评估。
+默认至少要求 2 个重叠 token，模糊回退最多允许 2 个 token 编辑（`maximumOverlapEditDistance`，可设为 0 关闭；上限为 8）。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，模糊匹配属于保守启发式，必须结合应用样本评估。
 
-无法匹配时保留两侧文字，并设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用可以据此人工复核、增加兼容宽度或采用另一组窗口参数重试；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被匹配移除的前缀在合并 trace 中改为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
+完全匹配时 `OverlapEditDistance=0` 且接缝不标记 uncertain；通过模糊回退时 `OverlapEditDistance` 记录编辑距离并设置 `SeamUncertain=true`，合并优先保留前一窗口的重叠文本，同时抑制后一窗口对应的前缀；无法通过门限时不删除后一窗口文本，也设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用应复核所有 uncertain 接缝；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被抑制前缀在合并 trace 中标记为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
+
+2026-09-29 的两种受控 3,600 字符样本用于验证接缝合同，不代表自然图片精度：PP-OCRv6 Small 在 ORT CPU 与 OpenVINO CPU 上均完成识别。周期重复短语样本用 18 窗口，CER `0.0556%`、WER `0.4556%`；变化词汇样本用 16 窗口，CER `0.0833%`、WER `0.7194%`；每个样本在两后端的文本 SHA 一致，模糊回退均处理了 1–2 token 编辑的接缝。样本图由脚本生成，不是公开数据集，也不应作为生产准确率结论。测试与边界见[受控长文本验证记录](../../eng/models/paddle-ocr/verification/synthetic-longtext-a2-20260929.md)。
 
 ### 资源与失败行为
 

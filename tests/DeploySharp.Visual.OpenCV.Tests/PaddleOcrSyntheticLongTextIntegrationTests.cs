@@ -92,16 +92,19 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
         Assert.IsTrue(result.RecognitionWidth!.Value.WindowCount > 1, "The >3200-character line must use multiple bounded windows.");
         Assert.IsTrue(result.RecognitionWidth.Value.NaturalWidth > 3200);
         OcrTextAccuracyMetrics metrics = OcrTextAccuracy.Compare(expected, result.Recognition.Text);
-        string evidencePath = Path.Combine(TestContext.TestResultsDirectory!, "synthetic-a2-" + backend + ".json");
+        string imageSha256 = FileSha256(imagePath);
+        string evidencePath = Path.Combine(TestContext.TestResultsDirectory!, "synthetic-a2-" + backend + "-" + imageSha256.Substring(0, 12) + ".json");
         File.WriteAllText(evidencePath, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
             generatedUtc = DateTimeOffset.UtcNow,
             backend,
             model = "paddleocr/ppocrv6/small-rec",
+            detectorSha256 = detectorRelease.Sha256,
             recognizerSha256 = recognizerRelease.Sha256,
+            dictionarySha256 = DictionarySha,
             imagePath,
-            imageSha256 = FileSha256(imagePath),
+            imageSha256,
             expectedCharacters = expected.Length,
             recognizedCharacters = result.Recognition.Text.Length,
             windowCount = result.RecognitionWidth.Value.WindowCount,
@@ -115,6 +118,28 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
             expectedTextSha256 = Sha256(expected),
             recognizedTextSha256 = Sha256(result.Recognition.Text),
             recognizedText = result.Recognition.Text,
+            windows = result.RecognitionWindows.Select(window => new
+            {
+                window.Index,
+                window.Start,
+                window.End,
+                window.Width.NaturalWidth,
+                window.Width.TargetWidth,
+                window.Width.TensorWidth,
+                window.RemovedPrefixTokens,
+                window.SeamUncertain,
+                window.OverlapEditDistance,
+                rawTimesteps = window.Recognition.Tokens.Count,
+                window.Recognition.Text,
+                emittedTokens = window.Recognition.Tokens.Count(token => token.Emitted),
+                emittedTrace = window.Recognition.Tokens.Where(token => token.Emitted).Select(token => new
+                {
+                    token.Timestep,
+                    token.ClassIndex,
+                    token.Text,
+                    token.Confidence
+                }).ToArray()
+            }).ToArray(),
             boundary = "Controlled synthetic contract sample; not a public dataset accuracy result."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(evidencePath);

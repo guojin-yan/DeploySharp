@@ -94,6 +94,8 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrRecognitionWindowOptions(double.NaN));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrRecognitionWindowOptions(maximumWindowsPerRegion: 257));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrRecognitionWindowOptions(minimumOverlapTokens: 3, maximumOverlapTokens: 2));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrRecognitionWindowOptions().WithMaximumOverlapEditDistance(-1));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrRecognitionWindowOptions().WithMaximumOverlapEditDistance(9));
         }
 
         [TestMethod]
@@ -128,6 +130,100 @@ namespace DeploySharp.Visual.Tests
             OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
             Assert.AreEqual(new string('X', plans.Count), merged.Recognition.Text);
             Assert.IsTrue(merged.RecognitionWindows.Skip(1).All(window => window.SeamUncertain && window.RemovedPrefixTokens == 0));
+        }
+
+        [TestMethod]
+        public void OneTokenSeamErrorUsesBoundedGeometricFuzzyMatchAndKeepsTraceProvenance()
+        {
+            TextRegion region = Region(600, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(overlapRatio: .5).WithMaximumOverlapEditDistance(1));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+
+            List<OcrToken> noisyTrace = raw[1].Recognition.Tokens.ToList();
+            int noisyIndex = noisyTrace.FindIndex(token => token.Emitted);
+            Assert.IsTrue(noisyIndex >= 0);
+            OcrToken original = noisyTrace[noisyIndex];
+            noisyTrace[noisyIndex] = new OcrToken(original.Timestep, original.ClassIndex + 100, original.Confidence, "X",
+                original.IsBlank, original.IsCollapsedRepeat, original.IsUnknown, original.Emitted);
+            RecognizedText noisyText = new RecognizedText(7,
+                string.Concat(noisyTrace.Where(token => token.Emitted).Select(token => token.Text)),
+                raw[1].Recognition.Confidence, noisyTrace, raw[1].Recognition.CharacterSetId,
+                raw[1].Recognition.CharacterSetVersion, raw[1].Recognition.CharacterSetSha256);
+            raw[1] = new OcrRecognitionWindowResult(plans[1], noisyText, raw[1].Width);
+
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(string.Concat(expected), merged.Recognition.Text);
+            Assert.AreEqual(region.SourceIndex, merged.Recognition.SourceRegionIndex);
+            OcrRecognitionWindowResult seam = merged.RecognitionWindows[1];
+            Assert.IsTrue(seam.SeamUncertain, "A fuzzy seam must remain visible to callers.");
+            Assert.AreEqual(1, seam.OverlapEditDistance);
+            Assert.IsTrue(seam.RemovedPrefixTokens > 0);
+
+            var size = new VisualSize(600, 48);
+            var sourceResult = new OcrResult(new[] { merged }, size, "det", new JYPPX.DeploySharp.Models.ModelId("det"),
+                "rec", new JYPPX.DeploySharp.Models.ModelId("rec"),
+                new OcrStageTiming(TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            var projection = new RoiProjection("fuzzy-seam", size, size, ImageTransform.Resize(size, size));
+            OcrResult projectedResult = new ModelSpaceOcrRoiProjector().Project(sourceResult, projection);
+            Assert.AreEqual(seam.OverlapEditDistance, projectedResult.Regions[0].RecognitionWindows[1].OverlapEditDistance,
+                "ROI projection must preserve accepted seam diagnostics.");
+
+            int offset = 0;
+            for (int windowIndex = 0; windowIndex < merged.RecognitionWindows.Count; windowIndex++)
+            {
+                OcrRecognitionWindowResult window = merged.RecognitionWindows[windowIndex];
+                int emittedOrdinal = 0;
+                for (int tokenIndex = 0; tokenIndex < window.Recognition.Tokens.Count; tokenIndex++)
+                {
+                    OcrToken source = window.Recognition.Tokens[tokenIndex];
+                    OcrToken projected = merged.Recognition.Tokens[offset + tokenIndex];
+                    bool expectedEmission = source.Emitted && emittedOrdinal++ >= window.RemovedPrefixTokens;
+                    Assert.AreEqual(source.ClassIndex, projected.ClassIndex);
+                    Assert.AreEqual(source.Confidence, projected.Confidence);
+                    Assert.AreEqual(source.Text, projected.Text);
+                    Assert.AreEqual(source.IsBlank, projected.IsBlank);
+                    Assert.AreEqual(source.IsCollapsedRepeat, projected.IsCollapsedRepeat);
+                    Assert.AreEqual(source.IsUnknown, projected.IsUnknown);
+                    Assert.AreEqual(expectedEmission, projected.Emitted);
+                    Assert.AreEqual(offset + tokenIndex, projected.Timestep);
+                }
+                offset += window.Recognition.Tokens.Count;
+            }
+        }
+
+        [TestMethod]
+        public void SeamNoiseBeyondConfiguredEditBudgetIsNotSilentlyDiscarded()
+        {
+            TextRegion region = Region(600, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(overlapRatio: .5).WithMaximumOverlapEditDistance(1));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+
+            List<OcrToken> noisyTrace = raw[1].Recognition.Tokens.ToList();
+            int[] emitted = noisyTrace.Select((token, index) => (token, index)).Where(item => item.token.Emitted).Take(2).Select(item => item.index).ToArray();
+            Assert.AreEqual(2, emitted.Length);
+            for (int index = 0; index < emitted.Length; index++)
+            {
+                OcrToken original = noisyTrace[emitted[index]];
+                string replacement = index == 0 ? "X" : "Y";
+                noisyTrace[emitted[index]] = new OcrToken(original.Timestep, original.ClassIndex + 100, original.Confidence, replacement,
+                    original.IsBlank, original.IsCollapsedRepeat, original.IsUnknown, original.Emitted);
+            }
+            RecognizedText noisyText = new RecognizedText(7,
+                string.Concat(noisyTrace.Where(token => token.Emitted).Select(token => token.Text)),
+                raw[1].Recognition.Confidence, noisyTrace, raw[1].Recognition.CharacterSetId,
+                raw[1].Recognition.CharacterSetVersion, raw[1].Recognition.CharacterSetSha256);
+            raw[1] = new OcrRecognitionWindowResult(plans[1], noisyText, raw[1].Width);
+
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            OcrRecognitionWindowResult seam = merged.RecognitionWindows[1];
+            Assert.IsTrue(seam.SeamUncertain);
+            Assert.AreEqual(0, seam.RemovedPrefixTokens);
+            Assert.AreEqual(0, seam.OverlapEditDistance);
+            Assert.IsTrue(merged.Recognition.Text.Contains("XY", StringComparison.Ordinal), "Unmatched text must remain available for downstream review.");
         }
 
         [TestMethod]
