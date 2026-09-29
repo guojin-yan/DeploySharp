@@ -94,25 +94,27 @@
 
 这组标准分位数记录没有 GPU 遥测，因此不能判断每次运行是否处于固定 P0/锁频状态；后续 GPU 记录必须同时保存时钟、功耗上限和 thermal/hardware slowdown 字段。
 
-### PaddleOCR：TensorRT 完整流水线稳态口径
+## Windows 11 / Ryzen 7 5800H / RTX 3060 Laptop：PaddleOCR TensorRT 10.11
 
-本机 `demo_1.jpg` 上 v4/v5/v6 七组核心模型的 ORT CPU、OpenVINO CPU 和 OpenCV DNN CPU 正式 5/50 矩阵见 [`paddleocr-core-3backend-demo1-matrix-20260924.md`](../eng/models/paddle-ocr/verification/paddleocr-core-3backend-demo1-matrix-20260924.md)。该矩阵包含 21 个精确模型×后端组合，并保留区域数、结果 SHA、阶段耗时、P50/P95 与相邻环境记录。
+本机 `demo_1.jpg` 上 v4/v5/v6 七组核心模型的 ORT CPU、OpenVINO CPU 和 OpenCV DNN CPU 正式 5/50 矩阵见 [`paddleocr-core-3backend-demo1-matrix-20260924.md`](../../eng/models/paddle-ocr/verification/paddleocr-core-3backend-demo1-matrix-20260924.md)。该矩阵包含 21 个精确模型×后端组合，并保留区域数、结果 SHA、阶段耗时、P50/P95 与相邻环境记录。
 
-三张本地 OCR 图像的 v5 mobile ORT/OpenVINO/OpenCV DNN 正式 5/50 矩阵已生成：[`paddleocr-v5-mobile-3backend-matrix-20260924.md`](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-3backend-matrix-20260924.md)。该矩阵保留每张图的区域数、结果 SHA、平均值、P50/P95 和相邻 `.environment.json` 协议；不同图片的区域数量不同，耗时不能简单横向比较。
+三张本地 OCR 图像的 v5 mobile ORT/OpenVINO/OpenCV DNN 正式 5/50 矩阵已生成：[`paddleocr-v5-mobile-3backend-matrix-20260924.md`](../../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-3backend-matrix-20260924.md)。该矩阵保留每张图的区域数、结果 SHA、平均值、P50/P95 和相邻 `.environment.json` 协议；不同图片的区域数量不同，耗时不能简单横向比较。
 
-口径：动态 TensorRT 11 engine，FP32，输入 `E:\Data\ocr\demo_1.jpg`，10 次预热、50 次计时，复用已准备输入。检测阶段每张图执行一次；识别阶段按下表选择稳定的 batch 和独立 Session 数量。所有记录均返回 16 个文本区域。
+2026-09-29 在具名设备 `JYPPX` 实测。系统 Windows 11 `10.0.26200`，16 个逻辑处理器，GPU 为 RTX 3060 Laptop，驱动 `576.02`。运行时为 .NET `10.0.12`、CUDA `12.9`、cuDNN `9.22`、TensorRT `10.11.0.33-cu12` 和 API 10 bridge。该轮没有同步采集 GPU 遥测，不能确认锁频或功耗限制。
+
+口径：TensorRT `10.11.0.33-cu12` 重建的动态 Engine，输入 `E:\Data\ocr\demo_1.jpg`（SHA-256 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`），5 次预热、50 次计时，batch 8、2 个独立阶段 Session，复用已准备输入。检测阶段每张图执行一次；识别阶段按宽度分组后执行动态 batch。所有记录均返回 16 个文本区域。原始 CSV 和 `.environment.json` 保存在本机 `artifacts/local-model-benchmarks`；可审计摘要和模型/Engine SHA-256 见 [`paddleocr-tensorrt10.11-formal-20260929.json`](../../eng/models/paddle-ocr/verification/paddleocr-tensorrt10.11-formal-20260929.json)。
 
 | 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 33.194 | 32.505 | 37.394 | 通过 |
-| PP-OCRv4 server | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session；TRT11 det/rec/legacy-cls engines | 122.777 | 122.200 | 127.458 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 46.785 | 46.090 | 50.015 | 通过 |
-| PP-OCRv5 server | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session；TRT11 server engines | 146.530 | 145.284 | 156.248 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；1 个阶段 Session | 19.548 | 19.527 | 20.339 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 32.166 | 31.511 | 36.351 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | FP32 | `demo_1.jpg`；batch 8；2 个阶段 Session | 81.351 | 80.692 | 85.247 | 通过 |
+| PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 29.775 | 29.775 | 34.304 | 通过 |
+| PP-OCRv4 server | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 114.605 | 114.205 | 118.435 | 通过 |
+| PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 47.107 | 46.474 | 55.036 | 通过 |
+| PP-OCRv5 server | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 91.054 | 90.797 | 93.476 | 通过 |
+| PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 16.917 | 16.743 | 18.399 | 通过 |
+| PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 28.688 | 27.311 | 36.788 | 通过 |
+| PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 66.340 | 64.387 | 77.434 | 通过 |
 
-PP-OCRv4 server 的初次失败来自旧的 mobile CLS engine sidecar；重新用 TensorRT 11 构建 `PP-OCRv4_mobile_cls.onnx.engine` 后，DeploySharp bridge 对 server det、server rec 和 legacy cls 三个 engine 均加载并推理通过。表中 `122.777/122.200/127.458 ms` 是本机 10 次预热、50 次计时、batch 8、2 个阶段 Session 的带遥测结果；36 个样本中 32 个达到至少 10% GPU 利用率，活跃样本利用率均值 `77.9%`、图形时钟 `1425–1837 MHz`、功耗限制样本 26、最高温度 `64°C`，thermal/hardware slowdown 为 0。v5 server 的 `146.530/145.284/156.248 ms` 来自带 GPU 遥测的一轮 10/50；53 个遥测样本利用率均值 `66.1%`、图形时钟 `1425–1972 MHz`、功耗限制样本 35、最高温度 `66°C`，thermal/hardware slowdown 均为 0。两组 server 结果均使用 RTX 3060 Laptop、TensorRT 11.0.0、CUDA 12.9、cuDNN 9.22、compute_86。
+本轮先用 `trtexec` 验证每个重建 Engine 可以由 TensorRT 10.11 反序列化，再通过 DeploySharp bridge 执行完整流水线；因此修复了原有 TensorRT 10.10/10.11 序列化版本不匹配导致的 `deserializeCudaEngine` 空对象假失败。表中平均值、P50/P95 来自各自正式 CSV，分段时间不能相加后当作总耗时。该轮没有同步采集 GPU 遥测，不能据此宣称锁频或功耗状态；设备、runtime、bridge、输入和所有模型/Engine SHA 以汇总 JSON 为准。Engine 与 TensorRT 序列化版本、GPU 架构和 profile 绑定，换设备或 TensorRT minor 版本必须重新构建。
 
 ## Windows 10 / Intel Core i7-14700KF / RTX 5060 Ti
 
