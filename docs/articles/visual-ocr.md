@@ -563,7 +563,7 @@ foreach (OcrRegionResult line in result.Regions)
 
 每个窗口使用原 `SourceIndex`，经过既有按宽度分组、Batch padding 和独立 Session 调度。原始 DET polygon、方向元数据和阅读顺序保留在最终行中。`RecognitionWindows` 只保留区间、逐窗口宽度、原始识别结果及接缝决策，不持有图像或张量。普通行的窗口列表为空，仍执行单次识别。
 
-直接用超宽区域构造 `TextCropRequest` 不会自动生成多个请求：在 SlidingWindow 模式下会抛出 `DS-VISUAL-4103`；应使用规划器或 `OcrPipeline`。`DescribeWidth` 始终只规划；固定模型仍以 `FixedWidth` 为上限，不能绕过 engine shape 限制。
+直接用超宽区域构造 `TextCropRequest` 不会自动生成多个请求：在 SlidingWindow 模式下会抛出 `DS-VISUAL-4103`；应使用 `OcrRecognitionWindowPlanner`、完整 `OcrPipeline.Run` 或 `OcrPipeline.RecognizeOnlyAsync`。后两条 Pipeline 入口会自动规划窗口、按 batch/session 池执行并归并回原检测区域。`DescribeWidth` 始终只规划；固定模型仍以 `FixedWidth` 为上限，不能绕过 engine shape 限制。
 
 ### 接缝匹配及不确定结果
 
