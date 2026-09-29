@@ -487,6 +487,10 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。兼容工件有独立兼容 ID、文件名和 SHA，不能沿用原始 Release 的 SHA；创建 `ModelArtifact` 时使用实际派生路径和哈希。发布策略是为 OpenVINO 单独上传 `slanext-wired-openvino-compat.onnx` 和 `slanext-wireless-openvino-compat.onnx`，保留原始 Release 图并由用户显式选择兼容资产；在这些资产上传前，清单状态为 `planned-separate-assets`，用户需本地生成。该输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
 
+### 弧形文本的能力边界
+
+当前 DeploySharp OCR 几何合同只接受源图矩形、简单多边形和显式四边形透视裁剪。它没有曲线控制点、基线采样或弧形展开器，因此弧形文本明确不支持，也不会被当作普通四边形静默处理。需要识别弧形文本时，应用层必须先用自己的曲线采样/展开算法生成可追溯的局部图像和多边形来源，再调用识别器-only 接口；未提供该展开结果时应返回/记录不支持。普通四边形仍可使用现有透视裁剪，但不得称为弧形文本矫正。
+
 ### TensorRT PP-Structure 复现
 
 本机 TensorRT 已安装在 `D:\Program Files`。DLL 加载失败需检查运行时根目录、bridge 编译的 TensorRT 主版本以及 CUDA/cuDNN 搜索路径，不能仅凭失败推断“没有安装”。
