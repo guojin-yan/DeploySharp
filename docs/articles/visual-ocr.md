@@ -534,6 +534,17 @@ foreach (OcrRegionResult item in result.Regions)
 
 优先在模型支持范围内选择合适的动态宽度。确实超过上限的 URL、订单号或长句可以启用滑窗。滑窗会增加 REC 工作量，适合解决宽度约束，不能作为普通行必然提速的开关。
 
+### 模型路由边界
+
+当前 OCR Pipeline 不会根据文字长度、置信度或语言自动切换 v4/v5/v6、mobile/server 或其它 recognizer。原因是现有公开标注和本地 smoke 证据不足以证明某个路由条件能稳定降低 CER/WER，自动路由还会改变字典、token 来源、Session 池和预算追溯。调用方如需路由，应显式创建多个已验证的 `OcrPipeline`/Profile，并在业务层固定：
+
+- 路由输入特征与阈值（例如语言、脚本、长度桶），同时记录配置 SHA；
+- 每个候选模型的模型/字典 SHA、后端、预处理和最大窗口/耗时预算；
+- 最终选择、候选结果和未选择原因，不能只返回置信度最高的文字；
+- 失败或超预算时的明确 fallback，不得在一次调用中无限创建新 Session。
+
+在没有按模型、数据域和后端固定 CER/WER 证据之前，推荐保持单 Profile、单字典和有界 Session 池。当前仓库将模型路由列为未完成实验项，不把近似模型的单机结果外推成自动路由收益。
+
 ```csharp
 TextCropProfile crop = recognitionProfile.CropProfile!.WithRecognitionWindows(
     new OcrRecognitionWindowOptions(
