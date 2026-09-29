@@ -337,7 +337,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
 ```
 
-公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。
+公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 对公式 OpenVINO CPU 的首个精确工件在 `ov_core_read_model_utf8` 阶段触发 native access violation，详情见 [`formula-openvino-blocker-20260929.md`](../../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)；聚合矩阵仍保持 `△`，没有把单个工件阻断外推到全部公式模型。
 
 `PaddleDocumentFormulaSealPipelineIntegrationTests` 已验证这两类结果可以挂入页面 Pipeline：公式使用 `PP-FormulaNet_plus-S` 和官方公式图片，输出带页码/输入 SHA 的 LaTeX；印章使用 PP-OCRv4 mobile seal 模型和 `demo_1.jpg`，输出带页码/输入 SHA 的掩码尺寸及区域。测试入口：
 
@@ -462,20 +462,19 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 ### OpenVINO SLANeXt 兼容转换
 
-原始图的 Loop 形参与外层常量同名，当前 OpenVINO importer 报出循环体参数数量 1/11 不匹配。该问题可以用局部变量重命名处理，无需展开循环、修改权重或改变停止条件。转换脚本生成一个新文件，运行 ONNX checker，并输出源文件与派生文件 SHA-256：
+原始图的 Loop 形参与外层常量同名，当前 OpenVINO importer 报出循环体参数数量 1/11 不匹配。该问题可以用局部变量重命名处理，无需展开循环、修改权重或改变停止条件。兼容脚本生成两个新文件，运行 ONNX checker，并输出源文件与派生文件 SHA-256，同时生成 [`slanext-openvino-compatibility.json`](../../eng/models/paddle-document/verification/slanext-openvino-compatibility.json)：
 
 ```powershell
 # 在仓库根目录执行；Python 环境需要 onnx，建议复用模型转换环境。
-python eng/models/paddle-document/scripts/normalize_loop_parameters.py `
-  E:\Model\PaddleDocument\onnx\slanext-wired.onnx `
-  artifacts/model-compatibility/slanext-wired-local-parameters.onnx
-python eng/models/paddle-document/scripts/normalize_loop_parameters.py `
-  E:\Model\PaddleDocument\onnx\slanext-wireless.onnx `
-  artifacts/model-compatibility/slanext-wireless-local-parameters.onnx
+& .\eng\models\paddle-document\scripts\Build-PaddleDocumentOpenVinoCompatibility.ps1 `
+  -ModelRoot E:\Model\PaddleDocument\onnx `
+  -OutputRoot E:\Model\PaddleDocument\onnx-normalized `
+  -Python E:\Model\PaddleDocument\paddle3\python.exe `
+  -ManifestPath E:\Model\PaddleDocument\onnx-normalized\slanext-openvino-compatibility.json
 
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_RUN_EXTERNAL = '1'
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_NORMALIZED_ROOT = `
-  (Resolve-Path artifacts/model-compatibility).Path
+  (Resolve-Path E:\Model\PaddleDocument\onnx-normalized).Path
 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
   -f net10.0 --no-restore `
   --filter FullyQualifiedName~AlphaRenamedTableGraphMatchesOriginalOrtOutputs
@@ -486,7 +485,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 | wired | `2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0` |
 | wireless | `9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6` |
 
-两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。派生文件有独立哈希，不能沿用原始 Release 的 SHA；创建 `ModelArtifact` 时使用实际派生路径和哈希。Release 下载客户端仍提供原始工件，不会暗中替换模型。该输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
+两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。兼容工件有独立兼容 ID、文件名和 SHA，不能沿用原始 Release 的 SHA；创建 `ModelArtifact` 时使用实际派生路径和哈希。发布策略是为 OpenVINO 单独上传 `slanext-wired-openvino-compat.onnx` 和 `slanext-wireless-openvino-compat.onnx`，保留原始 Release 图并由用户显式选择兼容资产；在这些资产上传前，清单状态为 `planned-separate-assets`，用户需本地生成。该输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
 
 ### TensorRT PP-Structure 复现
 
