@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Vision;
@@ -33,8 +34,10 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow("onnxruntime")]
+    [DataRow("openvino")]
     [TestCategory("ExternalModels")]
-    public void DocLayoutRunsOnThreeRealFunsdPagesAndRetainsDeterministicRegions()
+    public void DocLayoutRunsOnThreeRealFunsdPagesAndRetainsDeterministicRegions(string backend)
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT=1 to run the real FUNSD layout evidence.");
@@ -45,10 +48,19 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
         var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(descriptor, PaddleDocumentProfiles.Layout23Labels,
             new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: 0.3f);
         using var registry = new BackendRegistry();
-        registry.UseOnnxRuntime();
+        BackendId backendId;
+        string device;
+        if (string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase))
+        {
+            registry.UseOpenVino(); backendId = OpenVinoBackendProvider.BackendId; device = "CPU";
+        }
+        else
+        {
+            registry.UseOnnxRuntime(); backendId = OnnxRuntimeBackendProvider.BackendId; device = "cpu";
+        }
         var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
-        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
-        using var pipeline = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(ModelPath, OnnxRuntimeBackendProvider.BackendId), registry, request, VisualTaskId.LayoutDetection), request);
+        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
+        using var pipeline = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(ModelPath, backendId), registry, request, VisualTaskId.LayoutDetection), request);
         var pages = new List<object>();
         foreach (string image in Images)
         {
@@ -78,14 +90,14 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
                 regions = ordered
             });
         }
-        string report = Path.Combine(TestContext.TestResultsDirectory!, "funsd-doclayout-l-ort-evidence.json");
+        string report = Path.Combine(TestContext.TestResultsDirectory!, "funsd-doclayout-l-" + backend + "-evidence.json");
         File.WriteAllText(report, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
             generatedUtc = DateTimeOffset.UtcNow,
             model = descriptor.ModelId,
             modelSha256 = modelSha,
-            backend = "onnxruntime-cpu",
+            backend = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "openvino-cpu" : "onnxruntime-cpu",
             labels = PaddleDocumentProfiles.Layout23Labels,
             pages,
             boundary = "Three real FUNSD pages; layout-model execution and deterministic regions only, not layout accuracy without aligned region labels."

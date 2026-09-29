@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "deploysharp-funsd-doclayout-l-multibackend-v1",
+  "generatedUtc": "2026-09-29T13:20:00Z",
+  "model": "paddle-doc/pp-doclayout-l",
+  "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+  "scoreThreshold": 0.3,
+  "pages": [
+    { "image": "82504862.png", "imageSha256": "9a66fa4013bf93b9ba4e959feef7d6b2e278b714ca9d3d347b35aeb305b92626", "onnxruntimeCpuDetections": 30, "openvinoCpuDetections": 30, "onnxruntimeModelOrderTopLeft": false, "openvinoModelOrderTopLeft": false },
+    { "image": "82562350.png", "imageSha256": "38330e56545f7ef03ccf67b22330388e21444b4935e058d447f42cf329f50bdb", "onnxruntimeCpuDetections": 25, "openvinoCpuDetections": 25, "onnxruntimeModelOrderTopLeft": false, "openvinoModelOrderTopLeft": false },
+    { "image": "82573104.png", "imageSha256": "b0e9f8efecc27dd6445f849aace051078ecbb300b8c6440731d080c39697f18f", "onnxruntimeCpuDetections": 19, "openvinoCpuDetections": 19, "onnxruntimeModelOrderTopLeft": false, "openvinoModelOrderTopLeft": false }
+  ],
+  "boundary": "Three real FUNSD pages; execution and backend parity evidence only, not layout accuracy without aligned region labels."
+}
