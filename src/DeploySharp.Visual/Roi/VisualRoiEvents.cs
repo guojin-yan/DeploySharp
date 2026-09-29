@@ -492,8 +492,9 @@ namespace JYPPX.DeploySharp.Visual
                 var result = new SortedDictionary<string, long>(StringComparer.Ordinal);
                 foreach (Region region in _regions)
                 {
-                    foreach (VisualRoiEventKind kind in Enum.GetValues(typeof(VisualRoiEventKind)))
+                    foreach (object? value in Enum.GetValues(typeof(VisualRoiEventKind)))
                     {
+                        if (!(value is VisualRoiEventKind kind)) continue;
                         var key = new CountKey(region.Roi.Id, kind);
                         result[key.ToString()] = CurrentCount(key);
                     }
