@@ -20,8 +20,48 @@ namespace DeploySharp.Visual.Tests
         {
             Assert.IsTrue(PaddleDocumentModelCatalog.Official.Count >= 28);
             Assert.IsTrue(Enum.GetValues<PaddleDocumentModule>().All(module => module == PaddleDocumentModule.StructurePipeline || PaddleDocumentModelCatalog.Official.Any(model => model.Module == module)));
-            Assert.IsTrue(PaddleDocumentModelCatalog.Official.All(model => model.Status == PaddleDocumentArtifactStatus.Catalogued));
+            Assert.IsTrue(PaddleDocumentModelCatalog.Official
+                .Where(model => model.ModelId != "paddle-chart/pp-chart2table")
+                .All(model => model.Status == PaddleDocumentArtifactStatus.Catalogued));
+            Assert.AreEqual(PaddleDocumentArtifactStatus.ConversionBlocked,
+                PaddleDocumentModelCatalog.Get("paddle-chart/pp-chart2table").Status);
             CollectionAssert.AreEquivalent(new[] { "paddle-doc/pp-lcnet-x1-0-doc-ori", "paddle-doc/uvdoc", "paddle-table/slanext-wired", "paddle-formula/pp-formulanet-plus-s", "paddle-seal/ppocrv4-mobile", "paddle-chart/pp-chart2table" }, PaddleDocumentModelCatalog.Official.Select(model => model.ModelId).Intersect(new[] { "paddle-doc/pp-lcnet-x1-0-doc-ori", "paddle-doc/uvdoc", "paddle-table/slanext-wired", "paddle-formula/pp-formulanet-plus-s", "paddle-seal/ppocrv4-mobile", "paddle-chart/pp-chart2table" }).ToArray());
+        }
+
+        [TestMethod]
+        public void PaddleClassificationProfilesUseOfficialResizeShortThenCenterCropContract()
+        {
+            var profile = PaddleDocumentProfiles.CreateClassification(
+                PaddleDocumentModelCatalog.Get("paddle-doc/pp-lcnet-x1-0-doc-ori"),
+                PaddleDocumentProfiles.DocumentOrientationLabels,
+                VisualTaskId.DocumentOrientation);
+            Assert.AreEqual(VisualResizeMode.ShortestEdgeCenterCrop, profile.VisualProfile.Preprocessing!.ResizeMode);
+            Assert.AreEqual(new VisualSize(256, 256), profile.VisualProfile.Preprocessing.ShortestEdgeResize);
+            Assert.AreEqual(new VisualSize(224, 224), profile.VisualProfile.Preprocessing.ModelSize);
+            Assert.AreEqual(VisualNormalizationMode.MeanStandardDeviation, profile.VisualProfile.Preprocessing.Normalization.Mode);
+            Assert.AreEqual(VisualResizeMode.Resize, profile.VisualProfile.Preprocessing.WithResizeMode(VisualResizeMode.Resize).ResizeMode);
+            Assert.IsNull(profile.VisualProfile.Preprocessing.WithResizeMode(VisualResizeMode.Resize).ShortestEdgeResize);
+        }
+
+        [TestMethod]
+        public void OfficialLcNetProbabilitiesAreNotSoftmaxedTwice()
+        {
+            var profile = PaddleDocumentProfiles.CreateClassification(PaddleDocumentModelCatalog.Get("paddle-doc/pp-lcnet-x1-0-doc-ori"), PaddleDocumentProfiles.DocumentOrientationLabels, VisualTaskId.DocumentOrientation);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 224, 224), new float[3 * 224 * 224], TensorBufferOwnership.Transfer), new VisualSize(224, 224), new VisualSize(224, 224), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(224, 224), new VisualSize(224, 224)));
+            var outputs = new InferenceOutputs(new[] { new NamedTensor("fetch_name_0", new Tensor<float>(new TensorShape(1, 4), new[] { .02f, .04f, .88f, .06f }, TensorBufferOwnership.Transfer)) });
+            var result = (ClassificationResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+            Assert.AreEqual(2, result.TopPrediction!.Index);
+            Assert.AreEqual(.88f, result.TopPrediction.Score, .000001f);
+        }
+
+        [TestMethod]
+        public void SlanextUsesBgrAspectRatioAndTensorSpacePadding()
+        {
+            var options = PaddleDocumentProfiles.CreateTableStructure(PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired")).VisualProfile.Preprocessing!;
+            Assert.AreEqual(VisualColorOrder.Bgr, options.ColorOrder);
+            Assert.AreEqual(VisualResizeMode.LongestSidePadBottomRight, options.ResizeMode);
+            Assert.AreEqual(0f, options.NormalizedPaddingValue);
+            Assert.AreEqual(0f, options.WithBatchSize(2).WithModelSize(new VisualSize(512, 512)).NormalizedPaddingValue);
         }
 
         [TestMethod]
@@ -92,8 +132,8 @@ namespace DeploySharp.Visual.Tests
             SetWinner(structure, classes, 0, 0);
             SetWinner(structure, classes, 1, 1);
             SetWinner(structure, classes, 2, 5);
-            SetWinner(structure, classes, 3, 7);
-            SetWinner(structure, classes, 4, 10);
+            SetWinner(structure, classes, 3, 48);
+            SetWinner(structure, classes, 4, 6);
             SetWinner(structure, classes, 5, 49);
             var locations = new float[sequence * 8];
             locations[(3 * 8) + 0] = .1f;
@@ -114,7 +154,7 @@ namespace DeploySharp.Visual.Tests
             using (input)
             {
                 var result = (PaddleDocumentTableResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
-                Assert.AreEqual("<thead><tr><td></td>", result.Markup);
+                Assert.AreEqual("<thead><tr><td></td></tr>", result.Markup);
                 Assert.AreEqual(1, result.Regions.Count);
                 Assert.AreEqual(10f, result.Regions[0].Bounds.X, .01f);
                 Assert.AreEqual(10f, result.Regions[0].Bounds.Y, .01f);
@@ -144,6 +184,24 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        [DataRow("pp-formulanet-plus-s", 384, 384)]
+        [DataRow("pp-formulanet-plus-m", 384, 384)]
+        [DataRow("pp-formulanet-plus-l", 768, 768)]
+        [DataRow("pp-formulanet-s", 384, 384)]
+        [DataRow("pp-formulanet-l", 768, 768)]
+        [DataRow("unimernet", 672, 192)]
+        public void FormulaProfileUsesOfficialDimensionsAndSpecializedInput(string name, int width, int height)
+        {
+            var profile = PaddleDocumentProfiles.CreateFormula(PaddleDocumentModelCatalog.Get("paddle-formula/" + name), new PaddleDocumentFormulaSchema(new[] { "<s>", "x", "</s>" }, 2, 0)).VisualProfile;
+            Assert.AreEqual(new TensorShape(1, 1, height, width), profile.Input.ShapePattern);
+            Assert.IsNull(profile.Preprocessing, "Official formula preprocessing must not fall back to a simple resize.");
+            using var input = new PreparedVisualInput("x", new Tensor<float>(profile.Input.ShapePattern, new float[width * height]), new VisualSize(width, height), new VisualSize(width, height), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(width, height), new VisualSize(width, height)));
+            var output = InferenceOutputs.Create("fetch_name_0", new Tensor<long>(new TensorShape(1, 2), new long[] { 0, 1 }));
+            var result = (PaddleDocumentFormulaResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile, output, CancellationToken.None));
+            CollectionAssert.Contains(result.Warnings.ToArray(), "missing-eos:sequence-may-be-truncated");
+        }
+
+        [TestMethod]
         public void FormulaDecoderStopsAtEosAndPreservesTokenIds()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
@@ -159,6 +217,67 @@ namespace DeploySharp.Visual.Tests
                 CollectionAssert.AreEqual(new[] { 1, 2 }, result.TokenIds.ToArray());
             }
         }
+
+        [TestMethod]
+        public void ChartParsingContractDecodesIntegerTokensWhileKeepingConversionBlockedExplicit()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-chart/pp-chart2table");
+            var tokenizer = new PaddleDocumentFormulaTokenPieceTokenizer(new[] { "<s>", "<pad>", "</s>", "<table>", "</table>" });
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateChartParsing(descriptor, tokenizer, new VisualSize(8, 8), endTokenId: 2, startTokenId: 0, padTokenId: 1);
+            var image = new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("x", image, new VisualSize(8, 8), new VisualSize(8, 8), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('h', 64));
+            var tokens = new Tensor<long>(new TensorShape(1, 5), new long[] { 0, 3, 4, 2, 3 }, TensorBufferOwnership.Transfer);
+            using (input)
+            {
+                var result = (PaddleDocumentChartResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, InferenceOutputs.Create("fetch_name_0", tokens), CancellationToken.None));
+                Assert.AreEqual("<table></table>", result.StructuredData);
+                CollectionAssert.AreEqual(new[] { 3, 4 }, result.TokenIds.ToArray());
+                Assert.IsFalse(PaddleDocumentModelCatalog.TryGetReleaseArtifact(descriptor.ModelId, out _));
+                Assert.ThrowsExactly<InvalidOperationException>(() => profile.CreateArtifact("chart2table.onnx"));
+            }
+        }
+
+#if NET8_0 || NET9_0 || NET10_0
+        [TestMethod]
+        public void FormulaDecoderUsesOfficialBpeTokenizerWhenProvided()
+        {
+            var vocabulary = new[]
+            {
+                new KeyValuePair<string, int>("<s>", 0),
+                new KeyValuePair<string, int>("<pad>", 1),
+                new KeyValuePair<string, int>("</s>", 2),
+                new KeyValuePair<string, int>("<unk>", 3),
+                new KeyValuePair<string, int>("a", 4),
+                new KeyValuePair<string, int>("b", 5),
+                new KeyValuePair<string, int>("ab", 6)
+            };
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromVocabularyAndMerges(vocabulary, new[] { "a b" }, new Dictionary<string, int> { ["<s>"] = 0, ["<pad>"] = 1, ["</s>"] = 2, ["<unk>"] = 3 });
+            PaddleDocumentFormulaSchema schema = new PaddleDocumentFormulaSchema(tokenizer, endTokenId: 2, startTokenId: 0, padTokenId: 1, unknownTokenId: 3);
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor, schema);
+            var image = new Tensor<float>(new TensorShape(1, 1, 384, 384), new float[384 * 384], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("x", image, new VisualSize(384, 384), new VisualSize(384, 384), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(384, 384), new VisualSize(384, 384)), inputId: new string('f', 64));
+            var tokens = new Tensor<long>(new TensorShape(1, 4), new long[] { 0, 4, 5, 2 }, TensorBufferOwnership.Transfer);
+            using (input)
+            {
+                var result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, InferenceOutputs.Create("fetch_name_0", tokens), CancellationToken.None));
+                Assert.AreEqual("ab", result.Latex);
+                CollectionAssert.AreEqual(new[] { 4, 5 }, result.TokenIds.ToArray());
+            }
+        }
+
+        [TestMethod]
+        public void FormulaTokenizerLoadsOfficialPaddleInferenceYamlWhenPresent()
+        {
+            const string path = @"E:\Model\PaddleDocument\source\unimernet\UniMERNet_infer\inference.yml";
+            if (!System.IO.File.Exists(path)) Assert.Inconclusive("The optional official UniMERNet fixture is not installed.");
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(path);
+            Assert.IsTrue(tokenizer.Tokens.Count > 45000);
+            Assert.AreEqual("<s>", tokenizer.Tokens[0]);
+            Assert.AreEqual("</s>", tokenizer.Tokens[2]);
+            StringAssert.Contains(tokenizer.Decode(new[] { 23 }), "!");
+        }
+#endif
 
         [TestMethod]
         public void PaddleNmsDecoderMapsClassScoreAndModelCoordinatesToSource()
@@ -181,6 +300,70 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void PaddleNmsProfileAcceptsInt32AndInt64CountExports()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor,
+                new[] { "text" },
+                new VisualSize(640, 640));
+
+            VisualOutputBinding count = profile.VisualProfile.Outputs.Single(binding => binding.Name == "fetch_name_1");
+            Assert.AreEqual(TensorElementType.Int32, count.ElementType);
+            CollectionAssert.AreEquivalent(
+                new[] { TensorElementType.Int32, TensorElementType.Int64 },
+                count.AcceptedElementTypes.ToArray());
+            Assert.IsTrue(count.AcceptsElementType(TensorElementType.Int32));
+            Assert.IsTrue(count.AcceptsElementType(TensorElementType.Int64));
+            Assert.IsFalse(count.AcceptsElementType(TensorElementType.Float32));
+        }
+
+        [TestMethod]
+        public void PaddleNmsDecoderDecodesInt32CountExport()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(descriptor, new[] { "text" }, new VisualSize(8, 8));
+            var image = new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("image", image, new VisualSize(8, 8), new VisualSize(8, 8), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('i', 64));
+            var rows = new Tensor<float>(new TensorShape(1, 1, 6), new float[] { 0, .9f, 1, 1, 4, 4 }, TensorBufferOwnership.Transfer);
+            var count = new Tensor<int>(new TensorShape(1), new[] { 1 }, TensorBufferOwnership.Transfer);
+            using (input)
+            {
+                var result = (DetectionResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, new InferenceOutputs(new[] { new NamedTensor("fetch_name_0", rows), new NamedTensor("fetch_name_1", count) }), CancellationToken.None));
+                Assert.AreEqual(1, result.Detections.Count);
+                Assert.AreEqual("text", result.Detections[0].Label.Label);
+            }
+        }
+
+        [TestMethod]
+        public void PaddleNmsDecoderSupportsBatchedRankThreeOutputWithoutCountTensor()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor,
+                new[] { "text" },
+                new VisualSize(8, 8),
+                countOutputName: null,
+                maximumBatch: 2);
+            Assert.AreEqual(1, profile.VisualProfile.Outputs.Count);
+            var image = new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[2 * 3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var rows = new Tensor<float>(new TensorShape(2, 1, 6), new float[]
+            {
+                0, .9f, 1, 1, 4, 4,
+                0, .8f, 2, 2, 5, 5
+            }, TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("image", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('b', 64));
+            using (input)
+            {
+                object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, InferenceOutputs.Create("fetch_name_0", rows), CancellationToken.None));
+                var batch = decoded as DetectionBatchResult ?? throw new AssertFailedException("The decoder did not preserve the batched result.");
+                Assert.AreEqual(2, batch.Count);
+                Assert.AreEqual(1, batch[0].Detections.Count);
+                Assert.AreEqual(1, batch[1].Detections.Count);
+            }
+        }
+
+        [TestMethod]
         public void SealDecoderTurnsProbabilityComponentsIntoSourceRegions()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-seal/ppocrv4-mobile");
@@ -196,6 +379,62 @@ namespace DeploySharp.Visual.Tests
                 Assert.AreEqual(1f, result.Regions[0].Bounds.Width, .01f);
                 Assert.AreEqual("seal", result.Regions[0].Category);
             }
+        }
+
+        [TestMethod]
+        public void PaddleGeometryMatchesModelCanvasAndOfficialDetrNormalization()
+        {
+            var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"), PaddleDocumentProfiles.Layout23Labels,
+                new VisualSize(640, 640), includeGeometryInputs: true, maximumBatch: 2);
+            var inputs = new InferenceInputs(profile.CreateGeometryInputs(2));
+            CollectionAssert.AreEqual(new[] { 640f, 640f, 640f, 640f }, (float[])inputs.GetRequired("im_shape").Buffer);
+            CollectionAssert.AreEqual(new[] { 1f, 1f, 1f, 1f }, (float[])inputs.GetRequired("scale_factor").Buffer);
+            Assert.AreEqual(23, profile.VisualProfile.Labels.Count);
+            Assert.AreEqual(VisualNormalizationMode.Scale, profile.VisualProfile.Preprocessing!.Normalization.Mode);
+            Assert.AreEqual(255f, profile.VisualProfile.Preprocessing.Normalization.InputDivisors[0]);
+            Assert.AreEqual(VisualInterpolationMode.Cubic, profile.VisualProfile.Preprocessing.Interpolation);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => profile.CreateGeometryInputs(3));
+        }
+
+        [TestMethod]
+        public void PaddleGeometryFromPreparedInputKeepsModelSpaceForNonSquareSource()
+        {
+            var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"),
+                PaddleDocumentProfiles.Layout23Labels,
+                new VisualSize(640, 640),
+                includeGeometryInputs: true);
+            using var input = new PreparedVisualInput(
+                "image",
+                new Tensor<float>(new TensorShape(1, 3, 640, 640), new float[3 * 640 * 640], TensorBufferOwnership.Transfer),
+                new VisualSize(810, 1080),
+                new VisualSize(640, 640),
+                1,
+                VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(810, 1080), new VisualSize(640, 640)));
+
+            var inputs = new InferenceInputs(profile.CreateGeometryInputs(input));
+            CollectionAssert.AreEqual(new[] { 640f, 640f }, (float[])inputs.GetRequired("im_shape").Buffer);
+            CollectionAssert.AreEqual(new[] { 1f, 1f }, (float[])inputs.GetRequired("scale_factor").Buffer);
+            Assert.AreEqual(640f / 810f, input.Transform.ScaleX, .000001f);
+            Assert.AreEqual(640f / 1080f, input.Transform.ScaleY, .000001f);
+        }
+
+        [TestMethod]
+        public void PaddleNmsRaggedBatchUsesPerImageCountsWithoutEqualRowSplitting()
+        {
+            var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"), new[] { "text" }, new VisualSize(8, 8), maximumBatch: 2);
+            using var input = new PreparedVisualInput("image", new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[384]),
+                new VisualSize(16, 16), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(16, 16), new VisualSize(8, 8)));
+            var rows = new Tensor<float>(new TensorShape(3, 6), new[] { 0f, .9f, 1, 1, 3, 3, 0, .8f, 2, 2, 4, 4, 0, .7f, 3, 3, 5, 5 });
+            var outputs = new InferenceOutputs(new[] { new NamedTensor("fetch_name_0", rows), new NamedTensor("fetch_name_1", new Tensor<int>(new TensorShape(2), new[] { 1, 2 })) });
+            var result = (DetectionBatchResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+            Assert.AreEqual(1, result[0].Detections.Count);
+            Assert.AreEqual(2, result[1].Detections.Count);
+            Assert.AreEqual(.8f, result[1].Detections[0].Label.Score);
+            Assert.AreEqual(4f, result[1].Detections[0].Box.X);
+            var invalid = new InferenceOutputs(new[] { new NamedTensor("fetch_name_0", rows), new NamedTensor("fetch_name_1", new Tensor<int>(new TensorShape(2), new[] { 2, 2 })) });
+            Assert.ThrowsExactly<VisualException>(() => profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, invalid, CancellationToken.None)));
         }
 
         private static void SetWinner(float[] values, int classes, int step, int selected)

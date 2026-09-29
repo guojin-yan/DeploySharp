@@ -39,8 +39,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             new PaddleDocumentModelDescriptor("paddle-formula/unimernet", "UniMERNet", PaddleDocumentModule.FormulaRecognition, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/UniMERNet_infer.tar", "paddle-inference"),
             new PaddleDocumentModelDescriptor("paddle-seal/ppocrv4-mobile", "PP-OCRv4_mobile_seal_det", PaddleDocumentModule.SealTextDetection, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv4_mobile_seal_det_infer.tar", "paddle-inference"),
             new PaddleDocumentModelDescriptor("paddle-seal/ppocrv4-server", "PP-OCRv4_server_seal_det", PaddleDocumentModule.SealTextDetection, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv4_server_seal_det_infer.tar", "paddle-inference"),
+            // Region OCR is a core PP-OCR recognizer reused by the document pipeline.
+            // Keep one representative official model in this catalog so the TextRecognition
+            // result/stage has an independently downloadable asset identity as well.
             new PaddleDocumentModelDescriptor("paddleocr/ppocrv5/mobile-rec", "PP-OCRv5_mobile_rec", PaddleDocumentModule.TextRecognition, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar", "paddle-inference"),
-            new PaddleDocumentModelDescriptor("paddle-chart/pp-chart2table", "PP-Chart2Table", PaddleDocumentModule.ChartParsing, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-Chart2Table_infer.tar", "paddle-inference")
+            // The upstream archive remains generative source weights, not a standard Paddle
+            // inference export, and no derived four-graph bundle is in the model Release catalog.
+            // A local bundle is now executable through PaddleChart2TableOnnxSession, but this
+            // catalog row intentionally describes only downloadable/release artifact admission.
+            new PaddleDocumentModelDescriptor("paddle-chart/pp-chart2table", "PP-Chart2Table", PaddleDocumentModule.ChartParsing, "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-Chart2Table_infer.tar", "paddle-inference", PaddleDocumentArtifactStatus.ConversionBlocked)
         };
 
         /// <summary>Finds one catalog entry by stable model ID. / 按稳定模型 ID 查找目录项。</summary>
@@ -51,6 +58,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (descriptor == null) throw new KeyNotFoundException("The Paddle document model is not present in the official catalog: " + modelId);
             return descriptor;
         }
+
+        /// <summary>Gets converted ONNX Release metadata for one document model when the asset is present in models-paddleocr. / 当资产存在于 models-paddleocr 时获取文档模型的已转换 ONNX Release 元数据。</summary>
+        public static PaddleDocumentReleaseArtifact GetReleaseArtifact(string modelId) => PaddleDocumentReleaseArtifacts.Get(modelId);
+
+        /// <summary>Tries to get converted ONNX Release metadata; false identifies an intentionally unavailable conversion. / 尝试获取已转换 ONNX Release 元数据；false 表示该转换当前不可用。</summary>
+        public static bool TryGetReleaseArtifact(string modelId, out PaddleDocumentReleaseArtifact? artifact) => PaddleDocumentReleaseArtifacts.TryGet(modelId, out artifact);
 
         /// <summary>Returns a stable read-only view of all catalog entries for one module. / 返回指定模块的稳定只读目录视图。</summary>
         public static IReadOnlyList<PaddleDocumentModelDescriptor> ForModule(PaddleDocumentModule module)

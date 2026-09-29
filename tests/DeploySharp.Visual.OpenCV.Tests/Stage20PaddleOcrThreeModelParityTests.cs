@@ -189,7 +189,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string device = openVino ? "CPU" : "cpu";
             PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/stage20-detector"), Artifact(11, "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "ppocr-det-resize-long960-stride128-f32-v2", "ppocr-db-contour-minarea-unclip-v2"));
             PaddleOcrProfile classifier = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-classifier"), Artifact(7, "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
-            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, DictionarySha);
+            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, DictionarySha);
             PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(new ModelId("external/stage20-recognizer"), Artifact(7, "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha), characters);
 
             VisualSize sourceSize;
@@ -199,10 +199,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var profiles = new VisualProfileRegistry(); profiles.Register(detector.VisualProfile); profiles.Register(classifier.VisualProfile); profiles.Register(recognizer.VisualProfile); profiles.Freeze();
             var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
             using var pipeline = new OcrPipeline(backends,
-                profiles.Select(detector.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DET_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx"), backendId), backends, request, VisualTaskId.TextDetection), request,
-                profiles.Select(classifier.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx"), backendId), backends, request, VisualTaskId.TextOrientationClassification), request,
+                profiles.Select(detector.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DET_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx"), backendId), backends, request, VisualTaskId.TextDetection), request,
+                profiles.Select(classifier.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx"), backendId), backends, request, VisualTaskId.TextOrientationClassification), request,
                 classifier.CropProfile ?? throw new InvalidOperationException("The classifier crop profile is missing."),
-                profiles.Select(recognizer.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_REC_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx"), backendId), backends, request, VisualTaskId.TextRecognition), request,
+                profiles.Select(recognizer.CreateArtifact(RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_REC_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx"), backendId), backends, request, VisualTaskId.TextRecognition), request,
                 recognizer.CropProfile ?? throw new InvalidOperationException("The recognition crop profile is missing."),
                 new OcrPipelineOptions(maximumRegions: 32, maximumRecognitionBatch: 16),
                 orientationRejectionPolicy: OcrOrientationRejectionPolicy.UseZeroDegrees);
@@ -228,8 +228,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             BackendId backendId = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
             string device = openVino ? "CPU" : "cpu";
-            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_REC_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx");
-            string dictionaryPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt");
+            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_REC_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx");
+            string dictionaryPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt");
             OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "external.ppocrv5", "v5", true, DictionarySha);
             PaddleOcrProfile profile = PaddleOcrProfiles.CreateRecognition(new ModelId("external/stage20-recognizer-golden"), Artifact(7, "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha), characters);
             using var backends = new BackendRegistry();
@@ -246,8 +246,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             BackendId backendId = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
             string device = openVino ? "CPU" : "cpu";
-            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_DET_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx");
-            PaddleOcrProfile profile = PaddleOcrProfiles.CreateDetection(new ModelId("external/stage20-server-detector-golden"), Artifact(11, "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "ppocr-det-resize-long960-stride128-f32-v2", "ppocr-db-contour-minarea-unclip-v2"));
+            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_DET_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx");
+            PaddleOcrProfile profile = PaddleOcrProfiles.CreateDetection(new ModelId("external/stage20-server-detector-golden"), Artifact(11, "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "ppocr-det-resize-long960-stride128-f32-v2", "ppocr-db-contour-minarea-unclip-v2"));
             VisualSize sourceSize;
             using (PreparedVisualInput probe = new OpenCvVisualInputFactory().CreateFromFile(imagePath, "probe", new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr))) sourceSize = probe.SourceSize;
             using var backends = new BackendRegistry();
@@ -264,10 +264,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             BackendId backendId = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
             string device = openVino ? "CPU" : "cpu";
-            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_REC_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx");
-            string dictionaryPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt");
+            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_REC_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx");
+            string dictionaryPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_OCR_DICT") ?? @"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt");
             OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "external.ppocrv5", "v5", true, DictionarySha);
-            PaddleOcrProfile profile = PaddleOcrProfiles.CreateRecognition(new ModelId("external/stage20-server-recognizer-golden"), Artifact(10, "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha), characters);
+            PaddleOcrProfile profile = PaddleOcrProfiles.CreateRecognition(new ModelId("external/stage20-server-recognizer-golden"), Artifact(10, "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha), characters);
             using var backends = new BackendRegistry();
             if (openVino) backends.UseOpenVino(); else backends.UseOnnxRuntime();
             var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
@@ -282,7 +282,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             BackendId backendId = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
             string device = openVino ? "CPU" : "cpu";
-            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx");
+            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx");
             PaddleOcrProfile profile = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-classifier-golden"), Artifact(7, "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
             using var backends = new BackendRegistry();
             if (openVino) backends.UseOpenVino(); else backends.UseOnnxRuntime();
@@ -298,8 +298,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             BackendId backendId = openVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
             string device = openVino ? "CPU" : "cpu";
-            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_CLS_MODEL") ?? @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_cls_onnx.onnx");
-            PaddleOcrProfile profile = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-server-classifier-golden"), Artifact(7, "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
+            string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE20_SERVER_CLS_MODEL") ?? @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx");
+            PaddleOcrProfile profile = PaddleOcrProfiles.CreateTextLineOrientationClassification(new ModelId("external/stage20-server-classifier-golden"), Artifact(7, "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "pp-lcnet-textline-rgb-imagenet-v1", "argmax-0-180-threshold-v1"));
             using var backends = new BackendRegistry();
             if (openVino) backends.UseOpenVino(); else backends.UseOnnxRuntime();
             var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);

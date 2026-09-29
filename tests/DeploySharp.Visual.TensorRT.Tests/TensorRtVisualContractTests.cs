@@ -48,16 +48,25 @@ namespace DeploySharp.Visual.TensorRT.Tests
         public void SharedResizeLetterboxAndCenterCropContractsAreAccepted()
         {
             VisualModelProfile profile = Profile(new TensorShape(1, 3, 224, 224));
-            foreach (VisualResizeMode mode in new[] { VisualResizeMode.Resize, VisualResizeMode.Letterbox, VisualResizeMode.CenterCrop })
+            foreach (VisualResizeMode mode in new[] { VisualResizeMode.Resize, VisualResizeMode.Letterbox, VisualResizeMode.CenterCrop, VisualResizeMode.ShortestEdgeCenterCrop })
             {
                 var preprocessing = new VisualPreprocessingOptions(
                     new VisualSize(224, 224),
                     mode,
                     VisualColorOrder.Rgb,
                     VisualNormalizationOptions.ImageNet,
-                    VisualTensorLayout.Nchw);
+                    VisualTensorLayout.Nchw,
+                    shortestEdgeResize: mode == VisualResizeMode.ShortestEdgeCenterCrop ? new VisualSize(256, 256) : null);
                 TensorRtVisualContracts.ValidatePreprocessing(profile, preprocessing.ToOpenCvOptions());
             }
+        }
+
+        [TestMethod]
+        public void NormalizedPaddingRequiresCpuPreparationBeforeTensorRt()
+        {
+            VisualModelProfile profile = Profile(new TensorShape(1, 3, 224, 224));
+            var options = new VisualPreprocessingOptions(new VisualSize(224, 224), VisualResizeMode.LongestSidePadBottomRight, normalization: VisualNormalizationOptions.ImageNet, normalizedPaddingValue: 0);
+            Assert.ThrowsExactly<NotSupportedException>(() => TensorRtVisualContracts.ValidatePreprocessing(profile, options.ToOpenCvOptions()));
         }
 
         [TestMethod]

@@ -31,7 +31,7 @@ namespace DeploySharp.ModelFactory.Tests
             Assert.AreEqual("preview-algorithm-admission-blocked", admission.GetProperty("state").GetString());
             Assert.IsTrue(admission.GetProperty("catalogRedistributionDeclared").GetBoolean());
             Assert.IsFalse(admission.GetProperty("algorithmAdmissionRedistributionApproved").GetBoolean());
-            Assert.AreEqual("closed-public-prerelease", admission.GetProperty("immutableReleaseAsset").GetString());
+            Assert.AreEqual("not-published-official-source-prepared", admission.GetProperty("immutableReleaseAsset").GetString());
 
             string[] openBlockers = root.GetProperty("blockers")
                 .EnumerateArray()
@@ -41,14 +41,14 @@ namespace DeploySharp.ModelFactory.Tests
                 .ToArray();
 
             CollectionAssert.AreEquivalent(
-                new[] { "license-and-redistribution" },
+                new[] { "immutable-release-binding", "license-and-redistribution", "release-bound-local-golden" },
                 openBlockers);
 
             JsonElement algorithmCandidate = root.GetProperty("algorithmCandidate");
             Assert.AreEqual(candidate.ModelId, algorithmCandidate.GetProperty("catalogModelId").GetString());
             Assert.AreEqual(candidate.Release!.Tag, algorithmCandidate.GetProperty("release").GetProperty("tag").GetString());
             Assert.AreEqual(candidate.Release.Commit, algorithmCandidate.GetProperty("release").GetProperty("commit").GetString());
-            Assert.AreEqual("5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96", algorithmCandidate.GetProperty("release").GetProperty("manifestSha256").GetString());
+            Assert.AreEqual("f4f3d6fb507b4b8088843d74ab1e04233be6fb1663631eb709354252379f136d", algorithmCandidate.GetProperty("release").GetProperty("manifestSha256").GetString());
 
             JsonElement contract = algorithmCandidate.GetProperty("contract");
             CollectionAssert.AreEqual(new[] { 1, 3, 80, 160 }, contract.GetProperty("inputShape").EnumerateArray().Select(value => value.GetInt32()).ToArray());
@@ -148,14 +148,14 @@ namespace DeploySharp.ModelFactory.Tests
                 .OrderBy(value => value, StringComparer.Ordinal)
                 .ToArray();
 
-            bool valid = release["modelSha256"]!.GetValue<string>() == "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2"
+            bool valid = release["modelSha256"]!.GetValue<string>() == "94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3"
                 && contract["inputShape"]!.AsArray().Select(value => value!.GetValue<int>()).SequenceEqual(new[] { 1, 3, 80, 160 })
                 && contract["labelOrder"]!.AsArray().Select(value => value!.GetValue<string>()).SequenceEqual(new[] { "0_degree", "180_degree" })
                 && contract["rejectionThreshold"]!.GetValue<double>() == 0.9
                 && golden["label"]!.GetValue<string>() == "180_degree"
                 && golden["officialPredictorOutputStatus"]!.GetValue<string>() == "recorded"
                 && golden["officialPredictorOutputSha256"]!.GetValue<string>() == "d2820ebee4744ef48a7897cd888c659f5f733ae2b618b638577ad30902181e5d"
-                && openBlockers.SequenceEqual(new[] { "license-and-redistribution" });
+                && openBlockers.SequenceEqual(new[] { "immutable-release-binding", "license-and-redistribution", "release-bound-local-golden" });
             if (!valid) throw new InvalidDataException("PP-OCRv5 mobile-cls algorithm-admission evidence drifted.");
         }
     }

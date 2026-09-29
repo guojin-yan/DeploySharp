@@ -13,10 +13,12 @@
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
     <PackageReference Include="OpenVINO.runtime.win" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="OnnxSharp" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenCV\DeploySharp.Backend.OpenCV.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenVINO\DeploySharp.Backend.OpenVINO.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
   </ItemGroup>

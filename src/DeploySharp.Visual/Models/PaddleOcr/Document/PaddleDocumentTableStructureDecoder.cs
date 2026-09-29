@@ -55,6 +55,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 " colspan=\"2\"", " colspan=\"3\"", " colspan=\"4\"", " colspan=\"5\"", " colspan=\"6\"", " colspan=\"7\"", " colspan=\"8\"", " colspan=\"9\"", " colspan=\"10\"", " colspan=\"11\"", " colspan=\"12\"", " colspan=\"13\"", " colspan=\"14\"", " colspan=\"15\"", " colspan=\"16\"", " colspan=\"17\"", " colspan=\"18\"", " colspan=\"19\"", " colspan=\"20\"",
                 " rowspan=\"2\"", " rowspan=\"3\"", " rowspan=\"4\"", " rowspan=\"5\"", " rowspan=\"6\"", " rowspan=\"7\"", " rowspan=\"8\"", " rowspan=\"9\"", " rowspan=\"10\"", " rowspan=\"11\"", " rowspan=\"12\"", " rowspan=\"13\"", " rowspan=\"14\"", " rowspan=\"15\"", " rowspan=\"16\"", " rowspan=\"17\"", " rowspan=\"18\"", " rowspan=\"19\"", " rowspan=\"20\"", "<EOS>"
             };
+            // Official TableLabelDecode applies merge_no_span_structure=true:
+            // remove <td>, then append the merged token before adding EOS.
+            // Omitting this shifts every class from index 7 and drops plain cells.
+            tokens.Remove("<td>");
+            tokens.Insert(tokens.Count - 1, "<td></td>");
             return new PaddleDocumentTableStructureSchema(structureOutputName, locationOutputName, tokens, startTokenIndex: 0, endTokenIndex: tokens.Count - 1, padTokenIndex: -1, unknownTokenIndex: -1);
         }
 

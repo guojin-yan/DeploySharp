@@ -181,7 +181,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     }
 
                     PointF[] hull = ConvexHull(queue, tail, width, height);
-                    PointF[] box = MinimumAreaRectangle(hull);
+                    PointF[] box = Options.BoxType == PaddleDbBoxType.Polygon ? hull : MinimumAreaRectangle(hull);
                     if (ShortSide(box) < Options.MinimumSide) continue;
                     float score = Options.ScoreMode == PaddleDbScoreMode.Slow
                         ? checked((float)(maskScore / tail))
@@ -202,12 +202,27 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             {
                 Candidate candidate = Expand(candidates[index], width, height, Options.UnclipRatio);
                 if (ShortSide(candidate.Box) < 5f) continue;
-                PointF topLeft = Restore(candidate.Box[0], width, height, context);
-                PointF topRight = Restore(candidate.Box[1], width, height, context);
-                PointF bottomRight = Restore(candidate.Box[2], width, height, context);
-                PointF bottomLeft = Restore(candidate.Box[3], width, height, context);
-                var quadrilateral = new TextQuadrilateral(topLeft, topRight, bottomRight, bottomLeft, TextCornerOrder.TopLeftClockwise);
-                regions.Add(new TextRegion(index, candidate.Score, quadrilateral.Polygon, quadrilateral, metadata: new[]
+                PointF[] restored = new PointF[candidate.Box.Length];
+                for (int point = 0; point < restored.Length; point++) restored[point] = Restore(candidate.Box[point], width, height, context);
+                TextPolygon polygon;
+                TextQuadrilateral? quadrilateral;
+                if (Options.BoxType == PaddleDbBoxType.Polygon)
+                {
+                    // ConvexHull/Offset normally preserve counter-clockwise order, but
+                    // canonicalize from the measured signed area so custom numeric edge
+                    // cases cannot turn a valid polygon into a rejected result.
+                    double signedArea = SignedArea(restored);
+                    if (Math.Abs(signedArea) <= 0.000001f) continue;
+                    polygon = TextPolygon.Canonicalize(restored, signedArea > 0 ? OrientedVertexOrder.CounterClockwise : OrientedVertexOrder.Clockwise);
+                    quadrilateral = null;
+                }
+                else
+                {
+                    if (restored.Length != 4) continue;
+                    quadrilateral = new TextQuadrilateral(restored[0], restored[1], restored[2], restored[3], TextCornerOrder.TopLeftClockwise);
+                    polygon = quadrilateral.Polygon;
+                }
+                regions.Add(new TextRegion(index, candidate.Score, polygon, quadrilateral, metadata: new[]
                 {
                     new KeyValuePair<string, string>("paddle.db.scoreMode", Options.ScoreMode.ToString()),
                     new KeyValuePair<string, string>("paddle.db.boxType", Options.BoxType.ToString()),

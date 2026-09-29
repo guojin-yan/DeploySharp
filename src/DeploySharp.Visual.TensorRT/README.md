@@ -9,3 +9,23 @@ The initial contract supports one static Float32 NCHW image input, batch one, li
 CUDA postprocessing defaults to `TensorRtCudaVisualPostprocessingMode.WhenSupported`; use `Disabled` for an exact CPU-postprocessing comparison. `UsesCudaPostprocessing` exposes the admission result. Profiles that would increase managed materialization, including the default PaDiM raw-plus-restored-map contract, stay on the CPU decoder.
 
 Packed YOLO segmentation returns owned dense masks by default. Enable `YoloPackedDecoderOptions(generateRle: true)` only when the additional row-major RLE representation is required; leaving it disabled avoids a redundant full-mask scan and allocation.
+
+## PP-Chart2Table autoregressive TensorRT
+
+For the PP-Chart2Table four-engine bundle, use `PaddleChart2TableTensorRtDeviceSession` instead of the backend-neutral `PaddleChart2TableOnnxSession` when running TensorRT. The specialized path keeps the 48 KV tensors in two CUDA cache banks and reads back only vocabulary logits per decode step. Vision, token embedding, and prefill use the same TensorRT provider; the provider must outlive the session.
+
+```csharp
+using var provider = new TensorRtBackendProvider(
+    new TensorRtBackendOptions(TensorRtApiVersion.TensorRt10, cudaTargetArchitecture: "sm_86"));
+using var session = new PaddleChart2TableTensorRtDeviceSession(
+    provider,
+    chartTensorRtBundle,
+    new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
+
+PaddleChart2TableGenerationResult result = session.Generate(
+    preparedChartInput,
+    chartTokenizer,
+    maximumNewTokens: 256);
+```
+
+The bundle must contain four `tensorrt-engine` artifacts. The checked RTX 3060 Laptop sample produced the same complete table with strict FP32 language plans and with TF32 tactics enabled; TF32 is an optional measured plan variant, not a dataset-wide precision guarantee. See the [Chart2Table validation record](../../eng/models/paddle-document/verification/chart2table-component-validation.json) for graph/plan hashes, output, and timing boundaries.

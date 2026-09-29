@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Tensors;
 
@@ -19,14 +20,67 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
         public PaddleDocumentModelDescriptor Descriptor { get; }
         public VisualModelProfile VisualProfile { get; }
-        public ModelArtifact CreateArtifact(string path, BackendId? preferredBackend = null) => new ModelArtifact(VisualProfile.ModelId, VisualProfile.ModelFormat, path, Descriptor.Sha256, preferredBackend);
+        /// <summary>Creates NMS geometry inputs in model coordinates so the decoder maps boxes to the source exactly once. / 在模型坐标系中创建 NMS 几何输入，确保 Decoder 仅执行一次原图坐标还原。</summary>
+        public IReadOnlyList<NamedTensor> CreateGeometryInputs(int batchSize = 1)
+        {
+            if (!(VisualProfile.Decoder is PaddleDocumentNmsDecoder)) throw new InvalidOperationException("Geometry inputs are only defined for Paddle NMS profiles.");
+            if (batchSize < 1 || batchSize > VisualProfile.Input.MaximumBatch) throw new ArgumentOutOfRangeException(nameof(batchSize));
+            TensorShape shape = VisualProfile.Input.ShapePattern;
+            var inputs = new List<NamedTensor>();
+            foreach (VisualAuxiliaryInputBinding binding in VisualProfile.AuxiliaryInputs)
+            {
+                var values = new float[checked(batchSize * 2)];
+                for (int index = 0; index < batchSize; index++)
+                {
+                    if (binding.Name == "im_shape") { values[index * 2] = shape[2]; values[index * 2 + 1] = shape[3]; }
+                    else if (binding.Name == "scale_factor") { values[index * 2] = 1; values[index * 2 + 1] = 1; }
+                    else throw new InvalidOperationException("Unknown Paddle geometry input: " + binding.Name);
+                }
+                inputs.Add(new NamedTensor(binding.Name, new Tensor<float>(new TensorShape(batchSize, 2), values, TensorBufferOwnership.Transfer)));
+            }
+            return inputs;
+        }
+
+        /// <summary>
+        /// Creates the model-space geometry tensors for an already prepared input.
+        /// Paddle NMS exports in this profile family expect the postprocessor's
+        /// <c>im_shape</c> to be the model canvas and <c>scale_factor</c> to be
+        /// one; the decoder then applies the reversible DeploySharp transform
+        /// exactly once.  This is intentionally different from the portable
+        /// RT-DETR auxiliary contract, which passes the source-to-model scale
+        /// into an export that emits source-space boxes.
+        /// / 为已经完成前处理的输入创建模型坐标系几何张量。此类 Paddle NMS 导出约定
+        /// <c>im_shape</c> 使用模型画布、<c>scale_factor</c> 使用 1；随后由 Decoder
+        /// 仅通过 DeploySharp 可逆 Transform 还原一次源图坐标。它与输出源坐标的便携式
+        /// RT-DETR 辅助输入合同不同。
+        /// </summary>
+        public IReadOnlyList<NamedTensor> CreateGeometryInputs(PreparedVisualInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!(VisualProfile.Decoder is PaddleDocumentNmsDecoder)) throw new InvalidOperationException("Geometry inputs are only defined for Paddle NMS profiles.");
+            if (input.IsDisposed) throw new VisualException(VisualErrorCodes.ObjectDisposed, "The prepared visual input has been disposed.", tensorName: input.InputName);
+
+            TensorShape shape = VisualProfile.Input.ShapePattern;
+            if (shape.Rank != 4 || shape[2] <= 0 || shape[3] <= 0 || input.ModelSize != new VisualSize(checked((int)shape[3]), checked((int)shape[2])))
+                throw new VisualException(VisualErrorCodes.InputInvalid, "The prepared input model canvas does not match the Paddle NMS profile.", tensorName: input.InputName);
+            return CreateGeometryInputs(input.BatchSize);
+        }
+        /// <summary>Creates an artifact bound to the descriptor hash or, for the unified Release catalog, its independently published SHA-256. / 创建绑定目录哈希或统一 Release 独立发布 SHA-256 的工件。</summary>
+        public ModelArtifact CreateArtifact(string path, BackendId? preferredBackend = null)
+        {
+            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("An artifact path is required.", nameof(path));
+            if (Descriptor.Status == PaddleDocumentArtifactStatus.ConversionBlocked)
+                throw new InvalidOperationException("The selected Paddle document model is conversion-blocked and has no executable artifact. Provide a separately catalogued compatible export instead.");
+            string format = Descriptor.ReleaseArtifact != null && string.Equals(Path.GetExtension(path), ".onnx", StringComparison.OrdinalIgnoreCase) ? "onnx" : VisualProfile.ModelFormat;
+            return new ModelArtifact(VisualProfile.ModelId, format, path, Descriptor.Sha256 ?? Descriptor.ReleaseArtifact?.Sha256, preferredBackend);
+        }
     }
 
     /// <summary>Builds reusable PP-Structure profiles. These builders describe tensor contracts; exported ONNX names and preprocessing must be verified for each conversion. / 创建可复用 PP-Structure Profile；这些构建器描述张量合同，具体导出 ONNX 名称和预处理必须针对每次转换验证。</summary>
     public static class PaddleDocumentProfiles
     {
         /// <summary>Creates a document-orientation or table-classification score profile. / 创建文档方向或表格分类分数 Profile。</summary>
-        public static PaddleDocumentProfile CreateClassification(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualTaskId task, string inputName = "x", string outputName = "fetch_name_0", VisualSize? modelSize = null, int maximumBatch = 1, bool allowDynamicBatch = false, ClassificationScoreMode scoreMode = ClassificationScoreMode.Logits, VisualPreprocessingOptions? preprocessing = null)
+        public static PaddleDocumentProfile CreateClassification(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualTaskId task, string inputName = "x", string outputName = "fetch_name_0", VisualSize? modelSize = null, int maximumBatch = 1, bool allowDynamicBatch = false, ClassificationScoreMode? scoreMode = null, VisualPreprocessingOptions? preprocessing = null)
         {
             if (descriptor == null) throw new ArgumentNullException(nameof(descriptor));
             if (labels == null) throw new ArgumentNullException(nameof(labels));
@@ -40,13 +94,24 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             long batch = allowDynamicBatch ? -1 : 1;
             var visualLabels = new List<VisualLabel>(labelValues.Count);
             for (int index = 0; index < labelValues.Count; index++) visualLabels.Add(new VisualLabel(index, labelValues[index]));
-            var decoder = new ClassificationDecoder(outputName, scoreMode, 1, 0, task);
+            // Registered PP-LCNet graphs already end in Softmax. Custom logits
+            // exports retain the generic default and can explicitly override it.
+            var decoder = new ClassificationDecoder(outputName, scoreMode ?? (IsOfficialLcNet(descriptor.ModelId) ? ClassificationScoreMode.Probabilities : ClassificationScoreMode.Logits), 1, 0, task);
             var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".classification", new ModelId(descriptor.ModelId), task, "paddle-document-contract-v1", descriptor.ModelFormat,
                 new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(batch, 3, size.Height, size.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
                 new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(batch, labelValues.Count)) }, visualLabels, decoder,
-                preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1));
+                preprocessing: preprocessing ?? DefaultClassificationPreprocessing(descriptor.ModelId, size));
             return new PaddleDocumentProfile(descriptor, visual);
         }
+
+        private static VisualPreprocessingOptions DefaultClassificationPreprocessing(string modelId, VisualSize size)
+        {
+            return IsOfficialLcNet(modelId)
+                ? new VisualPreprocessingOptions(size, VisualResizeMode.ShortestEdgeCenterCrop, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1, interpolation: VisualInterpolationMode.Linear, shortestEdgeResize: new VisualSize(256, 256))
+                : new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1);
+        }
+
+        private static bool IsOfficialLcNet(string modelId) => modelId == "paddle-doc/pp-lcnet-x1-0-doc-ori" || modelId == "paddle-table/pp-lcnet-x1-0-table-cls";
 
         /// <summary>Creates a dense region profile for layout, seal, or table-cell models after a converter has exposed a [batch,candidates,fields] tensor. / 为版面、印章或表格单元格模型创建密集区域 Profile；前提是转换器已暴露 [batch,candidates,fields] 张量。</summary>
         public static PaddleDocumentProfile CreateRegionDetection(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualTaskId task, string inputName = "x", string outputName = "output", VisualSize? modelSize = null, DetectionBoxFormat boxFormat = DetectionBoxFormat.Xyxy, bool normalizedCoordinates = true, int classScoreOffset = 4, DetectionScoreMode scoreMode = DetectionScoreMode.ClassScore, int objectnessIndex = -1, DetectionDecoderOptions? decoderOptions = null, VisualPreprocessingOptions? preprocessing = null)
@@ -71,7 +136,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         }
 
         /// <summary>Creates a profile for Paddle's post-NMS [class,score,x1,y1,x2,y2] exports used by layout and cell models. / 为版面和单元格模型使用的 Paddle 后置 NMS 输出创建 Profile。</summary>
-        public static PaddleDocumentProfile CreatePaddleNmsRegions(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualSize modelSize, string imageInputName = "image", string outputName = "fetch_name_0", string countOutputName = "fetch_name_1", bool includeGeometryInputs = false, int maximumBatch = 1, float scoreThreshold = 0, VisualPreprocessingOptions? preprocessing = null)
+        public static PaddleDocumentProfile CreatePaddleNmsRegions(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualSize modelSize, string imageInputName = "image", string outputName = "fetch_name_0", string? countOutputName = "fetch_name_1", bool includeGeometryInputs = false, int maximumBatch = 1, float scoreThreshold = 0, VisualPreprocessingOptions? preprocessing = null, bool includeImageShapeInput = false, bool includeScaleFactorInput = false)
         {
             if (descriptor == null) throw new ArgumentNullException(nameof(descriptor));
             if (labels == null) throw new ArgumentNullException(nameof(labels));
@@ -79,18 +144,37 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             var labelValues = new List<string>(labels);
             if (labelValues.Count == 0) throw new ArgumentException("At least one label is required.", nameof(labels));
+            countOutputName = string.IsNullOrWhiteSpace(countOutputName) ? null : countOutputName;
             var decoder = new PaddleDocumentNmsDecoder(descriptor, labelValues, outputName, countOutputName, false, scoreThreshold);
             var auxiliary = new List<VisualAuxiliaryInputBinding>();
-            if (includeGeometryInputs)
+            if (includeGeometryInputs) { includeImageShapeInput = true; includeScaleFactorInput = true; }
+            if (includeImageShapeInput) auxiliary.Add(new VisualAuxiliaryInputBinding("im_shape", TensorElementType.Float32, new TensorShape(-1, 2)));
+            if (includeScaleFactorInput) auxiliary.Add(new VisualAuxiliaryInputBinding("scale_factor", TensorElementType.Float32, new TensorShape(-1, 2)));
+            TensorShape nmsOutputShape = countOutputName == null && maximumBatch > 1
+                ? new TensorShape(-1, -1, 6)
+                : new TensorShape(-1, 6);
+            var outputs = new List<VisualOutputBinding>
             {
-                auxiliary.Add(new VisualAuxiliaryInputBinding("im_shape", TensorElementType.Float32, new TensorShape(-1, 2)));
-                auxiliary.Add(new VisualAuxiliaryInputBinding("scale_factor", TensorElementType.Float32, new TensorShape(-1, 2)));
-            }
+                new VisualOutputBinding(outputName, TensorElementType.Float32, nmsOutputShape)
+            };
+            if (countOutputName != null)
+                outputs.Add(new VisualOutputBinding(countOutputName, TensorElementType.Int32, new TensorShape(-1), new[] { TensorElementType.Int64 }));
             var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".paddle-nms", new ModelId(descriptor.ModelId), decoder.Task, "paddle-document-contract-v1", descriptor.ModelFormat,
                 new VisualInputBinding(imageInputName, TensorElementType.Float32, new TensorShape(-1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
-                new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(-1, 6)), new VisualOutputBinding(countOutputName, TensorElementType.Int64, new TensorShape(-1)) }, labelsToVisual(labelValues), decoder, auxiliaryInputs: auxiliary,
-                preprocessing: preprocessing ?? new VisualPreprocessingOptions(modelSize, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1));
+                outputs, labelsToVisual(labelValues), decoder, auxiliaryInputs: auxiliary,
+                preprocessing: preprocessing ?? new VisualPreprocessingOptions(modelSize, VisualResizeMode.Resize, VisualColorOrder.Rgb, NmsNormalization(descriptor.ModelId), VisualTensorLayout.Nchw, 1, interpolation: VisualInterpolationMode.Cubic));
             return new PaddleDocumentProfile(descriptor, visual);
+        }
+
+        private static VisualNormalizationOptions NmsNormalization(string modelId)
+        {
+            // The official DETR exports use mean=0/std=1 and is_scale=true;
+            // PicoDet exports use ImageNet mean/std. "norm_type: none" does
+            // not disable the default pixel/255 scaling in PaddleX.
+            return modelId == "paddle-doc/pp-doclayout-l" || modelId == "paddle-doc/pp-doclayout-plus-l" ||
+                modelId == "paddle-doc/pp-docblocklayout" || modelId.StartsWith("paddle-doc/rt-detr-", StringComparison.Ordinal) ||
+                modelId.StartsWith("paddle-table/rt-detr-", StringComparison.Ordinal)
+                ? VisualNormalizationOptions.Scale() : VisualNormalizationOptions.ImageNet;
         }
 
         /// <summary>Creates the official two-output SLANeXt table-structure profile. / 创建官方双输出 SLANeXt 表格结构 Profile。</summary>
@@ -111,7 +195,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     new VisualOutputBinding(resolvedSchema.StructureOutputName, TensorElementType.Float32, new TensorShape(-1, -1, resolvedSchema.Tokens.Count))
                 },
                 Array.Empty<VisualLabel>(), decoder,
-                preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1));
+                preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.LongestSidePadBottomRight, VisualColorOrder.Bgr, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1, normalizedPaddingValue: 0));
             return new PaddleDocumentProfile(descriptor, visual);
         }
 
@@ -137,13 +221,34 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (schema == null) throw new ArgumentNullException(nameof(schema));
             if (descriptor.Module != PaddleDocumentModule.FormulaRecognition) throw new ArgumentException("The descriptor must identify formula recognition.", nameof(descriptor));
             if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
-            VisualSize size = modelSize ?? new VisualSize(384, 384);
+            VisualSize size = modelSize ?? (descriptor.ModelId == "paddle-formula/unimernet" ? new VisualSize(672, 192)
+                : descriptor.ModelId == "paddle-formula/pp-formulanet-plus-l" || descriptor.ModelId == "paddle-formula/pp-formulanet-l" ? new VisualSize(768, 768)
+                : new VisualSize(384, 384));
             var decoder = new PaddleDocumentFormulaDecoder(descriptor, schema, outputName, maximumSequenceLength);
             long batch = maximumBatch == 1 ? 1 : -1;
             var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".formula", new ModelId(descriptor.ModelId), VisualTaskId.FormulaRecognition, "paddle-document-contract-v1", descriptor.ModelFormat,
                 new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(batch, 1, size.Height, size.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
                 new[] { new VisualOutputBinding(outputName, TensorElementType.Int64, new TensorShape(-1, -1)) }, Array.Empty<VisualLabel>(), decoder,
-                preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Gray, VisualNormalizationOptions.DivideByStandardDeviation(new[] { 255f }), VisualTensorLayout.Nchw, 1));
+                // Official FormulaNet/UniMERNet require margin removal and two
+                // Pillow resampling steps, not a generic grayscale resize.
+                // OpenCvVisualInputFactory dispatches this to the formula factory;
+                // a caller-supplied common preprocessing contract remains explicit.
+                preprocessing: preprocessing);
+            return new PaddleDocumentProfile(descriptor, visual);
+        }
+
+        /// <summary>Creates a token-output chart profile for an externally exported single graph. For the official four-graph greedy generation bundle, use PaddleChart2TableOnnxSession. / 为外部导出的单图创建 Token 输出 Chart Profile；官方四图 Greedy Bundle 使用 PaddleChart2TableOnnxSession。</summary>
+        public static PaddleDocumentProfile CreateChartParsing(PaddleDocumentModelDescriptor descriptor, IPaddleDocumentFormulaTokenizer tokenizer, VisualSize? modelSize = null, string inputName = "x", string outputName = "fetch_name_0", int endTokenId = -1, int startTokenId = -1, int padTokenId = -1, int maximumSequenceLength = 8192, VisualPreprocessingOptions? preprocessing = null)
+        {
+            if (descriptor == null) throw new ArgumentNullException(nameof(descriptor));
+            if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
+            if (descriptor.Module != PaddleDocumentModule.ChartParsing) throw new ArgumentException("The descriptor must identify chart parsing.", nameof(descriptor));
+            VisualSize size = modelSize ?? new VisualSize(1024, 1024);
+            var decoder = new PaddleDocumentChartDecoder(descriptor, tokenizer, outputName, endTokenId, startTokenId, padTokenId, maximumSequenceLength);
+            var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".chart", new ModelId(descriptor.ModelId), VisualTaskId.ChartParsing, "paddle-document-contract-v1", descriptor.ModelFormat,
+                new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(1, 3, -1, -1), VisualTensorLayout.Nchw),
+                new[] { new VisualOutputBinding(outputName, TensorElementType.Int64, new TensorShape(1, -1)) }, Array.Empty<VisualLabel>(), decoder,
+                preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1));
             return new PaddleDocumentProfile(descriptor, visual);
         }
 
@@ -173,7 +278,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         /// <summary>Creates the standard four-way PP-LCNet document orientation labels. / 创建标准四分类 PP-LCNet 文档方向标签。</summary>
         public static IReadOnlyList<string> DocumentOrientationLabels { get; } = new[] { "0_degree", "90_degree", "180_degree", "270_degree" };
 
-        /// <summary>Returns the official 17-class order used by PP-DocLayout/PicoDet/RT-DETR 17-class exports. / 返回官方 17 类模型使用的顺序。</summary>
+        /// <summary>Returns the official PicoDet/RT-DETR 17-class order; PP-DocLayout-L/M/S use Layout23Labels. / 返回 PicoDet/RT-DETR 的 17 类顺序；PP-DocLayout-L/M/S 使用 Layout23Labels。</summary>
         public static IReadOnlyList<string> Layout17Labels { get; } = new[] { "paragraph_title", "image", "text", "number", "abstract", "content", "figure_title", "formula", "table", "table_title", "reference", "doc_title", "footnote", "header", "algorithm", "footer", "seal" };
         /// <summary>Returns the official three-class layout order. / 返回官方三类版面顺序。</summary>
         public static IReadOnlyList<string> Layout3Labels { get; } = new[] { "image", "table", "seal" };

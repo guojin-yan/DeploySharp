@@ -113,7 +113,7 @@ namespace JYPPX.DeploySharp.ModelFactory
         public ModelCatalogAssetKind Kind { get; }
         /// <summary>Gets the maintained release collection tag. / 获取维护中的 Release 集合标签。</summary>
         public string? ReleaseTag { get; }
-        /// <summary>Gets the versioned release download URI. / 获取版本化 Release 下载 URI。</summary>
+        /// <summary>Gets the versioned release or pinned official upstream download URI. / 获取版本化 Release 或固定官方上游下载 URI。</summary>
         public Uri? DownloadUri { get; }
         /// <summary>Gets the safe path used inside a materialized package or cache entry. / 获取在物化模型包或缓存条目中使用的安全路径。</summary>
         public string? RelativePath { get; }

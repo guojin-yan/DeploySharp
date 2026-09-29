@@ -189,6 +189,54 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(ImageTransformKind.Crop, crop.Transform.Kind);
                 Assert.AreEqual(new TensorShape(1, 3, 2, 2), crop.Tensor.Shape);
             }
+
+            var shortestEdgeOptions = new OpenCvPreprocessOptions(
+                new VisualSize(2, 2),
+                resizeMode: OpenCvResizeMode.ShortestEdgeCenterCrop,
+                outputType: OpenCvOutputType.UInt8,
+                shortestEdgeResize: new VisualSize(4, 4));
+            using (PreparedVisualInput shortestEdge = new OpenCvVisualInputFactory().Create(OpenCvImageSource.FromFile(Fixture("rgb.png")), "images", shortestEdgeOptions))
+            {
+                Assert.AreEqual(new TensorShape(1, 3, 2, 2), shortestEdge.Tensor.Shape);
+                Assert.AreEqual(ImageTransformKind.Crop, shortestEdge.Transform.Kind);
+                Assert.AreEqual(new VisualSize(3, 2), shortestEdge.SourceSize);
+                Assert.AreEqual(2f, shortestEdge.Transform.ScaleX, .001f);
+                Assert.AreEqual(2f, shortestEdge.Transform.ScaleY, .001f);
+            }
+        }
+
+        [TestMethod]
+        public void NormalizedPaddingPreservesContentAcrossLayoutsAndBatches()
+        {
+            foreach (VisualTensorLayout layout in new[] { VisualTensorLayout.Nchw, VisualTensorLayout.Nhwc })
+            foreach (VisualResizeMode mode in new[] { VisualResizeMode.Letterbox, VisualResizeMode.LongestSidePadBottomRight })
+            {
+                var options = new VisualPreprocessingOptions(new VisualSize(6, 6), mode, VisualColorOrder.Bgr, VisualNormalizationOptions.ImageNet, layout, 2, normalizedPaddingValue: 0);
+                using PreparedVisualInput padded = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), "x", options);
+                using PreparedVisualInput original = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), "x", new VisualPreprocessingOptions(new VisualSize(6, 6), mode, VisualColorOrder.Bgr, VisualNormalizationOptions.ImageNet, layout, 2));
+                var values = (float[])padded.Tensor.Buffer;
+                var expected = (float[])original.Tensor.Buffer;
+                int top = mode == VisualResizeMode.Letterbox ? 1 : 0;
+                for (int b = 0; b < 2; b++)
+                    for (int c = 0; c < 3; c++)
+                        for (int y = 0; y < 6; y++)
+                            for (int x = 0; x < 6; x++)
+                            {
+                                int index = layout == VisualTensorLayout.Nchw ? ((b * 3 + c) * 6 + y) * 6 + x : ((b * 6 + y) * 6 + x) * 3 + c;
+                                Assert.AreEqual(y < top || y >= top + 4 ? 0 : expected[index], values[index], .000001f);
+                            }
+            }
+        }
+
+        [TestMethod]
+        public void PaddleShortestEdgeRoundsFractionalDimensionsBeforeCenterCrop()
+        {
+            using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(Fixture("rgb.png"), "x", new VisualPreprocessingOptions(new VisualSize(2, 2), VisualResizeMode.ShortestEdgeCenterCrop, shortestEdgeResize: new VisualSize(5, 5)));
+            // 3x2 resized to 8x5 (round(7.5)), then crop at (3,1).
+            Assert.AreEqual(8f / 3, input.Transform.ScaleX, .00001f);
+            Assert.AreEqual(2.5f, input.Transform.ScaleY, .00001f);
+            Assert.AreEqual(-3f, input.Transform.OffsetX, .00001f);
+            Assert.AreEqual(-1f, input.Transform.OffsetY, .00001f);
         }
 
         [TestMethod]

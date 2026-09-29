@@ -10,9 +10,17 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
+    <!-- The layout parity assertion uses the official CPU ORT session as its reference backend. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <!-- The TensorRT integration test uses the shared OpenCV image/input factory
+         for the exact CPU-vs-CUDA preprocessing comparison. Keep the native
+         runtime explicit in this test project; a project reference to the
+         managed OpenCV adapter does not bring consumer-owned native assets. -->
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DeploySharp.Visual.TensorRT\DeploySharp.Visual.TensorRT.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
   </ItemGroup>
 </Project>

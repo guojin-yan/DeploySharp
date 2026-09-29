@@ -1,7 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 
 namespace DeploySharp.Visual.Tests
 {
@@ -21,6 +23,7 @@ namespace DeploySharp.Visual.Tests
                 Assert.IsFalse(string.IsNullOrWhiteSpace(descriptor.InputName));
                 Assert.IsFalse(string.IsNullOrWhiteSpace(descriptor.OutputName));
                 Assert.IsNotNull(PaddleOcrModelCatalog.Find(descriptor.ModelId));
+                Assert.IsNotNull(descriptor.ReleaseArtifact);
             }
         }
 
@@ -56,6 +59,51 @@ namespace DeploySharp.Visual.Tests
                 PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, artifact);
                 Assert.AreEqual(descriptor.ModelId, profile.VisualProfile.ModelId);
             }
+        }
+
+        [TestMethod]
+        public void CoreRowsMapToIndependentReleaseAssets()
+        {
+            foreach (PaddleOcrModelDescriptor descriptor in PaddleOcrModelCatalog.All)
+            {
+                PaddleOcrReleaseArtifact artifact = PaddleOcrModelCatalog.GetReleaseArtifact(descriptor.ModelId);
+                Assert.AreEqual("models-paddleocr", artifact.ReleaseTag);
+                Assert.IsTrue(artifact.AssetName.EndsWith(".onnx", System.StringComparison.Ordinal));
+                Assert.AreEqual(64, artifact.Sha256.Length);
+                Assert.AreEqual(descriptor.ModelId, artifact.ModelId);
+                Assert.IsTrue(artifact.Size > 0);
+                Assert.IsTrue(artifact.Opset > 0);
+            }
+        }
+
+        [TestMethod]
+        public void ConvertedDocumentRowsMapToIndependentReleaseAssetsAndBlockedRowsStayExplicit()
+        {
+            int converted = 0;
+            foreach (PaddleDocumentModelDescriptor descriptor in PaddleDocumentModelCatalog.Official)
+            {
+                if (PaddleDocumentModelCatalog.TryGetReleaseArtifact(descriptor.ModelId, out PaddleDocumentReleaseArtifact? artifact))
+                {
+                    converted++;
+                    Assert.IsNotNull(descriptor.ReleaseArtifact);
+                    Assert.IsTrue(artifact!.AssetName.EndsWith(".onnx", System.StringComparison.Ordinal));
+                    Assert.AreEqual(64, artifact.Sha256.Length);
+                    Assert.IsTrue(artifact.Size > 0);
+                }
+            }
+            Assert.AreEqual(29, converted);
+            Assert.IsFalse(PaddleDocumentModelCatalog.TryGetReleaseArtifact("paddle-chart/pp-chart2table", out _));
+        }
+
+        [TestMethod]
+        public void PublishedDocumentProfileCreatesAnOnnxArtifactBoundToReleaseSha()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-s");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor, PaddleDocumentProfiles.Layout5Labels, new VisualSize(640, 640));
+            JYPPX.DeploySharp.Models.ModelArtifact artifact = profile.CreateArtifact("pp-doclayout-s.onnx");
+            Assert.AreEqual("onnx", artifact.Format);
+            Assert.AreEqual(descriptor.ReleaseArtifact!.Sha256, artifact.Sha256);
         }
     }
 }

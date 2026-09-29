@@ -121,7 +121,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OpenCvLetterboxRounding letterboxRounding = OpenCvLetterboxRounding.Nearest,
             OpenCvInterpolation interpolation = OpenCvInterpolation.Linear,
             IEnumerable<float>? inputDivisors = null,
-            bool scaleUp = true)
+            bool scaleUp = true,
+            VisualSize? shortestEdgeResize = null,
+            float? normalizedPaddingValue = null)
         {
             if (!Enum.IsDefined(typeof(OpenCvResizeMode), resizeMode)) throw Invalid("The resize mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualColorOrder), colorOrder) || colorOrder == VisualColorOrder.Unspecified) throw Invalid("A concrete output color order is required.");
@@ -132,6 +134,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (!Enum.IsDefined(typeof(OpenCvInterpolation), interpolation)) throw Invalid("The interpolation mode is invalid.");
             if (interpolation == OpenCvInterpolation.PillowBicubic && resizeMode != OpenCvResizeMode.Resize) throw Invalid("Pillow-compatible bicubic interpolation currently supports fixed resize only.");
             if (batchSize <= 0) throw Invalid("The batch size must be positive.");
+            if (normalizedPaddingValue.HasValue && (float.IsNaN(normalizedPaddingValue.Value) || float.IsInfinity(normalizedPaddingValue.Value) || outputType != OpenCvOutputType.Float32)) throw Invalid("Normalized padding requires a finite Float32 value.");
+            if (shortestEdgeResize.HasValue && resizeMode != OpenCvResizeMode.ShortestEdgeCenterCrop) throw Invalid("A shortest-edge intermediate size requires ShortestEdgeCenterCrop geometry.");
+            if (shortestEdgeResize.HasValue && (shortestEdgeResize.Value.Width < modelSize.Width || shortestEdgeResize.Value.Height < modelSize.Height)) throw Invalid("The shortest-edge intermediate size cannot be smaller than the crop size.");
             int channels = GetChannelCount(colorOrder);
             bool outputHasAlpha = colorOrder == VisualColorOrder.Rgba || colorOrder == VisualColorOrder.Bgra;
             if (alphaMode == OpenCvAlphaMode.Preserve && !outputHasAlpha) throw Invalid("Preserving alpha requires RGBA or BGRA output.");
@@ -157,6 +162,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             LetterboxRounding = letterboxRounding;
             Interpolation = interpolation;
             ScaleUp = scaleUp;
+            ShortestEdgeResize = shortestEdgeResize;
+            NormalizedPaddingValue = normalizedPaddingValue;
         }
 
         /// <summary>Gets the model input size. / 获取模型输入尺寸。</summary>
@@ -189,6 +196,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public OpenCvInterpolation Interpolation { get; }
         /// <summary>Gets whether aspect-preserving geometry may enlarge a source image. / 获取保持宽高比几何是否允许放大源图。</summary>
         public bool ScaleUp { get; }
+        /// <summary>Gets an optional intermediate canvas for shortest-edge resize followed by center crop. / 获取最短边缩放后中心裁剪的可选中间画布。</summary>
+        public VisualSize? ShortestEdgeResize { get; }
+        /// <summary>Gets an optional post-normalization padding value in tensor space. / 获取张量空间中的可选归一化后填充值。</summary>
+        public float? NormalizedPaddingValue { get; }
 
         internal int ChannelCount => GetChannelCount(ColorOrder);
         internal float Mean(int channel) => _expandedMeans[channel];

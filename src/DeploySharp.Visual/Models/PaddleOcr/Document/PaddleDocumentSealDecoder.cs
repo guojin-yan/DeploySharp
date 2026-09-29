@@ -50,46 +50,68 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
         private PaddleDocumentSealResult DecodeRow(VisualDecodeContext context, int row, int width, int height, float[] values, int offset)
         {
-            var visited = new bool[width * height];
+            int plane = checked(width * height);
+            bool[] visited = VisualArrayPool<bool>.Rent(plane);
+            Array.Clear(visited, 0, plane);
             var regions = new List<PaddleDocumentRegion>();
-            var queue = new int[Math.Max(width, height) * 2];
-            for (int y = 0; y < height && regions.Count < MaximumRegions; y++) for (int x = 0; x < width && regions.Count < MaximumRegions; x++)
+            int[] queue = VisualArrayPool<int>.Rent(Math.Max(width, height) * 2);
+            try
             {
-                int seed = y * width + x;
-                if (visited[seed] || values[offset + seed] < Threshold) continue;
-                int head = 0, tail = 0, area = 0;
-                int minX = x, minY = y, maxX = x, maxY = y;
-                float maxScore = values[offset + seed], sum = 0;
-                EnsureQueueCapacity(ref queue, tail + 1); queue[tail++] = seed; visited[seed] = true;
-                while (head < tail)
+                for (int y = 0; y < height && regions.Count < MaximumRegions; y++) for (int x = 0; x < width && regions.Count < MaximumRegions; x++)
                 {
-                    int current = queue[head++]; int cx = current % width, cy = current / width; float score = values[offset + current];
-                    area++; sum += score; maxScore = Math.Max(maxScore, score); minX = Math.Min(minX, cx); minY = Math.Min(minY, cy); maxX = Math.Max(maxX, cx); maxY = Math.Max(maxY, cy);
-                    TryVisit(cx - 1, cy, width, height, values, offset, visited, ref queue, ref tail);
-                    TryVisit(cx + 1, cy, width, height, values, offset, visited, ref queue, ref tail);
-                    TryVisit(cx, cy - 1, width, height, values, offset, visited, ref queue, ref tail);
-                    TryVisit(cx, cy + 1, width, height, values, offset, visited, ref queue, ref tail);
+                    int seed = y * width + x;
+                    float seedScore = values[offset + seed];
+                    if (float.IsNaN(seedScore) || float.IsInfinity(seedScore)) throw Failure(context, "Seal probability output contains a non-finite value.", offset + seed);
+                    if (visited[seed] || seedScore < Threshold) continue;
+                    int head = 0, tail = 0, area = 0;
+                    int minX = x, minY = y, maxX = x, maxY = y;
+                    float maxScore = seedScore, sum = 0;
+                    EnsureQueueCapacity(ref queue, tail + 1); queue[tail++] = seed; visited[seed] = true;
+                    while (head < tail)
+                    {
+                        int current = queue[head++]; int cx = current % width, cy = current / width; float score = values[offset + current];
+                        area++; sum += score; maxScore = Math.Max(maxScore, score); minX = Math.Min(minX, cx); minY = Math.Min(minY, cy); maxX = Math.Max(maxX, cx); maxY = Math.Max(maxY, cy);
+                        TryVisit(cx - 1, cy, width, height, values, offset, visited, ref queue, ref tail, context);
+                        TryVisit(cx + 1, cy, width, height, values, offset, visited, ref queue, ref tail, context);
+                        TryVisit(cx, cy - 1, width, height, values, offset, visited, ref queue, ref tail, context);
+                        TryVisit(cx, cy + 1, width, height, values, offset, visited, ref queue, ref tail, context);
+                    }
+                    if (area < MinimumArea) continue;
+                    var frame = context.Input.BatchFrames[row];
+                    RectangleF modelBox = new RectangleF(minX, minY, maxX - minX + 1, maxY - minY + 1);
+                    RectangleF sourceBox = frame.Transform.ClipToSource(frame.Transform.ToSource(modelBox));
+                    var metadata = new Dictionary<string, string>(StringComparer.Ordinal) { ["mask-area"] = area.ToString(CultureInfo.InvariantCulture), ["mask-score"] = (sum / area).ToString("R", CultureInfo.InvariantCulture) };
+                    regions.Add(new PaddleDocumentRegion("seal", maxScore, sourceBox, metadata));
                 }
-                if (area < MinimumArea) continue;
-                var frame = context.Input.BatchFrames[row];
-                RectangleF modelBox = new RectangleF(minX, minY, maxX - minX + 1, maxY - minY + 1);
-                RectangleF sourceBox = frame.Transform.ClipToSource(frame.Transform.ToSource(modelBox));
-                var metadata = new Dictionary<string, string>(StringComparer.Ordinal) { ["mask-area"] = area.ToString(CultureInfo.InvariantCulture), ["mask-score"] = (sum / area).ToString("R", CultureInfo.InvariantCulture) };
-                regions.Add(new PaddleDocumentRegion("seal", maxScore, sourceBox, metadata));
+            }
+            finally
+            {
+                VisualArrayPool<int>.Return(queue);
+                VisualArrayPool<bool>.Return(visited);
             }
             var warnings = regions.Count >= MaximumRegions ? new[] { "maximum-regions-reached" } : Array.Empty<string>();
             var resultMetadata = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, context.Input.BatchFrames[row].InputId ?? context.Input.InputId ?? "input-not-hashed", row);
             return new PaddleDocumentSealResult(resultMetadata, width, height, regions, warnings);
         }
 
-        private void TryVisit(int x, int y, int width, int height, float[] values, int offset, bool[] visited, ref int[] queue, ref int tail)
+        private void TryVisit(int x, int y, int width, int height, float[] values, int offset, bool[] visited, ref int[] queue, ref int tail, VisualDecodeContext context)
         {
             if (x < 0 || x >= width || y < 0 || y >= height) return;
             int index = y * width + x;
-            if (visited[index] || values[offset + index] < Threshold) return;
+            float score = values[offset + index];
+            if (float.IsNaN(score) || float.IsInfinity(score)) throw Failure(context, "Seal probability output contains a non-finite value.", offset + index);
+            if (visited[index] || score < Threshold) return;
             EnsureQueueCapacity(ref queue, tail + 1); queue[tail++] = index; visited[index] = true;
         }
-        private static void EnsureQueueCapacity(ref int[] queue, int required) { if (required <= queue.Length) return; Array.Resize(ref queue, Math.Max(required, queue.Length * 2)); }
+        private static void EnsureQueueCapacity(ref int[] queue, int required)
+        {
+            if (required <= queue.Length) return;
+            int[] previous = queue;
+            queue = new int[Math.Max(required, queue.Length * 2)];
+            Array.Copy(previous, queue, previous.Length);
+            VisualArrayPool<int>.Return(previous);
+        }
+        private VisualException Failure(VisualDecodeContext context, string message, int index) => new VisualException(VisualErrorCodes.DecodeFailed, message, profileId: context.Profile.ProfileId, tensorName: OutputName, modelId: context.Profile.ModelId, technicalDetails: "index=" + index.ToString(CultureInfo.InvariantCulture));
     }
 
     public sealed class PaddleDocumentSealBatchResult

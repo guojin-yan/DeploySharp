@@ -26,7 +26,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 ToRounding(options.DimensionRounding),
                 ToInterpolation(options.Interpolation),
                 options.Normalization.InputDivisors,
-                options.ScaleUp);
+                options.ScaleUp,
+                options.ShortestEdgeResize,
+                options.NormalizedPaddingValue);
         }
 
         private static OpenCvResizeMode ToResizeMode(VisualResizeMode mode) => mode switch

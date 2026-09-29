@@ -3,6 +3,7 @@ using System;
 using System.Buffers;
 #endif
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -197,6 +198,11 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         public PreparedVisualInput Create(OpenCvImageSource source, VisualModelProfile profile, string? inputId = null, CancellationToken cancellationToken = default(CancellationToken), IEnumerable<NamedTensor>? auxiliaryInputs = null)
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (profile.Preprocessing == null && profile.Decoder is JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document.PaddleDocumentFormulaDecoder)
+            {
+                if (auxiliaryInputs != null && auxiliaryInputs.Any()) throw new ArgumentException("The official formula input factory does not consume auxiliary tensors.", nameof(auxiliaryInputs));
+                return new PaddleDocumentFormulaInputFactory().Create(source, profile, inputId, cancellationToken);
+            }
             VisualPreprocessingOptions effective = profile.Preprocessing ?? throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The visual profile does not declare common image preprocessing; use WithPreprocessing or its specialized input factory.", technicalDetails: "profileId=" + profile.ProfileId);
             return Create(source, profile.Input.Name, effective, inputId, cancellationToken, auxiliaryInputs);
         }
@@ -234,6 +240,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     // This avoids retaining a full-size managed pixel copy for the
                     // common OpenCV resize/letterbox paths.
                     ITensor tensor = CreateTensorFromMat(geometric, options, cancellationToken);
+                    ApplyNormalizedPadding(tensor, sourceSize, transform, options);
                     var means = new float[options.ChannelCount];
                     var scales = new float[options.ChannelCount];
                     for (int channel = 0; channel < scales.Length; channel++)
@@ -289,7 +296,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
 
         internal static PreparedVisualInput CreateRoiBatchFromDecodedPublic(Mat decoded, IReadOnlyList<IVisualRoiGeometry> geometries, string inputName, OpenCvPreprocessOptions options, string? inputId, CancellationToken cancellationToken, IEnumerable<NamedTensor>? auxiliaryInputs)
         {
-            var singleOptions = new OpenCvPreprocessOptions(options.ModelSize, options.ResizeMode, options.ColorOrder, options.AlphaMode, options.Means, options.StandardDeviations, options.Layout, 1, options.OutputType, options.PaddingColor, options.AlphaBackground, options.LetterboxRounding, options.Interpolation, options.InputDivisors, options.ScaleUp);
+            var singleOptions = new OpenCvPreprocessOptions(options.ModelSize, options.ResizeMode, options.ColorOrder, options.AlphaMode, options.Means, options.StandardDeviations, options.Layout, 1, options.OutputType, options.PaddingColor, options.AlphaBackground, options.LetterboxRounding, options.Interpolation, options.InputDivisors, options.ScaleUp, options.ShortestEdgeResize, options.NormalizedPaddingValue);
             var prepared = new PreparedVisualInput[geometries.Count];
             try
             {
@@ -530,9 +537,11 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
 
             if (options.ResizeMode == OpenCvResizeMode.ShortestEdgeCenterCrop)
             {
-                double cropScale = Math.Max((double)options.ModelSize.Width / sourceSize.Width, (double)options.ModelSize.Height / sourceSize.Height);
-                int cropResizedWidth = Math.Max(options.ModelSize.Width, checked((int)Math.Floor(sourceSize.Width * cropScale)));
-                int cropResizedHeight = Math.Max(options.ModelSize.Height, checked((int)Math.Floor(sourceSize.Height * cropScale)));
+                VisualSize intermediate = options.ShortestEdgeResize ?? options.ModelSize;
+                double cropScale = Math.Max((double)intermediate.Width / sourceSize.Width, (double)intermediate.Height / sourceSize.Height);
+                // Paddle ResizeByShort uses round; legacy CLIP geometry uses floor.
+                int cropResizedWidth = Math.Max(options.ModelSize.Width, options.ShortestEdgeResize.HasValue ? RoundLetterboxDimension(sourceSize.Width * cropScale, options.LetterboxRounding) : checked((int)Math.Floor(sourceSize.Width * cropScale)));
+                int cropResizedHeight = Math.Max(options.ModelSize.Height, options.ShortestEdgeResize.HasValue ? RoundLetterboxDimension(sourceSize.Height * cropScale, options.LetterboxRounding) : checked((int)Math.Floor(sourceSize.Height * cropScale)));
                 int cropX = Math.Max(0, (cropResizedWidth - options.ModelSize.Width) / 2);
                 int cropY = Math.Max(0, (cropResizedHeight - options.ModelSize.Height) / 2);
                 using (var resized = new Mat())
@@ -578,6 +587,38 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             }
         }
 
+        private static void ApplyNormalizedPadding(ITensor tensor, VisualSize sourceSize, ImageTransform transform, OpenCvPreprocessOptions options)
+        {
+            if (!options.NormalizedPaddingValue.HasValue || (options.ResizeMode != OpenCvResizeMode.Letterbox && options.ResizeMode != OpenCvResizeMode.LongestSidePadBottomRight)) return;
+            var values = (float[])tensor.Buffer;
+            int width = options.ModelSize.Width, height = options.ModelSize.Height, channels = options.ChannelCount;
+            int left = (int)Math.Round(transform.OffsetX), top = (int)Math.Round(transform.OffsetY);
+            int right = Math.Min(width, left + (int)Math.Round(sourceSize.Width * transform.ScaleX));
+            int bottom = Math.Min(height, top + (int)Math.Round(sourceSize.Height * transform.ScaleY));
+            bool planar = options.Layout == VisualTensorLayout.Nchw || options.Layout == VisualTensorLayout.Chw;
+            float value = options.NormalizedPaddingValue.Value;
+            int planes = planar ? channels * options.BatchSize : options.BatchSize;
+            int rowLength = width * (planar ? 1 : channels);
+            int contentStart = left * (planar ? 1 : channels), contentEnd = right * (planar ? 1 : channels);
+            for (int plane = 0; plane < planes; plane++)
+                for (int y = 0; y < height; y++)
+                {
+                    int offset = (plane * height + y) * rowLength;
+                    if (y < top || y >= bottom) FillPadding(values, offset, rowLength, value);
+                    else
+                    {
+                        FillPadding(values, offset, contentStart, value);
+                        FillPadding(values, offset + contentEnd, rowLength - contentEnd, value);
+                    }
+                }
+        }
+
+        private static void FillPadding(float[] values, int offset, int length, float value)
+        {
+            if (value == 0) Array.Clear(values, offset, length);
+            else for (int index = offset; index < offset + length; index++) values[index] = value;
+        }
+
         private static int RoundLetterboxDimension(double value, OpenCvLetterboxRounding rounding)
         {
             if (rounding == OpenCvLetterboxRounding.Floor) return checked((int)Math.Floor(value));
@@ -592,10 +633,10 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return InterpolationFlags.Linear;
         }
 
-        internal static byte[] PillowBicubicResize(byte[] source, int sourceWidth, int sourceHeight, int channels, int targetWidth, int targetHeight, CancellationToken cancellationToken)
+        internal static byte[] PillowBicubicResize(byte[] source, int sourceWidth, int sourceHeight, int channels, int targetWidth, int targetHeight, CancellationToken cancellationToken, double? sourceExtentWidth = null, double? sourceExtentHeight = null)
         {
-            ResampleCoefficient[] horizontal = CreatePillowBicubicCoefficients(sourceWidth, targetWidth);
-            ResampleCoefficient[] vertical = CreatePillowBicubicCoefficients(sourceHeight, targetHeight);
+            ResampleCoefficient[] horizontal = CreatePillowBicubicCoefficients(sourceWidth, targetWidth, sourceExtentWidth);
+            ResampleCoefficient[] vertical = CreatePillowBicubicCoefficients(sourceHeight, targetHeight, sourceExtentHeight);
             var intermediate = new byte[checked(sourceHeight * targetWidth * channels)];
             var destination = new byte[checked(targetHeight * targetWidth * channels)];
 
@@ -708,9 +749,9 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return result;
         }
 
-        private static ResampleCoefficient[] CreatePillowBicubicCoefficients(int sourceSize, int targetSize)
+        private static ResampleCoefficient[] CreatePillowBicubicCoefficients(int sourceSize, int targetSize, double? sourceExtent = null)
         {
-            double scale = sourceSize / (double)targetSize;
+            double scale = (sourceExtent ?? sourceSize) / targetSize;
             double filterScale = Math.Max(scale, 1.0);
             double support = 2.0 * filterScale;
             var result = new ResampleCoefficient[targetSize];
@@ -911,10 +952,13 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         private static ITensor CreateTensorFromMat(Mat image, OpenCvPreprocessOptions options, CancellationToken cancellationToken)
         {
             if (image == null) throw new ArgumentNullException(nameof(image));
-            if (image.Channels != 1 && image.Channels != 3 && image.Channels != 4) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "OpenCV returned an unsupported channel count.", technicalDetails: "channels=" + image.Channels);
+            // Native Mat properties cross the interop boundary; cache once,
+            // especially Channels, which was previously queried per pixel.
+            int sourceChannels = image.Channels;
+            if (sourceChannels != 1 && sourceChannels != 3 && sourceChannels != 4) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "OpenCV returned an unsupported channel count.", technicalDetails: "channels=" + sourceChannels);
             int width = image.Cols;
             int height = image.Rows;
-            int sourceRowBytes = checked(width * image.Channels);
+            int sourceRowBytes = checked(width * sourceChannels);
             TensorShape shape = CreateShape(width, height, options);
             int channels = options.ChannelCount;
             int perImage = checked(width * height * channels);
@@ -948,20 +992,20 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 Marshal.Copy(IntPtr.Add(data, checked(y * (int)step)), row, 0, sourceRowBytes);
                 for (int x = 0; x < width; x++)
                 {
-                    int sourceOffset = x * image.Channels;
+                    int sourceOffset = x * sourceChannels;
                     byte blue;
                     byte green;
                     byte red;
                     byte alpha = 255;
-                    if (image.Channels == 1) blue = green = red = row[sourceOffset];
+                    if (sourceChannels == 1) blue = green = red = row[sourceOffset];
                     else
                     {
                         blue = row[sourceOffset];
                         green = row[sourceOffset + 1];
                         red = row[sourceOffset + 2];
-                        if (image.Channels == 4) alpha = row[sourceOffset + 3];
+                        if (sourceChannels == 4) alpha = row[sourceOffset + 3];
                     }
-                    if (image.Channels == 4 && options.AlphaMode == OpenCvAlphaMode.Composite)
+                    if (sourceChannels == 4 && options.AlphaMode == OpenCvAlphaMode.Composite)
                     {
                         blue = Composite(blue, options.AlphaBackground.Blue, alpha);
                         green = Composite(green, options.AlphaBackground.Green, alpha);

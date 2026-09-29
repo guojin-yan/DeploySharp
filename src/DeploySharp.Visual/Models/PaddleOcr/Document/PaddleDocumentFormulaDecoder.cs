@@ -8,10 +8,10 @@ using JYPPX.DeploySharp.Tensors;
 
 namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 {
-    /// <summary>Defines a caller-supplied FormulaNet/UniMERNet token vocabulary. / 定义由调用方提供的 FormulaNet/UniMERNet token 词表。</summary>
+    /// <summary>Defines a FormulaNet/UniMERNet token vocabulary and optional semantic tokenizer. / 定义 FormulaNet/UniMERNet token 词表及可选的语义 tokenizer。</summary>
     public sealed class PaddleDocumentFormulaSchema
     {
-        public PaddleDocumentFormulaSchema(IEnumerable<string> tokens, int endTokenId, int startTokenId = -1, int padTokenId = -1, int unknownTokenId = -1)
+        public PaddleDocumentFormulaSchema(IEnumerable<string> tokens, int endTokenId, int startTokenId = -1, int padTokenId = -1, int unknownTokenId = -1, IPaddleDocumentFormulaTokenizer? tokenizer = null)
         {
             if (tokens == null) throw new ArgumentNullException(nameof(tokens));
             var values = new List<string>(tokens);
@@ -20,17 +20,22 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             ValidateOptional(startTokenId, values.Count, nameof(startTokenId));
             ValidateOptional(padTokenId, values.Count, nameof(padTokenId));
             ValidateOptional(unknownTokenId, values.Count, nameof(unknownTokenId));
-            Tokens = values.AsReadOnly(); EndTokenId = endTokenId; StartTokenId = startTokenId; PadTokenId = padTokenId; UnknownTokenId = unknownTokenId;
+            if (tokenizer != null && tokenizer.Tokens.Count != values.Count) throw new ArgumentException("The formula tokenizer vocabulary must match the schema token count.", nameof(tokenizer));
+            Tokens = values.AsReadOnly(); EndTokenId = endTokenId; StartTokenId = startTokenId; PadTokenId = padTokenId; UnknownTokenId = unknownTokenId; Tokenizer = tokenizer;
         }
+        public PaddleDocumentFormulaSchema(IPaddleDocumentFormulaTokenizer tokenizer, int endTokenId, int startTokenId = -1, int padTokenId = -1, int unknownTokenId = -1)
+            : this(tokenizer?.Tokens ?? throw new ArgumentNullException(nameof(tokenizer)), endTokenId, startTokenId, padTokenId, unknownTokenId, tokenizer) { }
         public IReadOnlyList<string> Tokens { get; }
         public int EndTokenId { get; }
         public int StartTokenId { get; }
         public int PadTokenId { get; }
         public int UnknownTokenId { get; }
+        /// <summary>Gets the optional BPE tokenizer used for semantic detokenization. / 获取用于语义反分词的可选 BPE tokenizer。</summary>
+        public IPaddleDocumentFormulaTokenizer? Tokenizer { get; }
         private static void ValidateOptional(int value, int count, string name) { if (value >= count) throw new ArgumentOutOfRangeException(name); }
     }
 
-    /// <summary>Decodes exported integer token sequences; byte-level BPE detokenization remains an explicit caller concern. / 解码导出的整数 token 序列；字节级 BPE 合并由调用方显式提供。</summary>
+    /// <summary>Decodes exported integer token sequences and optionally performs official BPE detokenization. / 解码导出的整数 token 序列，并可选执行官方 BPE 语义反分词。</summary>
     public sealed class PaddleDocumentFormulaDecoder : IVisualDecoder
     {
         public PaddleDocumentFormulaDecoder(PaddleDocumentModelDescriptor descriptor, PaddleDocumentFormulaSchema schema, string outputName = "fetch_name_0", int maximumSequenceLength = 4096)
@@ -65,16 +70,28 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 var ids = new List<int>(sequence);
                 var latex = new StringBuilder(sequence * 2);
                 var warnings = new List<string>();
+                bool reachedEnd = false;
                 for (int step = 0; step < sequence; step++)
                 {
                     int id = ReadToken(tensor, checked(row * sequence + step));
-                    if (id == Schema.EndTokenId) break;
+                    if (id == Schema.EndTokenId) { reachedEnd = true; break; }
                     if (id == Schema.StartTokenId || id == Schema.PadTokenId) continue;
                     ids.Add(id);
                     if (id < 0 || id >= Schema.Tokens.Count) { warnings.Add("unknown-token:" + id.ToString(CultureInfo.InvariantCulture)); continue; }
                     string value = Schema.Tokens[id];
                     if (id == Schema.UnknownTokenId) warnings.Add("unknown-token");
                     latex.Append(value);
+                }
+                if (!reachedEnd) warnings.Add("missing-eos:sequence-may-be-truncated");
+                if (Schema.Tokenizer != null)
+                {
+                    try { latex.Clear(); latex.Append(Schema.Tokenizer.Decode(ids)); }
+                    catch (Exception exception) when (exception is ArgumentException || exception is InvalidOperationException)
+                    {
+                        warnings.Add("tokenizer-fallback:" + exception.GetType().Name);
+                        latex.Clear();
+                        foreach (int id in ids) if (id >= 0 && id < Schema.Tokens.Count) latex.Append(Schema.Tokens[id]);
+                    }
                 }
                 var metadata = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, context.Input.BatchFrames[row].InputId ?? context.Input.InputId ?? "input-not-hashed", row);
                 results.Add(new PaddleDocumentFormulaResult(metadata, latex.ToString(), warnings, ids));

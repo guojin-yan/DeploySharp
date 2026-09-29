@@ -21,7 +21,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
     public sealed class Stage19BackendParityTests
     {
         private const string ImagePath = @"E:\Data\image\bus.jpg";
-        private const string DictionaryPath = @"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt";
+        private const string DictionaryPath = @"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt";
         private const string DictionarySha = "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b";
 
         [TestMethod]
@@ -90,9 +90,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
             var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
             using var pipeline = new OcrPipeline(
                 backends,
-                profiles.Select(detector.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx"), backendId), backends, request, VisualTaskId.TextDetection),
+                profiles.Select(detector.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx"), backendId), backends, request, VisualTaskId.TextDetection),
                 request,
-                profiles.Select(recognizer.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx"), backendId), backends, request, VisualTaskId.TextRecognition),
+                profiles.Select(recognizer.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx"), backendId), backends, request, VisualTaskId.TextRecognition),
                 request,
                 recognizer.CropProfile ?? throw new InvalidOperationException("The recognition crop profile is missing."));
             using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(

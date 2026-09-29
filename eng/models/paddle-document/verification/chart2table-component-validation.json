@@ -1,0 +1,467 @@
+{
+  "schemaVersion": "deploysharp-chart2table-bundle-validation-v5",
+  "modelId": "paddle-chart/pp-chart2table",
+  "status": "four-graph-bundle-published-cross-backend-and-chartqa-samples-verified",
+  "scope": "The existing official source checkpoint exports to a published four-graph image-to-generation ONNX bundle plus three tokenizer files in the existing models-paddleocr Release. ORT CPU, OpenVINO CPU, and TensorRT 10.11 CUDA have full EOS generation evidence on the official sample. TensorRT library-built plans now also pass the full-generation official-image regression; four additional ChartQA human test charts generated exact checked-in expected tables and matched eight associated QA labels. These four curated samples are qualitative evidence, not a dataset accuracy metric.",
+  "bundleRelease": {
+    "repository": "guojin-yan/DeploySharp",
+    "tag": "models-paddleocr",
+    "url": "https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr",
+    "bundleId": "paddle-chart/pp-chart2table",
+    "artifactCount": 7,
+    "artifacts": [
+      { "role": "vision-projector", "assetName": "pp-chart2table-vision-projector.onnx", "size": 395422861, "sha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d" },
+      { "role": "token-embedding", "assetName": "pp-chart2table-token-embedding.onnx", "size": 622018867, "sha256": "b83c0ce88deedd2a83d2c89e733fdbd84074d7c4ff47de797434870012389443" },
+      { "role": "text-prefill", "assetName": "pp-chart2table-text-prefill.onnx", "size": 1861636471, "sha256": "842dfbe792a8655690ec742bac16349f9fd0c26c3ff48be4d004f74db7dd4ff2" },
+      { "role": "text-decode-with-past", "assetName": "pp-chart2table-text-decode-with-past.onnx", "size": 1856229521, "sha256": "c4eaff23faccd3ce6bff33e0fbe11b44b35a780b73ac1990b5f9be7a031330a3" },
+      { "role": "qwen-tokenizer", "assetName": "qwen.tiktoken", "size": 2561218, "sha256": "b2b1b8dfb5cc5f024bafc373121c6aba3f66f9a5a0269e243470a1de16a33186" },
+      { "role": "tokenizer-config", "assetName": "tokenizer_config.json", "size": 1920, "sha256": "c167bad3fb717234222ea0fc401d797ca4f03c366f18c19c3026ed77777d0129" },
+      { "role": "added-tokens", "assetName": "added_tokens.json", "size": 183, "sha256": "4e0e1abe8efbae00a41ffb6275402dd0f9796f04398b4d129ad35310f76cb6cc" }
+    ]
+  },
+  "officialSource": {
+    "archive": "PP-Chart2Table_infer.tar",
+    "archiveSha256": "70d4c2e77bec599f2ad178bd58bea734860cb8403bddaa9c68ee50acfabfd5df",
+    "checkpoint": "model_state.pdparams",
+    "checkpointSha256": "84a6990436ddd55e03acdb44048ff6484aa53619f41412eda2e277df79ea2de6",
+    "format": "generative source checkpoint; not inference.json/inference.pdiparams",
+    "downloadPolicy": "reused existing local official archive; no duplicate download"
+  },
+  "input": {
+    "file": "chart_parsing_02.png",
+    "sha256": "d29ea952a5a182c18416dcf2bf17b606ead7ebf20100618ece87f6f288f856c3"
+  },
+  "visionProjector": {
+    "status": "verified-component",
+    "mappedTensors": 181,
+    "outputShape": [1, 256, 1024],
+    "onnxOpset": 17,
+    "onnxSha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+    "paddleOrtMaximumAbsoluteError": 0.00014904141426086426,
+    "evidence": "checkpoint -> Paddle vision/projector -> ONNX -> ORT CPU"
+  },
+  "paddleText": {
+    "status": "verified-paddle-image-conditioned-prefill",
+    "mappedTensors": 472,
+    "layers": 24,
+    "imagePlaceholderCount": 256,
+    "logitsShape": [1, 258, 151860],
+    "cacheKeyShape": [1, 258, 16, 64],
+    "finite": true,
+    "cpuElapsedMs": 71252.6061,
+    "evidence": "real chart image -> vision/projector merge -> Qwen2 text prefill/cache in Paddle CPU",
+    "note": "Historical minimal 258-token image-merge probe; the official PaddleX chat prompt used by the final bundle is 286 tokens and is captured in fourGraphBundle."
+  },
+  "textPrefillOnnx": {
+    "status": "verified-paddle-ort-parity",
+    "role": "historical fixed-four-token hidden-only component probe; production prefill is fourGraphBundle.graphs[text-prefill-with-lm-head]",
+    "shapeContract": {
+      "inputsEmbeds": [1, 4, 1024],
+      "attentionMask": [1, 4],
+      "positionIds": [1, 4],
+      "hiddenOutput": [1, 1, 1024]
+    },
+    "onnxOpset": 17,
+    "onnxBytes": 1234103922,
+    "onnxSha256": "fbd5b233b3b75cf39931d941f21dbb9b263810133c67d76a929861d7ddda7a2d",
+    "parityCases": [
+      { "seed": 0, "maxAbsoluteError": 0.0009446144104003906, "meanAbsoluteError": 0.00012165820953669026 },
+      { "seed": 7, "maxAbsoluteError": 0.00008976459503173828, "meanAbsoluteError": 1.3499211490852758e-05 }
+    ]
+  },
+  "textCachedDecodeOnnx": {
+    "status": "verified-paddle-ort-cached-decode-parity",
+    "role": "historical fixed-past hidden-only component probe; production dynamic KV with lm_head is fourGraphBundle.graphs[one-token-dynamic-past-decode-with-lm-head]",
+    "pastLengthUsedForProbe": 4,
+    "inputCount": 51,
+    "outputCount": 49,
+    "onnxOpset": 17,
+    "onnxBytes": 1234151977,
+    "onnxSha256": "ccf035b4bb3f5f80311137c5082361ea42001f07c738e903ffd80e4de2aa0573",
+    "hiddenOutputShape": [1, 1, 1024],
+    "nextCacheShape": [1, 5, 16, 64],
+    "maxAbsoluteError": 0.00015687942504882812,
+    "meanAbsoluteError": 0.000021065072134748313,
+    "finite": true
+  },
+  "fourGraphBundle": {
+    "status": "verified-end-to-end-ort-openvino-tensorrt",
+    "graphs": [
+      {
+        "role": "vision-projector",
+        "file": "chart-vision.onnx",
+        "bytes": 395422861,
+        "sha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+        "input": "pixel_values [1,3,1024,1024] Float32",
+        "output": "fetch_name_0 [1,256,1024] Float32"
+      },
+      {
+        "role": "token-embedding",
+        "file": "chart-token-embedding-dynamic.onnx",
+        "bytes": 622018867,
+        "sha256": "b83c0ce88deedd2a83d2c89e733fdbd84074d7c4ff47de797434870012389443",
+        "input": "input_ids [1,sequence] Int64",
+        "output": "fetch_name_0 [1,sequence,1024] Float32"
+      },
+      {
+        "role": "text-prefill-with-lm-head",
+        "file": "chart-text-prefill-full-epsilon.onnx",
+        "bytes": 1861636471,
+        "sha256": "842dfbe792a8655690ec742bac16349f9fd0c26c3ff48be4d004f74db7dd4ff2",
+        "input": "inputs_embeds [1,286,1024] Float32; attention_mask [1,286] Bool; position_ids [1,286] Int64",
+        "output": "first-token logits [1,1,151860] Float32 plus 24 present key/value pairs [1,286,16,64] Float32"
+      },
+      {
+        "role": "one-token-dynamic-past-decode-with-lm-head",
+        "file": "chart-text-decoder-dynamic-past-full-epsilon.onnx",
+        "bytes": 1856229521,
+        "sha256": "c4eaff23faccd3ce6bff33e0fbe11b44b35a780b73ac1990b5f9be7a031330a3",
+        "input": "inputs_embeds [1,1,1024] Float32; attention_mask [1,past+1] Bool; position_ids [1,1] Int64; 24 past key/value pairs [1,past,16,64] Float32",
+        "output": "next-token logits [1,1,151860] Float32 plus 24 present key/value pairs [1,past+1,16,64] Float32"
+      }
+    ],
+    "visionGraphRebuild": {
+      "status": "verified-by-repository-export-script",
+      "script": "eng/models/paddle-document/scripts/Export-PaddleChartVision.py",
+      "paddlexWheel": "paddlex-3.7.2-py3-none-any.whl",
+      "downloadedAssets": false,
+      "bytes": 395422861,
+      "sha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+      "paddleOrtMaximumAbsoluteError": 0.00014904141426086426
+    },
+    "textGraphRebuild": {
+      "status": "verified-reexported-from-same-official-checkpoint",
+      "script": "eng/models/paddle-document/scripts/Export-PaddleChart2TableTextGraphs.py",
+      "paddlexWheel": "paddlex-3.7.2-py3-none-any.whl",
+      "downloadedAssets": false,
+      "graphs": [
+        { "role": "token-embedding", "bytes": 622018905, "sha256": "ea5c20f1c1ba109b08a83441e5e6c8a072d36671b0e255469d967a3df7cf4fed", "patchedSqrtNodes": 0 },
+        { "role": "text-prefill", "bytes": 1861636471, "sha256": "4b445a0ae6eb3df38d61783c731537daa268096dc4e9ae4f8cc7ffa0b0ea0eb2", "patchedSqrtNodes": 49 },
+        { "role": "text-decode-with-past", "bytes": 1856229129, "sha256": "18011da067ba1ee6d3fece7130cb3a5ec420278825cfef55fce7207e51cd299b", "patchedSqrtNodes": 49 }
+      ]
+    },
+    "tokenizer": {
+      "implementation": "PaddleChart2TableTokenizer using Microsoft.ML.Tokenizers.TiktokenTokenizer",
+      "sourceFiles": ["qwen.tiktoken", "tokenizer_config.json", "added_tokens.json"],
+      "sourceSha256": {
+        "qwen.tiktoken": "b2b1b8dfb5cc5f024bafc373121c6aba3f66f9a5a0269e243470a1de16a33186",
+        "tokenizer_config.json": "c167bad3fb717234222ea0fc401d797ca4f03c366f18c19c3026ed77777d0129",
+        "added_tokens.json": "4e0e1abe8efbae00a41ffb6275402dd0f9796f04398b4d129ad35310f76cb6cc"
+      },
+      "promptTokens": 286,
+      "imagePlaceholderTokenId": 151859,
+      "imagePlaceholderCount": 256,
+      "eosTokenIds": [151643, 151645],
+      "promptTokenIdsSha256": "6097fbd88b37550710793448045e068bb91f389cce3c10a27916a6bb0d3a2249"
+    },
+    "ortCpuEndToEnd": {
+      "status": "verified-exact-greedy-token-parity-with-paddle",
+      "referenceRunner": "ONNX Runtime Python smoke for numerical logit parity",
+      "sample": "chart_parsing_02.png",
+      "newTokens": 3,
+      "tokenIds": [7948, 69442, 760],
+      "decodedPrefix": "年份 |",
+      "cacheLengths": [286, 287, 288],
+      "maxAbsoluteLogitErrorByStep": [0.00004291534423828125, 0.000048160552978515625, 0.00006771087646484375],
+      "finite": true,
+      "observedTimesMs": {
+        "vision": 5661.5527,
+        "embeddingAndMerge": 620.0474,
+        "prefill": 4009.733,
+        "decodeSteps": [120.0212, 104.5933],
+        "paddleReferenceTotal": 58881.4621
+      }
+    },
+    "dotnetOrtSession": {
+      "status": "verified-four-graph-generation",
+      "runner": "PaddleChart2TableOnnxSession via DeploySharp.Backend.OnnxRuntime",
+      "tokenIds": [7948, 69442, 760],
+      "decodedPrefix": "年份 |",
+      "observedRunsMs": [
+        { "vision": 9395.7954, "embedding": 18.5986, "prefill": 1393.0371, "decodeSteps": [150.9624, 130.3696] },
+        { "vision": 9663.3275, "embedding": 49.8547, "prefill": 2302.8008, "decodeSteps": [564.2239, 141.3804] },
+        { "vision": 17634.9086, "embedding": 25.3556, "prefill": 5332.1994, "decodeSteps": [2142.8514, 164.6018], "textGraphs": "script-rebuilt" }
+      ]
+    },
+    "dotnetOrtFullGeneration": {
+      "status": "verified-eos-complete-single-sample-table",
+      "runner": "PaddleChart2TableOnnxSession via DeploySharp.Backend.OnnxRuntime",
+      "device": {
+        "os": "Windows 11 build 26200 x64",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "logicalProcessors": 16,
+        "memoryGiB": 15.86,
+        "runtime": ".NET 10.0.12",
+        "backend": "ONNX Runtime CPU"
+      },
+      "sample": "chart_parsing_02.png",
+      "requestedMaximumNewTokens": 256,
+      "generatedTokenCountIncludingEos": 141,
+      "eosTokenId": 151645,
+      "finishReason": "EndOfSequence",
+      "observedTimesMs": {
+        "total": 39757.2791,
+        "vision": 6958.5644,
+        "embedding": 26.7006,
+        "prefill": 1164.7223,
+        "decodeStepCount": 140,
+        "decodeStepP50": 94.6902,
+        "decodeStepP95": 123.9216
+      },
+      "generatedText": "年份 | 单家五星级旅游饭店年平均营收 (百万元) | 单家五星级旅游饭店年平均利润 (百万元)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96",
+      "generatedTextSha256Utf8": "10effe548d6cb448e97ad7bfa6ec97643d0e021d5071d1b5ad23242d54e32094",
+      "qualityBoundary": "Complete EOS-terminated output from one official example image; this is not a labeled dataset accuracy evaluation."
+    },
+    "openVinoCpuEndToEnd": {
+      "status": "verified-four-graph-generation",
+      "sample": "chart_parsing_02.png",
+      "newTokens": 3,
+      "tokenIds": [7948, 69442, 760],
+      "decodedPrefix": "年份 |",
+      "observedTimesMs": {
+        "vision": 10450.7168,
+        "embedding": 45.9797,
+        "prefill": 2741.0663,
+        "decodeSteps": [861.394, 203.3693]
+      }
+    },
+    "dotnetOpenVinoCpuFullGeneration": {
+      "status": "verified-eos-complete-single-sample-table",
+      "runner": "PaddleChart2TableOnnxSession via DeploySharp.Backend.OpenVINO",
+      "device": {
+        "os": "Windows 11 build 26200 x64",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "logicalProcessors": 16,
+        "memoryGiB": 15.86,
+        "runtime": ".NET 10.0.12",
+        "backend": "OpenVINO 2025.4 CPU"
+      },
+      "sample": "chart_parsing_02.png",
+      "requestedMaximumNewTokens": 256,
+      "generatedTokenCountIncludingEos": 141,
+      "eosTokenId": 151645,
+      "finishReason": "EndOfSequence",
+      "observedTimesMs": {
+        "total": 46404.8819,
+        "vision": 6519.8756,
+        "embedding": 71.1894,
+        "prefill": 2265.2535,
+        "decodeStepCount": 140,
+        "decodeStepP50": 146.6321,
+        "decodeStepP95": 197.5197
+      },
+      "generatedText": "年份 | 单家五星级旅游饭店年平均营收 (百万元) | 单家五星级旅游饭店年平均利润 (百万元)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96",
+      "generatedTextSha256Utf8": "10effe548d6cb448e97ad7bfa6ec97643d0e021d5071d1b5ad23242d54e32094",
+      "qualityBoundary": "Complete EOS-terminated output from one official example image; this is not a labeled dataset accuracy evaluation."
+    },
+    "openCvPreprocessingParity": {
+      "reference": "PaddleX 3.7.2 GOTImageProcessor on chart_parsing_02.png",
+      "status": "verified-within-bicubic-rounding-tolerance",
+      "maximumAbsoluteError": 0.015008092,
+      "meanAbsoluteError": 2.3065922168571026e-7,
+      "referenceTensorSha256": "8cf1048899e18c41fe1542f71d27175fc6f16db77a1a555fb20aee4e8e80754e"
+    },
+    "tensorRtCudaEndToEnd": {
+      "status": "verified-four-prebuilt-plans-three-token-prefix",
+      "runtime": "TensorRT 10.11.0, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop GPU 6GB, compute capability 8.6, driver 576.02",
+      "postRunClockSnapshot": {
+        "pstate": "P0",
+        "smCurrentMHz": 1425,
+        "smMaxMHz": 2100,
+        "memoryCurrentMHz": 7000,
+        "memoryMaxMHz": 7001,
+        "temperatureC": 56,
+        "note": "One snapshot after inference, not a sustained-under-load clock trace; no explicit lock-clock setting was applied."
+      },
+      "planPrecisions": {"visionProjector": "FP16", "tokenEmbedding": "FP16", "textPrefill": "FP32", "textDecodeWithPast": "FP32"},
+      "tokenIds": [7948, 69442, 760],
+      "decodedPrefix": "年份 |",
+      "observedTimesMs": {
+        "firstRun": {
+          "vision": 1252.8743,
+          "embedding": 23.4263,
+          "prefill": 273.0067,
+          "decodeSteps": [1089.2699, 754.406]
+        },
+        "repeatRun": {
+          "vision": 685.7275,
+          "embedding": 11.2941,
+          "prefill": 160.713,
+          "decodeSteps": [622.4216, 705.9912]
+        },
+        "scriptRebuiltPlansRun": {
+          "vision": 815.6907,
+          "embedding": 48.0813,
+          "prefill": 3531.3988,
+          "decodeSteps": [3262.3283, 3673.043]
+        }
+      },
+      "plans": [
+        {"file": "vision-fp16.plan", "bytes": 202492756, "sha256": "3022519a933cf4d3d0fd60b19f1dc7536d46313698699a02a328df205857ebf2"},
+        {"file": "token-embedding-fp16.plan", "bytes": 311031644, "sha256": "8dcedbfb34df4accfd93a582c914373c707a244bace90b9a2eca679f0d5cbb25"},
+        {"file": "text-prefill-fp32.plan", "bytes": 1857986636, "sha256": "c0bb0d583bea835fbecbcb3bf569cda7cb8e2e34e31ac981e426cdff0ffc2497"},
+        {"file": "text-decode-fp32.plan", "bytes": 1858015404, "sha256": "33fd6de8034d1dd5b68d2eb44ba337745dcaf40df66831cb5302c3f3280d2fc8"}
+      ],
+      "engineBuilderNote": "The earlier null-engine report came from a test harness using the non-epsilon graph/profile pair and an attention-mask optimum of 512 with a KV optimum of 512; the mask length must equal past KV length + 1. TensorRT logged an internal reshape volume mismatch of 512 versus 513. The corrected test selects the epsilon graph used by the release plan and sets mask optimum to 513; TensorRtOnnxEngineBuilder then serialized the 51-input graph successfully. See tensorRtBuilderRegression."
+    },
+    "dotnetTensorRtCudaFullGeneration": {
+      "status": "verified-eos-complete-single-sample-table",
+      "runner": "PaddleChart2TableTensorRtDeviceSession via DeploySharp.Visual.TensorRT; persistent device-resident KV ping-pong; logits-only per-step D2H",
+      "runtime": "TensorRT 10.11.0, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop GPU 6GB, compute capability 8.6, driver 576.02",
+      "planPrecision": {"visionProjector": "FP16", "tokenEmbedding": "FP16", "textPrefill": "FP32 with TensorRT TF32 tactics enabled", "textDecodeWithPast": "FP32 with TensorRT TF32 tactics enabled"},
+      "builderOptimizationLevel": 0,
+      "planHashes": {
+        "vision-fp16.plan": "3022519a933cf4d3d0fd60b19f1dc7536d46313698699a02a328df205857ebf2",
+        "token-embedding-fp16.plan": "8dcedbfb34df4accfd93a582c914373c707a244bace90b9a2eca679f0d5cbb25",
+        "text-prefill-fp32-tf32.plan": "484e968e4a16e8230e8b5eb2619954ceeb51757b5214213495e49fbf5915d57f",
+        "text-decode-fp32-tf32.plan": "ccebf4bf8104c08c0bc4204c27795dd2f60c48677cc31a32b2d97bf7ed7219ed"
+      },
+      "sample": "chart_parsing_02.png",
+      "requestedMaximumNewTokens": 256,
+      "generatedTokenCountIncludingEos": 141,
+      "eosTokenId": 151645,
+      "finishReason": "EndOfSequence",
+      "observedRunsMs": [
+        {"total": 12643.776, "vision": 1379.7398, "embedding": 88.3996, "prefill": 252.4319, "decodeStepP50": 74.1888, "decodeStepP95": 106.9057},
+        {"total": 12120.9773, "vision": 916.0279, "embedding": 86.3613, "prefill": 192.4093, "decodeStepP50": 73.9057, "decodeStepP95": 108.1894},
+        {"total": 10115.686, "vision": 208.445, "embedding": 80.0415, "prefill": 273.991, "decodeStepP50": 66.4725, "decodeStepP95": 73.4841}
+      ],
+      "reportedBestRunMs": {
+        "total": 10115.686,
+        "vision": 208.445,
+        "embedding": 80.0415,
+        "prefill": 273.991,
+        "decodeStepCount": 140,
+        "decodeStepP50": 66.4725,
+        "decodeStepP95": 73.4841
+      },
+      "generatedText": "年份 | 单家五星级旅游饭店年平均营收 (百万元) | 单家五星级旅游饭店年平均利润 (百万元)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96",
+      "generatedTextSha256Utf8": "10effe548d6cb448e97ad7bfa6ec97643d0e021d5071d1b5ad23242d54e32094",
+      "optimizationHistoryMs": [
+        {"variant": "generic-host-KV strict-FP32", "total": 83418.4987, "decodeStepP50": 497.4847, "decodeStepP95": 527.7897},
+        {"variant": "generic-host-KV reusable-buffers strict-FP32", "total": 64164.3901, "decodeStepP50": 362.0554, "decodeStepP95": 412.3908},
+        {"variant": "device-resident-KV strict-FP32 before binding simplification", "total": 51871.5058, "decodeStepP50": 349.3646, "decodeStepP95": 411.6953},
+        {"variant": "device-resident-KV TF32 before binding simplification", "total": 44911.9903, "decodeStepP50": 307.7622, "decodeStepP95": 370.1802},
+        {"variant": "device-resident-KV TF32 with batched shape/report refresh and one bind/readiness pass", "total": 10115.686, "decodeStepP50": 66.4725, "decodeStepP95": 73.4841}
+      ],
+      "clockBoundary": "No GPU clock lock was applied. After the best run, the idle snapshot was P0 at 1425/2100 MHz SM and 7000/7001 MHz memory; it is not a sustained-under-load trace, so the spread across three runs is retained rather than treated as a controlled benchmark.",
+      "qualityBoundary": "The strict-FP32 and TF32 device-resident runs reached EOS and returned byte-identical text on this official sample. This is not a labeled dataset accuracy evaluation."
+    },
+    "fp16LanguageHeadFinding": "On this RTX 3060 laptop, TensorRT FP16 prefill/decode plans returned an all-zero lm_head logits tensor despite nonzero KV outputs. FP32 text prefill and decode plans restored the expected token sequence; the vision and token-embedding plans remain FP16.",
+    "taskQualityBoundary": "ORT CPU, OpenVINO CPU, and TensorRT CUDA each reached EOS and returned the same complete six-row table on one official sample. Four additional ChartQA human samples reproduced their expected tables and matched eight reference answers; this small curated set does not establish dataset-level accuracy or generalize to every chart style.",
+    "kvBufferOptimization": {
+      "status": "implemented-and-device-verified",
+      "changes": [
+        "The generic TensorRT host path now grows dynamic input buffers geometrically and reuses per-session output allocations instead of reallocating them on every token.",
+        "PaddleChart2TableTensorRtDeviceSession keeps the 48 KV tensors on CUDA in ping-pong banks; per decode step only logits, token embedding, and small attention/position inputs cross the host boundary.",
+        "TensorRtSession.RunDevice now sets all dynamic shapes before refreshing bindings and avoids duplicate BindAll/readiness work before enqueue.",
+        "The device path accepts optional TensorRT TF32 tactics for FP32 language plans; the verified output remains identical on the official sample."
+      ],
+      "contractTest": "PaddleChart2TableOnnxSessionTests.FourGraphBundleRunsPromptPrefillAndDynamicKvDecode asserts host-session KV tensor identity. The external TensorRT device-session full-generation test asserts EOS, first three token IDs, and exact full table text.",
+      "measuredOutcome": "Same official image and TensorRT device: generic strict-FP32 host-KV path 83.42 s; optimized device-resident TF32 path best observed 10.12 s (8.25x lower wall time than the old TensorRT route and 3.93x faster than the recorded ORT CPU run), with identical text. These are non-locked-clock observations, not a controlled multi-run benchmark."
+    }
+  },
+  "tensorRtBuilderRegression": {
+    "status": "resolved-test-input-profile-mismatch-builder-passed",
+    "runtime": "TensorRT 10.11.0.33, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop GPU 6GB, Windows 10, compute capability 8.6",
+    "rootCause": "The failing test resolved the plain ONNX decoder variant instead of the epsilon-patched graph used by the release path and gave attention_mask opt length 512 while the matching past_key/past_value opt length was 512. Since attention_mask length must be past + 1, TensorRT rejected a reshape from volume 512 to 513 and returned null from buildSerializedNetwork.",
+    "fix": [
+      "Resolve *-epsilon.onnx before the plain ONNX graph, matching the release publisher and plan build script.",
+      "Set decoder attention_mask profile opt length to 513 when the past KV optimum is 512.",
+      "Retain TensorRT native logger messages in TensorRtBackendException.TechnicalDetails so future builder failures expose the native shape diagnostic.",
+      "Read ONNX opset metadata without materializing multi-gigabyte protobuf graphs for modern opsets."
+    ],
+    "decoderGraph": "chart-text-decoder-dynamic-past-full-epsilon.onnx",
+    "decoderInputCount": 51,
+    "decoderProfilePastLengths": { "min": 286, "opt": 512, "max": 2332 },
+    "decoderProfileAttentionMaskLengths": { "min": 287, "opt": 513, "max": 2333 },
+    "singleDecoderBuildSeconds": 52,
+    "singleDecoderPlan": { "file": "text-decode-fp32.plan", "bytes": 1858015404, "sha256": "b58c53d23b8807a15a5578b30daba37c070b4d954b90938fdcaf8095cedb4422" },
+    "fourBuilderPlanE2E": {
+      "result": "all four library-built TensorRT plans completed greedy generation to EOS and reproduced the exact official six-row table",
+      "plans": [
+        { "file": "vision-fp16.plan", "bytes": 199288772, "sha256": "db017a2ce94f77c03e2e55343a7123de45270613414d1f179da8a79097daa4c7" },
+        { "file": "token-embedding-fp16.plan", "bytes": 622039268, "sha256": "56106bad4aabd6297a11c6e2af25c470b4d3e4a3bdca8bd82a08ddee0843116e" },
+        { "file": "text-prefill-fp32.plan", "bytes": 1857986636, "sha256": "975177c95d5914c80f1789d48904c8797fe1fdce9544e943ef28638e6a53a3ab" },
+        { "file": "text-decode-fp32.plan", "bytes": 1858015404, "sha256": "b58c53d23b8807a15a5578b30daba37c070b4d954b90938fdcaf8095cedb4422" }
+      ],
+      "expectedGeneratedTableSha256Utf8": "10effe548d6cb448e97ad7bfa6ec97643d0e021d5071d1b5ad23242d54e32094"
+    },
+    "tests": [
+      "LibraryBuilderSerializesDynamicChartKvDecodeGraph",
+      "OfficialChartImageRunsThroughFourTensorRtEnginesAndDynamicKvDecode"
+    ]
+  },
+  "chartQaHumanTensorRtEvidence": {
+    "status": "four-charts-full-eos-and-eight-reference-answers-matched",
+    "dataset": "ChartQA test_human",
+    "source": "https://github.com/vis-nlp/ChartQA",
+    "sourceLicense": "GPL-3.0; dataset files are not included in this repository or the model Release",
+    "sampleSetSha256": "5FBA61B508A96B85CD5906BB14ADFC1BA552BDCF88AC568ED6E2F79DCF0460B7",
+    "runtime": "TensorRT 10.11.0, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop GPU 6GB; library-built strict-FP32 text plans, FP16 vision/embedding plans",
+    "testMethod": "PaddleChart2TableTensorRtExternalIntegrationTests.ChartQaHumanTestChartsGenerateCompleteTablesThroughTensorRt",
+    "runElapsed": "29m 19s",
+    "resultBoundary": "All four runs reached EOS and exact expected generated-table strings; 8/8 labels were checked against values/counts derivable from the output tables. This is a 4-chart sample, not a benchmark-wide score. The 29m19s aggregate wall time was unexpectedly long versus the separate optimized official-sample observation. This run used Builder-created strict-FP32 text plans without a locked GPU clock; the timing cause has not been isolated and must not be used as a performance claim until a controlled rerun/profile.",
+    "samples": [
+      {
+        "image": "png_41699051005347.png",
+        "imageSha256": "B3E669137984FE0DBCEC29355262E1C39286466F771D4689CF42C73126507950",
+        "generatedTokensIncludingEos": 168,
+        "elapsedMs": 880568.781,
+        "finishReason": "EndOfSequence",
+        "questionChecks": [
+          { "question": "How many food item is shown in the bar graph?", "expectedAnswer": "14", "matchEvidence": "The output lists 14 commodities from Lamb through Cocoa." },
+          { "question": "What is the difference in value between Lamb and Corn?", "expectedAnswer": "0.57", "matchEvidence": "103.70 - 103.13 = 0.57." }
+        ],
+        "generatedText": "Country | Long-term price index in food commodities, 1850-2015, World, 1934\nLamb | 103.7\nCorn | 103.13\nBarley | 102.46\nRye | 87.37\nBeef | 85.27\nWheat | 83.73\nCoffee | 82.2\nTea | 68.48\nPeanuts | 64.71\nPalm oil | 57.6\nPork | 55.36\nRice | 42.48\nSugar | 25.56\nCocoa | 18.81"
+      },
+      {
+        "image": "png_41810321001157.png",
+        "imageSha256": "F753BAB919ED5CF525D79BAD95A4D64372418A07072297FF3F731C5C81BB8E06",
+        "generatedTokensIncludingEos": 34,
+        "elapsedMs": 188083.7963,
+        "finishReason": "EndOfSequence",
+        "questionChecks": [
+          { "question": "How many bars are shown in the chart?", "expectedAnswer": "3", "matchEvidence": "The output lists three entities: Mauritania, Fiji, and Madagascar." },
+          { "question": "Is the sum value of Madagascar more then Fiji?", "expectedAnswer": "No", "matchEvidence": "Madagascar is 0.21%, below Fiji at 0.38%." }
+        ],
+        "generatedText": "Characteristic | Value\nMauritania | 0.48%\nFiji | 0.38%\nMadagascar | 0.21%"
+      },
+      {
+        "image": "png_8127.png",
+        "imageSha256": "DAA5534CC75395F66E645278EEB2BDD1765AAC6E22F7A48653B6CFC287E895DD",
+        "generatedTokensIncludingEos": 40,
+        "elapsedMs": 242385.4507,
+        "finishReason": "EndOfSequence",
+        "questionChecks": [
+          { "question": "What's the value of the lowest bar?", "expectedAnswer": "23", "matchEvidence": "The minimum in the extracted table is 23." },
+          { "question": "What is the difference between the highest and the lowest green bar?", "expectedAnswer": "6", "matchEvidence": "The green series values are 23 and 29; their difference is 6." }
+        ],
+        "generatedText": "Entity | Limit its military role | Play a more active military role\n2015 | 68 | 23\n2016 | 62 | 29"
+      },
+      {
+        "image": "png_166.png",
+        "imageSha256": "2C62FFA7DBB59BFC14A07ABE045EB3BBAA99BFFB50A323C15194B03169B0115A",
+        "generatedTokensIncludingEos": 77,
+        "elapsedMs": 431965.7539,
+        "finishReason": "EndOfSequence",
+        "questionChecks": [
+          { "question": "What percent think of President Donald Trump as Dangerous?", "expectedAnswer": "62", "matchEvidence": "The Dangerous entry is 62.0." },
+          { "question": "Is Charismatic plus Well-qualified more than A strong leader?", "expectedAnswer": "Yes", "matchEvidence": "39 + 26 = 65, greater than 55." }
+        ],
+        "generatedText": "Entity | Values\nCaring about ordinary people | 23.0\nWell-qualified president to be | 26.0\nCharismatic | 39.0\na strong leader | 55.0\nDangerous | 62.0\nIntolerant | 65.0\nArrogant | 75.0"
+      }
+    ]
+  },
+  "conversionWorkarounds": [
+    "paddle2onnx --enable_dist_prim_all True is required for the Qwen2 SwiGLU graph",
+    "replace per-layer cached rotary buffers with a stateless export-time rotary implementation to avoid static-tracer aliasing",
+    "restore RMSNorm epsilon (1e-6) as an explicit Add before Reciprocal/ Sqrt in the converted graph"
+  ],
+  "notYetVerified": [
+    "OpenCV DNN execution of this four-graph autoregressive bundle",
+    "labeled dataset-level chart-to-table accuracy across chart styles",
+    "controlled TensorRT ChartQA latency rerun/profiling; the first four-image strict-FP32 Builder-plan run was unexpectedly slow",
+    "one-file merged ONNX export; the verified deployment bundle is four composable graphs"
+  ]
+}

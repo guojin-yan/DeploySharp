@@ -110,6 +110,27 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void PaddleDbDecoderHonorsPolygonGeometryOption()
+        {
+            PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(
+                new ModelId("tests/paddle-det-polygon"), PaddleArtifact(11),
+                postprocess: new PaddleDbPostprocessOptions(.3f, .6f, 1f, PaddleDbScoreMode.Slow, PaddleDbBoxType.Polygon, minimumSide: 1, maximumCandidates: 8, maximumRegions: 8));
+            VisualModelProfile profile = family.VisualProfile;
+            var source = new VisualSize(12, 12);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 12, 12), new float[432]), source, source, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(source, source));
+            var map = new float[144];
+            // Keep a solid component large enough for the configured minimum side;
+            // polygon mode must still omit the crop-only quadrilateral contract.
+            for (int y = 2; y <= 8; y++) for (int x = 2; x <= 8; x++) map[(y * 12) + x] = .95f;
+            var result = (TextDetectionResult)profile.Decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 12, 12), map)), CancellationToken.None));
+            Assert.AreEqual(1, result.Regions.Count);
+            Assert.IsTrue(result.Regions[0].Polygon.Vertices.Count >= 3);
+            Assert.IsNull(result.Regions[0].CropQuadrilateral);
+            Assert.AreEqual("Polygon", result.Regions[0].Metadata["paddle.db.boxType"]);
+        }
+
+        [TestMethod]
         public void PaddleDbDecoderRejectsProbabilityMapBeyondConfiguredSide()
         {
             PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(new ModelId("tests/paddle-det"), PaddleArtifact(11), maximumSide: 4);

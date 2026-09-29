@@ -32,6 +32,6 @@
     { "id": "unimernet", "module": "formula-recognition", "archive": "UniMERNet_infer.tar" },
     { "id": "ppocrv4-mobile-seal-det", "module": "seal-text-detection", "archive": "PP-OCRv4_mobile_seal_det_infer.tar" },
     { "id": "ppocrv4-server-seal-det", "module": "seal-text-detection", "archive": "PP-OCRv4_server_seal_det_infer.tar" },
-    { "id": "pp-chart2table", "module": "chart-parsing", "archive": "PP-Chart2Table_infer.tar" }
+    { "id": "pp-chart2table", "module": "chart-parsing", "archive": "PP-Chart2Table_infer.tar", "status": "conversion-blocked", "reason": "The upstream archive is a generative checkpoint rather than inference.json/inference.pdiparams, so this single-file acquisition row remains non-downloadable. Its separate four-graph ONNX generation bundle and three tokenizer assets are published in the models-paddleocr Release under bundleId paddle-chart/pp-chart2table; retrieve them with PaddleOcrReleaseClient.GetBundleAsync. ORT CPU, OpenVINO CPU, and TensorRT CUDA have full-generation evidence; see verification/chart2table-component-validation.json. The source-archive status does not describe the derived bundle's availability." }
   ]
 }

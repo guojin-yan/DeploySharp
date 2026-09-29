@@ -271,9 +271,16 @@ namespace JYPPX.DeploySharp.ModelFactory
 
         private static Uri? ValidateAssetUri(Uri? value, string path, ModelCatalogRelease? release, string? tag, List<ModelFactoryDiagnostic> diagnostics, string? modelId, string? artifactId = null, string? assetId = null)
         {
-            if (value == null || !value.IsAbsoluteUri || value.Scheme != Uri.UriSchemeHttps || !string.Equals(value.Host, "github.com", StringComparison.OrdinalIgnoreCase) || !string.IsNullOrEmpty(value.Query) || !string.IsNullOrEmpty(value.Fragment) || value.UserInfo.Length != 0)
+            if (value == null || !value.IsAbsoluteUri || value.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(value.Query) || !string.IsNullOrEmpty(value.Fragment) || value.UserInfo.Length != 0)
             {
-                Add(diagnostics, ModelFactoryDiagnosticCodes.AssetInvalid, "Asset downloadUrl must be an absolute HTTPS GitHub Release URL without query, fragment, or credentials.", path, modelId: modelId, artifactId: artifactId, assetId: assetId, uri: value);
+                Add(diagnostics, ModelFactoryDiagnosticCodes.AssetInvalid, "Asset downloadUrl must be an absolute HTTPS GitHub Release or pinned official Paddle asset URL without query, fragment, or credentials.", path, modelId: modelId, artifactId: artifactId, assetId: assetId, uri: value);
+                return null;
+            }
+
+            if (IsPinnedOfficialAssetUri(value)) return value;
+            if (!string.Equals(value.Host, "github.com", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(diagnostics, ModelFactoryDiagnosticCodes.AssetInvalid, "Asset downloadUrl must point to the recorded GitHub Release or an allowlisted pinned official Paddle asset.", path, modelId: modelId, artifactId: artifactId, assetId: assetId, uri: value);
                 return null;
             }
 
@@ -287,6 +294,51 @@ namespace JYPPX.DeploySharp.ModelFactory
 
             return value;
         }
+
+        private static bool IsPinnedOfficialAssetUri(Uri value)
+        {
+            string[] segments = Uri.UnescapeDataString(value.AbsolutePath).Trim('/').Split('/');
+            if (string.Equals(value.Host, "huggingface.co", StringComparison.OrdinalIgnoreCase))
+            {
+                return segments.Length == 5
+                    && string.Equals(segments[0], "PaddlePaddle", StringComparison.Ordinal)
+                    && IsOfficialPaddleOcrRepository(segments[1])
+                    && string.Equals(segments[2], "resolve", StringComparison.Ordinal)
+                    && IsRevision(segments[3])
+                    && string.Equals(segments[4], "inference.onnx", StringComparison.Ordinal);
+            }
+
+            if (string.Equals(value.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return (segments.Length == 4
+                        && string.Equals(segments[0], "PaddlePaddle", StringComparison.Ordinal)
+                        && string.Equals(segments[1], "PaddleOCR", StringComparison.Ordinal)
+                        && IsRevision(segments[2])
+                        && string.Equals(segments[3], "LICENSE", StringComparison.Ordinal))
+                    || (segments.Length == 7
+                        && string.Equals(segments[0], "PaddlePaddle", StringComparison.Ordinal)
+                        && string.Equals(segments[1], "PaddleOCR", StringComparison.Ordinal)
+                        && IsRevision(segments[2])
+                        && string.Equals(segments[3], "ppocr", StringComparison.Ordinal)
+                        && string.Equals(segments[4], "utils", StringComparison.Ordinal)
+                        && string.Equals(segments[5], "dict", StringComparison.Ordinal)
+                        && string.Equals(segments[6], "ppocrv5_dict.txt", StringComparison.Ordinal));
+            }
+
+            return false;
+        }
+
+        private static bool IsOfficialPaddleOcrRepository(string value)
+        {
+            return string.Equals(value, "PP-OCRv5_mobile_det_onnx", StringComparison.Ordinal)
+                || string.Equals(value, "PP-OCRv5_mobile_rec_onnx", StringComparison.Ordinal)
+                || string.Equals(value, "PP-LCNet_x0_25_textline_ori_onnx", StringComparison.Ordinal)
+                || string.Equals(value, "PP-OCRv5_server_det_onnx", StringComparison.Ordinal)
+                || string.Equals(value, "PP-OCRv5_server_rec_onnx", StringComparison.Ordinal)
+                || string.Equals(value, "PP-LCNet_x1_0_textline_ori_onnx", StringComparison.Ordinal);
+        }
+
+        private static bool IsRevision(string value) => value.Length == 40 && value.All(Uri.IsHexDigit);
 
         private static string? NormalizePath(string? value, string path, List<ModelFactoryDiagnostic> diagnostics, string? modelId = null, string? artifactId = null, string? assetId = null)
         {

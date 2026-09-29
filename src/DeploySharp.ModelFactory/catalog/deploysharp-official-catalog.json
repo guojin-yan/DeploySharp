@@ -641,11 +641,11 @@
       "task": "text-orientation-classification",
       "modelVersion": "PP-OCRv5-mobile-cls-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x0_25_textline_ori_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-LCNet_x0_25_textline_ori_onnx/resolve/aea1f18d97338aaf84b463f90192f2820524a00a/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:268d9aea61461c3d4a5a32752e5b920e8af2ee0a002362f6ba5cd39638fa2c3a",
+        "revision": "sha256:94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -684,8 +684,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-cls.modelpack.json",
               "relativePath": "mobile-cls.modelpack.json",
-              "size": 3077,
-              "sha256": "5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96",
+              "size": 3160,
+              "sha256": "f4f3d6fb507b4b8088843d74ab1e04233be6fb1663631eb709354252379f136d",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -693,10 +693,10 @@
               "assetId": "paddleocr-ppocrv5-mobile-cls-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-cls.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-LCNet_x0_25_textline_ori_onnx/resolve/aea1f18d97338aaf84b463f90192f2820524a00a/inference.onnx",
               "relativePath": "bundle/model.onnx",
-              "size": 1018940,
-              "sha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+              "size": 1019454,
+              "sha256": "94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -704,7 +704,7 @@
               "assetId": "paddleocr-ppocrv5-mobile-cls-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -713,9 +713,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "aea1f18d97338aaf84b463f90192f2820524a00a",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }
@@ -730,11 +730,11 @@
       "task": "text-detection",
       "modelVersion": "PP-OCRv5-mobile-det-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_det_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx/resolve/e6f4fa85f00e168c862bc462aebca69eef9b3d3d/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:50446e5d01ac2a73d5319c89513281f6578414c888c602f9af13f93feefffc58",
+        "revision": "sha256:a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -773,8 +773,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-det.modelpack.json",
               "relativePath": "mobile-det.modelpack.json",
-              "size": 3064,
-              "sha256": "21397cbb7207f61d10a332436319a5d3ebb4cd396de27fea20a1815e83435473",
+              "size": 3154,
+              "sha256": "4cb9064096e6228ed34c479aa50105271e11616ee2a4e83918ff120c1d5e0a59",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -782,10 +782,10 @@
               "assetId": "paddleocr-ppocrv5-mobile-det-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-det.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx/resolve/e6f4fa85f00e168c862bc462aebca69eef9b3d3d/inference.onnx",
               "relativePath": "bundle/model.onnx",
               "size": 4826518,
-              "sha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+              "sha256": "a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -793,7 +793,7 @@
               "assetId": "paddleocr-ppocrv5-mobile-det-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -802,9 +802,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "e6f4fa85f00e168c862bc462aebca69eef9b3d3d",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }
@@ -819,11 +819,11 @@
       "task": "text-recognition",
       "modelVersion": "PP-OCRv5-mobile-rec-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_rec_onnx/resolve/ed152b8b495f84de93cda5709d768548a9127622/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
+        "revision": "sha256:da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -863,8 +863,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/mobile-rec.modelpack.json",
               "relativePath": "mobile-rec.modelpack.json",
-              "size": 3324,
-              "sha256": "37838a112cbcd75c9945d52e51def6260f0a26a40fa4af80dc7d605de92b99d3",
+              "size": 3407,
+              "sha256": "7e1e809a0b992c85e63aeefa7d6d0a49be9958b42a101d3e78b43e5e4aecbefa",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -872,10 +872,10 @@
               "assetId": "paddleocr-ppocrv5-mobile-rec-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-mobile-rec.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_rec_onnx/resolve/ed152b8b495f84de93cda5709d768548a9127622/inference.onnx",
               "relativePath": "bundle/model.onnx",
-              "size": 16560873,
-              "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+              "size": 16534782,
+              "sha256": "da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -883,7 +883,7 @@
               "assetId": "paddleocr-ppocrv5-mobile-rec-dictionary",
               "kind": "other",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5_dict.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt",
               "relativePath": "bundle/ppocrv5_dict.txt",
               "size": 74012,
               "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
@@ -894,7 +894,7 @@
               "assetId": "paddleocr-ppocrv5-mobile-rec-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -903,9 +903,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "ed152b8b495f84de93cda5709d768548a9127622",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }
@@ -920,11 +920,11 @@
       "task": "text-orientation-classification",
       "modelVersion": "PP-OCRv5-server-cls-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-LCNet_x1_0_textline_ori_onnx/resolve/7fdcf3cf7061163eda7183b224aa334bd33068f7/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
+        "revision": "sha256:38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -963,8 +963,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-cls.modelpack.json",
               "relativePath": "server-cls.modelpack.json",
-              "size": 3076,
-              "sha256": "4292c3e01f62426252ad516a3e3897b6c3a5bc51dd3fc77d4593bb6be6cedd85",
+              "size": 3159,
+              "sha256": "62890c0a55cd614a0a8c2651b78d4d1704a683381ab997d8a237964c67ae1e3c",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -972,10 +972,10 @@
               "assetId": "paddleocr-ppocrv5-server-cls-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-cls.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-LCNet_x1_0_textline_ori_onnx/resolve/7fdcf3cf7061163eda7183b224aa334bd33068f7/inference.onnx",
               "relativePath": "bundle/model.onnx",
-              "size": 6777308,
-              "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f",
+              "size": 6777816,
+              "sha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -983,7 +983,7 @@
               "assetId": "paddleocr-ppocrv5-server-cls-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -992,9 +992,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "7fdcf3cf7061163eda7183b224aa334bd33068f7",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }
@@ -1009,11 +1009,11 @@
       "task": "text-detection",
       "modelVersion": "PP-OCRv5-server-det-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_det_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_server_det_onnx/resolve/dcf248c4dcc064c6d030db241255f9e8fbc6733a/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:22a33e0ba6a21425ea4192da03bf4395c9a0c67902bd924b7328fc859073045d",
+        "revision": "sha256:10803475a591f7dc623e24670fb5752ec94d39a1f8cf069aac1b6f0ce19cfc85",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -1052,8 +1052,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-det.modelpack.json",
               "relativePath": "server-det.modelpack.json",
-              "size": 3072,
-              "sha256": "4442be563e57a9cda3f0ce2d4a974199dd7cf51af41194d45170cbf4914d9cb0",
+              "size": 3155,
+              "sha256": "1c3b6ce0bd5a9b4c67a666f547361231376a6ef4dd24f9643b4ccb7b4121b6a2",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -1061,10 +1061,10 @@
               "assetId": "paddleocr-ppocrv5-server-det-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-det.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_server_det_onnx/resolve/dcf248c4dcc064c6d030db241255f9e8fbc6733a/inference.onnx",
               "relativePath": "bundle/model.onnx",
-              "size": 88116836,
-              "sha256": "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839",
+              "size": 88116791,
+              "sha256": "10803475a591f7dc623e24670fb5752ec94d39a1f8cf069aac1b6f0ce19cfc85",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -1072,7 +1072,7 @@
               "assetId": "paddleocr-ppocrv5-server-det-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -1081,9 +1081,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "dcf248c4dcc064c6d030db241255f9e8fbc6733a",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }
@@ -1098,11 +1098,11 @@
       "task": "text-recognition",
       "modelVersion": "PP-OCRv5-server-rec-release",
       "status": "preview",
-      "description": "Public alpha-preview PP-OCRv5 ONNX bundle with immutable GitHub Release assets and SHA-256 checksums.",
+      "description": "Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.",
       "source": {
-        "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_server_rec_infer.tar",
+        "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_server_rec_onnx/resolve/b70df217f4fd99d14f970bad092cebe7d74cc4d1/inference.onnx",
         "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-        "revision": "sha256:d99be2ffd348943ab52876179168be4fb5b14f5f0812f2ae4c76d89ec2ea750a",
+        "revision": "sha256:d9dc333c9c7b042c6dffb8e33d72b6f65c9c1d463d0a3c2f78174fea55e94752",
         "author": "PaddlePaddle",
         "licenseExpression": "Apache-2.0",
         "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -1142,8 +1142,8 @@
               "releaseTag": "models-visual.1",
               "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/server-rec.modelpack.json",
               "relativePath": "server-rec.modelpack.json",
-              "size": 3326,
-              "sha256": "492032ce76d98fbd8e33f78bf83cc983bb933696d56c23a4b4b58ff62ab7d571",
+              "size": 3409,
+              "sha256": "85d9f8c86ab8b3567d52628b8c845abd9888e0f1042be678526fd3127a12f61e",
               "mediaType": "application/json",
               "licenseExpression": "Apache-2.0"
             },
@@ -1151,10 +1151,10 @@
               "assetId": "paddleocr-ppocrv5-server-rec-model",
               "kind": "model",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5-server-rec.model.onnx",
+              "downloadUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_server_rec_onnx/resolve/b70df217f4fd99d14f970bad092cebe7d74cc4d1/inference.onnx",
               "relativePath": "bundle/model.onnx",
-              "size": 84502992,
-              "sha256": "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7",
+              "size": 84503027,
+              "sha256": "d9dc333c9c7b042c6dffb8e33d72b6f65c9c1d463d0a3c2f78174fea55e94752",
               "mediaType": "application/onnx",
               "licenseExpression": "Apache-2.0"
             },
@@ -1162,7 +1162,7 @@
               "assetId": "paddleocr-ppocrv5-server-rec-dictionary",
               "kind": "other",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/ppocrv5_dict.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt",
               "relativePath": "bundle/ppocrv5_dict.txt",
               "size": 74012,
               "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
@@ -1173,7 +1173,7 @@
               "assetId": "paddleocr-ppocrv5-server-rec-license",
               "kind": "license",
               "releaseTag": "models-visual.1",
-              "downloadUrl": "https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/paddleocr.LICENSE.txt",
+              "downloadUrl": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE",
               "relativePath": "bundle/source/licenses/paddleocr.LICENSE.txt",
               "size": 11376,
               "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e",
@@ -1182,9 +1182,9 @@
             }
           ],
           "conversion": {
-            "exporter": "paddle2onnx",
-            "exporterVersion": "2.0.2rc3",
-            "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562",
+            "exporter": "PaddlePaddle official Hugging Face ONNX",
+            "exporterVersion": "official-huggingface-revision",
+            "sourceRevision": "b70df217f4fd99d14f970bad092cebe7d74cc4d1",
             "notes": "Source, conversion, and runtime validation details are recorded in the released ModelPack."
           }
         }

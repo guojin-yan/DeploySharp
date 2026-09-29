@@ -1,0 +1,275 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using JYPPX.DeploySharp;
+using JYPPX.DeploySharp.Backends.TensorRT;
+using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Tensors;
+using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.TensorRT;
+using JYPPX.DeploySharp.Visual.OpenCV;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace DeploySharp.Visual.TensorRT.Tests
+{
+    [TestClass]
+    public sealed class PaddleChart2TableTensorRtExternalIntegrationTests
+    {
+        private const string VisionId = "paddle-chart/pp-chart2table/vision-projector";
+        private const string EmbeddingId = "paddle-chart/pp-chart2table/token-embedding";
+        private const string PrefillId = "paddle-chart/pp-chart2table/text-prefill";
+        private const string DecodeId = "paddle-chart/pp-chart2table/text-decode-with-past";
+        public TestContext TestContext { get; set; } = null!;
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void LibraryBuilderSerializesDynamicChartKvDecodeGraph()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL=1 to build the local PP-Chart2Table dynamic-KV graph with TensorRtOnnxEngineBuilder.");
+
+            string textRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TEXT_ROOT") ?? Path.Combine(Required("DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT"), "text-onnx-verify-20260923");
+            string outputRoot = Required("DEPLOYSHARP_CHART2TABLE_BUILDER_OUTPUT_ROOT");
+            Directory.CreateDirectory(outputRoot);
+            string onnxPath = GraphPath(textRoot, "chart-text-decoder-dynamic-past-full");
+            string enginePath = Path.Combine(outputRoot, "text-decode-fp32.plan");
+            if (File.Exists(enginePath)) Assert.Fail("Refusing to overwrite an existing builder regression artifact: " + enginePath);
+
+            var options = new TensorRtOnnxEngineBuildOptions(
+                apiVersion: TensorRtApiVersion.TensorRt10,
+                precision: TensorRtOnnxEnginePrecision.Float32,
+                maximumOnnxBytes: int.MaxValue,
+                maximumEngineBytes: int.MaxValue,
+                workspaceBytes: 1073741824UL,
+                optimizationLevel: 0,
+                overwrite: false,
+                inputProfiles: DecodeProfiles(),
+                disableTf32: true);
+            var artifact = new ModelArtifact(new ModelId(DecodeId), "onnx", onnxPath);
+
+            try
+            {
+                TensorRtOnnxEngineBuildResult result = new TensorRtOnnxEngineBuilder().Build(artifact, enginePath, options);
+                TestContext.WriteLine(JsonSerializer.Serialize(new { result.OnnxBytes, result.EngineBytes, result.EngineSha256, result.BuildInputsSha256, result.OptimizationProfileCount }));
+                Assert.IsTrue(result.EngineBytes >= 8);
+                Assert.IsTrue(File.Exists(result.EnginePath));
+            }
+            catch (TensorRtBackendException exception)
+            {
+                string diagnostic = exception.ErrorCode + ";technicalDetails=" + exception.TechnicalDetails + ";inner=" + exception.InnerException;
+                TestContext.WriteLine("CHART2TABLE_DYNAMIC_KV_BUILDER_FAILURE " + diagnostic);
+                Assert.Fail(diagnostic);
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void ChartQaHumanTestChartsGenerateCompleteTablesThroughTensorRt()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL=1 to run the local ChartQA samples through TensorRT.");
+
+            string sampleRoot = Required("DEPLOYSHARP_CHARTQA_SAMPLE_ROOT");
+            string modelRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
+            string engineRoot = Required("DEPLOYSHARP_CHART2TABLE_TRT_ENGINE_ROOT");
+            string[] engineFiles = { "vision-fp16.plan", "token-embedding-fp16.plan", "text-prefill-fp32.plan", "text-decode-fp32.plan" };
+            string[] modelIds = { VisionId, EmbeddingId, PrefillId, DecodeId };
+            var engineArtifacts = new List<ModelArtifact>(engineFiles.Length);
+            for (int index = 0; index < engineFiles.Length; index++)
+            {
+                string path = Path.Combine(engineRoot, engineFiles[index]);
+                if (!File.Exists(path)) Assert.Inconclusive("A library-built Chart2Table engine is missing: " + path);
+                engineArtifacts.Add(new ModelArtifact(new ModelId(modelIds[index]), "tensorrt-engine", path, ComputeSha256(path), TensorRtBackendProvider.BackendId));
+            }
+
+            var samples = new[]
+            {
+                new { File = "png_41699051005347.png", Questions = new[] { "How many food item is shown in the bar graph? → 14", "What is the difference in value between Lamb and Corn? → 0.57" }, ExpectedText = "Country | Long-term price index in food commodities, 1850-2015, World, 1934\nLamb | 103.7\nCorn | 103.13\nBarley | 102.46\nRye | 87.37\nBeef | 85.27\nWheat | 83.73\nCoffee | 82.2\nTea | 68.48\nPeanuts | 64.71\nPalm oil | 57.6\nPork | 55.36\nRice | 42.48\nSugar | 25.56\nCocoa | 18.81" },
+                new { File = "png_41810321001157.png", Questions = new[] { "How many bars are shown in the chart? → 3", "Is the sum value of Madagascar more then Fiji? → No" }, ExpectedText = "Characteristic | Value\nMauritania | 0.48%\nFiji | 0.38%\nMadagascar | 0.21%" },
+                new { File = "png_8127.png", Questions = new[] { "What's the value of the lowest bar? → 23", "What is the difference between the highest and the lowest green bar? → 6" }, ExpectedText = "Entity | Limit its military role | Play a more active military role\n2015 | 68 | 23\n2016 | 62 | 29" },
+                new { File = "png_166.png", Questions = new[] { "What percent think of President Donald Trump as Dangerous? → 62", "Is Charismatic plus Well-qualified more than A strong leader? → Yes" }, ExpectedText = "Entity | Values\nCaring about ordinary people | 23.0\nWell-qualified president to be | 26.0\nCharismatic | 39.0\na strong leader | 55.0\nDangerous | 62.0\nIntolerant | 65.0\nArrogant | 75.0" }
+            };
+
+            using var provider = new TensorRtBackendProvider(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt10, cudaTargetArchitecture: "sm_86"));
+            var tokenizer = new PaddleChart2TableTokenizer(modelRoot);
+            var bundle = new PaddleChart2TableOnnxBundle(engineArtifacts[0], engineArtifacts[1], engineArtifacts[2], engineArtifacts[3]);
+            using var session = new PaddleChart2TableTensorRtDeviceSession(provider, bundle, new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
+            var inputFactory = new OpenCvPaddleChart2TableInputFactory();
+
+            foreach (var sample in samples)
+            {
+                string imagePath = Path.Combine(sampleRoot, sample.File);
+                if (!File.Exists(imagePath)) Assert.Fail("A downloaded ChartQA image is missing: " + imagePath);
+                using PreparedVisualInput input = inputFactory.CreateFromFile(imagePath);
+                var watch = Stopwatch.StartNew();
+                PaddleChart2TableGenerationResult result = session.Generate(input, tokenizer, maximumNewTokens: 1024);
+                watch.Stop();
+
+                TestContext.WriteLine(JsonSerializer.Serialize(new
+                {
+                    dataset = "ChartQA test_human",
+                    sample.File,
+                    questionsAndAnswers = sample.Questions,
+                    result.FinishReason,
+                    tokenCount = result.TokenIds.Count,
+                    totalMs = watch.Elapsed.TotalMilliseconds,
+                    result.Text
+                }));
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.Text), sample.File + " produced an empty table.");
+                Assert.AreEqual(JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence, result.FinishReason, sample.File + " did not complete EOS generation.");
+                Assert.AreEqual(sample.ExpectedText, result.Text, sample.File + " did not reproduce the validated ChartQA table.");
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialChartImageRunsThroughFourTensorRtEnginesAndDynamicKvDecode()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL=1 to build and run the local four-graph PP-Chart2Table bundle on TensorRT.");
+            string sourceRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
+            string exportRoot = Required("DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT");
+            string image = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_IMAGE") ?? @"E:\Model\PaddleDocument\validation\chart_parsing_02.png";
+            string outputRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_ENGINE_ROOT") ?? @"E:\Model\PaddleDocument\chart2table-tensorrt-verify-20260923";
+            Directory.CreateDirectory(outputRoot);
+            string textRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TEXT_ROOT") ?? Path.Combine(exportRoot, "text-onnx-verify-20260923");
+            var sources = new[]
+            {
+                (VisionId, Path.Combine(exportRoot, "chart-vision.onnx"), "vision-fp16.plan", Array.Empty<TensorRtOnnxInputProfile>()),
+                (EmbeddingId, GraphPath(textRoot, "chart-token-embedding-dynamic"), "token-embedding-fp16.plan", EmbeddingProfiles()),
+                (PrefillId, GraphPath(textRoot, "chart-text-prefill-full"), "text-prefill-fp32.plan", Array.Empty<TensorRtOnnxInputProfile>()),
+                (DecodeId, GraphPath(textRoot, "chart-text-decoder-dynamic-past-full"), "text-decode-fp32.plan", DecodeProfiles())
+            };
+            var engineArtifacts = new List<ModelArtifact>(sources.Length);
+            bool reusePlans = string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_USE_EXISTING_PLANS"), "1", StringComparison.Ordinal);
+            if (reusePlans)
+            {
+                foreach (var source in sources)
+                {
+                    string? configuredPath = source.Item1 == PrefillId
+                        ? Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_PREFILL_PLAN")
+                        : source.Item1 == DecodeId
+                            ? Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_DECODE_PLAN")
+                            : null;
+                    string enginePath = string.IsNullOrWhiteSpace(configuredPath) ? Path.Combine(outputRoot, source.Item3) : Path.GetFullPath(configuredPath);
+                    if (!File.Exists(enginePath)) Assert.Inconclusive("A prebuilt TensorRT plan is missing: " + enginePath);
+                    engineArtifacts.Add(new ModelArtifact(new ModelId(source.Item1), "tensorrt-engine", enginePath, ComputeSha256(enginePath), TensorRtBackendProvider.BackendId));
+                }
+            }
+            else
+            {
+                var builder = new TensorRtOnnxEngineBuilder();
+                foreach (var source in sources)
+                {
+                    var onnxArtifact = new ModelArtifact(new ModelId(source.Item1), "onnx", source.Item2);
+                    string enginePath = Path.Combine(outputRoot, source.Item3);
+                    TensorRtOnnxEnginePrecision precision = source.Item1 == PrefillId || source.Item1 == DecodeId
+                        ? TensorRtOnnxEnginePrecision.Float32
+                        : TensorRtOnnxEnginePrecision.Float16;
+                    var options = new TensorRtOnnxEngineBuildOptions(
+                        apiVersion: TensorRtApiVersion.TensorRt10,
+                        precision: precision,
+                        maximumOnnxBytes: int.MaxValue,
+                        maximumEngineBytes: int.MaxValue,
+                        workspaceBytes: 1073741824UL,
+                        optimizationLevel: 0,
+                        overwrite: true,
+                        inputProfiles: source.Item4,
+                        disableTf32: precision == TensorRtOnnxEnginePrecision.Float32);
+                    try
+                    {
+                        TensorRtOnnxEngineBuildResult build = builder.Build(onnxArtifact, enginePath, options);
+                        TestContext.WriteLine(JsonSerializer.Serialize(new { role = source.Item3, build.OnnxBytes, build.EngineBytes, build.EngineSha256, buildInputsSha256 = build.BuildInputsSha256, apiVersion = build.ApiVersion.ToString() }));
+                        engineArtifacts.Add(new ModelArtifact(new ModelId(source.Item1), "tensorrt-engine", build.EnginePath, build.EngineSha256, TensorRtBackendProvider.BackendId));
+                    }
+                    catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                    {
+                        string details = "TensorRT engine build blocked at " + source.Item3 + ": " + exception.ToString() + " " + DescribeRuntime();
+                        Console.WriteLine("CHART2TABLE_TENSORRT_BLOCKED role=" + source.Item3 + ";details=" + details);
+                        TestContext.WriteLine(details);
+                        string diagnosticPath = Path.Combine(outputRoot, "blocked-" + Path.GetFileNameWithoutExtension(source.Item3) + "-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".json");
+                        File.WriteAllText(diagnosticPath, JsonSerializer.Serialize(new { role = source.Item3, errorCode = exception.ErrorCode, exception = exception.ToString(), details }, new JsonSerializerOptions { WriteIndented = true }));
+                        Assert.Inconclusive(details);
+                    }
+                    catch (TensorRtBackendException exception)
+                    {
+                        TestContext.WriteLine("CHART2TABLE_TENSORRT_BUILD_ERROR code=" + exception.ErrorCode + ";details=" + exception.TechnicalDetails);
+                        throw;
+                    }
+                }
+            }
+
+            var bundle = new PaddleChart2TableOnnxBundle(engineArtifacts[0], engineArtifacts[1], engineArtifacts[2], engineArtifacts[3]);
+            using var provider = new TensorRtBackendProvider(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt10, cudaTargetArchitecture: "sm_86"));
+            var tokenizer = new PaddleChart2TableTokenizer(sourceRoot);
+            using PreparedVisualInput input = new OpenCvPaddleChart2TableInputFactory().CreateFromFile(image);
+            using var session = new PaddleChart2TableTensorRtDeviceSession(provider, bundle, new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
+            int maximumNewTokens = ParseMaximumNewTokens();
+            var totalWatch = Stopwatch.StartNew();
+            PaddleChart2TableGenerationResult result = session.Generate(input, tokenizer, maximumNewTokens);
+            totalWatch.Stop();
+            TestContext.WriteLine(JsonSerializer.Serialize(new { result.Text, tokenIds = result.TokenIds, finish = result.FinishReason.ToString(), requestedNewTokens = maximumNewTokens, totalMs = totalWatch.Elapsed.TotalMilliseconds, visionMs = result.VisionTime.TotalMilliseconds, embeddingMs = result.EmbeddingTime.TotalMilliseconds, prefillMs = result.PrefillTime.TotalMilliseconds, decodeMs = result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray() }));
+            CollectionAssert.AreEqual(new[] { 7948, 69442, 760 }, result.TokenIds.Take(3).ToArray());
+            Assert.AreEqual(tokenizer.IsTerminalToken(result.TokenIds.Last()) ? JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence : JYPPX.DeploySharp.Results.Language.GenerationFinishReason.MaxTokens, result.FinishReason);
+            if (result.FinishReason == JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence)
+            {
+                const string expectedTable = "年份 | 单家五星级旅游饭店年平均营收 (百万元) | 单家五星级旅游饭店年平均利润 (百万元)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96";
+                Assert.AreEqual(expectedTable, result.Text, "A complete backend run must reproduce the verified official sample table exactly.");
+            }
+        }
+
+        private static int ParseMaximumNewTokens()
+        {
+            string? value = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_MAX_NEW_TOKENS");
+            if (string.IsNullOrWhiteSpace(value)) return 3;
+            if (!int.TryParse(value, out int parsed) || parsed < 3 || parsed > 2048) Assert.Fail("DEPLOYSHARP_CHART2TABLE_TRT_MAX_NEW_TOKENS must be an integer between 3 and 2048.");
+            return parsed;
+        }
+
+        private static TensorRtOnnxInputProfile[] EmbeddingProfiles() => new[]
+        {
+            new TensorRtOnnxInputProfile("input_ids", new TensorShape(1, 1), new TensorShape(1, 286), new TensorShape(1, 2333))
+        };
+
+        private static TensorRtOnnxInputProfile[] DecodeProfiles()
+        {
+            var values = new List<TensorRtOnnxInputProfile>
+            {
+                // attention_mask is one token longer than the past KV. The
+                // optimum KV length is 512, so the matching mask length is 513.
+                new TensorRtOnnxInputProfile("attention_mask", new TensorShape(1, 287), new TensorShape(1, 513), new TensorShape(1, 2333))
+            };
+            for (int layer = 0; layer < 24; layer++)
+            {
+                values.Add(new TensorRtOnnxInputProfile("past_key_" + layer, new TensorShape(1, 286, 16, 64), new TensorShape(1, 512, 16, 64), new TensorShape(1, 2332, 16, 64)));
+                values.Add(new TensorRtOnnxInputProfile("past_value_" + layer, new TensorShape(1, 286, 16, 64), new TensorShape(1, 512, 16, 64), new TensorShape(1, 2332, 16, 64)));
+            }
+            return values.ToArray();
+        }
+
+        private static string Required(string name)
+        {
+            string? value = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrWhiteSpace(value)) Assert.Inconclusive("Required external integration variable is missing: " + name);
+            return value!;
+        }
+
+        private static string DescribeRuntime() => string.Join(";", new[] { "JYPPX_NATIVE_BRIDGE_PATH", "JYPPX_TENSORRT_ROOT", "JYPPX_CUDA_ROOT", "JYPPX_CUDNN_ROOT" }.Select(name => name + "=" + (Environment.GetEnvironmentVariable(name) ?? "<unset>")));
+
+        private static string GraphPath(string root, string stem)
+        {
+            string epsilon = Path.Combine(root, stem + "-epsilon.onnx");
+            if (File.Exists(epsilon)) return epsilon;
+            string standard = Path.Combine(root, stem + ".onnx");
+            if (File.Exists(standard)) return standard;
+            return standard;
+        }
+
+        private static string ComputeSha256(string path)
+        {
+            using var stream = File.OpenRead(path);
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+        }
+    }
+}

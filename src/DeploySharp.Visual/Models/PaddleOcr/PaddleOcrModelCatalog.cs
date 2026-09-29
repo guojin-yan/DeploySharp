@@ -38,6 +38,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public bool IsLegacyClassification { get; }
         /// <summary>Gets whether the row requires a CTC dictionary. / 获取是否需要 CTC 字典。</summary>
         public bool DictionaryRequired { get; }
+
+        /// <summary>Gets the independently downloadable Release asset, when published. / 获取已发布的独立下载 Release 资产。</summary>
+        public PaddleOcrReleaseArtifact? ReleaseArtifact => PaddleOcrReleaseArtifacts.TryGet(ModelId, out PaddleOcrReleaseArtifact? artifact) ? artifact : null;
     }
 
     /// <summary>Catalog of the core PP-OCR v4/v5/v6 model contracts. / PP-OCR v4/v5/v6 核心模型合同目录。</summary>
@@ -75,6 +78,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 if (Entries[index].ModelId.Value.Equals(modelId.Value, StringComparison.OrdinalIgnoreCase)) return Entries[index];
             throw new KeyNotFoundException("Unknown PaddleOCR model ID: " + modelId.Value);
         }
+
+        /// <summary>Gets the independently downloadable models-paddleocr Release metadata for one core contract. / 获取核心合同对应的 models-paddleocr 独立下载 Release 元数据。</summary>
+        public static PaddleOcrReleaseArtifact GetReleaseArtifact(ModelId modelId) => PaddleOcrReleaseArtifacts.Get(modelId);
+
+        /// <summary>Tries to get independently downloadable Release metadata without throwing. / 尝试获取独立下载 Release 元数据而不抛出异常。</summary>
+        public static bool TryGetReleaseArtifact(ModelId modelId, out PaddleOcrReleaseArtifact? artifact) => PaddleOcrReleaseArtifacts.TryGet(modelId, out artifact);
 
         /// <summary>Creates the correct existing DeploySharp Profile for a catalog row. / 为目录行创建对应的 DeploySharp Profile。</summary>
         public static PaddleOcrProfile CreateProfile(PaddleOcrModelDescriptor descriptor, PaddleOcrArtifactContract artifact, OcrCharacterSet? characterSet = null, int maximumBatch = 64)

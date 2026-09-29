@@ -342,16 +342,18 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
         {
             if (options.ResizeMode == OpenCvResizeMode.Resize) return new Geometry(options.ModelSize.Width, options.ModelSize.Height, 0, 0, ImageTransformKind.Resize);
             bool centerCrop = options.ResizeMode == OpenCvResizeMode.CenterCrop || options.ResizeMode == OpenCvResizeMode.ShortestEdgeCenterCrop;
+            VisualSize cropCanvas = options.ShortestEdgeResize ?? options.ModelSize;
             double scale = centerCrop
-                ? Math.Max((double)options.ModelSize.Width / sourceWidth, (double)options.ModelSize.Height / sourceHeight)
+                ? Math.Max((double)cropCanvas.Width / sourceWidth, (double)cropCanvas.Height / sourceHeight)
                 : Math.Min((double)options.ModelSize.Width / sourceWidth, (double)options.ModelSize.Height / sourceHeight);
             if (!centerCrop && !options.ScaleUp) scale = Math.Min(1d, scale);
             int resizedWidth = Math.Max(1, Math.Min(options.ModelSize.Width, Round(sourceWidth * scale, options.LetterboxRounding)));
             int resizedHeight = Math.Max(1, Math.Min(options.ModelSize.Height, Round(sourceHeight * scale, options.LetterboxRounding)));
             if (centerCrop)
             {
-                resizedWidth = Math.Max(options.ModelSize.Width, Round(sourceWidth * scale, options.LetterboxRounding));
-                resizedHeight = Math.Max(options.ModelSize.Height, Round(sourceHeight * scale, options.LetterboxRounding));
+                var rounding = options.ResizeMode == OpenCvResizeMode.ShortestEdgeCenterCrop && !options.ShortestEdgeResize.HasValue ? OpenCvLetterboxRounding.Floor : options.LetterboxRounding;
+                resizedWidth = Math.Max(options.ModelSize.Width, Round(sourceWidth * scale, rounding));
+                resizedHeight = Math.Max(options.ModelSize.Height, Round(sourceHeight * scale, rounding));
             }
             bool bottomRight = options.ResizeMode == OpenCvResizeMode.LongestSidePadBottomRight;
             int left = bottomRight ? 0 : (options.ModelSize.Width - resizedWidth) / 2;

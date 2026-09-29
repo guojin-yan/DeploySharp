@@ -16,7 +16,7 @@ using JYPPX.DeploySharp.ModelPack.Json;
 
 namespace JYPPX.DeploySharp.ModelFactory
 {
-    /// <summary>Implements catalog selection, versioned Release downloads, content-addressed caching, and offline reuse. / 实现目录选择、版本化 Release 下载、内容寻址缓存和离线复用。</summary>
+    /// <summary>Implements catalog selection, pinned upstream or Release downloads, content-addressed caching, and offline reuse. / 实现目录选择、固定上游或 Release 下载、内容寻址缓存和离线复用。</summary>
     public sealed class ModelFactoryClient : IModelFactory
     {
         private const string RootMarker = ".deploysharp-model-factory-root";
@@ -429,7 +429,7 @@ namespace JYPPX.DeploySharp.ModelFactory
                     {
                         Uri? redirectUri = ResolveRedirectUri(requestUri, response.Headers.Location);
                         response.Dispose();
-                        if (followedTrustedRedirect || redirectUri == null || !IsTrustedGitHubReleaseRedirect(origin, redirectUri)) ThrowHttp("Only one HTTPS redirect from a GitHub Release asset to release-assets.githubusercontent.com is allowed.", asset, modelId, artifactId, response.StatusCode);
+                        if (followedTrustedRedirect || redirectUri == null || !IsTrustedAssetRedirect(origin, redirectUri)) ThrowHttp("Only one HTTPS redirect from an allowlisted official asset to its trusted CDN is allowed.", asset, modelId, artifactId, response.StatusCode);
                         requestUri = redirectUri!;
                         followedTrustedRedirect = true;
                         continue;
@@ -650,11 +650,19 @@ namespace JYPPX.DeploySharp.ModelFactory
             return location.IsAbsoluteUri ? location : new Uri(requestUri, location);
         }
 
-        private static bool IsTrustedGitHubReleaseRedirect(Uri origin, Uri redirectUri)
+        private static bool IsTrustedAssetRedirect(Uri origin, Uri redirectUri)
         {
             if (!string.Equals(origin.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(origin.Host, "github.com", StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(redirectUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(redirectUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)) return false;
+
+            if (string.Equals(origin.Host, "huggingface.co", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Equals(redirectUri.Host, "cdn-lfs.huggingface.co", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(redirectUri.Host, "cas-bridge.xethub.hf.co", StringComparison.OrdinalIgnoreCase)
+                    || redirectUri.Host.EndsWith(".cdn.hf.co", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (!string.Equals(origin.Host, "github.com", StringComparison.OrdinalIgnoreCase)
                 || !string.Equals(redirectUri.Host, "release-assets.githubusercontent.com", StringComparison.OrdinalIgnoreCase)) return false;
 
             string[] segments = origin.AbsolutePath.Trim('/').Split('/');
