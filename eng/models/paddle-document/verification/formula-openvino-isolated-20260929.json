@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "deploysharp-paddle-formula-openvino-isolated-v1",
+  "generatedUtc": "2026-09-29T08:22:14.5865079Z",
+  "backend": "OpenVINO CPU",
+  "runtime": "OpenVINO C# API 3.3.1 / runtime 2026.2.1 / Windows x64 / .NET 10",
+  "image": "general_formula_rec_001.png",
+  "imageSha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+  "isolation": "Each model ran in a separate dotnet test process so native crashes could not hide other model statuses.",
+  "results": [
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-s",
+      "modelSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "status": "unsupported",
+      "failureClass": "managed-importer-failure",
+      "operation": "Loop-18",
+      "error": "OpenVINO ONNX frontend canonical_inputs/control_inputs loop-carried dependency check failed."
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-m",
+      "modelSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "status": "unsupported",
+      "failureClass": "managed-importer-failure",
+      "operation": "Loop-18",
+      "error": "OpenVINO ONNX frontend canonical_inputs/control_inputs loop-carried dependency check failed."
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-l",
+      "modelSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "status": "unsupported",
+      "failureClass": "managed-importer-failure",
+      "operation": "Loop-18",
+      "error": "OpenVINO ONNX frontend canonical_inputs/control_inputs loop-carried dependency check failed."
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-s",
+      "modelSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "status": "unsupported",
+      "failureClass": "managed-importer-failure",
+      "operation": "Loop-18",
+      "error": "OpenVINO ONNX frontend canonical_inputs/control_inputs loop-carried dependency check failed."
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-l",
+      "modelSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "status": "unsupported",
+      "failureClass": "managed-importer-failure",
+      "operation": "Loop-18",
+      "error": "OpenVINO ONNX frontend canonical_inputs/control_inputs loop-carried dependency check failed."
+    },
+    {
+      "modelId": "paddle-formula/unimernet",
+      "modelSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "status": "unsupported",
+      "failureClass": "native-crash",
+      "operation": "ov_core_read_model_utf8",
+      "exitCode": "0xC0000005",
+      "error": "OpenVINO native importer access violation while reading the ONNX graph."
+    }
+  ],
+  "boundary": "All six formula artifacts were attempted in isolated processes. These are backend admission failures, not formula accuracy results; the ORT CPU semantic evidence remains separate."
+}

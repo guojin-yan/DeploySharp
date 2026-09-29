@@ -83,7 +83,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
 | 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | △ | △ | △ |
-| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | △ | △ | △ |
+| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | △ |
 | 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
 | 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | △ | ✓¶ |
@@ -117,16 +117,16 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | △ | △ |
 | `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | △ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | △ |
-| `paddle-formula/pp-formulanet-plus-m` | ✓ | △ | △ | △ |
-| `paddle-formula/pp-formulanet-plus-l` | ✓ | △ | △ | △ |
-| `paddle-formula/pp-formulanet-s` | ✓ | △ | △ | △ |
-| `paddle-formula/pp-formulanet-l` | ✓ | △ | △ | △ |
-| `paddle-formula/unimernet` | ✓ | △ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | △ |
+| `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | △ | △ |
+| `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | △ | △ |
+| `paddle-formula/unimernet` | ✓ | ✗¹ | △ | △ |
 | `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | △ | ✓ |
 | `paddle-seal/ppocrv4-server` | ✓ | ✓ | △ | ✓ |
 | `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
 
-¹ `pp-formulanet-plus-s` 的 OpenVINO 首次加载已在 `ov_core_read_model_utf8` 发生 native access violation，因此这个精确组合标记为 `✗`；其余公式工件尚未继续尝试，公式模型族聚合状态仍保持 `△`。详见 [`formula-openvino-blocker-20260929.md`](../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)。
+¹ 六个公式工件已经通过隔离进程逐项尝试，当前 OpenVINO 组合全部不支持：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash。逐项 SHA、退出分类和错误摘要见 [`formula-openvino-isolated-20260929.json`](../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。这表示当前精确后端准入失败，不代表公式识别准确率。
 
 ### PP-Chart2Table 四图生成 Bundle 验证
 

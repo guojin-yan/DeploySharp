@@ -1,6 +1,6 @@
 # FormulaNet / UniMERNet OpenVINO blocker (2026-09-29)
 
-An external OpenVINO CPU probe was attempted against the six locally acquired formula exports using the official formula image and tokenizer setup. The probe was intentionally stopped after the first native crash.
+An external OpenVINO CPU probe was first attempted against the six locally acquired formula exports using the official formula image and tokenizer setup. The initial single-process probe stopped after a native crash; a follow-up isolated matrix ran each model in its own process. The complete per-model result is in [`formula-openvino-isolated-20260929.json`](formula-openvino-isolated-20260929.json).
 
 ## Observed boundary
 
@@ -11,6 +11,6 @@ An external OpenVINO CPU probe was attempted against the six locally acquired fo
 - Failure phase: `ov_core_read_model_utf8` while loading the ONNX graph, before session creation or inference.
 - Process result: native access violation `0xC0000005`; the test host terminated, so managed exception handling cannot convert this into a normal per-model failure row.
 
-The remaining five formula artifacts were not attempted in this run because continuing after a native importer crash would make the result unsafe and ambiguous. The model/backend matrix therefore keeps the aggregate formula OpenVINO cell as `△` (not all six artifacts have been attempted), while the precise `pp-formulanet-plus-s` + OpenVINO combination is recorded as a current native importer/runtime blocker pending an isolated repro or a compatible graph.
+The isolated follow-up attempted all six artifacts. Plus-S/M/L and FormulaNet-S/L all fail during the same OpenVINO `Loop-18` importer check; UniMERNet reaches the native `ov_core_read_model_utf8` access violation. The exact matrix rows are therefore marked `✗` for this OpenVINO runtime. This is a backend admission result, not a formula accuracy result.
 
 The existing ORT CPU evidence for all six models remains valid. This probe does not change the ORT result or claim formula accuracy.
