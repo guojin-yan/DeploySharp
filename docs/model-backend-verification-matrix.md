@@ -116,7 +116,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | △ | △ |
 | `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | △ | △ | △ |
-| `paddle-formula/pp-formulanet-plus-s` | ✓ | △¹ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-m` | ✓ | △ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-l` | ✓ | △ | △ | △ |
 | `paddle-formula/pp-formulanet-s` | ✓ | △ | △ | △ |
@@ -126,7 +126,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-seal/ppocrv4-server` | ✓ | ✓ | △ | ✓ |
 | `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
 
-¹ `pp-formulanet-plus-s` 的 OpenVINO 首次加载已在 `ov_core_read_model_utf8` 发生 native access violation；其余公式工件尚未继续尝试，因此聚合状态保持 `△`。详见 [`formula-openvino-blocker-20260929.md`](../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)。
+¹ `pp-formulanet-plus-s` 的 OpenVINO 首次加载已在 `ov_core_read_model_utf8` 发生 native access violation，因此这个精确组合标记为 `✗`；其余公式工件尚未继续尝试，公式模型族聚合状态仍保持 `△`。详见 [`formula-openvino-blocker-20260929.md`](../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)。
 
 ### PP-Chart2Table 四图生成 Bundle 验证
 
