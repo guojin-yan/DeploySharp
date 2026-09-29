@@ -88,6 +88,8 @@ The same 24-page HierText long-text selection has now been run with PP-OCRv6 Sma
 
 The matching [v6 Small ORT/OpenVINO parity record](verification/hiertext-v6-small-ort-openvino-sliding-parity-20260929.md) repeats those 24 pages with OpenVINO CPU. All page-level text sequences and quality counts match ORT; the record is CPU backend parity for this exact selection, not numeric tensor equality, GPU parity or a release accuracy score.
 
+The [v5 Mobile ORT Session-pool comparison](verification/paddleocr-v5-mobile-ort-session-pool-20260929.md) connects the concurrency contracts to a formal device run: two independently-created stage Sessions reduced total P50/P95 from `662.330/1130.299 ms` to `422.132/548.821 ms` on the same image, with an identical result contract SHA. It remains a one-device steady-state observation; long-running soak and cross-device scaling are still open.
+
 For investigating low IoU without changing the release metric, `Measure-HierTextGeometryCoverage.ps1` compares each labeled quadrilateral with the union of overlapping predictions. It can distinguish merged/over-expanded boxes from genuinely uncovered text, but its coverage counts are diagnostic only and must not be presented as detection recall.
 
 Dataset images, labels, predictions and per-image reports are not copied into this repository or a model Release. This local HierText selection is marked smoke-only until each image landing page and redistribution terms have been reviewed; it must not be presented as a leaderboard result. This is quality evidence, not a performance benchmark: each page had one measured iteration, so the recorded timings do not establish P50/P95 performance.
