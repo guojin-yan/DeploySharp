@@ -369,6 +369,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。UVDoc TensorRT 运行记录见 [`uvdoc-tensorrt11-20260924.json`](../../eng/models/paddle-document/verification/uvdoc-tensorrt11-20260924.json)。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
 
+当前 PP-Structure 31 个精确 artifact/backend 单元的 pass/unsupported/unverified 数量见[状态摘要](../../eng/models/paddle-document/verification/paddle-document-status-summary-20260929.md)；该摘要只汇总逐组合执行证据，不代表数据集级准确率或跨设备兼容性。
+
 ### Chart2Table 完整 Bundle 技术验证
 
 本次验证复用了 `E:\Model\PaddleDocument\source\pp-chart2table\PP-Chart2Table\model_state.pdparams` 和官方 `chart_parsing_02.png`，没有重新下载同一官方包。结论分为三个层次：
