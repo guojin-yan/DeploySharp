@@ -23,3 +23,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 ```
 
 The B2/B3 plan remains open for a larger, harder low-quality set, false-correction analysis and a cost/benefit threshold chosen from real labels.
+
+## Severe eight-page follow-up
+
+The same test was rerun on eight distinct SROIE receipt pages with severe settings (contrast weight `0.12`, Gaussian blur `9x9`, noise σ `35`, stronger shadow gradient and JPEG quality `15`). This produced 48 records per backend. ORT/OpenVINO decisions remained identical: 35 candidate executions, 22 `CandidateSelected`, 13 `InsufficientGain`, and 13 full-pipeline `no-detected-region` rows. For all 35 candidate rows, case-folded CER was `0%` before and after enhancement; selected rows also remained `0% → 0%`. The severe set therefore adds routing/cost evidence but still does not demonstrate an accuracy gain, and default enhancement remains disabled.

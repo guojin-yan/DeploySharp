@@ -43,6 +43,7 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
         string root = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DEGRADED_ROOT") ?? DefaultRoot);
         string manifestPath = Path.Combine(root, "data", "annotations", "manifests", "synthetic-degraded-ocr.jsonl");
         if (!File.Exists(manifestPath)) Assert.Inconclusive("Generate the controlled degraded crop case first: " + root);
+        int expectedRecordCount = File.ReadLines(manifestPath).Count(line => !string.IsNullOrWhiteSpace(line));
 
         string modelDirectory = Path.Combine(ModelRoot, "PP-OCRv6", "small");
         string detectorPath = Path.Combine(modelDirectory, "PP-OCRv6_small_det_inference.onnx");
@@ -194,7 +195,7 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
         }
         enhancementPipeline?.Dispose();
 
-        Assert.AreEqual(24, records.Count);
+        Assert.AreEqual(expectedRecordCount, records.Count);
         string evidencePath = Path.Combine(TestContext.TestResultsDirectory!, "paddleocr-degraded-" + backend + ".json");
         File.WriteAllText(evidencePath, JsonSerializer.Serialize(new
         {
@@ -206,6 +207,7 @@ public sealed class PaddleOcrSyntheticDegradedIntegrationTests
             recognizerSha256 = recognizerRelease.Sha256,
             dictionarySha256 = DictionarySha,
             manifestPath,
+            severity = File.ReadLines(manifestPath).Where(line => !string.IsNullOrWhiteSpace(line)).Select(line => JsonDocument.Parse(line).RootElement.GetProperty("severity").GetString()).Distinct().ToArray(),
             records
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(evidencePath);

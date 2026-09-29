@@ -14,26 +14,26 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def degrade(image: np.ndarray, condition: str, seed: int) -> np.ndarray:
+def degrade(image: np.ndarray, condition: str, seed: int, severity: str) -> np.ndarray:
     if condition == "normal":
         return image.copy()
     if condition == "low-contrast":
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         gray = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-        return cv2.addWeighted(image, 0.32, gray, 0.68, 0)
+        return cv2.addWeighted(image, 0.12 if severity == "severe" else 0.32, gray, 0.88 if severity == "severe" else 0.68, 0)
     if condition == "blur":
-        return cv2.GaussianBlur(image, (5, 5), 1.25)
+        return cv2.GaussianBlur(image, (9, 9) if severity == "severe" else (5, 5), 3.0 if severity == "severe" else 1.25)
     if condition == "noise":
         rng = np.random.default_rng(seed)
-        noise = rng.normal(0, 16, image.shape).astype(np.float32)
+        noise = rng.normal(0, 35 if severity == "severe" else 16, image.shape).astype(np.float32)
         return np.clip(image.astype(np.float32) + noise, 0, 255).astype(np.uint8)
     if condition == "shadow":
         height, width = image.shape[:2]
-        gradient = np.linspace(1.0, 0.48, max(1, width), dtype=np.float32)
+        gradient = np.linspace(1.0, 0.18 if severity == "severe" else 0.48, max(1, width), dtype=np.float32)
         mask = np.tile(gradient[None, :, None], (height, 1, 3))
         return np.clip(image.astype(np.float32) * mask, 0, 255).astype(np.uint8)
     if condition == "jpeg":
-        ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 35])
+        ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 15 if severity == "severe" else 35])
         if not ok:
             raise RuntimeError("JPEG encoding failed")
         decoded = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
@@ -46,37 +46,42 @@ def degrade(image: np.ndarray, condition: str, seed: int) -> np.ndarray:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset-root", type=Path, required=True)
-    parser.add_argument("--source-manifest", type=Path, required=True)
-    parser.add_argument("--crop-manifest", type=Path, required=True)
+    parser.add_argument("--source-manifest", type=Path, action="append", required=True)
+    parser.add_argument("--crop-manifest", type=Path, action="append", required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--max-crops", type=int, default=4)
+    parser.add_argument("--severity", choices=("mild", "severe"), default="mild")
     args = parser.parse_args()
     if args.max_crops < 1 or args.max_crops > 32:
         raise SystemExit("max-crops must be between 1 and 32")
 
     parent_rows = {}
-    for line in args.source_manifest.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        record = json.loads(line)
-        for instance in record.get("instances", []):
-            parent_rows[instance["instance_id"]] = (record, instance)
+    for source_manifest in args.source_manifest:
+        for line in source_manifest.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            for instance in record.get("instances", []):
+                parent_rows[instance["instance_id"]] = (record, instance)
 
     selected = []
     selected_parent_ids: set[str] = set()
-    for line in args.crop_manifest.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        crop = json.loads(line)
-        parent = parent_rows.get(crop.get("parent_instance_id"))
-        if parent is None:
-            continue
-        if parent[0]["image_id"] in selected_parent_ids:
-            continue
-        text = parent[1].get("text") or ""
-        if 8 <= len(text) <= 32 and crop.get("quality_check") != "invalid":
-            selected.append((crop, parent[0], parent[1]))
-            selected_parent_ids.add(parent[0]["image_id"])
+    for crop_manifest in args.crop_manifest:
+        for line in crop_manifest.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            crop = json.loads(line)
+            parent = parent_rows.get(crop.get("parent_instance_id"))
+            if parent is None:
+                continue
+            if parent[0]["image_id"] in selected_parent_ids:
+                continue
+            text = parent[1].get("text") or ""
+            if 8 <= len(text) <= 32 and crop.get("quality_check") != "invalid":
+                selected.append((crop, parent[0], parent[1]))
+                selected_parent_ids.add(parent[0]["image_id"])
+            if len(selected) >= args.max_crops:
+                break
         if len(selected) >= args.max_crops:
             break
     if len(selected) < args.max_crops:
@@ -96,7 +101,7 @@ def main() -> None:
             raise SystemExit(f"unable to read source crop: {source_path}")
         source_sha = digest(source_path)
         for condition_index, condition in enumerate(conditions):
-            output = degrade(image, condition, 20260929 + source_index * 100 + condition_index)
+            output = degrade(image, condition, 20260929 + source_index * 100 + condition_index, args.severity)
             relative = Path("data/images/degraded") / f"{source_index:02d}-{condition}.png"
             output_path = root / relative
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -118,6 +123,7 @@ def main() -> None:
                     "source_crop_sha256": source_sha,
                     "source_text": instance["text"],
                     "condition": condition,
+                    "severity": args.severity,
                     "condition_seed": 20260929 + source_index * 100 + condition_index,
                     "image_sha256": digest(output_path),
                     "benchmark_eligibility": "controlled_degradation_smoke_only",
