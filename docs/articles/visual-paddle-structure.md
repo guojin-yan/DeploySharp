@@ -15,7 +15,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO 目前仅 wired 有通过证据 |
 | 表格结构识别 | `SLANeXt_wired/wireless` | `VisualTaskId.TableStructureRecognition`、表格标记和单元格结果 | wired/wireless 均已完成 ORT CPU 双输出序列/八点框 Decoder smoke；原始 Release 图在 OpenVINO 当前版本不支持（`Loop` importer），仅派生 alpha-renamed 图通过逐元素和 Decoder 对齐 |
 | 公式识别 | `PP-FormulaNet_plus-*`、`UniMERNet` | `VisualTaskId.FormulaRecognition`、LaTeX/序列结果 | 6 个可转换公式工件均已在真实 ORT CPU 推理后使用官方 `inference.yml` BPE tokenizer 完成语义 LaTeX 解码；token-piece fallback 保留给旧目标框架 |
-| 印章文本检测 | `PP-OCRv4_*_seal_det` | `VisualTaskId.SealTextDetection`、区域结果 | mobile/server 均已完成 ORT CPU + OpenVINO CPU 概率图连通区域 Decoder smoke；mobile/server 另有 TensorRT 11 输入/掩码/Decoder 一致性实测（server 已显式关闭 TF32）；弧形文本 OCR 组合仍待补 |
+| 印章文本检测 | `PP-OCRv4_*_seal_det` | `VisualTaskId.SealTextDetection`、区域结果 | mobile/server 均已完成 ORT CPU + OpenVINO CPU 概率图连通区域 Decoder smoke；mobile/server 另有 TensorRT 11 输入/掩码/Decoder 一致性实测（server 已显式关闭 TF32）；弧形文本明确不支持，需调用方先展开后再提交识别器-only |
 | 图表解析 | `PP-Chart2Table` | `PaddleChart2TableOnnxSession`、`PaddleChart2TableTensorRtDeviceSession`、`PaddleChart2TableGenerationResult` | 四图 greedy 生成已接入；四张 ONNX 图和 tokenizer 作为 `paddle-chart/pp-chart2table` Bundle 发布在 `models-paddleocr`；ORT CPU、OpenVINO CPU、TensorRT CUDA 已完成官方样例 EOS 证据，ChartQA 样本扩展验证见下文 |
 
 ## 获取官方模型并转换为 ONNX
@@ -337,7 +337,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
 ```
 
-公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 对公式 OpenVINO CPU 的首个精确工件在 `ov_core_read_model_utf8` 阶段触发 native access violation，详情见 [`formula-openvino-blocker-20260929.md`](../../eng/models/paddle-document/verification/formula-openvino-blocker-20260929.md)；聚合矩阵仍保持 `△`，没有把单个工件阻断外推到全部公式模型。
+公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 隔离矩阵已逐项尝试六个公式 OpenVINO 工件：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash；详细结果见 [`formula-openvino-isolated-20260929.json`](../../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。
 
 `PaddleDocumentFormulaSealPipelineIntegrationTests` 已验证这两类结果可以挂入页面 Pipeline：公式使用 `PP-FormulaNet_plus-S` 和官方公式图片，输出带页码/输入 SHA 的 LaTeX；印章使用 PP-OCRv4 mobile seal 模型和 `demo_1.jpg`，输出带页码/输入 SHA 的掩码尺寸及区域。测试入口：
 
