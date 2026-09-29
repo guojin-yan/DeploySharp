@@ -693,6 +693,12 @@ namespace JYPPX.DeploySharp.Visual
         public int TargetWidth { get; }
         /// <summary>Gets target height. / 获取目标高度。</summary>
         public int TargetHeight { get; }
+
+        /// <summary>Creates an equivalent request padded to an explicit tensor width so heterogeneous crops can share one batch. / 创建使用显式张量宽度填充的等价请求，使不同宽度的裁剪可以共享一个 Batch。</summary>
+        public TextCropRequest WithTargetWidth(int targetWidth)
+        {
+            return targetWidth == TargetWidth ? this : new TextCropRequest(Region, Profile, targetWidth);
+        }
     }
 
     /// <summary>Provides source dimensions and image-library-specific recognition crops without leaking vendor types. / 提供源尺寸和图像库特定识别裁剪，同时不泄漏 vendor 类型。</summary>
