@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v1",
+  "generatedUtc": "2026-09-29T00:00:00Z",
+  "documents": [
+    "docs/articles/visual-ocr.md",
+    "docs/articles/visual-paddle-structure.md",
+    "eng/models/paddle-ocr/README.md",
+    "eng/models/paddle-document/README.md",
+    "docs/model-backend-verification-matrix.md"
+  ],
+  "localMarkdownLinksChecked": 60,
+  "brokenLocalMarkdownLinks": 0,
+  "gitDiffCheck": "pass",
+  "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."
+}
