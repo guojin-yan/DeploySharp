@@ -114,6 +114,7 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
             wordErrorRate = metrics.WordErrorRate,
             expectedTextSha256 = Sha256(expected),
             recognizedTextSha256 = Sha256(result.Recognition.Text),
+            recognizedText = result.Recognition.Text,
             boundary = "Controlled synthetic contract sample; not a public dataset accuracy result."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(evidencePath);
