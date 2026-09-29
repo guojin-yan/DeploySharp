@@ -348,7 +348,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentFormulaSealPipelineIntegrationTests
 ```
 
-公式案例校验 `\\frac` 和 token 输出，印章案例校验 mask 尺寸；两者仍属于官方代表样本执行合同，不等同于公式识别或印章检测数据集精度。
+公式案例校验 `\\frac` 和 token 输出，印章案例校验 mask 尺寸；两者仍属于官方代表样本执行合同，不等同于公式识别或印章检测数据集精度。另有 Plus-S 五种受控公式图变体回归：原图/白边/对比度/轻模糊归一化 LaTeX 精确一致，JPEG q45 出现两个符号替换；证据见 [`formula-plus-s-variants-20260929.md`](../../eng/models/paddle-document/verification/formula-plus-s-variants-20260929.md)。
 
 印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。`FormulaModelsAndSealModelsProduceMachineReadableOrtEvidence` 进一步将六个公式模型和 mobile/server 两个印章模型的结果写入测试 JSON，记录模型/图片 SHA、token/LaTeX、mask 尺寸和区域数。公式当前有六个模型在官方公式样本上完成 token/LaTeX 语义回归，仍缺多公式人工真值集。
 
