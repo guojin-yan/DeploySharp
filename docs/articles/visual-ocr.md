@@ -767,7 +767,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。
 - **已知角度**：4 个不同 SROIE receipt 页的真实标注 crop 旋转到 8 个已知角度；0° case-folded CER/WER `0%/0%`，±12° 明显退化，±90° 全空输出，180° 仍有误差。该结果用于验证方向校正边界，不代表自然旋转分布成绩。详见 [SROIE 已知角度记录](../../eng/models/paddle-ocr/verification/sroie-known-angle-a3-20260929.md)。
 - **退化 smoke**：4 个不同 SROIE 页的真实 crop 生成 6 种退化，ORT/OpenVINO 各 24/24 通过；case-folded CER/WER 均为 `0%/0%`，说明退化强度不足以评估增强收益。详见 [B1b 记录](../../eng/models/paddle-ocr/verification/synthetic-degraded-b1b-20260929.md)。
-- **真实文档阅读顺序**：FUNSD 一页 smoke 的预测文本行与词级标注匹配阅读顺序 pair accuracy `83.64%` 但非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-20260929.md)。
+- **真实文档阅读顺序**：FUNSD 三页 smoke 的预测文本行与词级标注 aggregate reading-order pair accuracy `70.92%`，三页均非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 三页边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-3pages-20260929.md)。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。
