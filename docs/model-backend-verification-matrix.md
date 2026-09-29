@@ -130,7 +130,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 ¹ 六个公式工件已经通过隔离进程逐项尝试，当前 OpenVINO 组合全部不支持：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash。逐项 SHA、退出分类和错误摘要见 [`formula-openvino-isolated-20260929.json`](../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。这表示当前精确后端准入失败，不代表公式识别准确率。
 
-Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。因此完整 OpenCV 自回归仍保持 `△`，不是四图 Bundle 的完整支持；详细记录见 [`chart2table-opencv-isolated-20260929.json`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
+Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。该边界对应当前 JYPPX OpenCV C# `Mat` bridge 只暴露二维辅助分配/reshape，已由 fail-closed 合同测试固定。因此完整 OpenCV 自回归仍保持 `△`，不是四图 Bundle 的完整支持；详细记录见 [`chart2table-opencv-isolated-20260929.json`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
 
 ### PP-Chart2Table 四图生成 Bundle 验证
 
