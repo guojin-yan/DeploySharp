@@ -337,7 +337,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
 ```
 
-公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 隔离矩阵已逐项尝试六个公式 OpenVINO 工件：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash；详细结果见 [`formula-openvino-isolated-20260929.json`](../../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。
+公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 隔离矩阵已逐项尝试六个公式 OpenVINO 工件：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash；六个精确组合均标记为当前 OpenVINO 不支持，详细结果见 [`formula-openvino-isolated-20260929.json`](../../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。
 
 `PaddleDocumentFormulaSealPipelineIntegrationTests` 已验证这两类结果可以挂入页面 Pipeline：公式使用 `PP-FormulaNet_plus-S` 和官方公式图片，输出带页码/输入 SHA 的 LaTeX；印章使用 PP-OCRv4 mobile seal 模型和 `demo_1.jpg`，输出带页码/输入 SHA 的掩码尺寸及区域。测试入口：
 
