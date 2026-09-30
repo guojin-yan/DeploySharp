@@ -66,6 +66,111 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
         Assert.AreEqual(5, rows.Count);
     }
 
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void SixFormulaModelsRecordMultiVariantQualityEvidence()
+    {
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_VARIANTS") != "1") Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_FORMULA_VARIANTS=1 to run formula variants.");
+        string root = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_VARIANT_ROOT") ?? DefaultRoot);
+        string manifest = Path.Combine(root, "data", "annotations", "manifests", "formula-variants.jsonl");
+        if (!File.Exists(manifest)) Assert.Inconclusive("Formula variant manifest is missing: " + manifest);
+        var cases = new[]
+        {
+            (Model: "pp-formulanet-plus-s", Source: "PP-FormulaNet_plus-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-m", Source: "PP-FormulaNet_plus-M_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-l", Source: "PP-FormulaNet_plus-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "pp-formulanet-s", Source: "PP-FormulaNet-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-l", Source: "PP-FormulaNet-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "unimernet", Source: "UniMERNet_infer", Size: new VisualSize(672, 192))
+        };
+        string expectedNormalized = string.Concat(Expected.Where(value => !char.IsWhiteSpace(value)));
+        var rows = new List<object>(cases.Length * 5);
+        using var registry = new BackendRegistry();
+        registry.UseOnnxRuntime();
+        var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        var factory = new OpenCvVisualInputFactory();
+        foreach (var formulaCase in cases)
+        {
+            string modelPath = Path.Combine(ModelRoot, formulaCase.Model + ".onnx");
+            string yaml = Path.Combine(SourceRoot, formulaCase.Model, formulaCase.Source, "inference.yml");
+            if (!File.Exists(modelPath) || !File.Exists(yaml))
+            {
+                Assert.Fail("Formula variant assets are incomplete for " + formulaCase.Model + ".");
+            }
+
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(yaml);
+            int end = Find(tokenizer.Tokens, "</s>");
+            int start = Find(tokenizer.Tokens, "<s>");
+            int pad = Find(tokenizer.Tokens, "<pad>");
+            int unk = Find(tokenizer.Tokens, "<unk>");
+            Assert.IsTrue(end >= 0, "The official tokenizer must expose </s>: " + yaml);
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/" + formulaCase.Model);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(
+                descriptor,
+                new PaddleDocumentFormulaSchema(tokenizer, end, start, pad, unk),
+                modelSize: formulaCase.Size,
+                maximumSequenceLength: 4096);
+            using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), request);
+
+            foreach (string line in File.ReadLines(manifest))
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                using JsonDocument item = JsonDocument.Parse(line);
+                string variant = item.RootElement.GetProperty("variant").GetString()!;
+                string image = Path.Combine(root, item.RootElement.GetProperty("image_relpath").GetString()!.Replace('/', Path.DirectorySeparatorChar));
+                string manifestImageSha = item.RootElement.GetProperty("image_sha256").GetString()!;
+                Assert.IsTrue(File.Exists(image), "Formula variant image is missing: " + image);
+                string imageSha = FileSha(image);
+                Assert.AreEqual(manifestImageSha, imageSha, "Formula variant image SHA drifted: " + variant);
+                using PreparedVisualInput input = factory.CreateFromFile(image, profile.VisualProfile, inputId: variant);
+                InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                PaddleDocumentFormulaResult result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+                string normalizedActual = string.Concat(result.Latex.Where(value => !char.IsWhiteSpace(value)));
+                // The formula decoder removes EOS from the public token sequence;
+                // the warning is the stable contract used by the six-model audit.
+                bool reachedEos = !result.Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal);
+                rows.Add(new
+                {
+                    model = formulaCase.Model,
+                    variant,
+                    imageSha256 = imageSha,
+                    modelSha256 = FileSha(modelPath),
+                    tokenizerSha256 = FileSha(yaml),
+                    tokenCount = result.TokenIds.Count,
+                    tokenIdsSha256 = FileShaText(string.Join(",", result.TokenIds)),
+                    latexLength = result.Latex.Length,
+                    latexSha256 = FileShaText(result.Latex),
+                    reachedEndOfSequence = reachedEos,
+                    explicitEosTokenRetained = result.TokenIds.Contains(end),
+                    normalizedReferenceMatch = string.Equals(expectedNormalized, normalizedActual, StringComparison.Ordinal),
+                    warnings = result.Warnings.ToArray(),
+                    latex = result.Latex
+                });
+                Assert.IsTrue(result.TokenIds.Count > 0, formulaCase.Model + "/" + variant + " returned no formula tokens.");
+                Assert.IsTrue(reachedEos, formulaCase.Model + "/" + variant + " reported a truncated sequence.");
+            }
+        }
+
+        string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_VARIANT_REPORT_PATH")
+            ?? Path.Combine(TestContext.TestResultsDirectory!, "formula-six-models-variants.json");
+        string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+        if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+        File.WriteAllText(report, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            generatedAtUtc = DateTimeOffset.UtcNow,
+            backend = "onnxruntime-cpu",
+            sourceImage = "general_formula_rec_001.png",
+            modelCount = cases.Length,
+            variantCount = 5,
+            results = rows,
+            boundary = "Six formula models across five controlled variants of one official formula image; the normalized reference match is a controlled regression, not a formula dataset accuracy score or natural-image robustness claim."
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        TestContext.AddResultFile(report);
+        Assert.AreEqual(cases.Length * 5, rows.Count, "The six-model variant report must retain one row per model and variant.");
+    }
+
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+    private static string FileShaText(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 }
