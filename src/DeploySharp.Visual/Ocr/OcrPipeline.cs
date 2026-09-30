@@ -231,6 +231,54 @@ namespace JYPPX.DeploySharp.Visual
             return ExecuteAsync(input, orientation, options ?? OcrExecutionOptions.Default, cancellationToken);
         }
 
+        /// <summary>Overlaps bounded OCR-input preparation with independent frame inference and returns results in input order. / 将有界 OCR 输入准备与独立帧推理重叠，并按输入顺序返回结果。</summary>
+        /// <remarks>The callback runs on the thread pool. Returned inputs are transient and are disposed by this method after each execution, including cancellation and failure. This is a frame-pipeline overlap API, not a model-batch API; use the underlying visual pipeline's <c>RunManyAsync</c> or a model-specific batch profile for true tensor batches. / 回调在线程池执行。本方法把回调返回的输入视为临时对象，在每次执行结束、取消或失败时释放。这是连续帧流水线重叠接口，不是模型 Batch 接口；真正的张量 Batch 应在底层 Visual 阶段使用 RunManyAsync 或模型专用的 Batch Profile。</remarks>
+        public Task<IReadOnlyList<OcrResult>> RunPrefetchedAsync<TInput>(
+            IReadOnlyList<TInput> inputs,
+            Func<TInput, CancellationToken, IOcrImageInput> prepare,
+            int prefetch = 1,
+            OcrExecutionOptions? options = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+            if (prepare == null) throw new ArgumentNullException(nameof(prepare));
+            if (prefetch <= 0) throw new ArgumentOutOfRangeException(nameof(prefetch));
+            return RunPrefetchedCoreAsync(
+                inputs,
+                (value, token) => Task.Factory.StartNew(
+                    () => prepare(value, token),
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default),
+                prefetch,
+                options,
+                cancellationToken);
+        }
+
+        /// <summary>Overlaps asynchronous OCR-input preparation with independent frame inference and returns results in input order. / 将异步 OCR 输入准备与独立帧推理重叠，并按输入顺序返回结果。</summary>
+        /// <remarks>The asynchronous callback is started on the thread pool and receives the shared cancellation token. Returned inputs are transient and are disposed by this method after each execution. This does not combine frames into a model batch. / 异步回调在线程池启动并接收共享取消令牌。本方法把回调返回的输入视为临时对象，在每次执行结束后释放；它不会把多帧合并为模型 Batch。</remarks>
+        public Task<IReadOnlyList<OcrResult>> RunPrefetchedAsync<TInput>(
+            IReadOnlyList<TInput> inputs,
+            Func<TInput, CancellationToken, Task<IOcrImageInput>> prepareAsync,
+            int prefetch = 1,
+            OcrExecutionOptions? options = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+            if (prepareAsync == null) throw new ArgumentNullException(nameof(prepareAsync));
+            if (prefetch <= 0) throw new ArgumentOutOfRangeException(nameof(prefetch));
+            return RunPrefetchedCoreAsync(
+                inputs,
+                (value, token) => Task.Factory.StartNew(
+                    () => prepareAsync(value, token),
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default).Unwrap(),
+                prefetch,
+                options,
+                cancellationToken);
+        }
+
         /// <summary>Runs only the recognizer on caller-provided text regions, reusing the same crop/session pool without detector execution. / 仅对调用方提供的文本区域运行识别，复用同一裁剪和 Session 池且不执行检测器。</summary>
         public Task<IReadOnlyList<OcrRegionResult>> RecognizeOnlyAsync(IOcrRecognitionImageInput input, IReadOnlyList<TextRegion> regions, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -308,6 +356,73 @@ namespace JYPPX.DeploySharp.Visual
                 return output.AsReadOnly();
             }
             finally { if (entered) _operationGate.Release(); }
+        }
+
+        private async Task<IReadOnlyList<OcrResult>> RunPrefetchedCoreAsync<TInput>(
+            IReadOnlyList<TInput> inputs,
+            Func<TInput, CancellationToken, Task<IOcrImageInput>> prepareAsync,
+            int prefetch,
+            OcrExecutionOptions? options,
+            CancellationToken cancellationToken)
+        {
+            EnsureUsable();
+            if (inputs.Count == 0) return Array.Empty<OcrResult>();
+
+            OcrExecutionOptions effective = options ?? OcrExecutionOptions.Default;
+            // Prefetched inputs are owned by this method for the duration of one
+            // frame. Preserve diagnostics while forcing cleanup on every outcome.
+            // The wrapper owns callback-created inputs and disposes them in its
+            // own finally block. This avoids relying on input Dispose idempotency
+            // and keeps exactly-once ownership explicit.
+            OcrExecutionOptions runOptions = new OcrExecutionOptions(effective.Timeout, disposeInputOnCompletion: false, effective.CorrelationId);
+            if (effective.PixelQuality != null) runOptions = runOptions.WithPixelQuality(effective.PixelQuality);
+
+            int capacity = checked(_options.MaximumConcurrency + prefetch);
+            var pending = new Queue<Task<OcrResult>>(Math.Min(capacity, inputs.Count));
+            var results = new OcrResult[inputs.Count];
+            int next = 0;
+            try
+            {
+                while (next < inputs.Count && pending.Count < capacity)
+                {
+                    pending.Enqueue(PrepareAndExecutePrefetchedAsync(inputs[next], prepareAsync, runOptions, cancellationToken));
+                    next++;
+                }
+
+                int completed = 0;
+                while (pending.Count > 0)
+                {
+                    results[completed++] = await pending.Dequeue().ConfigureAwait(false);
+                    if (next < inputs.Count)
+                    {
+                        pending.Enqueue(PrepareAndExecutePrefetchedAsync(inputs[next], prepareAsync, runOptions, cancellationToken));
+                        next++;
+                    }
+                }
+                return Array.AsReadOnly(results);
+            }
+            catch
+            {
+                // Observe all started tasks so a late preparation cannot retain a
+                // decoded image after cancellation or a failed frame.
+                while (pending.Count > 0)
+                {
+                    try { await pending.Dequeue().ConfigureAwait(false); } catch { }
+                }
+                throw;
+            }
+        }
+
+        private async Task<OcrResult> PrepareAndExecutePrefetchedAsync<TInput>(
+            TInput value,
+            Func<TInput, CancellationToken, Task<IOcrImageInput>> prepareAsync,
+            OcrExecutionOptions options,
+            CancellationToken cancellationToken)
+        {
+            IOcrImageInput? input = await prepareAsync(value, cancellationToken).ConfigureAwait(false);
+            if (input == null) throw new ArgumentException("The OCR prefetch callback returned null.", nameof(prepareAsync));
+            try { return await ExecuteAsync(input, null, options, cancellationToken).ConfigureAwait(false); }
+            finally { input.Dispose(); }
         }
 
         /// <inheritdoc />

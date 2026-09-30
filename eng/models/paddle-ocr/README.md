@@ -84,6 +84,8 @@ The [dynamic REC batch record](verification/paddleocr-v5-recognition-dynamic-bat
 
 The selected v5 Mobile/Server component and pipeline goldens have a separate [ORT/OpenVINO golden parity record](verification/paddleocr-ort-openvino-golden-parity-20260928.md). It records the four passing external-model contract tests, fixed tensor/image hashes, exact recognition tokens and backend-specific scope limits; it is not a replacement for the public dataset evaluation or the unfinished OpenCV DNN/TensorRT matrix.
 
+For video and camera callers, `OcrPipeline.RunPrefetchedAsync` overlaps bounded next-frame input preparation with independent frame inference and returns results in source order. Callback-created inputs are owned and released by the method on success, cancellation or failure. This is frame-level pipeline overlap, not a true model batch; the full contract and example are in [visual-ocr.md](../../docs/articles/visual-ocr.md#连续帧异步预取).
+
 The same 24-page HierText long-text selection has now been run with PP-OCRv6 Small and SlidingWindow. The [v6 Small cross-check](verification/hiertext-v6-small-public-ocr-20260929.md) records 24/24 completed pages, detection TP/FP/FN `436/377/584`, matched CER `12.10%`, end-to-end CER `73.65%`, and the ≥128-character bucket `100/520` edits. It remains smoke-only and contains no line over 3,200 characters.
 
 The matching [v6 Small ORT/OpenVINO parity record](verification/hiertext-v6-small-ort-openvino-sliding-parity-20260929.md) repeats those 24 pages with OpenVINO CPU. All page-level text sequences and quality counts match ORT; the record is CPU backend parity for this exact selection, not numeric tensor equality, GPU parity or a release accuracy score.

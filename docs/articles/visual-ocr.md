@@ -69,6 +69,26 @@ foreach (OcrRegionResult region in result.Regions)
 
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
+### 连续帧异步预取
+
+视频或摄像头场景可以把下一帧的解码、缩放和输入张量准备，与当前帧的 OCR 推理重叠。`OcrPipeline.RunPrefetchedAsync` 接收输入描述和一个准备回调，按输入顺序返回 `OcrResult`；`prefetch` 控制最多提前保留的准备任务数量，`OcrPipelineOptions.MaximumConcurrency` 仍限制同时进入 OCR 执行阶段的帧数。
+
+```csharp
+IReadOnlyList<OcrResult> frames = await ocr.RunPrefetchedAsync(
+    framePaths,
+    async (path, token) =>
+    {
+        token.ThrowIfCancellationRequested();
+        return new OpenCvOcrImageInputFactory()
+            .CreateFromFile(path, "images", detectorOptions);
+    },
+    prefetch: 2,
+    options: new OcrExecutionOptions(timeout: TimeSpan.FromSeconds(2)),
+    cancellationToken);
+```
+
+同步准备回调也有同名重载。回调创建的 `IOcrImageInput` 由该方法临时拥有，在成功、取消或异常后都会释放；回调返回的输入不应在调用完成前由其它线程释放。该接口只是**帧级流水线重叠**，不会把多帧拼成一个模型 Batch；需要真正的张量 Batch 时，应使用识别器的动态 batch 或底层 `VisualPipeline.RunManyAsync`。取消会停止后续准备并等待已启动任务观察结束，避免解码图像和 native Mat 留在后台。
+
 一个 ModelPack 可以同时携带检测和识别 ONNX，或对应的 OpenVINO IR XML/BIN，并通过 <code>deploysharp.ocr.*</code> 扩展键绑定 Profile、字符集和预处理版本。字符表的 blank、unknown、Unicode 顺序必须和 logits 导出一致。
 
 ## 可选源像素质量诊断

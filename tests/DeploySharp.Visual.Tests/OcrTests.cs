@@ -259,6 +259,64 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task PrefetchedFramesOverlapPreparationPreserveOrderAndDisposeInputs()
+        {
+            using OcrFixture fixture = CreateOcrFixture(maximumConcurrency: 2);
+            var created = new List<FakeOcrImageInput>();
+            int activePreparation = 0;
+            int maximumPreparation = 0;
+            IReadOnlyList<OcrResult> results = await fixture.Pipeline.RunPrefetchedAsync(
+                new[] { 0, 1, 2, 3 },
+                async (index, token) =>
+                {
+                    int active = Interlocked.Increment(ref activePreparation);
+                    while (true)
+                    {
+                        int observed = Volatile.Read(ref maximumPreparation);
+                        if (active <= observed || Interlocked.CompareExchange(ref maximumPreparation, active, observed) == observed) break;
+                    }
+                    try
+                    {
+                        await Task.Delay(15, token);
+                        token.ThrowIfCancellationRequested();
+                        var input = new FakeOcrImageInput();
+                        lock (created) created.Add(input);
+                        return (IOcrImageInput)input;
+                    }
+                    finally { Interlocked.Decrement(ref activePreparation); }
+                },
+                prefetch: 2);
+
+            Assert.AreEqual(4, results.Count);
+            Assert.IsTrue(results.All(result => result.Regions.Count == 2));
+            Assert.IsTrue(maximumPreparation >= 2, "The asynchronous preparation callback should overlap while frames are inferred.");
+            Assert.AreEqual(4, created.Count);
+            Assert.IsTrue(created.All(input => input.DisposeCount == 1), "Prefetched OCR inputs must be disposed exactly once after success.");
+        }
+
+        [TestMethod]
+        public async Task PrefetchedFramesDisposeAlreadyPreparedInputsWhenInferenceFails()
+        {
+            using OcrFixture fixture = CreateOcrFixture(maximumConcurrency: 2);
+            fixture.DetectionProvider.Failure = new InvalidOperationException("synthetic prefetched frame failure");
+            var created = new List<FakeOcrImageInput>();
+            OcrPipelineException failure = await Assert.ThrowsExactlyAsync<OcrPipelineException>(() => fixture.Pipeline.RunPrefetchedAsync(
+                new[] { 0, 1, 2 },
+                (index, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    var input = new FakeOcrImageInput();
+                    lock (created) created.Add(input);
+                    return (IOcrImageInput)input;
+                },
+                prefetch: 2));
+
+            Assert.AreEqual(VisualErrorCodes.OcrPipelineFailed, failure.ErrorCode);
+            Assert.AreEqual(3, created.Count);
+            Assert.IsTrue(created.All(input => input.DisposeCount == 1), "Prefetched OCR inputs must be disposed after a failed frame.");
+        }
+
+        [TestMethod]
         public async Task RecognitionOnlyUsesCallerRegionsWithoutRunningDetector()
         {
             using OcrFixture fixture = CreateOcrFixture();
