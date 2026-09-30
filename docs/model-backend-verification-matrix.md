@@ -82,7 +82,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | △ |
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
-| 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | △ |
+| 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‖ |
 | 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | △ |
 | 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
@@ -92,7 +92,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 上面的模型族表用于快速浏览，下面按目录中的每个精确资产列出当前证据。`△` 表示尚未完成该精确组合的真实执行，`✗` 表示已经尝试并确认当前组合阻断；派生 SLANeXt 兼容图使用独立的 compatibility ID，不等同于原始 Release 图。
 
-同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。OpenCV DNN 的 14 个 Paddle NMS 精确组合执行报告见 [`paddle-document-opencv-nms-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md)。
+同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。OpenCV DNN 的 14 个 Paddle NMS 精确组合执行报告见 [`paddle-document-opencv-nms-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md)；TensorRT 两个 RT-DETR 表格单元格工件的正式 5/50 证据见 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md)。
 
 | 精确资产 | ORT CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|
@@ -116,8 +116,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
-| `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | ✓ | △ |
-| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | △ |
+| `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
+| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
 | `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | △ |
@@ -161,10 +161,12 @@ TensorRT 设备为 RTX 3060 Laptop 6GB、TensorRT 10.11.0、CUDA 12.9、cuDNN 9.
 |---|---|---|---:|
 | `paddle-table/pp-lcnet-x1-0-table-cls` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；静态 `x=[1,3,224,224]`；Engine SHA `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes） | ORT `wired_table` / `0.844208`，TensorRT `wired_table` / `0.851693`，绝对分数差 `0.007485` ≤ `0.01` | P50 `1.212 ms` / P95 `1.331 ms` |
 | `paddle-doc/pp-doclayout-l` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；动态 `image`、`im_shape`、`scale_factor` profile；Engine SHA `c6acaedc9f3ed2996e012d1fd6b45c5eb061877d2ac3aa0f77bde34f65e9a0ba` | 300 个候选中 9 个 score ≥ 0.05；与 ORT CPU 的高置信度 score 误差 ≤ 0.01、源坐标误差 ≤ 1.5 px | P50 `19.414 ms` / P95 `25.876 ms` |
+| `paddle-table/rt-detr-l-wired-cell-det` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；动态 `im_shape=[1,2]`、`image=[1,3,640,640]`、`scale_factor=[1,2]`；Engine SHA `71fb2ee40a53b66c5e61d8bf2679235f5eb53fc2f01dc335dc3bb828b0a2132b`（155,294,724 bytes） | ORT/TensorRT 均返回 300 个候选；高置信候选全量比较最大 score 差 `0.00895`、最小 IoU `0.9285` | P50 `21.605 ms` / P95 `24.613 ms` |
+| `paddle-table/rt-detr-l-wireless-cell-det` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；动态 `im_shape=[1,2]`、`image=[1,3,640,640]`、`scale_factor=[1,2]`；Engine SHA `cb7df85c136e0b45e673a37995ed5c58f2a587f385cca15f674a6cf8f29c6c2a`（144,357,020 bytes） | ORT/TensorRT 均返回 300 个候选；score ≥ 0.05 统计为 `294/295`，共同比较 294 个，最大 score 差 `0.00701`、最小 IoU `0.9179` | P50 `21.689 ms` / P95 `25.661 ms` |
 | `paddle-seal/ppocrv4-mobile` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；动态输入 profile 固定为 `image=[1,3,224,224]`；Engine SHA `13772da4a34bd9fb3ea1e1c3cfedabf6a2fb1aace0762c6e5253904e374c9953`（7,045,964 bytes） | `demo_1.jpg` 上 ORT/TensorRT 均返回 `224x224` 掩码、区域数 `0/0`；原始掩码最大/平均绝对误差 `9.42e-8`/`1.36e-8`；该图片无印章，仅作执行和输出一致性 | P50 `3.710 ms` / P95 `4.558 ms` |
 | `paddle-seal/ppocrv4-server` | TensorRT 11 API；CUDA 12.9；cuDNN 9.22；动态输入 profile 固定为 `image=[1,3,224,224]`；显式 `DisableTf32=true`；Engine SHA `d89b4c5cbfde1707bd486007bdf65afe481e3fcdb85c1cdf11d7c98f88332d03`（140,877,596 bytes） | `demo_1.jpg` 上 ORT/TensorRT 均返回 1 个区域；掩码平均绝对误差 `2.4136e-6`，最大绝对误差 `8.6451e-4`，逐元素误差通过当前合同 | P50 `12.221 ms` / P95 `24.648 ms` |
 
-上述 TensorRT 证据均使用 5 次预热、50 次测量；表格分类由 TensorRT CUDA 预处理、推理和分类 Decoder 完成，`pp-doclayout-l` 使用 OpenCV 在 CPU 上准备输入并由 TensorRT 负责模型执行和图内 Paddle NMS，印章 mobile/server 使用 OpenCV 在 CPU 上准备输入并由 TensorRT 执行概率图和专用 Decoder。server 印章在 TRT11 强类型网络下显式关闭 TF32，当前样本的原始概率图逐元素误差通过测试合同；这仍不替代数据集级精度评估。所有结果只对表中精确工件成立，不外推到同组其它模型。Engine 与 TensorRT/CUDA/cuDNN 版本及 GPU 架构绑定，换设备或运行时后必须重新构建并验证。
+上述 TensorRT 证据均使用 5 次预热、50 次测量；表格分类由 TensorRT CUDA 预处理、推理和分类 Decoder 完成，`pp-doclayout-l` 使用 OpenCV 在 CPU 上准备输入并由 TensorRT 负责模型执行和图内 Paddle NMS，两个 RT-DETR 表格单元格模型使用 OpenCV 准备三输入几何张量、TensorRT 执行图内 Paddle NMS，再由同一 Decoder 完成 ORT 对照，印章 mobile/server 使用 OpenCV 在 CPU 上准备输入并由 TensorRT 执行概率图和专用 Decoder。server 印章在 TRT11 强类型网络下显式关闭 TF32，当前样本的原始概率图逐元素误差通过测试合同；这仍不替代数据集级精度评估。所有结果只对表中精确工件成立，不外推到同组其它模型。Engine 与 TensorRT/CUDA/cuDNN 版本及 GPU 架构绑定，换设备或运行时后必须重新构建并验证。
 
 公式语义解码的精确证据：`FormulaExportsDecodeWithOfficialTokenizerOnRealOrtCpu` 对 6 个公式工件逐一使用官方 `general_formula_rec_001.png`、专用去白边/缩放/归一化和各自官方 BPE tokenizer 运行。最新结果为：Plus-S `1022/1226`、Plus-M `2/6`、Plus-L `49/62`、FormulaNet-S `1023/1036`、FormulaNet-L `31/37`、UniMERNet `1022/1252`（分别为 token 数/LaTeX 字符数），全部 warnings=0 并遇到 EOS。Plus-S/M/L 的 LaTeX 忽略排版空白后与官方示例一致；FormulaNet-S/L、UniMERNet 仍有符号或格式差异。原先 `bus.jpg` 的输出长度只算旧 smoke，不能视为公式精度。当前 ORT `✓` 表示精确工件可运行，不代表数据集准确率通过。2026-09-29 的隔离 OpenVINO 矩阵已逐项尝试六个工件：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash，六个精确组合均标记 `✗`。详细 SHA 和错误摘要见 [`formula-openvino-isolated-20260929.json`](../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。
 
@@ -181,6 +183,7 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 - `✓**` 表示使用 `eng/models/paddle-document/scripts/Build-PaddleDocumentOpenVinoCompatibility.ps1` 生成的派生 ONNX；原始 Release 文件保持未修改，派生文件使用独立 compatibility ID、文件名和 SHA-256 注册在 [`slanext-openvino-compatibility.json`](../eng/models/paddle-document/verification/slanext-openvino-compatibility.json)。原始 SLANeXt Release 图在当前 OpenVINO `Loop` importer 下标记为 `✗`，不能直接部署；兼容图的独立 Release 资产名已确定为 `slanext-wired-openvino-compat.onnx` 和 `slanext-wireless-openvino-compat.onnx`，上传前状态为 `planned-separate-assets`。
 - `✓†` 表示精确工件 `pp-doclayout-l` 已完成 TensorRT 11 动态输入和图内 Paddle NMS 推理，并与 ORT CPU 结果比较；输入预处理仍在 CPU，不能解释为 CUDA 端到端流水线。
 - `✓‡` 表示精确工件 `pp-lcnet-x1-0-table-cls` 已完成 TensorRT 11 静态输入、CUDA 预处理、分类 Decoder 和 ORT 标签/置信度一致性比较；置信度允许明确记录的绝对误差 `0.01`，不能外推为数据集精度结论。
+- `✓‖` 表示两个 RT-DETR 表格单元格精确工件已完成 TensorRT 11 动态三输入 profile、图内 Paddle NMS、全候选几何 IoU/score 对照和 5/50 P50/P95 测量；wireless 的一个 score≥0.05 候选落在数值边界，按共同匹配候选记录，不能外推为 cell 召回率或表格结构准确率。
 - `✓§` 表示精确工件 `ppocrv4-mobile/server-seal-det` 已完成 TensorRT 11 概率图推理、印章 Decoder 和 ORT 尺寸/区域数一致性比较；server 构建显式关闭 TF32，当前样本的原始掩码逐元素误差通过合同，但不能外推为数据集召回率。
 - `✓¶` 表示 Chart2Table 四图 Bundle 在 ORT CPU、OpenVINO CPU 和 TensorRT CUDA 均有完整 EOS 文本证据；TensorRT 四张 plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建并完成完整生成回归。此符号仍不表示数据集级准确率验证。
 - `△` 表示存在适用的后端执行合同，但本机尚无该精确组合的真实运行证据；部署时应先在目标设备完成 smoke test。
