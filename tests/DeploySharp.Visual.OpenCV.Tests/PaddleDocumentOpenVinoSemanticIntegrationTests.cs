@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OpenVINO;
@@ -23,6 +25,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
     {
         private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
         private const string ImagePath = @"E:\Data\image\bus.jpg";
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         [DataRow("wired")]
@@ -98,6 +101,103 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.IsTrue(uvdocResult!.Pixels.All(value => !float.IsNaN(value) && !float.IsInfinity(value)));
             Console.WriteLine("PADDLE_DOCUMENT_OPENVINO_SEMANTIC module=unwarping;shape=" + uvdocResult.Width + "x" + uvdocResult.Height + "x" + uvdocResult.Channels);
 
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void AllLocalLayoutDecodersRunOnRealOpenVinoCpu()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                (Model: "paddle-doc/pp-doclayout-plus-l", File: "pp-doclayout-plus-l.onnx", Size: new VisualSize(800, 800), Labels: PaddleDocumentProfiles.LayoutPlusLabels, ImageShape: true),
+                (Model: "paddle-doc/pp-doclayout-m", File: "pp-doclayout-m.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.Layout23Labels, ImageShape: false),
+                (Model: "paddle-doc/pp-doclayout-s", File: "pp-doclayout-s.onnx", Size: new VisualSize(480, 480), Labels: PaddleDocumentProfiles.Layout23Labels, ImageShape: false),
+                (Model: "paddle-doc/pp-docblocklayout", File: "pp-docblocklayout.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.RegionLabels, ImageShape: true),
+                (Model: "paddle-doc/picodet-layout-1x", File: "picodet-layout-1x.onnx", Size: new VisualSize(608, 800), Labels: PaddleDocumentProfiles.Layout5Labels, ImageShape: false),
+                (Model: "paddle-doc/picodet-layout-1x-table", File: "picodet-layout-1x-table.onnx", Size: new VisualSize(608, 800), Labels: PaddleDocumentProfiles.TableOnlyLabels, ImageShape: false),
+                (Model: "paddle-doc/picodet-s-layout-3cls", File: "picodet-s-layout-3cls.onnx", Size: new VisualSize(480, 480), Labels: PaddleDocumentProfiles.Layout3Labels, ImageShape: false),
+                (Model: "paddle-doc/picodet-l-layout-3cls", File: "picodet-l-layout-3cls.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.Layout3Labels, ImageShape: false),
+                (Model: "paddle-doc/rt-detr-h-layout-3cls", File: "rt-detr-h-layout-3cls.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.Layout3Labels, ImageShape: true),
+                (Model: "paddle-doc/picodet-s-layout-17cls", File: "picodet-s-layout-17cls.onnx", Size: new VisualSize(480, 480), Labels: PaddleDocumentProfiles.Layout17Labels, ImageShape: false),
+                (Model: "paddle-doc/picodet-l-layout-17cls", File: "picodet-l-layout-17cls.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.Layout17Labels, ImageShape: false),
+                (Model: "paddle-doc/rt-detr-h-layout-17cls", File: "rt-detr-h-layout-17cls.onnx", Size: new VisualSize(640, 640), Labels: PaddleDocumentProfiles.Layout17Labels, ImageShape: true)
+            };
+            var evidence = new List<object>(cases.Length);
+            int unexpectedFailures = 0;
+            foreach (var item in cases)
+            {
+                string path = Path.Combine(ModelRoot, item.File);
+                if (!File.Exists(path))
+                {
+                    evidence.Add(new { model = item.Model, status = "missing-model", file = item.File });
+                    continue;
+                }
+
+                PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                    PaddleDocumentModelCatalog.Get(item.Model),
+                    item.Labels,
+                    item.Size,
+                    includeImageShapeInput: item.ImageShape,
+                    includeScaleFactorInput: true,
+                    scoreThreshold: 0);
+                try
+                {
+                    DetectionResult result = Run(profile, path, profile.CreateGeometryInputs()) as DetectionResult
+                        ?? throw new AssertFailedException("The OpenVINO layout decoder returned an unexpected result type for " + item.Model + ".");
+                    Assert.IsTrue(result.Detections.All(detection => detection.Label.Score >= 0 && detection.Label.Score <= 1), item.Model + " returned an invalid score.");
+                    Assert.IsTrue(result.Detections.All(detection => float.IsFinite(detection.Box.X) && float.IsFinite(detection.Box.Y)), item.Model + " returned non-finite geometry.");
+                    evidence.Add(new
+                    {
+                        model = item.Model,
+                        status = "passed",
+                        modelSha256 = FileSha256(path),
+                        modelSize = new { width = item.Size.Width, height = item.Size.Height },
+                        labels = item.Labels,
+                        includeImageShape = item.ImageShape,
+                        detectionCount = result.Detections.Count
+                    });
+                    Console.WriteLine("PADDLE_DOCUMENT_OPENVINO_LAYOUT_MATRIX model=" + item.Model + ";status=passed;detections=" + result.Detections.Count);
+                }
+                catch (OpenVinoBackendException exception)
+                {
+                    evidence.Add(new
+                    {
+                        model = item.Model,
+                        status = "unsupported",
+                        modelSha256 = FileSha256(path),
+                        errorCode = exception.ErrorCode,
+                        operation = exception.Operation,
+                        technicalDetails = exception.TechnicalDetails,
+                        message = exception.Message
+                    });
+                    Console.WriteLine("PADDLE_DOCUMENT_OPENVINO_LAYOUT_MATRIX model=" + item.Model + ";status=unsupported;errorCode=" + exception.ErrorCode + ";operation=" + exception.Operation);
+                }
+                catch (Exception exception)
+                {
+                    unexpectedFailures++;
+                    evidence.Add(new { model = item.Model, status = "failed", modelSha256 = FileSha256(path), exception = exception.ToString() });
+                    Console.WriteLine("PADDLE_DOCUMENT_OPENVINO_LAYOUT_MATRIX model=" + item.Model + ";status=failed;exception=" + exception);
+                }
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_LAYOUT_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-openvino-layout-matrix.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                backend = "openvino-cpu",
+                input = new { file = "bus.jpg", path = ImagePath },
+                scope = "Twelve PP-Structure layout ONNX artifacts with their registered decoder/input contracts.",
+                results = evidence,
+                boundary = "Execution and decoder-contract evidence only; no layout accuracy is claimed without aligned region annotations."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(cases.Length, evidence.Count);
+            Assert.AreEqual(0, unexpectedFailures, "Unexpected non-OpenVINO failures must be investigated instead of being treated as unsupported.");
         }
 
         [TestMethod]
@@ -206,6 +306,12 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private static NamedTensor FloatInput(string name, params float[] values)
             => new NamedTensor(name, new Tensor<float>(new TensorShape(1, 2), values, TensorBufferOwnership.Transfer));
+
+        private static string FileSha256(string path)
+        {
+            using var stream = File.OpenRead(path);
+            return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+        }
 
         private static string RequireImage()
         {

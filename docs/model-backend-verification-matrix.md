@@ -67,7 +67,7 @@
 
 PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有独立 ONNX Release 资产；`PP-Chart2Table` 另以 `paddle-chart/pp-chart2table` 四图 ONNX + tokenizer Bundle 发布在同一个 `models-paddleocr` Release。Chart2Table 官方源包仍不是标准 `inference.json + inference.pdiparams`，因此单文件 Paddle archive 转换目录仍保留 `conversion-blocked`，这不影响已发布派生 Bundle 的下载和运行。下表按模型族分组，普通模型组内只要仍有未逐一执行的工件就保持 `△`；Chart2Table 则以真实完整流水线证据单独标记。PP-Structure 其它模型尚未全部逐一验证每个后端，不能把 Chart2Table 的结果外推到其它模型。
 
-本机已有 `E:\Model\PaddleDocument\onnx-smoke.json` 和 `semantic-smoke-selected.json`：28 个已转换 ONNX 均完成 ONNX Runtime CPU 图级 smoke（加载、输入绑定和原始输出形状）。`PaddleDocumentSemanticIntegrationTests` 使用真实 `E:\Data\image\bus.jpg` 对已接入专用 Decoder 的工件执行语义 smoke；版面导出当前按官方 23 类标签解码，阈值 0 时 `pp-doclayout-l` 返回 300 个候选。`PaddleDocumentPipelineSemanticIntegrationTests` 还验证了真实 ORT CPU 方向→版面统一编排。UVDoc 另有同一 `bus.jpg`、同一 `[1,3,640,640]` 准备张量的 ORT/OpenVINO CPU 对照：两边均返回有限 `640x640x3` 张量，均值 `115.8434269/115.8434069`，最大/平均绝对差 `0.0730591/0.00176066`。这是可运行性和数值范围证据；当前输出存在有界数值差异，不能写成像素等价或视觉质量通过。完整记录见 [`uvdoc-ort-openvino-parity-20260924.json`](../eng/models/paddle-document/verification/uvdoc-ort-openvino-parity-20260924.json)。Paddle NMS Profile 已明确接受 `Int32` 和 `Int64` 计数，并按每张图的累计计数处理不等长 batch，避免把合法的 Paddle2ONNX 类型差异误判为后端失败。TensorRT 现已有 `PaddleDocumentTensorRtExternalIntegrationTests` 外部入口；本机已确认 `D:\Program Files\TensorRT-11.0.0.114-cu12`、CUDA 12.9、cuDNN 9.22 和 TRT 11 bridge 可以共同加载，并完成 PP-LCNet 文档方向、PP-LCNet 表格分类以及 `pp-doclayout-l` 的 ONNX→Engine→推理 smoke。此前的失败来自 TensorRT 根目录、bridge API 和动态 profile 未显式配置，不是缺少 vendor DLL。
+本机已有 `E:\Model\PaddleDocument\onnx-smoke.json` 和 `semantic-smoke-selected.json`：28 个已转换 ONNX 均完成 ONNX Runtime CPU 图级 smoke（加载、输入绑定和原始输出形状）。`PaddleDocumentSemanticIntegrationTests` 使用真实 `E:\Data\image\bus.jpg` 对已接入专用 Decoder 的工件执行语义 smoke；版面导出当前按官方 23 类标签解码，阈值 0 时 `pp-doclayout-l` 返回 300 个候选。`PaddleDocumentPipelineSemanticIntegrationTests` 还验证了真实 ORT CPU 方向→版面统一编排。2026-09-30 又在同一 `bus.jpg`、各模型注册的输入/Decoder 合同下，逐项运行其余 12 个版面 ONNX 工件（PP-DocLayout/PicoDet/RT-DETR），OpenVINO CPU 为 12/12 pass；逐模型 SHA、输入尺寸和检测数量见 [`paddle-document-openvino-layout-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.md)。这组证据只表示精确工件能够在声明的 OpenVINO CPU 运行时完成推理并返回有限结果，不表示版面召回、mAP、标签准确率或性能排名。UVDoc 另有同一 `bus.jpg`、同一 `[1,3,640,640]` 准备张量的 ORT/OpenVINO CPU 对照：两边均返回有限 `640x640x3` 张量，均值 `115.8434269/115.8434069`，最大/平均绝对差 `0.0730591/0.00176066`。这是可运行性和数值范围证据；当前输出存在有界数值差异，不能写成像素等价或视觉质量通过。完整记录见 [`uvdoc-ort-openvino-parity-20260924.json`](../eng/models/paddle-document/verification/uvdoc-ort-openvino-parity-20260924.json)。Paddle NMS Profile 已明确接受 `Int32` 和 `Int64` 计数，并按每张图的累计计数处理不等长 batch，避免把合法的 Paddle2ONNX 类型差异误判为后端失败。TensorRT 现已有 `PaddleDocumentTensorRtExternalIntegrationTests` 外部入口；本机已确认 `D:\Program Files\TensorRT-11.0.0.114-cu12`、CUDA 12.9、cuDNN 9.22 和 TRT 11 bridge 可以共同加载，并完成 PP-LCNet 文档方向、PP-LCNet 表格分类以及 `pp-doclayout-l` 的 ONNX→Engine→推理 smoke。此前的失败来自 TensorRT 根目录、bridge API 和动态 profile 未显式配置，不是缺少 vendor DLL。
 
 UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `PaddingLayerImpl::forward` 抛出 `inputs[0].dims == 4`，矩阵标记为 `✗`。TensorRT 11 + DeploySharp Provider/decoder 已从同一 ONNX 构建并加载 engine，DisableTf32 对照输出 max/mean abs diff `0.0778809/0.00172731`，输出 `640x640x3`；该记录证明 TensorRT engine 可执行且存在有界数值差异，不代表像素等价或视觉质量通过。GPU trtexec mean/P95 `8.55564/9.9389 ms`。
 
@@ -76,9 +76,9 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 文档矫正：`paddle-doc/uvdoc` | ✓ | ✓ | ✓ | ✓ | ✗ | △ |
 | 版面分析：`paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓† |
-| 版面分析：`paddle-doc/pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s`、`pp-docblocklayout` | ✓ | ✓ | ✓ | △ | △ | △ |
-| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls`、`rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | △ | △ | △ |
-| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | △ | △ | △ |
+| 版面分析：`paddle-doc/pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s`、`pp-docblocklayout` | ✓ | ✓ | ✓ | ✓ | △ | △ |
+| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls`、`rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
+| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
 | 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | △ |
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
@@ -98,19 +98,19 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 |---|:---:|:---:|:---:|:---:|
 | `paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-doc/uvdoc` | ✓ | ✓ | ✗ | ✓ |
-| `paddle-doc/pp-doclayout-plus-l` | ✓ | △ | △ | △ |
+| `paddle-doc/pp-doclayout-plus-l` | ✓ | ✓ | △ | △ |
 | `paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ |
-| `paddle-doc/pp-doclayout-m` | ✓ | △ | △ | △ |
-| `paddle-doc/pp-doclayout-s` | ✓ | △ | △ | △ |
-| `paddle-doc/pp-docblocklayout` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-layout-1x` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-layout-1x-table` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-s-layout-3cls` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-l-layout-3cls` | ✓ | △ | △ | △ |
-| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-s-layout-17cls` | ✓ | △ | △ | △ |
-| `paddle-doc/picodet-l-layout-17cls` | ✓ | △ | △ | △ |
-| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | △ | △ | △ |
+| `paddle-doc/pp-doclayout-m` | ✓ | ✓ | △ | △ |
+| `paddle-doc/pp-doclayout-s` | ✓ | ✓ | △ | △ |
+| `paddle-doc/pp-docblocklayout` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-layout-1x` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-layout-1x-table` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-s-layout-3cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-l-layout-3cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | △ | △ |
 | `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | △ |
 | `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | △ |
 | `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |

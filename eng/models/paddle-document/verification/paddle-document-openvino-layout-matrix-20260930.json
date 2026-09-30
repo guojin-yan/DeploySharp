@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-09-30T05:13:29.7469684+00:00",
+  "backend": "openvino-cpu",
+  "input": {
+    "file": "bus.jpg",
+    "path": "E:\\Data\\image\\bus.jpg"
+  },
+  "scope": "Twelve PP-Structure layout ONNX artifacts with their registered decoder/input contracts.",
+  "results": [
+    {
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "status": "passed",
+      "modelSha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "modelSize": {
+        "width": 800,
+        "height": 800
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal",
+        "chart",
+        "formula_number",
+        "aside_text",
+        "reference_content"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/pp-doclayout-m",
+      "status": "passed",
+      "modelSha256": "a65002c871af5c3d4415524a813f55cda4e8c5d59fe8cebd5af16a84b48e80f3",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal",
+        "chart_title",
+        "chart",
+        "formula_number",
+        "header_image",
+        "footer_image",
+        "aside_text"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 100
+    },
+    {
+      "model": "paddle-doc/pp-doclayout-s",
+      "status": "passed",
+      "modelSha256": "5254cb338d5ffb0b54c6f95b527e6e7f0c8a0cb35919c4d6e420dcb913ba592f",
+      "modelSize": {
+        "width": 480,
+        "height": 480
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal",
+        "chart_title",
+        "chart",
+        "formula_number",
+        "header_image",
+        "footer_image",
+        "aside_text"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 100
+    },
+    {
+      "model": "paddle-doc/pp-docblocklayout",
+      "status": "passed",
+      "modelSha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "Region"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/picodet-layout-1x",
+      "status": "passed",
+      "modelSha256": "61efac8c8d3eeee09d7d16db249eb919c1432e22d8235bd408ddffa3477cb8fd",
+      "modelSize": {
+        "width": 608,
+        "height": 800
+      },
+      "labels": [
+        "Text",
+        "Title",
+        "List",
+        "Table",
+        "Figure"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 18
+    },
+    {
+      "model": "paddle-doc/picodet-layout-1x-table",
+      "status": "passed",
+      "modelSha256": "7cf5b8c3f7e00353bdb231fec73dd73b66ea0cbf598daaf1f113bf7e6dc4af31",
+      "modelSize": {
+        "width": 608,
+        "height": 800
+      },
+      "labels": [
+        "Table"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 3
+    },
+    {
+      "model": "paddle-doc/picodet-s-layout-3cls",
+      "status": "passed",
+      "modelSha256": "f2b2c55af08bad9dab4030f86d34336f99bc7e39df9999676ce29db7e60b2fb1",
+      "modelSize": {
+        "width": 480,
+        "height": 480
+      },
+      "labels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 66
+    },
+    {
+      "model": "paddle-doc/picodet-l-layout-3cls",
+      "status": "passed",
+      "modelSha256": "34d873d7ec7a77448b85ae41db5785bfae0c5dda483c03c177189ebd086b1ce4",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 76
+    },
+    {
+      "model": "paddle-doc/rt-detr-h-layout-3cls",
+      "status": "passed",
+      "modelSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/picodet-s-layout-17cls",
+      "status": "passed",
+      "modelSha256": "f8a43b8588f1cee80acea3646738a2704c7c7f4cb73f63bc3d325016195fd496",
+      "modelSize": {
+        "width": 480,
+        "height": 480
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 77
+    },
+    {
+      "model": "paddle-doc/picodet-l-layout-17cls",
+      "status": "passed",
+      "modelSha256": "b3e1b8deaa9538a76418083274df9acf07232cccb30ba6ab957a77a2d73cecb3",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal"
+      ],
+      "includeImageShape": false,
+      "detectionCount": 63
+    },
+    {
+      "model": "paddle-doc/rt-detr-h-layout-17cls",
+      "status": "passed",
+      "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    }
+  ],
+  "boundary": "Execution and decoder-contract evidence only; no layout accuracy is claimed without aligned region annotations."
+}

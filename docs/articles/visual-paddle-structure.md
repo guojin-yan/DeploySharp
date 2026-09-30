@@ -10,7 +10,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | --- | --- | --- | --- |
 | 文档方向 | `PP-LCNet_x1_0_doc_ori` | `VisualTaskId.DocumentOrientation`、四分类结果 | ORT CPU、OpenVINO CPU 和 TensorRT 11 smoke 已完成；分类预处理为短边 256 后中心裁剪 224 |
 | 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`。TensorRT 11 + DeploySharp decoder 已完成 DisableTf32 对照，max/mean 绝对差 `0.0778809/0.00172731`；OpenCV 5.0 importer 在 `PaddingLayerImpl` 处确认阻断。该 TensorRT 结果是有界数值比较，不是像素等价或视觉质量通过 |
-| 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；`pp-doclayout-l` 另有 OpenVINO、OpenCV DNN 和 TensorRT 11 NMS 实测，其余后端仍按矩阵逐工件记录 |
+| 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；12 个此前未逐项验证的工件已在 OpenVINO CPU 上全部执行通过，`pp-doclayout-l` 另有 OpenVINO、OpenCV DNN 和 TensorRT 11 NMS 实测；逐项边界见[版面 OpenVINO 矩阵报告](../../eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.md) |
 | 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
 | 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO 目前仅 wired 有通过证据 |
 | 表格结构识别 | `SLANeXt_wired/wireless` | `VisualTaskId.TableStructureRecognition`、表格标记和单元格结果 | wired/wireless 均已完成 ORT CPU 双输出序列/八点框 Decoder smoke；原始 Release 图在 OpenVINO 当前版本不支持（`Loop` importer），仅派生 alpha-renamed 图通过逐元素和 Decoder 对齐 |
@@ -369,7 +369,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。UVDoc TensorRT 运行记录见 [`uvdoc-tensorrt11-20260924.json`](../../eng/models/paddle-document/verification/uvdoc-tensorrt11-20260924.json)。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
 
-当前 PP-Structure 31 个精确 artifact/backend 单元的 pass/unsupported/unverified 数量见[状态摘要](../../eng/models/paddle-document/verification/paddle-document-status-summary-20260929.md)；该摘要只汇总逐组合执行证据，不代表数据集级准确率或跨设备兼容性。
+当前 PP-Structure 31 个精确 artifact/backend 单元的 pass/unsupported/unverified 数量见[状态摘要](../../eng/models/paddle-document/verification/paddle-document-status-summary-20260929.md)；其中 OpenVINO CPU 的 12 个版面工件逐项报告见[机器可读矩阵](../../eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.json)；这些摘要只汇总逐组合执行证据，不代表数据集级准确率或跨设备兼容性。
 
 ### Chart2Table 完整 Bundle 技术验证
 
