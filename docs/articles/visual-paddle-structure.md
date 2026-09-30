@@ -12,7 +12,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`。TensorRT 11 + DeploySharp decoder 已完成 DisableTf32 对照，max/mean 绝对差 `0.0778809/0.00172731`；OpenCV 5.0 importer 在 `PaddingLayerImpl` 处确认阻断。该 TensorRT 结果是有界数值比较，不是像素等价或视觉质量通过 |
 | 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；12 个此前未逐项验证的工件已在 OpenVINO CPU 上全部执行通过，`pp-doclayout-l` 另有 OpenVINO、OpenCV DNN 和 TensorRT 11 NMS 实测；逐项边界见[版面 OpenVINO 矩阵报告](../../eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.md) |
 | 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
-| 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO 目前仅 wired 有通过证据 |
+| 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO CPU wired/wireless 两个精确工件均已执行通过，逐项报告见 [`paddle-document-openvino-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.md) |
 | 表格结构识别 | `SLANeXt_wired/wireless` | `VisualTaskId.TableStructureRecognition`、表格标记和单元格结果 | wired/wireless 均已完成 ORT CPU 双输出序列/八点框 Decoder smoke；原始 Release 图在 OpenVINO 当前版本不支持（`Loop` importer），仅派生 alpha-renamed 图通过逐元素和 Decoder 对齐 |
 | 公式识别 | `PP-FormulaNet_plus-*`、`UniMERNet` | `VisualTaskId.FormulaRecognition`、LaTeX/序列结果 | 6 个可转换公式工件均已在真实 ORT CPU 推理后使用官方 `inference.yml` BPE tokenizer 完成语义 LaTeX 解码；token-piece fallback 保留给旧目标框架 |
 | 印章文本检测 | `PP-OCRv4_*_seal_det` | `VisualTaskId.SealTextDetection`、区域结果 | mobile/server 均已完成 ORT CPU + OpenVINO CPU 概率图连通区域 Decoder smoke；mobile/server 另有 TensorRT 11 输入/掩码/Decoder 一致性实测（server 已显式关闭 TF32）；弧形文本明确不支持，需调用方先展开后再提交识别器-only |
@@ -361,7 +361,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 | 后端/模块 | 当前真实证据 | 边界 |
 | --- | --- | --- |
 | ORT CPU | 22 个非公式工件、6 个公式 token/BPE 解码，方向→版面阶段编排 | 公式结果长度与 tokenizer 无告警不是公式准确率 |
-| OpenVINO CPU | 方向、版面、表格分类、单元格、UVDoc、mobile/server 印章 | 按精确模型记录；未外推其它工件 |
+| OpenVINO CPU | 方向、版面、表格分类、wired/wireless 单元格、UVDoc、mobile/server 印章 | 按精确模型记录；未外推其它工件 |
 | OpenVINO SLANeXt | wired/wireless 派生 ONNX 均通过，与原始 ORT 输出逐元素对比 | 原始 Release ONNX 仍受循环变量同名问题影响，需先执行下方兼容转换 |
 | OpenCV DNN | PP-DocLayout-L 单 batch 与 ORT 对比；两个 PP-LCNet 官方示例；PP-OCR v4/v5/v6 七组核心完整流水线 | PP-DocLayout-L 不请求被 importer 忽略的常量计数输出；Chart2Table 自回归仍未验证 |
 | TensorRT CUDA | PP-LCNet 文档方向、PP-LCNet 表格分类、`pp-doclayout-l` Paddle NMS、mobile/server 印章概率图；均有 ORT 对照和预热后 P50/P95 | TRT 11 bridge + TRT 11.0.0.114-cu12 + CUDA 12.9 + cuDNN 9.22；server 印章已显式关闭 TF32，当前样本逐元素误差通过合同，不外推其它模型 |

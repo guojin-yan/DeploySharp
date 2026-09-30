@@ -202,6 +202,63 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void AllLocalTableCellDecodersRunOnRealOpenVinoCpu()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                (Model: "paddle-table/rt-detr-l-wired-cell-det", File: "rt-detr-l-wired-cell-det.onnx"),
+                (Model: "paddle-table/rt-detr-l-wireless-cell-det", File: "rt-detr-l-wireless-cell-det.onnx")
+            };
+            var evidence = new List<object>(cases.Length);
+            foreach (var item in cases)
+            {
+                string path = Path.Combine(ModelRoot, item.File);
+                if (!File.Exists(path)) Assert.Inconclusive("Missing local PP-Structure model: " + path);
+                PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                    PaddleDocumentModelCatalog.Get(item.Model),
+                    new[] { "table-cell" },
+                    new VisualSize(640, 640),
+                    includeImageShapeInput: true,
+                    includeScaleFactorInput: true,
+                    scoreThreshold: 0);
+                DetectionResult result = Run(profile, path, profile.CreateGeometryInputs()) as DetectionResult
+                    ?? throw new AssertFailedException("The OpenVINO table-cell decoder returned an unexpected result type for " + item.Model + ".");
+                Assert.IsTrue(result.Detections.All(detection => detection.Label.Score >= 0 && detection.Label.Score <= 1), item.Model + " returned an invalid score.");
+                Assert.IsTrue(result.Detections.All(detection => float.IsFinite(detection.Box.X) && float.IsFinite(detection.Box.Y)), item.Model + " returned non-finite geometry.");
+                evidence.Add(new
+                {
+                    model = item.Model,
+                    status = "passed",
+                    modelSha256 = FileSha256(path),
+                    modelSize = new { width = 640, height = 640 },
+                    labels = new[] { "table-cell" },
+                    includeImageShape = true,
+                    detectionCount = result.Detections.Count
+                });
+                Console.WriteLine("PADDLE_DOCUMENT_OPENVINO_TABLE_CELL_MATRIX model=" + item.Model + ";status=passed;detections=" + result.Detections.Count);
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_TABLE_CELL_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-openvino-table-cell-matrix.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                backend = "openvino-cpu",
+                input = new { file = "bus.jpg", path = ImagePath },
+                scope = "The wired and wireless PP-Structure RT-DETR table-cell ONNX artifacts with their registered Paddle NMS decoder/input contracts.",
+                results = evidence,
+                boundary = "Execution and decoder-contract evidence only; no cell recall, table structure accuracy or performance claim is made."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(cases.Length, evidence.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void TableStructureOpenVinoLoopImporterBlockerIsExplicit()
         {
             RequireExternal();

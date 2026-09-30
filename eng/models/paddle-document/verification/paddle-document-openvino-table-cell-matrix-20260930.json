@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-09-30T05:19:21.4550431+00:00",
+  "backend": "openvino-cpu",
+  "input": {
+    "file": "bus.jpg",
+    "path": "E:\\Data\\image\\bus.jpg"
+  },
+  "scope": "The wired and wireless PP-Structure RT-DETR table-cell ONNX artifacts with their registered Paddle NMS decoder/input contracts.",
+  "results": [
+    {
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "status": "passed",
+      "modelSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "table-cell"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "status": "passed",
+      "modelSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "table-cell"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    }
+  ],
+  "boundary": "Execution and decoder-contract evidence only; no cell recall, table structure accuracy or performance claim is made."
+}

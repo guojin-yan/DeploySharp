@@ -117,7 +117,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | △ | △ |
-| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | △ | △ | △ |
+| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | △ |
@@ -149,6 +149,7 @@ TensorRT 设备为 RTX 3060 Laptop 6GB、TensorRT 10.11.0、CUDA 12.9、cuDNN 9.
 | `paddle-doc/uvdoc` | 矫正张量：`640x640x3`，全部有限值 | ✓ | ✓ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | 官方 `table_recognition.jpg`：`wired_table`，score 约 `0.844209` | ✓ | ✓ |
 | `paddle-table/rt-detr-l-wired-cell-det` | Paddle NMS 单元格结果：300 个区域 | ✓ | ✓ |
+| `paddle-table/rt-detr-l-wireless-cell-det` | Paddle NMS 单元格结果：300 个区域 | ✓ | ✓ |
 | `paddle-table/slanext-wired` | 结构序列：专用表格 Decoder；派生兼容图通过 OpenVINO | ✓ | ✓** |
 | `paddle-table/slanext-wireless` | 结构序列：专用表格 Decoder；派生兼容图通过 OpenVINO | ✓ | ✓** |
 | `paddle-seal/ppocrv4-mobile` | 概率图掩码：`224x224`，专用印章 Decoder | ✓ | ✓ |

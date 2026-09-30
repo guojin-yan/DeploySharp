@@ -26,6 +26,7 @@
     "slanextCompatibility": "eng/models/paddle-document/verification/slanext-openvino-compatibility.json",
     "formulaOpenVino": "eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json",
     "openvinoLayoutMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.json",
+    "openvinoTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.json",
     "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs"
   },
   "assets": [
@@ -50,7 +51,7 @@
     { "modelId": "paddle-table/slanext-wireless-openvino-compat", "artifactKind": "derived-compat-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-table/pp-lcnet-x1-0-table-cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-table/rt-detr-l-wired-cell-det", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-table/rt-detr-l-wireless-cell-det", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unverified", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
+    { "modelId": "paddle-table/rt-detr-l-wireless-cell-det", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-formula/pp-formulanet-plus-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-formula/pp-formulanet-plus-m", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-formula/pp-formulanet-plus-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
