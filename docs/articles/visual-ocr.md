@@ -801,6 +801,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 同一批输入还对七个 DET 工件保存了[原始 DB 概率图中间张量对照](../../eng/models/paddle-ocr/verification/paddleocr-core-det-intermediate-parity-20260930.md)。ORT/OpenVINO 的输入和输出形状在 21 组中全部一致，最大元素级绝对差为 `0.0067548752`（阈值 `0.01`）。这是后端合同证据，仍不包含人工框标注，因此不能替代检测召回率、IoU 或端到端 OCR 质量评测。
 
+随后对同一三图集合补做了[OpenCV DNN 与 ORT 的七组全流程对照](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20260930.md)。21/21 组合均完成 `det → crop → cls → rec → merge`，区域文本、置信度和多边形坐标全部匹配；v4 的精确输出名、legacy CLS shape 和 OpenCV batch=1 约束已写入复现合同。OpenCV 单次耗时明显高于 ORT，只作为兼容性证据，不替代正式性能矩阵。
+
 ### 2026-09-29 受控与真实关联边界补充
 
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。
