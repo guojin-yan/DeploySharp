@@ -391,6 +391,23 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 2. **TensorRT 使用边界与优化**：文本 TensorRT plan 保持 FP32 数据类型；FP16 text `lm_head` 图在此 GPU 上返回全零 logits。可选 TF32 tactics 在该官方样例上保持与严格 FP32 完全相同的输出，但尚未进行数据集精度验证。四图 TensorRT plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建；Decode 动态 profile 的空 Engine 问题由测试选择了错误图及 mask 长度不匹配造成，修正后库 Builder 计划通过完整 EOS 回归。`PaddleChart2TableTensorRtDeviceSession` 用两组 CUDA KV 缓冲区轮换，只回读 logits，并减少动态 shape/binding 重复工作。没有锁定 GPU 时钟，计时不是受控基准。
 3. **发布与泛化精度边界**：四个派生 ONNX 和 tokenizer sidecars 已作为 `paddle-chart/pp-chart2table` Bundle 放入 `models-paddleocr` Release；OpenCV DNN 仍未验证。官方样例和 4 个 ChartQA human 样本均完成 EOS 与表格输出校验，但这不是全量数据集精度指标。该模型目录项保留上游源包的 `conversion-blocked` 状态，不能表示其派生 ONNX Session 不可用。
 
+### Chart2Table 结构化质量指标
+
+生成文本除了整段字符串比较，还可以用 `PaddleChart2TableQualityEvaluator` 记录可解释的结构指标：行数、数据行数、列数、空单元格、Markdown 分隔行、畸形行、列数不一致、逐行匹配数和逐单元格匹配数。比较时会单独保留 `ExactTextMatch`，并对单元格首尾空白和连续空白做确定性归一化；转义的 `\|` 不会被误拆成新列。
+
+```csharp
+PaddleChart2TableQualityComparison quality =
+    PaddleChart2TableQualityEvaluator.Compare(expectedTable, result.Text);
+
+if (!quality.Actual.IsStructurallyValid)
+    throw new InvalidOperationException("Chart2Table output is not a rectangular table.");
+
+Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.ColumnCount};" +
+    $"rowAccuracy={quality.RowAccuracy:P2};cellAccuracy={quality.CellAccuracy:P2}");
+```
+
+这些指标用于区分“生成结束但结构损坏”“行列结构正确但部分单元格错误”和“完全匹配”。它们不替代 ChartQA、PubTables 或业务数据集的标注评测；只有固定数据集、golden 版本和样本来源后，才可以汇总为数据集级质量结果。四图 ORT/OpenVINO 外部回归现在会把同一组结构指标写入 `chart2table-*-multi-image-evidence.json`，仍保持四张精选图的 qualitative boundary。
+
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 
 ### 官方预处理与示例回归

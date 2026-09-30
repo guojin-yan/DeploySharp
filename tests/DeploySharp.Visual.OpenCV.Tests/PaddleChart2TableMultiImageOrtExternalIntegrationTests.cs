@@ -13,6 +13,7 @@ using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 using JYPPX.DeploySharp.Visual.OpenCV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -81,6 +82,9 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
             watch.Stop();
             Assert.AreEqual(GenerationFinishReason.EndOfSequence, result.FinishReason, sample.File + " must finish by EOS.");
             Assert.AreEqual(sample.ExpectedText, result.Text, sample.File + " table differs from the checked expected table.");
+            PaddleChart2TableQualityComparison quality = PaddleChart2TableQualityEvaluator.Compare(sample.ExpectedText, result.Text);
+            Assert.IsTrue(quality.Actual.IsStructurallyValid, sample.File + " generated text must be a rectangular pipe table.");
+            Assert.IsTrue(quality.IsExactStructureAndContent, sample.File + " structural table comparison failed.");
             rows.Add(new
             {
                 sample = sample.File,
@@ -95,7 +99,24 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
                 prefillMs = result.PrefillTime.TotalMilliseconds,
                 decodeStepCount = result.DecodeSteps.Count,
                 decodeP50Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .50),
-                decodeP95Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .95)
+                decodeP95Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .95),
+                structure = new
+                {
+                    expectedRows = quality.Expected.RowCount,
+                    actualRows = quality.Actual.RowCount,
+                    expectedDataRows = quality.Expected.DataRowCount,
+                    actualDataRows = quality.Actual.DataRowCount,
+                    expectedColumns = quality.Expected.ColumnCount,
+                    actualColumns = quality.Actual.ColumnCount,
+                    expectedCells = quality.Expected.CellCount,
+                    actualCells = quality.Actual.CellCount,
+                    rowExactMatchCount = quality.RowExactMatchCount,
+                    cellExactMatchCount = quality.CellExactMatchCount,
+                    rowAccuracy = quality.RowAccuracy,
+                    cellAccuracy = quality.CellAccuracy,
+                    exactTextMatch = quality.ExactTextMatch,
+                    structureMatches = quality.StructureMatches
+                }
             });
         }
         string report = Path.Combine(TestContext.TestResultsDirectory!, "chart2table-" + backend + "-multi-image-evidence.json");
