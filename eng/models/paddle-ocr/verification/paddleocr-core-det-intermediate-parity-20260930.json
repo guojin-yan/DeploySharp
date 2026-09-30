@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-09-30T07:40:22.6256741\u002B00:00",
+  "sourceRevision": "3f9d8e2c4eb1b660ef2337018044db20485a05fd",
+  "runtime": {
+    "left": "onnxruntime-cpu",
+    "right": "openvino-cpu"
+  },
+  "modelRoot": "E:\\Model\\paddleocr",
+  "protocol": {
+    "images": [
+      "demo_1.jpg",
+      "demo_2.jpg",
+      "demo_3.jpg"
+    ],
+    "combinations": 21,
+    "maximumAbsDifference": 0.01,
+    "input": "OpenCV input factory \u002B PP-OCR official detection preprocessing",
+    "comparison": "raw detector output element-wise maximum/mean absolute difference"
+  },
+  "summary": {
+    "detectorCount": 7,
+    "imageCount": 3,
+    "combinations": 21,
+    "inputMismatches": 0,
+    "shapeMismatches": 0,
+    "maximumObservedAbs": 0.006754875183105469,
+    "maximumObservedMean": 1.3802213830386926E-06,
+    "passed": true
+  },
+  "inputs": [
+    {
+      "path": "E:\\Data\\ocr\\demo_1.jpg",
+      "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c"
+    },
+    {
+      "path": "E:\\Data\\ocr\\demo_2.jpg",
+      "sha256": "957a9cc15da49312277796126be225e0ee653f3316578c12d626fa43fbe9561b"
+    },
+    {
+      "path": "E:\\Data\\ocr\\demo_3.jpg",
+      "sha256": "f9353f07461e913b019f504f501ed7723a1c2164fdc667f095cc7e64cc7caa2d"
+    }
+  ],
+  "detectors": [
+    {
+      "Variant": "v4-mobile",
+      "ModelId": "paddleocr/ppocrv4/mobile-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_det.onnx",
+      "ModelSha256": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 0.00011837482452392578,
+      "MaximumObservedMean": 4.294370183697564E-08,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "2f5c42f364399a7e2c21e857ceb7699e38a799bc13785df5e1d85e4be6634a4a",
+          "OpenVinoOutputSha256": "3f5f7c06e3635288c7d66f3671546757aae0013dc6922ab8268d9aacda00b03d",
+          "MaximumAbsDifference": 3.30805778503418E-05,
+          "MeanAbsDifference": 2.5562627643306292E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "1c6ecaf2efb88c80bc0edfc2dafa395e811407bee8c6343838f37abbcfaa5b80",
+          "OpenVinoOutputSha256": "9db08cd33da86e169ff46719d12d04cb325d09482fe0dba7b3b69d3a5b85c9ed",
+          "MaximumAbsDifference": 1.8775463104248047E-05,
+          "MeanAbsDifference": 2.240008550919451E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "eebf88381746af058c5f4cae1a11083639cf30f808aeaee28c88262e4ed70640",
+          "OpenVinoOutputSha256": "3fe439f27f9acfd011e161ec6b98643f036eeb1eaf34bb260c5dd1951aa91c36",
+          "MaximumAbsDifference": 0.00011837482452392578,
+          "MeanAbsDifference": 4.294370183697564E-08
+        }
+      ]
+    },
+    {
+      "Variant": "v4-server",
+      "ModelId": "paddleocr/ppocrv4/server-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_det.onnx",
+      "ModelSha256": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 0.006754875183105469,
+      "MaximumObservedMean": 1.3802213830386926E-06,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "b7297d20b85fe97f67acca67a4a70b4fe2aa045456a0ea794d1b1a98ef86812d",
+          "OpenVinoOutputSha256": "5ee283fcd4659a888e216abbac3b5f1aeef4ab1a451662ac0364fffb014a8ebd",
+          "MaximumAbsDifference": 0.00012284517288208008,
+          "MeanAbsDifference": 8.359918047305196E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "5c65379983198559f41f964e583170c9750e3bffa0dcbb46f4788fbc692f1dbd",
+          "OpenVinoOutputSha256": "ec2cac701e1f8338563011681c8ad25a005114e0486eb7211cd7573c98101fb1",
+          "MaximumAbsDifference": 6.413459777832031E-05,
+          "MeanAbsDifference": 3.4620380535681804E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "17cfd1738ca8d33b511eda167d5d6866f3299a7c46f1cdcb68b23e86c731ee9c",
+          "OpenVinoOutputSha256": "3dd49a20d1209123542ff18ea39fe88efe8e89ec5fd8460df33a41b846775c1f",
+          "MaximumAbsDifference": 0.006754875183105469,
+          "MeanAbsDifference": 1.3802213830386926E-06
+        }
+      ]
+    },
+    {
+      "Variant": "v5-mobile",
+      "ModelId": "paddleocr/ppocrv5/mobile-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_det.onnx",
+      "ModelSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 5.5283308029174805E-05,
+      "MaximumObservedMean": 8.094061152114409E-08,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "c1dbd40d0fcedb71030396f13e246c4594f6ee828a7dbe849e9c53741f8a174b",
+          "OpenVinoOutputSha256": "1f49ab1bf52a776aee2d6399b42a8601565a89110da20a60b840323ed5d94bbd",
+          "MaximumAbsDifference": 4.863739013671875E-05,
+          "MeanAbsDifference": 8.094061152114409E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "7aa6fcc76360e81ee5f4cbbf1985aa2ce151becfa953f915d1c76062084d7f21",
+          "OpenVinoOutputSha256": "8f15c8c20768cf68e815896f0faaf93903c6a60e972cd44d6d2e76bbf1125f31",
+          "MaximumAbsDifference": 3.123283386230469E-05,
+          "MeanAbsDifference": 5.7986022282795E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "afa1ecf7e7ad839f01fdfdd814327d4805c3f76f910e2d59fceee8f247c9e432",
+          "OpenVinoOutputSha256": "5a37adebbb4953f64dd1dda072073f5cc1b96156582fdca8c6e813c139daf6aa",
+          "MaximumAbsDifference": 5.5283308029174805E-05,
+          "MeanAbsDifference": 6.299694212594826E-08
+        }
+      ]
+    },
+    {
+      "Variant": "v5-server",
+      "ModelId": "paddleocr/ppocrv5/server-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_det.onnx",
+      "ModelSha256": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 0.00012356042861938477,
+      "MaximumObservedMean": 5.730642127940585E-08,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "14aedf36afb9a9623ed8f0fcfa4baa1655f25524e6d7e8edecd3882c3290ad16",
+          "OpenVinoOutputSha256": "eeaa49719e85d4bb607058de629636030691fd51d64892327880066bc20089c4",
+          "MaximumAbsDifference": 0.00012356042861938477,
+          "MeanAbsDifference": 5.730642127940585E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "1b65bfd6aa4e9185cc3c597cd47011dc91d77014c8dfe8b348b8b4921ac55661",
+          "OpenVinoOutputSha256": "8adad3af3e7e651975ac5ac1c76e85c0eb0e793e3a2878b81ed3437e9500975a",
+          "MaximumAbsDifference": 3.987550735473633E-05,
+          "MeanAbsDifference": 3.035804308233746E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "fac3e8634b094425cbeb37150edc4f20086a4b3b9dc8eeb47093dbf399b2f340",
+          "OpenVinoOutputSha256": "35fb79080021a7545967f77ba2700e4e1db9ea5bab505236f3dd589b95ebee57",
+          "MaximumAbsDifference": 9.143352508544922E-05,
+          "MeanAbsDifference": 3.834374817525801E-08
+        }
+      ]
+    },
+    {
+      "Variant": "v6-tiny",
+      "ModelId": "paddleocr/ppocrv6/tiny-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_det_inference.onnx",
+      "ModelSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 6.845593452453613E-05,
+      "MaximumObservedMean": 1.3773850939348252E-07,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "4883f469a45195f32f8515f7550e2b0f35d45f75ca8c582c2794a8b2830d0411",
+          "OpenVinoOutputSha256": "42d4b54a498b32a06005a80b332bc05210f3a121dcae020b99a2caeb4ced9d01",
+          "MaximumAbsDifference": 3.8057565689086914E-05,
+          "MeanAbsDifference": 7.32140588227511E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "cec908f2b7934ae819ba6012640cbeedd16895ecec3265a88746952670a73ff0",
+          "OpenVinoOutputSha256": "47d19bc513eafa20df0f17ff86eae3567e2d02df04c9f95b4f426cff2eaebafa",
+          "MaximumAbsDifference": 2.1457672119140625E-05,
+          "MeanAbsDifference": 7.604741056434438E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "4bbaf96d5fac4a66a8a3a5327edc2d87939abd7ef2e56f31de3de615822b9032",
+          "OpenVinoOutputSha256": "9cc147ba398086c122c1beabeae48282ce1acaf8b8d071b65f2b5f9edc916254",
+          "MaximumAbsDifference": 6.845593452453613E-05,
+          "MeanAbsDifference": 1.3773850939348252E-07
+        }
+      ]
+    },
+    {
+      "Variant": "v6-small",
+      "ModelId": "paddleocr/ppocrv6/small-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx",
+      "ModelSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 2.7924776077270508E-05,
+      "MaximumObservedMean": 1.4932257066124455E-07,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "dff5431fc84aa3674a58443b5a18977b8320a6811ecff25f8ed729bafe3cdf7a",
+          "OpenVinoOutputSha256": "2cc07ffce92e0e06dd73935233936aa1883113ded0de160ffd096b537c7631fb",
+          "MaximumAbsDifference": 1.0192394256591797E-05,
+          "MeanAbsDifference": 6.292840316017287E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "368fdf2b414ecc4fde00133f3df9afba5ad44e093151246dcc2ab75cec1c8865",
+          "OpenVinoOutputSha256": "563765f74693009875afaf786b732585485d871017b51375e64803f5253e5cca",
+          "MaximumAbsDifference": 1.150369644165039E-05,
+          "MeanAbsDifference": 5.719301859213653E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "081782bfb860473009c10062cc4c5182e548ad21586d54a0b31862921e0950db",
+          "OpenVinoOutputSha256": "bd820dcb83a2da9423890a2d9aa8120b0e0e93bb30e3105a719283f093b665ea",
+          "MaximumAbsDifference": 2.7924776077270508E-05,
+          "MeanAbsDifference": 1.4932257066124455E-07
+        }
+      ]
+    },
+    {
+      "Variant": "v6-medium",
+      "ModelId": "paddleocr/ppocrv6/medium-det",
+      "ModelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_det_inference.onnx",
+      "ModelSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+      "MaximumAbsDifferenceThreshold": 0.01,
+      "InputMismatches": 0,
+      "ShapeMismatches": 0,
+      "MaximumObservedAbs": 2.0772218704223633E-05,
+      "MaximumObservedMean": 9.513986748853015E-08,
+      "Images": [
+        {
+          "Image": "demo_1.jpg",
+          "InputSha256": "dbbdb3938fa7a880aec0403f74d064e125826238abf16b12c6d5d58b0612f553",
+          "OutputShape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "OrtOutputSha256": "5dcd84ae860c11062f96812b5d76c18b753cf61192bf66194f87ce9d62d10178",
+          "OpenVinoOutputSha256": "34fa140eeb91f8e035275657c98065ca87ada7f2a24324788396e5ffa5650d6c",
+          "MaximumAbsDifference": 1.2814998626708984E-05,
+          "MeanAbsDifference": 6.894093980923648E-08
+        },
+        {
+          "Image": "demo_2.jpg",
+          "InputSha256": "31332876cc689f70d1493aacd9ce9ba9dcf6dfecc755c6704579689623b31a6f",
+          "OutputShape": [
+            1,
+            1,
+            384,
+            384
+          ],
+          "OrtOutputSha256": "24ec41f29ac75035c8446daf94fe5c9fe2c8c14809822f71ca91b3b02b5c3544",
+          "OpenVinoOutputSha256": "2979d573836209bee9f1c6b0ee28624a13f40752ffb7145b7fb0dbe10afb9c73",
+          "MaximumAbsDifference": 1.1861324310302734E-05,
+          "MeanAbsDifference": 5.706096957426955E-08
+        },
+        {
+          "Image": "demo_3.jpg",
+          "InputSha256": "4d0059d1ff0da0f5e16300fa63ff28097a15a89feb8a2d856fbfe955ba81c645",
+          "OutputShape": [
+            1,
+            1,
+            768,
+            768
+          ],
+          "OrtOutputSha256": "f61ba9a1bc8451d49d2510fe05aeba79043ab593063b301b1012a871fa20dae9",
+          "OpenVinoOutputSha256": "92d263b22f37647ef1f01df7615e5717398f1867a55325c066c799109a6ae89c",
+          "MaximumAbsDifference": 2.0772218704223633E-05,
+          "MeanAbsDifference": 9.513986748853015E-08
+        }
+      ]
+    }
+  ]
+}
