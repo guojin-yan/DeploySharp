@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedUtc": "2026-09-30T08:15:55.2321960\u002B00:00",
-  "sourceRevision": "c3ee04a9e17ceffb2ceebc98667a161b8b968178",
+  "sourceRevision": "282ae8b",
   "runtime": {
     "left": "onnxruntime-cpu",
     "right": "opencv-dnn-cpu"
