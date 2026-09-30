@@ -119,7 +119,16 @@ public sealed class PaddleChart2TableMultiImageOrtExternalIntegrationTests
                 }
             });
         }
-        string report = Path.Combine(TestContext.TestResultsDirectory!, "chart2table-" + backend + "-multi-image-evidence.json");
+        string reportName = "chart2table-" + backend + "-multi-image-evidence.json";
+        string? reportOverride = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_REPORT_PATH");
+        string? reportRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_REPORT_ROOT");
+        string report = !string.IsNullOrWhiteSpace(reportOverride)
+            ? Path.GetFullPath(reportOverride)
+            : string.IsNullOrWhiteSpace(reportRoot)
+                ? Path.Combine(TestContext.TestResultsDirectory!, reportName)
+                : Path.Combine(Path.GetFullPath(reportRoot), reportName);
+        string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+        if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
         File.WriteAllText(report, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
