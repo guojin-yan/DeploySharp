@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
@@ -94,7 +96,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
                 Assert.IsTrue(result.Regions.Count > 0, testCase.Name + " returned no text regions.");
                 Assert.IsTrue(result.Regions.Any(region => region.Recognition != null), testCase.Name + " did not produce recognized text.");
-                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE variant=" + testCase.Name + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + result.Regions.Count(region => region.Recognition != null).ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + result.ComputeSha256());
+                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE variant=" + testCase.Name + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + result.Regions.Count(region => region.Recognition != null).ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + result.ComputeSha256() + ";textSha=" + ComputeTextSha(result));
             }
         }
 
@@ -126,6 +128,13 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             using PreparedVisualInput probe = new OpenCvVisualInputFactory().CreateFromFile(imagePath, "probe", new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr));
             return probe.SourceSize;
+        }
+
+        private static string ComputeTextSha(OcrResult result)
+        {
+            string text = string.Join("\n", result.Regions.Select(region => region.Recognition?.Text ?? string.Empty));
+            using SHA256 sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
         }
 
         private static string RequireFile(string path)
