@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-09-30T04:13:45.7866757+00:00",
+  "backend": "tensorrt-cuda",
+  "modelId": "paddle-chart/pp-chart2table",
+  "runtime": "JYPPX_NATIVE_BRIDGE_PATH=C:\\Users\\guoji\\.nuget\\packages\\jyppx.tensorrt.csharp.api.runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge\\4.0.0\\runtimes\\win-x64\\native\\jyppxtrtbridge.dll;JYPPX_TENSORRT_ROOT=D:\\Program Files\\TensorRT-10.11.0.33-cu12;JYPPX_CUDA_ROOT=C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9;JYPPX_CUDNN_ROOT=D:\\Program Files\\cuDNN-9.22.0-cuda12.9",
+  "engineRoot": "E:\\Model\\PaddleDocument\\chart2table-builder-e2e-20260924",
+  "engineSha256": [
+    {
+      "modelId": "paddle-chart/pp-chart2table/vision-projector",
+      "sha256": "db017a2ce94f77c03e2e55343a7123de45270613414d1f179da8a79097daa4c7"
+    },
+    {
+      "modelId": "paddle-chart/pp-chart2table/token-embedding",
+      "sha256": "56106bad4aabd6297a11c6e2af25c470b4d3e4a3bdca8bd82a08ddee0843116e"
+    },
+    {
+      "modelId": "paddle-chart/pp-chart2table/text-prefill",
+      "sha256": "975177c95d5914c80f1789d48904c8797fe1fdce9544e943ef28638e6a53a3ab"
+    },
+    {
+      "modelId": "paddle-chart/pp-chart2table/text-decode-with-past",
+      "sha256": "b58c53d23b8807a15a5578b30daba37c070b4d954b90938fdcaf8095cedb4422"
+    }
+  ],
+  "maximumNewTokens": 1024,
+  "results": [
+    {
+      "sample": "png_41699051005347.png",
+      "imageSha256": "b3e669137984fe0dbcec29355262e1c39286466f771d4689cf42c73126507950",
+      "expectedTextSha256": "bae7d00685bd1f3bcfe02e57b3ce3695f580016f4621fa62bfb876181e88e15d",
+      "generatedTextSha256": "bae7d00685bd1f3bcfe02e57b3ce3695f580016f4621fa62bfb876181e88e15d",
+      "tokenCountIncludingEos": 168,
+      "finishReason": "EndOfSequence",
+      "totalMs": 99866.1995,
+      "visionMs": 787.1854,
+      "embeddingMs": 133.8793,
+      "prefillMs": 915.6407,
+      "decodeStepCount": 167,
+      "decodeP50Ms": 573.3827,
+      "decodeP95Ms": 1013.8018199999999,
+      "structure": {
+        "expectedRows": 15,
+        "actualRows": 15,
+        "expectedDataRows": 14,
+        "actualDataRows": 14,
+        "expectedColumns": 2,
+        "actualColumns": 2,
+        "expectedCells": 30,
+        "actualCells": 30,
+        "rowExactMatchCount": 15,
+        "cellExactMatchCount": 30,
+        "rowAccuracy": 1,
+        "cellAccuracy": 1,
+        "exactTextMatch": true,
+        "structureMatches": true
+      }
+    },
+    {
+      "sample": "png_41810321001157.png",
+      "imageSha256": "f753bab919ed5cf525d79bad95a4d64372418a07072297ff3f731c5c81bb8e06",
+      "expectedTextSha256": "59cbe39922052c933d978b0b464107e2be692e42c6edafae0db946a9712e1906",
+      "generatedTextSha256": "59cbe39922052c933d978b0b464107e2be692e42c6edafae0db946a9712e1906",
+      "tokenCountIncludingEos": 34,
+      "finishReason": "EndOfSequence",
+      "totalMs": 28838.3513,
+      "visionMs": 1857.4887,
+      "embeddingMs": 28.5734,
+      "prefillMs": 1158.4495,
+      "decodeStepCount": 33,
+      "decodeP50Ms": 790.2913,
+      "decodeP95Ms": 1164.32366,
+      "structure": {
+        "expectedRows": 4,
+        "actualRows": 4,
+        "expectedDataRows": 3,
+        "actualDataRows": 3,
+        "expectedColumns": 2,
+        "actualColumns": 2,
+        "expectedCells": 8,
+        "actualCells": 8,
+        "rowExactMatchCount": 4,
+        "cellExactMatchCount": 8,
+        "rowAccuracy": 1,
+        "cellAccuracy": 1,
+        "exactTextMatch": true,
+        "structureMatches": true
+      }
+    },
+    {
+      "sample": "png_8127.png",
+      "imageSha256": "daa5534cc75395f66e645278eeb2bdd1765aac6e22f7a48653b6cfc287e895dd",
+      "expectedTextSha256": "effdc283cbf39f3af224e5ee6b28b87c040fff3016fe97add1b62c3c8a28f1ba",
+      "generatedTextSha256": "effdc283cbf39f3af224e5ee6b28b87c040fff3016fe97add1b62c3c8a28f1ba",
+      "tokenCountIncludingEos": 40,
+      "finishReason": "EndOfSequence",
+      "totalMs": 26994.9614,
+      "visionMs": 1814.1005,
+      "embeddingMs": 29.2446,
+      "prefillMs": 1044.5663,
+      "decodeStepCount": 39,
+      "decodeP50Ms": 692.6513,
+      "decodeP95Ms": 975.09415,
+      "structure": {
+        "expectedRows": 3,
+        "actualRows": 3,
+        "expectedDataRows": 2,
+        "actualDataRows": 2,
+        "expectedColumns": 3,
+        "actualColumns": 3,
+        "expectedCells": 9,
+        "actualCells": 9,
+        "rowExactMatchCount": 3,
+        "cellExactMatchCount": 9,
+        "rowAccuracy": 1,
+        "cellAccuracy": 1,
+        "exactTextMatch": true,
+        "structureMatches": true
+      }
+    },
+    {
+      "sample": "png_166.png",
+      "imageSha256": "2c62ffa7dbb59bfc14a07abe045eb3bbaa99bffb50a323c15194b03169b0115a",
+      "expectedTextSha256": "9e3df432b642a1cc0b79e22bf2e8cf46cff2721e4aca45b402f662776b947587",
+      "generatedTextSha256": "9e3df432b642a1cc0b79e22bf2e8cf46cff2721e4aca45b402f662776b947587",
+      "tokenCountIncludingEos": 77,
+      "finishReason": "EndOfSequence",
+      "totalMs": 52104.3351,
+      "visionMs": 2429.5386,
+      "embeddingMs": 55.7392,
+      "prefillMs": 606.2523,
+      "decodeStepCount": 76,
+      "decodeP50Ms": 609.41825,
+      "decodeP95Ms": 1066.1463749999998,
+      "structure": {
+        "expectedRows": 8,
+        "actualRows": 8,
+        "expectedDataRows": 7,
+        "actualDataRows": 7,
+        "expectedColumns": 2,
+        "actualColumns": 2,
+        "expectedCells": 16,
+        "actualCells": 16,
+        "rowExactMatchCount": 8,
+        "cellExactMatchCount": 16,
+        "rowAccuracy": 1,
+        "cellAccuracy": 1,
+        "exactTextMatch": true,
+        "structureMatches": true
+      }
+    }
+  ],
+  "boundary": "Four curated ChartQA human samples; exact table and structure reproduction is a multi-image qualitative regression, not a dataset accuracy score or controlled performance benchmark."
+}

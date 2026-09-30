@@ -11,6 +11,7 @@ using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.TensorRT;
 using JYPPX.DeploySharp.Visual.OpenCV;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.TensorRT.Tests
@@ -96,6 +97,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
             var bundle = new PaddleChart2TableOnnxBundle(engineArtifacts[0], engineArtifacts[1], engineArtifacts[2], engineArtifacts[3]);
             using var session = new PaddleChart2TableTensorRtDeviceSession(provider, bundle, new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
             var inputFactory = new OpenCvPaddleChart2TableInputFactory();
+            var evidence = new List<object>(samples.Length);
 
             foreach (var sample in samples)
             {
@@ -105,6 +107,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 var watch = Stopwatch.StartNew();
                 PaddleChart2TableGenerationResult result = session.Generate(input, tokenizer, maximumNewTokens: 1024);
                 watch.Stop();
+                PaddleChart2TableQualityComparison quality = PaddleChart2TableQualityEvaluator.Compare(sample.ExpectedText, result.Text);
 
                 TestContext.WriteLine(JsonSerializer.Serialize(new
                 {
@@ -119,7 +122,60 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 Assert.IsFalse(string.IsNullOrWhiteSpace(result.Text), sample.File + " produced an empty table.");
                 Assert.AreEqual(JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence, result.FinishReason, sample.File + " did not complete EOS generation.");
                 Assert.AreEqual(sample.ExpectedText, result.Text, sample.File + " did not reproduce the validated ChartQA table.");
+                Assert.IsTrue(quality.IsExactStructureAndContent, sample.File + " structural table comparison failed.");
+                evidence.Add(new
+                {
+                    sample = sample.File,
+                    imageSha256 = ComputeSha256(imagePath),
+                    expectedTextSha256 = Sha256Text(sample.ExpectedText),
+                    generatedTextSha256 = Sha256Text(result.Text),
+                    tokenCountIncludingEos = result.TokenIds.Count,
+                    finishReason = result.FinishReason.ToString(),
+                    totalMs = watch.Elapsed.TotalMilliseconds,
+                    visionMs = result.VisionTime.TotalMilliseconds,
+                    embeddingMs = result.EmbeddingTime.TotalMilliseconds,
+                    prefillMs = result.PrefillTime.TotalMilliseconds,
+                    decodeStepCount = result.DecodeSteps.Count,
+                    decodeP50Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .50),
+                    decodeP95Ms = Percentile(result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray(), .95),
+                    structure = new
+                    {
+                        expectedRows = quality.Expected.RowCount,
+                        actualRows = quality.Actual.RowCount,
+                        expectedDataRows = quality.Expected.DataRowCount,
+                        actualDataRows = quality.Actual.DataRowCount,
+                        expectedColumns = quality.Expected.ColumnCount,
+                        actualColumns = quality.Actual.ColumnCount,
+                        expectedCells = quality.Expected.CellCount,
+                        actualCells = quality.Actual.CellCount,
+                        rowExactMatchCount = quality.RowExactMatchCount,
+                        cellExactMatchCount = quality.CellExactMatchCount,
+                        rowAccuracy = quality.RowAccuracy,
+                        cellAccuracy = quality.CellAccuracy,
+                        exactTextMatch = quality.ExactTextMatch,
+                        structureMatches = quality.StructureMatches
+                    }
+                });
             }
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "chart2table-tensorrt-multi-image-evidence.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedUtc = DateTimeOffset.UtcNow,
+                backend = "tensorrt-cuda",
+                modelId = "paddle-chart/pp-chart2table",
+                runtime = DescribeRuntime(),
+                engineRoot,
+                engineSha256 = engineArtifacts.Select(value => new { modelId = value.ModelId.Value, sha256 = value.Sha256 }).ToArray(),
+                maximumNewTokens = 1024,
+                results = evidence,
+                boundary = "Four curated ChartQA human samples; exact table and structure reproduction is a multi-image qualitative regression, not a dataset accuracy score or controlled performance benchmark."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(samples.Length, evidence.Count, "The TensorRT evidence report must retain one row per sample.");
         }
 
         [TestMethod]
@@ -270,6 +326,19 @@ namespace DeploySharp.Visual.TensorRT.Tests
             using var stream = File.OpenRead(path);
             using var sha = System.Security.Cryptography.SHA256.Create();
             return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+        }
+
+        private static string Sha256Text(string value) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+
+        private static double Percentile(IReadOnlyList<double> values, double percentile)
+        {
+            if (values.Count == 0) return 0;
+            double[] sorted = values.OrderBy(value => value).ToArray();
+            double position = (sorted.Length - 1) * percentile;
+            int lower = (int)Math.Floor(position);
+            int upper = (int)Math.Ceiling(position);
+            if (lower == upper) return sorted[lower];
+            return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
         }
     }
 }
