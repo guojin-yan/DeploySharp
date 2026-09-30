@@ -793,6 +793,12 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 上表是繁忙开发设备上的短测，含构建与其他负载干扰，**不是最优性能记录**。SlidingWindow 增加了识别工作量；支持更大动态宽度的模型应同时对照 Reject/3200。当前验证覆盖 v4 mobile、v5 mobile、v6 tiny 的 CPU/CUDA；v6 small/medium、TensorRT/OpenVINO/OpenCV DNN 的滑窗矩阵和标注长文本 CER/WER 仍待补齐。
 
+### PP-OCR 核心三图跨后端证据（2026-09-30）
+
+为避免把单张演示图当成完整覆盖，固定使用 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg`，对 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 共 7 组 DET+CLS+REC 流水线分别运行 ONNX Runtime CPU 与 OpenVINO CPU。21 个组合在两个后端都完成检测、裁剪、方向、识别和合并；区域数与已识别数逐组合一致，按区域文本序列的 SHA-256 也为 `21/21` 一致。v6 没有独立版本化 CLS 归档，明确复用 PP-OCRv5 mobile CLS。
+
+该轮只使用演示图，没有逐字人工真值，因此不能从它计算 CER/WER、召回率或准确率；每组仅一次端到端调用，耗时不替代 5 次预热 + 50 次正式性能协议。模型、输入、结果摘要和可复现命令见[三图跨后端机器可读记录](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-openvino-ort-20260930.md)，复现脚本为 `eng/models/paddle-ocr/scripts/Invoke-PaddleOcrCoreThreeImageEvidence.ps1`。
+
 ### 2026-09-29 受控与真实关联边界补充
 
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。

@@ -1,0 +1,1070 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-09-30T07:24:49.1538467+00:00",
+  "sourceRevision": "3a76f56927fe5b95f5deeecad2b30b681f5f3e23+working-tree",
+  "protocol": {
+    "testProject": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\tests\\DeploySharp.Visual.OpenCV.Tests\\DeploySharp.Visual.OpenCV.Tests.csproj",
+    "configuration": "Debug",
+    "framework": "net10.0",
+    "openVinoCommand": "PaddleOcrAllCorePipelineOpenVinoIntegrationTests.EveryCorePpOcrVariantRunsOpenVinoAcrossThreeLocalImages",
+    "ortCommand": "PaddleOcrAllCorePipelineOrtIntegrationTests.EveryCorePpOcrVariantRunsCompleteDetClsRecMergeOnRealOrtCpu (one image per invocation)",
+    "preprocessing": "OpenCV input factory + PP-OCR official detection preprocessing",
+    "timing": "single end-to-end pipeline invocation per model/image; elapsedMs includes preparation, DET, CLS, crop, REC and merge"
+  },
+  "device": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "runtime": "OpenVINO CPU / ONNX Runtime CPU"
+  },
+  "inputs": [
+    {
+      "path": "E:\\Data\\ocr\\demo_1.jpg",
+      "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "lengthBytes": 89877
+    },
+    {
+      "path": "E:\\Data\\ocr\\demo_2.jpg",
+      "sha256": "957a9cc15da49312277796126be225e0ee653f3316578c12d626fa43fbe9561b",
+      "lengthBytes": 43476
+    },
+    {
+      "path": "E:\\Data\\ocr\\demo_3.jpg",
+      "sha256": "f9353f07461e913b019f504f501ed7723a1c2164fdc667f095cc7e64cc7caa2d",
+      "lengthBytes": 46138
+    }
+  ],
+  "models": [
+    {
+      "variant": "v4-mobile",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_det.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_rec.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv4\\ppocrv4_keys.txt"
+      },
+      "sha256": {
+        "detector": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+        "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+        "recognizer": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+        "dictionary": "8e9dc37300253c08a5db6d75f8ae7dbf9ab8dc8c8f88827400bfe974269d3953"
+      }
+    },
+    {
+      "variant": "v4-server",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_det.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_rec.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv4\\ppocrv4_keys.txt"
+      },
+      "sha256": {
+        "detector": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+        "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+        "recognizer": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+        "dictionary": "8e9dc37300253c08a5db6d75f8ae7dbf9ab8dc8c8f88827400bfe974269d3953"
+      }
+    },
+    {
+      "variant": "v5-mobile",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_det.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_rec.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv5\\ppocrv5_dict.txt"
+      },
+      "sha256": {
+        "detector": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+        "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+        "recognizer": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+        "dictionary": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+      }
+    },
+    {
+      "variant": "v5-server",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_det.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_rec.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv5\\ppocrv5_dict.txt"
+      },
+      "sha256": {
+        "detector": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+        "classifier": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+        "recognizer": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+        "dictionary": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+      }
+    },
+    {
+      "variant": "v6-tiny",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_det_inference.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_rec_inference.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_rec_dict.txt"
+      },
+      "sha256": {
+        "detector": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+        "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+        "recognizer": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+        "dictionary": "2af150bab777d86fa1ce821f6a37eabea90f1bb99ab9c41f031262e892a747bc"
+      }
+    },
+    {
+      "variant": "v6-small",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_rec_inference.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_rec_dict.txt"
+      },
+      "sha256": {
+        "detector": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+        "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+        "recognizer": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+        "dictionary": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+      }
+    },
+    {
+      "variant": "v6-medium",
+      "files": {
+        "detector": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_det_inference.onnx",
+        "classifier": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx",
+        "recognizer": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_rec_inference.onnx",
+        "dictionary": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_rec_dict.txt"
+      },
+      "sha256": {
+        "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+        "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+        "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+        "dictionary": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+      }
+    }
+  ],
+  "runs": {
+    "openVino": [
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 759.504,
+        "resultSha256": "71cd27ec4529bb808e37c0dfebfb7e7dab8299ecc159228fa58981a8f063a144",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2925.645,
+        "resultSha256": "b83a0bbdb64aadffa88830cffea2c221ae1f6703af1b308d3a3c050210e7b0a0",
+        "textSha256": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1062.694,
+        "resultSha256": "b29ef2e832baf3f485462c3fbddee1eddcd6c8e57b36d55ba84384f5a63382dc",
+        "textSha256": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2737.719,
+        "resultSha256": "f52d3288465a7a52ba3009dfdc731c67328082d18a623da99407b55e2c52aad4",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 554.512,
+        "resultSha256": "0cf810e73a3b1caf6163247730f3c451ca0e28f62a99885b5d42ca5b6d78080d",
+        "textSha256": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 868.128,
+        "resultSha256": "af8990c7e0af61e7438ccaef757d81fe909433913f2245f82474680fbe9e301d",
+        "textSha256": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2199.068,
+        "resultSha256": "31f13a54d45769f74e00106acb09a9a4412ecd45931a3f064d79300f5d05fd29",
+        "textSha256": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 508.479,
+        "resultSha256": "cfa03b007471b3bd8df365f8031743fda990528842a6058df1cfe105bcc6b24a",
+        "textSha256": "d2d6ef8c65891246657965b0ed6a9c922b0623fbd08e0fb610a66a8b62ae890c"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 1452.092,
+        "resultSha256": "928a85a137c1cda0cb89d3c9bf645bfaaf35d65d12053a2376b60b8e115189bc",
+        "textSha256": "b0a58be0be2c6c9fe10bcae28a88ee84de73c08e5d7e2b37f635c10df34f61ae"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 536.674,
+        "resultSha256": "c4a17a6927b54bd73cbdf6a1e6103b1e4f0a5834fe5fb80779da998ab8ffddcf",
+        "textSha256": "d90e4c2ac18fb8cb7417072972a5b547072692d6f7ebb2106ae55ec78ddbcaf9"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 1118.292,
+        "resultSha256": "c36f0e9fd50d8070387b635ad1449ce0075203d6edbbeec67b72df22ba5857b3",
+        "textSha256": "46d8af9c8f3f7b3d2685c9b92c89cfc5bb043205388cb71faf3b1997a83cf2cf"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 283.297,
+        "resultSha256": "5be257f3bf622a90d28b452012645edeea44988444204330cfa234289001137b",
+        "textSha256": "519dcc343cc859bb7d9e1a735a9359aaf683269ffa108a1f8083b0ae3e90a1a7"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 439.904,
+        "resultSha256": "9052032239f3e60fcf1223ae6e7f881309ddfb99b618802b096f360ee15895be",
+        "textSha256": "948d781689e623c10f5b9626ac0ace077f4b0d1a0902f251d0db603439281e1b"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 901.713,
+        "resultSha256": "561b2a9133f4fb77efad0e9ff3a2889f89515ccafb61100075fbb4c714d25777",
+        "textSha256": "04c06946339505a17d04bc2c3a1e23732dbc06bd4199480d5e128deff7beaa72"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 440.791,
+        "resultSha256": "7af8abaff6f6b4e0b930708fc37017b049685a2d223c1a636a23f0f3683ae93e",
+        "textSha256": "1f9e6ae66d88682bd21e0d7eef9123cdedd9294075b674f315f88a61efdeae85"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2255.436,
+        "resultSha256": "5de799e596f19e8dbb6c310c96604b3d969fb9a12da17a32e7aa3dc5324a7d54",
+        "textSha256": "3c037a05deb3f5f7effaecf889c8e253b8a4f0390822c8dedd85fc44cae61db7"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 635.275,
+        "resultSha256": "df7a334a1e51ab4133eb78f1cd47fe4066acc446728762109fa526bac5759012",
+        "textSha256": "1e07886dfd203120f747b01680f73d267e58c7202da3bb2badf35bc90f615a9a"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1849.121,
+        "resultSha256": "a8d88bec763693897b765a143ef1825eef746ab99397436e992bbc105130dfbe",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 312.003,
+        "resultSha256": "16f407528a16a72c46fa0d8821ed6671e414e2b015a90c2515a4ca43e0f03cfe",
+        "textSha256": "4e9238136d1d73e1475c44dcd8e3d5f7769063128b973ba02c8ee2c7528159cd"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 600.542,
+        "resultSha256": "1b7ccb4f607510c25818129993e411b231bab1b7743335bac9cf2a2323e20787",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1367.784,
+        "resultSha256": "4f4fbc4ab7ef7ea86073a3664a32e41637593a78cd850b2adbb8245fd0eaf740",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      }
+    ],
+    "ort": [
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 608.974,
+        "resultSha256": "049eb7563013bf5d7b4938c28112bfd4aa74081cfeffe7c8cb2a435b0e170c15",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2371.277,
+        "resultSha256": "981cb5a5007c41be6171c9a01586284aee371adb1ebb7ae6e18c49e32eaefc82",
+        "textSha256": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 807.37,
+        "resultSha256": "978d82249162cef011a99e31bfec0f3e17eed986b9746b678272a015d0278212",
+        "textSha256": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1766.877,
+        "resultSha256": "45921c49f5f006705eab60cf0675d02b5de11a4b0625d95005d3811768a8335a",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 314.783,
+        "resultSha256": "85f00c5ad8ee587bf316fc1966e01430bffaf0c38bd2dc280c539fc5aeb1856e",
+        "textSha256": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 859.986,
+        "resultSha256": "2fdf5b2687d02b06704aa2bd6c39652aa85647174e2e4017a98c356ebbe4313f",
+        "textSha256": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1796.302,
+        "resultSha256": "fbac8dcb3469d95702f3fec67188a71b1424eee8a15ae7d631d9395f38cf3b47",
+        "textSha256": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 443.071,
+        "resultSha256": "cafd7da2cc210ec09b19ceef74fd1bb07b17bc7d7cdab70c3be396373901679c",
+        "textSha256": "d2d6ef8c65891246657965b0ed6a9c922b0623fbd08e0fb610a66a8b62ae890c"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 1252.977,
+        "resultSha256": "ad0529e589d300e5d5f5ec355381b19a7eb478f648c814ccabdd1686630f9ff3",
+        "textSha256": "b0a58be0be2c6c9fe10bcae28a88ee84de73c08e5d7e2b37f635c10df34f61ae"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 402.1,
+        "resultSha256": "3ec46583423a5364e9ee35ab0bf836487eb7973052fe166e8e66b266405d910f",
+        "textSha256": "d90e4c2ac18fb8cb7417072972a5b547072692d6f7ebb2106ae55ec78ddbcaf9"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 909.336,
+        "resultSha256": "d3f0fb3de7b1615135429c21f1ab21c52922855163eb8a606dda733499610717",
+        "textSha256": "46d8af9c8f3f7b3d2685c9b92c89cfc5bb043205388cb71faf3b1997a83cf2cf"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 178.583,
+        "resultSha256": "fe4ca962e4ee43c124c492e709a4b12300f3e84c1198f22421031a0b48c50afa",
+        "textSha256": "519dcc343cc859bb7d9e1a735a9359aaf683269ffa108a1f8083b0ae3e90a1a7"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 360.064,
+        "resultSha256": "7b94b3a22042b2ba85b4387608aa52b2eafbd90b4c266782b0c675eccc285941",
+        "textSha256": "948d781689e623c10f5b9626ac0ace077f4b0d1a0902f251d0db603439281e1b"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 782.644,
+        "resultSha256": "7cef52a64ab10ca4e3c161233ecc146477b29c554e842762be82b03ef5bab2e1",
+        "textSha256": "04c06946339505a17d04bc2c3a1e23732dbc06bd4199480d5e128deff7beaa72"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 598.646,
+        "resultSha256": "a5c30f3f55a993d5983b69d9c6a2b747e6fe73ca3f36097be0216c1f518eb5e3",
+        "textSha256": "1f9e6ae66d88682bd21e0d7eef9123cdedd9294075b674f315f88a61efdeae85"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2782.619,
+        "resultSha256": "fc04ae774ac1ddcda06c54ca99f754578749e4db67fa6334ea8ef39318d3ec63",
+        "textSha256": "3c037a05deb3f5f7effaecf889c8e253b8a4f0390822c8dedd85fc44cae61db7"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 645.261,
+        "resultSha256": "87864f45e900b2dad806949be5118b45b8b59021b989d27ccb1159959a218dd1",
+        "textSha256": "1e07886dfd203120f747b01680f73d267e58c7202da3bb2badf35bc90f615a9a"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2082.779,
+        "resultSha256": "fb4261998d7a29f09cd1f39d1618804d9be1594ea5236ec8c2874c539a00a8cc",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 268.653,
+        "resultSha256": "baac8ec33f988ed684b21bacca0b6646de2b2e66bd39f3c87f7c81910ba4ef2f",
+        "textSha256": "4e9238136d1d73e1475c44dcd8e3d5f7769063128b973ba02c8ee2c7528159cd"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 589.975,
+        "resultSha256": "aeeb481afc64fa0e018bd8e8869433e602e919fdc4577dd576810bf8d45164fe",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1533.958,
+        "resultSha256": "7adf9f814d816bf5fad345008a006fc3a337729e79e4cecdaeccd3b723984911",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v4-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 759.504,
+        "resultSha256": "71cd27ec4529bb808e37c0dfebfb7e7dab8299ecc159228fa58981a8f063a144",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 608.974,
+        "resultSha256": "049eb7563013bf5d7b4938c28112bfd4aa74081cfeffe7c8cb2a435b0e170c15",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v4-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2925.645,
+        "resultSha256": "b83a0bbdb64aadffa88830cffea2c221ae1f6703af1b308d3a3c050210e7b0a0",
+        "textSha256": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2371.277,
+        "resultSha256": "981cb5a5007c41be6171c9a01586284aee371adb1ebb7ae6e18c49e32eaefc82",
+        "textSha256": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v5-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1062.694,
+        "resultSha256": "b29ef2e832baf3f485462c3fbddee1eddcd6c8e57b36d55ba84384f5a63382dc",
+        "textSha256": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 807.37,
+        "resultSha256": "978d82249162cef011a99e31bfec0f3e17eed986b9746b678272a015d0278212",
+        "textSha256": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v5-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2737.719,
+        "resultSha256": "f52d3288465a7a52ba3009dfdc731c67328082d18a623da99407b55e2c52aad4",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1766.877,
+        "resultSha256": "45921c49f5f006705eab60cf0675d02b5de11a4b0625d95005d3811768a8335a",
+        "textSha256": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v6-tiny",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 554.512,
+        "resultSha256": "0cf810e73a3b1caf6163247730f3c451ca0e28f62a99885b5d42ca5b6d78080d",
+        "textSha256": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 314.783,
+        "resultSha256": "85f00c5ad8ee587bf316fc1966e01430bffaf0c38bd2dc280c539fc5aeb1856e",
+        "textSha256": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v6-small",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 868.128,
+        "resultSha256": "af8990c7e0af61e7438ccaef757d81fe909433913f2245f82474680fbe9e301d",
+        "textSha256": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 859.986,
+        "resultSha256": "2fdf5b2687d02b06704aa2bd6c39652aa85647174e2e4017a98c356ebbe4313f",
+        "textSha256": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_1.jpg",
+      "variant": "v6-medium",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 2199.068,
+        "resultSha256": "31f13a54d45769f74e00106acb09a9a4412ecd45931a3f064d79300f5d05fd29",
+        "textSha256": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 16,
+        "recognized": 16,
+        "elapsedMs": 1796.302,
+        "resultSha256": "fbac8dcb3469d95702f3fec67188a71b1424eee8a15ae7d631d9395f38cf3b47",
+        "textSha256": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v4-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 508.479,
+        "resultSha256": "cfa03b007471b3bd8df365f8031743fda990528842a6058df1cfe105bcc6b24a",
+        "textSha256": "d2d6ef8c65891246657965b0ed6a9c922b0623fbd08e0fb610a66a8b62ae890c"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 443.071,
+        "resultSha256": "cafd7da2cc210ec09b19ceef74fd1bb07b17bc7d7cdab70c3be396373901679c",
+        "textSha256": "d2d6ef8c65891246657965b0ed6a9c922b0623fbd08e0fb610a66a8b62ae890c"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v4-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 1452.092,
+        "resultSha256": "928a85a137c1cda0cb89d3c9bf645bfaaf35d65d12053a2376b60b8e115189bc",
+        "textSha256": "b0a58be0be2c6c9fe10bcae28a88ee84de73c08e5d7e2b37f635c10df34f61ae"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 1252.977,
+        "resultSha256": "ad0529e589d300e5d5f5ec355381b19a7eb478f648c814ccabdd1686630f9ff3",
+        "textSha256": "b0a58be0be2c6c9fe10bcae28a88ee84de73c08e5d7e2b37f635c10df34f61ae"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v5-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 536.674,
+        "resultSha256": "c4a17a6927b54bd73cbdf6a1e6103b1e4f0a5834fe5fb80779da998ab8ffddcf",
+        "textSha256": "d90e4c2ac18fb8cb7417072972a5b547072692d6f7ebb2106ae55ec78ddbcaf9"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 402.1,
+        "resultSha256": "3ec46583423a5364e9ee35ab0bf836487eb7973052fe166e8e66b266405d910f",
+        "textSha256": "d90e4c2ac18fb8cb7417072972a5b547072692d6f7ebb2106ae55ec78ddbcaf9"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v5-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 1118.292,
+        "resultSha256": "c36f0e9fd50d8070387b635ad1449ce0075203d6edbbeec67b72df22ba5857b3",
+        "textSha256": "46d8af9c8f3f7b3d2685c9b92c89cfc5bb043205388cb71faf3b1997a83cf2cf"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 909.336,
+        "resultSha256": "d3f0fb3de7b1615135429c21f1ab21c52922855163eb8a606dda733499610717",
+        "textSha256": "46d8af9c8f3f7b3d2685c9b92c89cfc5bb043205388cb71faf3b1997a83cf2cf"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v6-tiny",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 283.297,
+        "resultSha256": "5be257f3bf622a90d28b452012645edeea44988444204330cfa234289001137b",
+        "textSha256": "519dcc343cc859bb7d9e1a735a9359aaf683269ffa108a1f8083b0ae3e90a1a7"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 14,
+        "recognized": 14,
+        "elapsedMs": 178.583,
+        "resultSha256": "fe4ca962e4ee43c124c492e709a4b12300f3e84c1198f22421031a0b48c50afa",
+        "textSha256": "519dcc343cc859bb7d9e1a735a9359aaf683269ffa108a1f8083b0ae3e90a1a7"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v6-small",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 439.904,
+        "resultSha256": "9052032239f3e60fcf1223ae6e7f881309ddfb99b618802b096f360ee15895be",
+        "textSha256": "948d781689e623c10f5b9626ac0ace077f4b0d1a0902f251d0db603439281e1b"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 360.064,
+        "resultSha256": "7b94b3a22042b2ba85b4387608aa52b2eafbd90b4c266782b0c675eccc285941",
+        "textSha256": "948d781689e623c10f5b9626ac0ace077f4b0d1a0902f251d0db603439281e1b"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_2.jpg",
+      "variant": "v6-medium",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 901.713,
+        "resultSha256": "561b2a9133f4fb77efad0e9ff3a2889f89515ccafb61100075fbb4c714d25777",
+        "textSha256": "04c06946339505a17d04bc2c3a1e23732dbc06bd4199480d5e128deff7beaa72"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 13,
+        "recognized": 13,
+        "elapsedMs": 782.644,
+        "resultSha256": "7cef52a64ab10ca4e3c161233ecc146477b29c554e842762be82b03ef5bab2e1",
+        "textSha256": "04c06946339505a17d04bc2c3a1e23732dbc06bd4199480d5e128deff7beaa72"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v4-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 440.791,
+        "resultSha256": "7af8abaff6f6b4e0b930708fc37017b049685a2d223c1a636a23f0f3683ae93e",
+        "textSha256": "1f9e6ae66d88682bd21e0d7eef9123cdedd9294075b674f315f88a61efdeae85"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 598.646,
+        "resultSha256": "a5c30f3f55a993d5983b69d9c6a2b747e6fe73ca3f36097be0216c1f518eb5e3",
+        "textSha256": "1f9e6ae66d88682bd21e0d7eef9123cdedd9294075b674f315f88a61efdeae85"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v4-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v4-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2255.436,
+        "resultSha256": "5de799e596f19e8dbb6c310c96604b3d969fb9a12da17a32e7aa3dc5324a7d54",
+        "textSha256": "3c037a05deb3f5f7effaecf889c8e253b8a4f0390822c8dedd85fc44cae61db7"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v4-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2782.619,
+        "resultSha256": "fc04ae774ac1ddcda06c54ca99f754578749e4db67fa6334ea8ef39318d3ec63",
+        "textSha256": "3c037a05deb3f5f7effaecf889c8e253b8a4f0390822c8dedd85fc44cae61db7"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v5-mobile",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 635.275,
+        "resultSha256": "df7a334a1e51ab4133eb78f1cd47fe4066acc446728762109fa526bac5759012",
+        "textSha256": "1e07886dfd203120f747b01680f73d267e58c7202da3bb2badf35bc90f615a9a"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-mobile",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 645.261,
+        "resultSha256": "87864f45e900b2dad806949be5118b45b8b59021b989d27ccb1159959a218dd1",
+        "textSha256": "1e07886dfd203120f747b01680f73d267e58c7202da3bb2badf35bc90f615a9a"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v5-server",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v5-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1849.121,
+        "resultSha256": "a8d88bec763693897b765a143ef1825eef746ab99397436e992bbc105130dfbe",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v5-server",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 2082.779,
+        "resultSha256": "fb4261998d7a29f09cd1f39d1618804d9be1594ea5236ec8c2874c539a00a8cc",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v6-tiny",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-tiny",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 312.003,
+        "resultSha256": "16f407528a16a72c46fa0d8821ed6671e414e2b015a90c2515a4ca43e0f03cfe",
+        "textSha256": "4e9238136d1d73e1475c44dcd8e3d5f7769063128b973ba02c8ee2c7528159cd"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-tiny",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 268.653,
+        "resultSha256": "baac8ec33f988ed684b21bacca0b6646de2b2e66bd39f3c87f7c81910ba4ef2f",
+        "textSha256": "4e9238136d1d73e1475c44dcd8e3d5f7769063128b973ba02c8ee2c7528159cd"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v6-small",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-small",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 600.542,
+        "resultSha256": "1b7ccb4f607510c25818129993e411b231bab1b7743335bac9cf2a2323e20787",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-small",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 589.975,
+        "resultSha256": "aeeb481afc64fa0e018bd8e8869433e602e919fdc4577dd576810bf8d45164fe",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      }
+    },
+    {
+      "image": "E:\\Data\\ocr\\demo_3.jpg",
+      "variant": "v6-medium",
+      "regionCountMatch": true,
+      "recognizedCountMatch": true,
+      "textShaMatch": true,
+      "openVino": {
+        "backend": "openvino-cpu",
+        "variant": "v6-medium",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1367.784,
+        "resultSha256": "4f4fbc4ab7ef7ea86073a3664a32e41637593a78cd850b2adbb8245fd0eaf740",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      },
+      "ort": {
+        "backend": "onnxruntime-cpu",
+        "variant": "v6-medium",
+        "regions": 10,
+        "recognized": 10,
+        "elapsedMs": 1533.958,
+        "resultSha256": "7adf9f814d816bf5fad345008a006fc3a337729e79e4cecdaeccd3b723984911",
+        "textSha256": "006b905b3d69d4a495b15e61ea45904eeade771e5cbc62dc850524b7a4ac4485"
+      }
+    }
+  ],
+  "summary": {
+    "imageCount": 3,
+    "variantCount": 7,
+    "combinations": 21,
+    "openVinoExecutionPass": 21,
+    "ortExecutionPass": 21,
+    "regionCountMatches": 21,
+    "recognizedCountMatches": 21,
+    "textShaMatches": 21,
+    "textShaMatchRate": 1.0
+  },
+  "limitations": [
+    "输入图片没有逐字人工真值；本报告只证明完整流水线执行、数量/文本跨后端匹配和可复现摘要，不是 CER/WER、召回率或准确率报告。",
+    "single invocation per combination is smoke timing, not the formal 5/50 performance protocol.",
+    "v6 uses the official PP-OCRv5 mobile CLS model because no separately versioned v6 CLS artifact is present."
+  ]
+}
