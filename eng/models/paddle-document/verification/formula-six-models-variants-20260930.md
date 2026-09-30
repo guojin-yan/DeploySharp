@@ -2,16 +2,16 @@
 
 All six locally acquired PaddleX formula exports were run through DeploySharp on ONNX Runtime CPU against five traceable variants of the official `general_formula_rec_001.png`: the original, a white-border variant, a contrast variant, a JPEG variant and a blur variant. Each run used that model's official `inference.yml` tokenizer and model-specific input size.
 
-| Model | Variants | EOS / no truncation | Normalized reference match | Token count range |
-| --- | ---: | ---: | ---: | ---: |
-| `pp-formulanet-plus-s` | 5 | 5/5 | 4/5 | 197–204 |
-| `pp-formulanet-plus-m` | 5 | 5/5 | 4/5 | 197–197 |
-| `pp-formulanet-plus-l` | 5 | 5/5 | 4/5 | 197–206 |
-| `pp-formulanet-s` | 5 | 5/5 | 0/5 | 213–214 |
-| `pp-formulanet-l` | 5 | 5/5 | 0/5 | 197–197 |
-| `unimernet` | 5 | 5/5 | 0/5 | 208–210 |
+| Model | Variants | EOS / no truncation | Normalized reference match | CER min / max / mean | Token count range |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `pp-formulanet-plus-s` | 5 | 5/5 | 4/5 | 0.00% / 5.92% / 1.18% | 197–204 |
+| `pp-formulanet-plus-m` | 5 | 5/5 | 4/5 | 0.00% / 2.37% / 0.47% | 197–197 |
+| `pp-formulanet-plus-l` | 5 | 5/5 | 4/5 | 0.00% / 3.55% / 0.71% | 197–206 |
+| `pp-formulanet-s` | 5 | 5/5 | 0/5 | 4.73% / 13.02% / 7.10% | 213–214 |
+| `pp-formulanet-l` | 5 | 5/5 | 0/5 | 2.37% / 2.37% / 2.37% | 197–197 |
+| `unimernet` | 5 | 5/5 | 0/5 | 5.33% / 11.24% / 6.51% | 208–210 |
 
-The three Plus models match the normalized reference on the original, white-border, contrast and blur variants. All three differ on the JPEG variant, which is a useful controlled degradation signal rather than a natural-image accuracy score. FormulaNet-S/L and UniMERNet produce complete, warning-free sequences on all five variants but differ from this Plus-model reference equation; their outputs are retained in the JSON so the token/LaTeX differences remain auditable. The public formula result removes EOS from `TokenIds`, so `reachedEndOfSequence` is determined by the absence of the decoder's `missing-eos:sequence-may-be-truncated` warning; `explicitEosTokenRetained` is therefore false for all rows by design.
+The three Plus models match the normalized reference on the original, white-border, contrast and blur variants. All three differ on the JPEG variant; their mean normalized character error rates are 1.18%, 0.47% and 0.71%. FormulaNet-S/L and UniMERNet produce complete, warning-free sequences on all five variants but differ from this Plus-model reference equation, with mean normalized character error rates of 7.10%, 2.37% and 6.51%; their outputs are retained in the JSON so the token/LaTeX differences remain auditable. CER here is Levenshtein distance over the whitespace-stripped LaTeX string, not a published formula benchmark. The public formula result removes EOS from `TokenIds`, so `reachedEndOfSequence` is determined by the absence of the decoder's `missing-eos:sequence-may-be-truncated` warning; `explicitEosTokenRetained` is therefore false for all rows by design.
 
 The machine-readable report contains the model, tokenizer and image SHA-256 values, token/LaTeX hashes, complete LaTeX strings, warning lists and variant-level reference flags: [formula-six-models-variants-20260930.json](formula-six-models-variants-20260930.json). The five variant images and manifest are generated locally by `eng/models/paddle-ocr/scripts/Generate-FormulaVariantCase.py` and are not redistributed with the repository.
 

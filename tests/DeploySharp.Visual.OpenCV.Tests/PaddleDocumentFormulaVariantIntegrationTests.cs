@@ -126,6 +126,7 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                 InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
                 PaddleDocumentFormulaResult result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
                 string normalizedActual = string.Concat(result.Latex.Where(value => !char.IsWhiteSpace(value)));
+                int normalizedEditDistance = EditDistance(expectedNormalized, normalizedActual);
                 // The formula decoder removes EOS from the public token sequence;
                 // the warning is the stable contract used by the six-model audit.
                 bool reachedEos = !result.Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal);
@@ -140,6 +141,9 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                     tokenIdsSha256 = FileShaText(string.Join(",", result.TokenIds)),
                     latexLength = result.Latex.Length,
                     latexSha256 = FileShaText(result.Latex),
+                    normalizedReferenceLength = expectedNormalized.Length,
+                    normalizedCharEditDistance = normalizedEditDistance,
+                    normalizedCharErrorRate = (double)normalizedEditDistance / Math.Max(1, expectedNormalized.Length),
                     reachedEndOfSequence = reachedEos,
                     explicitEosTokenRetained = result.TokenIds.Contains(end),
                     normalizedReferenceMatch = string.Equals(expectedNormalized, normalizedActual, StringComparison.Ordinal),
@@ -173,4 +177,22 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     private static string FileShaText(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+
+    private static int EditDistance(string expected, string actual)
+    {
+        int[] previous = new int[actual.Length + 1];
+        int[] current = new int[actual.Length + 1];
+        for (int column = 0; column <= actual.Length; column++) previous[column] = column;
+        for (int row = 1; row <= expected.Length; row++)
+        {
+            current[0] = row;
+            for (int column = 1; column <= actual.Length; column++)
+            {
+                int substitution = previous[column - 1] + (expected[row - 1] == actual[column - 1] ? 0 : 1);
+                current[column] = Math.Min(Math.Min(previous[column] + 1, current[column - 1] + 1), substitution);
+            }
+            (previous, current) = (current, previous);
+        }
+        return previous[actual.Length];
+    }
 }

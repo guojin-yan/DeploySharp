@@ -427,7 +427,7 @@ Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用�
 
 六模型的模型、Tokenizer、输入、token/LaTeX SHA-256 和完整输出见 [`formula-ort-six-models-20260930.md`](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.md) 及其 [JSON 证据](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.json)。该报告是单张官方样例的语义执行合同，不是公式数据集准确率；FormulaNet-S/L 和 UniMERNet 仍需额外人工真值样本。
 
-同一官方公式图还生成了原图、白边、对比度、模糊和 JPEG 五个可追溯变体，并让六个模型全部通过 ORT CPU。Plus-S/M/L 的归一化参考式匹配为各 `4/5`，差异均出现在 JPEG 变体；FormulaNet-S/L、UniMERNet 五个变体均正常结束但与 Plus 参考式不同。完整模型/变体 SHA、LaTeX 和 warning 见 [`formula-six-models-variants-20260930.md`](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.md) 及其 [JSON](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.json)。这是单一公式的受控回归，不是自然公式数据集准确率。
+同一官方公式图还生成了原图、白边、对比度、模糊和 JPEG 五个可追溯变体，并让六个模型全部通过 ORT CPU。Plus-S/M/L 的归一化参考式匹配为各 `4/5`，平均去空白 LaTeX CER 为 `1.18%/0.47%/0.71%`，差异均出现在 JPEG 变体；FormulaNet-S/L、UniMERNet 五个变体均正常结束但与 Plus 参考式不同，平均 CER 为 `7.10%/2.37%/6.51%`。完整模型/变体 SHA、LaTeX、编辑距离和 warning 见 [`formula-six-models-variants-20260930.md`](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.md) 及其 [JSON](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.json)。这里的 CER 是单一公式去空白字符串的 Levenshtein 比率，不是自然公式数据集准确率。
 
 公式输入还与固定版本的 PaddleX 原始 processor 逐元素对比。三种尺寸平均绝对误差分别约 `1.54e-7`、`7.70e-8`、`2.10e-6`；最大差异约 `0.022564`（相当于归一化前一个灰度级），来自 Pillow 整数滤波取整。此证据针对当前示例，不代表所有输入逐位相同。
 
