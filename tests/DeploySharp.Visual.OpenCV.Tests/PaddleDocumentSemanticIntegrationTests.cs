@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
@@ -23,6 +26,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
         private const string PaddleDocumentSourceRoot = @"E:\Model\PaddleDocument\source";
         private const string ImagePath = @"E:\Data\image\bus.jpg";
+        private const string ExpectedPlusLatex = @"\zeta_{0}(\nu)=-\frac{\nu\varrho^{-2\nu}}{\pi}\int_{\mu}^{\infty}d\omega\int_{C_{+}}dz\frac{2z^{2}}{(z^{2}+\omega^{2})^{\nu+1}}\breve{\Psi}(\omega;z)e^{i\epsilon z}\quad,";
+
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         [TestCategory("ExternalModels")]
@@ -289,6 +295,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
         public void FormulaExportsDecodeWithOfficialTokenizerOnRealOrtCpu()
         {
             RequireExternal();
+            string formulaImage = Path.Combine(Path.GetDirectoryName(ModelRoot)!, "validation", "general_formula_rec_001.png");
+            Assert.IsTrue(File.Exists(formulaImage), "Acquire the official formula example before running semantic validation.");
+            string imageSha256 = FileSha256(formulaImage);
             var cases = new[]
             {
                 new FormulaCase("pp-formulanet-plus-s", "PP-FormulaNet_plus-S_infer", new VisualSize(384, 384)),
@@ -298,13 +307,24 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 new FormulaCase("pp-formulanet-l", "PP-FormulaNet-L_infer", new VisualSize(768, 768)),
                 new FormulaCase("unimernet", "UniMERNet_infer", new VisualSize(672, 192))
             };
+            var evidence = new List<object>(cases.Length);
             foreach (FormulaCase formulaCase in cases)
             {
                 string model = formulaCase.ModelId;
                 string path = Path.Combine(ModelRoot, model + ".onnx");
-                if (!File.Exists(path)) { Console.WriteLine("PADDLE_DOCUMENT_FORMULA_SEMANTIC model=" + model + ";status=missing-model"); continue; }
+                if (!File.Exists(path))
+                {
+                    evidence.Add(new { model, status = "missing-model", backend = "onnxruntime-cpu", imageSha256 });
+                    Console.WriteLine("PADDLE_DOCUMENT_FORMULA_SEMANTIC model=" + model + ";status=missing-model");
+                    continue;
+                }
                 string yaml = Path.Combine(PaddleDocumentSourceRoot, model, formulaCase.SourceDirectory, "inference.yml");
-                if (!File.Exists(yaml)) { Console.WriteLine("PADDLE_DOCUMENT_FORMULA_SEMANTIC model=" + model + ";status=missing-tokenizer"); continue; }
+                if (!File.Exists(yaml))
+                {
+                    evidence.Add(new { model, status = "missing-tokenizer", backend = "onnxruntime-cpu", modelSha256 = FileSha256(path), imageSha256 });
+                    Console.WriteLine("PADDLE_DOCUMENT_FORMULA_SEMANTIC model=" + model + ";status=missing-tokenizer");
+                    continue;
+                }
 
                 PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(yaml);
                 int endTokenId = FindTokenId(tokenizer.Tokens, "</s>");
@@ -318,21 +338,64 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     new PaddleDocumentFormulaSchema(tokenizer, endTokenId, startTokenId, padTokenId, unknownTokenId),
                     modelSize: formulaCase.ModelSize,
                     maximumSequenceLength: 4096);
-                string formulaImage = Path.Combine(Path.GetDirectoryName(ModelRoot)!, "validation", "general_formula_rec_001.png");
-                Assert.IsTrue(File.Exists(formulaImage), "Acquire the official formula example before running semantic validation.");
                 PaddleDocumentFormulaResult result = Run(profile, path, Array.Empty<NamedTensor>(), formulaImage) as PaddleDocumentFormulaResult
                     ?? throw new AssertFailedException("The formula decoder returned an unexpected result type for " + model + ".");
                 Assert.IsTrue(result.TokenIds.Count > 0, "The formula model returned no semantic token IDs: " + model);
                 Assert.IsNotNull(result.Latex);
                 Assert.IsTrue(result.TokenIds.Count < 1000, "The official example must reach EOS before the export's maximum generation length.");
                 Assert.IsTrue(result.Latex.Contains("\\frac"), "The official fraction formula was not recovered.");
+                bool isPlus = model.StartsWith("pp-formulanet-plus-", StringComparison.Ordinal);
+                string normalizedActual = NormalizeFormula(result.Latex);
+                bool normalizedMatch = isPlus && string.Equals(NormalizeFormula(ExpectedPlusLatex), normalizedActual, StringComparison.Ordinal);
                 if (model.StartsWith("pp-formulanet-plus-", StringComparison.Ordinal))
                 {
-                    const string expected = @"\zeta_{0}(\nu)=-\frac{\nu\varrho^{-2\nu}}{\pi}\int_{\mu}^{\infty}d\omega\int_{C_{+}}dz\frac{2z^{2}}{(z^{2}+\omega^{2})^{\nu+1}}\breve{\Psi}(\omega;z)e^{i\epsilon z}\quad,";
-                    Assert.AreEqual(string.Concat(expected.Where(value => !char.IsWhiteSpace(value))), string.Concat(result.Latex.Where(value => !char.IsWhiteSpace(value))), "Official formula mismatch after removing formatting whitespace.");
+                    Assert.IsTrue(normalizedMatch, "Official formula mismatch after removing formatting whitespace.");
                 }
+                bool reachedEnd = !result.Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal);
+                Assert.IsTrue(reachedEnd, "The official formula example must terminate with the declared EOS token for " + model + ".");
+                evidence.Add(new
+                {
+                    model,
+                    status = "passed",
+                    backend = "onnxruntime-cpu",
+                    modelSha256 = FileSha256(path),
+                    tokenizerSha256 = FileSha256(yaml),
+                    imageSha256,
+                    modelWidth = formulaCase.ModelSize.Width,
+                    modelHeight = formulaCase.ModelSize.Height,
+                    tokenizerTokenCount = tokenizer.Tokens.Count,
+                    startTokenId,
+                    endTokenId,
+                    padTokenId,
+                    unknownTokenId,
+                    maximumSequenceLength = 4096,
+                    tokenCount = result.TokenIds.Count,
+                    tokenIdsSha256 = Sha256Text(string.Join(",", result.TokenIds)),
+                    latexLength = result.Latex.Length,
+                    latexSha256 = Sha256Text(result.Latex),
+                    reachedEndOfSequence = reachedEnd,
+                    warnings = result.Warnings.ToArray(),
+                    normalizedReferenceMatch = isPlus ? normalizedMatch : (bool?)null,
+                    latex = result.Latex
+                });
                 Console.WriteLine("PADDLE_DOCUMENT_FORMULA_SEMANTIC model=" + model + ";tokens=" + result.TokenIds.Count + ";latexLength=" + result.Latex.Length + ";warnings=" + result.Warnings.Count + ";image=general_formula_rec_001.png;latex=" + result.Latex);
             }
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "formula-ort-six-models.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                backend = "onnxruntime-cpu",
+                input = new { file = "general_formula_rec_001.png", sha256 = imageSha256, source = "PaddleX official formula recognition validation asset" },
+                scope = "Six locally acquired PaddleX formula exports decoded with their official inference.yml tokenizer on one official formula image.",
+                qualityBoundary = "This is a semantic execution and tokenizer/parity report, not a formula dataset accuracy score. Only Plus-S/M/L have a normalized LaTeX reference for this image; FormulaNet-S/L and UniMERNet require additional labeled samples.",
+                results = evidence
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(cases.Length, evidence.Count, "The six-model formula evidence report must retain one row per requested model.");
         }
 
         private sealed class LayoutCase
@@ -398,6 +461,12 @@ namespace DeploySharp.Visual.OpenCV.Tests
             for (int index = 0; index < tokens.Count; index++) if (string.Equals(tokens[index], token, StringComparison.Ordinal)) return index;
             return -1;
         }
+
+        private static string NormalizeFormula(string value) => string.Concat(value.Where(character => !char.IsWhiteSpace(character)));
+
+        private static string FileSha256(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+
+        private static string Sha256Text(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
         private static string RequireImage()
         {

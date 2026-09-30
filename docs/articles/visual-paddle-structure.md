@@ -423,7 +423,9 @@ Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用�
 | `img_rot180_demo.jpg` | PP-LCNet 方向；ORT/OpenVINO/OpenCV CPU、TensorRT CUDA | 类别 180°；CPU 三后端分数约 0.89236；CUDA 预处理允许 0.005 分数差异 |
 | `table_recognition.jpg` | PP-LCNet 表格分类；ORT/OpenVINO/OpenCV CPU、TensorRT CUDA | `wired_table`；CPU 分数约 0.844209，TensorRT 分数约 0.851693，绝对差 0.007485 ≤ 0.01 |
 | 同一表格 | SLANeXt wired/wireless；ORT、OpenVINO 派生兼容图 | 24 个结构 token、13 个单元格，含 colspan=4 的标题；原始输出误差 ≤0.001，结构一致 |
-| `general_formula_rec_001.png` | 六个公式模型；ORT CPU | token/LaTeX 长度依次为 Plus-S `1022/1226`、Plus-M `2/6`、Plus-L `49/62`、FormulaNet-S `1023/1036`、FormulaNet-L `31/37`、UniMERNet `1022/1252`；全部生成 EOS 且 warnings=0。Plus-S/M/L 的 LaTeX 忽略排版空白后与官方示例一致；FormulaNet-S/L 和 UniMERNet 仍有符号或格式差异 |
+| `general_formula_rec_001.png` | 六个公式模型；ORT CPU | token/LaTeX 长度为 Plus-S `197/262`、Plus-M `197/262`、Plus-L `197/262`、FormulaNet-S `213/276`、FormulaNet-L `197/262`、UniMERNet `208/270`；六个模型均到达 EOS 且 warnings=0。Plus-S/M/L 的 LaTeX 忽略排版空白后与官方示例一致；FormulaNet-S/L 和 UniMERNet 在该样例仍有符号或格式差异 |
+
+六模型的模型、Tokenizer、输入、token/LaTeX SHA-256 和完整输出见 [`formula-ort-six-models-20260930.md`](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.md) 及其 [JSON 证据](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.json)。该报告是单张官方样例的语义执行合同，不是公式数据集准确率；FormulaNet-S/L 和 UniMERNet 仍需额外人工真值样本。
 
 公式输入还与固定版本的 PaddleX 原始 processor 逐元素对比。三种尺寸平均绝对误差分别约 `1.54e-7`、`7.70e-8`、`2.10e-6`；最大差异约 `0.022564`（相当于归一化前一个灰度级），来自 Pillow 整数滤波取整。此证据针对当前示例，不代表所有输入逐位相同。
 

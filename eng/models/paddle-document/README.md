@@ -147,6 +147,14 @@ The general converter report proves graph loading on its selected smoke inputs, 
 
 For a converted model, inspect the ONNX graph before constructing a profile. Layout, cell and seal exports use Paddle post-NMS rows `[class, score, x1, y1, x2, y2]`; use `PaddleDocumentProfiles.CreatePaddleNmsRegions`. SLANeXt uses two outputs and `CreateTableStructure`. UVDoc uses `CreateUnwarping`. FormulaNet/UniMERNet return integer token IDs and require an explicit `PaddleDocumentFormulaSchema`.
 
+The six-model ORT CPU semantic regression is recorded in
+[formula-ort-six-models-20260930.md](verification/formula-ort-six-models-20260930.md)
+and its machine-readable [evidence JSON](verification/formula-ort-six-models-20260930.json).
+The report uses the official formula image and each model's own tokenizer,
+records all asset hashes and EOS/warning state, and keeps FormulaNet-S/L and
+UniMERNet outside the Plus reference-match claim until independently labeled
+formula samples are available.
+
 ## OpenVINO SLANeXt compatibility artifact
 
 The two original SLANeXt ONNX files contain Loop-body formal parameters whose names collide with captured outer values. The OpenVINO importer rejects those graphs even though the operators are standard ONNX. Generate separate compatibility artifacts by alpha-renaming only the Loop-body parameters. The wrapper generates both variants and writes a machine-readable source/derived SHA-256 manifest:
