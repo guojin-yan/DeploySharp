@@ -82,7 +82,7 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | △ |
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
-| 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | △ | △ | △ |
+| 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | △ |
 | 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | △ |
 | 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
@@ -92,32 +92,32 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 上面的模型族表用于快速浏览，下面按目录中的每个精确资产列出当前证据。`△` 表示尚未完成该精确组合的真实执行，`✗` 表示已经尝试并确认当前组合阻断；派生 SLANeXt 兼容图使用独立的 compatibility ID，不等同于原始 Release 图。
 
-同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。
+同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。OpenCV DNN 的 14 个 Paddle NMS 精确组合执行报告见 [`paddle-document-opencv-nms-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md)。
 
 | 精确资产 | ORT CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|
 | `paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-doc/uvdoc` | ✓ | ✓ | ✗ | ✓ |
-| `paddle-doc/pp-doclayout-plus-l` | ✓ | ✓ | △ | △ |
+| `paddle-doc/pp-doclayout-plus-l` | ✓ | ✓ | ✓ | △ |
 | `paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ |
-| `paddle-doc/pp-doclayout-m` | ✓ | ✓ | △ | △ |
-| `paddle-doc/pp-doclayout-s` | ✓ | ✓ | △ | △ |
-| `paddle-doc/pp-docblocklayout` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-layout-1x` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-layout-1x-table` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-s-layout-3cls` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-l-layout-3cls` | ✓ | ✓ | △ | △ |
-| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | △ | △ |
-| `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | △ | △ |
-| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | △ | △ |
+| `paddle-doc/pp-doclayout-m` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/pp-doclayout-s` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/pp-docblocklayout` | ✓ | ✓ | ✓ | △ |
+| `paddle-doc/picodet-layout-1x` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/picodet-layout-1x-table` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/picodet-s-layout-3cls` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/picodet-l-layout-3cls` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | △ |
+| `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | ✗ | △ |
+| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | △ |
 | `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | △ |
 | `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | △ |
 | `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
-| `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | △ | △ |
-| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | △ | △ |
+| `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | ✓ | △ |
+| `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | △ |
 | `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | △ |

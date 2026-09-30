@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-09-30T05:37:39.1056627+00:00",
+  "backend": "opencv-dnn-cpu",
+  "input": {
+    "file": "bus.jpg",
+    "path": "E:\\Data\\image\\bus.jpg"
+  },
+  "scope": "Fourteen PP-Structure Paddle NMS ONNX artifacts with their registered input and decoder contracts.",
+  "results": [
+    {
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "status": "passed",
+      "modelSha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "modelSize": {
+        "width": 800,
+        "height": 800
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal",
+        "chart",
+        "formula_number",
+        "aside_text",
+        "reference_content"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/pp-doclayout-m",
+      "status": "unsupported",
+      "modelSha256": "a65002c871af5c3d4415524a813f55cda4e8c5d59fe8cebd5af16a84b48e80f3",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/pp-doclayout-s",
+      "status": "unsupported",
+      "modelSha256": "5254cb338d5ffb0b54c6f95b527e6e7f0c8a0cb35919c4d6e420dcb913ba592f",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/pp-docblocklayout",
+      "status": "passed",
+      "modelSha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "Region"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/picodet-layout-1x",
+      "status": "unsupported",
+      "modelSha256": "61efac8c8d3eeee09d7d16db249eb919c1432e22d8235bd408ddffa3477cb8fd",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/picodet-layout-1x-table",
+      "status": "unsupported",
+      "modelSha256": "7cf5b8c3f7e00353bdb231fec73dd73b66ea0cbf598daaf1f113bf7e6dc4af31",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/picodet-s-layout-3cls",
+      "status": "unsupported",
+      "modelSha256": "f2b2c55af08bad9dab4030f86d34336f99bc7e39df9999676ce29db7e60b2fb1",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/picodet-l-layout-3cls",
+      "status": "unsupported",
+      "modelSha256": "34d873d7ec7a77448b85ae41db5785bfae0c5dda483c03c177189ebd086b1ce4",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/rt-detr-h-layout-3cls",
+      "status": "passed",
+      "modelSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-doc/picodet-s-layout-17cls",
+      "status": "unsupported",
+      "modelSha256": "f8a43b8588f1cee80acea3646738a2704c7c7f4cb73f63bc3d325016195fd496",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/picodet-l-layout-17cls",
+      "status": "unsupported",
+      "modelSha256": "b3e1b8deaa9538a76418083274df9acf07232cccb30ba6ab957a77a2d73cecb3",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [MatMul@ai.onnx]:(onnx_node!MatMul.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\matmul_layer.cpp:64: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::MatMulLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E DNN/MatMul: invalid shape of input B (expected: \u0027shape_B.size() \u003E= static_cast\u003Csize_t\u003E(2)\u0027), where\n\u003E \u003E     \u0027shape_B.size()\u0027 is 1\n\u003E \u003E must be greater than or equal to\n\u003E \u003E     \u0027static_cast\u003Csize_t\u003E(2)\u0027 is 2\n\u003E ",
+      "message": "OpenCV DNN could not specialize the ONNX input contract."
+    },
+    {
+      "model": "paddle-doc/rt-detr-h-layout-17cls",
+      "status": "passed",
+      "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "paragraph_title",
+        "image",
+        "text",
+        "number",
+        "abstract",
+        "content",
+        "figure_title",
+        "formula",
+        "table",
+        "table_title",
+        "reference",
+        "doc_title",
+        "footnote",
+        "header",
+        "algorithm",
+        "footer",
+        "seal"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "status": "passed",
+      "modelSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "table-cell"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "status": "passed",
+      "modelSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      },
+      "labels": [
+        "table-cell"
+      ],
+      "includeImageShape": true,
+      "detectionCount": 300
+    }
+  ],
+  "boundary": "Importer/execution and decoder-contract evidence only; no layout or cell recall, table structure accuracy or performance claim is made."
+}
