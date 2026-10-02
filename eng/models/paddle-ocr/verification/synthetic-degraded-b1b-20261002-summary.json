@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T14:11:36.9939206Z",
+  "sample": "synthetic-degraded-b1b-20261002",
+  "dataset": {
+    "name": "jsdnrs/ICDAR2019-SROIE",
+    "revision": "bffe40c26759f3376ec2b3ae9031dbba54cd587c",
+    "sourceManifests": [
+      {
+        "path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\sroie-train-20260923T072455614249Z.jsonl",
+        "sha256": "b0a5aa819acee08ed6601f1018391265af063a01c49f02c452d247fd6e3a2dd1"
+      },
+      {
+        "path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\sroie-train-20260923T072550009854Z.jsonl",
+        "sha256": "8e419b812cbaffb9bc40f0047ac11bace2b0e392cec742ec056dff2d3aaa4358"
+      }
+    ],
+    "generatedManifestSha256": "4871d69d78fda55a7282d8a03eb0eafa6c801e4e49aea692592627701e394325",
+    "parentPages": 10,
+    "sourceCrops": 10,
+    "records": 60,
+    "conditions": [
+      "blur",
+      "jpeg",
+      "low-contrast",
+      "noise",
+      "normal",
+      "shadow"
+    ],
+    "severity": [
+      "severe"
+    ],
+    "eligibility": "controlled_degradation_smoke_only"
+  },
+  "models": {
+    "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "recognizerSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "dictionarySha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+  },
+  "backends": [
+    {
+      "backend": "onnxruntime-cpu",
+      "records": 60,
+      "conditions": [
+        {
+          "condition": "blur",
+          "records": 10,
+          "meanCharacterErrorRate": 0.8249519230769231,
+          "meanWordErrorRate": 1.0,
+          "meanCaseFoldedCharacterErrorRate": 0.08,
+          "meanCaseFoldedWordErrorRate": 0.1,
+          "meanConfidence": 0.939422249,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "jpeg",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.994758311,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "low-contrast",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.9983824140000002,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "noise",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.9950412099999999,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "normal",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.998493023,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "shadow",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.9977623979999999,
+          "emptyRecognized": 0
+        }
+      ]
+    },
+    {
+      "backend": "openvino-cpu",
+      "records": 60,
+      "conditions": [
+        {
+          "condition": "blur",
+          "records": 10,
+          "meanCharacterErrorRate": 0.8249519230769231,
+          "meanWordErrorRate": 1.0,
+          "meanCaseFoldedCharacterErrorRate": 0.08,
+          "meanCaseFoldedWordErrorRate": 0.1,
+          "meanConfidence": 0.9394215499999999,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "jpeg",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.99475818,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "low-contrast",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.99838231,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "noise",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.9950410589999998,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "normal",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.998492931,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "shadow",
+          "records": 10,
+          "meanCharacterErrorRate": 0.744951923076923,
+          "meanWordErrorRate": 0.9,
+          "meanCaseFoldedCharacterErrorRate": 0.0,
+          "meanCaseFoldedWordErrorRate": 0.0,
+          "meanConfidence": 0.9977623270000002,
+          "emptyRecognized": 0
+        }
+      ]
+    }
+  ],
+  "parity": {
+    "records": 60,
+    "exactRecognizedText": 60,
+    "caseFoldedCerEqual": 60,
+    "maxConfidenceDelta": 4.899999999974369E-06
+  },
+  "enhancement": [
+    {
+      "backend": "onnxruntime-cpu",
+      "records": 60,
+      "noDetectedRegion": 22,
+      "candidateAvailable": 38,
+      "candidateSelected": 22,
+      "insufficientGain": 16,
+      "meanOriginalCaseFoldedCer": 0.009868421052631578,
+      "meanCandidateCaseFoldedCer": 0.012335526315789474,
+      "selectedOriginalCaseFoldedCer": 0.0,
+      "selectedCandidateCaseFoldedCer": 0.0,
+      "meanElapsedMs": 120.4818973684211
+    },
+    {
+      "backend": "openvino-cpu",
+      "records": 60,
+      "noDetectedRegion": 22,
+      "candidateAvailable": 38,
+      "candidateSelected": 22,
+      "insufficientGain": 16,
+      "meanOriginalCaseFoldedCer": 0.009868421052631578,
+      "meanCandidateCaseFoldedCer": 0.012335526315789474,
+      "selectedOriginalCaseFoldedCer": 0.0,
+      "selectedCandidateCaseFoldedCer": 0.0,
+      "meanElapsedMs": 52.46892368421053
+    }
+  ],
+  "rawEvidence": [
+    "synthetic-degraded-b1b-20261002-onnxruntime.json",
+    "synthetic-degraded-b1b-20261002-openvino.json",
+    "synthetic-degraded-b2b3-20261002-onnxruntime.json",
+    "synthetic-degraded-b2b3-20261002-openvino.json"
+  ],
+  "boundary": "Controlled parent-linked word crops. RecognizeOnly metrics and enhancement routing evidence do not establish page/line accuracy, robustness, default policy benefit, or backend generalization."
+}
