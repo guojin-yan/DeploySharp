@@ -819,6 +819,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 - **FUNSD 退化扩展**：另用 FUNSD `test/full-001` 的 32 个父页词 crop 生成 192 条 severe 记录；ORT/OpenVINO 文本 `192/192` 一致，blur 平均 case-folded CER/WER `97.40%/98.96%`、空输出 `18/32`。增强候选总体 `20.62% -> 18.09%`，但置信度选中行 `36.70% -> 37.43%`，说明 confidence-only 选择会产生误选，默认增强继续关闭。该结果仍是 word-crop smoke，不能当作 FUNSD 行/页准确率。详见 [FUNSD B1b 扩展记录](../../eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b1b-20261002.md) 和 [汇总 JSON](../../eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b1b-20261002-summary.json)。
 - **真实文档阅读顺序**：FUNSD 三页 smoke 的预测文本行与词级标注 aggregate reading-order pair accuracy `70.92%`，三页均非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 三页边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-3pages-20260929.md)。
 - **自然角度数据边界**：HierText 缓存的旋转元数据有 476 个非零角度条目，但与 1,724 个官方标注图像 ID 的交集为 0；因此不能把无真值的 Open Images 图片当成自然角度 OCR 评测。详见 [HierText 旋转覆盖审计](../../eng/models/paddle-ocr/verification/hiertext-rotation-coverage-a3-20261002.md)，A3 仍需要合法可归因的自然或明确标注角度数据。
+- **自然竖排切片**：18 条官方 `vertical=true` 且有文本的 HierText 行在 ORT/OpenVINO 上分别执行 0°、顺时针 90°、逆时针 90° 候选；两后端 18/18 候选文本一致，按真值选择的 oracle 只有 6/18 exact、平均 CER `46.3356%`。这是自然竖排输入和方向候选合同证据，不是自动方向分类准确率。详见 [HierText 竖排 A3 记录](../../eng/models/paddle-ocr/verification/hiertext-vertical-a3-20261002.md)。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。

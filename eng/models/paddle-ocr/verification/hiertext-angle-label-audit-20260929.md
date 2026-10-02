@@ -23,3 +23,5 @@ The existing v6 Small ORT/OpenVINO/OpenCV HierText records therefore remain long
 ## Follow-up cache audit (2026-10-02)
 
 The [rotation coverage audit](hiertext-rotation-coverage-a3-20261002.md) checked the complete local HierText validation annotation cache instead of only the 34 selected images. The Open Images metadata has 476 rows with nonzero source rotation, but none of the 1,724 annotation image IDs maps to those rows. The annotation cache therefore still contains no natural nonzero-rotation ground truth suitable for A3. The unmatched metadata-only IDs are intentionally not downloaded or scored as OCR samples.
+
+The separate [natural vertical-line record](hiertext-vertical-a3-20261002.md) does use the 18 non-empty `vertical=true` lines with source-linked transcripts. It verifies explicit 0/90-degree candidate execution and ORT/OpenVINO parity, but uses a ground-truth oracle for diagnosis; it does not supply an automatic orientation-classifier metric or close the full A3 gate.
