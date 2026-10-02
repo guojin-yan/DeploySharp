@@ -822,6 +822,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 - **自然竖排切片**：18 条官方 `vertical=true` 且有文本的 HierText 行在 ORT/OpenVINO 上分别执行 0°、顺时针 90°、逆时针 90° 候选；两后端 18/18 候选文本一致，按真值选择的 oracle 只有 6/18 exact、平均 CER `46.3356%`。这是自然竖排输入和方向候选合同证据，不是自动方向分类准确率。详见 [HierText 竖排 A3 记录](../../eng/models/paddle-ocr/verification/hiertext-vertical-a3-20261002.md)。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
+- PP-OCRv5 Mobile 与 v6 Small 的真实 REC batch=4 ORT/OpenVINO parity 已在[动态 Batch 记录](../../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md)中覆盖；这仍是 crop/decoder 合同，不是页面级准确率或 GPU 性能结果。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。
 - 多张独立图片可用 <code>RunManyAsync</code>；它是独立 Session 并发，不会把 batch=1 模型变成真正 batch。
 - GPU 后端应尽量复用输入缓冲区和 CUDA stream；TensorRT OCR 的设备侧前后处理边界见[TensorRT CUDA OCR](tensorrt-cuda-ocr.md)。

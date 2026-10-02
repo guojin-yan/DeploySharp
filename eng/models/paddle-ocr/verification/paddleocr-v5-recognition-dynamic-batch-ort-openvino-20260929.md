@@ -52,5 +52,5 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 ## 证据边界
 
 - 这是单 Session、batch=4 的动态输入和后端语义合同，不是多 Session 池、并发队列、吞吐 P50/P95 或 GPU 性能结果。
-- 只覆盖 PP-OCRv5 Mobile REC、ORT CPU 和 OpenVINO CPU；v4/v6、Server、OpenCV DNN、TensorRT 和 GPU 需要独立验证。
+- 本文主记录 PP-OCRv5 Mobile REC、ORT CPU 和 OpenVINO CPU；PP-OCRv6 Small 的同一合同已在[2026-10-02 动态 Batch 汇总](paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md)中独立验证。v4/Server、OpenCV DNN、TensorRT 和 GPU 仍需独立验证。
 - SROIE 词级框没有作为识别真值使用；文本一致性只说明两后端对同一输入的行为一致，不代表识别准确率。

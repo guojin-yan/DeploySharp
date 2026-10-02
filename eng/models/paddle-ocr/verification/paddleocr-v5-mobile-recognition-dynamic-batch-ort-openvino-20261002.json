@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T15:24:47.5481831\u002B00:00",
+  "model": {
+    "id": "paddleocr/ppocrv5/mobile-rec",
+    "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9"
+  },
+  "dictionarySha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+  "source": {
+    "dataset": "jsdnrs/ICDAR2019-SROIE",
+    "revision": "bffe40c26759f3376ec2b3ae9031dbba54cd587c",
+    "pageCount": 10,
+    "batchSize": 4,
+    "cropCount": 40,
+    "manifestA": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\sroie-train-20260923T072455614249Z.jsonl",
+    "manifestB": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\sroie-train-20260923T072550009854Z.jsonl"
+  },
+  "comparison": {
+    "leftBackend": "onnxruntime-cpu",
+    "rightBackend": "openvino-cpu",
+    "inputMismatches": 0,
+    "shapeMismatches": 0,
+    "textMismatches": 0,
+    "maximumOutputAbs": 0.000148773193359375,
+    "maximumOutputMean": 6.204175646671456E-10,
+    "maximumConfidenceDelta": 7.867813E-06,
+    "ortInputDigest": "6536d57b33eb7fb52515fcbeec7ea634fc468de85d0474c47b7e6c38c05e16cc",
+    "openVinoInputDigest": "6536d57b33eb7fb52515fcbeec7ea634fc468de85d0474c47b7e6c38c05e16cc",
+    "ortOutputDigest": "73563f35734f272ed71a47223f9e654aa3d97460d9aa718ac5e1380c32a7d440",
+    "openVinoOutputDigest": "ac486abd434fb181572b65507ea89abf8d920aaf995a8b2baa99e49afb7bb339"
+  },
+  "batches": [
+    {
+      "Id": "sroie-train-X00016469612",
+      "inputSha256": "5b3530f081d22c73999807a1f4b3ab16c809ddf287624a9e7a382a70a6cb9ee8",
+      "outputShape": [
+        4,
+        86,
+        18385
+      ],
+      "ortOutputSha256": "384bd6e6c79fa1d5e4ca57758482bbdf541db8a7e796d2b480f58bf0695d36bb",
+      "openVinoOutputSha256": "e7a858c09d70e3ccfa8d540fecfc7155229ad335d0c9cf8b746a851157ab8f5c",
+      "texts": [
+        "taneenya",
+        "BOOKTAK(TAMANDAYA)SDNBHD",
+        "789417-W",
+        "NO.5:55,57\u002659,JALANSAGU18,"
+      ],
+      "ortConfidences": [
+        0.40164378,
+        0.9816816,
+        0.91152954,
+        0.9314282
+      ],
+      "openVinoConfidences": [
+        0.40164265,
+        0.981681,
+        0.91152906,
+        0.9314288
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469619",
+      "inputSha256": "138f7791660fc117fbe283c5696850c48f6fca7f976487e84024300907bd3880",
+      "outputShape": [
+        4,
+        53,
+        18385
+      ],
+      "ortOutputSha256": "a55fd07b3cf8cf388c4c43f411a9a6d625caccc7ecd4ab85893fcc73ba9d689b",
+      "openVinoOutputSha256": "a43581616f563491126338c5d14a1e1261593dd21f57b80a7dffd161f5f7e312",
+      "texts": [
+        "tanmWeonyaYnw",
+        "INDAH GIFT \u0026 HOME DECO",
+        "27,JALANDEDAF13",
+        "TAMAN JOHOR JAYA,"
+      ],
+      "ortConfidences": [
+        0.5061989,
+        0.94871557,
+        0.9502748,
+        0.9348528
+      ],
+      "openVinoConfidences": [
+        0.5061972,
+        0.948715,
+        0.9502737,
+        0.9348516
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469620",
+      "inputSha256": "7e353d612a67a846f4cedfd121a1e39187d682cce5194d46d08d3bb9c8294b6c",
+      "outputShape": [
+        4,
+        79,
+        18385
+      ],
+      "ortOutputSha256": "6ec7d3c3053eb0d5722715b9ed0b630c8d40dd7da6c321a28afe55dce51835eb",
+      "openVinoOutputSha256": "611d5d8c0ee6d653644477553bf84401c5925f2ada02435dc1803d378baa40a0",
+      "texts": [
+        "cYanaeenaw",
+        "MR D.I.Y.(JOHOR)SDN BHD",
+        "(C0.REG:933109-X\uFF09",
+        "LOT 1851-A\u00261851-B,JALANKPB 6,"
+      ],
+      "ortConfidences": [
+        0.43390164,
+        0.9044631,
+        0.93554944,
+        0.92426294
+      ],
+      "openVinoConfidences": [
+        0.43390125,
+        0.9044629,
+        0.93554926,
+        0.92426234
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469622",
+      "inputSha256": "6a18622d591fd034ca96824e12c099dcadc18a15ecd6990f67c5d3959e4ad3c9",
+      "outputShape": [
+        4,
+        86,
+        18385
+      ],
+      "ortOutputSha256": "e7d96b501d6561059af8747a6fbf7a3301c48f15071bb543440b016e4df0e4d7",
+      "openVinoOutputSha256": "1c603ef207e3431cfe33586c5fb1a121f98e0ca158ef783aa6a9b0c9c39ee9cc",
+      "texts": [
+        "cYaneonyan",
+        "YONGFATTENTmRPRIsE",
+        "(M0517726)",
+        "NO.122.124.JALANDEDAP13"
+      ],
+      "ortConfidences": [
+        0.43294156,
+        0.5280902,
+        0.9279124,
+        0.9684757
+      ],
+      "openVinoConfidences": [
+        0.4329412,
+        0.52809805,
+        0.9279119,
+        0.9684749
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469623",
+      "inputSha256": "450fa0ff34238a7065358b26c62216eb31d7d6dc0f055ecbe14247fbd6a017b3",
+      "outputShape": [
+        4,
+        83,
+        18385
+      ],
+      "ortOutputSha256": "09ae7261dd2089c3e27b0a9f0b240d9f84bd0faa8919eb1673f61ad3b4e6459a",
+      "openVinoOutputSha256": "9ec125383cd966ab0f2fc368c6613a4f7e6ab66eb65ff2065de76f9f7338a91e",
+      "texts": [
+        "canaeena",
+        "MR D.I.Y.(H)SDN BHD",
+        "\uFF08C0.REG:86Q671-D\uFF09",
+        "1OT 1851-A\u0026 1851-B. JALAN KPB 6,"
+      ],
+      "ortConfidences": [
+        0.3832756,
+        0.85341364,
+        0.8930216,
+        0.8261906
+      ],
+      "openVinoConfidences": [
+        0.3832745,
+        0.8534129,
+        0.8930207,
+        0.8261895
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469669",
+      "inputSha256": "ca0e1d2b2ba1b9bccfe0dde90085982d540588a7f9cbc8d9338b67229d7ae0d2",
+      "outputShape": [
+        4,
+        60,
+        18385
+      ],
+      "ortOutputSha256": "31987570805648d11c28b045f2dfcb0bee065673f146660e471abae16d982478",
+      "openVinoOutputSha256": "0d62b9759d1f5895fe90b32120de978f882c9f17cceac72222f21d356dd95696",
+      "texts": [
+        "cYnancnaanyyew",
+        "ABCHOTRADING",
+        "No.2\u00264,JALAN HARMONI3/2,",
+        "TAMANDESAHARMONI."
+      ],
+      "ortConfidences": [
+        0.42139834,
+        0.7400258,
+        0.9374363,
+        0.9336691
+      ],
+      "openVinoConfidences": [
+        0.4213982,
+        0.74001914,
+        0.93743503,
+        0.93366814
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469672",
+      "inputSha256": "f1fbe1c13e3f9120ed9510bdfbd21a8487de6b3bf854eb1f5af65924b9a0dda6",
+      "outputShape": [
+        4,
+        91,
+        18385
+      ],
+      "ortOutputSha256": "9a6bedb5e3ba3e2462e3393d228dac62d4c8335ea282442db4928cd84c8a7efa",
+      "openVinoOutputSha256": "54b0c1ab9b7b165b0bd641a5f0742eca0b4357b08b0994f95a68ea31c2578e71",
+      "texts": [
+        "cYanchayyee",
+        "SOON HUATMACHINERYENTERPRISE",
+        "(JM0352019-K)",
+        "NO.53JALANPUTRA1,"
+      ],
+      "ortConfidences": [
+        0.61517453,
+        0.982481,
+        0.9310249,
+        0.9581872
+      ],
+      "openVinoConfidences": [
+        0.61517173,
+        0.9824805,
+        0.93102443,
+        0.95818627
+      ]
+    },
+    {
+      "Id": "sroie-train-X00016469676",
+      "inputSha256": "3152bfa0b03d3aef532072bbdbce1406169119dcd98a209bb0c3ad24dd2a4761",
+      "outputShape": [
+        4,
+        94,
+        18385
+      ],
+      "ortOutputSha256": "28c0299f2806ff63b84819805ecfa4785c999c9c0a6134d846353124040cd7e0",
+      "openVinoOutputSha256": "2351917465e91fcd7852613b1ee14be2afd8afa8026d30432b250f3e54dc5725",
+      "texts": [
+        "cYnannhayee",
+        "S.H.H.MOTOR\uFF08SUNGAI RENGIT)SDN.BHD.",
+        "(801580-T\uFF09",
+        "No.343,Jalan Kurau, Sungai Rengit,"
+      ],
+      "ortConfidences": [
+        0.47095427,
+        0.9056308,
+        0.88742626,
+        0.9285866
+      ],
+      "openVinoConfidences": [
+        0.47095326,
+        0.9056291,
+        0.88742477,
+        0.928586
+      ]
+    },
+    {
+      "Id": "sroie-train-X51005200938",
+      "inputSha256": "ecd8e99c13cfb97ad6ed7fa3358fe99332e01f6459a69a667d3ce37fedb944da",
+      "outputShape": [
+        4,
+        77,
+        18385
+      ],
+      "ortOutputSha256": "08db5c6bdf99767ef62720b56c0d5ca4897d107dc6c27e205eec081d9232bc50",
+      "openVinoOutputSha256": "ba06660932ea307167905050328a023ec2dd44d6469f58edfc6be7647fd11ff8",
+      "texts": [
+        "PERNIAGAAN ZHENG HUI",
+        "Ja032595",
+        "NO.59JAlANPERMAS9/5",
+        "BANDAR BARU PERMAS JAYA"
+      ],
+      "ortConfidences": [
+        0.9570632,
+        0.26599842,
+        0.5910365,
+        0.9473794
+      ],
+      "openVinoConfidences": [
+        0.95706254,
+        0.26600182,
+        0.59104395,
+        0.94737864
+      ]
+    },
+    {
+      "Id": "sroie-train-X51005230617",
+      "inputSha256": "818f276fe94a2573dbda2b8f7bac89bcdc24db7464e8af2822be0c85a2b5e992",
+      "outputShape": [
+        4,
+        96,
+        18385
+      ],
+      "ortOutputSha256": "5a8144e987f5bd2a101600ca7a229c12283ab4f75dd214c0ac4086ea044414a9",
+      "openVinoOutputSha256": "516eb244483b7d041828e01d9d685f53f20894a4776f88ab43ae9dfe174f4cd6",
+      "texts": [
+        "1950",
+        "Gerbang Alaf Restaurants Sdn Bhd",
+        "(65351-M)",
+        "farmerlyneenas"
+      ],
+      "ortConfidences": [
+        0.29554337,
+        0.9564617,
+        0.84481794,
+        0.44540665
+      ],
+      "openVinoConfidences": [
+        0.29554,
+        0.9564608,
+        0.84481406,
+        0.4454055
+      ]
+    }
+  ]
+}

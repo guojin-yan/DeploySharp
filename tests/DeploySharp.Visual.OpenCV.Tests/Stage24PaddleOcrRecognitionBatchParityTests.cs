@@ -41,14 +41,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string manifestB = Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_MANIFEST_B") ?? Path.Combine(datasetRoot, "data", "annotations", "manifests", "sroie-train-20260923T072550009854Z.jsonl");
             string recognitionModel = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_REC_MODEL") ?? Path.Combine(modelRoot, "PP-OCRv5_mobile_rec.onnx"));
             string dictionary = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_DICT") ?? Path.Combine(modelRoot, "ppocrv5_dict.txt"));
+            string modelFlavor = Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_MODEL_FLAVOR") ?? "v5";
+            string dictionarySha = Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_DICT_SHA256") ?? DictionarySha;
+            string recognitionSha = Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_REC_SHA256") ?? RecognitionSha;
             List<CropPage> pages = LoadPages(new[] { manifestA, manifestB }, datasetRoot);
             Assert.AreEqual(10, pages.Count, "The pinned SROIE smoke selection must contain ten pages.");
             Assert.IsTrue(pages.All(page => page.Crops.Count == BatchSize));
 
             PaddleOcrProfile profile = PaddleOcrProfiles.CreateRecognition(
-                new ModelId("external/stage24-sroie-batch-recognizer"),
-                Artifact(7, RecognitionSha, "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", DictionarySha),
-                PaddleOcrProfiles.LoadCharacterSet(dictionary, "external.ppocrv5", "v5", true, DictionarySha),
+                new ModelId("external/stage24-" + modelFlavor + "-sroie-batch-recognizer"),
+                Artifact(7, recognitionSha, "ppocr-rec-bgr-half-range-h48-v1", "ppocr-ctc-probability-greedy-v1", dictionarySha),
+                PaddleOcrProfiles.LoadCharacterSet(dictionary, "external.ppocr" + modelFlavor, modelFlavor, true, dictionarySha),
                 maximumBatch: BatchSize);
 
             BackendRun ort = RunBackend(profile, recognitionModel, pages, openVino: false);
@@ -97,9 +100,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.IsTrue(maximumConfidenceDelta <= .001f, "The selected CPU backend batch confidence drift exceeded 0.001: " + maximumConfidenceDelta.ToString("R", CultureInfo.InvariantCulture));
 
             string? evidencePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_STAGE24_EVIDENCE_PATH");
-            if (!string.IsNullOrWhiteSpace(evidencePath)) WriteEvidence(evidencePath, pages, ort, openVino, manifestA, manifestB, inputMismatches, shapeMismatches, textMismatches, maximumOutputAbs, maximumOutputMean, maximumConfidenceDelta);
+            if (!string.IsNullOrWhiteSpace(evidencePath)) WriteEvidence(evidencePath, pages, ort, openVino, manifestA, manifestB, modelFlavor, recognitionSha, dictionarySha, inputMismatches, shapeMismatches, textMismatches, maximumOutputAbs, maximumOutputMean, maximumConfidenceDelta);
 
             Console.WriteLine("STAGE24_PADDLEOCR_REC_BATCH_PARITY pages=" + pages.Count.ToString(CultureInfo.InvariantCulture)
+                + ";modelFlavor=" + modelFlavor
                 + ";batchSize=" + BatchSize.ToString(CultureInfo.InvariantCulture)
                 + ";inputMismatches=" + inputMismatches.ToString(CultureInfo.InvariantCulture)
                 + ";shapeMismatches=" + shapeMismatches.ToString(CultureInfo.InvariantCulture)
@@ -140,7 +144,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return new BackendRun(BatchDigest(batches), batches);
         }
 
-        private static void WriteEvidence(string path, IReadOnlyList<CropPage> pages, BackendRun ort, BackendRun openVino, string manifestA, string manifestB, int inputMismatches, int shapeMismatches, int textMismatches, double maximumOutputAbs, double maximumOutputMean, float maximumConfidenceDelta)
+        private static void WriteEvidence(string path, IReadOnlyList<CropPage> pages, BackendRun ort, BackendRun openVino, string manifestA, string manifestB, string modelFlavor, string recognitionSha, string dictionarySha, int inputMismatches, int shapeMismatches, int textMismatches, double maximumOutputAbs, double maximumOutputMean, float maximumConfidenceDelta)
         {
             string fullPath = Path.GetFullPath(path);
             string? directory = Path.GetDirectoryName(fullPath);
@@ -149,8 +153,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
             {
                 schemaVersion = 1,
                 generatedUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
-                model = new { id = "paddleocr/ppocrv5/mobile-rec", sha256 = RecognitionSha },
-                dictionarySha256 = DictionarySha,
+                model = new { id = "paddleocr/ppocr" + modelFlavor + "/mobile-rec", sha256 = recognitionSha },
+                dictionarySha256 = dictionarySha,
                 source = new
                 {
                     dataset = "jsdnrs/ICDAR2019-SROIE",

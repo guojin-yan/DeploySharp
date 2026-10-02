@@ -80,7 +80,7 @@ The corresponding [v5 Mobile DET intermediate parity record](verification/paddle
 
 The same selection also has a [v5 Mobile CLS crop parity record](verification/paddleocr-v5-orientation-crop-ort-openvino-parity-20260929.md). Across 40 real crops, input tensors, class indices, rejection decisions and accepted orientations match between ORT/OpenVINO; maximum output drift is below `2.4e-6`. No direction ground truth is implied by this backend contract.
 
-The [dynamic REC batch record](verification/paddleocr-v5-recognition-dynamic-batch-ort-openvino-20260929.md) submits ten real batches of four heterogeneous crops. Public `TextCropRequest.WithTargetWidth` now lets callers align valid crop widths for a true batch; ORT/OpenVINO keep batch=4 and decode all 40 texts identically. This does not yet claim multi-session pool throughput or GPU performance.
+The [dynamic REC batch records](verification/paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md) submit ten real batches of four heterogeneous crops for both PP-OCRv5 Mobile and PP-OCRv6 Small. Public `TextCropRequest.WithTargetWidth` aligns valid crop widths for a true batch; ORT/OpenVINO keep batch=4, with zero input/shape/text mismatches for all 40 crops in each model. This does not claim multi-session pool throughput or GPU performance.
 
 The [non-external regression gate](verification/non-external-regression-gate-20261002.md) records the current contract gate separately from model execution: Visual `488 passed/5 skipped`, Visual.OpenCV `99 passed/4 skipped`, and ModelFactory `63 passed/2 skipped`, with zero failures. External skips remain explicit and do not imply backend support.
 
