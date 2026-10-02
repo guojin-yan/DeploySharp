@@ -410,6 +410,8 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 为扩大任务级证据，新增了[六张官方 ChartQA `val` 图表的有界质量记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md)。样本来自固定 upstream revision，CSV 表格转换为期望管道表；ORT CPU 和 OpenVINO CPU 均为 `6/6` EOS，生成文本 SHA `6/6` 一致，复杂多列样本在两个后端暴露相同的列结构边界。该选择累计匹配 `44/116` 个单元格，只用于定位图表类型和结构问题，不能外推为 ChartQA split 准确率；图片和 CSV 保留在本地缓存，不进入仓库或 Release。
 
+文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，当前六份入口文档共 `112` 个本地链接，断链 `0`。
+
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 
 ### 官方预处理与示例回归
