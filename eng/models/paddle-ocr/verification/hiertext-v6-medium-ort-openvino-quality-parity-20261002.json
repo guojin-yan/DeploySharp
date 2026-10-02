@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T11:31:35Z",
+  "sourceRevision": "7a8183ccc0159039f4ee243ede87010900f5aa37",
+  "benchmarkAssemblySha256": "dcd8bd822201b454713ec7534e717c7275378596cbf2cf09e3e64d001eb2dcf3",
+  "model": "v6/medium",
+  "dataset": {
+    "source": "google-research-datasets/hiertext",
+    "manifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+    "selectedManifestSha256": "2c3933fbd5f29c2d4054357518feae96eb1bedd4b009333e105bfeb267159316",
+    "images": 24,
+    "licenseScope": "CC-BY-2.0 images; CC-BY-SA-4.0 annotations; smoke-only until source-specific redistribution review"
+  },
+  "protocol": {
+    "warmup": 1,
+    "iterations": 1,
+    "batchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "maximumRegions": 1024,
+    "maximumWidth": 320
+  },
+  "backends": {
+    "onnxruntime-cpu": {
+      "completedPages": 24,
+      "failures": 0,
+      "emptyOutputs": 0,
+      "detector": { "tp": 459, "fp": 478, "fn": 561, "f1": 0.4690853346959632 },
+      "matched": { "cer": 0.12123528512459869, "wer": 0.3257506824385805 },
+      "endToEnd": { "cer": 0.7175981625287104, "wer": 0.9841616602949208 },
+      "latencyMs": { "totalP50": 1928.529, "totalP95": 4687.4426, "detP50": 608.6525, "detP95": 905.0884, "recP50": 1325.4875, "recP95": 4013.38025 }
+    },
+    "openvino-cpu": {
+      "completedPages": 24,
+      "failures": 0,
+      "emptyOutputs": 0,
+      "detector": { "tp": 459, "fp": 478, "fn": 561, "f1": 0.4690853346959632 },
+      "matched": { "cer": 0.12123528512459869, "wer": 0.3257506824385805 },
+      "endToEnd": { "cer": 0.7175981625287104, "wer": 0.9841616602949208 },
+      "latencyMs": { "totalP50": 1325.5845, "totalP95": 2646.7097, "detP50": 394.618, "detP95": 627.83345, "recP50": 775.575, "recP95": 2182.93435 }
+    }
+  },
+  "parity": {
+    "pageTextSequenceMismatches": 0,
+    "regionCountMismatches": 0,
+    "correspondingRegions": 937,
+    "regionTextMismatches": 0,
+    "maxPolygonCoordinateAbsDiff": 0.0,
+    "maxConfidenceAbsDiff": 0.0000257
+  },
+  "limits": [
+    "This is exact-host, exact-model, exact-manifest smoke evidence, not a release-accuracy score.",
+    "One measured iteration per page does not satisfy the formal 5-warmup/50-iteration performance protocol.",
+    "The selection contains no natural line at or above 3200 characters; A2 remains open."
+  ]
+}

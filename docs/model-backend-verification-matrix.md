@@ -202,4 +202,6 @@ PP-OCRv5 mobile 的真实 OpenCV DNN 全流程已与 ORT 在同一准备张量�
 
 新增的[v6 Medium HierText 质量记录](../eng/models/paddle-ocr/verification/hiertext-v6-medium-public-ocr-20261002.md)在同一 24 页标注选择上完成 ORT CPU SlidingWindow 全流程，24/24 页面无失败或空输出。IoU 0.5 检测 TP/FP/FN 为 `459/478/561`、F1 `46.91%`，匹配区域 CER/WER 为 `12.12%/32.58%`，端到端 CER/WER 为 `71.76%/98.42%`，总耗时 P50/P95 为 `1928.53/4687.44 ms`（单次测量）。该数据仍为 smoke-only，不是发布精度或正式 5/50 性能证据，且没有 3,200 字符以上自然连续行。
 
+对应的[ORT/OpenVINO v6 Medium 质量 parity 记录](../eng/models/paddle-ocr/verification/hiertext-v6-medium-ort-openvino-quality-parity-20261002.md)在完全相同的 24 页、模型和滑窗合同下复跑 OpenVINO CPU；两后端页面文本、区域数量、TP/FP/FN、CER/WER 全部一致，937 个对应区域的 polygon 坐标最大差为 `0`、置信度最大差为 `2.57e-5`。OpenVINO 总耗时 P50/P95 为 `1325.58/2646.71 ms`，但仍是单次 smoke 观察，不是正式性能排名。
+
 本轮补充的本机证据：`E:\Model\paddleocr\paddle-ocr-onnx-smoke.json` 对 17 个核心 ONNX 图均记录了 ONNX Runtime CPU 图级 smoke；`PaddleOcrAllCorePipelineOrtIntegrationTests` 对 7 组完整流水线完成真实 ORT CPU 运行；新增 `PaddleOcrAllCorePipelineOpenVinoIntegrationTests` 对同样 7 组完成真实 OpenVINO CPU `det → crop → cls → rec → merge` 运行；阶段 19/20 集成测试补测了 PP-OCRv5 mobile/server 的 ORT CPU、OpenVINO CPU 以及 v4 legacy/v5 mobile/server CLS；基准工具在同一 `demo_1.jpg` 上补测了 OpenCV DNN 的 v4 mobile/server、v5 mobile/server、v6 tiny/small/medium 七组完整流水线，均返回 16 个区域并产生识别结果。测试使用的模型路径已经统一为 `E:\Model\paddleocr\PP-OCRv4`、`PP-OCRv5`、`PP-OCRv6`，不再依赖旧的 `E:\Model\ocr` 路径。
