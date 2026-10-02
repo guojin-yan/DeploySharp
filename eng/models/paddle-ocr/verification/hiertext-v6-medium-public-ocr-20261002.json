@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T11:09:21.5396439Z",
+  "sourceRevision": "2d951991d21b537ec3186a8bd3408baf0ce34526",
+  "sourceWorkingTreeDirty": true,
+  "benchmarkAssemblySha256": "dcd8bd822201b454713ec7534e717c7275378596cbf2cf09e3e64d001eb2dcf3",
+  "model": "v6/medium",
+  "backend": "onnxruntime",
+  "device": "cpu",
+  "host": {
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "processorCount": 16
+  },
+  "models": {
+    "detectorSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "recognizerSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba"
+  },
+  "dataset": {
+    "source": "google-research-datasets/hiertext",
+    "manifest": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-003.jsonl",
+    "manifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+    "selectedManifestSha256": "2c3933fbd5f29c2d4054357518feae96eb1bedd4b009333e105bfeb267159316",
+    "images": 24,
+    "licenseScope": "CC-BY-2.0 images; CC-BY-SA-4.0 annotations; smoke-only until source-specific redistribution review"
+  },
+  "protocol": {
+    "warmup": 1,
+    "iterations": 1,
+    "batchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "maximumWindowsPerImage": 1024,
+    "maximumRegions": 1024,
+    "maximumWidth": 320,
+    "completedPages": 24,
+    "failures": 0,
+    "emptyOutputs": 0
+  },
+  "quality": {
+    "iou05": {
+      "tp": 459,
+      "fp": 478,
+      "fn": 561,
+      "precision": 0.48986125933831376,
+      "recall": 0.45,
+      "f1": 0.4690853346959632
+    },
+    "iou075": {
+      "tp": 121,
+      "fp": 816,
+      "fn": 899,
+      "precision": 0.12913553895410887,
+      "recall": 0.11862745098039215,
+      "f1": 0.12365866121614716
+    },
+    "matchedRegion": {
+      "regions": 459,
+      "exactMatches": 229,
+      "cer": 0.12123528512459869,
+      "wer": 0.3257506824385805,
+      "editDistance": 793,
+      "referenceCharacters": 6541
+    },
+    "endToEnd": {
+      "correctRegions": 229,
+      "groundTruthRegions": 1020,
+      "cer": 0.7175981625287104,
+      "wer": 0.9841616602949208,
+      "editDistance": 6561,
+      "referenceCharacters": 9143
+    },
+    "longText": {
+      "ge32": { "regions": 42, "characters": 2378, "endToEndEdits": 473, "matchedRegions": 37 },
+      "ge128": { "regions": 4, "characters": 520, "endToEndEdits": 79, "matchedRegions": 4 },
+      "ge3200": { "regions": 0, "characters": 0, "endToEndEdits": 0, "matchedRegions": 0 }
+    }
+  },
+  "latencyMs": {
+    "det": { "count": 24, "p50": 608.6525, "p95": 905.0884 },
+    "recognition": { "count": 24, "p50": 1325.4875, "p95": 4013.38025 },
+    "total": { "count": 24, "p50": 1928.529, "p95": 4687.4426, "min": 983.25, "max": 12848.34 }
+  },
+  "geometryDiagnostic": {
+    "groundTruthRegions": 1020,
+    "maxSinglePredictionCoverageAtLeast50Percent": 802,
+    "sumPredictionCoverageAtLeast50Percent": 804,
+    "bestOverlapAtLeast50PercentOnBothPolygons": 465,
+    "bestPredictionIoUAtLeast50Percent": 459,
+    "combinedCoverageWithoutSingleIoUMatch": 345,
+    "strongOverlapCountAtLeastTwo": 81,
+    "predictionsCoveringAtLeastTwoGroundTruthRegions": 56,
+    "maximumGroundTruthRegionsCoveredByOnePrediction": 3
+  },
+  "limits": [
+    "This is a 24-page smoke selection, not a leaderboard or release-accuracy score.",
+    "The selection contains no natural line at or above 3200 characters; A2 remains open.",
+    "One measured iteration per page does not satisfy the formal 5-warmup/50-iteration performance protocol.",
+    "Geometry coverage counts are diagnostic and do not replace IoU precision/recall."
+  ]
+}

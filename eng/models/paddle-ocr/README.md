@@ -94,6 +94,8 @@ For video and camera callers, `OcrPipeline.RunPrefetchedAsync` overlaps bounded 
 
 The same 24-page HierText long-text selection has now been run with PP-OCRv6 Small and SlidingWindow. The [v6 Small cross-check](verification/hiertext-v6-small-public-ocr-20260929.md) records 24/24 completed pages, detection TP/FP/FN `436/377/584`, matched CER `12.10%`, end-to-end CER `73.65%`, and the ≥128-character bucket `100/520` edits. It remains smoke-only and contains no line over 3,200 characters.
 
+The follow-up [v6 Medium public quality record](verification/hiertext-v6-medium-public-ocr-20261002.md) uses the same 24-page selection with ORT CPU and SlidingWindow. All pages completed with zero failures or empty outputs. Detection TP/FP/FN at IoU 0.5 are `459/478/561` (F1 `46.91%`), matched-region CER/WER are `12.12%/32.58%`, and end-to-end CER/WER are `71.76%/98.42%`. Total latency P50/P95 is `1928.53/4687.44 ms` under the one-warm-up/one-measured-iteration smoke protocol. The selection has no natural line ≥3,200 characters, so it does not close A2 or establish release accuracy.
+
 The matching [v6 Small ORT/OpenVINO parity record](verification/hiertext-v6-small-ort-openvino-sliding-parity-20260929.md) repeats those 24 pages with OpenVINO CPU. All page-level text sequences and quality counts match ORT; the record is CPU backend parity for this exact selection, not numeric tensor equality, GPU parity or a release accuracy score.
 
 The [v6 Small OpenCV DNN cross-check](verification/hiertext-v6-small-opencv-public-ocr-20260929.md) also completed all 24 pages with identical detection and CER/WER counts. Ordered text sequences matched ORT on 23/24 pages, with one character difference on one page; this is close backend behavior rather than exact text parity.
