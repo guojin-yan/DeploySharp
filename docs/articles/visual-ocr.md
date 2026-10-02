@@ -807,6 +807,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 同一批次又以 OpenVINO CPU 复跑，并形成[ORT/OpenVINO 质量 parity 记录](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-ort-openvino-quality-parity-20261002.md)。24 页文本序列、检测计数、CER/WER 全部一致；937 个对应预测区域的文本和 polygon 坐标一致，置信度最大绝对差 `2.57e-5`。OpenVINO 总耗时 P50/P95 为 `1325.58/2646.71 ms`，只能解释为当前主机和单次协议下的观察，不代表跨设备性能排名或准确率结论。
 
+同一精确组合也完成了[OpenCV DNN 质量 smoke](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-opencv-quality-20261002.md)。检测几何与 ORT 完全一致（TP/FP/FN `459/478/561`），但识别是后端相关的：23/24 页文本序列、937 个对应区域中的 174 个文本不同；OpenCV 匹配 CER/WER 为 `11.89%/30.48%`，端到端 CER/WER 为 `71.14%/96.89%`，总耗时 P50/P95 为 `11971.02/26997.76 ms`。这证明当前 OpenCV 导入器可以完成该组合，但不能把 ORT/OpenVINO 的文本 parity 或性能结论外推到 OpenCV。
+
 ### 2026-09-29 受控与真实关联边界补充
 
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。

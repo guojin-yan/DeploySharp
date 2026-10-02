@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T11:52:17Z",
+  "sourceRevision": "6deb9ce28e49e0764f16f2b86de0d975481b35cc",
+  "benchmarkAssemblySha256": "dcd8bd822201b454713ec7534e717c7275378596cbf2cf09e3e64d001eb2dcf3",
+  "model": "v6/medium",
+  "backend": "opencv-dnn",
+  "device": "cpu",
+  "host": { "operatingSystem": "Microsoft Windows 10.0.26200", "architecture": "X64", "processorCount": 16 },
+  "models": {
+    "detectorSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "recognizerSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba"
+  },
+  "dataset": {
+    "source": "google-research-datasets/hiertext",
+    "manifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+    "selectedManifestSha256": "2c3933fbd5f29c2d4054357518feae96eb1bedd4b009333e105bfeb267159316",
+    "images": 24,
+    "licenseScope": "CC-BY-2.0 images; CC-BY-SA-4.0 annotations; smoke-only until source-specific redistribution review"
+  },
+  "protocol": {
+    "warmup": 1,
+    "iterations": 1,
+    "batchSize": 1,
+    "inferenceChannels": 1,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "maximumRegions": 1024,
+    "maximumWidth": 320,
+    "completedPages": 24,
+    "failures": 0,
+    "emptyOutputs": 0
+  },
+  "quality": {
+    "iou05": { "tp": 459, "fp": 478, "fn": 561, "precision": 0.48986125933831376, "recall": 0.45, "f1": 0.4690853346959632 },
+    "matchedRegion": { "exactMatches": 231, "cer": 0.11894205778932884, "wer": 0.30482256596906276 },
+    "endToEnd": { "correctRegions": 231, "groundTruthRegions": 1020, "cer": 0.7113638849392978, "wer": 0.9688694702348444 },
+    "longText": {
+      "ge32": { "regions": 42, "characters": 2378, "endToEndEdits": 467, "matchedRegions": 37 },
+      "ge128": { "regions": 4, "characters": 520, "endToEndEdits": 79, "matchedRegions": 4 },
+      "ge3200": { "regions": 0, "characters": 0, "endToEndEdits": 0, "matchedRegions": 0 }
+    }
+  },
+  "latencyMs": {
+    "det": { "count": 24, "p50": 1685.088, "p95": 2453.75065 },
+    "recognition": { "count": 24, "p50": 10324.8285, "p95": 25017.57035 },
+    "total": { "count": 24, "p50": 11971.022, "p95": 26997.75995 }
+  },
+  "parityAgainstOrt": {
+    "pageTextSequenceMismatches": 23,
+    "regionCountMismatches": 0,
+    "correspondingRegions": 937,
+    "regionTextMismatches": 174,
+    "maxPolygonCoordinateAbsDiff": 0.0,
+    "maxConfidenceAbsDiff": 0.59039062
+  },
+  "geometryDiagnostic": {
+    "groundTruthRegions": 1020,
+    "maxSinglePredictionCoverageAtLeast50Percent": 802,
+    "sumPredictionCoverageAtLeast50Percent": 804,
+    "bestOverlapAtLeast50PercentOnBothPolygons": 465,
+    "bestPredictionIoUAtLeast50Percent": 459,
+    "combinedCoverageWithoutSingleIoUMatch": 345,
+    "strongOverlapCountAtLeastTwo": 81,
+    "predictionsCoveringAtLeastTwoGroundTruthRegions": 56,
+    "maximumGroundTruthRegionsCoveredByOnePrediction": 3
+  },
+  "limits": [
+    "This is exact-host, exact-model, exact-manifest smoke evidence, not a release-accuracy score.",
+    "OpenCV DNN OCR text differs from ORT on 23 of 24 pages; the result remains supported execution with a backend-specific quality boundary.",
+    "One measured iteration per page does not satisfy the formal 5-warmup/50-iteration performance protocol.",
+    "The selection contains no natural line at or above 3200 characters; A2 remains open."
+  ]
+}
