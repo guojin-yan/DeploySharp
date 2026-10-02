@@ -32,6 +32,8 @@ Stage24 使用 SROIE 10 页的前 4 个词框，每页将 4 个不同原始宽�
 
 `artifacts/paddleocr-crop-parity/stage24-sroie-v5-mobile-rec-batch-ort-openvino-20260929.json`
 
+2026-10-02 使用当前工作树重跑同一测试：`1/1` 通过，10 个 batch/40 个 crop 保留真实 batch=4，输入、shape 和文本不一致数均为 `0`；最大输出差 `1.4877319e-4`，最大置信度差 `7.867813e-6`。
+
 ## 复现
 
 在 `DeploySharp` 仓库目录执行：

@@ -132,6 +132,8 @@ The four curated ChartQA human images now have separate ORT CPU, OpenVINO CPU an
 
 The six formula models also have a controlled five-variant ORT CPU regression: all 30 runs produced non-empty, non-truncated sequences, while the Plus-S/M/L models matched the normalized reference on 4/5 variants. Mean whitespace-stripped LaTeX CER was 1.18%/0.47%/0.71% for Plus-S/M/L, 7.10%/2.37% for FormulaNet-S/L and 6.51% for UniMERNet; the complete outputs are retained for review. See [`formula-six-models-variants-20260930.md`](verification/formula-six-models-variants-20260930.md) and the [machine-readable report](verification/formula-six-models-variants-20260930.json). This remains a one-equation controlled regression, not a formula dataset accuracy score; OpenVINO is still blocked by its isolated importer/native failures.
 
+The same six-model/30-variant test was rerun on 2026-10-02 with the current worktree and passed `2/2`; all 30 row-level model/variant outputs matched the checked-in report's LaTeX hashes, normalized edit distances and EOS state. This is a reproducibility check, not new accuracy evidence; the multi-equation labeled-set and OpenVINO gates remain open.
+
 On 2026-09-18 the repository manifest was acquired into `E:\Model\PaddleDocument` with Python 3.11, PaddlePaddle `3.0.0.dev20250613`, Paddle2ONNX `2.0.2rc3`, ONNX `1.17`, and ONNX Runtime CPU. Twenty-eight standard inference archives converted successfully and passed the structural smoke tool. The generated report is outside Git at `E:\Model\PaddleDocument\onnx-smoke.json`.
 
 To repeat the graph check with a real image (the script uses a stride-friendly 640x640 canvas for dynamic graphs), run:

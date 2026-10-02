@@ -32,6 +32,8 @@ Stage23 使用与 DET/REC 记录相同的 SROIE 10 页选择，每页取前 4 �
 
 `artifacts/paddleocr-crop-parity/stage23-sroie-v5-mobile-cls-ort-openvino-20260929.json`
 
+2026-10-02 使用当前工作树重跑同一测试：`1/1` 通过，10 页/40 个 crop 的输入、类别、拒绝状态和方向不一致数均为 `0`；最大输出差 `2.3841858e-6`，最大置信度差 `2.3245811e-6`。
+
 ## 复现
 
 在 `DeploySharp` 仓库目录执行：

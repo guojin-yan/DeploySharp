@@ -17,6 +17,12 @@ The machine-readable report contains the model, tokenizer and image SHA-256 valu
 
 This is a controlled multi-model regression over one equation. It does not measure formula dataset accuracy, symbol-level CER, natural-image robustness or any non-ORT backend. The next quality gate is a legally redistributable multi-equation labeled set, followed by per-model normalized LaTeX/CER evaluation and the currently blocked OpenVINO combinations.
 
+## 2026-10-02 reproducibility rerun
+
+The same two external test methods were rerun on the current `DeploySharpV2.0` worktree with the pinned model, tokenizer, image and five-variant manifest. Both methods passed (`2/2`, `0` skipped, `0` failed); all six models produced 5/5 non-empty, non-truncated sequences (30/30 rows). The six-model report was compared row by row with the checked-in 2026-09-30 report: model, variant, LaTeX SHA, normalized edit distance and EOS state matched for all 30 rows.
+
+The rerun reproduced the per-model exact-match/CER summary: Plus-S `4/5, 1.1834%`, Plus-M `4/5, 0.4734%`, Plus-L `4/5, 0.7101%`, FormulaNet-S `0/5, 7.1006%`, FormulaNet-L `0/5, 2.3669%`, and UniMERNet `0/5, 6.5089%`. The generated rerun JSON is kept in the local ignored artifact directory (`artifacts/formula-variants-20260929/formula-six-models-variants-20261002-rerun.json`) because it contains full output strings; the checked-in 2026-09-30 JSON remains the canonical review artifact. This rerun confirms decoder reproducibility only and does not close the multi-equation labeled-set, symbol-level CER or OpenVINO gates.
+
 ## Reproduction
 
 ```powershell

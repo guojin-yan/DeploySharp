@@ -429,6 +429,8 @@ Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用�
 
 同一官方公式图还生成了原图、白边、对比度、模糊和 JPEG 五个可追溯变体，并让六个模型全部通过 ORT CPU。Plus-S/M/L 的归一化参考式匹配为各 `4/5`，平均去空白 LaTeX CER 为 `1.18%/0.47%/0.71%`，差异均出现在 JPEG 变体；FormulaNet-S/L、UniMERNet 五个变体均正常结束但与 Plus 参考式不同，平均 CER 为 `7.10%/2.37%/6.51%`。完整模型/变体 SHA、LaTeX、编辑距离和 warning 见 [`formula-six-models-variants-20260930.md`](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.md) 及其 [JSON](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.json)。这里的 CER 是单一公式去空白字符串的 Levenshtein 比率，不是自然公式数据集准确率。
 
+2026-10-02 在当前工作树按同一固定输入重跑六模型×五变体，两个测试方法 `2/2` 通过，30 行输出与已提交报告的模型/变体、LaTeX SHA、归一化编辑距离和 EOS 状态逐行一致。这只证明解码器回归可复现，不改变多公式真值集或 OpenVINO 尚未完成的状态。
+
 公式输入还与固定版本的 PaddleX 原始 processor 逐元素对比。三种尺寸平均绝对误差分别约 `1.54e-7`、`7.70e-8`、`2.10e-6`；最大差异约 `0.022564`（相当于归一化前一个灰度级），来自 Pillow 整数滤波取整。此证据针对当前示例，不代表所有输入逐位相同。
 
 ```powershell
