@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T15:33:30Z",
+  "sourceRevision": "a8e81930ee51ccc995a6541e3106a0ad51607926",
+  "sourceWorkingTreeDirty": true,
+  "benchmarkAssemblySha256": "dcd8bd822201b454713ec7534e717c7275378596cbf2cf09e3e64d001eb2dcf3",
+  "model": "v6/medium",
+  "device": "cpu",
+  "host": {
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "processorCount": 16,
+    "machine": "JYPPX"
+  },
+  "models": {
+    "detectorSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "recognizerSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba"
+  },
+  "dataset": {
+    "source": "google-research-datasets/hiertext",
+    "manifest": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-002.jsonl",
+    "manifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+    "selectedManifestSha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c",
+    "images": 10,
+    "licenseScope": "CC-BY-2.0 images; CC-BY-SA-4.0 annotations; smoke-only until source-specific redistribution review"
+  },
+  "protocol": {
+    "pipeline": "det-crop-rec-merge",
+    "warmup": 1,
+    "iterations": 1,
+    "batchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "maximumRegions": 1024,
+    "maximumWidth": 320,
+    "completedPages": 10,
+    "failures": 0,
+    "emptyOutputs": 0
+  },
+  "backends": {
+    "onnxruntime": {
+      "images": 10,
+      "detection": { "tp": 187, "fp": 244, "fn": 350, "precision": 0.43387470997679817, "recall": 0.34823091247672255, "f1": 0.38636363636363635 },
+      "matchedRegion": { "regions": 187, "exactMatches": 90, "cer": 0.1808242220353238, "wer": 0.4978902953586498 },
+      "endToEnd": { "correctRegions": 90, "groundTruthRegions": 537, "cer": 1.089210155148096, "wer": 1.2586750788643533, "groundTruthCharacters": 2836 },
+      "latencyMs": { "detP50": 564.5535, "detP95": 647.6122, "recP50": 646.483, "recP95": 2457.81495, "totalP50": 1258.121, "totalP95": 2948.36205 },
+      "geometry": { "maxSinglePredictionCoverageAtLeast50Percent": 385, "sumPredictionCoverageAtLeast50Percent": 388, "bestOverlapAtLeast50PercentOnBothPolygons": 190, "bestPredictionIoUAtLeast50Percent": 187, "combinedCoverageWithoutSingleIoUMatch": 201, "strongOverlapCountAtLeastTwo": 47, "predictionsCoveringAtLeastTwoGroundTruthRegions": 21, "maximumGroundTruthRegionsCoveredByOnePrediction": 3 }
+    },
+    "openvino": {
+      "images": 10,
+      "detection": { "tp": 187, "fp": 244, "fn": 350, "precision": 0.43387470997679817, "recall": 0.34823091247672255, "f1": 0.38636363636363635 },
+      "matchedRegion": { "regions": 187, "exactMatches": 90, "cer": 0.1808242220353238, "wer": 0.4978902953586498 },
+      "endToEnd": { "correctRegions": 90, "groundTruthRegions": 537, "cer": 1.089210155148096, "wer": 1.2586750788643533, "groundTruthCharacters": 2836 },
+      "latencyMs": { "detP50": 375.4865, "detP95": 423.3717, "recP50": 425.481, "recP95": 1574.9929, "totalP50": 835.7465, "totalP95": 1900.75005 },
+      "geometry": { "maxSinglePredictionCoverageAtLeast50Percent": 385, "sumPredictionCoverageAtLeast50Percent": 388, "bestOverlapAtLeast50PercentOnBothPolygons": 190, "bestPredictionIoUAtLeast50Percent": 187, "combinedCoverageWithoutSingleIoUMatch": 201, "strongOverlapCountAtLeastTwo": 47, "predictionsCoveringAtLeastTwoGroundTruthRegions": 21, "maximumGroundTruthRegionsCoveredByOnePrediction": 3 }
+    }
+  },
+  "parity": {
+    "pageTextSequenceMatches": 10,
+    "pageTextSequenceTotal": 10,
+    "regionCountMatches": 10,
+    "regionCountTotal": 10,
+    "maximumPolygonAbsoluteDifference": 0.0,
+    "maximumConfidenceAbsoluteDifference": 0.00002185
+  },
+  "limits": [
+    "This is a ten-page HierText smoke selection, not a leaderboard or release-accuracy score.",
+    "The selection contains no natural line at or above 3200 characters; A2 remains open.",
+    "One measured iteration per page does not satisfy the formal 5-warmup/50-iteration performance protocol.",
+    "The geometry coverage counts are diagnostics and do not replace IoU precision/recall.",
+    "The source images, annotations and raw predictions remain outside the repository and Release."
+  ]
+}
