@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T15:03:36.0311138+00:00",
+  "sourceRevision": "e848e405add601c3d630d37cce8f6780fb9afa23",
+  "annotationSource": "google-research-datasets/HierText validation annotation cache",
+  "metadataPath": "F:\\OCRBenchmarkTesting\\artifacts\\cache\\hiertext\\validation-images-with-rotation.csv",
+  "metadataSha256": "ed93a0e121fe345effdfc7359b848dbc64a1ff6778c8c73563157cb500b33a17",
+  "annotationPath": "F:\\OCRBenchmarkTesting\\artifacts\\cache\\hiertext\\validation.jsonl.gz",
+  "annotationSha256": "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a",
+  "metadataImageCount": 41620,
+  "annotationImageCount": 1724,
+  "metadataNonZeroRotationImageCount": 476,
+  "annotatedIdsMissingMetadataCount": 1690,
+  "annotatedRotationCounts": {
+    "<blank>": 3,
+    "0.0": 31
+  },
+  "allMetadataRotationCounts": {
+    "<blank>": 5318,
+    "0.0": 35826,
+    "180.0": 30,
+    "270.0": 333,
+    "90.0": 113
+  },
+  "annotatedNonZeroRotationImageCount": 0,
+  "annotatedNonZeroRotationImageIds": [],
+  "representativeUnmatchedNonZeroRotationImageIds": [
+    "0004886b7d043cfd",
+    "0065e1098f7a353b",
+    "0152e9e59ca4897b",
+    "0177ba1593d54279",
+    "02ce70f1b6ff6b00",
+    "02ec05fac2e747a6",
+    "031244297d177089",
+    "0344cade36bbd4f4",
+    "03ff460545b92e53",
+    "043cb18c8b64a83e",
+    "04593c33db4a437b",
+    "05028f7518f7c265",
+    "05f4df7a207d1901",
+    "060c7fa6287df581",
+    "0713109a36fd0303",
+    "087323111be52855",
+    "093e4e110fd3f5c6",
+    "09657edae4f69497",
+    "0ad7884032419621",
+    "0b6f22bf3b586889"
+  ],
+  "status": "blocked-no-annotated-nonzero-rotation",
+  "interpretation": "Metadata-only nonzero rotation rows cannot be used as OCR quality samples without a matching HierText annotation record."
+}
