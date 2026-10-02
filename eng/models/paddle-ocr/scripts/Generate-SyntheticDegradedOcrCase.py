@@ -51,6 +51,7 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--max-crops", type=int, default=4)
     parser.add_argument("--severity", choices=("mild", "severe"), default="mild")
+    parser.add_argument("--id-prefix", default="sroie", help="Prefix for generated image IDs; defaults to sroie for backwards compatibility.")
     args = parser.parse_args()
     if args.max_crops < 1 or args.max_crops > 32:
         raise SystemExit("max-crops must be between 1 and 32")
@@ -111,7 +112,7 @@ def main() -> None:
                 {
                     "schema_version": "1.0",
                     "record_type": "degraded_crop",
-                    "image_id": f"sroie-{source_index:02d}-{condition}",
+                    "image_id": f"{args.id_prefix}-{source_index:02d}-{condition}",
                     "image_relpath": str(relative).replace("\\", "/"),
                     "source_dataset": parent["source_dataset"],
                     "source_split": parent["source_split"],

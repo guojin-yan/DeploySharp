@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-02T14:41:25.8661664Z",
+  "sample": "synthetic-degraded-funsd-b1b-20261002",
+  "dataset": {
+    "name": "FUNSD",
+    "revision": "c31735649e4f441bcbb4fd0f379574f7520b42286e80b01d80b445649d54761f",
+    "sourceManifest": {
+      "path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\funsd-test-full-001.jsonl",
+      "sha256": "5d58429c21d4df671654b8016a58d47d758ff69b7e3378c6e42b571cb360cab3"
+    },
+    "cropManifest": {
+      "path": "F:\\OCRBenchmarkTesting\\data\\crops\\funsd\\c31735649e4f\\test\\full-001\\manifest.jsonl",
+      "sha256": "25a95b2955cf3e58db5ad46f59ba6032dd5bb69525652f24a820f50588661074"
+    },
+    "generatedManifestSha256": "bd6e38a9d422f0b3ee083a6ce657fa0e250cb3ad6def2adeff42824e8ebff75b",
+    "parentPages": 32,
+    "sourceCrops": 32,
+    "records": 192,
+    "conditions": [
+      "blur",
+      "jpeg",
+      "low-contrast",
+      "noise",
+      "normal",
+      "shadow"
+    ],
+    "severity": [
+      "severe"
+    ],
+    "eligibility": "controlled_degradation_smoke_only",
+    "annotationGranularity": "word-crop; not line/page truth"
+  },
+  "models": {
+    "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "recognizerSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "dictionarySha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+  },
+  "backends": [
+    {
+      "backend": "onnxruntime-cpu",
+      "records": 192,
+      "conditions": [
+        {
+          "condition": "blur",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.9739930555555556,
+          "meanCaseFoldedWordErrorRate": 0.9895833333333333,
+          "meanConfidence": 0.15099065687500002,
+          "emptyRecognized": 18
+        },
+        {
+          "condition": "jpeg",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2255059523809524,
+          "meanCaseFoldedWordErrorRate": 0.3958333333333333,
+          "meanConfidence": 0.82204830328125,
+          "emptyRecognized": 1
+        },
+        {
+          "condition": "low-contrast",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2124231150793651,
+          "meanCaseFoldedWordErrorRate": 0.3333333333333333,
+          "meanConfidence": 0.8275221300937502,
+          "emptyRecognized": 2
+        },
+        {
+          "condition": "noise",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.24403386544011546,
+          "meanCaseFoldedWordErrorRate": 0.4270833333333333,
+          "meanConfidence": 0.8270985612499998,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "normal",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2124231150793651,
+          "meanCaseFoldedWordErrorRate": 0.3333333333333333,
+          "meanConfidence": 0.8275221300937502,
+          "emptyRecognized": 2
+        },
+        {
+          "condition": "shadow",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.20895089285714286,
+          "meanCaseFoldedWordErrorRate": 0.3125,
+          "meanConfidence": 0.810017308125,
+          "emptyRecognized": 5
+        }
+      ]
+    },
+    {
+      "backend": "openvino-cpu",
+      "records": 192,
+      "conditions": [
+        {
+          "condition": "blur",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.9739930555555556,
+          "meanCaseFoldedWordErrorRate": 0.9895833333333333,
+          "meanConfidence": 0.15098994999999996,
+          "emptyRecognized": 18
+        },
+        {
+          "condition": "jpeg",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2255059523809524,
+          "meanCaseFoldedWordErrorRate": 0.3958333333333333,
+          "meanConfidence": 0.8220474326875001,
+          "emptyRecognized": 1
+        },
+        {
+          "condition": "low-contrast",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2124231150793651,
+          "meanCaseFoldedWordErrorRate": 0.3333333333333333,
+          "meanConfidence": 0.82752174125,
+          "emptyRecognized": 2
+        },
+        {
+          "condition": "noise",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.24403386544011546,
+          "meanCaseFoldedWordErrorRate": 0.4270833333333333,
+          "meanConfidence": 0.8270977806250002,
+          "emptyRecognized": 0
+        },
+        {
+          "condition": "normal",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.2124231150793651,
+          "meanCaseFoldedWordErrorRate": 0.3333333333333333,
+          "meanConfidence": 0.82752174125,
+          "emptyRecognized": 2
+        },
+        {
+          "condition": "shadow",
+          "records": 32,
+          "meanCaseFoldedCharacterErrorRate": 0.20895089285714286,
+          "meanCaseFoldedWordErrorRate": 0.3125,
+          "meanConfidence": 0.8100168021875,
+          "emptyRecognized": 5
+        }
+      ]
+    }
+  ],
+  "parity": {
+    "records": 192,
+    "exactRecognizedText": 192,
+    "caseFoldedCerEqual": 192,
+    "maxConfidenceDelta": 1.0100000000012876E-05
+  },
+  "enhancement": [
+    {
+      "backend": "onnxruntime-cpu",
+      "records": 192,
+      "noDetectedRegion": 145,
+      "candidateAvailable": 45,
+      "candidateSelected": 14,
+      "insufficientGain": 33,
+      "meanOriginalCaseFoldedCer": 0.20619554204660584,
+      "meanCandidateCaseFoldedCer": 0.18087830687830686,
+      "selectedOriginalCaseFoldedCer": 0.3669897959183673,
+      "selectedCandidateCaseFoldedCer": 0.37433106575963715,
+      "meanElapsedMs": 97.88792553191486
+    },
+    {
+      "backend": "openvino-cpu",
+      "records": 192,
+      "noDetectedRegion": 145,
+      "candidateAvailable": 45,
+      "candidateSelected": 14,
+      "insufficientGain": 33,
+      "meanOriginalCaseFoldedCer": 0.20619554204660584,
+      "meanCandidateCaseFoldedCer": 0.18087830687830686,
+      "selectedOriginalCaseFoldedCer": 0.3669897959183673,
+      "selectedCandidateCaseFoldedCer": 0.37433106575963715,
+      "meanElapsedMs": 38.328002127659566
+    }
+  ],
+  "rawEvidence": [
+    "synthetic-degraded-funsd-b1b-20261002-onnxruntime.json",
+    "synthetic-degraded-funsd-b1b-20261002-openvino.json",
+    "synthetic-degraded-funsd-b2b3-20261002-onnxruntime.json",
+    "synthetic-degraded-funsd-b2b3-20261002-openvino.json"
+  ],
+  "boundary": "Controlled parent-linked FUNSD word crops. Results are not page/line accuracy, handwriting benchmark accuracy, robustness approval, default enhancement benefit, or backend generalization."
+}
