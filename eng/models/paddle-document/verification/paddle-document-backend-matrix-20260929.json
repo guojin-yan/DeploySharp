@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-09-30T05:04:15Z",
+  "generatedUtc": "2026-10-04T19:02:52.0497061Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -29,7 +29,11 @@
     "openvinoTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.json",
     "opencvNmsMatrix": "eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.json",
     "tensorRtTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.json",
-    "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs"
+    "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs",
+    "chart2tableExtendedOrt": "eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json",
+    "chart2tableExtendedTensorRt": "eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json",
+    "chart2tableBackendAlignment": "eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.json",
+    "regressionGate": "eng/models/paddle-ocr/verification/paddleocr-ppstructure-regression-20261005.json"
   },
   "assets": [
     { "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
