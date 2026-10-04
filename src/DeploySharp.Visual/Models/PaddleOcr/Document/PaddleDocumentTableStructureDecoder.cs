@@ -172,7 +172,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             }
             if (tokens.Count == 0) warnings.Add("empty-structure-sequence");
             float average = scoreCount == 0 ? 0 : (float)(scoreSum / scoreCount);
-            var metadataResult = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, context.Input.InputId ?? "input-not-hashed", row);
+            VisualInputFrame frame = context.Input.BatchFrames[row];
+            var metadataResult = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, frame.InputId ?? context.Input.InputId ?? "input-not-hashed", row);
             return new PaddleDocumentTableResult(PaddleDocumentModule.TableStructureRecognition, metadataResult, markup.ToString(), cells, "html", warnings, tokens, average);
         }
 

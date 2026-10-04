@@ -195,8 +195,13 @@ namespace DeploySharp.Visual.Tests
             locations[rowOneCell + 5] = .75f;
             locations[rowOneCell + 6] = .5f;
             locations[rowOneCell + 7] = .75f;
+            var frames = new[]
+            {
+                new VisualInputFrame(new VisualSize(8, 8), new VisualSize(8, 8), ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), new string('a', 64)),
+                new VisualInputFrame(new VisualSize(8, 8), new VisualSize(8, 8), ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), new string('b', 64))
+            };
             using var input = new PreparedVisualInput("x", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw,
-                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('t', 64));
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('t', 64), batchFrames: frames);
             var outputs = new InferenceOutputs(new[]
             {
                 new NamedTensor("locations", new Tensor<float>(new TensorShape(2, 3, 8), locations, TensorBufferOwnership.Transfer)),
@@ -208,6 +213,8 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(2, batch.Count);
             Assert.AreEqual(0, batch[0].Metadata.PageIndex);
             Assert.AreEqual(1, batch[1].Metadata.PageIndex);
+            Assert.AreEqual(new string('a', 64), batch[0].Metadata.InputSha256);
+            Assert.AreEqual(new string('b', 64), batch[1].Metadata.InputSha256);
             Assert.AreEqual("<td></td>", batch[0].Markup);
             Assert.AreEqual("<td></td>", batch[1].Markup);
             Assert.AreEqual(1, batch[0].Regions.Count);
