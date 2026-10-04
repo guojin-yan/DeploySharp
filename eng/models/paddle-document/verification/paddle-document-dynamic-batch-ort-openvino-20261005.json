@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-04T19:50:27.3471476+00:00",
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "batch": 2,
+  "scope": "Official PP-LCNet document-orientation and table-classification ONNX exports with two identical source rows.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "modelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "0_degree",
+        "0_degree"
+      ],
+      "scores": [
+        0.9240474,
+        0.9240474
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "modelSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "wired",
+        "wired"
+      ],
+      "scores": [
+        0.7577595,
+        0.7577595
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "modelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "0_degree",
+        "0_degree"
+      ],
+      "scores": [
+        0.9240475,
+        0.9240475
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "modelSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "wired",
+        "wired"
+      ],
+      "scores": [
+        0.75775963,
+        0.75775963
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True model batch execution and decoder result-order evidence on one Windows host; not a quality score, throughput benchmark or cross-device claim."
+}

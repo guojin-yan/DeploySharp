@@ -73,6 +73,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 2026-10-05 对本地真实模型根目录完成了 [ONNX Batch 轴审计](../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.md)：53/54 图成功解析，1 个零字节 Chart2Table 实验文件保留为 `load-failed`；32 个图有动态输入第一轴，8 个标准图静态为 `batch=1`。动态图包括 PP-DocLayout-L/Plus-L、PP-DocBlockLayout、RT-DETR 版面/单元格、公式、分类、印章、SLANeXt 和 UVDoc；PicoDet、PP-DocLayout-M/S 需使用独立 Session 或页面并发。Chart2Table 所有生成图仍是请求 batch=1，动态的是序列/KV 轴。该审计只证明图级形状合同，不代表任何后端的真实 Batch 性能或 Decoder 通过；逐文件输入/输出轴和 SHA-256 见[机器可读记录](../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.json)。
 
+随后对两个官方动态 PP-LCNet 分类图做了真实 Batch 运行：ORT CPU/OpenVINO CPU 均以两个相同 `bus.jpg` 行绑定 `[2,3,224,224]`，方向和表格分类各返回两行，标签、分数和顺序保持一致。该结果只覆盖这两个精确模型/后端/主机，不改变静态 layout 或 Chart2Table 的边界；机器可读记录见 [`paddle-document-dynamic-batch-ort-openvino-20261005.json`](../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.json)，复现协议见对应 [Markdown 报告](../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

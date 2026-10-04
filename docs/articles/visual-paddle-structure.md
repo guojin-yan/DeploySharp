@@ -55,6 +55,8 @@ python -m pip install paddlepaddle paddle2onnx
 
 Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 为 `1`，只是序列长度或 KV 轴可以动态；自回归状态绑定到单张图，不能因为 KV 动态就把它标记成模型 Batch。动态轴也只表示可以尝试批量绑定，仍需按后端完成输入绑定、Decoder、内存和结果一致性验证；本审计不替代任何后端运行或精度证据。
 
+当前已有一条真实 Batch 证据：文档方向 `PP-LCNet_x1_0_doc_ori` 和表格分类 `PP-LCNet_x1_0_table_cls` 在 ORT CPU、OpenVINO CPU 上均用两个相同的 `bus.jpg` 输入运行 `[2,3,224,224]`，两行结果的标签、分数和顺序均保持一致。详见 [动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。这是精确 ONNX/后端/主机上的执行合同，不是性能提升、数据集准确率或所有模型支持声明。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：
