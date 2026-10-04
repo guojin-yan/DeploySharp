@@ -409,6 +409,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 2. **TensorRT 使用边界与优化**：文本 TensorRT plan 保持 FP32 数据类型；FP16 text `lm_head` 图在此 GPU 上返回全零 logits。可选 TF32 tactics 在该官方样例上保持与严格 FP32 完全相同的输出，但尚未进行数据集精度验证。四图 TensorRT plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建；Decode 动态 profile 的空 Engine 问题由测试选择了错误图及 mask 长度不匹配造成，修正后库 Builder 计划通过完整 EOS 回归。`PaddleChart2TableTensorRtDeviceSession` 用两组 CUDA KV 缓冲区轮换，只回读 logits，并减少动态 shape/binding 重复工作。没有锁定 GPU 时钟，计时不是受控基准。
 3. **发布与泛化精度边界**：四个派生 ONNX 和 tokenizer sidecars 已作为 `paddle-chart/pp-chart2table` Bundle 放入 `models-paddleocr` Release；OpenCV DNN 仍未验证。官方样例和 4 个 ChartQA human 样本均在 ORT、OpenVINO 和 TensorRT 完成 EOS 与表格输出校验，TensorRT 还记录了四图逐阶段耗时和结构指标，详见 [`chart2table-tensorrt-multi-image-20260930.md`](../../eng/models/paddle-document/verification/chart2table-tensorrt-multi-image-20260930.md)。这些是定性回归，不是全量数据集精度或受控性能基准。该模型目录项保留上游源包的 `conversion-blocked` 状态，不能表示其派生 ONNX Session 不可用。
 
+    12 张 `ChartQA/val` 图像的 ORT 和 TensorRT 结果还可以通过 [对齐报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.md) 直接核对。脚本只对已生成的两个 JSON 做同源校验：输入图像 SHA、EOS 原因、结构标志、期望单元格数量均为 `12/12`，两边精确单元格合计均为 `140`；它不重新推理，也不构成全量准确率或受控性能结论。对应的[机器可读 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.json) 可供 CI 或后续设备结果比较使用。
+
 ### Chart2Table 结构化质量指标
 
 生成文本除了整段字符串比较，还可以用 `PaddleChart2TableQualityEvaluator` 记录可解释的结构指标：行数、数据行数、列数、空单元格、Markdown 分隔行、畸形行、列数不一致、逐行匹配数和逐单元格匹配数。比较时会单独保留 `ExactTextMatch`，并对单元格首尾空白和连续空白做确定性归一化；转义的 `\|` 不会被误拆成新列。
