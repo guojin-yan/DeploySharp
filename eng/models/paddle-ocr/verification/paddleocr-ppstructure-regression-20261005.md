@@ -4,7 +4,7 @@ This record captures the current local Release regression pass used while closin
 
 ## Environment
 
-- Repository revision: `e13f659` (`DeploySharpV2.0`)
+- Repository revision: `4299bdb` (`DeploySharpV2.0`)
 - Configuration: `Release`
 - Target framework: `net10.0`
 - Command shape: `dotnet test <project> -f net10.0 --configuration Release --no-restore --verbosity minimal`
@@ -16,11 +16,11 @@ This record captures the current local Release regression pass used while closin
 |---|---:|---:|---:|---:|---|
 | `DeploySharp.ModelFactory.Tests` | 63 | 2 | 0 | 65 | model catalog and release client contracts |
 | `DeploySharp.ModelPack.Json.Tests` | 29 | 3 | 0 | 32 | model-pack and PaddleOCR manifest contracts |
-| `DeploySharp.Visual.Tests` | 495 | 5 | 0 | 500 | core Visual contracts and opt-in model tests |
+| `DeploySharp.Visual.Tests` | 496 | 5 | 0 | 501 | core Visual contracts and opt-in model tests |
 | `DeploySharp.Visual.OpenCV.Tests` | 99 | 107 | 0 | 206 | OpenCV contracts and gated external model probes |
 | `DeploySharp.Visual.TensorRT.Tests` | 8 | 12 | 0 | 20 | TensorRT contracts and gated external PP-Structure probes |
 
-The five projects completed `823` tests with `694` passed, `129` explicit skips and `0` failures. The skips are environment gates for missing or intentionally disabled external assets; they are not backend support claims and are not counted as failures.
+The five projects completed `824` tests with `695` passed, `129` explicit skips and `0` failures. The skips are environment gates for missing or intentionally disabled external assets; they are not backend support claims and are not counted as failures.
 
 ## Warnings and boundaries
 
