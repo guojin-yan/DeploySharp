@@ -12,7 +12,7 @@ This is an incremental regression record for the bounded page-concurrency API ad
 
 ## Change under test
 
-`PaddleDocumentPipeline.RunManyConcurrentAsync` now executes independent pages with a caller-selected hard concurrency limit while preserving input order and page provenance. The existing `RunManyAsync` remains sequential. The new contract requires the caller to provide thread-safe stage adapters or one independent native Session/Pipeline per execution channel; it does not turn a batch-one model into a tensor Batch.
+`PaddleDocumentPipeline.RunManyConcurrentAsync` now executes independent pages with a caller-selected hard concurrency limit while preserving input order and page provenance. The existing `RunManyAsync` remains sequential. The new contract requires the caller to provide thread-safe stage adapters and native Sessions; if a stage is not thread-safe, pages must be sharded across separately created Pipeline instances outside this method. It does not turn a batch-one model into a tensor Batch.
 
 ## Results
 
