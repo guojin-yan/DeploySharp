@@ -370,7 +370,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 公式案例校验 `\\frac` 和 token 输出，印章案例校验 mask 尺寸；两者仍属于官方代表样本执行合同，不等同于公式识别或印章检测数据集精度。另有 Plus-S 五种受控公式图变体回归：原图/白边/对比度/轻模糊归一化 LaTeX 精确一致，JPEG q45 出现两个符号替换；证据见 [`formula-plus-s-variants-20260929.md`](../../eng/models/paddle-document/verification/formula-plus-s-variants-20260929.md)。
 
-印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。`FormulaModelsAndSealModelsProduceMachineReadableOrtEvidence` 进一步将六个公式模型和 mobile/server 两个印章模型的结果写入测试 JSON，记录模型/图片 SHA、token/LaTeX、mask 尺寸和区域数。公式当前有六个模型在官方公式样本上完成 token/LaTeX 语义回归，仍缺多公式人工真值集。
+印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。`FormulaModelsAndSealModelsProduceMachineReadableOrtEvidence` 进一步将六个公式模型和 mobile/server 两个印章模型的结果写入测试 JSON，记录模型/图片 SHA、token/LaTeX、mask 尺寸和区域数。公式当前有六个模型在官方公式样本上完成 token/LaTeX 语义回归，仍缺多公式人工真值集。当前本机数据根目录的可用性审计见 [`formula-data-availability-audit-20261005.md`](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.md) 和 [JSON 清单](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.json)：只有一张官方公式图片，没有可准入的多公式标注文件，因此不能计算数据集级 CER/WER。
 
 ## 状态和验证规则
 
@@ -436,7 +436,7 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 同一固定 `ChartQA/val` 选择已扩展为 12 张图并在相同 TensorRT plans 上复测：`12/12` EOS、`9/12` 行列维度一致、单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 `4,398.95/12,209.76 ms`，Decode P50/P95 范围 `33.37–39.48 / 35.85–48.81 ms`。这仍是有界任务质量和阶段计时诊断，不是 split accuracy、问答分数或受控性能基准。详见 [TensorRT 12 图记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。
 
-文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-04 最近一次运行检查六份入口文档共 `149` 个本地链接，断链 `0`。
+文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-05 最近一次运行检查六份入口文档共 `179` 个本地链接，断链 `0`。
 
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 

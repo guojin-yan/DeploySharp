@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "deploysharp-formula-evaluation-data-audit-v1",
+  "generatedUtc": "2026-10-04T18:55:06.0865071+00:00",
+  "roots": [
+    {
+      "id": "OCRBenchmarkTesting",
+      "path": "F:\\OCRBenchmarkTesting",
+      "exists": true
+    },
+    {
+      "id": "PaddleDocumentValidation",
+      "path": "E:\\Model\\PaddleDocument\\validation",
+      "exists": true
+    }
+  ],
+  "candidateCount": 6,
+  "formulaImageCandidateCount": 1,
+  "labelManifestCandidateCount": 0,
+  "multiEquationLabeledCandidateCount": 0,
+  "officialSingleImageCandidateCount": 1,
+  "admission": {
+    "status": "blocked",
+    "redistributableMultiEquationTruthSet": false,
+    "eligibleSampleCount": 0,
+    "reason": "No formula-named multi-equation label manifest was found in the audited roots; current evidence remains a single official sample and controlled variants."
+  },
+  "candidates": [
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "formula-384x384.f32",
+      "extension": ".f32",
+      "kind": "preprocessed-tensor",
+      "sizeBytes": 589824,
+      "sha256": "0fe7a0de96771ad78630147069c260c373309ef9f332473d7b3b5ea786e1606d",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 0,
+      "notes": [
+        "preprocessed input tensor is not evaluation truth"
+      ]
+    },
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "formula-672x192.f32",
+      "extension": ".f32",
+      "kind": "preprocessed-tensor",
+      "sizeBytes": 516096,
+      "sha256": "3537000712f24514e95b8e6526696ff9651389ed43f84c225b9a0da8dad0d756",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 0,
+      "notes": [
+        "preprocessed input tensor is not evaluation truth"
+      ]
+    },
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "formula-768x768.f32",
+      "extension": ".f32",
+      "kind": "preprocessed-tensor",
+      "sizeBytes": 2359296,
+      "sha256": "39feb34ad82952c86cbefb314cd416436a93e43fa7bf79927012c6dfd550b145",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 0,
+      "notes": [
+        "preprocessed input tensor is not evaluation truth"
+      ]
+    },
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "formula-processors-paddlex.py",
+      "extension": ".py",
+      "kind": "other",
+      "sizeBytes": 37283,
+      "sha256": "4a2c197634a210a90cca7bf3f417ce594b610db0058d2ccfa060dc2dcfb752eb",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 0,
+      "notes": []
+    },
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "formula-reference.json",
+      "extension": ".json",
+      "kind": "text-or-manifest",
+      "sizeBytes": 1082,
+      "sha256": "a042d6a5c9caca5509d9c5a8e46f62e63fa394633c96cc3c20f25056ee4c19e1",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 1,
+      "notes": []
+    },
+    {
+      "source": "PaddleDocumentValidation",
+      "relativePath": "general_formula_rec_001.png",
+      "extension": ".png",
+      "kind": "image",
+      "sizeBytes": 2346,
+      "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+      "hashSkippedReason": null,
+      "labelSignal": false,
+      "recordCount": 0,
+      "notes": [
+        "official single-image formula sample name"
+      ]
+    }
+  ],
+  "boundary": "This audit inventories local candidate files only. It does not download data, grant a license, infer labels from model outputs, or calculate formula accuracy."
+}
