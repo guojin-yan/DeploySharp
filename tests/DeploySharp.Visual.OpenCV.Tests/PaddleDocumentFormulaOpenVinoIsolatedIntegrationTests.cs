@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OpenVINO;
@@ -19,7 +21,7 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 [DoNotParallelize]
 public sealed class PaddleDocumentFormulaOpenVinoIsolatedIntegrationTests
 {
-    private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
+    private static string ModelRoot => Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FORMULA_MODEL_ROOT") ?? @"E:\Model\PaddleDocument\onnx";
     private const string SourceRoot = @"E:\Model\PaddleDocument\source";
     private const string FormulaImage = @"E:\Model\PaddleDocument\validation\general_formula_rec_001.png";
 
@@ -52,11 +54,27 @@ public sealed class PaddleDocumentFormulaOpenVinoIsolatedIntegrationTests
         registry.UseOpenVino();
         var request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
         using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateFromFile(FormulaImage, profile.VisualProfile, inputId: "formula-openvino-isolated");
-        using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OpenVinoBackendProvider.BackendId), request);
+        bool compatibilityRoot = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FORMULA_MODEL_ROOT"));
+        ModelArtifact artifact = compatibilityRoot
+            ? new ModelArtifact(profile.VisualProfile.ModelId, "onnx", modelPath, ComputeFileSha256(modelPath), OpenVinoBackendProvider.BackendId)
+            : profile.CreateArtifact(modelPath, OpenVinoBackendProvider.BackendId);
+        using IInferenceSession session = registry.CreateSession(artifact, request);
         InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
         PaddleDocumentFormulaResult result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
         Assert.IsTrue(result.TokenIds.Count > 0, "The formula model returned no tokens.");
-        Console.WriteLine("PADDLE_DOCUMENT_FORMULA_OPENVINO_ISOLATED model=" + item.ModelId + ";status=pass;tokens=" + result.TokenIds.Count + ";latexLength=" + result.Latex.Length + ";warnings=" + result.Warnings.Count);
+        Console.WriteLine("PADDLE_DOCUMENT_FORMULA_OPENVINO_ISOLATED model=" + item.ModelId + ";status=pass;compatibilityRoot=" + compatibilityRoot + ";sha256=" + (artifact.Sha256 ?? "") + ";tokens=" + result.TokenIds.Count + ";tokenIdsSha256=" + ComputeSha256(string.Join(",", result.TokenIds)) + ";latexLength=" + result.Latex.Length + ";latexSha256=" + ComputeSha256(result.Latex) + ";warnings=" + string.Join(",", result.Warnings));
+    }
+
+    private static string ComputeFileSha256(string path)
+    {
+        using SHA256 algorithm = SHA256.Create();
+        using FileStream stream = File.OpenRead(path);
+        return Convert.ToHexString(algorithm.ComputeHash(stream)).ToLowerInvariant();
+    }
+
+    private static string ComputeSha256(string value)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value ?? string.Empty))).ToLowerInvariant();
     }
 
     private static int Find(System.Collections.Generic.IReadOnlyList<string> tokens, string value)

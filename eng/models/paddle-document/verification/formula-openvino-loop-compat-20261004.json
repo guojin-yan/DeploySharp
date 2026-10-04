@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "deploysharp-paddle-formula-openvino-loop-compat-v1",
+  "generatedAtUtc": "2026-10-04T14:00:00Z",
+  "runtime": "OpenVINO C# API 3.3.1 / runtime 2026.2.1 / Windows x64 / .NET 10",
+  "backend": "openvino-cpu",
+  "input": {
+    "file": "general_formula_rec_001.png",
+    "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+    "source": "PaddleX official formula recognition validation asset"
+  },
+  "transformation": {
+    "script": "eng/models/paddle-document/scripts/normalize_loop_parameters.py",
+    "operation": "alpha-rename ONNX subgraph formal parameters only",
+    "sourcePolicy": "source graphs were preserved; derived graphs were written outside the repository",
+    "onnxChecker": "all six derived graphs passed"
+  },
+  "results": [
+    {
+      "model": "pp-formulanet-plus-s",
+      "sourceSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "derivedSha256": "295bb18e930372c4d91a184d72987e5541fbffb5422cd6ba51bc23420e8e43da",
+      "derivedBytes": 231879608,
+      "ortReference": { "tokenCount": 197, "tokenIdsSha256": "4612e088c164287a5a8fc18ed91fdb11186473db0bc1d6ff14ca3be089b61628" },
+      "openvino": {
+        "status": "executed-but-semantic-parity-failed",
+        "tokenCount": 3,
+        "tokenIdsSha256": "9c830c71fab93cb2dc0dab7eaca771fa32f97954447b21647c4a867f8bd9c5a0",
+        "latexLength": 6,
+        "latexSha256": "e881d7e96262b3f61849662da84b18eb8aac30f8f517c9615895cce2cbdcfdd3",
+        "warnings": []
+      },
+      "verdict": "not-admitted",
+      "reason": "The graph reached inference, but the result is not token-parity equivalent to the ORT reference."
+    },
+    {
+      "model": "pp-formulanet-plus-m",
+      "sourceSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "derivedSha256": "acc504c34c4e81fc47109723480bca1fb9f85708aa246475ea9319429809a082",
+      "derivedBytes": 592374467,
+      "ortReference": { "tokenCount": 197, "tokenIdsSha256": "4612e088c164287a5a8fc18ed91fdb11186473db0bc1d6ff14ca3be089b61628" },
+      "openvino": {
+        "status": "loop-reshape-failed",
+        "error": "Node fetch_name_0.0 of type Loop; Reshape.22 received input shape (1,16,1,2) with pattern (16,1,1)."
+      },
+      "verdict": "not-admitted"
+    },
+    {
+      "model": "pp-formulanet-plus-l",
+      "sourceSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "derivedSha256": "6e370cdb674f05c916fdb682fe7df30af29d25de7567a5d6a9d49f2ffeb22b3a",
+      "derivedBytes": 733527518,
+      "ortReference": { "tokenCount": 197, "tokenIdsSha256": "4612e088c164287a5a8fc18ed91fdb11186473db0bc1d6ff14ca3be089b61628" },
+      "openvino": {
+        "status": "loop-reshape-failed",
+        "error": "Node fetch_name_0.0 of type Loop; Reshape.249 received input shape (1,16,1,2) with pattern (16,1,1)."
+      },
+      "verdict": "not-admitted"
+    },
+    {
+      "model": "pp-formulanet-s",
+      "sourceSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "derivedSha256": "c63b38f32eba6df368791f4a6edad48f4e5d040fda940f5d0adb22593ee21904",
+      "derivedBytes": 231879608,
+      "ortReference": { "tokenCount": 213, "tokenIdsSha256": "1d5cc4c041ba9cc6f91c7a373a3c6f193a3ac719ff5a7f0035c0f297e617edbb" },
+      "openvino": {
+        "status": "executed-but-semantic-parity-failed",
+        "tokenCount": 1023,
+        "tokenIdsSha256": "0d7e8c7e17762e73b125ba799f22eafc939bafdcf8f44d6eb396ffddad8ce7ac",
+        "latexLength": 1026,
+        "latexSha256": "9a45fb04b5133dc0e15c24fc2c03850de4389f1b12a5bf9e5e442d56d497eb76",
+        "warnings": [ "missing-eos:sequence-may-be-truncated" ]
+      },
+      "verdict": "not-admitted",
+      "reason": "The graph ran to the declared sequence boundary without EOS and did not match the ORT token sequence."
+    },
+    {
+      "model": "pp-formulanet-l",
+      "sourceSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "derivedSha256": "47b019d539ff57957e3fd72f908770ac42a96a2bea94710b23ee0a2b12c0e9ea",
+      "derivedBytes": 730381790,
+      "ortReference": { "tokenCount": 197, "tokenIdsSha256": "f814b43fad8912c69eedd6befa262b1d312addb68339a6edacabfbf10dc1244a" },
+      "openvino": {
+        "status": "loop-reshape-failed",
+        "error": "Node fetch_name_0.0 of type Loop; Reshape.249 received input shape (1,16,1,2) with pattern (16,1,1)."
+      },
+      "verdict": "not-admitted"
+    },
+    {
+      "model": "unimernet",
+      "sourceSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "derivedSha256": "e6701247370184730aedc8f11ad7019f804039546b8d28be8e24750069d0904f",
+      "derivedBytes": 1842046990,
+      "ortReference": { "tokenCount": 208, "tokenIdsSha256": "bb5a284e0e6d4b87169fad96d29f52af2f09f211040385e32c7ff2e00f8ca7cc" },
+      "openvino": {
+        "status": "native-importer-crash",
+        "error": "ov_core_read_model_utf8 terminated the isolated test host with access violation 0xC0000005."
+      },
+      "verdict": "not-admitted"
+    }
+  ],
+  "conclusion": "Alpha-renaming Loop-body parameters is not a sufficient OpenVINO compatibility conversion for the FormulaNet/UniMERNet graphs. No formula model is admitted for OpenVINO from this experiment. The original ONNX artifacts and ORT CPU evidence remain unchanged; a future compatible export must prove both importer stability and token-level parity before Release admission."
+}

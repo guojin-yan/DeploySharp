@@ -24,7 +24,7 @@
     "matrixDocument": "docs/model-backend-verification-matrix.md",
     "chart2table": "eng/models/paddle-document/verification/chart2table-component-validation.json",
     "slanextCompatibility": "eng/models/paddle-document/verification/slanext-openvino-compatibility.json",
-    "formulaOpenVino": "eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json",
+    "formulaOpenVino": "eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json",
     "openvinoLayoutMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.json",
     "openvinoTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.json",
     "opencvNmsMatrix": "eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.json",

@@ -14,7 +14,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 | 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
 | 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO CPU wired/wireless 两个精确工件均已执行通过；TensorRT 11 动态三输入 profile、图内 NMS、ORT 几何/score 对照和 5/50 P50/P95 也已完成，逐项报告见 [`paddle-document-openvino-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.md) 与 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md) |
 | 表格结构识别 | `SLANeXt_wired/wireless` | `VisualTaskId.TableStructureRecognition`、表格标记和单元格结果 | wired/wireless 均已完成 ORT CPU 双输出序列/八点框 Decoder smoke；原始 Release 图在 OpenVINO 当前版本不支持（`Loop` importer），仅派生 alpha-renamed 图通过逐元素和 Decoder 对齐 |
-| 公式识别 | `PP-FormulaNet_plus-*`、`UniMERNet` | `VisualTaskId.FormulaRecognition`、LaTeX/序列结果 | 6 个可转换公式工件均已在真实 ORT CPU 推理后使用官方 `inference.yml` BPE tokenizer 完成语义 LaTeX 解码；token-piece fallback 保留给旧目标框架 |
+| 公式识别 | `PP-FormulaNet_plus-*`、`UniMERNet` | `VisualTaskId.FormulaRecognition`、LaTeX/序列结果 | 6 个可转换公式工件均已在真实 ORT CPU 推理后使用官方 `inference.yml` BPE tokenizer 完成语义 LaTeX 解码；OpenVINO 兼容图实验中没有模型通过 token 级 parity，仍标记为不支持；token-piece fallback 保留给旧目标框架 |
 | 印章文本检测 | `PP-OCRv4_*_seal_det` | `VisualTaskId.SealTextDetection`、区域结果 | mobile/server 均已完成 ORT CPU + OpenVINO CPU 概率图连通区域 Decoder smoke；mobile/server 另有 TensorRT 11 输入/掩码/Decoder 一致性实测（server 已显式关闭 TF32）；弧形文本明确不支持，需调用方先展开后再提交识别器-only |
 | 图表解析 | `PP-Chart2Table` | `PaddleChart2TableOnnxSession`、`PaddleChart2TableTensorRtDeviceSession`、`PaddleChart2TableGenerationResult` | 四图 greedy 生成已接入；四张 ONNX 图和 tokenizer 作为 `paddle-chart/pp-chart2table` Bundle 发布在 `models-paddleocr`；ORT CPU、OpenVINO CPU、TensorRT CUDA 已完成官方样例 EOS 证据，ChartQA 样本扩展验证见下文 |
 
@@ -339,7 +339,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
 ```
 
-公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-09-29 隔离矩阵已逐项尝试六个公式 OpenVINO 工件：Plus-S/M/L、FormulaNet-S/L 在 `Loop-18` importer 阶段失败，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash；六个精确组合均标记为当前 OpenVINO 不支持，详细结果见 [`formula-openvino-isolated-20260929.json`](../../eng/models/paddle-document/verification/formula-openvino-isolated-20260929.json)。
+公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-10-04 又对六个公式 ONNX 做了 Loop-body 参数重命名兼容实验：六个派生图均通过 `onnx.checker`，但 Plus-S/FormulaNet-S 虽进入 OpenVINO 执行却没有通过 token parity，Plus-M/Plus-L/FormulaNet-L 在 Loop reshape 处失败，UniMERNet 仍 native crash；六个精确组合继续标记为当前 OpenVINO 不支持。详见 [`formula-openvino-loop-compat-20261004.json`](../../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json) 与 [`formula-openvino-loop-compat-20261004.md`](../../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.md)。
 
 `PaddleDocumentFormulaSealPipelineIntegrationTests` 已验证这两类结果可以挂入页面 Pipeline：公式使用 `PP-FormulaNet_plus-S` 和官方公式图片，输出带页码/输入 SHA 的 LaTeX；印章使用 PP-OCRv4 mobile seal 模型和 `demo_1.jpg`，输出带页码/输入 SHA 的掩码尺寸及区域。测试入口：
 
@@ -410,7 +410,7 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 为扩大任务级证据，新增了[六张官方 ChartQA `val` 图表的有界质量记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md)。样本来自固定 upstream revision，CSV 表格转换为期望管道表；ORT CPU 和 OpenVINO CPU 均为 `6/6` EOS，生成文本 SHA `6/6` 一致，复杂多列样本在两个后端暴露相同的列结构边界。该选择累计匹配 `44/116` 个单元格，只用于定位图表类型和结构问题，不能外推为 ChartQA split 准确率；图片和 CSV 保留在本地缓存，不进入仓库或 Release。
 
-文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-04 最近一次运行检查六份入口文档共 `139` 个本地链接，断链 `0`。
+文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-04 最近一次运行检查六份入口文档共 `142` 个本地链接，断链 `0`。
 
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 
@@ -434,6 +434,8 @@ Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用�
 同一官方公式图还生成了原图、白边、对比度、模糊和 JPEG 五个可追溯变体，并让六个模型全部通过 ORT CPU。Plus-S/M/L 的归一化参考式匹配为各 `4/5`，平均去空白 LaTeX CER 为 `1.18%/0.47%/0.71%`，差异均出现在 JPEG 变体；FormulaNet-S/L、UniMERNet 五个变体均正常结束但与 Plus 参考式不同，平均 CER 为 `7.10%/2.37%/6.51%`。完整模型/变体 SHA、LaTeX、编辑距离和 warning 见 [`formula-six-models-variants-20260930.md`](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.md) 及其 [JSON](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.json)。这里的 CER 是单一公式去空白字符串的 Levenshtein 比率，不是自然公式数据集准确率。
 
 2026-10-02 在当前工作树按同一固定输入重跑六模型×五变体，两个测试方法 `2/2` 通过，30 行输出与已提交报告的模型/变体、LaTeX SHA、归一化编辑距离和 EOS 状态逐行一致。这只证明解码器回归可复现，不改变多公式真值集或 OpenVINO 尚未完成的状态。
+
+2026-10-04 的 OpenVINO 兼容图实验进一步确认：结构合法不等于可用后端。Plus-S 的派生图只返回 3 个 token（ORT 参考 197），FormulaNet-S 返回 1023 个 token并带 `missing-eos`（ORT 参考 213），其余四个模型分别在 Loop reshape 或 native importer 阶段失败。因此不能把 alpha-renamed 图上传为 OpenVINO 资产；后续必须先修复循环状态形状并通过 token 级 parity，再重新进入发布矩阵。
 
 公式输入还与固定版本的 PaddleX 原始 processor 逐元素对比。三种尺寸平均绝对误差分别约 `1.54e-7`、`7.70e-8`、`2.10e-6`；最大差异约 `0.022564`（相当于归一化前一个灰度级），来自 Pillow 整数滤波取整。此证据针对当前示例，不代表所有输入逐位相同。
 
