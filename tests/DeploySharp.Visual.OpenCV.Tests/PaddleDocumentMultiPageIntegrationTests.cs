@@ -88,7 +88,28 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         CollectionAssert.AreEqual(new[] { 0, 1 }, concurrentPages.Select(page => page.Page.PageIndex).ToArray());
         Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256 == sourceSha));
         Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count > 0));
-        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed);
+        MultiPageBenchmarkEvidence? benchmark = null;
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_BENCHMARK") == "1")
+        {
+            int warmupCount = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_WARMUPS", 5);
+            int measurementCount = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_MEASUREMENTS", 50);
+            benchmark = new MultiPageBenchmarkEvidence
+            {
+                warmupCount = warmupCount,
+                measurementCount = measurementCount,
+                sequential = await MeasureRepeatedAsync(
+                    () => pipeline.RunManyAsync(inputPages, CancellationToken.None),
+                    sourceSha,
+                    warmupCount,
+                    measurementCount).ConfigureAwait(false),
+                concurrent = await MeasureRepeatedAsync(
+                    () => pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: 2, CancellationToken.None),
+                    sourceSha,
+                    warmupCount,
+                    measurementCount).ConfigureAwait(false)
+            };
+        }
+        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed, benchmark);
         Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
             + ";orientationRegions=" + string.Join(",", concurrentPages.Select(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count)));
     }
@@ -108,7 +129,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         IReadOnlyList<PaddleDocumentPipelineResult> sequentialPages,
         IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages,
         TimeSpan sequentialElapsed,
-        TimeSpan concurrentElapsed)
+        TimeSpan concurrentElapsed,
+        MultiPageBenchmarkEvidence? benchmark)
     {
         string? requestedPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT_EVIDENCE_PATH");
         if (string.IsNullOrWhiteSpace(requestedPath)) return;
@@ -139,7 +161,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 sessionMaxConcurrency = 2,
                 sequentialWallElapsedMs = sequentialElapsed.TotalMilliseconds,
                 sequentialPageElapsedSumMs = sequentialPages.Sum(page => page.Elapsed.TotalMilliseconds),
-                concurrentElapsedMs = concurrentElapsed.TotalMilliseconds
+                concurrentElapsedMs = concurrentElapsed.TotalMilliseconds,
+                benchmark
             },
             models = new
             {
@@ -159,6 +182,84 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             boundary = "This is a real two-page ORT CPU page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
         };
         File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, new UTF8Encoding(false));
+    }
+
+    private static async Task<MultiPageTimingSummary> MeasureRepeatedAsync(
+        Func<Task<IReadOnlyList<PaddleDocumentPipelineResult>>> execute,
+        string sourceSha,
+        int warmupCount,
+        int measurementCount)
+    {
+        for (int index = 0; index < warmupCount; index++)
+        {
+            IReadOnlyList<PaddleDocumentPipelineResult> warmup = await execute().ConfigureAwait(false);
+            AssertPageContract(warmup, sourceSha);
+        }
+
+        var samples = new List<double>(measurementCount);
+        for (int index = 0; index < measurementCount; index++)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            IReadOnlyList<PaddleDocumentPipelineResult> result = await execute().ConfigureAwait(false);
+            stopwatch.Stop();
+            AssertPageContract(result, sourceSha);
+            samples.Add(stopwatch.Elapsed.TotalMilliseconds);
+        }
+
+        return new MultiPageTimingSummary
+        {
+            samplesMs = samples.ToArray(),
+            minMs = samples.Min(),
+            maxMs = samples.Max(),
+            p50Ms = Percentile(samples, 0.50),
+            p95Ms = Percentile(samples, 0.95)
+        };
+    }
+
+    private static void AssertPageContract(IReadOnlyList<PaddleDocumentPipelineResult> pages, string sourceSha)
+    {
+        Assert.AreEqual(2, pages.Count);
+        CollectionAssert.AreEqual(new[] { 0, 1 }, pages.Select(page => page.Page.PageIndex).ToArray());
+        Assert.IsTrue(pages.All(page => page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256 == sourceSha));
+        Assert.IsTrue(pages.All(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count > 0));
+    }
+
+    private static int ReadPositiveInt(string name, int defaultValue)
+    {
+        string? value = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrWhiteSpace(value)) return defaultValue;
+        if (!int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed) || parsed < 1 || parsed > 200)
+        {
+            throw new AssertFailedException($"{name} must be an integer from 1 to 200.");
+        }
+        return parsed;
+    }
+
+    private static double Percentile(IReadOnlyList<double> values, double percentile)
+    {
+        double[] sorted = values.OrderBy(value => value).ToArray();
+        double rank = (sorted.Length - 1) * percentile;
+        int lower = (int)Math.Floor(rank);
+        int upper = (int)Math.Ceiling(rank);
+        if (lower == upper) return sorted[lower];
+        return sorted[lower] + ((sorted[upper] - sorted[lower]) * (rank - lower));
+    }
+
+    private sealed class MultiPageBenchmarkEvidence
+    {
+        public int warmupCount { get; init; }
+        public int measurementCount { get; init; }
+        public MultiPageTimingSummary sequential { get; init; } = new();
+        public MultiPageTimingSummary concurrent { get; init; } = new();
+    }
+
+    private sealed class MultiPageTimingSummary
+    {
+        public double[] samplesMs { get; init; } = Array.Empty<double>();
+        public double minMs { get; init; }
+        public double maxMs { get; init; }
+        public double p50Ms { get; init; }
+        public double p95Ms { get; init; }
     }
 
     private static string RequireModel(string name)
