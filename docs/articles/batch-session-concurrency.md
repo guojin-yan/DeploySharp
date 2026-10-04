@@ -81,8 +81,13 @@ IReadOnlyList<VisualInferenceResult> frames =
 | OBB | `OrientedDetectionResult` | `OrientedDetectionBatchResult` |
 | 异常检测 | `AnomalyDetectionResult` | `AnomalyDetectionBatchResult` |
 | RMBG | `BackgroundRemovalResult` | `BackgroundRemovalBatchResult` |
+| PP-Structure 版面/NMS、表格单元格 | `DetectionResult` | `DetectionBatchResult` |
+| PP-Structure 公式、印章、UVDoc | `PaddleDocumentFormulaResult` / `PaddleDocumentSealResult` / `PaddleDocumentUnwarpingResult` | 对应 `PaddleDocumentFormulaBatchResult` / `PaddleDocumentSealBatchResult` / `PaddleDocumentUnwarpingBatchResult` |
+| Chart2Table 自回归 | `PaddleDocumentChartResult` | 当前要求 batch=1；使用独立 Session 池并发 |
 
 Batch 结果按输入行索引访问；每行携带自己的源图变换。固定 batch-one 任务即使通过 Session 池并发，也仍返回 batch-one 结果列表，不会包装成 `*BatchResult`。
+
+PP-Structure 的 batch decoder 合同已经覆盖版面/NMS、公式、印章和 UVDoc 的逐行结果与页码/几何或像素隔离；这只是解码合同，不代表每个后端和每个官方工件都已完成真实动态 batch 性能验证。Chart2Table 的视觉编码器可以拆分运行，但文本自回归目前保持 batch=1，需通过独立 Session 或专用调度策略扩展吞吐。
 
 ## 取消、超时和释放
 

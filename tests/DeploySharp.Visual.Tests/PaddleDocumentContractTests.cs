@@ -411,6 +411,59 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SealDecoderPreservesIndependentBatchRowsAndPageMetadata()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-seal/ppocrv4-mobile");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateSealDetection(descriptor, new VisualSize(8, 8), maximumBatch: 2, threshold: .5f, minimumArea: 2);
+            var image = new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[2 * 3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("x", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('s', 64));
+            var mask = new float[2 * 8 * 8];
+            mask[(2 * 8) + 2] = .9f; mask[(2 * 8) + 3] = .8f; mask[(3 * 8) + 2] = .7f; mask[(3 * 8) + 3] = .6f;
+            int second = 8 * 8;
+            mask[second + (5 * 8) + 5] = .95f; mask[second + (5 * 8) + 6] = .85f; mask[second + (6 * 8) + 5] = .75f; mask[second + (6 * 8) + 6] = .65f;
+            using (input)
+            {
+                object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile,
+                    InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(2, 1, 8, 8), mask, TensorBufferOwnership.Transfer)), CancellationToken.None));
+                var batch = decoded as PaddleDocumentSealBatchResult ?? throw new AssertFailedException("The seal decoder did not preserve the batched result.");
+                Assert.AreEqual(2, batch.Count);
+                Assert.AreEqual(0, batch[0].Metadata.PageIndex);
+                Assert.AreEqual(1, batch[1].Metadata.PageIndex);
+                Assert.AreEqual(1, batch[0].Regions.Count);
+                Assert.AreEqual(1, batch[1].Regions.Count);
+                Assert.AreEqual(2f, batch[0].Regions[0].Bounds.X, .01f);
+                Assert.AreEqual(5f, batch[1].Regions[0].Bounds.X, .01f);
+            }
+        }
+
+        [TestMethod]
+        public void UnwarpingDecoderPreservesIndependentBatchRowsAndPixels()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/uvdoc");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateUnwarping(descriptor, new VisualSize(8, 8), maximumBatch: 2);
+            var image = new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[2 * 3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("image", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('u', 64));
+            var pixels = new float[2 * 3 * 2 * 2];
+            pixels[0] = .25f;
+            pixels[12] = .75f;
+            using (input)
+            {
+                object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile,
+                    InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(2, 3, 2, 2), pixels, TensorBufferOwnership.Transfer)), CancellationToken.None));
+                var batch = decoded as PaddleDocumentUnwarpingBatchResult ?? throw new AssertFailedException("The UVDoc decoder did not preserve the batched result.");
+                Assert.AreEqual(2, batch.Count);
+                Assert.AreEqual(0, batch[0].Metadata.PageIndex);
+                Assert.AreEqual(1, batch[1].Metadata.PageIndex);
+                Assert.AreEqual(.25f, batch[0].Pixels[0], .000001f);
+                Assert.AreEqual(.75f, batch[1].Pixels[0], .000001f);
+                Assert.AreEqual(12, batch[0].Pixels.Count);
+                Assert.AreEqual(12, batch[1].Pixels.Count);
+            }
+        }
+
+        [TestMethod]
         public void PaddleGeometryMatchesModelCanvasAndOfficialDetrNormalization()
         {
             var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"), PaddleDocumentProfiles.Layout23Labels,
