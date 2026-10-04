@@ -30,6 +30,8 @@ The checked-in model-release catalog keeps `pp-chart2table` as `conversion-block
 
 ## Current local evidence
 
+The real two-page [bounded concurrency record](verification/paddle-document-multipage-concurrent-ort-20261005.md) exercises orientation -> layout on ORT CPU with the same `bus.jpg` input duplicated as page 0/1. `RunManyAsync` measured `882.267 ms` wall time, while `RunManyConcurrentAsync(maxDegreeOfParallelism: 2)` measured `791.9943 ms`; both pages preserved source SHA, page order and 300 layout regions. This is a one-run execution/provenance observation, not a formal throughput benchmark, tensor Batch result or quality score. OpenVINO/TensorRT page-concurrency measurements and repeated 5/50 timing remain open.
+
 For task-specific regression inputs, use `scripts/Acquire-PaddleDocumentValidation.ps1`. It downloads and verifies the SHA-256 of the official direction, table and formula examples. `scripts/Generate-FormulaReference.py` executes only the unchanged preprocessing classes from a pinned PaddleX revision to generate Float32 reference tensors. Requirements: NumPy, Pillow, opencv-python-headless. Use `--processor-source` for a locally downloaded copy if Python's network access is unavailable; the same source hash is required.
 
 ### Chart2Table four-graph bundle and runtime evidence

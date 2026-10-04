@@ -238,6 +238,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 `maxDegreeOfParallelism` 是硬上限；调用方必须确认 stage 自身及其 native Session 支持并发。若不能确认，应在该方法外创建多个独立 Pipeline 并自行分片调度。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
 
+真实模型证据见[两页 ORT CPU 有界并发记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-20261005.md)：方向→版面两阶段在同一 `bus.jpg` 的两个页对象上运行，串行墙钟为 `882.267 ms`，页面并发上限为 `2` 时墙钟为 `791.9943 ms`。该结果只证明页面顺序、源 SHA、区域数量和一次运行的并发行为；它不是模型 Batch、正式 5/50 性能基准或精度结论。OpenVINO/TensorRT 的多页并发和重复性能协议仍需单独验证。
+
 ### 版面区域 → OCR
 
 版面检测结果可以交给 `PaddleDocumentRegionTextStage`。该适配器要求前序阶段产生 `LayoutDetection` 区域，然后按页面区域顺序调用应用提供的 OCR 委托；委托负责从原图按 `region.Bounds` 裁剪、调用已有 `OcrPipeline`，再返回一条 `PaddleDocumentTextItem`。库会检查区域索引、页码和输入 SHA，并把每条文本与页面坐标绑定。
