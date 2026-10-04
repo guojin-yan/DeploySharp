@@ -111,6 +111,42 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void RegionDetectionProfileSupportsIndependentDynamicBatchRows()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/rt-detr-h-layout-17cls");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateRegionDetection(
+                descriptor,
+                new[] { "table" },
+                VisualTaskId.LayoutDetection,
+                modelSize: new VisualSize(8, 8),
+                maximumBatch: 2,
+                decoderOptions: new DetectionDecoderOptions(scoreThreshold: .1f, maximumCandidates: 2, maximumDetections: 2));
+
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(2, profile.VisualProfile.Input.MaximumBatch);
+            var image = new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[2 * 3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var frames = new[]
+            {
+                new VisualInputFrame(new VisualSize(8, 8), new VisualSize(8, 8), ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), new string('a', 64)),
+                new VisualInputFrame(new VisualSize(16, 8), new VisualSize(8, 8), ImageTransform.Letterbox(new VisualSize(16, 8), new VisualSize(8, 8)), new string('b', 64))
+            };
+            using var input = new PreparedVisualInput("x", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), batchFrames: frames);
+            var values = new float[2 * 1 * 5];
+            values[0] = 0; values[1] = 0; values[2] = 1; values[3] = 1; values[4] = .9f;
+            values[5] = 0; values[6] = 0; values[7] = 1; values[8] = 1; values[9] = .8f;
+            var outputs = InferenceOutputs.Create("output", new Tensor<float>(new TensorShape(2, 1, 5), values, TensorBufferOwnership.Transfer));
+
+            var batch = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as DetectionBatchResult;
+            Assert.IsNotNull(batch);
+            Assert.AreEqual(2, batch!.Count);
+            Assert.AreEqual(1, batch[0].Detections.Count);
+            Assert.AreEqual(1, batch[1].Detections.Count);
+            Assert.AreEqual(8f, batch[0].Detections[0].Box.Width, .001f);
+            Assert.AreEqual(16f, batch[1].Detections[0].Box.Width, .001f);
+        }
+
+        [TestMethod]
         public void SpecializedResultsRejectWrongModuleAndKeepPayload()
         {
             PaddleDocumentModelDescriptor model = PaddleDocumentModelCatalog.Official[0];

@@ -149,13 +149,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         private static bool IsOfficialLcNet(string modelId) => modelId == "paddle-doc/pp-lcnet-x1-0-doc-ori" || modelId == "paddle-table/pp-lcnet-x1-0-table-cls";
 
         /// <summary>Creates a dense region profile for layout, seal, or table-cell models after a converter has exposed a [batch,candidates,fields] tensor. / 为版面、印章或表格单元格模型创建密集区域 Profile；前提是转换器已暴露 [batch,candidates,fields] 张量。</summary>
-        public static PaddleDocumentProfile CreateRegionDetection(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualTaskId task, string inputName = "x", string outputName = "output", VisualSize? modelSize = null, DetectionBoxFormat boxFormat = DetectionBoxFormat.Xyxy, bool normalizedCoordinates = true, int classScoreOffset = 4, DetectionScoreMode scoreMode = DetectionScoreMode.ClassScore, int objectnessIndex = -1, DetectionDecoderOptions? decoderOptions = null, VisualPreprocessingOptions? preprocessing = null)
+        /// <remarks>Values greater than one require a dynamic batch export; the default remains batch one for backward compatibility. / 大于 1 时要求导出模型具有动态 Batch；默认值仍为 1 以保持向后兼容。</remarks>
+        public static PaddleDocumentProfile CreateRegionDetection(PaddleDocumentModelDescriptor descriptor, IEnumerable<string> labels, VisualTaskId task, string inputName = "x", string outputName = "output", VisualSize? modelSize = null, DetectionBoxFormat boxFormat = DetectionBoxFormat.Xyxy, bool normalizedCoordinates = true, int classScoreOffset = 4, DetectionScoreMode scoreMode = DetectionScoreMode.ClassScore, int objectnessIndex = -1, DetectionDecoderOptions? decoderOptions = null, VisualPreprocessingOptions? preprocessing = null, int maximumBatch = 1)
         {
             if (descriptor == null) throw new ArgumentNullException(nameof(descriptor));
             if (labels == null) throw new ArgumentNullException(nameof(labels));
             if (task != VisualTaskId.LayoutDetection && task != VisualTaskId.SealTextDetection && task != VisualTaskId.TableCellDetection) throw new ArgumentException("Region builder only accepts layout, seal, or table-cell tasks.", nameof(task));
             var labelValues = new List<string>(labels);
             if (labelValues.Count == 0) throw new ArgumentException("At least one label is required.", nameof(labels));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             if (string.IsNullOrWhiteSpace(inputName) || string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("Exact tensor names are required.");
             int fieldCount = checked(classScoreOffset + labelValues.Count);
             var visualLabels = new List<VisualLabel>(labelValues.Count);
@@ -164,7 +166,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             var decoder = new DetectionDecoder(schema, decoderOptions, task);
             VisualSize size = modelSize ?? new VisualSize(640, 640);
             var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".regions", new ModelId(descriptor.ModelId), task, "paddle-document-contract-v1", descriptor.ModelFormat,
-                new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(1, 3, size.Height, size.Width), VisualTensorLayout.Nchw),
+                new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(maximumBatch > 1 ? -1 : 1, 3, size.Height, size.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
                 new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(-1, -1, fieldCount)) }, visualLabels, decoder,
                 preprocessing: preprocessing ?? new VisualPreprocessingOptions(size, VisualResizeMode.Resize, VisualColorOrder.Rgb, VisualNormalizationOptions.ImageNet, VisualTensorLayout.Nchw, 1));
             return new PaddleDocumentProfile(descriptor, visual);

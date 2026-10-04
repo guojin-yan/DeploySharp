@@ -51,7 +51,7 @@ python -m pip install paddlepaddle paddle2onnx
 
 ## 在代码中创建 Profile
 
-文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：
+文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：
 
 ```csharp
 using JYPPX.DeploySharp;
