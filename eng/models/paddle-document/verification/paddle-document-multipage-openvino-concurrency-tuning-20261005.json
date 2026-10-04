@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-openvino-concurrency-tuning-v1",
+  "sourceRevision": "833e63d4156f49196e0aeed13fafe732c2ae73cb",
+  "backend": "openvino-cpu",
+  "environment": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "processArchitecture": "X64",
+    "processorCount": 16
+  },
+  "input": {
+    "path": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "pageCount": 2,
+    "orientationModelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+    "layoutModelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "pageOrderChecked": true,
+    "sourceShaChecked": true,
+    "nonEmptyLayoutChecked": true
+  },
+  "configurations": [
+    {
+      "sessionConcurrency": 1,
+      "pageConcurrency": 1,
+      "sequentialP50Ms": 561.8156,
+      "sequentialP95Ms": 635.13906,
+      "concurrentP50Ms": 582.6073,
+      "concurrentP95Ms": 687.551325,
+      "concurrentDeltaP50Percent": 3.70,
+      "concurrentDeltaP95Percent": 8.25,
+      "rawEvidence": "paddle-document-multipage-openvino-s1-p1-20261005.json"
+    },
+    {
+      "sessionConcurrency": 1,
+      "pageConcurrency": 2,
+      "sequentialP50Ms": 633.13785,
+      "sequentialP95Ms": 1256.413365,
+      "concurrentP50Ms": 560.64265,
+      "concurrentP95Ms": 1059.188415,
+      "concurrentDeltaP50Percent": -11.45,
+      "concurrentDeltaP95Percent": -15.70,
+      "rawEvidence": "paddle-document-multipage-openvino-s1-p2-20261005.json"
+    },
+    {
+      "sessionConcurrency": 2,
+      "pageConcurrency": 1,
+      "sequentialP50Ms": 583.132,
+      "sequentialP95Ms": 686.26401,
+      "concurrentP50Ms": 643.53615,
+      "concurrentP95Ms": 697.002535,
+      "concurrentDeltaP50Percent": 10.36,
+      "concurrentDeltaP95Percent": 1.56,
+      "rawEvidence": "paddle-document-multipage-openvino-s2-p1-20261005.json"
+    },
+    {
+      "sessionConcurrency": 2,
+      "pageConcurrency": 2,
+      "sequentialP50Ms": 566.14045,
+      "sequentialP95Ms": 638.83725,
+      "concurrentP50Ms": 638.593,
+      "concurrentP95Ms": 695.8447,
+      "concurrentDeltaP50Percent": 12.80,
+      "concurrentDeltaP95Percent": 8.92,
+      "rawEvidence": "paddle-document-multipage-openvino-s2-p2-20261005.json"
+    }
+  ],
+  "boundary": "Four configurations on one host and one duplicated input are a tuning observation, not a universal optimum, quality score, model Batch result or cross-device performance claim."
+}
