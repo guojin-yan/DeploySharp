@@ -53,4 +53,6 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 For OpenVINO, replace the ORT gate/report variables with `DEPLOYSHARP_CHART2TABLE_EXTENDED_OPENVINO_RUN_EXTERNAL=1` and `chart2table-openvino-extended-quality-20261002.json`. TensorRT is a separate CUDA run using the same six-image manifest; its bounded EOS/structure/timing evidence is recorded in [chart2table-tensorrt-extended-quality-20261004.md](chart2table-tensorrt-extended-quality-20261004.md). That run is not a controlled performance profile or split-level accuracy evaluation.
 
+When both ORT and OpenVINO gates are set to `1` in one invocation, a shared `DEPLOYSHARP_CHART2TABLE_EXTENDED_REPORT_PATH` is automatically suffixed with `-onnxruntime` or `-openvino` before the extension so the two reports cannot overwrite each other. A `{backend}` placeholder may also be used explicitly; with only one gate enabled, the configured path remains unchanged for compatibility.
+
 The official dataset source describes `val/png` and `val/tables` as paired chart images and underlying tables. This document intentionally records a bounded task-quality selection, not a full split evaluation or a redistribution of the source dataset.

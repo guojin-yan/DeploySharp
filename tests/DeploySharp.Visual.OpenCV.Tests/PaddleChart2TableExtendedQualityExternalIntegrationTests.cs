@@ -127,8 +127,7 @@ public sealed class PaddleChart2TableExtendedQualityExternalIntegrationTests
             });
         }
 
-        string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_EXTENDED_REPORT_PATH")
-            ?? Path.Combine(TestContext.TestResultsDirectory!, "chart2table-" + backend + "-extended-quality.json");
+        string report = ResolveReportPath(backend, TestContext.TestResultsDirectory!);
         string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
         if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
         File.WriteAllText(report, JsonSerializer.Serialize(new
@@ -147,6 +146,33 @@ public sealed class PaddleChart2TableExtendedQualityExternalIntegrationTests
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
         Console.WriteLine("PADDLE_CHART2TABLE_EXTENDED backend=" + backend + ";samples=" + rows.Count + ";report=" + report);
+    }
+
+    private static string ResolveReportPath(string backend, string testResultsDirectory)
+    {
+        string? configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_EXTENDED_REPORT_PATH");
+        if (string.IsNullOrWhiteSpace(configured))
+            return Path.Combine(testResultsDirectory, "chart2table-" + backend + "-extended-quality.json");
+
+        string backendName = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase)
+            ? "openvino"
+            : "onnxruntime";
+        if (configured.Contains("{backend}", StringComparison.OrdinalIgnoreCase))
+            return configured.Replace("{backend}", backendName, StringComparison.OrdinalIgnoreCase);
+
+        bool bothBackendsEnabled = string.Equals(
+                Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_EXTENDED_ORT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)
+            && string.Equals(
+                Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_EXTENDED_OPENVINO_RUN_EXTERNAL"), "1", StringComparison.Ordinal);
+        if (!bothBackendsEnabled)
+            return configured;
+
+        string extension = Path.GetExtension(configured);
+        string stem = extension.Length == 0 ? configured : configured[..^extension.Length];
+        string suffix = "-" + backendName;
+        return stem.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+            ? configured
+            : stem + suffix + extension;
     }
 
     private static int ParseMaximumNewTokens(string backend)
