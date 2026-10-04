@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JYPPX.DeploySharp.Results.Vision;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.Tests
@@ -53,6 +54,37 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual("one", batch[0].TopPrediction!.Label);
             Assert.AreEqual("zero", batch[1].TopPrediction!.Label);
             Assert.AreEqual(1, fixture.Provider.LastSession!.RunCount);
+        }
+
+        [TestMethod]
+        public void PaddleRegionDynamicBatchRunsThroughVisualPipeline()
+        {
+            VisualModelProfile profile = PaddleDocumentProfiles.CreateRegionDetection(
+                PaddleDocumentModelCatalog.Get("paddle-doc/rt-detr-h-layout-17cls"),
+                new[] { "table" },
+                VisualTaskId.LayoutDetection,
+                modelSize: new VisualSize(2, 2),
+                maximumBatch: 2,
+                decoderOptions: new DetectionDecoderOptions(scoreThreshold: .1f, maximumCandidates: 2, maximumDetections: 2)).VisualProfile.WithModelFormat("fake");
+            using PipelineFixture fixture = VisualTestData.Pipeline(profile, new TensorShape(-1, -1, 5), inputs =>
+            {
+                Assert.AreEqual(2L, inputs.GetRequired("x").Shape[0]);
+                return InferenceOutputs.Create("output", new Tensor<float>(new TensorShape(2, 1, 5), new[]
+                {
+                    0f, 0f, 1f, 1f, .9f,
+                    0f, 0f, 1f, 1f, .8f
+                }, TensorBufferOwnership.Transfer));
+            });
+            var size = new VisualSize(2, 2);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24], TensorBufferOwnership.Transfer),
+                size, size, 2, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size), inputId: "paddle-region-batch");
+
+            DetectionBatchResult batch = fixture.Pipeline.Run(input).GetValue<DetectionBatchResult>();
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(1, batch[0].Detections.Count);
+            Assert.AreEqual(1, batch[1].Detections.Count);
+            Assert.AreEqual(2f, batch[0].Detections[0].Box.Width, .001f);
+            Assert.AreEqual(2f, batch[1].Detections[0].Box.Width, .001f);
         }
 
         [TestMethod]
