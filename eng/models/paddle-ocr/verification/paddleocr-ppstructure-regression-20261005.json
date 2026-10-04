@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-ppstructure-regression-v2",
+  "generatedUtc": "2026-10-04T19:02:52.0497061Z",
+  "repositoryRevision": "e13f659b7b451573cbc4096fd279583cb11bcc1b",
+  "branch": "DeploySharpV2.0",
+  "configuration": "Release",
+  "targetFramework": "net10.0",
+  "commandTemplate": "dotnet test <project> -f net10.0 --configuration Release --no-restore --verbosity minimal",
+  "projects": [
+    {
+      "project": "DeploySharp.ModelFactory.Tests",
+      "path": "tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj",
+      "passed": 63,
+      "skipped": 2,
+      "failed": 0,
+      "total": 65,
+      "scope": "model catalog and release client contracts"
+    },
+    {
+      "project": "DeploySharp.ModelPack.Json.Tests",
+      "path": "tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj",
+      "passed": 29,
+      "skipped": 3,
+      "failed": 0,
+      "total": 32,
+      "scope": "model-pack and PaddleOCR manifest contracts"
+    },
+    {
+      "project": "DeploySharp.Visual.Tests",
+      "path": "tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj",
+      "passed": 495,
+      "skipped": 5,
+      "failed": 0,
+      "total": 500,
+      "scope": "core Visual contracts and opt-in model tests"
+    },
+    {
+      "project": "DeploySharp.Visual.OpenCV.Tests",
+      "path": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj",
+      "passed": 99,
+      "skipped": 107,
+      "failed": 0,
+      "total": 206,
+      "scope": "OpenCV contracts and gated external model probes"
+    },
+    {
+      "project": "DeploySharp.Visual.TensorRT.Tests",
+      "path": "tests/DeploySharp.Visual.TensorRT.Tests/DeploySharp.Visual.TensorRT.Tests.csproj",
+      "passed": 8,
+      "skipped": 12,
+      "failed": 0,
+      "total": 20,
+      "scope": "TensorRT contracts and gated external PP-Structure probes"
+    }
+  ],
+  "totals": {
+    "passed": 694,
+    "skipped": 129,
+    "failed": 0,
+    "total": 823
+  },
+  "warnings": [
+    "Legacy target frameworks emit dependency support warnings; no Release net10.0 test failed.",
+    "Skipped tests are external-asset or explicit environment gates and are not support claims.",
+    "DeploySharp.Visual.Configuration.Json.Tests has no source project file in this checkout and is not included."
+  ],
+  "boundary": "This is a local Release contract/regression gate. It does not close external model, dataset accuracy, cross-device performance, or long-running soak gates."
+}
