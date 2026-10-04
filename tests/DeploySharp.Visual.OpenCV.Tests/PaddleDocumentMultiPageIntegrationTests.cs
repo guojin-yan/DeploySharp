@@ -40,6 +40,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         string gate = useOpenVino ? "DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_MULTIPAGE" : "DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL";
         if (Environment.GetEnvironmentVariable(gate) != "1") Assert.Inconclusive("Set " + gate + "=1 to run the multi-page PP-Structure case.");
         if (!File.Exists(ImagePath)) Assert.Inconclusive("Missing multi-page input: " + ImagePath);
+        int sessionConcurrency = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY", 2);
+        int pageConcurrency = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY", 2);
         string orientationPath = RequireModel("pp-lcnet-x1-0-doc-ori.onnx");
         string layoutPath = RequireModel("pp-doclayout-l.onnx");
         var orientationDescriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-lcnet-x1-0-doc-ori");
@@ -65,8 +67,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             device = "cpu";
         }
         BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
-        using VisualPipeline orientation = CreatePipeline(orientationRegistry, orientationProfile, orientationPath, request, backendId);
-        using VisualPipeline layout = CreatePipeline(layoutRegistry, layoutProfile, layoutPath, request, backendId);
+        using VisualPipeline orientation = CreatePipeline(orientationRegistry, orientationProfile, orientationPath, request, backendId, sessionConcurrency);
+        using VisualPipeline layout = CreatePipeline(layoutRegistry, layoutProfile, layoutPath, request, backendId, sessionConcurrency);
         string sourceSha = Sha256(ImagePath);
         var stages = new IPaddleDocumentPipelineStage[]
         {
@@ -103,7 +105,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         Assert.IsTrue(PaddleDocumentPipelineExport.ToMarkdown(pages).Contains("PP-Structure page 1", StringComparison.Ordinal));
 
         Stopwatch concurrentWatch = Stopwatch.StartNew();
-        IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages = await pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: 2, CancellationToken.None).ConfigureAwait(false);
+        IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages = await pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: pageConcurrency, CancellationToken.None).ConfigureAwait(false);
         concurrentWatch.Stop();
         Assert.AreEqual(2, concurrentPages.Count);
         CollectionAssert.AreEqual(new[] { 0, 1 }, concurrentPages.Select(page => page.Page.PageIndex).ToArray());
@@ -124,21 +126,21 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                     warmupCount,
                     measurementCount).ConfigureAwait(false),
                 concurrent = await MeasureRepeatedAsync(
-                    () => pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: 2, CancellationToken.None),
+                    () => pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: pageConcurrency, CancellationToken.None),
                     sourceSha,
                     warmupCount,
                     measurementCount).ConfigureAwait(false)
             };
         }
-        WriteConcurrentEvidenceIfRequested(backend, backendId, sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed, benchmark);
-        Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT backend=" + backend + ";pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+        WriteConcurrentEvidenceIfRequested(backend, backendId, sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sessionConcurrency, pageConcurrency, sequentialWatch.Elapsed, concurrentWatch.Elapsed, benchmark);
+        Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT backend=" + backend + ";pages=2;maxDegreeOfParallelism=" + pageConcurrency + ";sessionConcurrency=" + sessionConcurrency + ";elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
             + ";orientationRegions=" + string.Join(",", concurrentPages.Select(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count)));
     }
 
-    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string path, BackendRequest request, BackendId backendId)
+    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string path, BackendRequest request, BackendId backendId, int sessionConcurrency)
     {
         var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
-        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, backendId), registry, request, profile.VisualProfile.Task), request, new SessionOptions(2, false));
+        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, backendId), registry, request, profile.VisualProfile.Task), request, new SessionOptions(sessionConcurrency, false));
     }
 
     private static void WriteConcurrentEvidenceIfRequested(
@@ -151,6 +153,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         PaddleDocumentProfile layoutProfile,
         IReadOnlyList<PaddleDocumentPipelineResult> sequentialPages,
         IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages,
+        int sessionConcurrency,
+        int pageConcurrency,
         TimeSpan sequentialElapsed,
         TimeSpan concurrentElapsed,
         MultiPageBenchmarkEvidence? benchmark)
@@ -191,8 +195,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 backendId = backendId.Value,
                 sequentialMethod = "PaddleDocumentPipeline.RunManyAsync",
                 concurrentMethod = "PaddleDocumentPipeline.RunManyConcurrentAsync",
-                maxDegreeOfParallelism = 2,
-                sessionMaxConcurrency = 2,
+                maxDegreeOfParallelism = pageConcurrency,
+                sessionMaxConcurrency = sessionConcurrency,
                 sequentialWallElapsedMs = sequentialElapsed.TotalMilliseconds,
                 sequentialPageElapsedSumMs = sequentialPages.Sum(page => page.Elapsed.TotalMilliseconds),
                 concurrentElapsedMs = concurrentElapsed.TotalMilliseconds,
@@ -213,7 +217,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 elapsedMs = page.Elapsed.TotalMilliseconds,
                 timings = page.Timings.ToDictionary(item => item.Module.ToString(), item => item.Elapsed.TotalMilliseconds)
             }).ToArray(),
-            boundary = "This is a real two-page " + backendName + " page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
+            boundary = "This is a real two-page " + backendName + " page-concurrency and provenance observation on one host with configurable session/page concurrency; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
         };
         File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, new UTF8Encoding(false));
     }

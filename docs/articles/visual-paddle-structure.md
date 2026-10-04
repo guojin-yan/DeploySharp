@@ -238,6 +238,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 `maxDegreeOfParallelism` 是硬上限；调用方必须确认 stage 自身及其 native Session 支持并发。若不能确认，应在该方法外创建多个独立 Pipeline 并自行分片调度。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
 
+外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
+
 真实模型证据见[两页 ORT CPU 有界并发记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-20261005.md)：方向→版面两阶段在同一 `bus.jpg` 的两个页对象上运行，串行墙钟为 `882.267 ms`，页面并发上限为 `2` 时墙钟为 `791.9943 ms`。进一步的[5 次预热/50 次测量记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-benchmark-20261005.md)给出串行 P50/P95 `841.0031/918.2798 ms`、并发 P50/P95 `708.4469/873.7787 ms`；[OpenVINO CPU 单次记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-20261005.md)给出串行/并发墙钟 `898.9205/644.0613 ms`，[OpenVINO 5/50 记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-benchmark-20261005.md)给出串行 P50/P95 `563.6314/647.9142 ms`、并发 P50/P95 `631.2580/664.9269 ms`，说明该主机上页面并发反而变慢。结果只证明页面顺序、源 SHA、区域数量和当前主机上的执行行为；它们不是模型 Batch、质量结论或跨设备性能承诺。TensorRT 多页并发仍需单独验证。
 
 ### 版面区域 → OCR
