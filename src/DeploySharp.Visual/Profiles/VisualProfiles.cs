@@ -307,7 +307,9 @@ namespace JYPPX.DeploySharp.Visual
         public VisualModelProfile WithModelFormat(string modelFormat)
         {
             if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
-            return new VisualModelProfile(ProfileId, ModelId, Task, Version, modelFormat, Input, Outputs, Labels, Decoder, RequiredCapabilities, MinimumBackendVersion, AuxiliaryInputs, Preprocessing);
+            string normalized = VisualGuard.Identifier(modelFormat, nameof(modelFormat));
+            string profileId = string.Equals(ModelFormat, normalized, StringComparison.OrdinalIgnoreCase) ? ProfileId : ProfileId + "." + normalized;
+            return new VisualModelProfile(profileId, ModelId, Task, Version, normalized, Input, Outputs, Labels, Decoder, RequiredCapabilities, MinimumBackendVersion, AuxiliaryInputs, Preprocessing);
         }
 
         /// <summary>Gets a label by class index, falling back to the invariant index string. / 按类别索引获取标签；缺失时回退到不变索引字符串。</summary>

@@ -338,9 +338,14 @@ namespace DeploySharp.Visual.Tests
             PaddleDocumentProfile engineProfile = onnxProfile.ForArtifactFormat("tensorrt-engine");
             Assert.AreEqual("onnx", onnxProfile.VisualProfile.ModelFormat);
             Assert.AreEqual("tensorrt-engine", engineProfile.VisualProfile.ModelFormat);
+            Assert.AreEqual(onnxProfile.VisualProfile.ProfileId + ".tensorrt-engine", engineProfile.VisualProfile.ProfileId);
             Assert.AreEqual(onnxProfile.VisualProfile.Input.Name, engineProfile.VisualProfile.Input.Name);
             Assert.AreEqual(onnxProfile.VisualProfile.Outputs.Count, engineProfile.VisualProfile.Outputs.Count);
             Assert.AreSame(onnxProfile.VisualProfile.Decoder, engineProfile.VisualProfile.Decoder);
+            var profiles = new VisualProfileRegistry();
+            profiles.Register(onnxProfile.VisualProfile);
+            profiles.Register(engineProfile.VisualProfile);
+            Assert.AreEqual(2, profiles.GetProfiles().Count);
 
             ModelArtifact artifact = engineProfile.CreateArtifact("pp-doclayout-l.engine", new BackendId("tensorrt"));
             Assert.AreEqual("tensorrt-engine", artifact.Format);
