@@ -219,6 +219,35 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void FormulaDecoderPreservesIndependentBatchRowsAndEosBoundaries()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            var schema = new PaddleDocumentFormulaSchema(new[] { "<s>", "a", "b", "</s>" }, 3, 0);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor, schema, maximumBatch: 2);
+            var image = new Tensor<float>(new TensorShape(2, 1, 384, 384), new float[2 * 384 * 384], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("x", image, new VisualSize(384, 384), new VisualSize(384, 384), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(384, 384), new VisualSize(384, 384)), inputId: new string('q', 64));
+            var tokens = new Tensor<long>(new TensorShape(2, 5), new long[]
+            {
+                0, 1, 2, 3, 1,
+                0, 2, 3, 1, 1
+            }, TensorBufferOwnership.Transfer);
+            using (input)
+            {
+                object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile,
+                    InferenceOutputs.Create("fetch_name_0", tokens), CancellationToken.None));
+                var batch = decoded as PaddleDocumentFormulaBatchResult ?? throw new AssertFailedException("The formula decoder did not preserve the batched result.");
+                Assert.AreEqual(2, batch.Count);
+                Assert.AreEqual("ab", batch[0].Latex);
+                Assert.AreEqual("b", batch[1].Latex);
+                CollectionAssert.AreEqual(new[] { 1, 2 }, batch[0].TokenIds.ToArray());
+                CollectionAssert.AreEqual(new[] { 2 }, batch[1].TokenIds.ToArray());
+                Assert.IsFalse(batch[0].Warnings.Contains("missing-eos:sequence-may-be-truncated"));
+                Assert.IsFalse(batch[1].Warnings.Contains("missing-eos:sequence-may-be-truncated"));
+            }
+        }
+
+        [TestMethod]
         public void ChartParsingContractDecodesIntegerTokensWhileKeepingConversionBlockedExplicit()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-chart/pp-chart2table");
