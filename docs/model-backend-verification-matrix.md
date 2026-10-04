@@ -75,6 +75,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 随后对两个官方动态 PP-LCNet 分类图做了真实 Batch 运行：ORT CPU/OpenVINO CPU 均以两个相同 `bus.jpg` 行绑定 `[2,3,224,224]`，方向和表格分类各返回两行，标签、分数和顺序保持一致。该结果只覆盖这两个精确模型/后端/主机，不改变静态 layout 或 Chart2Table 的边界；机器可读记录见 [`paddle-document-dynamic-batch-ort-openvino-20261005.json`](../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.json)，复现协议见对应 [Markdown 报告](../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。
 
+同一协议随后覆盖官方 `PP-DocLayout-L` 动态 NMS 图：ORT CPU/OpenVINO CPU 均以两个相同输入绑定图像和几何辅助张量，按 `bbox_num` 正确拆分扁平输出，两行均返回 300 个候选且结果保持一致。机器可读记录见 [`paddle-document-layout-dynamic-batch-ort-openvino-20261005.json`](../eng/models/paddle-document/verification/paddle-document-layout-dynamic-batch-ort-openvino-20261005.json)，复现协议见对应 [Markdown 报告](../eng/models/paddle-document/verification/paddle-document-layout-dynamic-batch-ort-openvino-20261005.md)。该结果不扩展为 layout 准确率、TensorRT/OpenCV 或静态图 Batch 支持。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
