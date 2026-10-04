@@ -59,6 +59,8 @@ Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 
 
 随后对官方 `PP-DocLayout-L` 动态 Paddle NMS 图完成了真实双行运行：ORT CPU、OpenVINO CPU 均绑定 `[2,3,640,640]` 图像和 `[2,2]` 的 `im_shape`/`scale_factor`，使用 `bbox_num` 将扁平 `[300*batch,6]` 输出按行切分，两行均保留 300 个导出候选且标签/几何完全一致。详见 [版面动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-dynamic-batch-ort-openvino-20261005.md)。这不是版面准确率或性能基准；`300` 是导出图的后置 NMS 候选数量，不是真值目标数量。
 
+同一协议还在架构不同的官方 `RT-DETR-H_layout_3cls` 图上通过：ORT CPU、OpenVINO CPU 均完成双行输入、几何辅助绑定和 `bbox_num` 扁平输出切分，两行各返回 300 个候选且结果逐项一致。详见 [RT-DETR 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.md)。这仍只覆盖精确模型/后端/主机，不扩展为 TensorRT、OpenCV 或所有 RT-DETR 变体支持。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：

@@ -103,6 +103,42 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(2, rows.Count);
         }
 
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchRtDetrLayoutRunsOnOrtAndOpenVino()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch RT-DETR layout image");
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId)
+            })
+            {
+                rows.Add(RunNmsCase(backend, "paddle-doc/rt-detr-h-layout-3cls", "rt-detr-h-layout-3cls.onnx", PaddleDocumentProfiles.Layout3Labels));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_RTDETR_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-rtdetr-layout-dynamic-batch-ort-openvino.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath) },
+                batch = 2,
+                model = "paddle-doc/rt-detr-h-layout-3cls",
+                modelFile = "rt-detr-h-layout-3cls.onnx",
+                scope = "Official RT-DETR-H three-class layout dynamic Paddle NMS export with two identical source rows.",
+                results = rows,
+                boundary = "True model batch execution, auxiliary geometry binding and flattened bbox_num row partitioning on one Windows host; not a quality score, throughput benchmark or cross-device claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, rows.Count);
+        }
+
         private static readonly ClassifierCase[] Cases =
         {
             new ClassifierCase(
@@ -119,12 +155,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private static object RunLayoutCase(BackendCase backend)
         {
-            string path = Path.Combine(ModelRoot, "pp-doclayout-l.onnx");
-            RequireFile(path, "PP-DocLayout-L dynamic model");
-            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+            return RunNmsCase(backend, "paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", PaddleDocumentProfiles.Layout23Labels);
+        }
+
+        private static object RunNmsCase(BackendCase backend, string modelId, string fileName, IReadOnlyList<string> labels)
+        {
+            string path = Path.Combine(ModelRoot, fileName);
+            RequireFile(path, modelId + " dynamic model");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
             PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
                 descriptor,
-                PaddleDocumentProfiles.Layout23Labels,
+                labels,
                 new VisualSize(640, 640),
                 includeGeometryInputs: true,
                 maximumBatch: 2,
@@ -183,7 +224,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.AreEqual(first.Box.Height, second.Box.Height, .00001f, backend.Name + " changed height geometry between identical batch rows.");
             }
 
-            Console.WriteLine("PADDLE_DOCUMENT_LAYOUT_DYNAMIC_BATCH backend=" + backend.Name + ";batch=" + input.BatchSize + ";detections=" + decoded[0].Detections.Count);
+            Console.WriteLine("PADDLE_DOCUMENT_LAYOUT_DYNAMIC_BATCH backend=" + backend.Name + ";model=" + modelId + ";batch=" + input.BatchSize + ";detections=" + decoded[0].Detections.Count);
             return new
             {
                 backend = backend.Name,
