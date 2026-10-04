@@ -166,6 +166,57 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SlanetDecoderPreservesIndependentBatchRowsAndPageMetadata()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
+            var schema = new PaddleDocumentTableStructureSchema(
+                "structure",
+                "locations",
+                new[] { "<s>", "<td></td>", "<eos>" },
+                startTokenIndex: 0,
+                endTokenIndex: 2,
+                cellTokens: new[] { "<td></td>" });
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateTableStructure(descriptor, schema, modelSize: new VisualSize(8, 8), maximumBatch: 2);
+            var image = new Tensor<float>(new TensorShape(2, 3, 8, 8), new float[2 * 3 * 8 * 8], TensorBufferOwnership.Transfer);
+            var structure = new float[2 * 3 * 3];
+            for (int row = 0; row < 2; row++)
+            {
+                SetWinner(structure, 3, row * 3, 0);
+                SetWinner(structure, 3, row * 3 + 1, 1);
+                SetWinner(structure, 3, row * 3 + 2, 2);
+            }
+            var locations = new float[2 * 3 * 8];
+            int rowOneCell = (1 * 3 + 1) * 8;
+            locations[rowOneCell + 0] = .5f;
+            locations[rowOneCell + 1] = .5f;
+            locations[rowOneCell + 2] = .75f;
+            locations[rowOneCell + 3] = .5f;
+            locations[rowOneCell + 4] = .75f;
+            locations[rowOneCell + 5] = .75f;
+            locations[rowOneCell + 6] = .5f;
+            locations[rowOneCell + 7] = .75f;
+            using var input = new PreparedVisualInput("x", image, new VisualSize(8, 8), new VisualSize(8, 8), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)), inputId: new string('t', 64));
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("locations", new Tensor<float>(new TensorShape(2, 3, 8), locations, TensorBufferOwnership.Transfer)),
+                new NamedTensor("structure", new Tensor<float>(new TensorShape(2, 3, 3), structure, TensorBufferOwnership.Transfer))
+            });
+
+            object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+            var batch = decoded as PaddleDocumentTableBatchResult ?? throw new AssertFailedException("The SLANeXt decoder did not preserve the batched result.");
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual(0, batch[0].Metadata.PageIndex);
+            Assert.AreEqual(1, batch[1].Metadata.PageIndex);
+            Assert.AreEqual("<td></td>", batch[0].Markup);
+            Assert.AreEqual("<td></td>", batch[1].Markup);
+            Assert.AreEqual(1, batch[0].Regions.Count);
+            Assert.AreEqual(1, batch[1].Regions.Count);
+            Assert.AreEqual(4f, batch[1].Regions[0].Bounds.X, .01f);
+            Assert.AreEqual(2f, batch[1].Regions[0].Bounds.Width, .01f);
+        }
+
+        [TestMethod]
         public void UvdocDecoderReturnsOwnedCorrectedPixels()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/uvdoc");
