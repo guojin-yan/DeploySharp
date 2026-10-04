@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-tensorrt-evidence-v1",
+  "status": "passed",
+  "generatedUtc": "2026-10-04T00:00:00Z",
+  "machine": "JYPPX",
+  "os": "Windows",
+  "runtime": {
+    "api": 10,
+    "tensorrt": "10.11.0.33-cu12",
+    "cuda": "12.9",
+    "cudnn": "9.22",
+    "bridgePackage": "jyppx.tensorrt.csharp.api.runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge/4.0.0"
+  },
+  "model": {
+    "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
+    "onnxSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+    "engineSha256": "f80df8411b34714cfa77eddefa7a1c2afaca70e83dceeaf85601b76545e6f195",
+    "engineBytes": 8593404,
+    "engineBuildMs": 58024.8733
+  },
+  "input": {
+    "path": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+    "lengthBytes": 16208
+  },
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "batch": 1,
+    "sessions": 1
+  },
+  "result": {
+    "label": "wired_table",
+    "tensorrtScore": 0.8517079,
+    "cpuReferenceScore": 0.8442081,
+    "absoluteScoreDifference": 0.0074998,
+    "scoreTolerance": 0.01
+  },
+  "timingMs": {
+    "p50": 0.9974,
+    "p95": 1.1903
+  },
+  "test": "PaddleDocumentTensorRtExternalIntegrationTests.TableClassificationRunsThroughTensorRtAndPreservesOrtScore",
+  "scope": "One official PP-LCNet table-classification ONNX artifact and one validation image on this Windows device. This is not a complete PP-Structure TensorRT matrix or a table-structure accuracy claim."
+}
