@@ -45,6 +45,6 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleChart2TableExtendedQualityExternalIntegrationTests
 ```
 
-For OpenVINO, replace the ORT gate/report variables with `DEPLOYSHARP_CHART2TABLE_EXTENDED_OPENVINO_RUN_EXTERNAL=1` and `chart2table-openvino-extended-quality-20261002.json`. TensorRT remains a separate CUDA run; this six-image record does not claim a TensorRT performance profile.
+For OpenVINO, replace the ORT gate/report variables with `DEPLOYSHARP_CHART2TABLE_EXTENDED_OPENVINO_RUN_EXTERNAL=1` and `chart2table-openvino-extended-quality-20261002.json`. TensorRT is a separate CUDA run using the same six-image manifest; its bounded EOS/structure/timing evidence is recorded in [chart2table-tensorrt-extended-quality-20261004.md](chart2table-tensorrt-extended-quality-20261004.md). That run is not a controlled performance profile or split-level accuracy evaluation.
 
 The official dataset source describes `val/png` and `val/tables` as paired chart images and underlying tables. This document intentionally records a bounded task-quality selection, not a full split evaluation or a redistribution of the source dataset.

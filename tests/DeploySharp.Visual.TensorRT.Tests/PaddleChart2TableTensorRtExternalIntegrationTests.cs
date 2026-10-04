@@ -180,6 +180,149 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialChartQaExtendedSelectionRecordsTensorRtQualityAndTiming()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_EXTENDED_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_EXTENDED_RUN_EXTERNAL=1 to run the bounded ChartQA TensorRT quality selection.");
+
+            string sampleRoot = Required("DEPLOYSHARP_CHARTQA_EXTENDED_ROOT");
+            string modelRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
+            string engineRoot = Required("DEPLOYSHARP_CHART2TABLE_TRT_ENGINE_ROOT");
+            string manifestPath = Path.Combine(sampleRoot, "manifest.json");
+            if (!File.Exists(manifestPath)) Assert.Inconclusive("Missing ChartQA extended manifest: " + manifestPath);
+            ExtendedManifest manifest = JsonSerializer.Deserialize<ExtendedManifest>(
+                File.ReadAllText(manifestPath),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? throw new InvalidDataException("Invalid ChartQA extended manifest.");
+            if (manifest.Samples.Count == 0) Assert.Fail("ChartQA extended manifest contains no samples.");
+
+            string[] engineFiles = { "vision-fp16.plan", "token-embedding-fp16.plan", "text-prefill-fp32.plan", "text-decode-fp32.plan" };
+            string[] modelIds = { VisionId, EmbeddingId, PrefillId, DecodeId };
+            var engineArtifacts = new List<ModelArtifact>(engineFiles.Length);
+            for (int index = 0; index < engineFiles.Length; index++)
+            {
+                string path = Path.Combine(engineRoot, engineFiles[index]);
+                if (!File.Exists(path)) Assert.Inconclusive("A library-built Chart2Table engine is missing: " + path);
+                engineArtifacts.Add(new ModelArtifact(
+                    new ModelId(modelIds[index]),
+                    "tensorrt-engine",
+                    path,
+                    ComputeSha256(path),
+                    TensorRtBackendProvider.BackendId));
+            }
+
+            int maximumNewTokens = ParseExtendedMaximumNewTokens();
+            using var provider = new TensorRtBackendProvider(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt10, cudaTargetArchitecture: "sm_86"));
+            var tokenizer = new PaddleChart2TableTokenizer(modelRoot);
+            var bundle = new PaddleChart2TableOnnxBundle(engineArtifacts[0], engineArtifacts[1], engineArtifacts[2], engineArtifacts[3]);
+            using var session = new PaddleChart2TableTensorRtDeviceSession(
+                provider,
+                bundle,
+                new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
+            var inputFactory = new OpenCvPaddleChart2TableInputFactory();
+            var evidence = new List<object>(manifest.Samples.Count);
+
+            foreach (ExtendedSample sample in manifest.Samples)
+            {
+                string imagePath = Path.Combine(sampleRoot, "images", sample.File);
+                if (!File.Exists(imagePath)) Assert.Fail("Missing ChartQA image: " + imagePath);
+                string tableName = string.IsNullOrWhiteSpace(sample.TableFile)
+                    ? Path.GetFileNameWithoutExtension(sample.File) + ".csv"
+                    : sample.TableFile!;
+                string tablePath = Path.Combine(sampleRoot, "tables", tableName);
+                if (!File.Exists(tablePath)) Assert.Fail("Missing ChartQA table: " + tablePath);
+                string imageSha = ComputeSha256(imagePath);
+                if (!string.IsNullOrWhiteSpace(sample.ImageSha256) && !string.Equals(imageSha, sample.ImageSha256, StringComparison.OrdinalIgnoreCase))
+                    Assert.Fail("ChartQA image SHA mismatch: " + sample.File);
+                string tableSha = ComputeSha256(tablePath);
+                if (!string.IsNullOrWhiteSpace(sample.TableSha256) && !string.Equals(tableSha, sample.TableSha256, StringComparison.OrdinalIgnoreCase))
+                    Assert.Fail("ChartQA table SHA mismatch: " + tableName);
+
+                using PreparedVisualInput input = inputFactory.CreateFromFile(imagePath);
+                Stopwatch watch = Stopwatch.StartNew();
+                PaddleChart2TableGenerationResult result = session.Generate(input, tokenizer, maximumNewTokens);
+                watch.Stop();
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.Text), sample.File + " produced an empty table.");
+                Assert.AreEqual(
+                    JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence,
+                    result.FinishReason,
+                    sample.File + " did not complete EOS generation.");
+                PaddleChart2TableQualityComparison quality = PaddleChart2TableQualityEvaluator.Compare(sample.ExpectedText ?? string.Empty, result.Text);
+                double[] decodeMs = result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray();
+                evidence.Add(new
+                {
+                    sample = sample.File,
+                    imageSha256 = imageSha,
+                    sourceTableSha256 = tableSha,
+                    expectedTextSha256 = Sha256Text(sample.ExpectedText ?? string.Empty),
+                    generatedTextSha256 = Sha256Text(result.Text),
+                    tokenCountIncludingEos = result.TokenIds.Count,
+                    finishReason = result.FinishReason.ToString(),
+                    totalMs = watch.Elapsed.TotalMilliseconds,
+                    visionMs = result.VisionTime.TotalMilliseconds,
+                    embeddingMs = result.EmbeddingTime.TotalMilliseconds,
+                    prefillMs = result.PrefillTime.TotalMilliseconds,
+                    decodeStepCount = decodeMs.Length,
+                    decodeP50Ms = Percentile(decodeMs, .50),
+                    decodeP95Ms = Percentile(decodeMs, .95),
+                    structure = new
+                    {
+                        expectedRows = quality.Expected.RowCount,
+                        actualRows = quality.Actual.RowCount,
+                        expectedColumns = quality.Expected.ColumnCount,
+                        actualColumns = quality.Actual.ColumnCount,
+                        expectedCells = quality.Expected.CellCount,
+                        actualCells = quality.Actual.CellCount,
+                        rowExactMatchCount = quality.RowExactMatchCount,
+                        cellExactMatchCount = quality.CellExactMatchCount,
+                        rowAccuracy = quality.RowAccuracy,
+                        cellAccuracy = quality.CellAccuracy,
+                        exactTextMatch = quality.ExactTextMatch,
+                        structureMatches = quality.StructureMatches,
+                        actualStructurallyValid = quality.Actual.IsStructurallyValid
+                    }
+                });
+                TestContext.WriteLine(JsonSerializer.Serialize(new
+                {
+                    sample = sample.File,
+                    result.FinishReason,
+                    tokenCount = result.TokenIds.Count,
+                    totalMs = watch.Elapsed.TotalMilliseconds,
+                    decodeP50Ms = Percentile(decodeMs, .50),
+                    decodeP95Ms = Percentile(decodeMs, .95),
+                    quality.StructureMatches,
+                    quality.CellExactMatchCount,
+                    quality.Expected.CellCount
+                }));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_EXTENDED_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "chart2table-tensorrt-extended-quality.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedUtc = DateTimeOffset.UtcNow,
+                backend = "tensorrt-cuda",
+                modelId = "paddle-chart/pp-chart2table",
+                runtime = DescribeRuntime(),
+                engineRoot,
+                engineSha256 = engineArtifacts.Select(value => new { modelId = value.ModelId.Value, sha256 = value.Sha256 }).ToArray(),
+                sourceRepository = manifest.SourceRepository,
+                sourceRevision = manifest.SourceRevision,
+                split = manifest.Split,
+                maximumNewTokens,
+                sampleCount = evidence.Count,
+                results = evidence,
+                boundary = "Bounded official ChartQA image/table selection; EOS, structure and timing evidence only, not split-level ChartQA accuracy or a controlled performance benchmark."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(manifest.Samples.Count, evidence.Count, "The TensorRT extended evidence report must retain one row per sample.");
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialChartImageRunsThroughFourTensorRtEnginesAndDynamicKvDecode()
         {
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL=1 to build and run the local four-graph PP-Chart2Table bundle on TensorRT.");
@@ -282,6 +425,15 @@ namespace DeploySharp.Visual.TensorRT.Tests
             return parsed;
         }
 
+        private static int ParseExtendedMaximumNewTokens()
+        {
+            string? value = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_EXTENDED_MAX_NEW_TOKENS");
+            if (string.IsNullOrWhiteSpace(value)) return 1024;
+            if (!int.TryParse(value, out int parsed) || parsed < 3 || parsed > 4096)
+                Assert.Fail("DEPLOYSHARP_CHART2TABLE_TRT_EXTENDED_MAX_NEW_TOKENS must be an integer between 3 and 4096.");
+            return parsed;
+        }
+
         private static TensorRtOnnxInputProfile[] EmbeddingProfiles() => new[]
         {
             new TensorRtOnnxInputProfile("input_ids", new TensorShape(1, 1), new TensorShape(1, 286), new TensorShape(1, 2333))
@@ -339,6 +491,24 @@ namespace DeploySharp.Visual.TensorRT.Tests
             int upper = (int)Math.Ceiling(position);
             if (lower == upper) return sorted[lower];
             return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+        }
+
+        private sealed class ExtendedManifest
+        {
+            public string? Dataset { get; set; }
+            public string? Split { get; set; }
+            public string? SourceRepository { get; set; }
+            public string? SourceRevision { get; set; }
+            public List<ExtendedSample> Samples { get; set; } = new();
+        }
+
+        private sealed class ExtendedSample
+        {
+            public string File { get; set; } = string.Empty;
+            public string? TableFile { get; set; }
+            public string? ExpectedText { get; set; }
+            public string? ImageSha256 { get; set; }
+            public string? TableSha256 { get; set; }
         }
     }
 }
