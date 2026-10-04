@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-04T16:53:53.8813545\u002B00:00",
+  "sourceRevision": "3bbfa09f69f2cad63cc4c747322756fc2bfdc785",
+  "backend": "onnxruntime-cpu",
+  "device": "cpu",
+  "environment": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "processArchitecture": "X64",
+    "processorCount": 16
+  },
+  "input": {
+    "path": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "pageCount": 2,
+    "sourceSize": {
+      "width": 810,
+      "height": 1080
+    }
+  },
+  "execution": {
+    "sequentialMethod": "PaddleDocumentPipeline.RunManyAsync",
+    "concurrentMethod": "PaddleDocumentPipeline.RunManyConcurrentAsync",
+    "maxDegreeOfParallelism": 2,
+    "sessionMaxConcurrency": 2,
+    "sequentialWallElapsedMs": 969.4047,
+    "sequentialPageElapsedSumMs": 967.1850999999999,
+    "concurrentElapsedMs": 775.054,
+    "benchmark": {
+      "warmupCount": 5,
+      "measurementCount": 50,
+      "sequential": {
+        "samplesMs": [
+          961.3604,
+          813.3985,
+          847.8067,
+          831.0511,
+          803.2208,
+          807.2121,
+          808.8277,
+          857.174,
+          887.4015,
+          868.3838,
+          972.1842,
+          827.5391,
+          911.6723,
+          814.0153,
+          845.8223,
+          810.8347,
+          836.0913,
+          864.6818,
+          812.4251,
+          809.6788,
+          901.6241,
+          872.2168,
+          876.2528,
+          923.686,
+          824.1157,
+          811.966,
+          841.1627,
+          863.9655,
+          813.0171,
+          769.606,
+          824.3756,
+          822.7841,
+          875.7395,
+          848.9915,
+          839.4366,
+          840.8434,
+          820.2851,
+          855.7383,
+          856.201,
+          870.6942,
+          901.6003,
+          903.6761,
+          879.6202,
+          865.9493,
+          828.2653,
+          786.9601,
+          778.3192,
+          793.6786,
+          882.6657,
+          803.5364
+        ],
+        "minMs": 769.606,
+        "maxMs": 972.1842,
+        "p50Ms": 841.00305,
+        "p95Ms": 918.2798349999999
+      },
+      "concurrent": {
+        "samplesMs": [
+          716.6663,
+          698.3667,
+          692.328,
+          685.2805,
+          880.584,
+          732.0636,
+          711.4493,
+          774.5258,
+          679.2727,
+          702.749,
+          790.6241,
+          692.1711,
+          715.1482,
+          688.8135,
+          672.1326,
+          726.5577,
+          699.8771,
+          766.9022,
+          685.9549,
+          680.4879,
+          696.3641,
+          721.4621,
+          694.3009,
+          865.2145,
+          701.8308,
+          698.3533,
+          699.3773,
+          671.1078,
+          678.4148,
+          821.906,
+          716.7747,
+          706.2125,
+          741.5688,
+          762.6215,
+          713.8265,
+          912.6383,
+          724.4468,
+          692.1223,
+          714.5985,
+          675.9288,
+          720.9057,
+          865.4611,
+          665.2102,
+          695.8876,
+          698.9419,
+          710.6813,
+          767.4026,
+          916.3753,
+          681.1803,
+          717.9421
+        ],
+        "minMs": 665.2102,
+        "maxMs": 916.3753,
+        "p50Ms": 708.4468999999999,
+        "p95Ms": 873.778695
+      }
+    }
+  },
+  "models": {
+    "orientation": {
+      "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "path": "E:\\Model\\PaddleDocument\\onnx\\pp-lcnet-x1-0-doc-ori.onnx",
+      "sha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0"
+    },
+    "layout": {
+      "modelId": "paddle-doc/pp-doclayout-l",
+      "path": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-l.onnx",
+      "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9"
+    }
+  },
+  "pages": [
+    {
+      "inputIndex": 0,
+      "pageIndex": 0,
+      "inputSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+      "orientation": "0_degree",
+      "layoutRegionCount": 300,
+      "elapsedMs": 773.2061,
+      "timings": {
+        "DocumentOrientation": 21.2196,
+        "LayoutDetection": 751.9775
+      }
+    },
+    {
+      "inputIndex": 1,
+      "pageIndex": 1,
+      "inputSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+      "orientation": "0_degree",
+      "layoutRegionCount": 300,
+      "elapsedMs": 684.4272,
+      "timings": {
+        "DocumentOrientation": 21.9124,
+        "LayoutDetection": 662.4984
+      }
+    }
+  ],
+  "boundary": "This is a real two-page ORT CPU page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
+}
