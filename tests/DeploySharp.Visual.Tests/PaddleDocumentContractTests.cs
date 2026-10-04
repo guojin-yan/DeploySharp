@@ -56,6 +56,37 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void ClassificationProfileSupportsExplicitDynamicBatchRows()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-lcnet-x1-0-doc-ori");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateClassification(
+                descriptor,
+                PaddleDocumentProfiles.DocumentOrientationLabels,
+                VisualTaskId.DocumentOrientation,
+                modelSize: new VisualSize(2, 2),
+                maximumBatch: 2,
+                allowDynamicBatch: true);
+
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0]);
+            Assert.AreEqual(2, profile.VisualProfile.Input.MaximumBatch);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(2, 3, 2, 2), new float[24], TensorBufferOwnership.Transfer),
+                new VisualSize(2, 2), new VisualSize(2, 2), 2, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(2, 2), new VisualSize(2, 2)), inputId: "document-orientation-batch");
+            var outputs = InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(2, 4), new[]
+            {
+                .9f, .05f, .03f, .02f,
+                .01f, .02f, .03f, .94f
+            }, TensorBufferOwnership.Transfer));
+
+            var batch = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as ClassificationBatchResult;
+            Assert.IsNotNull(batch);
+            Assert.AreEqual(2, batch!.Count);
+            Assert.AreEqual("0_degree", batch[0].TopPrediction!.Label);
+            Assert.AreEqual("270_degree", batch[1].TopPrediction!.Label);
+        }
+
+        [TestMethod]
         public void SlanextUsesBgrAspectRatioAndTensorSpacePadding()
         {
             var options = PaddleDocumentProfiles.CreateTableStructure(PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired")).VisualProfile.Preprocessing!;
