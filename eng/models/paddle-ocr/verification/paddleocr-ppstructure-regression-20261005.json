@@ -1,7 +1,7 @@
 {
   "schemaVersion": "deploysharp-paddleocr-ppstructure-regression-v2",
-  "generatedUtc": "2026-10-04T19:19:43.0118934Z",
-  "repositoryRevision": "f6c8e698cbbcdd0f6e315aab1c3217ef7a897c02",
+  "generatedUtc": "2026-10-04T19:25:13.0373330Z",
+  "repositoryRevision": "4cdd8ef59b08955ae9b74499b2ce0b5a2c3c9485",
   "branch": "DeploySharpV2.0",
   "configuration": "Release",
   "targetFramework": "net10.0",
@@ -28,10 +28,10 @@
     {
       "project": "DeploySharp.Visual.Tests",
       "path": "tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj",
-      "passed": 497,
+      "passed": 498,
       "skipped": 5,
       "failed": 0,
-      "total": 502,
+      "total": 503,
       "scope": "core Visual contracts and opt-in model tests"
     },
     {
@@ -54,10 +54,10 @@
     }
   ],
   "totals": {
-    "passed": 696,
+    "passed": 697,
     "skipped": 129,
     "failed": 0,
-    "total": 825
+    "total": 826
   },
   "warnings": [
     "Legacy target frameworks emit dependency support warnings; no Release net10.0 test failed.",
