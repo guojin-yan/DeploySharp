@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-tensorrt-evidence-v1",
+  "status": "passed",
+  "generatedUtc": "2026-10-04T00:00:00Z",
+  "machine": "JYPPX",
+  "os": "Windows",
+  "runtime": {
+    "api": 10,
+    "tensorrt": "10.11.0.33-cu12",
+    "cuda": "12.9",
+    "cudnn": "9.22",
+    "bridgePackage": "jyppx.tensorrt.csharp.api.runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge/4.0.0",
+    "cudaArchitecture": "compute_86"
+  },
+  "model": {
+    "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+    "onnxSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+    "engineSha256": "cc7e1454489680630a18a1d6c403668b9d7571dc8d4410c9d33d75bb21ef2547",
+    "engineBytes": 10270852,
+    "engineBuildMs": 63634.811
+  },
+  "input": {
+    "path": "E:\\Model\\PaddleDocument\\validation\\img_rot180_demo.jpg",
+    "sha256": "c5a77e031470e13878ff4f28a06ca843fd455d95c20b1b49b486681e346209ed"
+  },
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "batch": 1,
+    "sessions": 1,
+    "optimizationLevel": 3
+  },
+  "timingMs": {
+    "p50": 1.1231,
+    "p95": 1.8312,
+    "lastPreprocessing": 0.039,
+    "lastInference": 0.891,
+    "lastPostprocessing": 0.007,
+    "imageDecode": 103.153
+  },
+  "classification": {
+    "cudaScore": 0.89481854,
+    "cpuReferenceScore": 0.8923855,
+    "absoluteScoreDifference": 0.00243304,
+    "scoreTolerance": 0.005,
+    "topPredictionIndex": 2
+  },
+  "test": "PaddleDocumentTensorRtExternalIntegrationTests.DocumentOrientationRunsThroughCudaPreprocessTensorRtAndDecoder",
+  "scope": "One official PP-LCNet orientation ONNX artifact and one validation image on this Windows device. Engine build and steady-state inference are reported separately; this is not a complete PP-Structure TensorRT matrix or a TRT 11 result."
+}
