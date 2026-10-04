@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -123,6 +124,7 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
                 window.Index,
                 window.Start,
                 window.End,
+                expectedWindowText = ExpectedWindowText(expected, window.Start, window.End),
                 window.Width.NaturalWidth,
                 window.Width.TargetWidth,
                 window.Width.TensorWidth,
@@ -131,6 +133,8 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
                 window.OverlapEditDistance,
                 rawTimesteps = window.Recognition.Tokens.Count,
                 window.Recognition.Text,
+                windowCharacterEditDistance = OcrTextAccuracy.Compare(ExpectedWindowText(expected, window.Start, window.End), window.Recognition.Text).CharacterEditDistance,
+                windowCharacterErrorRate = OcrTextAccuracy.Compare(ExpectedWindowText(expected, window.Start, window.End), window.Recognition.Text).CharacterErrorRate,
                 emittedTokens = window.Recognition.Tokens.Count(token => token.Emitted),
                 emittedTrace = window.Recognition.Tokens.Where(token => token.Emitted).Select(token => new
                 {
@@ -140,7 +144,7 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
                     token.Confidence
                 }).ToArray()
             }).ToArray(),
-            boundary = "Controlled synthetic contract sample; not a public dataset accuracy result."
+            boundary = "Controlled synthetic contract sample; window-level metrics attribute recognition and seam behavior but are not a public dataset accuracy result."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(evidencePath);
         Console.WriteLine("PADDLEOCR_SYNTHETIC_A2 backend=" + backend + ";characters=" + expected.Length + ";windows=" + result.RecognitionWidth.Value.WindowCount + ";recognizedLength=" + result.Recognition.Text.Length + ";cer=" + metrics.CharacterErrorRate.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + ";wer=" + metrics.WordErrorRate.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + ";textSha=" + Sha256(result.Recognition.Text));
@@ -151,4 +155,15 @@ public sealed class PaddleOcrSyntheticLongTextIntegrationTests
 
     private static string Sha256(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     private static string FileSha256(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+
+    private static string ExpectedWindowText(string expected, double start, double end)
+    {
+        var builder = new StringBuilder();
+        for (int index = 0; index < expected.Length; index++)
+        {
+            double center = (index + .5) / expected.Length;
+            if (center >= start && center < end) builder.Append(expected[index]);
+        }
+        return builder.ToString();
+    }
 }

@@ -27,6 +27,17 @@ Each profile produced byte-identical recognized text on both backends. The repea
 
 The Visual contract suite passed 13/13 window tests, including one-edit recovery, rejection above the configured edit budget, preservation of uncertain text, Unicode tokens, and merged-token-to-window trace mapping. The real-model integration test passed all four sample/backend combinations. Result JSON files named `synthetic-a2-{backend}-{image-sha-prefix}.json` record each window's geometry, raw text, CTC timesteps, emitted token class/text/confidence, removed prefix count, uncertainty flag and edit distance. This is implementation/contract evidence only. A2 remains open until naturally occurring or otherwise attributable annotated >3,200-character images are evaluated, and results are repeated on additional supported model families.
 
+## 2026-10-04 protocol re-run and window attribution
+
+The same two local images, model files and dictionary were re-run on the current Windows environment with the test's per-window expected-text projection enabled. This is a diagnostic re-run, not a replacement for the historical table above: the observed CER differs from the earlier run and must therefore be treated as environment/protocol-sensitive until a locked 5/50 benchmark is repeated.
+
+| Text profile | Backend parity | Windows | Recognized chars | Character ED / CER | Word ED / WER | Non-zero window ED | Seam-uncertain windows | Overlap ED sum |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Repeated phrase (`d3f31481c2ed`) | ORT/OpenVINO byte-identical | 18 | 3,650 | 51 / 1.4167% | 6 / 1.3667% | 14 windows / 24 | 6 | 5 |
+| Varied vocabulary (`e5e27fbc5ae1`) | ORT/OpenVINO byte-identical | 16 | 3,657 | 59 / 1.6389% | 8 / 2.1583% | 16 windows / 87 | 3 | 2 |
+
+The per-window diagnostic uses the normalized character-center interval only to attribute likely recognition versus seam locations; a window still contains overlap and may have a removed right-window prefix, so the projected substring is not an independent ground truth. The result is useful for locating regressions, not for adding window CERs together or claiming model accuracy. The machine-readable files are emitted under the ignored test output directory as `synthetic-a2-{backend}-{image-sha-prefix}.json`; they include each window's projected expected text, recognition text, edit distance, uncertainty flag and CTC trace. The two backends produced the same aggregate and per-window values in both re-runs.
+
 ## Reproduction
 
 ```powershell
