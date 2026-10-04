@@ -1,7 +1,7 @@
 {
   "schemaVersion": "deploysharp-paddleocr-ppstructure-regression-v2",
   "generatedUtc": "2026-10-04T19:25:13.0373330Z",
-  "repositoryRevision": "4cdd8ef59b08955ae9b74499b2ce0b5a2c3c9485",
+  "repositoryRevision": "93b63a15f49684a36fb175e0b7c6496c1439d853",
   "branch": "DeploySharpV2.0",
   "configuration": "Release",
   "targetFramework": "net10.0",
@@ -38,9 +38,9 @@
       "project": "DeploySharp.Visual.OpenCV.Tests",
       "path": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj",
       "passed": 99,
-      "skipped": 107,
+      "skipped": 108,
       "failed": 0,
-      "total": 206,
+      "total": 207,
       "scope": "OpenCV contracts and gated external model probes"
     },
     {
@@ -55,9 +55,9 @@
   ],
   "totals": {
     "passed": 697,
-    "skipped": 129,
+    "skipped": 130,
     "failed": 0,
-    "total": 826
+    "total": 827
   },
   "warnings": [
     "Legacy target frameworks emit dependency support warnings; no Release net10.0 test failed.",
