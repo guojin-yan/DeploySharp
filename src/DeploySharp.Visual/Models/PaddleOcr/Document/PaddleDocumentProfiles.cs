@@ -65,14 +65,49 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 throw new VisualException(VisualErrorCodes.InputInvalid, "The prepared input model canvas does not match the Paddle NMS profile.", tensorName: input.InputName);
             return CreateGeometryInputs(input.BatchSize);
         }
+
+        /// <summary>
+        /// Creates a profile copy for a converted backend artifact while preserving the
+        /// Paddle document decoder and tensor contract. Use this when the same ONNX
+        /// contract has been compiled into a backend-specific file such as a TensorRT
+        /// engine; the original profile remains unchanged for ONNX or other artifacts.
+        /// / 为已转换的后端工件创建 Profile 副本，同时保留 Paddle 文档 Decoder 和张量合同。
+        /// 当同一 ONNX 合同被编译为 TensorRT Engine 等后端专用文件时使用；原 Profile
+        /// 不变，仍可用于 ONNX 或其它工件。
+        /// </summary>
+        public PaddleDocumentProfile ForArtifactFormat(string artifactFormat)
+        {
+            if (string.IsNullOrWhiteSpace(artifactFormat)) throw new ArgumentException("An artifact format is required.", nameof(artifactFormat));
+            return new PaddleDocumentProfile(Descriptor, VisualProfile.WithModelFormat(artifactFormat));
+        }
+
         /// <summary>Creates an artifact bound to the descriptor hash or, for the unified Release catalog, its independently published SHA-256. / 创建绑定目录哈希或统一 Release 独立发布 SHA-256 的工件。</summary>
         public ModelArtifact CreateArtifact(string path, BackendId? preferredBackend = null)
+        {
+            return CreateArtifactCore(path, preferredBackend, null);
+        }
+
+        /// <summary>Creates an artifact for this profile with an explicitly measured SHA-256, useful for backend-specific Engine files. / 使用显式测得的 SHA-256 为此 Profile 创建工件，适用于后端专用 Engine 文件。</summary>
+        public ModelArtifact CreateArtifactWithSha256(string path, string sha256, BackendId? preferredBackend = null)
+        {
+            if (string.IsNullOrWhiteSpace(sha256) || sha256.Length != 64 || !IsHex(sha256)) throw new ArgumentException("SHA-256 must be 64 hexadecimal characters.", nameof(sha256));
+            return CreateArtifactCore(path, preferredBackend, sha256.ToLowerInvariant());
+        }
+
+        private ModelArtifact CreateArtifactCore(string path, BackendId? preferredBackend, string? explicitSha256)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("An artifact path is required.", nameof(path));
             if (Descriptor.Status == PaddleDocumentArtifactStatus.ConversionBlocked)
                 throw new InvalidOperationException("The selected Paddle document model is conversion-blocked and has no executable artifact. Provide a separately catalogued compatible export instead.");
-            string format = Descriptor.ReleaseArtifact != null && string.Equals(Path.GetExtension(path), ".onnx", StringComparison.OrdinalIgnoreCase) ? "onnx" : VisualProfile.ModelFormat;
-            return new ModelArtifact(VisualProfile.ModelId, format, path, Descriptor.Sha256 ?? Descriptor.ReleaseArtifact?.Sha256, preferredBackend);
+            string format = Descriptor.ReleaseArtifact != null && string.Equals(VisualProfile.ModelFormat, Descriptor.ModelFormat, StringComparison.OrdinalIgnoreCase) && string.Equals(Path.GetExtension(path), ".onnx", StringComparison.OrdinalIgnoreCase) ? "onnx" : VisualProfile.ModelFormat;
+            string? sha256 = explicitSha256 ?? (string.Equals(format, Descriptor.ModelFormat, StringComparison.OrdinalIgnoreCase) ? Descriptor.Sha256 ?? Descriptor.ReleaseArtifact?.Sha256 : null);
+            return new ModelArtifact(VisualProfile.ModelId, format, path, sha256, preferredBackend);
+        }
+
+        private static bool IsHex(string value)
+        {
+            foreach (char character in value) if (!((character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F'))) return false;
+            return true;
         }
     }
 

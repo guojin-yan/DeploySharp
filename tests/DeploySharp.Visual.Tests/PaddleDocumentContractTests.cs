@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Results.Vision;
@@ -322,6 +323,34 @@ namespace DeploySharp.Visual.Tests
                 Assert.IsFalse(PaddleDocumentModelCatalog.TryGetReleaseArtifact(descriptor.ModelId, out _));
                 Assert.ThrowsExactly<InvalidOperationException>(() => profile.CreateArtifact("chart2table.onnx"));
             }
+        }
+
+        [TestMethod]
+        public void PaddleDocumentProfileCanTargetAConvertedBackendArtifactFormat()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+            PaddleDocumentProfile onnxProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor,
+                PaddleDocumentProfiles.Layout23Labels,
+                new VisualSize(640, 640),
+                includeGeometryInputs: true);
+
+            PaddleDocumentProfile engineProfile = onnxProfile.ForArtifactFormat("tensorrt-engine");
+            Assert.AreEqual("onnx", onnxProfile.VisualProfile.ModelFormat);
+            Assert.AreEqual("tensorrt-engine", engineProfile.VisualProfile.ModelFormat);
+            Assert.AreEqual(onnxProfile.VisualProfile.Input.Name, engineProfile.VisualProfile.Input.Name);
+            Assert.AreEqual(onnxProfile.VisualProfile.Outputs.Count, engineProfile.VisualProfile.Outputs.Count);
+            Assert.AreSame(onnxProfile.VisualProfile.Decoder, engineProfile.VisualProfile.Decoder);
+
+            ModelArtifact artifact = engineProfile.CreateArtifact("pp-doclayout-l.engine", new BackendId("tensorrt"));
+            Assert.AreEqual("tensorrt-engine", artifact.Format);
+            Assert.AreEqual("pp-doclayout-l.engine", artifact.Location);
+            Assert.IsNull(artifact.Sha256, "A backend-specific artifact must not inherit the ONNX SHA.");
+            Assert.AreEqual(new ModelId("paddle-doc/pp-doclayout-l"), artifact.ModelId);
+
+            const string engineSha = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+            ModelArtifact hashed = engineProfile.CreateArtifactWithSha256("pp-doclayout-l.engine", engineSha, new BackendId("tensorrt"));
+            Assert.AreEqual(engineSha, hashed.Sha256);
         }
 
 #if NET8_0 || NET9_0 || NET10_0

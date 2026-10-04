@@ -574,6 +574,23 @@ dotnet test tests/DeploySharp.Visual.TensorRT.Tests/DeploySharp.Visual.TensorRT.
 
 脚本默认对版面、表格分类和 mobile/server 印章都执行 5 次预热、50 次计时；复现实验时可通过 `-LayoutWarmup/-LayoutIterations`、`-TableWarmup/-TableIterations`、`-SealWarmup/-SealIterations` 和 `-ServerSealWarmup/-ServerSealIterations` 显式调整，文档中的公开数字使用默认的 5/50 协议。
 
+如果把同一 PP-Structure ONNX 合同编译成 TensorRT Engine，使用 `ForArtifactFormat("tensorrt-engine")` 创建后端专用 Profile 副本，再通过该 Profile 创建工件。原始 Profile 不会被修改，因此 ONNX、OpenVINO 或其它调用可以继续复用原对象：
+
+```csharp
+PaddleDocumentProfile onnxProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+    PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"),
+    PaddleDocumentProfiles.Layout23Labels,
+    new VisualSize(640, 640),
+    includeGeometryInputs: true);
+
+PaddleDocumentProfile engineProfile = onnxProfile.ForArtifactFormat("tensorrt-engine");
+ModelArtifact engine = engineProfile.CreateArtifact(
+    @"C:\\models\\pp-doclayout-l.engine",
+    TensorRtBackendProvider.BackendId);
+```
+
+格式变体只改变 Profile 与工件匹配所需的逻辑格式，不会自动转换 ONNX、推断 Engine 的 TensorRT 版本，也不会绕过 `ConversionBlocked` 模型的来源限制。格式发生变化时，`CreateArtifact` 不会把 ONNX SHA 错当成 Engine SHA；如果要把实际 Engine 哈希带入工件，可使用 `CreateArtifactWithSha256(path, sha256, backend)`。Engine 仍必须由目标设备上的匹配 TensorRT/CUDA/cuDNN 组合构建，并按本文的 SHA、输入 profile 和计时协议单独记录。
+
 如果 TRT11 的强类型网络需要严格的 FP32 数值对照，可在 ONNX→Engine 构建时显式关闭 TF32；这与 `Float32` 弱类型精度选项不同，适用于 TRT11：
 
 ```csharp

@@ -71,8 +71,8 @@ public sealed class PaddleDocumentTensorRtMultiPageIntegrationTests
             new VisualSize(640, 640),
             includeGeometryInputs: true,
             scoreThreshold: 0);
-        PaddleDocumentProfile orientationTensorRtProfile = AsTensorRtProfile(orientationProfile);
-        PaddleDocumentProfile layoutTensorRtProfile = AsTensorRtProfile(layoutProfile);
+        PaddleDocumentProfile orientationTensorRtProfile = orientationProfile.ForArtifactFormat("tensorrt-engine");
+        PaddleDocumentProfile layoutTensorRtProfile = layoutProfile.ForArtifactFormat("tensorrt-engine");
 
         string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-document-trt-multipage-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -240,32 +240,12 @@ public sealed class PaddleDocumentTensorRtMultiPageIntegrationTests
         var profiles = new VisualProfileRegistry();
         profiles.Register(profile.VisualProfile);
         profiles.Freeze();
-        var artifact = new ModelArtifact(profile.VisualProfile.ModelId, "tensorrt-engine", enginePath, preferredBackend: TensorRtBackendProvider.BackendId);
+        ModelArtifact artifact = profile.CreateArtifact(enginePath, TensorRtBackendProvider.BackendId);
         return new VisualPipeline(
             registry,
             profiles.Select(artifact, registry, request, profile.VisualProfile.Task),
             request,
             new SessionOptions(sessionConcurrency, false));
-    }
-
-    private static PaddleDocumentProfile AsTensorRtProfile(PaddleDocumentProfile source)
-    {
-        VisualModelProfile original = source.VisualProfile;
-        var visual = new VisualModelProfile(
-            original.ProfileId + ".tensorrt",
-            original.ModelId,
-            original.Task,
-            original.Version,
-            "tensorrt-engine",
-            original.Input,
-            original.Outputs,
-            original.Labels,
-            original.Decoder,
-            original.RequiredCapabilities,
-            original.MinimumBackendVersion,
-            original.AuxiliaryInputs,
-            original.Preprocessing);
-        return new PaddleDocumentProfile(source.Descriptor, visual);
     }
 
     private static void AssertPageContract(IReadOnlyList<PaddleDocumentPipelineResult> pages, string sourceSha)

@@ -303,6 +303,13 @@ namespace JYPPX.DeploySharp.Visual
             return new VisualModelProfile(ProfileId, ModelId, Task, Version, ModelFormat, Input, Outputs, Labels, Decoder, RequiredCapabilities, MinimumBackendVersion, AuxiliaryInputs, preprocessing);
         }
 
+        /// <summary>Creates a profile copy for an explicitly selected artifact format, such as <c>tensorrt-engine</c> or <c>openvino-ir</c>. / 为显式选择的工件格式创建 Profile 副本，例如 <c>tensorrt-engine</c> 或 <c>openvino-ir</c>。</summary>
+        public VisualModelProfile WithModelFormat(string modelFormat)
+        {
+            if (string.IsNullOrWhiteSpace(modelFormat)) throw new ArgumentException("A model format is required.", nameof(modelFormat));
+            return new VisualModelProfile(ProfileId, ModelId, Task, Version, modelFormat, Input, Outputs, Labels, Decoder, RequiredCapabilities, MinimumBackendVersion, AuxiliaryInputs, Preprocessing);
+        }
+
         /// <summary>Gets a label by class index, falling back to the invariant index string. / 按类别索引获取标签；缺失时回退到不变索引字符串。</summary>
         public string GetLabel(int classIndex)
         {
