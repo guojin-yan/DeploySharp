@@ -236,7 +236,7 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
         cancellationToken);
 ```
 
-`maxDegreeOfParallelism` 是硬上限；调用方必须为每个并发通道提供独立的 native Session，或确认 stage 自身线程安全。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
+`maxDegreeOfParallelism` 是硬上限；调用方必须确认 stage 自身及其 native Session 支持并发。若不能确认，应在该方法外创建多个独立 Pipeline 并自行分片调度。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
 
 ### 版面区域 → OCR
 

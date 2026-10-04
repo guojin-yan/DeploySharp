@@ -183,8 +183,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
         /// <summary>
         /// Runs independent pages with bounded concurrency while preserving caller order. Stages and their
-        /// underlying sessions must be safe for concurrent calls, or the caller must provide one pipeline per
-        /// execution channel. The default <see cref="RunManyAsync(IEnumerable{PaddleDocumentPage}, CancellationToken)"/>
+        /// underlying sessions must be safe for concurrent calls. If they are not, the caller must shard pages
+        /// across separately created pipeline instances outside this method. The default <see cref="RunManyAsync(IEnumerable{PaddleDocumentPage}, CancellationToken)"/>
         /// remains sequential so existing stage adapters keep their deterministic lifetime semantics.
         /// / 以有界并发运行相互独立的页面并保持调用方顺序。阶段及其底层会话必须支持并发调用，或调用方为每个执行通道提供独立 Pipeline。默认的
         /// <see cref="RunManyAsync(IEnumerable{PaddleDocumentPage}, CancellationToken)"/> 仍保持串行，以兼容现有阶段适配器的确定性生命周期。
