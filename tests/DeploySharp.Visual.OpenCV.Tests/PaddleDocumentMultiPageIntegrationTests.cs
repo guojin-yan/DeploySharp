@@ -71,7 +71,9 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             new PaddleDocumentPage(ImagePath, new VisualSize(810, 1080), 0),
             new PaddleDocumentPage(ImagePath, new VisualSize(810, 1080), 1)
         };
+        Stopwatch sequentialWatch = Stopwatch.StartNew();
         IReadOnlyList<PaddleDocumentPipelineResult> pages = await pipeline.RunManyAsync(inputPages, CancellationToken.None).ConfigureAwait(false);
+        sequentialWatch.Stop();
         Assert.AreEqual(2, pages.Count);
         Assert.AreEqual(0, pages[0].Page.PageIndex); Assert.AreEqual(1, pages[1].Page.PageIndex);
         Assert.AreEqual(sourceSha, pages[1].GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256);
@@ -86,7 +88,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         CollectionAssert.AreEqual(new[] { 0, 1 }, concurrentPages.Select(page => page.Page.PageIndex).ToArray());
         Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256 == sourceSha));
         Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count > 0));
-        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, concurrentWatch.Elapsed);
+        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed);
         Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
             + ";orientationRegions=" + string.Join(",", concurrentPages.Select(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count)));
     }
@@ -105,6 +107,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         PaddleDocumentProfile layoutProfile,
         IReadOnlyList<PaddleDocumentPipelineResult> sequentialPages,
         IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages,
+        TimeSpan sequentialElapsed,
         TimeSpan concurrentElapsed)
     {
         string? requestedPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT_EVIDENCE_PATH");
@@ -134,7 +137,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 concurrentMethod = "PaddleDocumentPipeline.RunManyConcurrentAsync",
                 maxDegreeOfParallelism = 2,
                 sessionMaxConcurrency = 2,
-                sequentialElapsedMs = sequentialPages.Sum(page => page.Elapsed.TotalMilliseconds),
+                sequentialWallElapsedMs = sequentialElapsed.TotalMilliseconds,
+                sequentialPageElapsedSumMs = sequentialPages.Sum(page => page.Elapsed.TotalMilliseconds),
                 concurrentElapsedMs = concurrentElapsed.TotalMilliseconds
             },
             models = new
