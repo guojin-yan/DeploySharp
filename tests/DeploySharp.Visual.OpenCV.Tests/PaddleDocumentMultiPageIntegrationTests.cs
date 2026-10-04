@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results;
@@ -31,9 +32,13 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
-    public async Task TwoPageOrientationLayoutBookPreservesPageOrderAndExports()
+    [DataRow("onnxruntime")]
+    [DataRow("openvino")]
+    public async Task TwoPageOrientationLayoutBookPreservesPageOrderAndExports(string backend)
     {
-        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL") != "1") Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL=1 to run the multi-page PP-Structure case.");
+        bool useOpenVino = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase);
+        string gate = useOpenVino ? "DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_MULTIPAGE" : "DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL";
+        if (Environment.GetEnvironmentVariable(gate) != "1") Assert.Inconclusive("Set " + gate + "=1 to run the multi-page PP-Structure case.");
         if (!File.Exists(ImagePath)) Assert.Inconclusive("Missing multi-page input: " + ImagePath);
         string orientationPath = RequireModel("pp-lcnet-x1-0-doc-ori.onnx");
         string layoutPath = RequireModel("pp-doclayout-l.onnx");
@@ -41,11 +46,27 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
         var orientationProfile = PaddleDocumentProfiles.CreateClassification(orientationDescriptor, PaddleDocumentProfiles.DocumentOrientationLabels, VisualTaskId.DocumentOrientation, modelSize: new VisualSize(224, 224));
         var layoutDescriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
         var layoutProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(layoutDescriptor, PaddleDocumentProfiles.Layout23Labels, new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: 0);
-        using var orientationRegistry = new BackendRegistry(); orientationRegistry.UseOnnxRuntime();
-        using var layoutRegistry = new BackendRegistry(); layoutRegistry.UseOnnxRuntime();
-        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
-        using VisualPipeline orientation = CreatePipeline(orientationRegistry, orientationProfile, orientationPath, request);
-        using VisualPipeline layout = CreatePipeline(layoutRegistry, layoutProfile, layoutPath, request);
+        BackendId backendId;
+        string device;
+        using var orientationRegistry = new BackendRegistry();
+        using var layoutRegistry = new BackendRegistry();
+        if (useOpenVino)
+        {
+            orientationRegistry.UseOpenVino();
+            layoutRegistry.UseOpenVino();
+            backendId = OpenVinoBackendProvider.BackendId;
+            device = "CPU";
+        }
+        else
+        {
+            orientationRegistry.UseOnnxRuntime();
+            layoutRegistry.UseOnnxRuntime();
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+            device = "cpu";
+        }
+        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
+        using VisualPipeline orientation = CreatePipeline(orientationRegistry, orientationProfile, orientationPath, request, backendId);
+        using VisualPipeline layout = CreatePipeline(layoutRegistry, layoutProfile, layoutPath, request, backendId);
         string sourceSha = Sha256(ImagePath);
         var stages = new IPaddleDocumentPipelineStage[]
         {
@@ -109,18 +130,20 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                     measurementCount).ConfigureAwait(false)
             };
         }
-        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed, benchmark);
-        Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+        WriteConcurrentEvidenceIfRequested(backend, backendId, sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, sequentialWatch.Elapsed, concurrentWatch.Elapsed, benchmark);
+        Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT backend=" + backend + ";pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
             + ";orientationRegions=" + string.Join(",", concurrentPages.Select(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count)));
     }
 
-    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string path, BackendRequest request)
+    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string path, BackendRequest request, BackendId backendId)
     {
         var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
-        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, OnnxRuntimeBackendProvider.BackendId), registry, request, profile.VisualProfile.Task), request, new SessionOptions(2, false));
+        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, backendId), registry, request, profile.VisualProfile.Task), request, new SessionOptions(2, false));
     }
 
     private static void WriteConcurrentEvidenceIfRequested(
+        string backend,
+        BackendId backendId,
         string sourceSha,
         string orientationPath,
         string layoutPath,
@@ -134,7 +157,17 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
     {
         string? requestedPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT_EVIDENCE_PATH");
         if (string.IsNullOrWhiteSpace(requestedPath)) return;
-        string fullPath = Path.GetFullPath(requestedPath);
+        string backendName = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "openvino" : "onnxruntime";
+        bool hasBackendPlaceholder = requestedPath.Contains("{backend}", StringComparison.OrdinalIgnoreCase);
+        string resolvedPath = requestedPath.Replace("{backend}", backendName, StringComparison.OrdinalIgnoreCase);
+        string fullPath = Path.GetFullPath(resolvedPath);
+        if (!hasBackendPlaceholder && backendName != "onnxruntime")
+        {
+            string? backendDirectory = Path.GetDirectoryName(fullPath);
+            string stem = Path.GetFileNameWithoutExtension(fullPath);
+            string extension = Path.GetExtension(fullPath);
+            fullPath = Path.Combine(backendDirectory ?? string.Empty, stem + "-" + backendName + extension);
+        }
         string? directory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
         var evidence = new
@@ -142,8 +175,8 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             schemaVersion = 1,
             generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
             sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
-            backend = "onnxruntime-cpu",
-            device = "cpu",
+            backend = backendName + "-cpu",
+            device = backendName == "openvino" ? "CPU" : "cpu",
             environment = new
             {
                 machine = Environment.MachineName,
@@ -155,6 +188,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             input = new { path = ImagePath, sha256 = sourceSha, pageCount = concurrentPages.Count, sourceSize = new { width = 810, height = 1080 } },
             execution = new
             {
+                backendId = backendId.Value,
                 sequentialMethod = "PaddleDocumentPipeline.RunManyAsync",
                 concurrentMethod = "PaddleDocumentPipeline.RunManyConcurrentAsync",
                 maxDegreeOfParallelism = 2,
@@ -179,7 +213,7 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 elapsedMs = page.Elapsed.TotalMilliseconds,
                 timings = page.Timings.ToDictionary(item => item.Module.ToString(), item => item.Elapsed.TotalMilliseconds)
             }).ToArray(),
-            boundary = "This is a real two-page ORT CPU page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
+            boundary = "This is a real two-page " + backendName + " page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
         };
         File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, new UTF8Encoding(false));
     }
