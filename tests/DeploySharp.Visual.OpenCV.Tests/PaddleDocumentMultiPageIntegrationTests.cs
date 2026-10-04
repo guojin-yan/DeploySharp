@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -62,23 +65,87 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
                 })
         };
         var pipeline = new PaddleDocumentPipeline(stages);
-        IReadOnlyList<PaddleDocumentPipelineResult> pages = await pipeline.RunManyAsync(new[]
+        PaddleDocumentPage[] inputPages =
         {
             new PaddleDocumentPage(ImagePath, new VisualSize(810, 1080), 0),
             new PaddleDocumentPage(ImagePath, new VisualSize(810, 1080), 1)
-        }, CancellationToken.None).ConfigureAwait(false);
+        };
+        IReadOnlyList<PaddleDocumentPipelineResult> pages = await pipeline.RunManyAsync(inputPages, CancellationToken.None).ConfigureAwait(false);
         Assert.AreEqual(2, pages.Count);
         Assert.AreEqual(0, pages[0].Page.PageIndex); Assert.AreEqual(1, pages[1].Page.PageIndex);
         Assert.AreEqual(sourceSha, pages[1].GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256);
         Assert.IsTrue(pages.All(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count > 0));
         Assert.IsTrue(PaddleDocumentPipelineExport.ToJson(pages).Contains("\"pageIndex\"", StringComparison.Ordinal));
         Assert.IsTrue(PaddleDocumentPipelineExport.ToMarkdown(pages).Contains("PP-Structure page 1", StringComparison.Ordinal));
+
+        Stopwatch concurrentWatch = Stopwatch.StartNew();
+        IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages = await pipeline.RunManyConcurrentAsync(inputPages, maxDegreeOfParallelism: 2, CancellationToken.None).ConfigureAwait(false);
+        concurrentWatch.Stop();
+        Assert.AreEqual(2, concurrentPages.Count);
+        CollectionAssert.AreEqual(new[] { 0, 1 }, concurrentPages.Select(page => page.Page.PageIndex).ToArray());
+        Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256 == sourceSha));
+        Assert.IsTrue(concurrentPages.All(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count > 0));
+        WriteConcurrentEvidenceIfRequested(sourceSha, orientationPath, layoutPath, orientationProfile, layoutProfile, pages, concurrentPages, concurrentWatch.Elapsed);
+        Console.WriteLine("PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT pages=2;maxDegreeOfParallelism=2;elapsedMs=" + concurrentWatch.Elapsed.TotalMilliseconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+            + ";orientationRegions=" + string.Join(",", concurrentPages.Select(page => page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count)));
     }
 
     private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string path, BackendRequest request)
     {
         var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
-        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, OnnxRuntimeBackendProvider.BackendId), registry, request, profile.VisualProfile.Task), request);
+        return new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(path, OnnxRuntimeBackendProvider.BackendId), registry, request, profile.VisualProfile.Task), request, new SessionOptions(2, false));
+    }
+
+    private static void WriteConcurrentEvidenceIfRequested(
+        string sourceSha,
+        string orientationPath,
+        string layoutPath,
+        PaddleDocumentProfile orientationProfile,
+        PaddleDocumentProfile layoutProfile,
+        IReadOnlyList<PaddleDocumentPipelineResult> sequentialPages,
+        IReadOnlyList<PaddleDocumentPipelineResult> concurrentPages,
+        TimeSpan concurrentElapsed)
+    {
+        string? requestedPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_MULTIPAGE_CONCURRENT_EVIDENCE_PATH");
+        if (string.IsNullOrWhiteSpace(requestedPath)) return;
+        string fullPath = Path.GetFullPath(requestedPath);
+        string? directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+        var evidence = new
+        {
+            schemaVersion = 1,
+            generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
+            sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
+            backend = "onnxruntime-cpu",
+            device = "cpu",
+            input = new { path = ImagePath, sha256 = sourceSha, pageCount = concurrentPages.Count, sourceSize = new { width = 810, height = 1080 } },
+            execution = new
+            {
+                sequentialMethod = "PaddleDocumentPipeline.RunManyAsync",
+                concurrentMethod = "PaddleDocumentPipeline.RunManyConcurrentAsync",
+                maxDegreeOfParallelism = 2,
+                sessionMaxConcurrency = 2,
+                sequentialElapsedMs = sequentialPages.Sum(page => page.Elapsed.TotalMilliseconds),
+                concurrentElapsedMs = concurrentElapsed.TotalMilliseconds
+            },
+            models = new
+            {
+                orientation = new { modelId = orientationProfile.Descriptor.ModelId, path = orientationPath, sha256 = Sha256(orientationPath) },
+                layout = new { modelId = layoutProfile.Descriptor.ModelId, path = layoutPath, sha256 = Sha256(layoutPath) }
+            },
+            pages = concurrentPages.Select((page, index) => new
+            {
+                inputIndex = index,
+                pageIndex = page.Page.PageIndex,
+                inputSha256 = page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Metadata.InputSha256,
+                orientation = page.GetRequired<PaddleDocumentOrientationResult>(PaddleDocumentModule.DocumentOrientation).Label,
+                layoutRegionCount = page.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.LayoutDetection).Regions.Count,
+                elapsedMs = page.Elapsed.TotalMilliseconds,
+                timings = page.Timings.ToDictionary(item => item.Module.ToString(), item => item.Elapsed.TotalMilliseconds)
+            }).ToArray(),
+            boundary = "This is a real two-page ORT CPU page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
+        };
+        File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, new UTF8Encoding(false));
     }
 
     private static string RequireModel(string name)
