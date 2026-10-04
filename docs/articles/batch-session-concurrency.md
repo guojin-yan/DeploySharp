@@ -10,6 +10,8 @@ DeploySharp 同时支持真正的模型 Batch、多个 batch-one Session 并发�
 | Session 池并发 | `VisualPipeline.RunManyAsync`、`SessionOptions.MaxConcurrency` | batch-one 也可用；每个 Session 独立 | 多张独立图片、吞吐优先 |
 | 异步预取 | `VisualPipeline.RunPrefetchedAsync` | 任意可异步准备的输入 | 视频中准备下一帧时执行当前帧 |
 
+PP-Structure 多页还提供显式的 `PaddleDocumentPipeline.RunManyConcurrentAsync`。它是页面级有界并发，要求阶段和底层 Session 可并发使用；默认 `RunManyAsync` 仍是串行，不会隐式共享非线程安全的 stage。
+
 真正 Batch 改变模型张量的首维；Session 池只增加独立 native 执行上下文；异步预取只重叠 CPU 准备和后端调用。一个 batch-one 模型不能通过 `RunManyAsync` 变成真正 Batch。
 
 ## 真正 Batch

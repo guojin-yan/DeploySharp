@@ -181,6 +181,56 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             return results.AsReadOnly();
         }
 
+        /// <summary>
+        /// Runs independent pages with bounded concurrency while preserving caller order. Stages and their
+        /// underlying sessions must be safe for concurrent calls, or the caller must provide one pipeline per
+        /// execution channel. The default <see cref="RunManyAsync(IEnumerable{PaddleDocumentPage}, CancellationToken)"/>
+        /// remains sequential so existing stage adapters keep their deterministic lifetime semantics.
+        /// / 以有界并发运行相互独立的页面并保持调用方顺序。阶段及其底层会话必须支持并发调用，或调用方为每个执行通道提供独立 Pipeline。默认的
+        /// <see cref="RunManyAsync(IEnumerable{PaddleDocumentPage}, CancellationToken)"/> 仍保持串行，以兼容现有阶段适配器的确定性生命周期。
+        /// </summary>
+        public async Task<IReadOnlyList<PaddleDocumentPipelineResult>> RunManyConcurrentAsync(
+            IEnumerable<PaddleDocumentPage> pages,
+            int maxDegreeOfParallelism,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (pages == null) throw new ArgumentNullException(nameof(pages));
+            if (maxDegreeOfParallelism <= 0) throw new ArgumentOutOfRangeException(nameof(maxDegreeOfParallelism));
+
+            PaddleDocumentPage[] selected = pages.ToArray();
+            var results = new PaddleDocumentPipelineResult[selected.Length];
+            using var gate = new SemaphoreSlim(maxDegreeOfParallelism, maxDegreeOfParallelism);
+            var tasks = new Task[selected.Length];
+            for (int index = 0; index < selected.Length; index++)
+            {
+                int resultIndex = index;
+                tasks[index] = RunPageAsync(selected[resultIndex], resultIndex, results, gate, cancellationToken);
+            }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+            return Array.AsReadOnly(results);
+        }
+
+        private async Task RunPageAsync(
+            PaddleDocumentPage page,
+            int resultIndex,
+            PaddleDocumentPipelineResult[] results,
+            SemaphoreSlim gate,
+            CancellationToken cancellationToken)
+        {
+            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (page == null) throw new ArgumentException("A document page cannot be null.", nameof(page));
+                results[resultIndex] = await RunAsync(page, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }
+
         public async Task<PaddleDocumentPipelineResult> RunAsync(PaddleDocumentPage page, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (page == null) throw new ArgumentNullException(nameof(page));

@@ -156,6 +156,70 @@ namespace DeploySharp.Visual.Tests
             StringAssert.Contains(markdown, "PP-Structure page 1");
         }
 
+        [TestMethod]
+        public async Task ConcurrentMultiPagePipelinePreservesOrderAndBoundsStageConcurrency()
+        {
+            int active = 0;
+            int maximumActive = 0;
+            var stage = new PaddleDocumentPipelineStage(PaddleDocumentModule.DocumentOrientation, async (context, token) =>
+            {
+                int current = Interlocked.Increment(ref active);
+                int observed;
+                do
+                {
+                    observed = maximumActive;
+                    if (current <= observed) break;
+                }
+                while (Interlocked.CompareExchange(ref maximumActive, current, observed) != observed);
+
+                try
+                {
+                    await Task.Delay(30, token).ConfigureAwait(false);
+                    return new PaddleDocumentOrientationResult(Metadata(PaddleDocumentModule.DocumentOrientation, context.Page.PageIndex), "0_degree", 0);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref active);
+                }
+            });
+            var pipeline = new PaddleDocumentPipeline(new[] { stage });
+            PaddleDocumentPage[] input = Enumerable.Range(0, 6)
+                .Select(index => new PaddleDocumentPage("page-" + index, new VisualSize(320, 240), index))
+                .ToArray();
+
+            IReadOnlyList<PaddleDocumentPipelineResult> results = await pipeline.RunManyConcurrentAsync(input, maxDegreeOfParallelism: 2);
+
+            Assert.AreEqual(input.Length, results.Count);
+            CollectionAssert.AreEqual(input.Select(page => page.PageIndex).ToArray(), results.Select(result => result.Page.PageIndex).ToArray());
+            Assert.IsTrue(maximumActive >= 2, "The bounded API should overlap independent pages.");
+            Assert.IsTrue(maximumActive <= 2, "The bounded API exceeded the requested concurrency.");
+        }
+
+        [TestMethod]
+        public async Task ConcurrentMultiPagePipelineObservesCancellationAndRejectsInvalidConcurrency()
+        {
+            var stage = new PaddleDocumentPipelineStage(PaddleDocumentModule.DocumentOrientation, async (context, token) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5), token).ConfigureAwait(false);
+                return new PaddleDocumentOrientationResult(Metadata(PaddleDocumentModule.DocumentOrientation, context.Page.PageIndex), "0_degree", 0);
+            });
+            var pipeline = new PaddleDocumentPipeline(new[] { stage });
+            await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(() => pipeline.RunManyConcurrentAsync(Array.Empty<PaddleDocumentPage>(), 0));
+
+            using var cancellation = new CancellationTokenSource();
+            Task<IReadOnlyList<PaddleDocumentPipelineResult>> run = pipeline.RunManyConcurrentAsync(
+                new[]
+                {
+                    new PaddleDocumentPage("page-0", new VisualSize(320, 240), 0),
+                    new PaddleDocumentPage("page-1", new VisualSize(320, 240), 1)
+                },
+                maxDegreeOfParallelism: 1,
+                cancellation.Token);
+            await Task.Delay(30).ConfigureAwait(false);
+            cancellation.Cancel();
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(async () => await run.ConfigureAwait(false));
+        }
+
         private static PaddleDocumentResultMetadata Metadata(PaddleDocumentModule module, int pageIndex)
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Official.First(model => model.Module == module);

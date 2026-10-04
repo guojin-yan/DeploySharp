@@ -226,6 +226,18 @@ string bookMarkdown = PaddleDocumentPipelineExport.ToMarkdown(pages);
 
 `RunManyAsync` 不并行复用 stage；需要并发时应由应用创建独立的 pipeline/session 通道，再自行合并结果，以免把非线程安全的视觉会话隐式共享。
 
+如果已经确认阶段适配器及其底层 Session 支持并发调用，也可以使用显式有界的 `RunManyConcurrentAsync`。该方法只控制页面级并发，不会把多个页面拼成模型 Batch，并且仍按输入顺序返回结果：
+
+```csharp
+IReadOnlyList<PaddleDocumentPipelineResult> pages =
+    await documentPipeline.RunManyConcurrentAsync(
+        decodedPages,
+        maxDegreeOfParallelism: 2,
+        cancellationToken);
+```
+
+`maxDegreeOfParallelism` 是硬上限；调用方必须为每个并发通道提供独立的 native Session，或确认 stage 自身线程安全。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
+
 ### 版面区域 → OCR
 
 版面检测结果可以交给 `PaddleDocumentRegionTextStage`。该适配器要求前序阶段产生 `LayoutDetection` 区域，然后按页面区域顺序调用应用提供的 OCR 委托；委托负责从原图按 `region.Bounds` 裁剪、调用已有 `OcrPipeline`，再返回一条 `PaddleDocumentTextItem`。库会检查区域索引、页码和输入 SHA，并把每条文本与页面坐标绑定。
@@ -277,7 +289,7 @@ await File.WriteAllTextAsync("document.json", PaddleDocumentPipelineExport.ToJso
 await File.WriteAllTextAsync("document.md", PaddleDocumentPipelineExport.ToMarkdown(pages), cancellationToken);
 ```
 
-`PaddleDocumentPipelineTests.OrderedMultiPagePipelineExportsEachPageWithModuleProvenance` 覆盖方向→公式依赖、多页页码顺序和 JSON/Markdown 导出。真实模型综合案例仍需在目标设备上按模型资产和后端重新运行。
+`PaddleDocumentPipelineTests.OrderedMultiPagePipelineExportsEachPageWithModuleProvenance` 覆盖方向→公式依赖、多页页码顺序和 JSON/Markdown 导出；`ConcurrentMultiPagePipelinePreservesOrderAndBoundsStageConcurrency` 覆盖有界并发的输入顺序、并发上限和页码来源，取消合同另有测试覆盖。真实模型综合案例仍需在目标设备上按模型资产和后端重新运行。
 
 ### 表格、公式、印章和图表任务链
 
