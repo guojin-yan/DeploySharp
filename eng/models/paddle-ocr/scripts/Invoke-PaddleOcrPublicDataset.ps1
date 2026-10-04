@@ -10,6 +10,7 @@ param(
     [string]$OutputDirectory,
     [string]$Version = 'v5',
     [string]$Variant = 'mobile',
+    [ValidateSet('onnxruntime', 'openvino', 'opencv-dnn', 'onnxruntime-cuda', 'tensorrt')]
     [string]$Backend = 'onnxruntime',
     [int]$StartIndex = 0,
     [int]$MaxImages = 0,
