@@ -1,0 +1,7207 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-onnx-batch-axis-audit-v1",
+  "generatedUtc": "2026-10-04T19:34:15.051911Z",
+  "roots": [
+    "E:\\Model\\PaddleDocument\\onnx",
+    "E:\\Model\\PaddleDocument\\onnx-normalized",
+    "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929",
+    "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+    "E:\\Model\\PaddleDocument\\chart-export"
+  ],
+  "records": [
+    {
+      "status": "parsed",
+      "fileSizeBytes": 395422861,
+      "sha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "pixel_values",
+          "shape": [
+            1,
+            3,
+            1024,
+            1024
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            256,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "chart-vision.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\chart-vision.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1856229521,
+      "sha256": "c4eaff23faccd3ce6bff33e0fbe11b44b35a780b73ac1990b5f9be7a031330a3",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            "DynamicDimension.0"
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            1
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_0",
+          "shape": [
+            1,
+            "DynamicDimension.1",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_0",
+          "shape": [
+            1,
+            "DynamicDimension.2",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_1",
+          "shape": [
+            1,
+            "DynamicDimension.3",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_1",
+          "shape": [
+            1,
+            "DynamicDimension.4",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_2",
+          "shape": [
+            1,
+            "DynamicDimension.5",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_2",
+          "shape": [
+            1,
+            "DynamicDimension.6",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_3",
+          "shape": [
+            1,
+            "DynamicDimension.7",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_3",
+          "shape": [
+            1,
+            "DynamicDimension.8",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_4",
+          "shape": [
+            1,
+            "DynamicDimension.9",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_4",
+          "shape": [
+            1,
+            "DynamicDimension.10",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_5",
+          "shape": [
+            1,
+            "DynamicDimension.11",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_5",
+          "shape": [
+            1,
+            "DynamicDimension.12",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_6",
+          "shape": [
+            1,
+            "DynamicDimension.13",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_6",
+          "shape": [
+            1,
+            "DynamicDimension.14",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_7",
+          "shape": [
+            1,
+            "DynamicDimension.15",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_7",
+          "shape": [
+            1,
+            "DynamicDimension.16",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_8",
+          "shape": [
+            1,
+            "DynamicDimension.17",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_8",
+          "shape": [
+            1,
+            "DynamicDimension.18",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_9",
+          "shape": [
+            1,
+            "DynamicDimension.19",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_9",
+          "shape": [
+            1,
+            "DynamicDimension.20",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_10",
+          "shape": [
+            1,
+            "DynamicDimension.21",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_10",
+          "shape": [
+            1,
+            "DynamicDimension.22",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_11",
+          "shape": [
+            1,
+            "DynamicDimension.23",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_11",
+          "shape": [
+            1,
+            "DynamicDimension.24",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_12",
+          "shape": [
+            1,
+            "DynamicDimension.25",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_12",
+          "shape": [
+            1,
+            "DynamicDimension.26",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_13",
+          "shape": [
+            1,
+            "DynamicDimension.27",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_13",
+          "shape": [
+            1,
+            "DynamicDimension.28",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_14",
+          "shape": [
+            1,
+            "DynamicDimension.29",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_14",
+          "shape": [
+            1,
+            "DynamicDimension.30",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_15",
+          "shape": [
+            1,
+            "DynamicDimension.31",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_15",
+          "shape": [
+            1,
+            "DynamicDimension.32",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_16",
+          "shape": [
+            1,
+            "DynamicDimension.33",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_16",
+          "shape": [
+            1,
+            "DynamicDimension.34",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_17",
+          "shape": [
+            1,
+            "DynamicDimension.35",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_17",
+          "shape": [
+            1,
+            "DynamicDimension.36",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_18",
+          "shape": [
+            1,
+            "DynamicDimension.37",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_18",
+          "shape": [
+            1,
+            "DynamicDimension.38",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_19",
+          "shape": [
+            1,
+            "DynamicDimension.39",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_19",
+          "shape": [
+            1,
+            "DynamicDimension.40",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_20",
+          "shape": [
+            1,
+            "DynamicDimension.41",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_20",
+          "shape": [
+            1,
+            "DynamicDimension.42",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_21",
+          "shape": [
+            1,
+            "DynamicDimension.43",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_21",
+          "shape": [
+            1,
+            "DynamicDimension.44",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_22",
+          "shape": [
+            1,
+            "DynamicDimension.45",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_22",
+          "shape": [
+            1,
+            "DynamicDimension.46",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_23",
+          "shape": [
+            1,
+            "DynamicDimension.47",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_23",
+          "shape": [
+            1,
+            "DynamicDimension.48",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            151860
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            "DynamicDimension.49",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            "DynamicDimension.50",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            "DynamicDimension.51",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            "DynamicDimension.52",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            "DynamicDimension.53",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            "DynamicDimension.54",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            "DynamicDimension.55",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            "DynamicDimension.56",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            "DynamicDimension.57",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            "DynamicDimension.58",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            "DynamicDimension.59",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            "DynamicDimension.60",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            "DynamicDimension.61",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            "DynamicDimension.62",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            "DynamicDimension.63",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            "DynamicDimension.64",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            "DynamicDimension.65",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            "DynamicDimension.66",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            "DynamicDimension.67",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            "DynamicDimension.68",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            "DynamicDimension.69",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            "DynamicDimension.70",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            "DynamicDimension.71",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            "DynamicDimension.72",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            "DynamicDimension.73",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            "DynamicDimension.74",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            "DynamicDimension.75",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            "DynamicDimension.76",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            "DynamicDimension.77",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            "DynamicDimension.78",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            "DynamicDimension.79",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            "DynamicDimension.80",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            "DynamicDimension.81",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            "DynamicDimension.82",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            "DynamicDimension.83",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            "DynamicDimension.84",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            "DynamicDimension.85",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            "DynamicDimension.86",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            "DynamicDimension.87",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            "DynamicDimension.88",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            "DynamicDimension.89",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            "DynamicDimension.90",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            "DynamicDimension.91",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            "DynamicDimension.92",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            "DynamicDimension.93",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            "DynamicDimension.94",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            "DynamicDimension.95",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            "DynamicDimension.96",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-past-full-epsilon.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-past-full-epsilon.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1856223002,
+      "sha256": "043b7f618872b1ba46135928ab05128e5510ee60b7b8803719af0b24cfb2015a",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            "DynamicDimension.0"
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            1
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_0",
+          "shape": [
+            1,
+            "DynamicDimension.1",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_0",
+          "shape": [
+            1,
+            "DynamicDimension.2",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_1",
+          "shape": [
+            1,
+            "DynamicDimension.3",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_1",
+          "shape": [
+            1,
+            "DynamicDimension.4",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_2",
+          "shape": [
+            1,
+            "DynamicDimension.5",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_2",
+          "shape": [
+            1,
+            "DynamicDimension.6",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_3",
+          "shape": [
+            1,
+            "DynamicDimension.7",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_3",
+          "shape": [
+            1,
+            "DynamicDimension.8",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_4",
+          "shape": [
+            1,
+            "DynamicDimension.9",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_4",
+          "shape": [
+            1,
+            "DynamicDimension.10",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_5",
+          "shape": [
+            1,
+            "DynamicDimension.11",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_5",
+          "shape": [
+            1,
+            "DynamicDimension.12",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_6",
+          "shape": [
+            1,
+            "DynamicDimension.13",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_6",
+          "shape": [
+            1,
+            "DynamicDimension.14",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_7",
+          "shape": [
+            1,
+            "DynamicDimension.15",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_7",
+          "shape": [
+            1,
+            "DynamicDimension.16",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_8",
+          "shape": [
+            1,
+            "DynamicDimension.17",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_8",
+          "shape": [
+            1,
+            "DynamicDimension.18",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_9",
+          "shape": [
+            1,
+            "DynamicDimension.19",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_9",
+          "shape": [
+            1,
+            "DynamicDimension.20",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_10",
+          "shape": [
+            1,
+            "DynamicDimension.21",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_10",
+          "shape": [
+            1,
+            "DynamicDimension.22",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_11",
+          "shape": [
+            1,
+            "DynamicDimension.23",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_11",
+          "shape": [
+            1,
+            "DynamicDimension.24",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_12",
+          "shape": [
+            1,
+            "DynamicDimension.25",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_12",
+          "shape": [
+            1,
+            "DynamicDimension.26",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_13",
+          "shape": [
+            1,
+            "DynamicDimension.27",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_13",
+          "shape": [
+            1,
+            "DynamicDimension.28",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_14",
+          "shape": [
+            1,
+            "DynamicDimension.29",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_14",
+          "shape": [
+            1,
+            "DynamicDimension.30",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_15",
+          "shape": [
+            1,
+            "DynamicDimension.31",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_15",
+          "shape": [
+            1,
+            "DynamicDimension.32",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_16",
+          "shape": [
+            1,
+            "DynamicDimension.33",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_16",
+          "shape": [
+            1,
+            "DynamicDimension.34",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_17",
+          "shape": [
+            1,
+            "DynamicDimension.35",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_17",
+          "shape": [
+            1,
+            "DynamicDimension.36",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_18",
+          "shape": [
+            1,
+            "DynamicDimension.37",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_18",
+          "shape": [
+            1,
+            "DynamicDimension.38",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_19",
+          "shape": [
+            1,
+            "DynamicDimension.39",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_19",
+          "shape": [
+            1,
+            "DynamicDimension.40",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_20",
+          "shape": [
+            1,
+            "DynamicDimension.41",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_20",
+          "shape": [
+            1,
+            "DynamicDimension.42",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_21",
+          "shape": [
+            1,
+            "DynamicDimension.43",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_21",
+          "shape": [
+            1,
+            "DynamicDimension.44",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_22",
+          "shape": [
+            1,
+            "DynamicDimension.45",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_22",
+          "shape": [
+            1,
+            "DynamicDimension.46",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_23",
+          "shape": [
+            1,
+            "DynamicDimension.47",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_23",
+          "shape": [
+            1,
+            "DynamicDimension.48",
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            151860
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            "DynamicDimension.49",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            "DynamicDimension.50",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            "DynamicDimension.51",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            "DynamicDimension.52",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            "DynamicDimension.53",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            "DynamicDimension.54",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            "DynamicDimension.55",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            "DynamicDimension.56",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            "DynamicDimension.57",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            "DynamicDimension.58",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            "DynamicDimension.59",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            "DynamicDimension.60",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            "DynamicDimension.61",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            "DynamicDimension.62",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            "DynamicDimension.63",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            "DynamicDimension.64",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            "DynamicDimension.65",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            "DynamicDimension.66",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            "DynamicDimension.67",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            "DynamicDimension.68",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            "DynamicDimension.69",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            "DynamicDimension.70",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            "DynamicDimension.71",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            "DynamicDimension.72",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            "DynamicDimension.73",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            "DynamicDimension.74",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            "DynamicDimension.75",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            "DynamicDimension.76",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            "DynamicDimension.77",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            "DynamicDimension.78",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            "DynamicDimension.79",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            "DynamicDimension.80",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            "DynamicDimension.81",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            "DynamicDimension.82",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            "DynamicDimension.83",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            "DynamicDimension.84",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            "DynamicDimension.85",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            "DynamicDimension.86",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            "DynamicDimension.87",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            "DynamicDimension.88",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            "DynamicDimension.89",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            "DynamicDimension.90",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            "DynamicDimension.91",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            "DynamicDimension.92",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            "DynamicDimension.93",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            "DynamicDimension.94",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            "DynamicDimension.95",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            "DynamicDimension.96",
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-past-full.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-past-full.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234151977,
+      "sha256": "ccf035b4bb3f5f80311137c5082361ea42001f07c738e903ffd80e4de2aa0573",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            5
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            1
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_0",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_0",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_1",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_1",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_2",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_2",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_3",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_3",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_4",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_4",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_5",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_5",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_6",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_6",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_7",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_7",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_8",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_8",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_9",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_9",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_10",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_10",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_11",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_11",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_12",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_12",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_13",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_13",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_14",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_14",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_15",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_15",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_16",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_16",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_17",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_17",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_18",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_18",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_19",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_19",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_20",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_20",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_21",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_21",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_22",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_22",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_23",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_23",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-rope-decode-epsilon.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-rope-decode-epsilon.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234145470,
+      "sha256": "092bf6a505b8fa40583505ba5838cccbcd3a1deac0755a0275c6482a1428e35d",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            5
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            1
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_0",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_0",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_1",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_1",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_2",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_2",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_3",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_3",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_4",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_4",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_5",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_5",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_6",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_6",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_7",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_7",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_8",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_8",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_9",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_9",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_10",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_10",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_11",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_11",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_12",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_12",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_13",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_13",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_14",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_14",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_15",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_15",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_16",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_16",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_17",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_17",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_18",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_18",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_19",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_19",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_20",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_20",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_21",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_21",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_22",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_22",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_key_23",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "past_value_23",
+          "shape": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            5,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-rope-decode.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-rope-decode.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234103922,
+      "sha256": "fbd5b233b3b75cf39931d941f21dbb9b263810133c67d76a929861d7ddda7a2d",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            4,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-rope-epsilon.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-rope-epsilon.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234097415,
+      "sha256": "8c7926958c8c086890f5d13c5776f5322d5e3b9c4e3f18e0afaa78f11d5307dd",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            4,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-dynamic-rope.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-dynamic-rope.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234103424,
+      "sha256": "66f81192c4f547e88edeb5de2819d7e49454c2a05952bf641b5cc70d4dcaec0b",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            4,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-prefill-epsilon.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-prefill-epsilon.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1234096917,
+      "sha256": "026956bf15b6b1cd8ebef31273a602710db0fd62df40674df496b7235f8d8dd2",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            4,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            4
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-decoder-prefill.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-decoder-prefill.onnx"
+    },
+    {
+      "status": "load-failed",
+      "fileSizeBytes": 0,
+      "sha256": null,
+      "error": "empty ONNX file",
+      "batchCapability": "unavailable",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-prefill-fixed-distprim.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-prefill-fixed-distprim.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1861636471,
+      "sha256": "842dfbe792a8655690ec742bac16349f9fd0c26c3ff48be4d004f74db7dd4ff2",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            286,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            286
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            286
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            151860
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-prefill-full-epsilon.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-prefill-full-epsilon.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1861630356,
+      "sha256": "8ac0f38fe924511fe7ed28c7339309c94c58299b81c48bab7043d518f4d76a75",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "inputs_embeds",
+          "shape": [
+            1,
+            286,
+            1024
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            286
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "position_ids",
+          "shape": [
+            1,
+            286
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            1,
+            151860
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_2",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_3",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_4",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_5",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_6",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_7",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_8",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_9",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_10",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_11",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_12",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_13",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_14",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_15",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_16",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_17",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_18",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_19",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_20",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_21",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_22",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_23",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_24",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_25",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_26",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_27",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_28",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_29",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_30",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_31",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_32",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_33",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_34",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_35",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_36",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_37",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_38",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_39",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_40",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_41",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_42",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_43",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_44",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_45",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_46",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_47",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        },
+        {
+          "name": "fetch_name_48",
+          "shape": [
+            1,
+            286,
+            16,
+            64
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-text-prefill-full.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-text-prefill-full.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 622018867,
+      "sha256": "b83c0ce88deedd2a83d2c89e733fdbd84074d7c4ff47de797434870012389443",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "input_ids",
+          "shape": [
+            1,
+            "DynamicDimension.0"
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            "DynamicDimension.0",
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "text-onnx-verify-20260923/chart-token-embedding-dynamic.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\text-onnx-verify-20260923\\chart-token-embedding-dynamic.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 395422861,
+      "sha256": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "pixel_values",
+          "shape": [
+            1,
+            3,
+            1024,
+            1024
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            1,
+            256,
+            1024
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": false,
+      "batchCapability": "autoregressive-static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\chart-export",
+      "relativePath": "verify-20260923/chart-vision.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\chart-export\\verify-20260923\\chart-vision.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 730381790,
+      "sha256": "47b019d539ff57957e3fd72f908770ac42a96a2bea94710b23ee0a2b12c0e9ea",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "pp-formulanet-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\pp-formulanet-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 733527518,
+      "sha256": "6e370cdb674f05c916fdb682fe7df30af29d25de7567a5d6a9d49f2ffeb22b3a",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "pp-formulanet-plus-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\pp-formulanet-plus-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 592374467,
+      "sha256": "acc504c34c4e81fc47109723480bca1fb9f85708aa246475ea9319429809a082",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "pp-formulanet-plus-m.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\pp-formulanet-plus-m.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 231879608,
+      "sha256": "295bb18e930372c4d91a184d72987e5541fbffb5422cd6ba51bc23420e8e43da",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "pp-formulanet-plus-s.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\pp-formulanet-plus-s.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 231879608,
+      "sha256": "c63b38f32eba6df368791f4a6edad48f4e5d040fda940f5d0adb22593ee21904",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "pp-formulanet-s.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\pp-formulanet-s.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1842046990,
+      "sha256": "e6701247370184730aedc8f11ad7019f804039546b8d28be8e24750069d0904f",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            192,
+            672
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004",
+      "relativePath": "unimernet.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-formula-loop-compat-20261004\\unimernet.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929",
+      "relativePath": "slanext-wired-local-parameters.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wired-local-parameters.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929",
+      "relativePath": "slanext-wired-openvino-compat.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wired-openvino-compat.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929",
+      "relativePath": "slanext-wireless-local-parameters.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wireless-local-parameters.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929",
+      "relativePath": "slanext-wireless-openvino-compat.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wireless-openvino-compat.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized",
+      "relativePath": "slanext-wired-local-parameters.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized\\slanext-wired-local-parameters.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743498,
+      "sha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx-normalized",
+      "relativePath": "slanext-wireless-local-parameters.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx-normalized\\slanext-wireless-local-parameters.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 23469221,
+      "sha256": "b3e1b8deaa9538a76418083274df9acf07232cccb30ba6ab957a77a2d73cecb3",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_525_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-l-layout-17cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-l-layout-17cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 23433157,
+      "sha256": "34d873d7ec7a77448b85ae41db5785bfae0c5dda483c03c177189ebd086b1ce4",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_525_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-l-layout-3cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-l-layout-3cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 7502497,
+      "sha256": "7cf5b8c3f7e00353bdb231fec73dd73b66ea0cbf598daaf1f113bf7e6dc4af31",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            800,
+            608
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_481_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-layout-1x-table.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-layout-1x-table.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 7510754,
+      "sha256": "61efac8c8d3eeee09d7d16db249eb919c1432e22d8235bd408ddffa3477cb8fd",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            800,
+            608
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_481_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-layout-1x.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-layout-1x.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 4895821,
+      "sha256": "f8a43b8588f1cee80acea3646738a2704c7c7f4cb73f63bc3d325016195fd496",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            480,
+            480
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_477_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-s-layout-17cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-s-layout-17cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 4874092,
+      "sha256": "f2b2c55af08bad9dab4030f86d34336f99bc7e39df9999676ce29db7e60b2fb1",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            480,
+            480
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_477_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "picodet-s-layout-3cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\picodet-s-layout-3cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 129311709,
+      "sha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.1",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.1",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2349_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-docblocklayout.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-docblocklayout.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 129356945,
+      "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.0",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.0",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2349_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-doclayout-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 23484680,
+      "sha256": "a65002c871af5c3d4415524a813f55cda4e8c5d59fe8cebd5af16a84b48e80f3",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_525_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-doclayout-m.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-m.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 129694577,
+      "sha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.2",
+            3,
+            800,
+            800
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.2",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2349_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-doclayout-plus-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-plus-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 4905136,
+      "sha256": "5254cb338d5ffb0b54c6f95b527e6e7f0c8a0cb35919c4d6e420dcb913ba592f",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            480,
+            480
+          ],
+          "batchAxis": "static:1"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            1,
+            2
+          ],
+          "batchAxis": "static:1"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "TopK_477_o0__d0",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            1
+          ],
+          "firstAxis": "static:1"
+        }
+      ],
+      "dynamicInputBatch": false,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "static-batch-1",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-doclayout-s.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-s.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 730379948,
+      "sha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-formulanet-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 733525676,
+      "sha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-formulanet-plus-l.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-plus-l.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 592372919,
+      "sha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-formulanet-plus-m.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-plus-m.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 231878904,
+      "sha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-formulanet-plus-s.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-plus-s.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 231878904,
+      "sha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-formulanet-s.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-s.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 6783057,
+      "sha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            224,
+            224
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.0",
+            4
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-lcnet-x1-0-doc-ori.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-lcnet-x1-0-doc-ori.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 6772807,
+      "sha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            224,
+            224
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.0",
+            2
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "pp-lcnet-x1-0-table-cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\pp-lcnet-x1-0-table-cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 4819576,
+      "sha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "ConvTranspose_497_o0__d0",
+            "ConvTranspose_497_o0__d1",
+            "ConvTranspose_497_o0__d2",
+            "ConvTranspose_497_o0__d3"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "ppocrv4-mobile-seal-det.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\ppocrv4-mobile-seal-det.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 113443410,
+      "sha256": "f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "ConvTranspose_488_o0__d0",
+            "ConvTranspose_488_o0__d1",
+            "ConvTranspose_488_o0__d2",
+            "ConvTranspose_488_o0__d3"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "ppocrv4-server-seal-det.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\ppocrv4-server-seal-det.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 492034253,
+      "sha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.2",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.2",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2793_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "rt-detr-h-layout-17cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\rt-detr-h-layout-17cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 492005465,
+      "sha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.2",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.2",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.2",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2793_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "rt-detr-h-layout-3cls.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\rt-detr-h-layout-3cls.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 129311709,
+      "sha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.1",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.1",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2349_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "rt-detr-l-wired-cell-det.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\rt-detr-l-wired-cell-det.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 129311709,
+      "sha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "im_shape",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.1",
+            3,
+            640,
+            640
+          ],
+          "batchAxis": "dynamic"
+        },
+        {
+          "name": "scale_factor",
+          "shape": [
+            "DynamicDimension.1",
+            2
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "300*DynamicDimension.1",
+            6
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "Tile_2349_o0__d0"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "rt-detr-l-wireless-cell-det.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\rt-detr-l-wireless-cell-det.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743373,
+      "sha256": "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "slanext-wired.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\slanext-wired.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 367743373,
+      "sha256": "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            512,
+            512
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2",
+            8
+          ],
+          "firstAxis": "dynamic"
+        },
+        {
+          "name": "fetch_name_1",
+          "shape": [
+            "DynamicDimension.3",
+            "DynamicDimension.4",
+            50
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "slanext-wireless.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\slanext-wireless.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 1842024100,
+      "sha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "irVersion": 8,
+      "opset": 18,
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            192,
+            672
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "unimernet.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\unimernet.onnx"
+    },
+    {
+      "status": "parsed",
+      "fileSizeBytes": 31684150,
+      "sha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+      "irVersion": 8,
+      "opset": 17,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ],
+          "batchAxis": "dynamic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.3",
+            3,
+            "DynamicDimension.4",
+            "DynamicDimension.5"
+          ],
+          "firstAxis": "dynamic"
+        }
+      ],
+      "dynamicInputBatch": true,
+      "dynamicOutputFirstAxis": true,
+      "batchCapability": "dynamic-input-and-output-batch-axis",
+      "root": "E:\\Model\\PaddleDocument\\onnx",
+      "relativePath": "uvdoc.onnx",
+      "absolutePath": "E:\\Model\\PaddleDocument\\onnx\\uvdoc.onnx"
+    }
+  ],
+  "boundary": "Graph shape evidence only; no runtime, decoder, accuracy, throughput or backend support claim is implied."
+}

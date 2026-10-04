@@ -49,6 +49,12 @@ python -m pip install paddlepaddle paddle2onnx
 
 本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 隔离探针已确认 Vision/Embedding 可加载，但 Prefill/Decode 需要三维/四维辅助张量，当前 OpenCV DNN 适配器合同不支持，因此完整 OpenCV 自回归仍未支持。详见 [`chart2table-opencv-isolated-20260929.json`](../../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
 
+### 真实 ONNX 的 Batch 边界
+
+不要根据模型名称或 Profile 参数猜测官方图是否支持 Batch。使用 [`Audit-PaddleDocumentBatchShapes.py`](../../eng/models/paddle-document/scripts/Audit-PaddleDocumentBatchShapes.py) 对外部模型根目录做 protobuf 级审计后，当前 54 个本地 ONNX 文件中 53 个可解析、1 个零字节实验导出被保留为失败记录；其中 32 个图的输入第一轴是动态的，8 个标准 PP-Structure 图明确是静态 `batch=1`。动态输入/输出图包括 PP-DocLayout-L/Plus-L、PP-DocBlockLayout、RT-DETR 版面/单元格、公式、表格分类、印章、SLANeXt 和 UVDoc；PicoDet 与 PP-DocLayout-M/S 应走 Session 池或多页有界并发。完整逐文件输入/输出轴、SHA-256 和失败记录见[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.json)与[审计报告](../../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.md)。
+
+Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 为 `1`，只是序列长度或 KV 轴可以动态；自回归状态绑定到单张图，不能因为 KV 动态就把它标记成模型 Batch。动态轴也只表示可以尝试批量绑定，仍需按后端完成输入绑定、Decoder、内存和结果一致性验证；本审计不替代任何后端运行或精度证据。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：

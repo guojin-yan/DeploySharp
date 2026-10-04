@@ -71,6 +71,8 @@ PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有�
 
 UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `PaddingLayerImpl::forward` 抛出 `inputs[0].dims == 4`，矩阵标记为 `✗`。TensorRT 11 + DeploySharp Provider/decoder 已从同一 ONNX 构建并加载 engine，DisableTf32 对照输出 max/mean abs diff `0.0778809/0.00172731`，输出 `640x640x3`；该记录证明 TensorRT engine 可执行且存在有界数值差异，不代表像素等价或视觉质量通过。GPU trtexec mean/P95 `8.55564/9.9389 ms`。
 
+2026-10-05 对本地真实模型根目录完成了 [ONNX Batch 轴审计](../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.md)：53/54 图成功解析，1 个零字节 Chart2Table 实验文件保留为 `load-failed`；32 个图有动态输入第一轴，8 个标准图静态为 `batch=1`。动态图包括 PP-DocLayout-L/Plus-L、PP-DocBlockLayout、RT-DETR 版面/单元格、公式、分类、印章、SLANeXt 和 UVDoc；PicoDet、PP-DocLayout-M/S 需使用独立 Session 或页面并发。Chart2Table 所有生成图仍是请求 batch=1，动态的是序列/KV 轴。该审计只证明图级形状合同，不代表任何后端的真实 Batch 性能或 Decoder 通过；逐文件输入/输出轴和 SHA-256 见[机器可读记录](../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
