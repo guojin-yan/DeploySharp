@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-03T16:30:00Z",
+  "model": "v6/medium",
+  "device": "cpu",
+  "host": { "operatingSystem": "Microsoft Windows 10.0.26200", "architecture": "X64", "processorCount": 16, "machine": "JYPPX" },
+  "modelSha256": {
+    "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba"
+  },
+  "sourceSelections": [
+    { "name": "sample-003", "images": 24, "manifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e", "selectedManifestSha256": "2c3933fbd5f29c2d4054357518feae96eb1bedd4b009333e105bfeb267159316" },
+    { "name": "sample-002", "images": 10, "manifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7", "selectedManifestSha256": "5f334b20afbdc9303cbb9426867fa3087c19bb45f78c889d612b4d2ae10512c" }
+  ],
+  "protocol": { "pipeline": "det-crop-rec-merge", "warmup": 1, "iterations": 1, "batchSize": 16, "opencvBatchSize": 1, "inferenceChannels": 1, "overflowMode": "SlidingWindow", "windowOverlap": 0.2, "maximumWindowsPerRegion": 32, "maximumRegions": 1024, "maximumWidth": 320, "pages": 34, "groundTruthRegions": 1557, "groundTruthCharacters": 11979, "sourceWorkingTreeDirty": true, "benchmarkAssemblySha256": "dcd8bd822201b454713ec7534e717c7275378596cbf2cf09e3e64d001eb2dcf3" },
+  "backends": {
+    "onnxruntime": {
+      "completedPages": 34, "failures": 0, "emptyOutputs": 0,
+      "detection": { "tp": 646, "fp": 722, "fn": 911, "precision": 0.4722222222222222, "recall": 0.41490044958253053, "f1": 0.4417094017094017 },
+      "matchedRegion": { "regions": 646, "exactMatches": 319, "cer": 0.13040103492884864, "wer": 0.3562874251497006, "editDistance": 1008, "referenceCharacters": 7730, "referenceWords": 1336 },
+      "endToEnd": { "correctRegions": 319, "groundTruthRegions": 1557, "cer": 0.8055764254111362, "wer": 1.054766734279919, "editDistance": 9650, "referenceCharacters": 11979, "referenceWords": 2465 },
+      "latencyMs": { "detP50": 599.2, "detP95": 882.764, "recP50": 967.851, "recP95": 2850.165, "totalP50": 1687.398, "totalP95": 3572.892 }
+    },
+    "openvino": {
+      "completedPages": 34, "failures": 0, "emptyOutputs": 0,
+      "detection": { "tp": 646, "fp": 722, "fn": 911, "precision": 0.4722222222222222, "recall": 0.41490044958253053, "f1": 0.4417094017094017 },
+      "matchedRegion": { "regions": 646, "exactMatches": 319, "cer": 0.13040103492884864, "wer": 0.3562874251497006, "editDistance": 1008, "referenceCharacters": 7730, "referenceWords": 1336 },
+      "endToEnd": { "correctRegions": 319, "groundTruthRegions": 1557, "cer": 0.8055764254111362, "wer": 1.054766734279919, "editDistance": 9650, "referenceCharacters": 11979, "referenceWords": 2465 },
+      "latencyMs": { "detP50": 389.235, "detP95": 623.399, "recP50": 647.829, "recP95": 1903.573, "totalP50": 1131.568, "totalP95": 2255.657 }
+    },
+    "opencv-dnn": {
+      "completedPages": 34, "failures": 0, "emptyOutputs": 0,
+      "detection": { "tp": 646, "fp": 722, "fn": 911, "precision": 0.4722222222222222, "recall": 0.41490044958253053, "f1": 0.4417094017094017 },
+      "matchedRegion": { "regions": 646, "exactMatches": 331, "cer": 0.12846054333764553, "wer": 0.33907185628742514, "editDistance": 993, "referenceCharacters": 7730, "referenceWords": 1336 },
+      "endToEnd": { "correctRegions": 331, "groundTruthRegions": 1557, "cer": 0.8008180983387595, "wer": 1.0434077079107504, "editDistance": 9593, "referenceCharacters": 11979, "referenceWords": 2465 },
+      "latencyMs": { "detP50": 1654.112, "detP95": 2438.443, "recP50": 7532.727, "recP95": 21686.309, "totalP50": 9646.348, "totalP95": 24180.497 }
+    }
+  },
+  "crossBackend": {
+    "ortVsOpenVino": { "pageTextSequenceMatches": 34, "pageTextSequenceTotal": 34, "regionCountMatches": 34, "maximumPolygonAbsoluteDifference": 0.0, "maximumConfidenceAbsoluteDifference": 0.0000257 },
+    "ortVsOpenCvDnn": { "pageTextSequenceMatches": 11, "pageTextSequenceTotal": 34, "regionCountMatches": 34, "correspondingRegions": 1368, "regionTextMismatches": 178, "maximumPolygonAbsoluteDifference": 0.02765, "maximumConfidenceAbsoluteDifference": 0.59039062 }
+  },
+  "longText": { "ge32": { "regions": 42, "characters": 2378, "endToEndEdits": 473, "matchedRegions": 37 }, "ge128": { "regions": 4, "characters": 520, "endToEndEdits": 79, "matchedRegions": 4 }, "ge3200": { "regions": 0, "characters": 0, "endToEndEdits": 0, "matchedRegions": 0 } },
+  "limits": [
+    "The two fixed selections contain 34 HierText pages and are smoke evidence pending source-specific redistribution review.",
+    "The aggregate is not a leaderboard or release-accuracy score; the detection recall and CER/WER reflect this exact model and selection.",
+    "One measured iteration per page does not satisfy the formal 5-warmup/50-iteration performance protocol.",
+    "OpenCV DNN uses batch 1 because the current importer contract is static; its higher recognition latency is an observed backend boundary, not a quality failure.",
+    "No natural line reaches 3,200 characters, so the A2 natural-long-text gate remains open.",
+    "Raw images, annotations and predictions remain outside the repository and Release."
+  ]
+}
