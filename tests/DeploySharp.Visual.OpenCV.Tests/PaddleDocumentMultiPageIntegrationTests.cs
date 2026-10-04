@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -118,6 +119,14 @@ public sealed class PaddleDocumentMultiPageIntegrationTests
             sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
             backend = "onnxruntime-cpu",
             device = "cpu",
+            environment = new
+            {
+                machine = Environment.MachineName,
+                operatingSystem = RuntimeInformation.OSDescription,
+                runtime = RuntimeInformation.FrameworkDescription,
+                processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                processorCount = Environment.ProcessorCount
+            },
             input = new { path = ImagePath, sha256 = sourceSha, pageCount = concurrentPages.Count, sourceSize = new { width = 810, height = 1080 } },
             execution = new
             {
