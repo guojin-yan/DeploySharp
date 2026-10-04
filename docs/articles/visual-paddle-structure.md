@@ -61,6 +61,8 @@ Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 
 
 同一协议还在架构不同的官方 `RT-DETR-H_layout_3cls` 图上通过：ORT CPU、OpenVINO CPU 均完成双行输入、几何辅助绑定和 `bbox_num` 扁平输出切分，两行各返回 300 个候选且结果逐项一致。详见 [RT-DETR 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.md)。这仍只覆盖精确模型/后端/主机，不扩展为 TensorRT、OpenCV 或所有 RT-DETR 变体支持。
 
+SLANeXt wired 也完成了真实动态 Batch 解码：ORT CPU 使用官方 `slanext-wired.onnx`，OpenVINO CPU 使用独立 SHA-256 的 Loop 兼容图；两边均绑定 `[2,3,512,512]` 的两行相同表格，Decoder 均返回 24 个结构 token、13 个 cell，HTML 哈希完全一致。该证据只覆盖这两个精确工件和单机双行执行，不代表原始 SLANeXt 图可以直接导入 OpenVINO，也不代表表格准确率、吞吐或 TensorRT/OpenCV 支持。详见 [SLANeXt 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md) 及 [JSON 记录](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino.json)。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using JYPPX.DeploySharp;
@@ -27,6 +28,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
     {
         private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
         private const string ImagePath = @"E:\Data\image\bus.jpg";
+        private const string TableImagePath = @"E:\Model\PaddleDocument\validation\table_recognition.jpg";
+        private const string SlanextOpenVinoRoot = @"E:\Model\PaddleDocument\onnx-normalized-rerun-20260929";
 
         public TestContext TestContext { get; set; } = null!;
 
@@ -134,6 +137,39 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 scope = "Official RT-DETR-H three-class layout dynamic Paddle NMS export with two identical source rows.",
                 results = rows,
                 boundary = "True model batch execution, auxiliary geometry binding and flattened bbox_num row partitioning on one Windows host; not a quality score, throughput benchmark or cross-device claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchSlaNextRunsOnOrtAndOpenVino()
+        {
+            RequireExternal();
+            RequireFile(TableImagePath, "dynamic-batch table image");
+            var cases = new[]
+            {
+                new TableBackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId, Path.Combine(ModelRoot, "slanext-wired.onnx")),
+                new TableBackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId, Path.Combine(SlanextOpenVinoRoot, "slanext-wired-openvino-compat.onnx"))
+            };
+            var rows = new List<object>();
+            foreach (TableBackendCase backend in cases) rows.Add(RunSlaNextCase(backend));
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_SLANEXT_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-slanext-dynamic-batch-ort-openvino.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                input = new { file = TableImagePath, sha256 = FileSha256(TableImagePath) },
+                batch = 2,
+                model = "paddle-table/slanext-wired",
+                scope = "Official SLANeXt dynamic table-structure export on ORT and the separately hashed OpenVINO-compatible graph.",
+                results = rows,
+                boundary = "True model batch execution and table decoder row isolation on one Windows host; OpenVINO uses the compatibility graph because the original graph remains Loop-importer blocked; not a table accuracy score, throughput benchmark or cross-device claim."
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(2, rows.Count);
@@ -327,6 +363,80 @@ namespace DeploySharp.Visual.OpenCV.Tests
             public string FileName { get; }
             public VisualTaskId Task { get; }
             public IReadOnlyList<string> Labels { get; }
+        }
+
+        private sealed class TableBackendCase
+        {
+            public TableBackendCase(string name, BackendId id, string modelPath) { Name = name; Id = id; ModelPath = modelPath; }
+            public string Name { get; }
+            public BackendId Id { get; }
+            public string ModelPath { get; }
+        }
+
+        private static object RunSlaNextCase(TableBackendCase backend)
+        {
+            RequireFile(backend.ModelPath, backend.Name + " SLANeXt model");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateTableStructure(descriptor, modelSize: new VisualSize(512, 512), maximumBatch: 2);
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0]);
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[1].ShapePattern[0]);
+
+            var factory = new OpenCvVisualInputFactory();
+            using PreparedVisualInput probe = factory.CreateFromFile(TableImagePath, profile.VisualProfile, inputId: "slanext-dynamic-batch-probe");
+            var fullSource = new RectangleRoiGeometry(new RectangleF(0, 0, probe.SourceSize.Width, probe.SourceSize.Height));
+            using PreparedVisualInput input = factory.CreateRoiBatch(
+                OpenCvImageSource.FromFile(TableImagePath),
+                new IVisualRoiGeometry[] { fullSource, fullSource },
+                profile.VisualProfile.Input.Name,
+                profile.VisualProfile.Preprocessing!.ToOpenCvOptions(),
+                inputId: "slanext-dynamic-batch-rows",
+                cancellationToken: CancellationToken.None);
+            Assert.AreEqual(2, input.BatchSize);
+            Assert.AreEqual(2L, input.Tensor.Shape[0]);
+
+            using var registry = new BackendRegistry();
+            BackendRequest request;
+            if (backend.Id == OnnxRuntimeBackendProvider.BackendId)
+            {
+                registry.UseOnnxRuntime();
+                request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            }
+            else
+            {
+                registry.UseOpenVino();
+                request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+            }
+
+            ModelArtifact artifact = backend.Id == OpenVinoBackendProvider.BackendId
+                ? profile.CreateArtifactWithSha256(backend.ModelPath, FileSha256(backend.ModelPath), backend.Id)
+                : profile.CreateArtifact(backend.ModelPath, backend.Id);
+            using IInferenceSession session = registry.CreateSession(artifact, request);
+            InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+            var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentTableBatchResult
+                ?? throw new AssertFailedException(backend.Name + " did not return a PaddleDocumentTableBatchResult.");
+            Assert.AreEqual(2, decoded.Count);
+            Assert.IsTrue(decoded[0].Tokens.Count > 10, backend.Name + " returned an empty first table structure.");
+            Assert.AreEqual(decoded[0].Tokens.Count, decoded[1].Tokens.Count, backend.Name + " changed token count between identical batch rows.");
+            Assert.AreEqual(decoded[0].Markup, decoded[1].Markup, backend.Name + " changed HTML between identical batch rows.");
+            CollectionAssert.AreEqual(decoded[0].Tokens.Select(value => value.Index).ToArray(), decoded[1].Tokens.Select(value => value.Index).ToArray());
+
+            Console.WriteLine("PADDLE_DOCUMENT_SLANEXT_DYNAMIC_BATCH backend=" + backend.Name + ";batch=" + input.BatchSize + ";tokens=" + decoded[0].Tokens.Count + ";cells=" + decoded[0].Regions.Count);
+            return new
+            {
+                backend = backend.Name,
+                model = descriptor.ModelId,
+                modelPath = backend.ModelPath,
+                modelSha256 = FileSha256(backend.ModelPath),
+                inputShape = input.Tensor.Shape.ToString(),
+                inputBatch = input.BatchSize,
+                outputNames = outputs.Select(value => value.Name).ToArray(),
+                resultCount = decoded.Count,
+                tokenCounts = decoded.Items.Select(value => value.Tokens.Count).ToArray(),
+                cellCounts = decoded.Items.Select(value => value.Regions.Count).ToArray(),
+                markupSha256 = decoded.Items.Select(value => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value.Markup))).ToLowerInvariant()).ToArray(),
+                status = "passed"
+            };
         }
 
         private static void RequireFile(string path, string description)

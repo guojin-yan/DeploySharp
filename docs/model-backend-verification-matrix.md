@@ -79,6 +79,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 跨架构复核还覆盖官方 `RT-DETR-H_layout_3cls` 动态 NMS 图：两个相同输入在 ORT CPU/OpenVINO CPU 上均完成 `[2,3,640,640]` 与几何辅助绑定，`bbox_num` 切分后两行各 300 个候选且标签/几何一致。机器可读记录见 [`paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.json`](../eng/models/paddle-document/verification/paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.json)，复现协议见对应 [Markdown 报告](../eng/models/paddle-document/verification/paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.md)。
 
+随后对 `paddle-table/slanext-wired` 完成了真正动态 Batch 表格解码：ORT CPU 使用官方图，OpenVINO CPU 使用独立 SHA-256 的 Loop 兼容图；两行相同输入均为 `[2,3,512,512]`，两后端各返回 24 个 token、13 个 cell，HTML 哈希一致。该结果只覆盖精确工件的输入绑定和 Decoder 行隔离，不改变原始 SLANeXt/OpenVINO 的 `✗` 与派生兼容图的 `✓**` 语义，也不构成表格准确率或性能结论。详见 [`paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md`](../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md) 和 [JSON](../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
