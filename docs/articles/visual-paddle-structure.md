@@ -238,7 +238,7 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 `maxDegreeOfParallelism` 是硬上限；调用方必须确认 stage 自身及其 native Session 支持并发。若不能确认，应在该方法外创建多个独立 Pipeline 并自行分片调度。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
 
-真实模型证据见[两页 ORT CPU 有界并发记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-20261005.md)：方向→版面两阶段在同一 `bus.jpg` 的两个页对象上运行，串行墙钟为 `882.267 ms`，页面并发上限为 `2` 时墙钟为 `791.9943 ms`。进一步的[5 次预热/50 次测量记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-benchmark-20261005.md)给出串行 P50/P95 `841.0031/918.2798 ms`、并发 P50/P95 `708.4469/873.7787 ms`；[OpenVINO CPU 单次记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-20261005.md)给出串行/并发墙钟 `898.9205/644.0613 ms`。这些结果只证明页面顺序、源 SHA、区域数量和当前主机上的执行行为；它们不是模型 Batch、质量结论或跨设备性能承诺。OpenVINO 重复 5/50、TensorRT 多页并发仍需单独验证。
+真实模型证据见[两页 ORT CPU 有界并发记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-20261005.md)：方向→版面两阶段在同一 `bus.jpg` 的两个页对象上运行，串行墙钟为 `882.267 ms`，页面并发上限为 `2` 时墙钟为 `791.9943 ms`。进一步的[5 次预热/50 次测量记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-benchmark-20261005.md)给出串行 P50/P95 `841.0031/918.2798 ms`、并发 P50/P95 `708.4469/873.7787 ms`；[OpenVINO CPU 单次记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-20261005.md)给出串行/并发墙钟 `898.9205/644.0613 ms`，[OpenVINO 5/50 记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-benchmark-20261005.md)给出串行 P50/P95 `563.6314/647.9142 ms`、并发 P50/P95 `631.2580/664.9269 ms`，说明该主机上页面并发反而变慢。结果只证明页面顺序、源 SHA、区域数量和当前主机上的执行行为；它们不是模型 Batch、质量结论或跨设备性能承诺。TensorRT 多页并发仍需单独验证。
 
 ### 版面区域 → OCR
 

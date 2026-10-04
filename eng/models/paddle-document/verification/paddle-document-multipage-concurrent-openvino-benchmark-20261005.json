@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-04T17:11:22.7427895\u002B00:00",
+  "sourceRevision": "28c1f4751264500954ef63aa129380e2eb869ea6",
+  "backend": "openvino-cpu",
+  "device": "CPU",
+  "environment": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "processArchitecture": "X64",
+    "processorCount": 16
+  },
+  "input": {
+    "path": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "pageCount": 2,
+    "sourceSize": {
+      "width": 810,
+      "height": 1080
+    }
+  },
+  "execution": {
+    "backendId": "openvino",
+    "sequentialMethod": "PaddleDocumentPipeline.RunManyAsync",
+    "concurrentMethod": "PaddleDocumentPipeline.RunManyConcurrentAsync",
+    "maxDegreeOfParallelism": 2,
+    "sessionMaxConcurrency": 2,
+    "sequentialWallElapsedMs": 820.4169,
+    "sequentialPageElapsedSumMs": 818.3265,
+    "concurrentElapsedMs": 725.1321,
+    "benchmark": {
+      "warmupCount": 5,
+      "measurementCount": 50,
+      "sequential": {
+        "samplesMs": [
+          576.1655,
+          570.4724,
+          552.9496,
+          548.9957,
+          570.0244,
+          647.8293,
+          635.6683,
+          554.2938,
+          573.3472,
+          596.6276,
+          558.4171,
+          552.1297,
+          553.82,
+          638.967,
+          554.9266,
+          553.731,
+          567.0983,
+          565.0245,
+          562.2383,
+          550.2398,
+          584.7981,
+          634.8165,
+          555.7143,
+          557.0655,
+          555.0186,
+          551.7479,
+          549.6933,
+          557.8411,
+          591.8377,
+          617.3138,
+          620.1119,
+          647.9836,
+          596.8371,
+          560.6543,
+          614.2451,
+          559.68,
+          605.0474,
+          556.3023,
+          557.4019,
+          584.0269,
+          557.5124,
+          560.7457,
+          590.3795,
+          613.5112,
+          582.2831,
+          554.1851,
+          557.4784,
+          550.1265,
+          676.5299,
+          656.1028
+        ],
+        "minMs": 548.9957,
+        "maxMs": 676.5299,
+        "p50Ms": 563.6314,
+        "p95Ms": 647.914165
+      },
+      "concurrent": {
+        "samplesMs": [
+          654.2819,
+          614.4858,
+          672.259,
+          624.3043,
+          617.9508,
+          623.9138,
+          639.9022,
+          645.3007,
+          624.2145,
+          648.4833,
+          621.6087,
+          619.1529,
+          630.0497,
+          645.0941,
+          604.663,
+          630.7212,
+          666.2259,
+          641.2322,
+          612.1839,
+          627.0066,
+          626.5105,
+          642.6855,
+          663.3393,
+          683.0532,
+          642.2899,
+          640.0196,
+          649.2177,
+          653.5253,
+          603.9981,
+          612.4257,
+          647.2724,
+          620.1174,
+          618.8862,
+          610.8128,
+          639.1309,
+          652.806,
+          616.6596,
+          662.8509,
+          603.1573,
+          635.364,
+          629.1646,
+          637.5272,
+          616.9496,
+          620.3829,
+          645.032,
+          636.453,
+          613.5485,
+          639.1148,
+          630.043,
+          631.7948
+        ],
+        "minMs": 603.1573,
+        "maxMs": 683.0532,
+        "p50Ms": 631.258,
+        "p95Ms": 664.92693
+      }
+    }
+  },
+  "models": {
+    "orientation": {
+      "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "path": "E:\\Model\\PaddleDocument\\onnx\\pp-lcnet-x1-0-doc-ori.onnx",
+      "sha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0"
+    },
+    "layout": {
+      "modelId": "paddle-doc/pp-doclayout-l",
+      "path": "E:\\Model\\PaddleDocument\\onnx\\pp-doclayout-l.onnx",
+      "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9"
+    }
+  },
+  "pages": [
+    {
+      "inputIndex": 0,
+      "pageIndex": 0,
+      "inputSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+      "orientation": "0_degree",
+      "layoutRegionCount": 300,
+      "elapsedMs": 723.7686,
+      "timings": {
+        "DocumentOrientation": 17.3454,
+        "LayoutDetection": 706.4169
+      }
+    },
+    {
+      "inputIndex": 1,
+      "pageIndex": 1,
+      "inputSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+      "orientation": "0_degree",
+      "layoutRegionCount": 300,
+      "elapsedMs": 704.5239,
+      "timings": {
+        "DocumentOrientation": 19.8637,
+        "LayoutDetection": 684.6501
+      }
+    }
+  ],
+  "boundary": "This is a real two-page openvino page-concurrency and provenance observation on one host; it is not a quality score, a tensor batch benchmark, or a cross-device performance claim."
+}
