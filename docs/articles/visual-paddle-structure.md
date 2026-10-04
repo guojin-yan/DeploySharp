@@ -152,7 +152,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 该案例验证的是可运行的方向→版面任务链和结果来源，不代表版面区域已经与人工标注集完成精度评测，也不自动包含版面区域内的 OCR、表格或公式任务。后续阶段应从 `context.GetRegions()` 显式接收区域并创建局部输入，再将局部坐标映射回页面坐标。
 
-另外，`PaddleDocumentFunsdLayoutEvidenceTests` 在三个真实 FUNSD 表单页上用 ORT/OpenVINO 分别运行 `pp-doclayout-l`，两后端均得到 30/25/19 个区域（阈值 0.3）。该记录只证明版面模型的跨后端执行和 typed region 合同；没有对齐的 23 类版面真值，因此不被解释为版面准确率或阅读顺序通过。详见 [`funsd-doclayout-l-multibackend-20260929.json`](../../eng/models/paddle-ocr/verification/funsd-doclayout-l-multibackend-20260929.json)。
+另外，`PaddleDocumentFunsdLayoutEvidenceTests` 默认仍在三个真实 FUNSD 表单页上运行；设置 `DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT_MAX_PAGES=50` 后，可对本地 FUNSD 测试集的 50 页执行同一合同。2026-10-04 的 ORT/OpenVINO 扩展均完成 `50/50` 页、共 1332 个区域，检测数量和标签逐页一致，坐标/尺寸/score 最大绝对差约 `4.6e-4`；两后端只有 `5/50` 页天然按左上顺序输出，因此仍需显式 reading-order policy。该记录只证明版面模型的跨后端执行和 typed region 合同；FUNSD 是词/实体标注，没有对齐的 23 类版面真值，因此不被解释为版面准确率或阅读顺序通过。详见 [`funsd-doclayout-l-50page-multibackend-20261004.md`](../../eng/models/paddle-document/verification/funsd-doclayout-l-50page-multibackend-20261004.md) 及两份原始 JSON。
 
 如果阶段已经由 `VisualPipeline` 管理，Visual 包还提供
 `PaddleDocumentVisualPipelineStage` 适配器。它把“准备 `PreparedVisualInput` → 调用所选后端 →

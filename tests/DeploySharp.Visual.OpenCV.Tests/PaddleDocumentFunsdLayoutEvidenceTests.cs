@@ -24,7 +24,7 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 public sealed class PaddleDocumentFunsdLayoutEvidenceTests
 {
     private const string ModelPath = @"E:\Model\PaddleDocument\onnx\pp-doclayout-l.onnx";
-    private static readonly string[] Images =
+    private static readonly string[] DefaultImages =
     {
         @"F:\OCRBenchmarkTesting\data\images\funsd\test\82504862.png",
         @"F:\OCRBenchmarkTesting\data\images\funsd\test\82562350.png",
@@ -42,7 +42,8 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT=1 to run the real FUNSD layout evidence.");
         if (!File.Exists(ModelPath)) Assert.Inconclusive("Missing PP-DocLayout-L model: " + ModelPath);
-        if (Images.Any(path => !File.Exists(path))) Assert.Inconclusive("A FUNSD page is missing.");
+        string[] images = SelectImages();
+        if (images.Length == 0 || images.Any(path => !File.Exists(path))) Assert.Inconclusive("A selected FUNSD page is missing.");
         string modelSha = Sha256(ModelPath);
         var descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
         var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(descriptor, PaddleDocumentProfiles.Layout23Labels,
@@ -62,7 +63,7 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
         BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
         using var pipeline = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(ModelPath, backendId), registry, request, VisualTaskId.LayoutDetection), request);
         var pages = new List<object>();
-        foreach (string image in Images)
+        foreach (string image in images)
         {
             using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromFile(new OpenCvVisualInputFactory(), image, profile, Sha256(image));
             VisualInferenceResult inference = pipeline.Run(input);
@@ -99,10 +100,21 @@ public sealed class PaddleDocumentFunsdLayoutEvidenceTests
             modelSha256 = modelSha,
             backend = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "openvino-cpu" : "onnxruntime-cpu",
             labels = PaddleDocumentProfiles.Layout23Labels,
+            selectedPageCount = images.Length,
+            selectionPolicy = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT_MAX_PAGES") ?? "default-three-pages",
             pages,
-            boundary = "Three real FUNSD pages; layout-model execution and deterministic regions only, not layout accuracy without aligned region labels."
+            boundary = "Real FUNSD pages; layout-model execution and deterministic regions only, not layout accuracy without aligned region labels."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
+    }
+
+    private static string[] SelectImages()
+    {
+        string? requested = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT_MAX_PAGES");
+        if (!int.TryParse(requested, out int maximum) || maximum <= 0) return DefaultImages;
+        string root = Path.GetDirectoryName(DefaultImages[0])!;
+        string[] all = Directory.Exists(root) ? Directory.GetFiles(root, "*.png").OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray() : Array.Empty<string>();
+        return all.Take(Math.Min(maximum, 50)).ToArray();
     }
 
     private static string Sha256(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
