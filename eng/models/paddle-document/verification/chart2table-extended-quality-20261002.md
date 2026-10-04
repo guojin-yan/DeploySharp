@@ -20,6 +20,12 @@ Machine-readable reports retain image/table source SHA-256, generated text SHA-2
 - [ORT report](chart2table-extended-quality-ort-20261002.json)
 - [OpenVINO report](chart2table-extended-quality-openvino-20261002.json)
 
+## 2026-10-04 ORT twelve-sample extension
+
+The same pinned ChartQA revision was reacquired with `CountPerGroup=4` and run on ONNX Runtime CPU with the same four-graph bundle. All `12/12` samples reached `EndOfSequence`; `9/12` had matching row/column dimensions, `3/12` matched the CSV-derived text exactly, and the aggregate cell match was `140/293` (`47.78%`). Total latency P50/P95 was `26.866/72.933 s`; the mean per-sample decode-step P50/P95 fields were `95.73/161.25 ms`. The expanded selection remains grouped qualitative evidence, not ChartQA split accuracy or a controlled benchmark.
+
+The machine-readable report records each image/table SHA, generated text SHA, token count, finish reason, stage timings and structure metrics: [ORT twelve-sample report](chart2table-extended-quality-ort-20261004.json). The corresponding OpenVINO twelve-sample attempt with a `1024` token limit was stopped after more than 13 minutes before a report was produced; the complete six-sample OpenVINO evidence above remains the canonical cross-backend quality record. A future larger run must use separate backend-specific report paths and an explicitly documented token budget.
+
 ## Reproduction
 
 Acquire the external cache (no model or dataset files are written to the repository):

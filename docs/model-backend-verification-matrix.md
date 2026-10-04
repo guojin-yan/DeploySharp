@@ -132,6 +132,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。该边界对应当前 JYPPX OpenCV C# `Mat` bridge 只暴露二维辅助分配/reshape，已由 fail-closed 合同测试固定。因此完整 OpenCV 自回归仍保持 `△`，不是四图 Bundle 的完整支持；详细记录见 [`chart2table-opencv-isolated-20260929.json`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
 
+2026-10-04 的 ChartQA 扩展又完成了 ORT CPU 12 图有界任务质量运行：`12/12` EOS、`9/12` 结构维度一致、`140/293` 单元格匹配；这只扩充质量诊断，不改变后端运行矩阵。报告见 [`chart2table-extended-quality-ort-20261004.json`](../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json)。同 token 上限的 OpenVINO 扩展未在限定时间内完成，矩阵继续以已有六图完整证据为准。
+
 ### PP-Chart2Table 四图生成 Bundle 验证
 
 验证复用了现有官方 checkpoint 和示例图片，没有重复下载。四张图分别是 Vision/Projector、动态 Token Embedding、固定 286-token 官方 Prompt Prefill（含 `lm_head` 和 KV）、单 token 动态 past Decode（含 `lm_head` 和 KV）。Tokenizer 直接读取官方 `qwen.tiktoken`、`tokenizer_config.json`、`added_tokens.json`；Prompt 为 286 token，含 256 个连续 `<imgpad>`。

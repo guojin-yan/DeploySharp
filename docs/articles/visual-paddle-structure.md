@@ -410,6 +410,8 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 为扩大任务级证据，新增了[六张官方 ChartQA `val` 图表的有界质量记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md)。样本来自固定 upstream revision，CSV 表格转换为期望管道表；ORT CPU 和 OpenVINO CPU 均为 `6/6` EOS，生成文本 SHA `6/6` 一致，复杂多列样本在两个后端暴露相同的列结构边界。该选择累计匹配 `44/116` 个单元格，只用于定位图表类型和结构问题，不能外推为 ChartQA split 准确率；图片和 CSV 保留在本地缓存，不进入仓库或 Release。
 
+2026-10-04 又按同一 revision 扩展了 12 张图的 ORT CPU 任务质量记录：`12/12` EOS、`9/12` 行列维度一致、`3/12` 文本精确匹配，累计单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 为 `26.866/72.933 s`。这是分组诊断证据，不是 ChartQA split accuracy 或受控性能基准，逐样本 SHA、阶段耗时和结构字段见 [ORT 12 图 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json)。同一 `1024` token 上限的 OpenVINO 扩展运行超过 13 分钟后停止且未形成报告，六图完整 OpenVINO 记录仍是当前跨后端质量基线。
+
 同一六图选择也完成了 TensorRT CUDA 复测：`6/6` EOS、`5/6` 结构维度一致、单元格匹配 `44/116`，总耗时 `1.18–13.25 s`，Decode P50/P95 `33.32–40.39 / 34.32–48.60 ms`。该结果使用未锁频的本机 RTX 3060 和既有四张 plan，只作为任务质量与阶段计时证据，不是 ChartQA split 准确率或受控性能基准。详见 [TensorRT 六图记录](../../eng/models/paddle-document/verification/chart2table-tensorrt-extended-quality-20261004.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-tensorrt-extended-quality-20261004.json)。
 
 文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-04 最近一次运行检查六份入口文档共 `149` 个本地链接，断链 `0`。
