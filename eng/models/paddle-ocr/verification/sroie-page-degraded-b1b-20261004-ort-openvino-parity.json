@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-full-page-degradation-parity-v1",
+  "left": {
+    "path": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\sroie-page-degraded-b1b-20261004-ort\\predictions.json",
+    "sha256": "042841ea0cfe4c9002c4c4c4a3680a4f83c42982c58decd468ff480bd945cb95",
+    "backend": "onnxruntime"
+  },
+  "right": {
+    "path": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\sroie-page-degraded-b1b-20261004-openvino\\predictions.json",
+    "sha256": "92a2a7bf62bf08c35d98e156a2b51bd525abcaf2da7950b12b0ffbe6e5d6999c",
+    "backend": "openvino"
+  },
+  "images": 60,
+  "statusMatches": 60,
+  "regionCountMatches": 60,
+  "textMismatchedImages": 0,
+  "textMismatches": 0,
+  "comparedRegions": 3169,
+  "maxPolygonAbsDiff": 0.0,
+  "maxConfidenceAbsDiff": 4.830000000000112e-05,
+  "conditions": {
+    "blur": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 498,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 4.830000000000112e-05
+    },
+    "jpeg": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 526,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 3.0840000000087464e-05
+    },
+    "low-contrast": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 538,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 3.089999999994486e-05
+    },
+    "noise": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 527,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 2.5399999999953238e-05
+    },
+    "normal": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 541,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 2.1900000000019126e-05
+    },
+    "shadow": {
+      "severity": "severe",
+      "images": 10,
+      "statusMatches": 10,
+      "regionCountMatches": 10,
+      "textMismatchedImages": 0,
+      "textMismatches": 0,
+      "comparedRegions": 539,
+      "maxPolygonAbsDiff": 0.0,
+      "maxConfidenceAbsDiff": 1.5839999999989196e-05
+    }
+  },
+  "interpretation": "Prediction contract comparison only. It does not establish accuracy or a production performance ranking."
+}

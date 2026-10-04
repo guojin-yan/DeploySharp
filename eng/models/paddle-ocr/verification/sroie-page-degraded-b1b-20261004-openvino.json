@@ -1,0 +1,780 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-full-page-degradation-summary-v1",
+  "sourceManifestSha256": "59db5f8b6a2d625cfad331c973e9d1bcd289cc096e65b793a60fd5db135be678",
+  "predictionsSha256": "92a2a7bf62bf08c35d98e156a2b51bd525abcaf2da7950b12b0ffbe6e5d6999c",
+  "evaluationSha256": "614d218bced27d11d336a7d7accaf17b3b6f41febe40d3c75ef31a0a4021f4f6",
+  "model": {
+    "name": "DeploySharp PaddleOCR",
+    "version": "v6/medium",
+    "detector_sha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "recognizer_sha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+    "classifier_sha256": null
+  },
+  "backend": "openvino",
+  "sourceRevision": "1d98546d98c2c9d7804acb9494df17f5ef5dc811",
+  "conditions": {
+    "blur": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 413,
+          "fp": 85,
+          "fn": 129,
+          "precision": 0.8293172690763052,
+          "recall": 0.7619926199261993,
+          "f1_hmean": 0.7942307692307693
+        },
+        "0.75": {
+          "tp": 193,
+          "fp": 305,
+          "fn": 349,
+          "precision": 0.38755020080321284,
+          "recall": 0.35608856088560886,
+          "f1_hmean": 0.3711538461538461
+        }
+      },
+      "recognition": {
+        "matched_regions": 413,
+        "exact_match_count": 44,
+        "exact_match_rate": 0.10653753026634383,
+        "cer": 0.5893784875889937,
+        "edit_distance": 3063,
+        "ground_truth_characters": 5197,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "long": {
+              "cer": 0.6182618261826183,
+              "exact_match_rate": 0.024242424242424242,
+              "instances": 165
+            },
+            "medium": {
+              "cer": 0.5091174325309993,
+              "exact_match_rate": 0.12299465240641712,
+              "instances": 187
+            },
+            "short": {
+              "cer": 0.6157894736842106,
+              "exact_match_rate": 0.2786885245901639,
+              "instances": 61
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.6592156862745098,
+              "exact_match_rate": 0.06077348066298342,
+              "instances": 181
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.5716410510659395,
+              "exact_match_rate": 0.03571428571428571,
+              "instances": 112
+            },
+            "punctuation": {
+              "cer": 2.1666666666666665,
+              "exact_match_rate": 0.0,
+              "instances": 2
+            },
+            "numeric": {
+              "cer": 0.34615384615384615,
+              "exact_match_rate": 0.2457627118644068,
+              "instances": 118
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 44,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.08118081180811808,
+        "end_to_end_cer": 0.7172613966194298,
+        "edit_distance": 4201,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1365.772,
+          "p95": 1835.7785999999996,
+          "mean": 1401.3703
+        },
+        "det": {
+          "count": 10,
+          "p50": 258.645,
+          "p95": 362.7219999999999,
+          "mean": 258.4646
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1074.1840000000002,
+          "p95": 1494.2216999999998,
+          "mean": 1111.7289
+        }
+      },
+      "severity": "severe"
+    },
+    "jpeg": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 479,
+          "fp": 47,
+          "fn": 63,
+          "precision": 0.9106463878326996,
+          "recall": 0.8837638376383764,
+          "f1_hmean": 0.8970037453183519
+        },
+        "0.75": {
+          "tp": 268,
+          "fp": 258,
+          "fn": 274,
+          "precision": 0.5095057034220533,
+          "recall": 0.4944649446494465,
+          "f1_hmean": 0.50187265917603
+        }
+      },
+      "recognition": {
+        "matched_regions": 479,
+        "exact_match_count": 238,
+        "exact_match_rate": 0.4968684759916493,
+        "cer": 0.3422286332491886,
+        "edit_distance": 1898,
+        "ground_truth_characters": 5546,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "long": {
+              "cer": 0.37129654797499323,
+              "exact_match_rate": 0.30357142857142855,
+              "instances": 168
+            },
+            "medium": {
+              "cer": 0.29404228058936577,
+              "exact_match_rate": 0.5207373271889401,
+              "instances": 217
+            },
+            "short": {
+              "cer": 0.238562091503268,
+              "exact_match_rate": 0.7872340425531915,
+              "instances": 94
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.43943981831945494,
+              "exact_match_rate": 0.29207920792079206,
+              "instances": 202
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.32759445241511237,
+              "exact_match_rate": 0.37606837606837606,
+              "instances": 117
+            },
+            "punctuation": {
+              "cer": 1.8571428571428572,
+              "exact_match_rate": 0.3333333333333333,
+              "instances": 3
+            },
+            "numeric": {
+              "cer": 0.04838709677419355,
+              "exact_match_rate": 0.8535031847133758,
+              "instances": 157
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 238,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.43911439114391143,
+        "end_to_end_cer": 0.4205224517671163,
+        "edit_distance": 2463,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1385.4699999999998,
+          "p95": 1836.7046999999998,
+          "mean": 1425.9818
+        },
+        "det": {
+          "count": 10,
+          "p50": 244.151,
+          "p95": 366.02149999999995,
+          "mean": 252.9659
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1099.1345000000001,
+          "p95": 1539.67645,
+          "mean": 1142.1123
+        }
+      },
+      "severity": "severe"
+    },
+    "low-contrast": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 491,
+          "fp": 47,
+          "fn": 51,
+          "precision": 0.912639405204461,
+          "recall": 0.9059040590405905,
+          "f1_hmean": 0.9092592592592593
+        },
+        "0.75": {
+          "tp": 324,
+          "fp": 214,
+          "fn": 218,
+          "precision": 0.6022304832713755,
+          "recall": 0.5977859778597786,
+          "f1_hmean": 0.6000000000000001
+        }
+      },
+      "recognition": {
+        "matched_regions": 491,
+        "exact_match_count": 273,
+        "exact_match_rate": 0.5560081466395111,
+        "cer": 0.3238129239557301,
+        "edit_distance": 1814,
+        "ground_truth_characters": 5602,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "long": {
+              "cer": 0.35199782549605874,
+              "exact_match_rate": 0.35714285714285715,
+              "instances": 168
+            },
+            "medium": {
+              "cer": 0.270846394984326,
+              "exact_match_rate": 0.6081081081081081,
+              "instances": 222
+            },
+            "short": {
+              "cer": 0.2652439024390244,
+              "exact_match_rate": 0.7722772277227723,
+              "instances": 101
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.4263157894736842,
+              "exact_match_rate": 0.3592233009708738,
+              "instances": 206
+            },
+            "punctuation": {
+              "cer": 3.125,
+              "exact_match_rate": 0.25,
+              "instances": 4
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.29459588713534196,
+              "exact_match_rate": 0.4358974358974359,
+              "instances": 117
+            },
+            "numeric": {
+              "cer": 0.046263345195729534,
+              "exact_match_rate": 0.8963414634146342,
+              "instances": 164
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 273,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.503690036900369,
+        "end_to_end_cer": 0.3882533720334642,
+        "edit_distance": 2274,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1396.078,
+          "p95": 2255.5464499999994,
+          "mean": 1491.2504000000001
+        },
+        "det": {
+          "count": 10,
+          "p50": 255.11,
+          "p95": 380.74609999999996,
+          "mean": 256.49789999999996
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1103.231,
+          "p95": 1880.1541499999994,
+          "mean": 1204.5845
+        }
+      },
+      "severity": "severe"
+    },
+    "noise": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 477,
+          "fp": 50,
+          "fn": 65,
+          "precision": 0.905123339658444,
+          "recall": 0.8800738007380073,
+          "f1_hmean": 0.8924228250701589
+        },
+        "0.75": {
+          "tp": 287,
+          "fp": 240,
+          "fn": 255,
+          "precision": 0.5445920303605313,
+          "recall": 0.5295202952029521,
+          "f1_hmean": 0.5369504209541628
+        }
+      },
+      "recognition": {
+        "matched_regions": 477,
+        "exact_match_count": 223,
+        "exact_match_rate": 0.46750524109014674,
+        "cer": 0.3600217864923747,
+        "edit_distance": 1983,
+        "ground_truth_characters": 5508,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "long": {
+              "cer": 0.39162765078490774,
+              "exact_match_rate": 0.30120481927710846,
+              "instances": 166
+            },
+            "short": {
+              "cer": 0.24025974025974026,
+              "exact_match_rate": 0.7021276595744681,
+              "instances": 94
+            },
+            "medium": {
+              "cer": 0.3103887826641173,
+              "exact_match_rate": 0.4930875576036866,
+              "instances": 217
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.46755218216318783,
+              "exact_match_rate": 0.2926829268292683,
+              "instances": 205
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.33575229801644896,
+              "exact_match_rate": 0.35344827586206895,
+              "instances": 116
+            },
+            "numeric": {
+              "cer": 0.06592039800995025,
+              "exact_match_rate": 0.7922077922077922,
+              "instances": 154
+            },
+            "punctuation": {
+              "cer": 2.0,
+              "exact_match_rate": 0.0,
+              "instances": 2
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 223,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.4114391143911439,
+        "end_to_end_cer": 0.44288885094758407,
+        "edit_distance": 2594,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1556.1985,
+          "p95": 1862.48225,
+          "mean": 1464.6605
+        },
+        "det": {
+          "count": 10,
+          "p50": 256.679,
+          "p95": 404.77045,
+          "mean": 270.1009
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1175.2495,
+          "p95": 1574.8664999999999,
+          "mean": 1159.3829
+        }
+      },
+      "severity": "severe"
+    },
+    "normal": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 490,
+          "fp": 51,
+          "fn": 52,
+          "precision": 0.9057301293900185,
+          "recall": 0.9040590405904059,
+          "f1_hmean": 0.9048938134810711
+        },
+        "0.75": {
+          "tp": 323,
+          "fp": 218,
+          "fn": 219,
+          "precision": 0.5970425138632163,
+          "recall": 0.5959409594095941,
+          "f1_hmean": 0.5964912280701755
+        }
+      },
+      "recognition": {
+        "matched_regions": 490,
+        "exact_match_count": 274,
+        "exact_match_rate": 0.5591836734693878,
+        "cer": 0.3203517587939699,
+        "edit_distance": 1785,
+        "ground_truth_characters": 5572,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "medium": {
+              "cer": 0.270846394984326,
+              "exact_match_rate": 0.6171171171171171,
+              "instances": 222
+            },
+            "short": {
+              "cer": 0.26851851851851855,
+              "exact_match_rate": 0.75,
+              "instances": 100
+            },
+            "long": {
+              "cer": 0.34656446756090886,
+              "exact_match_rate": 0.36904761904761907,
+              "instances": 168
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.43054489639293936,
+              "exact_match_rate": 0.3627450980392157,
+              "instances": 204
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.2831524303916942,
+              "exact_match_rate": 0.4369747899159664,
+              "instances": 119
+            },
+            "punctuation": {
+              "cer": 3.125,
+              "exact_match_rate": 0.25,
+              "instances": 4
+            },
+            "numeric": {
+              "cer": 0.04529201430274136,
+              "exact_match_rate": 0.901840490797546,
+              "instances": 163
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 274,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.5055350553505535,
+        "end_to_end_cer": 0.3923510329520232,
+        "edit_distance": 2298,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1420.4630000000002,
+          "p95": 2002.61565,
+          "mean": 1527.8323
+        },
+        "det": {
+          "count": 10,
+          "p50": 258.4705,
+          "p95": 429.5265,
+          "mean": 279.2804
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1148.1455,
+          "p95": 1648.1642499999998,
+          "mean": 1217.2084
+        }
+      },
+      "severity": "severe"
+    },
+    "shadow": {
+      "images": 10,
+      "predictedImages": 10,
+      "statusCounts": {
+        "ok": 10
+      },
+      "detection": {
+        "0.5": {
+          "tp": 492,
+          "fp": 47,
+          "fn": 50,
+          "precision": 0.9128014842300557,
+          "recall": 0.9077490774907749,
+          "f1_hmean": 0.910268270120259
+        },
+        "0.75": {
+          "tp": 329,
+          "fp": 210,
+          "fn": 213,
+          "precision": 0.6103896103896104,
+          "recall": 0.6070110701107011,
+          "f1_hmean": 0.6086956521739131
+        }
+      },
+      "recognition": {
+        "matched_regions": 492,
+        "exact_match_count": 267,
+        "exact_match_rate": 0.5426829268292683,
+        "cer": 0.3160612535612536,
+        "edit_distance": 1775,
+        "ground_truth_characters": 5616,
+        "evaluation_context": "detected_crops",
+        "slices": {
+          "length": {
+            "medium": {
+              "cer": 0.2713661883967561,
+              "exact_match_rate": 0.6053811659192825,
+              "instances": 223
+            },
+            "long": {
+              "cer": 0.33858267716535434,
+              "exact_match_rate": 0.34911242603550297,
+              "instances": 169
+            },
+            "short": {
+              "cer": 0.2818181818181818,
+              "exact_match_rate": 0.73,
+              "instances": 100
+            }
+          },
+          "character_type": {
+            "Latin": {
+              "cer": 0.41944024205748864,
+              "exact_match_rate": 0.3526570048309179,
+              "instances": 207
+            },
+            "mixed_alphanumeric": {
+              "cer": 0.2831524303916942,
+              "exact_match_rate": 0.42857142857142855,
+              "instances": 119
+            },
+            "punctuation": {
+              "cer": 3.0,
+              "exact_match_rate": 0.4,
+              "instances": 5
+            },
+            "numeric": {
+              "cer": 0.0462085308056872,
+              "exact_match_rate": 0.8757763975155279,
+              "instances": 161
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "end_to_end_correct_regions": 267,
+        "ground_truth_regions": 542,
+        "end_to_end_accuracy": 0.492619926199262,
+        "end_to_end_cer": 0.3761311251493939,
+        "edit_distance": 2203,
+        "ground_truth_characters": 5857,
+        "iou_threshold": 0.5
+      },
+      "latencyMs": {
+        "total": {
+          "count": 10,
+          "p50": 1545.6295,
+          "p95": 1944.68685,
+          "mean": 1507.7565
+        },
+        "det": {
+          "count": 10,
+          "p50": 285.04200000000003,
+          "p95": 401.06865,
+          "mean": 277.6023
+        },
+        "rec": {
+          "count": 10,
+          "p50": 1174.1515,
+          "p95": 1577.72785,
+          "mean": 1198.1403
+        }
+      },
+      "severity": "severe"
+    }
+  },
+  "globalEvaluation": {
+    "images": {
+      "expected": 60,
+      "predicted": 60,
+      "errors": 0,
+      "empty_outputs": 0,
+      "missing_predictions": 0,
+      "unknown_predictions": 0,
+      "duplicate_prediction_ids": 0
+    },
+    "detection": {
+      "0.5": {
+        "tp": 2842,
+        "fp": 327,
+        "fn": 410,
+        "precision": 0.8968128747238877,
+        "recall": 0.8739237392373924,
+        "f1_hmean": 0.885220370658776
+      },
+      "0.75": {
+        "tp": 1724,
+        "fp": 1445,
+        "fn": 1528,
+        "precision": 0.544020195645314,
+        "recall": 0.5301353013530136,
+        "f1_hmean": 0.5369880080984271
+      }
+    },
+    "recognition": {
+      "matched_regions": 2842,
+      "exact_match_count": 1319,
+      "exact_match_rate": 0.464109781843772,
+      "cer": 0.37280953966284314,
+      "edit_distance": 12318,
+      "ground_truth_characters": 33041,
+      "evaluation_context": "detected_crops",
+      "slices": {
+        "length": {
+          "medium": {
+            "cer": 0.3166559070367979,
+            "exact_match_rate": 0.5046583850931677,
+            "instances": 1288
+          },
+          "short": {
+            "cer": 0.2973124300111982,
+            "exact_match_rate": 0.6963636363636364,
+            "instances": 550
+          },
+          "long": {
+            "cer": 0.40271390191703477,
+            "exact_match_rate": 0.2848605577689243,
+            "instances": 1004
+          }
+        },
+        "character_type": {
+          "Latin": {
+            "cer": 0.47270763169600305,
+            "exact_match_rate": 0.29128630705394193,
+            "instances": 1205
+          },
+          "mixed_alphanumeric": {
+            "cer": 0.3477287268074216,
+            "exact_match_rate": 0.34714285714285714,
+            "instances": 700
+          },
+          "punctuation": {
+            "cer": 2.675,
+            "exact_match_rate": 0.25,
+            "instances": 20
+          },
+          "numeric": {
+            "cer": 0.08907563025210084,
+            "exact_match_rate": 0.7851690294438386,
+            "instances": 917
+          }
+        }
+      },
+      "matched_region_wer": 0.5752580752580753,
+      "matched_reference_words": 6006,
+      "matched_word_edit_distance": 3455
+    },
+    "pipeline": {
+      "end_to_end_correct_regions": 1319,
+      "ground_truth_regions": 3252,
+      "end_to_end_accuracy": 0.40559655596555966,
+      "end_to_end_cer": 0.4562347049115019,
+      "edit_distance": 16033,
+      "ground_truth_characters": 35142,
+      "iou_threshold": 0.5,
+      "end_to_end_wer": 0.6789103152739516,
+      "reference_words": 6534,
+      "word_edit_distance": 4436
+    },
+    "latencyMs": {
+      "det": {
+        "count": 60,
+        "mean": 265.8186666666667,
+        "p50": 258.645,
+        "p90": 395.45140000000004,
+        "p95": 408.9482,
+        "p99": 427.52029999999996,
+        "throughput_per_second": 3.7619630424750707
+      },
+      "cls": {
+        "count": 60,
+        "mean": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0,
+        "throughput_per_second": null
+      },
+      "rec": {
+        "count": 60,
+        "mean": 1172.1928833333334,
+        "p50": 1116.261,
+        "p90": 1572.5737,
+        "p95": 1610.0665999999999,
+        "p99": 1879.8353899999984,
+        "throughput_per_second": 0.8531019205272147
+      },
+      "total": {
+        "count": 60,
+        "mean": 1469.8086333333333,
+        "p50": 1426.0085,
+        "p90": 1913.6295,
+        "p95": 1953.9106499999998,
+        "p99": 2249.6709699999983,
+        "throughput_per_second": 0.6803606791532657
+      }
+    }
+  },
+  "interpretation": "Controlled full-page degradation smoke. Conditions preserve SROIE polygons but do not represent a natural low-quality test split or a production accuracy guarantee."
+}
