@@ -130,5 +130,6 @@
       "characterCer": 10.479338842975206
     }
   ],
+  "tokenDiversityDiagnosticReport": "formula-formulanet-l-token-diversity-20261007.json",
   "boundary": "One FormulaNet-L export, four selected realFormula samples and ONNX Runtime CPU. The three added rows are a targeted stop-position probe, not an accuracy estimate. This localizes the exported graph iteration ceiling but does not establish why the checkpoint did not emit EOS for the original sample, general formula quality, or behavior on another backend."
 }

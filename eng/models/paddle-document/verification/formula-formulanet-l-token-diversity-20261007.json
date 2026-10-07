@@ -1,0 +1,394 @@
+{
+  "schemaVersion": "deploysharp-formula-token-diversity-diagnostic-v1",
+  "generatedAtUtc": "2026-10-07T12:47:13.695627+00:00",
+  "model": "paddle-formula/pp-formulanet-l",
+  "modelSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+  "startTokenId": 0,
+  "endTokenId": 2,
+  "inputs": [
+    {
+      "fileName": "formula-formulanet-l-eos-token-trace-rerun-20261007.json",
+      "sha256": "c7c97141814b2f7970a00b372d23c5b79af9fc5fa1ae3d9f9426a9686d66d9a4"
+    },
+    {
+      "fileName": "formula-formulanet-l-generation-limit-multisample-20261007.json",
+      "sha256": "44ecb94fc5036f6724cca5869523b50a31571d8f5dd31ac3b83c797389bb8bb3"
+    }
+  ],
+  "method": {
+    "windowTokenCount": 128,
+    "windowAlignment": "Non-overlapping windows over generated token IDs after BOS/EOS removal.",
+    "lowDiversityFlag": {
+      "uniqueTokenCountAtMost": 4,
+      "uniqueFourGramRatioAtMost": 0.1,
+      "meaning": "Exploratory descriptive threshold for this selected probe only; not a general detector, confidence score, or accuracy metric."
+    },
+    "exactSuffixPeriodMaximumPeriodTokens": 64
+  },
+  "sampleCount": 4,
+  "samples": [
+    {
+      "image": "211110912-2.png",
+      "imageSha256": "2ee24dde726358fe671c4360c5b28d7f22162f7acd0464789aec8c964a6618ad",
+      "inputTensorSha256": "2392730fc7f70da3d6270ac2744c55c6f20f56ddefe491c7ef2fbb735065ea75",
+      "rawOutputShape": [
+        1,
+        1025
+      ],
+      "rawTokenCount": 1025,
+      "rawTokenIdsSha256": "eaf2a6b6e21444152e9af16f5947537973509c649d6df1289fefeb2e0b74b118",
+      "bosCount": 1,
+      "eosCount": 0,
+      "rawEosIndex": -1,
+      "reachedEos": false,
+      "generatedTokenCountExcludingBosAndEos": 1024,
+      "decodedPredictionCharacters": 1759,
+      "referenceCharacters": 175,
+      "normalizedCharacterCer": 9.24,
+      "fullWindowsAnalyzed": 8,
+      "firstLowDiversityWindow": {
+        "startGeneratedTokenIndex": 256,
+        "tokenCount": 128,
+        "uniqueTokenCount": 3,
+        "fourGramPositions": 125,
+        "uniqueFourGramCount": 3,
+        "repeatedFourGramPositions": 122,
+        "uniqueFourGramRatio": 0.024,
+        "lowDiversityFlag": true
+      },
+      "exactRepeatedSuffixPeriod": null,
+      "windowSummaries": [
+        {
+          "startGeneratedTokenIndex": 0,
+          "tokenCount": 128,
+          "uniqueTokenCount": 30,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 98,
+          "repeatedFourGramPositions": 27,
+          "uniqueFourGramRatio": 0.784,
+          "lowDiversityFlag": false
+        },
+        {
+          "startGeneratedTokenIndex": 128,
+          "tokenCount": 128,
+          "uniqueTokenCount": 29,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 99,
+          "repeatedFourGramPositions": 26,
+          "uniqueFourGramRatio": 0.792,
+          "lowDiversityFlag": false
+        },
+        {
+          "startGeneratedTokenIndex": 256,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 384,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 512,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 640,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 768,
+          "tokenCount": 128,
+          "uniqueTokenCount": 4,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 7,
+          "repeatedFourGramPositions": 118,
+          "uniqueFourGramRatio": 0.056,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 896,
+          "tokenCount": 128,
+          "uniqueTokenCount": 8,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 28,
+          "repeatedFourGramPositions": 97,
+          "uniqueFourGramRatio": 0.224,
+          "lowDiversityFlag": false
+        }
+      ]
+    },
+    {
+      "image": "211200471-3.png",
+      "imageSha256": "8623020f892bcdd09c88bc465de63df132ff7fa1527a725c9221f505d732071a",
+      "inputTensorSha256": "b87c9e4deee49fe6bd6f73a2e640c030714efc2fcfbf2e03292b66fda601e747",
+      "rawOutputShape": [
+        1,
+        1024
+      ],
+      "rawTokenCount": 1024,
+      "rawTokenIdsSha256": "3ae06aabafe8cfc32716a613df0e320d4bdba7a1847e7a7dbf60ae2ebd8c8c4e",
+      "bosCount": 1,
+      "eosCount": 1,
+      "rawEosIndex": 1023,
+      "reachedEos": true,
+      "generatedTokenCountExcludingBosAndEos": 1022,
+      "decodedPredictionCharacters": 1351,
+      "referenceCharacters": 121,
+      "normalizedCharacterCer": 10.479338842975206,
+      "fullWindowsAnalyzed": 7,
+      "firstLowDiversityWindow": {
+        "startGeneratedTokenIndex": 256,
+        "tokenCount": 128,
+        "uniqueTokenCount": 3,
+        "fourGramPositions": 125,
+        "uniqueFourGramCount": 3,
+        "repeatedFourGramPositions": 122,
+        "uniqueFourGramRatio": 0.024,
+        "lowDiversityFlag": true
+      },
+      "exactRepeatedSuffixPeriod": null,
+      "windowSummaries": [
+        {
+          "startGeneratedTokenIndex": 0,
+          "tokenCount": 128,
+          "uniqueTokenCount": 23,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 76,
+          "repeatedFourGramPositions": 49,
+          "uniqueFourGramRatio": 0.608,
+          "lowDiversityFlag": false
+        },
+        {
+          "startGeneratedTokenIndex": 128,
+          "tokenCount": 128,
+          "uniqueTokenCount": 24,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 68,
+          "repeatedFourGramPositions": 57,
+          "uniqueFourGramRatio": 0.544,
+          "lowDiversityFlag": false
+        },
+        {
+          "startGeneratedTokenIndex": 256,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 384,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 512,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 640,
+          "tokenCount": 128,
+          "uniqueTokenCount": 4,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 7,
+          "repeatedFourGramPositions": 118,
+          "uniqueFourGramRatio": 0.056,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 768,
+          "tokenCount": 128,
+          "uniqueTokenCount": 8,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 27,
+          "repeatedFourGramPositions": 98,
+          "uniqueFourGramRatio": 0.216,
+          "lowDiversityFlag": false
+        }
+      ]
+    },
+    {
+      "image": "220800300-41.png",
+      "imageSha256": "75db6d66a1d403b6b9e47222c4b238e141daf8112957615f6b66fdc896d45088",
+      "inputTensorSha256": "24da5c346c71c49a4ce436e178a79828f621187cb7583ce7325e9364598c5a34",
+      "rawOutputShape": [
+        1,
+        1024
+      ],
+      "rawTokenCount": 1024,
+      "rawTokenIdsSha256": "dfa93329bc557d03e56a0e8c6b6981d474d2d520320c682db14662d5045ca25d",
+      "bosCount": 1,
+      "eosCount": 1,
+      "rawEosIndex": 1023,
+      "reachedEos": true,
+      "generatedTokenCountExcludingBosAndEos": 1022,
+      "decodedPredictionCharacters": 682,
+      "referenceCharacters": 70,
+      "normalizedCharacterCer": 9.714285714285714,
+      "fullWindowsAnalyzed": 7,
+      "firstLowDiversityWindow": {
+        "startGeneratedTokenIndex": 0,
+        "tokenCount": 128,
+        "uniqueTokenCount": 3,
+        "fourGramPositions": 125,
+        "uniqueFourGramCount": 3,
+        "repeatedFourGramPositions": 122,
+        "uniqueFourGramRatio": 0.024,
+        "lowDiversityFlag": true
+      },
+      "exactRepeatedSuffixPeriod": {
+        "periodTokenCount": 3,
+        "repeatedCycles": 340,
+        "coveredSuffixTokenCount": 1020,
+        "periodTokenIds": [
+          243,
+          82,
+          23
+        ]
+      },
+      "windowSummaries": [
+        {
+          "startGeneratedTokenIndex": 0,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 128,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 256,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 384,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 512,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 640,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        },
+        {
+          "startGeneratedTokenIndex": 768,
+          "tokenCount": 128,
+          "uniqueTokenCount": 3,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 3,
+          "repeatedFourGramPositions": 122,
+          "uniqueFourGramRatio": 0.024,
+          "lowDiversityFlag": true
+        }
+      ]
+    },
+    {
+      "image": "220808471-63.png",
+      "imageSha256": "f6af58ce95d3b20c257e3df8f8729a17356485523201bbd09416c54ead10ad66",
+      "inputTensorSha256": "7c3267decc669dccefdeb914a763dfe60b7610407bbb855f0068213283f2668c",
+      "rawOutputShape": [
+        1,
+        220
+      ],
+      "rawTokenCount": 220,
+      "rawTokenIdsSha256": "323b681e3798a80eccb2b93522ddf0bbd12e242adb462f21fa9cc3c6f449bd8f",
+      "bosCount": 1,
+      "eosCount": 1,
+      "rawEosIndex": 219,
+      "reachedEos": true,
+      "generatedTokenCountExcludingBosAndEos": 218,
+      "decodedPredictionCharacters": 197,
+      "referenceCharacters": 124,
+      "normalizedCharacterCer": 0.5887096774193549,
+      "fullWindowsAnalyzed": 1,
+      "firstLowDiversityWindow": null,
+      "exactRepeatedSuffixPeriod": null,
+      "windowSummaries": [
+        {
+          "startGeneratedTokenIndex": 0,
+          "tokenCount": 128,
+          "uniqueTokenCount": 25,
+          "fourGramPositions": 125,
+          "uniqueFourGramCount": 80,
+          "repeatedFourGramPositions": 45,
+          "uniqueFourGramRatio": 0.64,
+          "lowDiversityFlag": false
+        }
+      ]
+    }
+  ],
+  "boundary": "Purposively selected traces from one model/export and ORT CPU. These descriptive statistics do not establish causation, population prevalence, EOS correctness, formula accuracy, or other-backend behavior."
+}
