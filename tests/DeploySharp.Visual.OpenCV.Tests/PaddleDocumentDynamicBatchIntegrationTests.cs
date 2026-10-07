@@ -437,6 +437,59 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchAdditionalLayoutsRunOnOpenCvDnn()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch additional layout image");
+            var models = new[]
+            {
+                (ModelId: "paddle-doc/pp-doclayout-plus-l", FileName: "pp-doclayout-plus-l.onnx", Labels: PaddleDocumentProfiles.LayoutPlusLabels, Size: new VisualSize(800, 800)),
+                (ModelId: "paddle-doc/pp-docblocklayout", FileName: "pp-docblocklayout.onnx", Labels: PaddleDocumentProfiles.RegionLabels, Size: new VisualSize(640, 640))
+            };
+            var rows = new List<object>();
+            var backend = new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId);
+            foreach (var model in models)
+            {
+                rows.Add(RunNmsCaseWithOpenCvFailureEvidence(
+                    backend,
+                    model.ModelId,
+                    model.FileName,
+                    model.Labels,
+                    ImagePath,
+                    useDistinctHorizontalBands: true,
+                    modelSize: model.Size));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_ADDITIONAL_LAYOUT_OPENCV_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-additional-layout-dynamic-batch-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                environment = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    osArchitecture = RuntimeInformation.OSArchitecture.ToString(),
+                    processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    processorCount = Environment.ProcessorCount
+                },
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath), regions = "distinct top/bottom horizontal bands" },
+                batch = 2,
+                models = models.Select(value => new { id = value.ModelId, file = value.FileName, sha256 = FileSha256(Path.Combine(ModelRoot, value.FileName)), modelSize = new { width = value.Size.Width, height = value.Size.Height } }).ToArray(),
+                backend = "opencv-dnn-cpu",
+                scope = "Official PP-DocLayout_plus-L and PP-DocBlockLayout dynamic Paddle-NMS exports. OpenCV DNN CPU is tested with two distinct bus.jpg horizontal regions and per-row geometry; backend adapter failures are retained as exact unsupported evidence.",
+                results = rows,
+                boundary = "Only these exact dynamic batch=2 model/runtime combinations on this Windows host are measured. A failed OpenCV DNN importer/forward is recorded without root-cause investigation; successful execution would run the full region decoder. The crops have no layout ground truth and this is not an accuracy or throughput result. Existing single-image evidence and other model statuses are unchanged."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchSealDetectorsRunOnOrtOpenVinoAndOpenCvDnn()
         {
             RequireExternal();

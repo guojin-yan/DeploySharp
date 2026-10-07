@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T08:05:53.286092+00:00",
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "osArchitecture": "X64",
+    "processArchitecture": "X64",
+    "framework": ".NET 10.0.12",
+    "processorCount": 16
+  },
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "regions": "distinct top/bottom horizontal bands"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "id": "paddle-doc/pp-doclayout-plus-l",
+      "file": "pp-doclayout-plus-l.onnx",
+      "sha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "modelSize": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    {
+      "id": "paddle-doc/pp-docblocklayout",
+      "file": "pp-docblocklayout.onnx",
+      "sha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      }
+    }
+  ],
+  "backend": "opencv-dnn-cpu",
+  "scope": "Official PP-DocLayout_plus-L and PP-DocBlockLayout dynamic Paddle-NMS exports. OpenCV DNN CPU is tested with two distinct bus.jpg horizontal regions and per-row geometry; backend adapter failures are retained as exact unsupported evidence.",
+  "results": [
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "modelSha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/pp-docblocklayout",
+      "modelSha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    }
+  ],
+  "boundary": "Only these exact dynamic batch=2 model/runtime combinations on this Windows host are measured. A failed OpenCV DNN importer/forward is recorded without root-cause investigation; successful execution would run the full region decoder. The crops have no layout ground truth and this is not an accuracy or throughput result. Existing single-image evidence and other model statuses are unchanged."
+}
