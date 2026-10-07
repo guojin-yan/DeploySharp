@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "deploysharp-formulanet-l-generation-limit-probe-v1",
+  "generatedAtUtc": "2026-10-07T12:17:29+00:00",
+  "runtime": {
+    "python": "3.12.14",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.30.0",
+    "provider": "CPUExecutionProvider",
+    "logicalProcessorCount": 16
+  },
+  "model": {
+    "id": "paddle-formula/pp-formulanet-l",
+    "sha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3"
+  },
+  "officialPaddleProgram": {
+    "sha256": "67d356d53daa3df256acc3ac47c34b72399fe3df7debd6990be5129e3fd4b8f3",
+    "loop": {
+      "whileOperation": "1.while",
+      "conditionOperation": "1.logical_and",
+      "sequenceComparisonOperation": "1.less_than",
+      "boundAssignmentOperation": "1.assign_value_",
+      "loopConditionCombinesLengthBoundAndRuntimeStopPredicate": true,
+      "decodeIterationCap": 1024
+    }
+  },
+  "exportedOnnxLoop": {
+    "loopOperation": "Loop.0",
+    "conditionOperation": "And",
+    "conditionInputs": ["Less", "Not"],
+    "combinesLengthBoundAndRuntimeStopPredicate": true,
+    "lengthComparisonOperation": "Less",
+    "loopBoundInitializer": "auto.cast.1898",
+    "decodeIterationCap": 1024,
+    "positionalEmbeddingGather": {
+      "graph": "loop-body",
+      "node": "Gather.1",
+      "initializer": "m_bart_learned_positional_embedding_3.w_0",
+      "shape": [1026, 512]
+    },
+    "positionTableMaximumIndex": 1025,
+    "positionTableBoundaryInterpretation": "The 1,024 loop iterations may produce up to 1,024 tokens after the initial BOS; the no-EOS sample returns BOS plus all 1,024 generated positions (1,025 raw IDs). An EOS can still be emitted on the final in-range iteration."
+  },
+  "input": {
+    "sample": "211110912-2.png",
+    "sampleSha256": "2ee24dde726358fe671c4360c5b28d7f22162f7acd0464789aec8c964a6618ad",
+    "shape": [1, 1, 768, 768],
+    "tensorSha256": "2392730fc7f70da3d6270ac2744c55c6f20f56ddefe491c7ef2fbb735065ea75"
+  },
+  "probes": [
+    {
+      "requestedLoopCap": 1024,
+      "usesOriginalGraph": true,
+      "graphSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "status": "completed",
+      "rawShape": [1, 1025],
+      "rawTokenCount": 1025,
+      "bosCount": 1,
+      "padCount": 0,
+      "eosCount": 0,
+      "unkCount": 0,
+      "rawTokenIdsSha256": "eaf2a6b6e21444152e9af16f5947537973509c649d6df1289fefeb2e0b74b118"
+    },
+    {
+      "requestedLoopCap": 1025,
+      "usesOriginalGraph": false,
+      "graphSha256": "a4f5fb86e2bdf3f53370bf011128f09960bc64986e231ac74c46108890762519",
+      "status": "failed",
+      "errorType": "InvalidArgument",
+      "error": "Gather.1 index 1026 is out of bounds; valid range [-1026,1025]."
+    },
+    {
+      "requestedLoopCap": 2048,
+      "usesOriginalGraph": false,
+      "graphSha256": "cd77121fbe83df48cd0b89d91d110eb8f5fd8e12b15732542d5887652929487e",
+      "status": "failed",
+      "errorType": "InvalidArgument",
+      "error": "Gather.1 index 1026 is out of bounds; valid range [-1026,1025]."
+    }
+  ],
+  "additionalRealFormulaSamples": [
+    {
+      "image": "220808471-63.png",
+      "imageSha256": "f6af58ce95d3b20c257e3df8f8729a17356485523201bbd09416c54ead10ad66",
+      "inputTensorSha256": "7c3267decc669dccefdeb914a763dfe60b7610407bbb855f0068213283f2668c",
+      "rawShape": [1, 220],
+      "rawTokenCount": 220,
+      "rawTokensSha256": "323b681e3798a80eccb2b93522ddf0bbd12e242adb462f21fa9cc3c6f449bd8f",
+      "bosCount": 1,
+      "padCount": 0,
+      "eosCount": 1,
+      "eosIndex": 219,
+      "reachedEosBeforeLimit": true,
+      "decodedTokenCount": 109,
+      "predictionCharacters": 197,
+      "referenceCharacters": 124,
+      "characterCer": 0.5887096774193549
+    },
+    {
+      "image": "220800300-41.png",
+      "imageSha256": "75db6d66a1d403b6b9e47222c4b238e141daf8112957615f6b66fdc896d45088",
+      "inputTensorSha256": "24da5c346c71c49a4ce436e178a79828f621187cb7583ce7325e9364598c5a34",
+      "rawShape": [1, 1024],
+      "rawTokenCount": 1024,
+      "rawTokensSha256": "dfa93329bc557d03e56a0e8c6b6981d474d2d520320c682db14662d5045ca25d",
+      "bosCount": 1,
+      "padCount": 0,
+      "eosCount": 1,
+      "eosIndex": 1023,
+      "reachedEosAtLastOutputPosition": true,
+      "decodedTokenCount": 341,
+      "predictionCharacters": 682,
+      "referenceCharacters": 70,
+      "characterCer": 9.714285714285714
+    },
+    {
+      "image": "211200471-3.png",
+      "imageSha256": "8623020f892bcdd09c88bc465de63df132ff7fa1527a725c9221f505d732071a",
+      "inputTensorSha256": "b87c9e4deee49fe6bd6f73a2e640c030714efc2fcfbf2e03292b66fda601e747",
+      "rawShape": [1, 1024],
+      "rawTokenCount": 1024,
+      "rawTokensSha256": "3ae06aabafe8cfc32716a613df0e320d4bdba7a1847e7a7dbf60ae2ebd8c8c4e",
+      "bosCount": 1,
+      "padCount": 0,
+      "eosCount": 1,
+      "eosIndex": 1023,
+      "reachedEosAtLastOutputPosition": true,
+      "decodedTokenCount": 402,
+      "predictionCharacters": 1351,
+      "referenceCharacters": 121,
+      "characterCer": 10.479338842975206
+    }
+  ],
+  "boundary": "One FormulaNet-L export, four selected realFormula samples and ONNX Runtime CPU. The three added rows are a targeted stop-position probe, not an accuracy estimate. This localizes the exported graph iteration ceiling but does not establish why the checkpoint did not emit EOS for the original sample, general formula quality, or behavior on another backend."
+}
