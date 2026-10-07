@@ -73,7 +73,7 @@ UVDoc 也已完成双行动态 Batch：使用 `bus.jpg` 左/右两个不重叠 R
 
 PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 `demo_4.jpg` 与 `demo_5.jpg`，ORT CPU、OpenVINO CPU、OpenCV DNN CPU 均把两图组成 `[2,3,224,224]` 并得到 `[2,1,224,224]` 概率图，六个模型/后端组合都完成 Decoder 行映射。page index 与来源 SHA 保持输入顺序；不同后端 raw mask 摘要不一致，因此只证明执行和行隔离，不作为数值 parity。样本没有印章真值，mobile `0/0`、server `1/0` 区域数不能解释为检测准确性，也不是速度结论。见[三后端报告](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)。
 
-方向分类和表格分类也补上了跨三种 CPU 后端的不同输入 Batch 证据：在官方表格示例的顶部/底部区域上，两个 PP-LCNet 模型都返回两行，逐行 raw-logit SHA 不同；三个后端对同一区域观察到相同 top label。原始输出摘要不完全相同，且区域没有人工标签，因此这只关闭精确工件的动态 Batch 行隔离执行缺口，不构成数值 parity、分类准确率或速度声明。详情见[跨后端报告](../../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.md)。
+方向分类和表格分类也补上了跨三种 CPU 后端的不同输入 Batch 证据：在官方表格示例的顶部/底部区域上，两个 PP-LCNet 模型都返回两行，逐行 raw-logit SHA 不同；测试逐行比较原始输出与 ORT CPU，并要求最大绝对差不超过 `1e-4`。本机观测最大差小于 `1.2e-7`，三个后端对同一区域的 top label 一致。SHA 不同反映浮点值并非逐位相同；输入区域没有人工标签，因此数值 parity 不代表分类准确率或速度。详情见[跨后端报告](../../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.md)。
 
 ## 在代码中创建 Profile
 

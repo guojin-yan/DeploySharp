@@ -4,7 +4,7 @@
 
 This run exercises the official PP-LCNet document-orientation and table-classification ONNX exports with batch=2 on ONNX Runtime CPU, OpenVINO CPU and OpenCV DNN CPU. Unlike the earlier duplicate-row batch probe, this run uses two distinct non-overlapping horizontal regions from one source image and verifies that both prepared tensor rows and both raw output rows remain distinct before decoding.
 
-This is model execution and row-isolation evidence for these two exact artifacts. The image regions are execution probes, not annotated orientation or table-classification ground truth. The test does not assert cross-backend numerical parity, accuracy, throughput or cross-device behavior; raw output SHA values differ slightly across runtime implementations even when top labels agree.
+This is model execution, row-isolation and bounded raw-output numerical-parity evidence for these two exact artifacts. The image regions are execution probes, not annotated orientation or table-classification ground truth. Raw output SHA values differ across runtime implementations because the floating-point values are not bit-identical; the test compares each batch row against ONNX Runtime CPU and enforces a maximum absolute error of `1e-4`. This does not establish accuracy, throughput or cross-device behavior.
 
 ## Environment and inputs
 
@@ -27,18 +27,18 @@ This is model execution and row-isolation evidence for these two exact artifacts
 
 ## Results
 
-All six model/backend combinations passed the batch=2 input/output shape checks and full classification decoder. Within every combination, the two input-row SHA values and the two raw-logit-row SHA values differ, so the measured rows were not duplicates and the backend did not return a repeated raw output row. Top labels observed for each region also matched across these three backend runs.
+All six model/backend combinations passed the batch=2 input/output shape checks and full classification decoder. Within every combination, the two input-row SHA values and the two raw-logit-row SHA values differ, so the measured rows were not duplicates and the backend did not return a repeated raw output row. Top labels matched across all three backends, and every raw output row stayed within the explicit `1e-4` max-absolute-error tolerance against the ONNX Runtime CPU reference.
 
-| Backend | Model | Top labels (row 0 / row 1) | Scores (row 0 / row 1, rounded) | Distinct input/output rows |
+| Backend | Model | Top labels (row 0 / row 1) | Scores (row 0 / row 1) | Max abs diff vs ORT (row 0 / row 1) |
 |---|---|---|---|---|
-| ONNX Runtime CPU | Document orientation | `0_degree / 0_degree` | `0.9243435 / 0.92513317` | pass |
-| ONNX Runtime CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477461` | pass |
-| OpenVINO CPU | Document orientation | `0_degree / 0_degree` | `0.9243434 / 0.92513305` | pass |
-| OpenVINO CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477462` | pass |
-| OpenCV DNN CPU | Document orientation | `0_degree / 0_degree` | `0.9243435 / 0.92513317` | pass |
-| OpenCV DNN CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477461` | pass |
+| ONNX Runtime CPU | Document orientation | `0_degree / 0_degree` | `0.9243435 / 0.92513317` | `0 / 0` (reference) |
+| ONNX Runtime CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477461` | `0 / 0` (reference) |
+| OpenVINO CPU | Document orientation | `0_degree / 0_degree` | `0.9243434 / 0.92513305` | `1.1921e-7 / 1.1921e-7` |
+| OpenVINO CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477462` | `3.3528e-8 / 1.1921e-7` |
+| OpenCV DNN CPU | Document orientation | `0_degree / 0_degree` | `0.9243435 / 0.92513317` | `1.3039e-8 / 2.4214e-8` |
+| OpenCV DNN CPU | Table classification | `wired / wired` | `0.9560565 / 0.9477461` | `1.1176e-8 / 3.7253e-8` |
 
-The observed label agreement is not an accuracy result: the source bands have no ground-truth labels, and this test does not enforce a tolerance-based cross-backend parity contract. Exact per-row logits digests, scores, model hashes and input hashes are retained in the [machine-readable report](paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json).
+The observed label agreement and numerical parity are not accuracy results: the source bands have no ground-truth labels. The measured maximum error is below `1.2e-7` on this host, with a conservative enforced tolerance of `1e-4`; this tolerance is not a guarantee for other devices or runtime versions. Exact per-row logits, digests, scores, model hashes, input hashes and measured error are retained in the [machine-readable report](paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json).
 
 ## Reproduction
 
@@ -52,4 +52,4 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~OfficialDynamicBatchClassifiersPreserveDistinctRowsAcrossCpuBackends --verbosity minimal
 ```
 
-The opt-in integration test passed `1/1`, covering two exact models across three CPU backends. This report does not establish classification quality or a performance ranking.
+The opt-in integration test passed `1/1`, covering two exact models across three CPU backends and enforcing the per-row raw-output tolerance. This report does not establish classification quality or a performance ranking.

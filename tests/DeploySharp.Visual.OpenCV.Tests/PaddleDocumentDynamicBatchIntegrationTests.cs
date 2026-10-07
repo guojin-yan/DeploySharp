@@ -33,6 +33,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private const string ImagePath = @"E:\Data\image\bus.jpg";
         private const string TableImagePath = @"E:\Model\PaddleDocument\validation\table_recognition.jpg";
         private const string SlanextOpenVinoRoot = @"E:\Model\PaddleDocument\onnx-normalized-rerun-20260929";
+        private const float ClassifierCrossBackendMaxAbsoluteTolerance = 0.0001f;
 
         public TestContext TestContext { get; set; } = null!;
 
@@ -80,6 +81,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             RequireExternal();
             RequireFile(TableImagePath, "dynamic-batch classifier image");
             var rows = new List<object>();
+            var ortRawOutputRowsByModel = new Dictionary<string, float[][]>(StringComparer.Ordinal);
             foreach (BackendCase backend in new[]
             {
                 new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
@@ -88,7 +90,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             })
             {
                 foreach (ClassifierCase item in Cases)
-                    rows.Add(RunCase(backend, item, useDistinctHorizontalBands: true));
+                    rows.Add(RunCase(backend, item, useDistinctHorizontalBands: true, ortRawOutputRowsByModel: ortRawOutputRowsByModel));
             }
 
             string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_CLASSIFIER_DISTINCT_DYNAMIC_BATCH_REPORT_PATH")
@@ -111,9 +113,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 batch = 2,
                 models = Cases.Select(item => new { model = item.ModelId, file = item.FileName }).ToArray(),
                 backends = new[] { "onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu" },
-                scope = "Official PP-LCNet document-orientation and table-classification ONNX exports; each batch row is a distinct top/bottom region from the same table-recognition image.",
+                scope = "Official PP-LCNet document-orientation and table-classification ONNX exports; each batch row is a distinct top/bottom region from the same table-recognition image. Raw outputs are compared per row against ONNX Runtime CPU with an explicit maximum-absolute-error tolerance.",
                 results = rows,
-                boundary = "True batch binding, distinct raw input/output rows and decoder result mapping for these exact artifacts/backends on one Windows host. Regions are execution probes, not classification ground truth; no accuracy, cross-backend numeric parity, throughput or cross-device claim is made."
+                numericParity = new { referenceBackend = "onnxruntime-cpu", comparison = "raw output values per batch row", maximumAbsoluteTolerance = ClassifierCrossBackendMaxAbsoluteTolerance },
+                boundary = "True batch binding, distinct raw input/output rows, decoder result mapping and bounded raw-output numerical parity for these exact artifacts/backends on one Windows host. Regions are execution probes, not classification ground truth; no accuracy, throughput or cross-device claim is made."
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(6, rows.Count);
@@ -817,7 +820,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString()))).ToLowerInvariant();
         }
 
-        private static object RunCase(BackendCase backend, ClassifierCase item, bool useDistinctHorizontalBands = false)
+        private static object RunCase(
+            BackendCase backend,
+            ClassifierCase item,
+            bool useDistinctHorizontalBands = false,
+            Dictionary<string, float[][]>? ortRawOutputRowsByModel = null)
         {
             string path = Path.Combine(ModelRoot, item.FileName);
             RequireFile(path, item.ModelId);
@@ -895,10 +902,49 @@ namespace DeploySharp.Visual.OpenCV.Tests
             ITensor logits = outputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
             Assert.AreEqual(2L, logits.Shape[0], item.ModelId + " returned the wrong raw output batch size.");
             string[] outputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(logits, row)).ToArray();
+            float[][] rawOutputRows = TensorRows(logits, 2);
             if (useDistinctHorizontalBands)
                 Assert.AreNotEqual(outputRowSha256[0], outputRowSha256[1], backend.Name + " returned duplicate raw classifier rows for distinct regions.");
             else
                 Assert.AreEqual(outputRowSha256[0], outputRowSha256[1], backend.Name + " changed raw outputs for identical classifier rows.");
+            object? numericParity = null;
+            if (ortRawOutputRowsByModel is not null)
+            {
+                if (backend.Id == OnnxRuntimeBackendProvider.BackendId)
+                {
+                    Assert.IsFalse(ortRawOutputRowsByModel.ContainsKey(item.ModelId), "The ONNX Runtime reference output was recorded twice for " + item.ModelId + ".");
+                    ortRawOutputRowsByModel.Add(item.ModelId, rawOutputRows);
+                    numericParity = new
+                    {
+                        referenceBackend = backend.Name,
+                        maximumAbsoluteTolerance = ClassifierCrossBackendMaxAbsoluteTolerance,
+                        maximumAbsoluteDifferencePerRow = new[] { 0d, 0d },
+                        status = "reference"
+                    };
+                }
+                else
+                {
+                    Assert.IsTrue(ortRawOutputRowsByModel.TryGetValue(item.ModelId, out float[][]? referenceRows), "ONNX Runtime reference output is missing for " + item.ModelId + ".");
+                    Assert.AreEqual(referenceRows!.Length, rawOutputRows.Length, backend.Name + " returned a different classifier batch row count.");
+                    var maximumAbsoluteDifferencePerRow = new double[rawOutputRows.Length];
+                    for (int row = 0; row < rawOutputRows.Length; row++)
+                    {
+                        maximumAbsoluteDifferencePerRow[row] = MaxAbsoluteDifference(referenceRows[row], rawOutputRows[row]);
+                        Assert.IsTrue(
+                            maximumAbsoluteDifferencePerRow[row] <= ClassifierCrossBackendMaxAbsoluteTolerance,
+                            backend.Name + " raw classifier row " + row + " differs from ONNX Runtime by " + maximumAbsoluteDifferencePerRow[row].ToString("R", CultureInfo.InvariantCulture) +
+                            ", exceeding absolute tolerance " + ClassifierCrossBackendMaxAbsoluteTolerance.ToString("R", CultureInfo.InvariantCulture) + ".");
+                    }
+
+                    numericParity = new
+                    {
+                        referenceBackend = "onnxruntime-cpu",
+                        maximumAbsoluteTolerance = ClassifierCrossBackendMaxAbsoluteTolerance,
+                        maximumAbsoluteDifferencePerRow,
+                        status = "passed"
+                    };
+                }
+            }
             var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as ClassificationBatchResult
                 ?? throw new AssertFailedException(item.ModelId + " did not return a ClassificationBatchResult.");
             Assert.AreEqual(2, decoded.Count, item.ModelId + " returned an unexpected batch row count.");
@@ -922,6 +968,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 outputNames = outputs.Select(value => value.Name).ToArray(),
                 rawOutputShape = logits.Shape.ToString(),
                 rawOutputRowSha256 = outputRowSha256,
+                rawOutputRows,
+                numericParity,
                 resultCount = decoded.Count,
                 labels = decoded.Results.Select(value => value.TopPrediction!.Label).ToArray(),
                 scores = decoded.Results.Select(value => value.TopPrediction!.Score).ToArray(),
@@ -1053,6 +1101,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
             if (row < 0 || row >= batchSize || values.Length % batchSize != 0) throw new ArgumentOutOfRangeException(nameof(row));
             int rowLength = values.Length / batchSize;
             return Convert.ToHexString(SHA256.HashData(MemoryMarshal.AsBytes(values.AsSpan(row * rowLength, rowLength)))).ToLowerInvariant();
+        }
+
+        private static float[][] TensorRows(ITensor tensor, int batchSize)
+        {
+            if (!(tensor.Buffer is float[] values)) throw new AssertFailedException("The classifier output must be Float32.");
+            if (tensor.Shape.Rank == 0 || tensor.Shape[0] != batchSize || values.Length % batchSize != 0)
+                throw new AssertFailedException("The classifier output does not contain the expected batch rows.");
+            int rowLength = values.Length / batchSize;
+            return Enumerable.Range(0, batchSize)
+                .Select(row => values.AsSpan(row * rowLength, rowLength).ToArray())
+                .ToArray();
         }
 
         private static string DetectionRowSha256(DetectionResult result)
