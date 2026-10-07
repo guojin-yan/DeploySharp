@@ -1,0 +1,1572 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-07T13:40:54.7128730\u002B00:00",
+  "sourceRevision": "1edbf65b2e7d1e6ea6f1531acc801115822d2d75",
+  "sourceWorkingTreeDirty": true,
+  "model": {
+    "id": "paddleocr/ppocrv6/small-det",
+    "variant": "PP-OCRv6 Small DET",
+    "path": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx",
+    "sha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "catalogSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e"
+  },
+  "backend": "onnxruntime-cpu",
+  "protocol": {
+    "inferenceCount": 34,
+    "candidatePolicy": "One raw detector probability map per image is reused across every decoder candidate; only CPU DB postprocessing thresholds vary.",
+    "tuningSelection": "sample-002; maximize aggregate IoU@0.5 F1; ties prefer the unchanged default.",
+    "holdoutPolicy": "sample-003 is evaluated only after selecting on sample-002; no parameter is selected from holdout metrics.",
+    "thresholds": [
+      0.5,
+      0.75
+    ],
+    "limitations": [
+      "This is a bounded smoke sensitivity study on one PP-OCRv6 Small DET artifact and two fixed HierText selections, not a release accuracy claim.",
+      "It evaluates detection geometry only; recognition, CER/WER, other model variants, GPU execution, and other backends are outside each run.",
+      "HierText image and annotation license terms remain source-specific; this report does not grant redistribution rights.",
+      "No library default or model profile is changed by this experiment."
+    ]
+  },
+  "manifests": {
+    "tuning": {
+      "path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-002.jsonl",
+      "sha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+      "images": 10,
+      "imageIds": [
+        "hiertext-validation-5c4d5de59518fe4d",
+        "hiertext-validation-97a0add3f8f47b65",
+        "hiertext-validation-d14658b78cec2cf7",
+        "hiertext-validation-c9ecf7b1e970a65a",
+        "hiertext-validation-ab6fb759938e462b",
+        "hiertext-validation-975414ca1e6b155c",
+        "hiertext-validation-c4c9ba09a6640ad0",
+        "hiertext-validation-507f4f0db1f4fed7",
+        "hiertext-validation-41ec68d29b5f5db0",
+        "hiertext-validation-e8987917745126f6"
+      ]
+    },
+    "holdout": {
+      "path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-003.jsonl",
+      "sha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+      "images": 24,
+      "imageIds": [
+        "hiertext-validation-012bfb1d9f9afc48",
+        "hiertext-validation-04c69de1d1bf9892",
+        "hiertext-validation-07f328166c0ebbf7",
+        "hiertext-validation-16f097c5d6407f7d",
+        "hiertext-validation-26e97e9f6d719dee",
+        "hiertext-validation-291e9c3df3a9ffb5",
+        "hiertext-validation-3ea969425b1c88bd",
+        "hiertext-validation-466c6ce044b8bd46",
+        "hiertext-validation-4e0277825c80fed8",
+        "hiertext-validation-62bd21d5af1428d9",
+        "hiertext-validation-7a7d0f471fe900e2",
+        "hiertext-validation-7d9138e29dd9b711",
+        "hiertext-validation-83499e8f67512938",
+        "hiertext-validation-86760f63da399e07",
+        "hiertext-validation-870b721faf7b475d",
+        "hiertext-validation-945782e585e04e0e",
+        "hiertext-validation-973b7f62446f02cd",
+        "hiertext-validation-a2364c31de73114d",
+        "hiertext-validation-b4cc87af903b8270",
+        "hiertext-validation-c2291a13c825966f",
+        "hiertext-validation-c237f9cec8e311b0",
+        "hiertext-validation-d989ba898a556309",
+        "hiertext-validation-e02496ac77418748",
+        "hiertext-validation-e4de4f4143491a9d"
+      ]
+    },
+    "disjointImageIds": true
+  },
+  "tuning": {
+    "selectedCandidate": {
+      "name": "unclip-1.3",
+      "probabilityThreshold": 0.3,
+      "boxThreshold": 0.6,
+      "unclipRatio": 1.3,
+      "scoreMode": "Fast",
+      "boxType": "Quadrilateral",
+      "isBaseline": false
+    },
+    "candidates": [
+      {
+        "candidate": {
+          "name": "default",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": true
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 152,
+          "fp": 215,
+          "fn": 385,
+          "precision": 0.4141689373297003,
+          "recall": 0.28305400372439476,
+          "f1": 0.33628318584070793
+        },
+        "iou075": {
+          "tp": 19,
+          "fp": 348,
+          "fn": 518,
+          "precision": 0.051771117166212535,
+          "recall": 0.035381750465549346,
+          "f1": 0.04203539823008849
+        }
+      },
+      {
+        "candidate": {
+          "name": "probability-0.25",
+          "probabilityThreshold": 0.25,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 143,
+          "fp": 207,
+          "fn": 394,
+          "precision": 0.4085714285714286,
+          "recall": 0.26629422718808193,
+          "f1": 0.322435174746336
+        },
+        "iou075": {
+          "tp": 14,
+          "fp": 336,
+          "fn": 523,
+          "precision": 0.04,
+          "recall": 0.0260707635009311,
+          "f1": 0.03156708004509582
+        }
+      },
+      {
+        "candidate": {
+          "name": "probability-0.35",
+          "probabilityThreshold": 0.35,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 155,
+          "fp": 219,
+          "fn": 382,
+          "precision": 0.4144385026737968,
+          "recall": 0.2886405959031657,
+          "f1": 0.34028540065861684
+        },
+        "iou075": {
+          "tp": 20,
+          "fp": 354,
+          "fn": 517,
+          "precision": 0.053475935828877004,
+          "recall": 0.037243947858473,
+          "f1": 0.04390779363336992
+        }
+      },
+      {
+        "candidate": {
+          "name": "box-0.55",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.55,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 161,
+          "fp": 227,
+          "fn": 376,
+          "precision": 0.41494845360824745,
+          "recall": 0.29981378026070765,
+          "f1": 0.3481081081081081
+        },
+        "iou075": {
+          "tp": 20,
+          "fp": 368,
+          "fn": 517,
+          "precision": 0.05154639175257732,
+          "recall": 0.037243947858473,
+          "f1": 0.043243243243243246
+        }
+      },
+      {
+        "candidate": {
+          "name": "box-0.65",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.65,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 142,
+          "fp": 199,
+          "fn": 395,
+          "precision": 0.41642228739002934,
+          "recall": 0.2644320297951583,
+          "f1": 0.3234624145785877
+        },
+        "iou075": {
+          "tp": 15,
+          "fp": 326,
+          "fn": 522,
+          "precision": 0.04398826979472141,
+          "recall": 0.027932960893854747,
+          "f1": 0.03416856492027335
+        }
+      },
+      {
+        "candidate": {
+          "name": "unclip-1.3",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.3,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 176,
+          "fp": 191,
+          "fn": 361,
+          "precision": 0.47956403269754766,
+          "recall": 0.32774674115456237,
+          "f1": 0.3893805309734513
+        },
+        "iou075": {
+          "tp": 33,
+          "fp": 334,
+          "fn": 504,
+          "precision": 0.08991825613079019,
+          "recall": 0.061452513966480445,
+          "f1": 0.07300884955752213
+        }
+      },
+      {
+        "candidate": {
+          "name": "unclip-1.7",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.7,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 10,
+        "iou05": {
+          "tp": 124,
+          "fp": 243,
+          "fn": 413,
+          "precision": 0.33787465940054495,
+          "recall": 0.2309124767225326,
+          "f1": 0.27433628318584075
+        },
+        "iou075": {
+          "tp": 9,
+          "fp": 358,
+          "fn": 528,
+          "precision": 0.02452316076294278,
+          "recall": 0.01675977653631285,
+          "f1": 0.01991150442477876
+        }
+      }
+    ],
+    "images": [
+      {
+        "imageId": "hiertext-validation-5c4d5de59518fe4d",
+        "imageFileName": "5c4d5de59518fe4d.jpg",
+        "imageSha256": "ff72c2547e08783ceda36401a9a4482f387f148aea30065eff16e7a65306d82f",
+        "inputTensorSha256": "27ce3f46201c8a04350e2b6750a8b1630bae150d3579dbfc8b03a83f7fc7ef58",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "f0d65de46a0456c1837913931df8377c513f210f5a85fbcd1906f1889396ec18",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 28,
+            "decodedOutputSha256": "d7fbb592f68750cd82636378ff755a4cd81ed11a37c2eb847bb14d616f346b60",
+            "geometrySha256": "ef5704d42a55eeacd5a230a394ce54759bcfbdcccab125a3c20b175e30d923f9"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 23,
+            "decodedOutputSha256": "d26f713efb7ddcd3d95c1d35dd164a22d475c58ecbf5a7da0c6374e532da8b5e",
+            "geometrySha256": "5591362c2e0ac83c380806bd18c41648657b087504a002b131857797df9295d9"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 29,
+            "decodedOutputSha256": "75161a6a274122ca87cfb3694888a82da4c359b232e9c45144583f6ec844c9a4",
+            "geometrySha256": "1c8597659f93a24b7eda0a98df6567258e70ddfaaa1d19de2e27fff4626faf12"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 32,
+            "decodedOutputSha256": "48784b5d9596115bc6b9fc1ff41154e7ae53d8c3af17048aeecb11f6b8356c2f",
+            "geometrySha256": "83fd9cb1d7b574d86f286e8cef5867dcc89705ab760a986f79736b0be98cbeb0"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 23,
+            "decodedOutputSha256": "d421253b81a1c2b10511be6a2e470e277a462ca0989d0f0662d4e40895f07188",
+            "geometrySha256": "3ea84ba714d300ca135558ae8c2dff3f98d2a4035490dc58ff0078f172c45234"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 28,
+            "decodedOutputSha256": "715413afb4063888d28a05e9b104f5b61e33bbec6a739d8401815552ca229b3c",
+            "geometrySha256": "736edb3a89aa072925af4ec0c22ac78d7d61c4be45fbb032cf8ad43ffe92bf9a"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 28,
+            "decodedOutputSha256": "b02c97c7e33736f02a483f18e03fbddf689588be4ebef647e26ec01926bccc69",
+            "geometrySha256": "2c1bdc5c2b2a2bd4b92a1b8dc4c346d92b598db323ce3d085a5eb1b7dc4d2074"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-97a0add3f8f47b65",
+        "imageFileName": "97a0add3f8f47b65.jpg",
+        "imageSha256": "4be415e823941b14c4df515b2956c536303cf7f8d05cda450035083b36afb438",
+        "inputTensorSha256": "b4dee8c92e24d347ddd57b8da4252dc306c7d8e30e98e73610642f0dee6fb4ba",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          640
+        ],
+        "rawOutputSha256": "3f93032f4cbf6562f56de9390e9b2fc2011d964bbe2fbdead40248a6cd5cc8e2",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 32,
+            "decodedOutputSha256": "6d42a9d05df2eaab466f14f3e207ab1b609d9ab195dc4c1186c6cc2d22daa3a7",
+            "geometrySha256": "c9342725359a10efbe4d3ddf6eb7e3ee49f5903c27acc7dd14208ffc2a1ae07b"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 31,
+            "decodedOutputSha256": "288b15ad039a1a1bc312026b61f6c44fac400968fad352430191a7659a1ee56a",
+            "geometrySha256": "1d71cf16ed881af4e83a8904f17079910b66d1a4b0cfc46c1105a5864739c02f"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 32,
+            "decodedOutputSha256": "09a3063b3609fbf23181850a8bce9cdf8a28fb0c06402facb3311575c283fdac",
+            "geometrySha256": "8b53e036cbeed2a09c83d8cf6429a00381c58c571dd5d11f267586cc1903ba06"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 32,
+            "decodedOutputSha256": "6d42a9d05df2eaab466f14f3e207ab1b609d9ab195dc4c1186c6cc2d22daa3a7",
+            "geometrySha256": "c9342725359a10efbe4d3ddf6eb7e3ee49f5903c27acc7dd14208ffc2a1ae07b"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 31,
+            "decodedOutputSha256": "adc7ec367e4755cae9b25cb6c8cc188a68301539e746d338df94141a0198426f",
+            "geometrySha256": "9ec0236223a115749aa7575d83d710828d53ba408446b1a2ec60da8af1c6058b"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 32,
+            "decodedOutputSha256": "99a504bc09c7c765de9efb50172a3a1a5a78f7431840853990f960359f7097bb",
+            "geometrySha256": "8ad8aee8f0f8646d7a48681000839717f565b9258c18d2c8ba619be83c11e1d8"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 32,
+            "decodedOutputSha256": "eb00f02b6bdb37d84cf7338f351b6d3fb0590d5a98827ebf70b0d7a74d1b4287",
+            "geometrySha256": "99ac14e6f2616d4705c24bc859149921c04ced8aec580e8b535064d647c8ef3c"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-d14658b78cec2cf7",
+        "imageFileName": "d14658b78cec2cf7.jpg",
+        "imageSha256": "920d57c6ea734eb9200e60078c7046ccd61912657ef39e5885ea68a185a359a5",
+        "inputTensorSha256": "9650ec34359ce058d575fbab107c60a12f1b87417e3efb0a7344660ddbe10d46",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "baa9a1ebf4ff2067dab1dadae3a8c923fd0095c77f8a7a0dabd17883e155612f",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 18,
+            "decodedOutputSha256": "44596b45cc7559330709340169d41c1c68966a58ffa52f70de3b6e8976751f22",
+            "geometrySha256": "4097fbee26448bbf92a02482ec5bd6e66c8416ae701a844c9fe8d1f6a16925e3"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 18,
+            "decodedOutputSha256": "f42036f71a2d33b743e275961c02ee3e43bca176740e3dd78991eed2477bdeb5",
+            "geometrySha256": "99477c084cdde16346ebb698d441b6da06a0ee597741b39082c9a5fa0edd70da"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 18,
+            "decodedOutputSha256": "f647b132d96d979f5e8716d82e9411c020ffc438db7b2848ce2589971dfe9ff9",
+            "geometrySha256": "781108363f01ef10085db777bd62ed338afe7025f4de3de0e9d3ca5771438bc0"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 20,
+            "decodedOutputSha256": "62f766a26a215355020e52551e85648c7b40168c878ccc8c0c9d64f6d90f331c",
+            "geometrySha256": "c23597787ae63eb77795e82c1175f7e4fa204a516269635fa66c8995cf9de6e6"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 16,
+            "decodedOutputSha256": "4a3c40fe0a2243b4a0f826d72f587eed5c0cacdf004b43ea4de1c826e5876a94",
+            "geometrySha256": "75e9b004b777af6ee8b18784e85eb598334cff8b6112083e9ecd994d649450e8"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 18,
+            "decodedOutputSha256": "c7601348d043597250b2d5a3725aeddd743276f617974e8531422dddde6ade7f",
+            "geometrySha256": "5ae4d524d0f6e69ec7091919a9f56062257b71c1b2aab6645540d4935ee342c7"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 18,
+            "decodedOutputSha256": "a0a9e5f58fc2fca7170d823aa1b2a7a44ab2c539d8cdb3a3d6f52ad27ba08b85",
+            "geometrySha256": "91182b4dc69d72db24093c48c76039db9702025fa5adc24d5b848f1d98c1ef55"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+        "imageFileName": "c9ecf7b1e970a65a.jpg",
+        "imageSha256": "78b3967bc3d0c982b85f71335acf87b911f892da749a9a4d4147c214aa944b9e",
+        "inputTensorSha256": "c1fe1d29a096d3049a12283af915c5dd39bca4e5ec57492cc5a2016d62d4d603",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "27c623c3a172c36fafb538481ce29855c16738df17f182104d9dbafefb995df7",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 26,
+            "decodedOutputSha256": "3b435647f08791c97e1c595730628be68ccc9af4e44e781815b4840bf14c11f8",
+            "geometrySha256": "ee22252407a8c295725ec44e09fc8b0575b08b6369607f1061d2cec1abaadc49"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 26,
+            "decodedOutputSha256": "55f725910b4ae8ae0efb3ed5d03820539c06659f626b7dbde49c556c428e44ea",
+            "geometrySha256": "c58b7a4f8a66946330a1f446ff2592170ee874f87aaf5803117573184c5349a5"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 26,
+            "decodedOutputSha256": "76269a69907b80c6e556a6c87d571e7556857651ee2b96bbbe5667919a6be286",
+            "geometrySha256": "7bc1e6b71d429ef84efd8210cae41a338ed053e901cdd8a253eed90d2f03cbad"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 26,
+            "decodedOutputSha256": "3b435647f08791c97e1c595730628be68ccc9af4e44e781815b4840bf14c11f8",
+            "geometrySha256": "ee22252407a8c295725ec44e09fc8b0575b08b6369607f1061d2cec1abaadc49"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 24,
+            "decodedOutputSha256": "3f1fcf6f766045af1e2d9ba667f0a96f245d669f75a6fc6efcd5a2d7b9030727",
+            "geometrySha256": "f98cc5211c7cd1e185a2aaba8cfb21f5f801a711f1b358eee747cd3070a21d52"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 26,
+            "decodedOutputSha256": "f47ab125fa17cd004a61e5fe62890ac697f35a88000f69ceb066985c688ff23f",
+            "geometrySha256": "7838a8c19ade3b1c8ff207e1ba737af997842dc6e757bdaaf95908bb217a6871"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 26,
+            "decodedOutputSha256": "a97892d35c02abc6f0836eeb63b4502e5d89c05f8fe9a22dcf00ff88dcfafbc8",
+            "geometrySha256": "313ef52b709502d797c96b5ac14e72795149c3f46fc3c264b93398b0cb64906e"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-ab6fb759938e462b",
+        "imageFileName": "ab6fb759938e462b.jpg",
+        "imageSha256": "b914d2d6268fd1ab3d423e590a10cec05d68ee06111f40df5e05722119825ae4",
+        "inputTensorSha256": "1cafc009ce518d26761b6aaf41d49b61c9488f81f3626914b02b4c6818c2800c",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          640
+        ],
+        "rawOutputSha256": "33321e6c066127f5981558b49d18dfdca57074866a460c55b983e1e92bd08823",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 24,
+            "decodedOutputSha256": "32f2bdf4ed964f1ffb5c54c96542fffe8b5842a9045d8c259967cd7656cd34e3",
+            "geometrySha256": "7bf58b612b855cfaf934b398fe13b0508a29c86981ac4478d5140b5830abf9bc"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 23,
+            "decodedOutputSha256": "10acfeb83c3174b656256d573ad994b6b08b32f259a7137f86c63dcc5334f008",
+            "geometrySha256": "20b6bcdf2cfc2e57f196da539c1286245856ecb1a3de3e114d9cf04ff1ac2382"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 24,
+            "decodedOutputSha256": "6db617449c0f5dfbff30fa6ebee4df15365f918a3a1aa62d3135f48ea56c0807",
+            "geometrySha256": "83b2ccee5790ea9da395119800a2d88366ade5bdba502c9e045553132140489c"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 24,
+            "decodedOutputSha256": "32f2bdf4ed964f1ffb5c54c96542fffe8b5842a9045d8c259967cd7656cd34e3",
+            "geometrySha256": "7bf58b612b855cfaf934b398fe13b0508a29c86981ac4478d5140b5830abf9bc"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 23,
+            "decodedOutputSha256": "9183d76d7c71b47d5c8e41851436820bb8bc63e8f878b5321305c695e9021c21",
+            "geometrySha256": "5fe3f8d4b5759f206a1432abdc22982a75fea2b32b4b22fc9a7c8bad20c34615"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 24,
+            "decodedOutputSha256": "664d1f2bfb78c6ddcb794b6b487787ef4df85fce661a96ba5f7b2bae63e13efb",
+            "geometrySha256": "ee41c3d2ee550ee0754672a4bbe855a5e3688963454f6910b32325e25652bd7c"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 24,
+            "decodedOutputSha256": "35891eee4fe67acf7b1b3672dd7f0a5ef9c7f8c2c288a5ad77e2650beeecdc3d",
+            "geometrySha256": "0a7ce14ec0e807ff8535e9ec8ee1726cfe41d340a819a293e7f2b979400902d2"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-975414ca1e6b155c",
+        "imageFileName": "975414ca1e6b155c.jpg",
+        "imageSha256": "460b37e9a8d301c26fd93aec3ef2677f76c6edc11d439fbc4029304e49344df2",
+        "inputTensorSha256": "9619e32accc0039a3ecf2caa23cbff1c176a574c7add1749d730c663e589c40a",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "47e4b5785bf372fbfc81233dcee1d351b52e10abeded4ca87931047d8ca3ae58",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 64,
+            "decodedOutputSha256": "20de5dabb30e5617d486a1bfff589a0c8bc12c90f3174ac7651eca37b1b214f9",
+            "geometrySha256": "944cc6fc87f11352d3038f3b4b48aa047887ab0c1862f2221c961508eadb56ad"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 57,
+            "decodedOutputSha256": "89d22cc1cd0a27982123a7060fa46de4ea826e6846d22ec003b900dced4fb69d",
+            "geometrySha256": "496a9abfdc070ac4856a7dc21c34de78e1098d3df111078a4494af26d51d5ddb"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 69,
+            "decodedOutputSha256": "1815b1b2115d0295f4a01db49f8b6ae2e4b0d5dd3544298977daf0237ae97fee",
+            "geometrySha256": "3a4f59927e662328a7f78494280e61d55b81f379c64200117a4f330588630c0e"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 74,
+            "decodedOutputSha256": "b2afd070a9fc76c62ddf8ce065bf0e87e2cbd318216d7cbc6fc919eb866de453",
+            "geometrySha256": "9fde42d749b93686deb78c68513c90d4f63d533c6c8ad276e320e92916aa99fd"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 54,
+            "decodedOutputSha256": "39a9d8909f4802386f297a631526f90ea7850fa7c8cac2767d0a919c3fac8b04",
+            "geometrySha256": "7762c5bc973c0da8af15a98efe8f9e4f77a1a8d2c8509e508173b3bc1b619820"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 64,
+            "decodedOutputSha256": "74a47826c9902d8533941a10157e02f472481eca49c20dd0923fcd14a39eecfa",
+            "geometrySha256": "e3ffea6722334667e65a1f696d1c27d5b1a34d6ffe33690b3945b64133807d4d"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 64,
+            "decodedOutputSha256": "1a72d07b5804671438281a0b07a5ff1fe63eb2d9d6c73d7004ca40d7e1b1c85c",
+            "geometrySha256": "f1290b0c320e4a76a3b9ea4faa1bfdd42a629f521d303cb1f2239e3e3ed9b37f"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+        "imageFileName": "c4c9ba09a6640ad0.jpg",
+        "imageSha256": "d854299524772e49f100918e34795dfaf121399a2cd7a1e4193e96ac6efd8d83",
+        "inputTensorSha256": "8d6a153bf9d1ec71143507f63c3b211052aa7797aa65def55052f4906bbf13d2",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "7f93eec1b0bdc30beeee9fba5c20683f09225208a0bb6d0a03b56803c28b86bf",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 3,
+            "decodedOutputSha256": "7ee37c8ac6bd021ba70d3f1646523cbc3cba24f71e65de7e980b3c1fc5f46da4",
+            "geometrySha256": "4388c1ffc61b7f2ab293e7b66b42085192f5781a671fadf621821605e2435bf7"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 2,
+            "decodedOutputSha256": "7e36599c2d4047b21caa1fc8cfc18274bc35fe373f22c296344002b118306f24",
+            "geometrySha256": "dcf4fed165c6a627e57f229f781dd37d65c1435444a98b72f1b5e04c7a66604e"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 2,
+            "decodedOutputSha256": "d097ac668be9d8bd1b94eb60a015c3a94d0c53f79addcb26707522868ac26076",
+            "geometrySha256": "d67f11153733c0c061744a086d5a121798f3df75ca046d39b9c3c5663ebdf14e"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 4,
+            "decodedOutputSha256": "e5ebde46d47ec12f83398ab36cda6d0d72aa97a5d71e82063880215ff6ae0d80",
+            "geometrySha256": "5d7fbe2927046d6358a11d2ef6406a8ef353c2874de7f545ea1791fef62c63c3"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 2,
+            "decodedOutputSha256": "fa301596f252665c7a7a6d73807ce74641f9bf7e325da51ee5dd4ff1b7a81da2",
+            "geometrySha256": "d39129808188255008ed7f90d5a7d1a6b3a9e689861d1c1b6e18f812a8546cba"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 3,
+            "decodedOutputSha256": "3f187d23058802aea9832b0eeda474bdc64c94fa05ec065d479363833e46fe15",
+            "geometrySha256": "2abc26640731cee3151e2cd141ad5e3a0681013cdb0bc07e290299b11947026f"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 3,
+            "decodedOutputSha256": "5e40f2ee46d8ddc330a69b50b6a3062273ea6981e1fe5680cdcd2eac42d30f88",
+            "geometrySha256": "ba8142f28c70178a07492b3067e3e326a53f8dc3d5a2f643ba6a9b8ec93014be"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-507f4f0db1f4fed7",
+        "imageFileName": "507f4f0db1f4fed7.jpg",
+        "imageSha256": "cfada193281ee0bf99e0bbc41f59fd16f31674e6237ea494773b877de84168ed",
+        "inputTensorSha256": "1a2d17e8b0080005ccff5db288d02f1daefb33cc5e820dab9ab50ab852bf962b",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "583fbdbc722325c6e7e427be0380a59b723e81b1685686269a6357a8f16ff209",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 17,
+            "decodedOutputSha256": "1156572b3123167651731eece3b2fbf72c21fd85cfc5dda3546eb60d9fde912f",
+            "geometrySha256": "ea3cd64f24f587f9c59c5514e262f2b7f84633cf658ceeba770d80336c789320"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 16,
+            "decodedOutputSha256": "fb1ee64952804c53f689f2a2a102028899c9de622528ccfe71fe0cf86d486ce9",
+            "geometrySha256": "51034c371fbe7d69414b84fd6fe74e420ece65276048efcc460f80a69ad21045"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 19,
+            "decodedOutputSha256": "d53e4a215c7c02914f4ca837c46b243d85fc1625ab7e41ac2800c6bec21f9291",
+            "geometrySha256": "717dc3912d3c37b3140cc4133ade064d947c7f87724208b6173f95b1fcd73c95"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 21,
+            "decodedOutputSha256": "7d6d912a0a7e88272dfcb720fbd3a5fee0145dd7d4c0bef9bb2808db6de4b722",
+            "geometrySha256": "f33aba98a3b04872f911f576adaf1d3e72830376f6366f34222a4d23cbb7cd43"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 15,
+            "decodedOutputSha256": "f3f05eba6f5fb9c2a24563a145fbea3b156e0487a1a9986dfaef6a028294ced3",
+            "geometrySha256": "2227a61e13cbe55bf97ea6d13dca357cbf69b25dddf606203468cf378a20c365"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 17,
+            "decodedOutputSha256": "b8bb4e738a5581043ae18cda45cf79c711b41e761f52108562572b994f35c8a9",
+            "geometrySha256": "ee1fd46b0a7e93cb16168e05713c6dc924d9f8bb74d1382e5b5f33befebe5507"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 17,
+            "decodedOutputSha256": "e11cfbf7d869972f27f3ad46b7f478a315b81803e3f5c2d6f9ec7c36ddf80fdc",
+            "geometrySha256": "b7d373861c4ace61fad67d1fcce39b19184baa986e88d434105a0e545486aa4c"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-41ec68d29b5f5db0",
+        "imageFileName": "41ec68d29b5f5db0.jpg",
+        "imageSha256": "b5d7bf7c3c4acd5da1689c69257cf8a47f9e6017eaa8b8ba9e361f42e81d91e4",
+        "inputTensorSha256": "945beb2b4ca1b236d4f05c2ffab1888e7c2063160748091b782dfc30f9d12e84",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "5dd3a99f48a22024d1281f3e6ba3d14736afb4067666a0d31a32e34741f6ff20",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 27,
+            "decodedOutputSha256": "82c89edf24b16b80eecfe57050c7bca645dd52680596348fed7187871f80dad9",
+            "geometrySha256": "ba150fd8d32213ba814d6e52298b70f3367c52965bf673cff008db71fcbd23fd"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 26,
+            "decodedOutputSha256": "c1d610e8aa8b69f0a5dc10dcabc5649c363c53aa9e7d7e28885ee31243db1a65",
+            "geometrySha256": "d42acb611484d6e188a1615dbeec7a4a643ffcb4ee4cf55a21c49c9aebb3d6eb"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 27,
+            "decodedOutputSha256": "4ecd876265f486266598bd35855dd98099ed08a25ff5e153f56ea301f9fbd308",
+            "geometrySha256": "370edae5c7f2bff121d0751d01c02b9435951871c4696420b3ba04f762d510dc"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 27,
+            "decodedOutputSha256": "82c89edf24b16b80eecfe57050c7bca645dd52680596348fed7187871f80dad9",
+            "geometrySha256": "ba150fd8d32213ba814d6e52298b70f3367c52965bf673cff008db71fcbd23fd"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 25,
+            "decodedOutputSha256": "e4821e0d2b65bf190affd1c9ff11429b89e27fe062c7d431ed548ed694699bf9",
+            "geometrySha256": "79cc429bd25769968fbc7f99a121816cd5bd265ecd2adb65a376e1a9ee0bdcc8"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 27,
+            "decodedOutputSha256": "2b68cc83df49286d204b3e434cf7bfb74b2e2ff93fd88ae07c03b9c8eae6aafc",
+            "geometrySha256": "0fa96a6590c66821569592c049e5235517f6b694f66112a741bbe1a4b5023c70"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 27,
+            "decodedOutputSha256": "99bf045f82c5dbcce2ab933b28b7734255b84e556d2f44aab5e619d8a36257be",
+            "geometrySha256": "37b5feb0cee0ced2f5fcfa9933c9de15df2a06abff947a0038b04b53e4bf119a"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-e8987917745126f6",
+        "imageFileName": "e8987917745126f6.jpg",
+        "imageSha256": "947d70cf7ab7af613e3a7345706fcbd0d8246f75239ca25305f2dc709ae9cc81",
+        "inputTensorSha256": "61119bee37afc9788f7b221f70d75ff72664d84d00dc633feb127413535379c6",
+        "outputShape": [
+          1,
+          1,
+          384,
+          1024
+        ],
+        "rawOutputSha256": "b189b02d4c1fab9ad914943a181ad8dabe39371e7f50c0601a9986f95aa32ef9",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 128,
+            "decodedOutputSha256": "0477e5f8603460398c97f6d33413fb951b0cffb4e063fb6445cfc92b2777461c",
+            "geometrySha256": "063711b8f6ba3b7472285604e77fd484faa7fcace831dc905aa8def1f6ea2f76"
+          },
+          {
+            "candidate": "probability-0.25",
+            "regionCount": 128,
+            "decodedOutputSha256": "3c3eb808eb26ae580e58a0a0f032df106ba89c956fd41ad7693cf4ac1617cab5",
+            "geometrySha256": "4b9439322f94f93579312d34fe65879635808105dca44207660a88376dab05c0"
+          },
+          {
+            "candidate": "probability-0.35",
+            "regionCount": 128,
+            "decodedOutputSha256": "75a4c6f09c18519a062ba836f972bec187bf0adf747c0ccf8368e0919bad8ede",
+            "geometrySha256": "ead17b9aa1546238ebdd00cbb43726fb6cc5b2d3474c5ba9a8424c843f9ada77"
+          },
+          {
+            "candidate": "box-0.55",
+            "regionCount": 128,
+            "decodedOutputSha256": "0477e5f8603460398c97f6d33413fb951b0cffb4e063fb6445cfc92b2777461c",
+            "geometrySha256": "063711b8f6ba3b7472285604e77fd484faa7fcace831dc905aa8def1f6ea2f76"
+          },
+          {
+            "candidate": "box-0.65",
+            "regionCount": 128,
+            "decodedOutputSha256": "0477e5f8603460398c97f6d33413fb951b0cffb4e063fb6445cfc92b2777461c",
+            "geometrySha256": "063711b8f6ba3b7472285604e77fd484faa7fcace831dc905aa8def1f6ea2f76"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 128,
+            "decodedOutputSha256": "08e3875d67633b9bcb666bb20eb53fc04ca01c700f19f3148728c0703aea9a78",
+            "geometrySha256": "fece3a371ef7f3f091a8eb2c8d029b0a0ad5e7056513ff04feab5888fb05a031"
+          },
+          {
+            "candidate": "unclip-1.7",
+            "regionCount": 128,
+            "decodedOutputSha256": "e9794f1b53cc5f80681b5fabe90f2b7b7dab950b9cccb0caee843f29dccebf9b",
+            "geometrySha256": "ff5ecbf1c8d5e65ca6873e73a073eb817bad1a7e0fa5b67a783318692ed12899"
+          }
+        ]
+      }
+    ]
+  },
+  "holdout": {
+    "candidates": [
+      {
+        "candidate": {
+          "name": "default",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.5,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": true
+        },
+        "images": 24,
+        "iou05": {
+          "tp": 436,
+          "fp": 377,
+          "fn": 584,
+          "precision": 0.5362853628536285,
+          "recall": 0.42745098039215684,
+          "f1": 0.4757228587015821
+        },
+        "iou075": {
+          "tp": 102,
+          "fp": 711,
+          "fn": 918,
+          "precision": 0.12546125461254612,
+          "recall": 0.1,
+          "f1": 0.11129296235679215
+        }
+      },
+      {
+        "candidate": {
+          "name": "unclip-1.3",
+          "probabilityThreshold": 0.3,
+          "boxThreshold": 0.6,
+          "unclipRatio": 1.3,
+          "scoreMode": "Fast",
+          "boxType": "Quadrilateral",
+          "isBaseline": false
+        },
+        "images": 24,
+        "iou05": {
+          "tp": 509,
+          "fp": 304,
+          "fn": 511,
+          "precision": 0.6260762607626076,
+          "recall": 0.49901960784313726,
+          "f1": 0.5553737043098745
+        },
+        "iou075": {
+          "tp": 149,
+          "fp": 664,
+          "fn": 871,
+          "precision": 0.18327183271832717,
+          "recall": 0.14607843137254903,
+          "f1": 0.16257501363884344
+        }
+      }
+    ],
+    "images": [
+      {
+        "imageId": "hiertext-validation-012bfb1d9f9afc48",
+        "imageFileName": "012bfb1d9f9afc48.jpg",
+        "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+        "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          768
+        ],
+        "rawOutputSha256": "8bba95b50118e8d98420a90e30514e99e31f9008554789b1f5d117f3177a3248",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 24,
+            "decodedOutputSha256": "d86c06c10053b1651d6cdd1337606d25f665d0c32e33c014690ca7617f7e41a2",
+            "geometrySha256": "660afb8e8a38d2b2f7e0d0961d819b0322b82d7f82a81ad5b628ca49e9e96a8c"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 24,
+            "decodedOutputSha256": "64aae4a082b1203a46f47093d346d72b970c3d1fc913ac47be54c794402417c6",
+            "geometrySha256": "af4ac8bcb19140dd27014fb19d0cdfa33b098aa49c9a9358eb28a52fe976d532"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-04c69de1d1bf9892",
+        "imageFileName": "04c69de1d1bf9892.jpg",
+        "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+        "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "ac378321990de2d1eaf6689b7223082d6eeab4ce86e26b9ad874cae4dab813dc",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 59,
+            "decodedOutputSha256": "5b5a6ae0a50012bb9344aaac0c94254fe72f4fa99d193be6412e3fce3ff23759",
+            "geometrySha256": "687275e66cb317c8a60edb8ee49c60c8fa4f0a3a3c3418fe6c66d5b3eb700fe8"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 59,
+            "decodedOutputSha256": "470a975b6311ace6321cdb70487058a4403b74f1f1c7c4f796013cad8fc16016",
+            "geometrySha256": "79777d80bd2d106666dd95cb419e8e692c945587cf9c7a34d6562334d4aaa107"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-07f328166c0ebbf7",
+        "imageFileName": "07f328166c0ebbf7.jpg",
+        "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+        "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "9659b0b8e177cfe7f0a4810f2a54719af949d869eddaa6de23409e807b4d9150",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 27,
+            "decodedOutputSha256": "37d5f59fd3c68e414efd79e8bd0ce04d5074b37f57393ead30e962f4d6b651ec",
+            "geometrySha256": "83b8b0a0e3fefad326c8b41d9378f81f4bafc1ee9ac42fff28adeaea18bda704"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 27,
+            "decodedOutputSha256": "947899c971874ebc694e4ccedc6378193e6ac6b9a1d8092e04e04bb80aa56aea",
+            "geometrySha256": "de857735d71bbb413a0723aa69f443341e4e0f4220429494eb6f67840c9fcb46"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-16f097c5d6407f7d",
+        "imageFileName": "16f097c5d6407f7d.jpg",
+        "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+        "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "1f8bdde9b3bfabf6c153f738cae5ebff9dd91751c7a7ff90e01f406e76d4d73c",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 61,
+            "decodedOutputSha256": "1f4ab82b35ce5325023f21b77238bbec19f407a696122dfce02be47f6db44fd4",
+            "geometrySha256": "00995625b13fd4aae505148d62ed1c37e51f4a02c789b0cd822fbf97842b1ee4"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 61,
+            "decodedOutputSha256": "ead0212ec7bca5fbaa37f8d44a0e2c80364727461357fbfa793150cbe04c7040",
+            "geometrySha256": "0804bdd86ea8b77c849d41b7a8311c19ce7116a528f10e8f79e1f118dc0f5110"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-26e97e9f6d719dee",
+        "imageFileName": "26e97e9f6d719dee.jpg",
+        "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+        "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "ce441da6758bae3c023b7a00fd9064dde3b5474f116c41987c8ebcd7c6bb5d02",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 28,
+            "decodedOutputSha256": "4e506d38e93ff512d74a736a97e83618274bd7f77195d7dec6204e3528c20e28",
+            "geometrySha256": "3f8847ea0494809d9e52a9a0995a7ed0f15ab38483ea9c77c18fb1c419826c66"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 28,
+            "decodedOutputSha256": "5e469538cb5928c1596f4ac9f78f92d55826eff9b0b1699144c3bc9865203ea2",
+            "geometrySha256": "3afa9a7a4e1464537f8f62d4f5d169ed5dc910aa5523a30de0b85ac28420ce61"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-291e9c3df3a9ffb5",
+        "imageFileName": "291e9c3df3a9ffb5.jpg",
+        "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+        "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "025fba7080acb946d408e0f604100577369baf0f3d72a8e548fcbd002ef6625a",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 22,
+            "decodedOutputSha256": "94f6a97934c1bdb91c41b084f2339b0c3503f9649c29bf29339ac845fe182467",
+            "geometrySha256": "20fdcbbc20d9c070ad1ec40577c1f370df4a576f934d10c1521b07b64658368c"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 22,
+            "decodedOutputSha256": "29f9dae58b6dfc5f6b236a622c58deba6486d3546ad65a79d6f065e8669e178f",
+            "geometrySha256": "aededbb8c91c66fd5958c7c4415b9f3a15c072f54be56b492cb92ff0c7955e98"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-3ea969425b1c88bd",
+        "imageFileName": "3ea969425b1c88bd.jpg",
+        "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+        "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "db77d1b65c1fa5298e3a05029069bf718ebcc3520acd03b0b12b5ae1dbd8cff2",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 52,
+            "decodedOutputSha256": "6d307577c5e69d3a536124788333f0ba01961f9b3596c87dade857857a023f9a",
+            "geometrySha256": "b4d90895f39ca384c4c27cc0a1b734d10df7e4d3afddfae7dc8c84abea70fdfe"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 52,
+            "decodedOutputSha256": "db6c300723c02a6310d68f2e4f501d7300cdd53efbdcf240abb37f09a70637be",
+            "geometrySha256": "432185168ffa01368fa558b0c5d2016489ccee45a435f40148cb57bbbca98221"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-466c6ce044b8bd46",
+        "imageFileName": "466c6ce044b8bd46.jpg",
+        "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+        "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "dc0559ec64d009a5d19f2e15c78ac029118c0a112a9dd4dcbd477537f4fb2241",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 22,
+            "decodedOutputSha256": "14001d80d6a5f1c8a796dae4a32ecb72d3b4a1f7f1a54db6589e5b272120bb93",
+            "geometrySha256": "2de1d42e6187d7462826355eae74785aca71bcff978b3ae7ee6837903e0c9081"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 22,
+            "decodedOutputSha256": "f39a02b94fd047e4a933546577d26dc769ed86b589dbd9f0ad98a9610f535a78",
+            "geometrySha256": "f47ecd32a70c1373be51ad780227132e8edfcff3c55f9b7cb329eefcba6e1ae0"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-4e0277825c80fed8",
+        "imageFileName": "4e0277825c80fed8.jpg",
+        "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+        "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "a61fdd3a672f35cffd7a02f32d7d170b9c9c78b041edc411ac34c3ddd0faed9d",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 41,
+            "decodedOutputSha256": "8945864b8c63d6741a68c0a8f3d1170693afef751faebb728a5a48a500b91293",
+            "geometrySha256": "f5d80aaf639fd90656d27881bb1f488b3b23d9d6515861184b9983be96529340"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 41,
+            "decodedOutputSha256": "587952757065afe644e4531f73c932d80887e265d78f3a743772524fd45a88b1",
+            "geometrySha256": "64970f837e09b964ea83dc567befaaad73485e90704bde70284fa40f32b0b115"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-62bd21d5af1428d9",
+        "imageFileName": "62bd21d5af1428d9.jpg",
+        "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+        "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "c7039e759496451c3e1ffb0866a51cfb03f83027bdfbe5c20bc3664726d76ba7",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 8,
+            "decodedOutputSha256": "c739282eac9191d1ca4bacc8d7734d720db62f8506246d81cf56fc64955b974b",
+            "geometrySha256": "d51cd739c03274217056025fede539191522599b23767205771b79a7bbd70b2c"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 8,
+            "decodedOutputSha256": "57b24ab9511c13567b2da5cd1fb3a662af86ca76121248697497414644bdaccb",
+            "geometrySha256": "961cdf85c619b4edafca075b673596c623f246a6b29f3e706d31fae38e7d1966"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-7a7d0f471fe900e2",
+        "imageFileName": "7a7d0f471fe900e2.jpg",
+        "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+        "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "e0fa9af1abedd0e45b43430bbe4a066434a5ac65e99230b3a474986834005163",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 58,
+            "decodedOutputSha256": "41cdda076623e0ced5bfa4be65ccbaa8c39d7262e8af4f5bd69a858699c7ed48",
+            "geometrySha256": "1e854bbe1b78321851171df1b28e470fd1107d2e1bc4be89f5e5d2c1f38cf190"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 58,
+            "decodedOutputSha256": "da6d072f052e2b1337c259116ace949c7f217af708816a7e2b2da536546cda3c",
+            "geometrySha256": "e2a8a5ccee13fe3f3f26937fc3446bdfda163c5ef3fb98e90fadde0087d22dab"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-7d9138e29dd9b711",
+        "imageFileName": "7d9138e29dd9b711.jpg",
+        "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+        "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          640
+        ],
+        "rawOutputSha256": "7fcc04852c905fc314f74da0c84efe4b29818dfb32c67507ca5ee2225ed31bfb",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 21,
+            "decodedOutputSha256": "b8bcd1c265c96f9226a3015a99255d2d7bcf2c719c71512a9a8902d4a95f696b",
+            "geometrySha256": "cb8a7c1198608c1518f14cfef501b5f4ee2e8bf3c856d09da1c5b3fd0c8abef0"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 21,
+            "decodedOutputSha256": "8b568e5035f5ad6cd3b9fcf89918ca1a9b650543dfcd1cb44ac5ad223278690b",
+            "geometrySha256": "9fa549566b0eebf8985b903462c7934b1146c51c958391e2b8b912fef2811cdf"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-83499e8f67512938",
+        "imageFileName": "83499e8f67512938.jpg",
+        "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+        "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "5118b2a2f6abffd791b3d174557ba4669eff4c768a58a428e00117d5fee1b6a2",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 44,
+            "decodedOutputSha256": "c28715bee5991353eaaa15f9b1e1ac197d5e7387ba9fcd6e799a45aa1484e2f1",
+            "geometrySha256": "2284c0f8d7b71c8b4d608ddec8ed05b157acfbbd7c4f6173f4db1f4a7f4820f6"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 44,
+            "decodedOutputSha256": "4b0d163fb252caead2c95703b6da63541ceee85cee508876d1c6d222243b19b9",
+            "geometrySha256": "a64309defe00b468698f6902d75885c47070489c0511d03e09b1c3d1b7f4ccac"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-86760f63da399e07",
+        "imageFileName": "86760f63da399e07.jpg",
+        "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+        "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          768
+        ],
+        "rawOutputSha256": "a5c8c5b903fed3542a7f27d5692ad1ac26bfbe0dc7cbd19d879bae9c631c6424",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 49,
+            "decodedOutputSha256": "fba97d4e420500a4b3bc6f4ce309c1f05304168f17da6858baabf1c5451e54db",
+            "geometrySha256": "2ab38b303c0dd7e66444bcbc72d85ee32f11929e33e8a877ff352e37c5b10853"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 49,
+            "decodedOutputSha256": "ad76ccf8c75eb896481bcc9e8b061b603986343ebb465422ae504f41522d59a2",
+            "geometrySha256": "a00f7f9139d43b44cf4f0b626c4246ca337b5e83a3d51450dc998d13c8065127"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-870b721faf7b475d",
+        "imageFileName": "870b721faf7b475d.jpg",
+        "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+        "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "4629dd641795cf068c1a4be49e44735fd7ab8e4e43498a9ad680ebd075c6ce59",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 55,
+            "decodedOutputSha256": "813e361ebfd10ba38998d466d7984acee0fe7cd8a2c68e976d65c69d0bed27e0",
+            "geometrySha256": "01c5cd357b72251d4fb6ce550a9107197193d7c5803187012842bd956060956f"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 55,
+            "decodedOutputSha256": "bbd083c8f2acace1314f027bdb0bb809cf1b153e478402d9a7b0f974de07b35e",
+            "geometrySha256": "325a9d16f193d33b64a5fe6b9e7bcfe17d8703a8926898e1bcc3b076ddfc6d2d"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-945782e585e04e0e",
+        "imageFileName": "945782e585e04e0e.jpg",
+        "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+        "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "a9e31c29fdcf5719b2de8d5c3f2035bb3dac7cea76828028fae8d5c55a86fb34",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 20,
+            "decodedOutputSha256": "4d8153e15c844102b59c8c37b6ad88e5ca23565b00853921e62ca4871ebb566f",
+            "geometrySha256": "983f6665b012fe7ce5998ad21be6c159679cbc405021e8ce0902d2a110e05a7f"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 20,
+            "decodedOutputSha256": "32310a85f7fe9a66045d01929d8267ef465547f2a8c603067b88bdd2479a260b",
+            "geometrySha256": "e354448281153ffd2eb4c644467958b44d29a3794eb774438b0ef82b95ac1c31"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-973b7f62446f02cd",
+        "imageFileName": "973b7f62446f02cd.jpg",
+        "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+        "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "a92807e17772453a3cde8d6a547751f79f5ad893c0f5d66c61ca00b08a505b01",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 39,
+            "decodedOutputSha256": "ccffe321d24a447a8f8f000dbeb91512957665aeddfc79aa220f38f6b631ef21",
+            "geometrySha256": "3da7bf1391c7cded509a196e800f69852ae3e12af9cafbffdd39e823221d9ded"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 39,
+            "decodedOutputSha256": "569db8ccdea36ca9d8803d0226277a74e289777975f917fb07ed0c39ffc9fad9",
+            "geometrySha256": "64edc276f10f2117dfccbf7ce3a07e96ae73558c4ff9e5b1640c6186928b7b48"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-a2364c31de73114d",
+        "imageFileName": "a2364c31de73114d.jpg",
+        "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+        "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "e7c284d308c308c031239dc347fcccbc65c3f4991627ee48015698e2777535dd",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 15,
+            "decodedOutputSha256": "6b6c2319bbbdf123c03a360d2e7dc0b42dbc9a3b9709d87a52859c5543b90232",
+            "geometrySha256": "52de04609d927d472a70183cd19b2ab759c7c7dc473299dfd58bb31653fc0f49"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 15,
+            "decodedOutputSha256": "3f97ffd2225722a9a3fa474beb23317b72bfbe97670d582f3377d306a63ed727",
+            "geometrySha256": "d933474bcf45f6f24603a93c600ab380633d6265f85d1157b6cd2d3739d5d46d"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-b4cc87af903b8270",
+        "imageFileName": "b4cc87af903b8270.jpg",
+        "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+        "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "7c5de0f10ccc6d24a6e45c06f11b773c343bd1088ee36ccc5b2858e6df2bb6e2",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 24,
+            "decodedOutputSha256": "9e1b4ec0854ade85f94eae0b1e0773eb4fec50bc090ef53775d4e15783a12c98",
+            "geometrySha256": "8683595300bb87ea9b5bb6d1599a59bff8b87b743d40f15ab8adbd6e0d5f9138"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 24,
+            "decodedOutputSha256": "a2def7dad2ad126dd9e3764782ebbdc8feae4468b6b4010b17b293697b9d81b8",
+            "geometrySha256": "b520c5ab03c9701c42d651cc1179f0389b6f309ea2027029339a0fd42b7b477c"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-c2291a13c825966f",
+        "imageFileName": "c2291a13c825966f.jpg",
+        "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+        "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "0518c1c308ff55ace108671f505e8362fbb15c7dd05701021ce822a722f1c816",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 30,
+            "decodedOutputSha256": "decfc6477acddec3eedd7ce04062d3d41a0769e0df53af4a84eacd8d4657f35a",
+            "geometrySha256": "58aaef0202c6f0d9d530b5a9900f04affde833a8699693e800bf3e0670c21480"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 30,
+            "decodedOutputSha256": "0f62d4e048335585bb59d40accf8fd02ad9f43c286be6759669d3bb7c79b3d3a",
+            "geometrySha256": "61ba136647b097749d7c7d67901b1a20592ad3a2c4058bec16974beb29849bf2"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-c237f9cec8e311b0",
+        "imageFileName": "c237f9cec8e311b0.jpg",
+        "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+        "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+        "outputShape": [
+          1,
+          1,
+          640,
+          1024
+        ],
+        "rawOutputSha256": "755bc285375bc4afca756a638d65e625e96d9b81d0229cbfdc6c14989e997eb9",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 6,
+            "decodedOutputSha256": "0a82980cebea544a6cb6df3aa9bfaa959994162161b2a97899a707402b8a9e7a",
+            "geometrySha256": "56c5e7c0719a8a328867ae1a69fc9fb9303d26e24f376f9b039e6edc14ab99c9"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 6,
+            "decodedOutputSha256": "0e0d1d9277c7640b23898ddf4054becd339b2c2659a2ae3be1d94dbed0704cee",
+            "geometrySha256": "d013566ca9bc4b77403fd70a0eaf790e3f3d00d70a72867c8f0e33806c02a8d1"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-d989ba898a556309",
+        "imageFileName": "d989ba898a556309.jpg",
+        "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+        "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          896
+        ],
+        "rawOutputSha256": "44c16c7c755c025119e0cd2cad4fcc8e201736f786f4c0ff6d0377ae8ec01e79",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 34,
+            "decodedOutputSha256": "345a9f30aa302042a7f3c755f5378b2b93e58a79231391363e61899236d7228c",
+            "geometrySha256": "4fc4fc977fbd1f67dae79857f98e84eb8480feaa7d0534fadb51b881159db561"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 34,
+            "decodedOutputSha256": "548563bd43f88e7178aa7994987e43704bf1c78494321c153fb4de56f75c865a",
+            "geometrySha256": "afa121d0a711767ee2cd71723d7bb03305839c3b91965f04d6013380cfd5696c"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-e02496ac77418748",
+        "imageFileName": "e02496ac77418748.jpg",
+        "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+        "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+        "outputShape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "rawOutputSha256": "88e2b3d87f20520d470d69326ffa6e567ef0d8f9c187c5e262e894f6f8b370ea",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 66,
+            "decodedOutputSha256": "2790f80aba8050b254a1b28c0b9476e13c8b2cd74457cf2db9ba30750bbcf4e7",
+            "geometrySha256": "f59d44ae09b85f1fb10267469bbd4712c72ed8b997d9437a94783d4ac3603d8f"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 66,
+            "decodedOutputSha256": "19c05c9c1daa83209e3713e0a67593c562f340b08e9b63e99dcd46fc10eeac39",
+            "geometrySha256": "e6eb836d1f66acd0071216afc7c50f37a307a8cb67f6f3d92d036893ae984667"
+          }
+        ]
+      },
+      {
+        "imageId": "hiertext-validation-e4de4f4143491a9d",
+        "imageFileName": "e4de4f4143491a9d.jpg",
+        "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+        "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+        "outputShape": [
+          1,
+          1,
+          768,
+          1024
+        ],
+        "rawOutputSha256": "bd0b72312c2ccbb7c091439d35dba32f1e4ae69389f5e6c95682580daab30413",
+        "candidates": [
+          {
+            "candidate": "default",
+            "regionCount": 8,
+            "decodedOutputSha256": "395fed352e868e5b7a9e0ed333fee52f3bfb5ec1613036e224e5a6719206e26c",
+            "geometrySha256": "eb0be3de0c92f742f1a85d35fe69965768c9473df25b1126aa56654be2a11bcf"
+          },
+          {
+            "candidate": "unclip-1.3",
+            "regionCount": 8,
+            "decodedOutputSha256": "478ce898af39d2cc21156547aa87a69b3cf786864cb61ee1cc06fbd06e99a4ff",
+            "geometrySha256": "42d1cf8239bcd4490dc7e579cefdb4c619a13c418a0a4f5d79f565c84e33acb2"
+          }
+        ]
+      }
+    ]
+  }
+}

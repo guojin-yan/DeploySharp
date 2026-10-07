@@ -156,6 +156,7 @@ namespace DeploySharp.Visual.Tests
                 InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(1, 1, 8, 8), map)), CancellationToken.None));
             Assert.AreEqual(1, result.Regions.Count);
             Assert.IsTrue(result.Regions[0].Score <= 1f);
+            Assert.AreEqual(1.0000001f, map[(2 * 8) + 2], "DB decoding must not mutate the borrowed backend output tensor while normalizing boundary noise.");
 
             map[0] = float.NaN;
             VisualException nonFinite = Assert.ThrowsExactly<VisualException>(() => profile.Decoder.Decode(new VisualDecodeContext(input, profile,

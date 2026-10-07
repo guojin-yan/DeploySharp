@@ -149,11 +149,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 {
                     float value = probabilities[index];
                     // CPU kernels can round a sigmoid boundary to a few ulps outside [0,1].
-                    // Accept only that numerical noise, then normalize it before thresholding.
+                    // Accept only that numerical noise and normalize this local value; outputs
+                    // are borrowed from the backend and must never be mutated by a decoder.
                     if (float.IsNaN(value) || float.IsInfinity(value) || value < -ProbabilityTolerance || value > 1f + ProbabilityTolerance) throw Failure(context, "DB probability values must remain finite and in [0,1].", technicalDetails: "index=" + index + ";value=" + value);
-                    if (value < 0f) value = 0f;
-                    else if (value > 1f) value = 1f;
-                    probabilities[index] = value;
+                    value = ClampProbability(value);
                     visited[index] = value <= Options.ProbabilityThreshold ? (byte)1 : (byte)0;
                 }
 
@@ -173,7 +172,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     {
                         int current = queue[head++];
                         int x = current % width;
-                        maskScore += probabilities[current];
+                        maskScore += ClampProbability(probabilities[current]);
                         if (x != 0) Visit(current - 1, visited, queue, ref tail);
                         if (x != width - 1) Visit(current + 1, visited, queue, ref tail);
                         if (current >= width) Visit(current - width, visited, queue, ref tail);
@@ -265,12 +264,19 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 int rowOffset = y * width;
                 for (int x = rowLeft; x <= rowRight; x++)
                 {
-                    sum += values[rowOffset + x];
+                    sum += ClampProbability(values[rowOffset + x]);
                     count++;
                 }
             }
             if (count == 0) return 0f;
             return checked((float)(sum / count));
+        }
+
+        private static float ClampProbability(float value)
+        {
+            if (value < 0f) return 0f;
+            if (value > 1f) return 1f;
+            return value;
         }
 
         private static bool TryGetConvexRowRange(PointF[] polygon, int y, int left, int right, out int rowLeft, out int rowRight)
