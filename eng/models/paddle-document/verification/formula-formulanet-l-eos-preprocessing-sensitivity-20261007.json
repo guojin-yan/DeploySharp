@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "deploysharp-formulanet-l-official-onnx-trace-v1",
+  "runtime": {
+    "paddlex": "3.7.2",
+    "paddle": "3.0.0",
+    "device": "cpu",
+    "runner": "official PaddleX PP-FormulaNet-L predictor runner"
+  },
+  "model": {
+    "id": "paddle-formula/pp-formulanet-l",
+    "onnxSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+    "officialProgramSha256": "67d356d53daa3df256acc3ac47c34b72399fe3df7debd6990be5129e3fd4b8f3",
+    "officialWeightsSha256": "039b320b0d1b64361a053f7496b05db9f53fabd22d27c80ccfab4c59d3881318",
+    "inferenceYamlSha256": "39bcdd283d08c4328ae853a62da1c6d2a4966360dae0ff0524670ae65ae91af9",
+    "yamlMaxSequenceLength": 1024,
+    "decoderSafetyLimitSequenceLength": 4096,
+    "startTokenId": 0,
+    "endTokenId": 2
+  },
+  "sample": {
+    "image": "211110912-2.png",
+    "imageSha256": "2ee24dde726358fe671c4360c5b28d7f22162f7acd0464789aec8c964a6618ad",
+    "referenceLatexSha256": "3a3f86aa8c51ed3aa99b33677922a7afaab3a2b877d73e3d7db6957c0d4f537f",
+    "inputShape": [
+      1,
+      1,
+      768,
+      768
+    ],
+    "inputTensorSha256": "5e3f24d90a5306bc6b4a548d450bfcd0e09623babfc2e1e739edce0e654ec1d5",
+    "rawOutputShape": [
+      1,
+      1025
+    ],
+    "onnxRawTokenCount": 1025,
+    "officialRawTokenCount": 1025,
+    "rawStartsWithBos": true,
+    "generatedTokenCountExcludingBos": 1024,
+    "officialAndOnnxRawTokenIdsExactMatch": true,
+    "firstDifferingTokenIndex": null,
+    "eosTokenOccurrences": 0,
+    "eosTokenIndex": null,
+    "reachedEos": false,
+    "onnxDecoderWarning": [
+      "missing-eos:sequence-may-be-truncated"
+    ],
+    "officialLatexCharacters": 1777,
+    "deploySharpLatexCharacters": 2139,
+    "officialAndDeploySharpWhitespaceStrippedLatexExactMatch": true,
+    "referenceLatexCharacters": 175,
+    "officialExactMatchToReferenceAfterWhitespaceRemoval": false,
+    "deploySharpExactMatchToReferenceAfterWhitespaceRemoval": false,
+    "officialLatexPreview": "\\begin{array}{r}{\\tau(T)-\\tau(S)=\\left(\\left(\\sqrt{\\displaystyle\\frac{t}{s}}-1\\right)\\cdot\\sum_{i\\in S}e_{i}\\right)+\\left(\\sum_{i\\in T\\backslash S}e_{i}\\right)}\\\\ {\\Rightarrow\\|\\tau(T)-\\tau(S)\\|_{2}=\\sqrt{s\\cdot\\left(\\sqrt{\\displaystyle\\frac{t}{s}}-1\\right)^{2}+t-s}\\qquad\\qquad\\qquad\\qquad\\qquad\\qqu",
+    "officialLatexSuffix": "d\\qquad\\qquad\\qquad\\qquad\\qquad{\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad{\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad{\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad{\\qquad\\qquad\\qquad\\qquad\\qquad\\qquad\\ {\\ \\ \\ \\ \\ \\ \\ \\ \\ \\ \\tau\\ \\tau\\tau{\\tau(T(T r "
+  },
+  "preprocessingComparison": {
+    "sourceImage": "F:\\OCRBenchmarkTesting\\datasets\\realFormula-zenodo-11296815\\extracted\\realFormula-public\\img-corrected\\211110912-2.png",
+    "sourceImageSha256": "2ee24dde726358fe671c4360c5b28d7f22162f7acd0464789aec8c964a6618ad",
+    "officialPreprocessedTensorSha256": "5e3f24d90a5306bc6b4a548d450bfcd0e09623babfc2e1e739edce0e654ec1d5",
+    "officialPreprocessedTensorPath": "E:\\Model\\PaddleDocument\\validation\\formula-eos-input-reference-20261007\\211110912-2.paddlex.f32",
+    "deploySharpPreprocessedTensorPath": "E:\\Model\\PaddleDocument\\validation\\formula-eos-input-reference-20261007\\211110912-2.deploysharp.f32",
+    "deploySharpPreprocessedTensorSha256": "2392730fc7f70da3d6270ac2744c55c6f20f56ddefe491c7ef2fbb735065ea75",
+    "inputShape": [
+      1,
+      1,
+      768,
+      768
+    ],
+    "elementCount": 589824,
+    "exactElementMatchCount": 586391,
+    "differentElementCount": 3433,
+    "maximumAbsoluteDifference": 0.02256368100643158,
+    "meanAbsoluteDifference": 4.007698350960709e-08,
+    "officialRange": [
+      -4.563291072845459,
+      1.1904487609863281
+    ],
+    "deploySharpRange": [
+      -4.563291072845459,
+      1.1904487609863281
+    ],
+    "method": "PaddleX Predictor pre_tfs Read -> UniMERNetImgDecode -> UniMERNetTestTransform -> LatexImageFormat"
+  },
+  "preprocessingSensitivity": {
+    "baselineInputTensorSha256": "2392730fc7f70da3d6270ac2744c55c6f20f56ddefe491c7ef2fbb735065ea75",
+    "currentInputTensorSha256": "5e3f24d90a5306bc6b4a548d450bfcd0e09623babfc2e1e739edce0e654ec1d5",
+    "baselineRawTokenCount": 1025,
+    "currentRawTokenCount": 1025,
+    "rawTokenIdsExactMatch": true,
+    "differentRawTokenCount": 0,
+    "baselineEosIndex": null,
+    "currentEosIndex": null,
+    "baselineReachedEos": false,
+    "currentReachedEos": false,
+    "interpretationBoundary": "Single sample/input-preprocessing sensitivity check; does not establish general preprocessing equivalence or formula quality."
+  },
+  "conclusion": "The official PaddleX runner and ONNX Runtime produced byte-for-byte identical token IDs for the exact same captured Float32 input. Neither output contains EOS; both emit BOS plus 1024 generated positions. The matching inference.yml max_seq_len=1024 is configured under the preprocessing label encoder, so this observation alone does not prove that YAML field is the causal generation cap. The trace localizes this sample's non-EOS behavior to the official/exported execution path rather than DeploySharp token decoding.",
+  "boundary": "One realFormula sample, one official checkpoint export and CPU runtime pair. This does not establish a general quality result, a semantic-equivalence judgment, or behavior on other models/backends."
+}

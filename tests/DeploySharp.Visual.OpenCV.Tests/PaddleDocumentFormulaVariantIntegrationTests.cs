@@ -199,6 +199,15 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
         string? archiveSha256 = File.Exists(archivePath) ? FileSha(archivePath) : null;
         int sampleLimit = 0;
         _ = int.TryParse(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_LIMIT"), out sampleLimit);
+        string imageFilter = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_IMAGES") ?? string.Empty;
+        HashSet<string> selectedImages = imageFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (selectedImages.Count > 0)
+        {
+            string[] missingImages = selectedImages.Where(image => samples.All(sample => !string.Equals(sample.Image, image, StringComparison.OrdinalIgnoreCase))).ToArray();
+            Assert.AreEqual(0, missingImages.Length, "The realFormula image filter contains unknown samples: " + string.Join(", ", missingImages));
+            samples = samples.Where(sample => selectedImages.Contains(sample.Image)).ToList();
+        }
         if (sampleLimit > 0) samples = samples.Take(sampleLimit).ToList();
 
         var cases = new[]
@@ -215,6 +224,15 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var selectedCases = cases.Where(item => selectedModels.Count == 0 || selectedModels.Contains(item.Model)).ToArray();
         Assert.IsTrue(selectedCases.Length > 0, "The model filter did not select a known formula model.");
+        string? inputTensorOverridePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_INPUT_TENSOR");
+        if (!string.IsNullOrWhiteSpace(inputTensorOverridePath))
+        {
+            Assert.AreEqual(1, samples.Count, "An input tensor override is only valid for a single selected formula sample.");
+            Assert.AreEqual(1, selectedCases.Length, "An input tensor override is only valid for a single selected formula model.");
+        }
+        bool captureTokenTrace = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_TRACE_TOKENS") == "1";
+        string? inputTensorDumpDirectory = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_INPUT_DUMP_DIR");
+        if (!string.IsNullOrWhiteSpace(inputTensorDumpDirectory)) Directory.CreateDirectory(inputTensorDumpDirectory);
 
         using var registry = new BackendRegistry();
         registry.UseOnnxRuntime();
@@ -234,6 +252,12 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                 new PaddleDocumentFormulaSchema(tokenizer, end, start, pad, unk), modelSize: formulaCase.Size, maximumSequenceLength: 4096);
             using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), request);
 
+            string sourceModelDirectory = Path.GetDirectoryName(yaml)!;
+            string sourceProgramPath = Path.Combine(sourceModelDirectory, "inference.json");
+            string sourceWeightsPath = Path.Combine(sourceModelDirectory, "inference.pdiparams");
+            var maxSequenceMatch = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(yaml), @"(?m)^\s*max_seq_len:\s*(\d+)");
+            int? yamlMaximumSequenceLength = maxSequenceMatch.Success ? int.Parse(maxSequenceMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : null;
+
             var resultRows = new List<object>(samples.Count);
             long totalEditDistance = 0;
             long totalReferenceCharacters = 0;
@@ -248,7 +272,19 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                 Assert.IsTrue(File.Exists(imagePath), "realFormula image is missing: " + imagePath);
                 Assert.AreEqual(sample.ImageSha256, FileSha(imagePath), "realFormula image SHA changed: " + sample.Image);
                 using PreparedVisualInput input = factory.CreateFromFile(imagePath, profile.VisualProfile, inputId: sample.Image);
+                string? inputTensorOverrideSha256 = null;
+                if (!string.IsNullOrWhiteSpace(inputTensorOverridePath))
+                    inputTensorOverrideSha256 = OverrideFloat32Tensor(input.Tensor, inputTensorOverridePath);
                 InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                PaddleDocumentFormulaDecoder decoder = (PaddleDocumentFormulaDecoder)profile.VisualProfile.Decoder;
+                ITensor rawOutput = outputs.GetRequired(decoder.OutputName);
+                long[] rawTokenIds = ReadIntegerSequence(rawOutput);
+                string? inputTensorDumpFile = null;
+                if (!string.IsNullOrWhiteSpace(inputTensorDumpDirectory))
+                {
+                    inputTensorDumpFile = Path.GetFileNameWithoutExtension(sample.Image) + ".deploysharp.f32";
+                    File.WriteAllBytes(Path.Combine(inputTensorDumpDirectory, inputTensorDumpFile), ReadFloat32Bytes(input.Tensor));
+                }
                 PaddleDocumentFormulaResult result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(
                     new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
 
@@ -274,6 +310,11 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                 {
                     image = sample.Image,
                     imageSha256 = sample.ImageSha256,
+                    inputTensorSource = inputTensorOverrideSha256 == null ? "deploysharp-preprocessing" : "external-float32-override",
+                    inputShape = input.Tensor.Shape.ToArray(),
+                    inputTensorSha256 = TensorSha256(input.Tensor),
+                    inputTensorOverrideSha256,
+                    inputTensorDumpFile,
                     referenceSha256 = FileShaText(sample.ReferenceLatex),
                     referenceLength = normalizedReference.Length,
                     predictionLength = normalizedPrediction.Length,
@@ -286,6 +327,10 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                     whitespaceTokenErrorRate = (double)tokenEditDistance / Math.Max(1, referenceTokens.Length),
                     whitespaceTokenExactMatch = referenceTokens.SequenceEqual(predictionTokens, StringComparer.Ordinal),
                     reachedEndOfSequence = reachedEos,
+                    rawOutputShape = rawOutput.Shape.ToArray(),
+                    rawEosIndex = Array.IndexOf(rawTokenIds, end),
+                    rawOutputTokenIds = captureTokenTrace ? rawTokenIds : null,
+                    decodedTokenIds = captureTokenTrace ? result.TokenIds.ToArray() : null,
                     emptyPrediction = normalizedPrediction.Length == 0,
                     warnings = result.Warnings.ToArray(),
                     prediction = result.Latex
@@ -296,6 +341,13 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                 model = "paddle-formula/" + formulaCase.Model,
                 modelSha256 = FileSha(modelPath),
                 tokenizerYamlSha256 = FileSha(yaml),
+                sourceInferenceProgramSha256 = File.Exists(sourceProgramPath) ? FileSha(sourceProgramPath) : null,
+                sourceInferenceWeightsSha256 = File.Exists(sourceWeightsPath) ? FileSha(sourceWeightsPath) : null,
+                startTokenId = start,
+                endTokenId = end,
+                padTokenId = pad,
+                yamlMaximumSequenceLength,
+                decoderSafetyLimitSequenceLength = ((PaddleDocumentFormulaDecoder)profile.VisualProfile.Decoder).MaximumSequenceLength,
                 backend = "onnxruntime-cpu",
                 sampleCount = samples.Count,
                 exactMatches,
@@ -349,6 +401,44 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     private static string FileShaText(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+    private static string TensorSha256(ITensor tensor)
+    {
+        if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] values)
+        {
+            byte[] bytes = ReadFloat32Bytes(tensor);
+            return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        }
+        throw new InvalidOperationException("Formula image input is not a Float32 tensor.");
+    }
+
+    private static byte[] ReadFloat32Bytes(ITensor tensor)
+    {
+        if (tensor.ElementType != TensorElementType.Float32 || tensor.Buffer is not float[] values)
+            throw new InvalidOperationException("Formula image input is not a Float32 tensor.");
+        byte[] bytes = new byte[checked(values.Length * sizeof(float))];
+        System.Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+        return bytes;
+    }
+
+    private static string OverrideFloat32Tensor(ITensor tensor, string path)
+    {
+        if (!File.Exists(path)) throw new FileNotFoundException("Formula input tensor override was not found.", path);
+        if (!BitConverter.IsLittleEndian) throw new PlatformNotSupportedException("Formula input tensor overrides are currently defined as little-endian Float32.");
+        if (tensor.ElementType != TensorElementType.Float32 || tensor.Buffer is not float[] values)
+            throw new InvalidOperationException("Formula input tensor override requires a Float32 tensor.");
+        byte[] bytes = File.ReadAllBytes(path);
+        if (bytes.Length != checked(values.Length * sizeof(float)))
+            throw new InvalidDataException($"Formula input tensor override contains {bytes.Length} bytes; expected {values.Length * sizeof(float)} for shape [{string.Join(",", tensor.Shape)}].");
+        Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+        return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+    }
+
+    private static long[] ReadIntegerSequence(ITensor tensor)
+    {
+        if (tensor.ElementType == TensorElementType.Int64 && tensor.Buffer is long[] values64) return values64;
+        if (tensor.ElementType == TensorElementType.Int32 && tensor.Buffer is int[] values32) return values32.Select(value => (long)value).ToArray();
+        throw new InvalidOperationException("Formula model output is not a supported integer token tensor: " + tensor.ElementType);
+    }
 
     private static int EditDistance(string expected, string actual)
     {

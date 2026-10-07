@@ -11,6 +11,7 @@ $documents = @(
     'eng/models/paddle-document/README.md',
     'eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-error-patterns-20261007.md',
+    'eng/models/paddle-document/verification/formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md',
     'docs/model-backend-verification-matrix.md',
     'eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md'
 )
