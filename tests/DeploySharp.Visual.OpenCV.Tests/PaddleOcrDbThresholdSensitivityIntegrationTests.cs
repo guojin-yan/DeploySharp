@@ -43,6 +43,209 @@ public sealed class PaddleOcrDbThresholdSensitivityIntegrationTests
     public void PpOcrV6SmallDbThresholdSweepUsesDisjointTuneAndHoldoutSetsOnOpenVinoCpu()
         => RunThresholdSweep("openvino");
 
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void PpOcrV6SmallDbProbabilityMapsAreComparedOnTheSameHoldoutInputs()
+        => RunProbabilityMapParity();
+
+    private void RunProbabilityMapParity()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DB_SWEEP"), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_DB_SWEEP=1 to run the opt-in PP-OCRv6 Small DB cross-backend probability-map comparison.");
+
+        string datasetRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DB_SWEEP_DATASET_ROOT") ?? DefaultDatasetRoot);
+        string modelPath = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DB_SWEEP_MODEL") ?? DefaultModelPath);
+        string holdoutManifestPath = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DB_SWEEP_HOLDOUT_MANIFEST") ?? Path.Combine(datasetRoot, "data", "annotations", "manifests", HoldoutManifestName));
+        RequireFile(modelPath);
+        RequireFile(holdoutManifestPath);
+
+        List<ImageCase> images = LoadManifest(holdoutManifestPath, datasetRoot);
+        Assert.IsTrue(images.Count > 0, "The fixed HierText holdout must contain images.");
+
+        ModelId modelId = new ModelId(ModelIdValue);
+        PaddleOcrModelDescriptor descriptor = PaddleOcrModelCatalog.Find(modelId);
+        PaddleOcrReleaseArtifact release = PaddleOcrModelCatalog.GetReleaseArtifact(modelId);
+        PaddleOcrArtifactContract artifact = new PaddleOcrArtifactContract(
+            release.Opset,
+            release.Sha256,
+            "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+            "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical",
+            "Apache-2.0;external-artifact-redistribution-unverified",
+            "ppocr-official-inference-v1",
+            "deploysharp-paddleocr-db-ctc-v1");
+        PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, artifact, maximumBatch: 1);
+        string modelSha256 = Sha256File(modelPath);
+        Assert.AreEqual(release.Sha256, modelSha256, "The configured detector differs from the catalog-pinned artifact.");
+
+        using var ortBackends = new BackendRegistry();
+        ortBackends.UseOnnxRuntime();
+        using var openVinoBackends = new BackendRegistry();
+        openVinoBackends.UseOpenVino();
+        BackendRequest ortRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        BackendRequest openVinoRequest = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+        using IInferenceSession ortSession = ortBackends.CreateSession(
+            profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), ortRequest, new SessionOptions(1, false));
+        using IInferenceSession openVinoSession = openVinoBackends.CreateSession(
+            profile.CreateArtifact(modelPath, OpenVinoBackendProvider.BackendId), openVinoRequest, new SessionOptions(1, false));
+
+        var inputFactory = new OpenCvVisualInputFactory();
+        var perImage = new List<object>(images.Count);
+        double absoluteDifferenceSum = 0;
+        double maximumAbsoluteDifference = 0;
+        long comparedElements = 0;
+        long differentElements = 0;
+        long thresholdMismatchElements = 0;
+        long ortPositiveOpenVinoNegative = 0;
+        long ortNegativeOpenVinoPositive = 0;
+        const float dbProbabilityThreshold = 0.3f;
+
+        foreach (ImageCase image in images)
+        {
+            string imageSha256 = Sha256File(image.ImagePath);
+            if (!string.IsNullOrWhiteSpace(image.ExpectedImageSha256))
+                Assert.AreEqual(image.ExpectedImageSha256, imageSha256, "Dataset source bytes differ from the manifest for " + image.ImageId + ".");
+
+            VisualSize sourceSize;
+            using (PreparedVisualInput probe = inputFactory.CreateFromFile(
+                image.ImagePath,
+                "probe",
+                new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr)))
+                sourceSize = probe.SourceSize;
+
+            using PreparedVisualInput input = inputFactory.CreateFromFile(
+                image.ImagePath,
+                profile.VisualProfile.Input.Name,
+                OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize));
+            string inputTensorSha256 = Sha256Tensor(input.Tensor);
+            InferenceOutputs ortOutputs = ortSession.Run(InferenceInputs.Create(profile.VisualProfile.Input.Name, input.Tensor), CancellationToken.None);
+            Assert.AreEqual(inputTensorSha256, Sha256Tensor(input.Tensor), "ORT modified the shared input tensor for " + image.ImageId + ".");
+            ITensor ortOutput = ortOutputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+            InferenceOutputs openVinoOutputs = openVinoSession.Run(InferenceInputs.Create(profile.VisualProfile.Input.Name, input.Tensor), CancellationToken.None);
+            Assert.AreEqual(inputTensorSha256, Sha256Tensor(input.Tensor), "OpenVINO did not receive the unchanged shared input tensor for " + image.ImageId + ".");
+            ITensor openVinoOutput = openVinoOutputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+
+            long[] ortShape = ortOutput.Shape.ToArray();
+            long[] openVinoShape = openVinoOutput.Shape.ToArray();
+            CollectionAssert.AreEqual(ortShape, openVinoShape, "Backend output shapes differ for " + image.ImageId + ".");
+            Assert.AreEqual(TensorElementType.Float32, ortOutput.ElementType, "ORT output must be Float32 for " + image.ImageId + ".");
+            Assert.AreEqual(TensorElementType.Float32, openVinoOutput.ElementType, "OpenVINO output must be Float32 for " + image.ImageId + ".");
+            float[] ortValues = ortOutput.Buffer as float[] ?? throw new InvalidDataException("ORT DB output buffer is not Float32[].");
+            float[] openVinoValues = openVinoOutput.Buffer as float[] ?? throw new InvalidDataException("OpenVINO DB output buffer is not Float32[].");
+            Assert.AreEqual(ortValues.Length, openVinoValues.Length, "Backend output element counts differ for " + image.ImageId + ".");
+
+            double imageAbsoluteDifferenceSum = 0;
+            double imageMaximumAbsoluteDifference = 0;
+            long imageDifferentElements = 0;
+            long imageThresholdMismatchElements = 0;
+            long imageOrtPositiveOpenVinoNegative = 0;
+            long imageOrtNegativeOpenVinoPositive = 0;
+            for (int index = 0; index < ortValues.Length; index++)
+            {
+                float ortValue = ortValues[index];
+                float openVinoValue = openVinoValues[index];
+                Assert.IsTrue(float.IsFinite(ortValue) && float.IsFinite(openVinoValue), "Probability map contains a non-finite value for " + image.ImageId + ".");
+                double absoluteDifference = Math.Abs((double)ortValue - openVinoValue);
+                imageAbsoluteDifferenceSum += absoluteDifference;
+                if (absoluteDifference > imageMaximumAbsoluteDifference) imageMaximumAbsoluteDifference = absoluteDifference;
+                if (ortValue != openVinoValue) imageDifferentElements++;
+
+                bool ortPositive = ortValue >= dbProbabilityThreshold;
+                bool openVinoPositive = openVinoValue >= dbProbabilityThreshold;
+                if (ortPositive != openVinoPositive)
+                {
+                    imageThresholdMismatchElements++;
+                    if (ortPositive) imageOrtPositiveOpenVinoNegative++;
+                    else imageOrtNegativeOpenVinoPositive++;
+                }
+            }
+
+            absoluteDifferenceSum += imageAbsoluteDifferenceSum;
+            maximumAbsoluteDifference = Math.Max(maximumAbsoluteDifference, imageMaximumAbsoluteDifference);
+            comparedElements += ortValues.Length;
+            differentElements += imageDifferentElements;
+            thresholdMismatchElements += imageThresholdMismatchElements;
+            ortPositiveOpenVinoNegative += imageOrtPositiveOpenVinoNegative;
+            ortNegativeOpenVinoPositive += imageOrtNegativeOpenVinoPositive;
+            perImage.Add(new
+            {
+                imageId = image.ImageId,
+                fileName = Path.GetFileName(image.ImagePath),
+                imageSha256,
+                sharedInputTensorSha256 = inputTensorSha256,
+                inputShape = input.Tensor.Shape.ToArray(),
+                outputShape = ortShape,
+                ortOutputSha256 = Sha256Tensor(ortOutput),
+                openVinoOutputSha256 = Sha256Tensor(openVinoOutput),
+                comparedElements = ortValues.Length,
+                maxAbsDiff = imageMaximumAbsoluteDifference,
+                meanAbsDiff = imageAbsoluteDifferenceSum / ortValues.Length,
+                differentElements = imageDifferentElements,
+                dbProbabilityThreshold,
+                thresholdMismatchElements = imageThresholdMismatchElements,
+                ortPositiveOpenVinoNegative = imageOrtPositiveOpenVinoNegative,
+                ortNegativeOpenVinoPositive = imageOrtNegativeOpenVinoPositive
+            });
+        }
+
+        Assert.IsTrue(comparedElements > 0, "No DB probability-map values were compared.");
+        string outputDirectory = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DB_SWEEP_OUTPUT") ?? TestContext.TestResultsDirectory ?? Path.GetTempPath();
+        Directory.CreateDirectory(Path.GetFullPath(outputDirectory));
+        string reportPath = Path.Combine(Path.GetFullPath(outputDirectory), "paddleocr-v6-small-db-probability-map-parity-" + DateTime.UtcNow.ToString("yyyyMMddTHHmmssfffZ", CultureInfo.InvariantCulture) + ".json");
+        var report = new
+        {
+            schemaVersion = 1,
+            generatedUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+            sourceRevision = ResolveSourceRevision(),
+            sourceWorkingTreeDirty = true,
+            model = new { id = ModelIdValue, variant = "PP-OCRv6 Small DET", path = modelPath, sha256 = modelSha256, catalogSha256 = release.Sha256 },
+            backends = new[] { "onnxruntime-cpu", "openvino-cpu" },
+            dataset = new
+            {
+                root = datasetRoot,
+                manifest = holdoutManifestPath,
+                manifestSha256 = Sha256File(holdoutManifestPath),
+                images = images.Count,
+                evaluationScope = "The fixed sample-003 holdout is used only for output-difference characterization; no decoder parameter is selected from this comparison."
+            },
+            protocol = new
+            {
+                inputPolicy = "Each image is decoded and preprocessed once. The same Float32 tensor instance is passed sequentially to ORT CPU and OpenVINO CPU; its SHA-256 is rechecked after each Run.",
+                outputPolicy = "Both output tensors must be Float32 and have identical shapes and element counts.",
+                dbProbabilityThreshold = dbProbabilityThreshold,
+                metrics = new[] { "maxAbsDiff", "meanAbsDiff", "differentElements", "thresholdMismatchElements", "ortPositiveOpenVinoNegative", "ortNegativeOpenVinoPositive" },
+                limitations = new[]
+                {
+                    "This quantifies runtime output differences for one PP-OCRv6 Small detector and one fixed 24-image HierText smoke selection on this host.",
+                    "The DB threshold mismatch count is a pixel-level diagnostic, not a text detection accuracy or quality metric.",
+                    "No performance, GPU, other model variant, other host, or distribution-wide parity claim is made."
+                }
+            },
+            summary = new
+            {
+                comparedImages = images.Count,
+                comparedElements,
+                maxAbsDiff = maximumAbsoluteDifference,
+                meanAbsDiff = absoluteDifferenceSum / comparedElements,
+                differentElements,
+                dbProbabilityThreshold,
+                thresholdMismatchElements,
+                thresholdMismatchFraction = (double)thresholdMismatchElements / comparedElements,
+                ortPositiveOpenVinoNegative,
+                ortNegativeOpenVinoPositive
+            },
+            imageResults = perImage
+        };
+        File.WriteAllText(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) + Environment.NewLine, new UTF8Encoding(false));
+        TestContext.AddResultFile(reportPath);
+        Console.WriteLine("PADDLEOCR_DB_PROBABILITY_PARITY model=" + ModelIdValue
+            + ";images=" + images.Count.ToString(CultureInfo.InvariantCulture)
+            + ";elements=" + comparedElements.ToString(CultureInfo.InvariantCulture)
+            + ";maxAbsDiff=" + maximumAbsoluteDifference.ToString("R", CultureInfo.InvariantCulture)
+            + ";meanAbsDiff=" + (absoluteDifferenceSum / comparedElements).ToString("R", CultureInfo.InvariantCulture)
+            + ";thresholdMismatches=" + thresholdMismatchElements.ToString(CultureInfo.InvariantCulture)
+            + ";report=" + reportPath);
+    }
+
     private void RunThresholdSweep(string backendName)
     {
         if (backendName != "onnxruntime" && backendName != "openvino") throw new ArgumentOutOfRangeException(nameof(backendName));
