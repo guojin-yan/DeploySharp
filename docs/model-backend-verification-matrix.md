@@ -85,6 +85,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 2026-10-07 又对 `paddle-doc/uvdoc` 官方动态导出执行双行 ORT CPU / OpenVINO CPU 解码，输入为 `bus.jpg` 左/右两个不重叠区域。两后端均绑定 `[2,3,640,640]` 并输出 `[2,3,640,640]`，每行生成独立的 `640×640×3` 图像结果且 page index 为 `[0,1]`；行间输出 mean absolute difference `72.4329`，证明两条结果没有互相覆盖。对应行的 ORT/OpenVINO mean absolute difference 为 `0.002078/0.002263`，全量 max 为 `0.103020`。这只证明动态 Batch 绑定、结果行隔离和有界数值对照，不表示视觉质量或吞吐通过。详见 [`paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md`](../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md) 及 [JSON](../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.json)；OpenCV DNN 的 importer 阻断和 TensorRT 未验证状态不变。
 
+2026-10-07 又补充 wired/wireless 两个 RT-DETR-L 表格单元格官方导出：ORT CPU、OpenVINO CPU 均以 `[2,3,640,640]` 和 `im_shape=[2,2]`、`scale_factor=[2,2]` 运行，四个精确模型/后端组合均解码为两行、每行 300 个后置 NMS 候选。输入来自同一 `table_recognition.jpg` 的上下两个不重叠 `551×66` 区域；每个组合的两行输入张量 SHA 和解码结果 SHA 均不同，未出现行结果复用。该 300 是图输出候选数，不是单元格真值；本测试不评价准确率、不做 ORT/OpenVINO 数值 parity，也不采集吞吐。详见[动态 Batch 验证报告](../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

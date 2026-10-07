@@ -55,7 +55,7 @@ python -m pip install paddlepaddle paddle2onnx
 
 Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 为 `1`，只是序列长度或 KV 轴可以动态；自回归状态绑定到单张图，不能因为 KV 动态就把它标记成模型 Batch。动态轴也只表示可以尝试批量绑定，仍需按后端完成输入绑定、Decoder、内存和结果一致性验证；本审计不替代任何后端运行或精度证据。
 
-当前已有一条真实 Batch 证据：文档方向 `PP-LCNet_x1_0_doc_ori` 和表格分类 `PP-LCNet_x1_0_table_cls` 在 ORT CPU、OpenVINO CPU 上均用两个相同的 `bus.jpg` 输入运行 `[2,3,224,224]`，两行结果的标签、分数和顺序均保持一致。详见 [动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。这是精确 ONNX/后端/主机上的执行合同，不是性能提升、数据集准确率或所有模型支持声明。
+目前已有多条真实 Batch 执行证据，分别按精确 ONNX、后端和主机记录；最初覆盖的文档方向 `PP-LCNet_x1_0_doc_ori` 与表格分类 `PP-LCNet_x1_0_table_cls` 在 ORT CPU、OpenVINO CPU 上均以两个相同 `bus.jpg` 行运行 `[2,3,224,224]`，标签、分数和顺序一致，见[分类动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。以下结果不代表所有 PP-Structure 模型都支持 Batch，也不代表性能或数据集准确率。
 
 随后对官方 `PP-DocLayout-L` 动态 Paddle NMS 图完成了真实双行运行：ORT CPU、OpenVINO CPU 均绑定 `[2,3,640,640]` 图像和 `[2,2]` 的 `im_shape`/`scale_factor`，使用 `bbox_num` 将扁平 `[300*batch,6]` 输出按行切分，两行均保留 300 个导出候选且标签/几何完全一致。详见 [版面动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-dynamic-batch-ort-openvino-20261005.md)。这不是版面准确率或性能基准；`300` 是导出图的后置 NMS 候选数量，不是真值目标数量。
 
@@ -64,6 +64,10 @@ Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 
 SLANeXt wired 也完成了真实动态 Batch 解码：ORT CPU 使用官方 `slanext-wired.onnx`，OpenVINO CPU 使用独立 SHA-256 的 Loop 兼容图；两边均绑定 `[2,3,512,512]` 的两行相同表格，Decoder 均返回 24 个结构 token、13 个 cell，HTML 哈希完全一致。该证据只覆盖这两个精确工件和单机双行执行，不代表原始 SLANeXt 图可以直接导入 OpenVINO，也不代表表格准确率、吞吐或 TensorRT/OpenCV 支持。详见 [SLANeXt 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md) 及 [JSON 记录](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino.json)。
 
 SLANeXt wireless 现也完成同协议实测：ORT CPU 使用官方 `slanext-wireless.onnx`，OpenVINO CPU 使用独立 SHA 的 Loop 兼容图；两个后端均以 `[2,3,512,512]` 运行两行，返回 24 个 token、13 个 cell，HTML 哈希一致。wired 与 wireless 两个变体因此都具备双行动态 Batch 的模型/Decoder 证据。OpenVINO 仍需显式兼容图；该结果不构成表格准确率或性能结论。见 [wireless 报告](../../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md) 和 [JSON 记录](../../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json)。
+
+2026-10-07 又补充 wired/wireless 两个 RT-DETR-L 表格单元格模型：ORT CPU 和 OpenVINO CPU 均以 `[2,3,640,640]` 执行，`im_shape`、`scale_factor` 分别绑定为 `[2,2]`；输入是 `table_recognition.jpg` 上下两个不重叠的 `551×66` 区域。四个精确模型/后端组合都返回两行、每行 300 个后置 NMS 候选；两行输入张量 SHA 和解码结果 SHA 均不同，能排除把同一行结果复用到另一行。这里的 300 是图导出候选数，不是单元格真值数量。详见[单元格动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json)；这不是准确率、跨后端数值 parity 或性能结论。
+
+UVDoc 也已完成双行动态 Batch：使用 `bus.jpg` 左/右两个不重叠 ROI，ORT CPU 和 OpenVINO CPU 均解码成两个独立 `640×640×3` 结果；逐行跨后端平均绝对差为 `0.002078/0.002263`，属于有界数值对照，不表示像素等价或视觉质量通过。详见[UVDoc 报告](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md)。
 
 ## 在代码中创建 Profile
 
@@ -452,7 +456,7 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 同一固定 `ChartQA/val` 选择已扩展为 12 张图并在相同 TensorRT plans 上复测：`12/12` EOS、`9/12` 行列维度一致、单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 `4,398.95/12,209.76 ms`，Decode P50/P95 范围 `33.37–39.48 / 35.85–48.81 ms`。这仍是有界任务质量和阶段计时诊断，不是 split accuracy、问答分数或受控性能基准。详见 [TensorRT 12 图记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。
 
-文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261002.md)维护；审计脚本会解析相对文件和 GitHub 风格目录链接，2026-10-05 最近一次运行检查六份入口文档共 `182` 个本地链接，断链 `0`。
+文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261007-table-cell.md)维护；审计脚本检查六份 PP-OCR/PP-Structure 入口文档的相对本地链接，本轮共检查 `223` 条、断链 `0`。外部 URL 与运行时生成路径不在此审计范围。
 
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 

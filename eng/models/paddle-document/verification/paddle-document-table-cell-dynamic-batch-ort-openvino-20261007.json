@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T05:12:13.2887529+00:00",
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "file": "rt-detr-l-wired-cell-det.onnx"
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "file": "rt-detr-l-wireless-cell-det.onnx"
+    }
+  ],
+  "scope": "Official wired and wireless RT-DETR-L table-cell dynamic NMS exports with two distinct, non-overlapping horizontal bands from one source image on ONNX Runtime CPU and OpenVINO CPU.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "modelSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "dd86800767763a7a2c425d2521ecad6365b7f079c8dbcddd87a45f2bc6264081",
+        "91c2c7e55cc4360edbb784930cc227577863941cf99488bc0667e9234781b2cc"
+      ],
+      "detectionRowSha256": [
+        "dac532d0c9f896a63ed1a8fb3ed9c31187bd3d01fccb4b85e2a9bd82a790cb16",
+        "061e3f2c5eb8bd1a0ab8f11dca4b80a83f9b6148642e9897f7ecf9a9d159efc6"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 551,
+          "height": 66
+        },
+        {
+          "x": 0,
+          "y": 66,
+          "width": 551,
+          "height": 66
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "table-cell"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "modelSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "dd86800767763a7a2c425d2521ecad6365b7f079c8dbcddd87a45f2bc6264081",
+        "91c2c7e55cc4360edbb784930cc227577863941cf99488bc0667e9234781b2cc"
+      ],
+      "detectionRowSha256": [
+        "eeeb97e9686a19302ba033205c57365a50db681265c37b566f6e8cd765ca8b69",
+        "872d88f41c4b5776d77b8b6c65b3c20671a58c8f80195521f5136bfc610ab921"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 551,
+          "height": 66
+        },
+        {
+          "x": 0,
+          "y": 66,
+          "width": 551,
+          "height": 66
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "table-cell"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "modelSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "dd86800767763a7a2c425d2521ecad6365b7f079c8dbcddd87a45f2bc6264081",
+        "91c2c7e55cc4360edbb784930cc227577863941cf99488bc0667e9234781b2cc"
+      ],
+      "detectionRowSha256": [
+        "98a8ee61310bf4541d8a57404608f1e6a61e3025eb09a23d67d9274fdf705403",
+        "9b34c53287596d03492786f85758b50da7fa13d82ebe42c96e8c68b2982f84df"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 551,
+          "height": 66
+        },
+        {
+          "x": 0,
+          "y": 66,
+          "width": 551,
+          "height": 66
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "table-cell"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "modelSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "dd86800767763a7a2c425d2521ecad6365b7f079c8dbcddd87a45f2bc6264081",
+        "91c2c7e55cc4360edbb784930cc227577863941cf99488bc0667e9234781b2cc"
+      ],
+      "detectionRowSha256": [
+        "300bc580de04409d73ae2573753b06594e7f68a9ac6ab61a52b64cd2189cfe2c",
+        "335aa3516567489573875bd68cb95e1b43e6c5f988146e379c672eaf8fd59fd8"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 551,
+          "height": 66
+        },
+        {
+          "x": 0,
+          "y": 66,
+          "width": 551,
+          "height": 66
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "table-cell"
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True model batch binding, distinct input and result row digests, per-row auxiliary geometry and decoder row isolation on one Windows host. The source is one table image split into two regions, not two independent pages. This is not a cell-detection accuracy score, cross-backend numerical parity test, throughput benchmark or cross-device claim."
+}
