@@ -21,9 +21,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DeploySharp.Visual.OpenCV.Tests
 {
     /// <summary>
-    /// Compares the raw DB detector output for every local PP-OCR v4/v5/v6
-    /// detector on the same three images in ORT CPU and OpenVINO CPU.
-    /// This is an intermediate tensor contract, not a detection quality score.
+    /// Compares raw DB detector outputs and decoded regions for every local
+    /// PP-OCR v4/v5/v6 detector across ORT CPU and OpenVINO CPU on fixed demo
+    /// images and a HierText holdout. This is backend-contract evidence, not a
+    /// detection quality score.
     /// </summary>
     [TestClass]
     public sealed class PaddleOcrCoreDetectionIntermediateParityTests
@@ -135,9 +136,16 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(24, images.Length, "The pinned sample-003 probability-map holdout must contain 24 unique images.");
             double threshold = new PaddleDbPostprocessOptions().ProbabilityThreshold;
             double maximumAbsDifference = ParseDouble(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DET_PARITY_MAX_ABS"), MaximumAbsDifferenceDefault);
+            string[] requestedVariants = (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_DET_PARITY_VARIANTS") ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var requestedNames = new HashSet<string>(requestedVariants, StringComparer.OrdinalIgnoreCase);
+            DetectorCase[] selectedCases = requestedNames.Count == 0 ? Cases : Cases.Where(testCase => requestedNames.Contains(testCase.Name)).ToArray();
+            Assert.IsTrue(selectedCases.Length > 0, "The selected detector variant did not match any catalog test case.");
+            string[] unknownVariants = requestedNames.Except(Cases.Select(testCase => testCase.Name), StringComparer.OrdinalIgnoreCase).ToArray();
+            Assert.AreEqual(0, unknownVariants.Length, "Unknown detector variant requested: " + string.Join(",", unknownVariants));
 
-            var modelRecords = new List<HoldoutDetectorRecord>(Cases.Length);
-            foreach (DetectorCase testCase in Cases)
+            var modelRecords = new List<HoldoutDetectorRecord>(selectedCases.Length);
+            foreach (DetectorCase testCase in selectedCases)
             {
                 string modelPath = RequireFile(Path.Combine(modelRoot, testCase.Folder, testCase.FileName));
                 PaddleOcrModelDescriptor descriptor = PaddleOcrModelCatalog.Find(new ModelId(testCase.ModelId));
@@ -227,6 +235,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 InferenceOutputs openVinoOutputs = openVinoSession.Run(InferenceInputs.Create(profile.VisualProfile.Input.Name, input.Tensor), CancellationToken.None);
                 Assert.AreEqual(inputSha256, TensorSha(input.Tensor), testCase.Name + " OpenVINO did not receive the unchanged shared input tensor for " + Path.GetFileName(imagePath) + ".");
                 ITensor openVinoOutput = openVinoOutputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+                var dbDecoder = new PaddleDbTextDetectionDecoder(profile.VisualProfile.Outputs[0].Name);
+                var ortDecoded = (TextDetectionResult)dbDecoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, ortOutputs, CancellationToken.None));
+                var openVinoDecoded = (TextDetectionResult)dbDecoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, openVinoOutputs, CancellationToken.None));
+                GeometryComparison geometry = CompareGeometry(ortDecoded.Regions, openVinoDecoded.Regions);
                 long[] ortShape = ortOutput.Shape.ToArray();
                 long[] openVinoShape = openVinoOutput.Shape.ToArray();
                 CollectionAssert.AreEqual(ortShape, openVinoShape, testCase.Name + " output shapes differ for " + Path.GetFileName(imagePath) + ".");
@@ -242,6 +254,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 long imageThresholdMismatchElements = 0;
                 long imageOrtPositiveOpenVinoNegative = 0;
                 long imageOrtNegativeOpenVinoPositive = 0;
+                int imageMaximumDifferenceFlatIndex = -1;
+                var imageThresholdMismatchPixels = new List<ThresholdMismatchPixel>();
                 for (int index = 0; index < ortValues.Length; index++)
                 {
                     float ortValue = ortValues[index];
@@ -249,7 +263,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     Assert.IsTrue(float.IsFinite(ortValue) && float.IsFinite(openVinoValue), testCase.Name + " output contains a non-finite value.");
                     double difference = Math.Abs((double)ortValue - openVinoValue);
                     imageAbsoluteDifferenceSum += difference;
-                    imageMaximumAbsoluteDifference = Math.Max(imageMaximumAbsoluteDifference, difference);
+                    if (difference > imageMaximumAbsoluteDifference)
+                    {
+                        imageMaximumAbsoluteDifference = difference;
+                        imageMaximumDifferenceFlatIndex = index;
+                    }
                     if (ortValue != openVinoValue) imageDifferentElements++;
 
                     bool ortPositive = ortValue >= threshold;
@@ -259,6 +277,13 @@ namespace DeploySharp.Visual.OpenCV.Tests
                         imageThresholdMismatchElements++;
                         if (ortPositive) imageOrtPositiveOpenVinoNegative++;
                         else imageOrtNegativeOpenVinoPositive++;
+                        imageThresholdMismatchPixels.Add(new ThresholdMismatchPixel(
+                            index,
+                            TensorCoordinates(index, ortShape),
+                            ortValue,
+                            openVinoValue,
+                            ortPositive,
+                            openVinoPositive));
                     }
                 }
 
@@ -282,7 +307,26 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     imageDifferentElements,
                     imageThresholdMismatchElements,
                     imageOrtPositiveOpenVinoNegative,
-                    imageOrtNegativeOpenVinoPositive));
+                    imageOrtNegativeOpenVinoPositive,
+                    imageMaximumDifferenceFlatIndex,
+                    imageMaximumDifferenceFlatIndex < 0 ? Array.Empty<long>() : TensorCoordinates(imageMaximumDifferenceFlatIndex, ortShape),
+                    imageMaximumDifferenceFlatIndex < 0 ? 0 : ortValues[imageMaximumDifferenceFlatIndex],
+                    imageMaximumDifferenceFlatIndex < 0 ? 0 : openVinoValues[imageMaximumDifferenceFlatIndex],
+                    imageThresholdMismatchPixels,
+                    ortDecoded.Regions.Count,
+                    openVinoDecoded.Regions.Count,
+                    geometry.RegionCountMatch,
+                    geometry.GeometrySha256Equal,
+                    geometry.RegionsWithGeometryDifference,
+                    geometry.MaximumCoordinateAbsDifference,
+                    geometry.MaximumCoordinateAbsDifferenceRegionIndex,
+                    geometry.MaximumScoreAbsDifference,
+                    geometry.GreedyIoUMatches.Count,
+                    geometry.MatchedAtIou095,
+                    geometry.MatchedAtIou099,
+                    geometry.UnmatchedOrtAtIou095,
+                    geometry.UnmatchedOpenVinoAtIou095,
+                    geometry.GreedyIoUMatches.Count == 0 ? 1f : geometry.GreedyIoUMatches.Min(match => match.IoU)));
             }
 
             return new HoldoutDetectorRecord(
@@ -317,6 +361,113 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 images.Add(RequireFile(Path.GetFullPath(Path.Combine(datasetRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)))));
             }
             return images.ToArray();
+        }
+
+        private static long[] TensorCoordinates(int flatIndex, IReadOnlyList<long> shape)
+        {
+            var coordinates = new long[shape.Count];
+            long remaining = flatIndex;
+            for (int axis = shape.Count - 1; axis >= 0; axis--)
+            {
+                if (shape[axis] <= 0) throw new InvalidDataException("Detector output shape contains a non-positive dimension.");
+                coordinates[axis] = remaining % shape[axis];
+                remaining /= shape[axis];
+            }
+            return coordinates;
+        }
+
+        private static GeometryComparison CompareGeometry(IReadOnlyList<TextRegion> ortRegions, IReadOnlyList<TextRegion> openVinoRegions)
+        {
+            bool regionCountMatch = ortRegions.Count == openVinoRegions.Count;
+            bool comparable = regionCountMatch;
+            double maximumCoordinateAbsDifference = 0;
+            double maximumScoreAbsDifference = 0;
+            int regionsWithGeometryDifference = 0;
+            int maximumCoordinateAbsDifferenceRegionIndex = -1;
+            var iouEdges = new List<RegionIouEdge>();
+            var ortGeometry = new StringBuilder();
+            var openVinoGeometry = new StringBuilder();
+            for (int regionIndex = 0; regionIndex < ortRegions.Count; regionIndex++)
+            {
+                TextRegion ortRegion = ortRegions[regionIndex];
+                AppendPolygon(ortGeometry, ortRegion.Polygon);
+                if (regionIndex >= openVinoRegions.Count) continue;
+                TextRegion openVinoRegion = openVinoRegions[regionIndex];
+                AppendPolygon(openVinoGeometry, openVinoRegion.Polygon);
+                maximumScoreAbsDifference = Math.Max(maximumScoreAbsDifference, Math.Abs((double)ortRegion.Score - openVinoRegion.Score));
+                for (int rightIndex = 0; rightIndex < openVinoRegions.Count; rightIndex++)
+                {
+                    float iou = TextPolygon.IntersectionOverUnion(ortRegion.Polygon, openVinoRegions[rightIndex].Polygon);
+                    if (iou > 0) iouEdges.Add(new RegionIouEdge(regionIndex, rightIndex, iou));
+                }
+                bool regionGeometryDiffers = false;
+                if (ortRegion.Polygon.Vertices.Count != openVinoRegion.Polygon.Vertices.Count)
+                {
+                    comparable = false;
+                    regionsWithGeometryDifference++;
+                    continue;
+                }
+                for (int vertexIndex = 0; vertexIndex < ortRegion.Polygon.Vertices.Count; vertexIndex++)
+                {
+                    var ortPoint = ortRegion.Polygon.Vertices[vertexIndex];
+                    var openVinoPoint = openVinoRegion.Polygon.Vertices[vertexIndex];
+                    double xDifference = Math.Abs((double)ortPoint.X - openVinoPoint.X);
+                    double yDifference = Math.Abs((double)ortPoint.Y - openVinoPoint.Y);
+                    if (xDifference > 0 || yDifference > 0) regionGeometryDiffers = true;
+                    if (xDifference > maximumCoordinateAbsDifference)
+                    {
+                        maximumCoordinateAbsDifference = xDifference;
+                        maximumCoordinateAbsDifferenceRegionIndex = regionIndex;
+                    }
+                    if (yDifference > maximumCoordinateAbsDifference)
+                    {
+                        maximumCoordinateAbsDifference = yDifference;
+                        maximumCoordinateAbsDifferenceRegionIndex = regionIndex;
+                    }
+                }
+                if (regionGeometryDiffers) regionsWithGeometryDifference++;
+            }
+
+            string ortHash = Sha256Text(ortGeometry.ToString());
+            string openVinoHash = Sha256Text(openVinoGeometry.ToString());
+            var matchedOrt = new HashSet<int>();
+            var matchedOpenVino = new HashSet<int>();
+            var greedyMatches = new List<RegionIouEdge>();
+            foreach (RegionIouEdge edge in iouEdges.OrderByDescending(edge => edge.IoU).ThenBy(edge => edge.OrtIndex).ThenBy(edge => edge.OpenVinoIndex))
+            {
+                if (matchedOrt.Contains(edge.OrtIndex) || matchedOpenVino.Contains(edge.OpenVinoIndex)) continue;
+                matchedOrt.Add(edge.OrtIndex);
+                matchedOpenVino.Add(edge.OpenVinoIndex);
+                greedyMatches.Add(edge);
+            }
+            int matchedAtIou095 = greedyMatches.Count(match => match.IoU >= 0.95f);
+            int matchedAtIou099 = greedyMatches.Count(match => match.IoU >= 0.99f);
+            return new GeometryComparison(
+                regionCountMatch,
+                comparable && string.Equals(ortHash, openVinoHash, StringComparison.Ordinal),
+                regionsWithGeometryDifference,
+                comparable ? maximumCoordinateAbsDifference : (double?)null,
+                maximumCoordinateAbsDifferenceRegionIndex,
+                regionCountMatch ? maximumScoreAbsDifference : (double?)null,
+                greedyMatches,
+                matchedAtIou095,
+                matchedAtIou099,
+                Math.Max(0, ortRegions.Count - matchedAtIou095),
+                Math.Max(0, openVinoRegions.Count - matchedAtIou095));
+        }
+
+        private static void AppendPolygon(StringBuilder builder, TextPolygon polygon)
+        {
+            foreach (var point in polygon.Vertices)
+                builder.Append(point.X.ToString("R", CultureInfo.InvariantCulture)).Append(',')
+                    .Append(point.Y.ToString("R", CultureInfo.InvariantCulture)).Append(';');
+            builder.Append('\n');
+        }
+
+        private static string Sha256Text(string value)
+        {
+            using SHA256 sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
         }
 
         private static void WriteHoldoutEvidence(
@@ -365,6 +516,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 summary = new
                 {
                     detectorCount = records.Count,
+                    detectorVariants = records.Select(record => record.Variant).ToArray(),
                     imageCount = images.Count,
                     detectorImagePairs = records.Sum(record => record.Images.Count),
                     comparedElements = records.Sum(record => record.ComparedElements),
@@ -393,7 +545,49 @@ namespace DeploySharp.Visual.OpenCV.Tests
             long DifferentElements,
             long ThresholdMismatchElements,
             long OrtPositiveOpenVinoNegative,
-            long OrtNegativeOpenVinoPositive);
+            long OrtNegativeOpenVinoPositive,
+            int MaximumAbsDifferenceFlatIndex,
+            IReadOnlyList<long> MaximumAbsDifferenceCoordinates,
+            float OrtProbabilityAtMaximumAbsDifference,
+            float OpenVinoProbabilityAtMaximumAbsDifference,
+            IReadOnlyList<ThresholdMismatchPixel> ThresholdMismatchPixels,
+            int OrtRegionCount,
+            int OpenVinoRegionCount,
+            bool RegionCountMatch,
+            bool GeometrySha256Equal,
+            int RegionsWithGeometryDifference,
+            double? MaximumCoordinateAbsDifference,
+            int MaximumCoordinateAbsDifferenceRegionIndex,
+            double? MaximumScoreAbsDifference,
+            int GreedyMatchedRegionCount,
+            int MatchedRegionsAtIou095,
+            int MatchedRegionsAtIou099,
+            int UnmatchedOrtRegionsAtIou095,
+            int UnmatchedOpenVinoRegionsAtIou095,
+            float MinimumGreedyMatchedIoU);
+
+        private sealed record ThresholdMismatchPixel(
+            int FlatIndex,
+            IReadOnlyList<long> Coordinates,
+            float OrtProbability,
+            float OpenVinoProbability,
+            bool OrtAboveOrAtThreshold,
+            bool OpenVinoAboveOrAtThreshold);
+
+        private sealed record GeometryComparison(
+            bool RegionCountMatch,
+            bool GeometrySha256Equal,
+            int RegionsWithGeometryDifference,
+            double? MaximumCoordinateAbsDifference,
+            int MaximumCoordinateAbsDifferenceRegionIndex,
+            double? MaximumScoreAbsDifference,
+            IReadOnlyList<RegionIouEdge> GreedyIoUMatches,
+            int MatchedAtIou095,
+            int MatchedAtIou099,
+            int UnmatchedOrtAtIou095,
+            int UnmatchedOpenVinoAtIou095);
+
+        private sealed record RegionIouEdge(int OrtIndex, int OpenVinoIndex, float IoU);
 
         private sealed record HoldoutDetectorRecord(
             string Variant,
