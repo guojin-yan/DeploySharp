@@ -87,6 +87,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 2026-10-07 又补充 wired/wireless 两个 RT-DETR-L 表格单元格官方导出：ORT CPU、OpenVINO CPU 均以 `[2,3,640,640]` 和 `im_shape=[2,2]`、`scale_factor=[2,2]` 运行，四个精确模型/后端组合均解码为两行、每行 300 个后置 NMS 候选。输入来自同一 `table_recognition.jpg` 的上下两个不重叠 `551×66` 区域；每个组合的两行输入张量 SHA 和解码结果 SHA 均不同，未出现行结果复用。该 300 是图输出候选数，不是单元格真值；本测试不评价准确率、不做 ORT/OpenVINO 数值 parity，也不采集吞吐。详见[动态 Batch 验证报告](../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json)。
 
+2026-10-07 又对官方 `PP-DocLayout_plus-L` 和 `PP-DocBlockLayout` 完成 batch=2 全解码运行：ORT CPU、OpenVINO CPU 共四个精确组合均成功绑定动态图像轴与 `im_shape`/`scale_factor` 辅助轴。每行来自 `bus.jpg` 的不同半幅裁剪，输入张量 SHA 与解码结果 SHA 均按行不同；每行返回 300 个图导出候选。半幅只是行隔离执行探针，不用于版面质量评价；候选数不是准确率指标，也不代表数值 parity、性能、TensorRT/OpenCV Batch 或所有版面模型支持。详见[动态 Batch 验证报告](../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

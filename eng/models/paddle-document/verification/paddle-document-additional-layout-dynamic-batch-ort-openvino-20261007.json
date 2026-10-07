@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T05:23:08.77854+00:00",
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "file": "pp-doclayout-plus-l.onnx",
+      "modelSize": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    {
+      "model": "paddle-doc/pp-docblocklayout",
+      "file": "pp-docblocklayout.onnx",
+      "modelSize": {
+        "width": 640,
+        "height": 640
+      }
+    }
+  ],
+  "scope": "Official PP-DocLayout_plus-L and PP-DocBlockLayout dynamic Paddle NMS exports. Each batch row is a distinct non-overlapping horizontal crop of bus.jpg; ORT CPU and OpenVINO CPU execute the full NMS decoder.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "modelSha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "inputShape": "[2,3,800,800]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "9ff70ecabb9e209d1040b03e640a487727ed741d64740b5514767d24a4ce5d80",
+        "c87341255af182bcb15c9b505df6af906ffadd7f2cf76191e8e146a1f1df81ff"
+      ],
+      "detectionRowSha256": [
+        "018df7d14f45e4d3d581e0143dfae8e6860e256aa0e18c4ecbb1eb9016b41c23",
+        "452c46338911a3d8291289a54011bc7be499fcf32bddeae575186bdd1c3556b3"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "figure_title",
+        "paragraph_title",
+        "chart",
+        "doc_title",
+        "number",
+        "seal",
+        "table",
+        "formula",
+        "header",
+        "footer",
+        "aside_text",
+        "reference_content",
+        "abstract",
+        "formula_number"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-docblocklayout",
+      "modelSha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "42eaceacc2cf43cc1e0ffa1cf5e6088b0574a9fe8a6c51879fed3650e368c3c9",
+        "acf80f03a0e8e27402265897cdbcd79bb37aab6c29b2afc967411799b11ac65b"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "Region"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-doclayout-plus-l",
+      "modelSha256": "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048",
+      "inputShape": "[2,3,800,800]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "9ff70ecabb9e209d1040b03e640a487727ed741d64740b5514767d24a4ce5d80",
+        "c87341255af182bcb15c9b505df6af906ffadd7f2cf76191e8e146a1f1df81ff"
+      ],
+      "detectionRowSha256": [
+        "d4248e8763b72fc65fb9e29093e22a0d364d6c491408326608e818e6b166877e",
+        "63c81aa9ffb244da6146eae65b937cbf72aad8758e30ee24441a5b4cb610f523"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "figure_title",
+        "paragraph_title",
+        "chart",
+        "doc_title",
+        "number",
+        "seal",
+        "table",
+        "formula",
+        "header",
+        "footer",
+        "aside_text",
+        "reference_content",
+        "abstract",
+        "formula_number"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-docblocklayout",
+      "modelSha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "4fb3bfa0cc091077bb4d47a6d6ae57d067f3bd5a9d7be8e8c4b0b613959f6ca8",
+        "014971de910c7693079b0995c09c64abaa209e2781f866a8fcbb27985870ca9b"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "Region"
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True model batch binding and row-isolated decoded results for these two exact artifacts/backends on one Windows host. Crops are execution probes, not representative document-quality samples; not an accuracy score, throughput benchmark, TensorRT/OpenCV batch claim or cross-device claim."
+}

@@ -146,6 +146,56 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchAdditionalLayoutsRunOnOrtAndOpenVino()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch additional layout image");
+            var models = new[]
+            {
+                (ModelId: "paddle-doc/pp-doclayout-plus-l", FileName: "pp-doclayout-plus-l.onnx", Labels: PaddleDocumentProfiles.LayoutPlusLabels, Size: new VisualSize(800, 800)),
+                (ModelId: "paddle-doc/pp-docblocklayout", FileName: "pp-docblocklayout.onnx", Labels: PaddleDocumentProfiles.RegionLabels, Size: new VisualSize(640, 640))
+            };
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId)
+            })
+            {
+                foreach (var model in models)
+                {
+                    rows.Add(RunNmsCase(
+                        backend,
+                        model.ModelId,
+                        model.FileName,
+                        model.Labels,
+                        ImagePath,
+                        useDistinctHorizontalBands: true,
+                        modelSize: model.Size));
+                }
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_ADDITIONAL_LAYOUT_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-additional-layout-dynamic-batch-ort-openvino.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath) },
+                batch = 2,
+                models = models.Select(value => new { model = value.ModelId, file = value.FileName, modelSize = new { width = value.Size.Width, height = value.Size.Height } }).ToArray(),
+                scope = "Official PP-DocLayout_plus-L and PP-DocBlockLayout dynamic Paddle NMS exports. Each batch row is a distinct non-overlapping horizontal crop of bus.jpg; ORT CPU and OpenVINO CPU execute the full NMS decoder.",
+                results = rows,
+                boundary = "True model batch binding and row-isolated decoded results for these two exact artifacts/backends on one Windows host. Crops are execution probes, not representative document-quality samples; not an accuracy score, throughput benchmark, TensorRT/OpenCV batch claim or cross-device claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(4, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchTableCellDetectorsRunOnOrtAndOpenVino()
         {
             RequireExternal();
@@ -415,7 +465,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return RunNmsCase(backend, "paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", PaddleDocumentProfiles.Layout23Labels);
         }
 
-        private static object RunNmsCase(BackendCase backend, string modelId, string fileName, IReadOnlyList<string> labels, string imagePath = ImagePath, bool useDistinctHorizontalBands = false)
+        private static object RunNmsCase(BackendCase backend, string modelId, string fileName, IReadOnlyList<string> labels, string imagePath = ImagePath, bool useDistinctHorizontalBands = false, VisualSize? modelSize = null)
         {
             string path = Path.Combine(ModelRoot, fileName);
             RequireFile(path, modelId + " dynamic model");
@@ -423,7 +473,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
                 descriptor,
                 labels,
-                new VisualSize(640, 640),
+                modelSize ?? new VisualSize(640, 640),
                 includeGeometryInputs: true,
                 maximumBatch: 2,
                 scoreThreshold: 0);
