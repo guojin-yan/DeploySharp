@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T07:44:39.4240501+00:00",
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "regions": "distinct top/bottom horizontal bands"
+  },
+  "batch": 2,
+  "model": {
+    "id": "paddle-doc/rt-detr-h-layout-17cls",
+    "file": "rt-detr-h-layout-17cls.onnx"
+  },
+  "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+  "backends": [
+    "onnxruntime-cpu",
+    "openvino-cpu",
+    "opencv-dnn-cpu"
+  ],
+  "scope": "Official RT-DETR-H 17-class layout dynamic Paddle-NMS export. Each backend is given two distinct bus.jpg horizontal regions and both geometry auxiliary inputs; successful runs execute the full per-row region decoder, while OpenCV DNN adapter failures are retained as exact unsupported evidence.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-17cls",
+      "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "0f63587e2b35c3112074f4acfcc7659fd16d3fa50cff8f37fc06044c3f90d85f",
+        "c741ba092d9bbdee5945cb91c07dc8c4ea18b782aa584dc14c2b95b91d5e2876"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "table",
+        "number",
+        "abstract",
+        "seal",
+        "doc_title",
+        "algorithm",
+        "header",
+        "content",
+        "paragraph_title",
+        "footnote",
+        "reference",
+        "figure_title",
+        "footer",
+        "table_title",
+        "formula"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-17cls",
+      "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "a49feeffa88a26e6342aa67661070ad76616335605ee5533e287ab443ddaf3b1",
+        "7995bf4152f176b068258585d37083cd73a2fb43c162f75c3a5823a64e9b61ce"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "table",
+        "number",
+        "abstract",
+        "seal",
+        "doc_title",
+        "algorithm",
+        "header",
+        "paragraph_title",
+        "content",
+        "footnote",
+        "reference",
+        "figure_title",
+        "footer",
+        "table_title",
+        "formula"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-17cls",
+      "modelSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    }
+  ],
+  "boundary": "ORT CPU and OpenVINO CPU completed true dynamic batch binding and distinct per-row decoding for this exact model on one Windows host. OpenCV DNN was attempted and its forward failure is retained as exact unsupported evidence. Crops are execution probes, not representative document-layout labels; this is not an accuracy or throughput result, and does not imply TensorRT Batch support."
+}

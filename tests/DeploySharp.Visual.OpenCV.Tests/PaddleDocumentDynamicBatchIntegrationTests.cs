@@ -270,6 +270,69 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchRtDetrSeventeenClassLayoutRunsOnOrtOpenVinoAndOpenCvDnn()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch RT-DETR 17-class layout image");
+            const string modelId = "paddle-doc/rt-detr-h-layout-17cls";
+            const string modelFile = "rt-detr-h-layout-17cls.onnx";
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId),
+                new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId)
+            })
+            {
+                try
+                {
+                    rows.Add(RunNmsCase(
+                        backend,
+                        modelId,
+                        modelFile,
+                        PaddleDocumentProfiles.Layout17Labels,
+                        ImagePath,
+                        useDistinctHorizontalBands: true,
+                        modelSize: new VisualSize(640, 640)));
+                }
+                catch (OpenCvDnnBackendException exception) when (backend.Id == OpenCvDnnBackendProvider.BackendId)
+                {
+                    rows.Add(new
+                    {
+                        backend = backend.Name,
+                        model = modelId,
+                        modelSha256 = FileSha256(Path.Combine(ModelRoot, modelFile)),
+                        status = "dynamic-batch-execution-unsupported",
+                        errorCode = exception.ErrorCode,
+                        technicalDetails = exception.TechnicalDetails,
+                        innerException = exception.InnerException?.Message
+                    });
+                }
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_RTDETR_17CLASS_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath), regions = "distinct top/bottom horizontal bands" },
+                batch = 2,
+                model = new { id = modelId, file = modelFile },
+                modelSha256 = FileSha256(Path.Combine(ModelRoot, modelFile)),
+                backends = new[] { "onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu" },
+                scope = "Official RT-DETR-H 17-class layout dynamic Paddle-NMS export. Each backend is given two distinct bus.jpg horizontal regions and both geometry auxiliary inputs; successful runs execute the full per-row region decoder, while OpenCV DNN adapter failures are retained as exact unsupported evidence.",
+                results = rows,
+                boundary = "ORT CPU and OpenVINO CPU completed true dynamic batch binding and distinct per-row decoding for this exact model on one Windows host. OpenCV DNN was attempted and its forward failure is retained as exact unsupported evidence. Crops are execution probes, not representative document-layout labels; this is not an accuracy or throughput result, and does not imply TensorRT Batch support."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(3, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchAdditionalLayoutsRunOnOrtAndOpenVino()
         {
             RequireExternal();
@@ -699,10 +762,30 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 registry.UseOnnxRuntime();
                 request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
             }
-            else
+            else if (backend.Id == OpenVinoBackendProvider.BackendId)
             {
                 registry.UseOpenVino();
                 request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+            }
+            else if (backend.Id == OpenCvDnnBackendProvider.BackendId)
+            {
+                var contractInputs = new List<TensorDescriptor>
+                {
+                    new TensorDescriptor(profile.VisualProfile.Input.Name, profile.VisualProfile.Input.ElementType, profile.VisualProfile.Input.ShapePattern)
+                };
+                contractInputs.AddRange(profile.VisualProfile.AuxiliaryInputs.Select(binding =>
+                    new TensorDescriptor(binding.Name, binding.ElementType, binding.ShapePattern)));
+                var contract = new OpenCvDnnModelContract(
+                    profile.VisualProfile.ModelId,
+                    contractInputs,
+                    profile.VisualProfile.Outputs.Select(binding => new TensorDescriptor(binding.Name, binding.ElementType, binding.ShapePattern)),
+                    new[] { profile.VisualProfile.Input.Name });
+                registry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+                request = new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu");
+            }
+            else
+            {
+                throw new AssertFailedException("Unsupported dynamic NMS backend case: " + backend.Id);
             }
 
             using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(path, backend.Id), request);

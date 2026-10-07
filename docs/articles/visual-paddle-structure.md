@@ -77,6 +77,8 @@ PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 
 
 公式动态 Batch 已逐项覆盖六个官方动态输入导出：PP-FormulaNet Plus-S/M/L、FormulaNet-S/L 和 UniMERNet。它们都在 ORT CPU 上以官方公式样例的上下不同区域绑定 batch=2，每行到达 EOS，token IDs 与 LaTeX 均和该行独立 batch=1 推理完全一致。裁剪区域是执行隔离探针，不是独立标注公式；结论不代表数据集准确率、吞吐或其他后端支持。各模型 shape、token 数、SHA 与复现命令见[六模型动态 Batch 报告](../../eng/models/paddle-document/verification/formula-dynamic-batch-six-models-ort-20261007.md)。
 
+同日还为官方 RT-DETR-H 17-class 版面模型完成 batch=2 验证：ORT CPU/OpenVINO CPU 对 `bus.jpg` 上下不同区域绑定 `[2,3,640,640]` 和两个 `[2,2]` 几何输入，均返回两行、每行 300 个候选；OpenCV DNN session 虽创建成功，但 forward 报 `DS-OCV-8004` / `Requested blob not found`，因此该精确 OpenCV 动态 Batch 组合不支持，不改变其单 Batch 既有结果。半幅图片没有版面标注，此项不是准确率或吞吐证据；TensorRT Batch 仍未验证。详情见[报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-20261007.md)及[三后端 JSON](../../eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json)。
+
 表格分类器的 TensorRT 动态 Batch 仍未通过 DeploySharp 实测。vendor `trtexec` 可以构建并执行 batch=2 Engine，但该随机输入、GPU-only 运行不包含 DeploySharp Provider、预处理/后处理或数据搬运；DeploySharp 在当前机器则被 TensorRT native bridge 的结构化异常 `3228369022` 阻断。故这只定位为 bridge/runtime 初始化待查，不能宣称动态 Batch 已支持，也不改动既有单 Batch 精确模型状态。详情见[独立探针报告](../../eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-probe-20261007.md)。
 
 ## 在代码中创建 Profile
