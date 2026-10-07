@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-04T19:02:52.0497061Z",
+  "generatedUtc": "2026-10-07T08:11:24.0886967Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -18,7 +18,8 @@
   "statusSemantics": {
     "pass": "The exact artifact/backend has real execution evidence for the declared scope.",
     "unsupported": "The exact artifact/backend was attempted and failed at the current importer/runtime.",
-    "unverified": "A code or artifact contract exists but no exact real execution evidence is registered."
+    "unverified": "A code or artifact contract exists but no exact real execution evidence is registered.",
+    "dynamicBatchEvidence": "The assets array preserves each artifact's existing general/single-image evidence; dynamicBatchEvidence records narrower batch-specific outcomes separately."
   },
   "evidence": {
     "matrixDocument": "docs/model-backend-verification-matrix.md",
@@ -35,6 +36,18 @@
     "chart2tableBackendAlignment": "eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.json",
     "regressionGate": "eng/models/paddle-ocr/verification/paddleocr-ppstructure-regression-20261005.json"
   },
+  "dynamicBatchEvidence": [
+    {
+      "modelId": "paddle-doc/rt-detr-h-layout-3cls",
+      "batch": 2,
+      "onnxSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json"
+    }
+  ],
   "assets": [
     { "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-doc/uvdoc", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },

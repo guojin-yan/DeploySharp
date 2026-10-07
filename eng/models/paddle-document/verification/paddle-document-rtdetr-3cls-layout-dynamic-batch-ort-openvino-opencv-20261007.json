@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T08:17:09.3136059+00:00",
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "osArchitecture": "X64",
+    "processArchitecture": "X64",
+    "framework": ".NET 10.0.12",
+    "processorCount": 16
+  },
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "regions": "distinct top/bottom horizontal bands"
+  },
+  "batch": 2,
+  "model": {
+    "id": "paddle-doc/rt-detr-h-layout-3cls",
+    "file": "rt-detr-h-layout-3cls.onnx",
+    "sha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b"
+  },
+  "backends": [
+    "onnxruntime-cpu",
+    "openvino-cpu",
+    "opencv-dnn-cpu"
+  ],
+  "scope": "Official RT-DETR-H three-class layout dynamic Paddle-NMS export. Each backend receives distinct bus.jpg horizontal regions and both geometry auxiliary inputs; OpenCV DNN adapter failures are retained as exact unsupported evidence.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-3cls",
+      "modelSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "ad879a34383c69ebe0828101431340ca4cab6bbe8e9e855d294e6e151b918e64",
+        "bb329ab5abc04982aa396bab6961f94d5598b2e887a9c4fc15ec04e9745a0608"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-3cls",
+      "modelSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "43192fe6075b2495fbd3f128deed696363f4d6594fcab1aeaadee9aa232920b8",
+        "7103b6e4d514d3083241c20990242e865784195b8f2a580e69f5c5e0a048c60e"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "table",
+        "seal"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/rt-detr-h-layout-3cls",
+      "modelSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    }
+  ],
+  "boundary": "Only the exact RT-DETR-H 3-class batch=2 contract on these Windows CPU backends is measured. Successful rows execute the full region decoder; failed OpenCV execution is recorded separately. The crops have no layout ground truth and this is not an accuracy or throughput result."
+}

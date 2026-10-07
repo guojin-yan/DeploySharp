@@ -270,6 +270,60 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchRtDetrThreeClassLayoutRunsOnOrtOpenVinoAndOpenCvDnn()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch RT-DETR 3-class layout image");
+            const string modelId = "paddle-doc/rt-detr-h-layout-3cls";
+            const string modelFile = "rt-detr-h-layout-3cls.onnx";
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId),
+                new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId)
+            })
+            {
+                rows.Add(RunNmsCaseWithOpenCvFailureEvidence(
+                    backend,
+                    modelId,
+                    modelFile,
+                    PaddleDocumentProfiles.Layout3Labels,
+                    ImagePath,
+                    useDistinctHorizontalBands: true,
+                    modelSize: new VisualSize(640, 640)));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_RTDETR_3CLASS_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                environment = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    osArchitecture = RuntimeInformation.OSArchitecture.ToString(),
+                    processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    processorCount = Environment.ProcessorCount
+                },
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath), regions = "distinct top/bottom horizontal bands" },
+                batch = 2,
+                model = new { id = modelId, file = modelFile, sha256 = FileSha256(Path.Combine(ModelRoot, modelFile)) },
+                backends = new[] { "onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu" },
+                scope = "Official RT-DETR-H three-class layout dynamic Paddle-NMS export. Each backend receives distinct bus.jpg horizontal regions and both geometry auxiliary inputs; OpenCV DNN adapter failures are retained as exact unsupported evidence.",
+                results = rows,
+                boundary = "Only the exact RT-DETR-H 3-class batch=2 contract on these Windows CPU backends is measured. Successful rows execute the full region decoder; failed OpenCV execution is recorded separately. The crops have no layout ground truth and this is not an accuracy or throughput result."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(3, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchDocLayoutLRunOnOrtOpenVinoAndOpenCvDnn()
         {
             RequireExternal();
