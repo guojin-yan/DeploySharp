@@ -75,6 +75,10 @@ PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 
 
 方向分类和表格分类也补上了跨三种 CPU 后端的不同输入 Batch 证据：在官方表格示例的顶部/底部区域上，两个 PP-LCNet 模型都返回两行，逐行 raw-logit SHA 不同；测试逐行比较原始输出与 ORT CPU，并要求最大绝对差不超过 `1e-4`。本机观测最大差小于 `1.2e-7`，三个后端对同一区域的 top label 一致。SHA 不同反映浮点值并非逐位相同；输入区域没有人工标签，因此数值 parity 不代表分类准确率或速度。详情见[跨后端报告](../../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.md)。
 
+公式动态 Batch 开始逐模型核验：官方 PP-FormulaNet Plus-S 已在 ORT CPU 绑定 `[2,1,384,384]` 并返回 `[2,180]`；官方公式图像上下两个不同区域分别输出 175/66 token，均到达 EOS，且与各自独立单图运行逐 token、LaTeX 完全一致。区域是行隔离执行探针而非独立标注公式。该结果不能外推至其它 FormulaNet/UniMERNet、OpenVINO、OpenCV DNN、TensorRT、公式准确率或吞吐；复现细节见[报告](../../eng/models/paddle-document/verification/paddle-document-formula-plus-s-dynamic-batch-ort-20261007.md)。
+
+表格分类器的 TensorRT 动态 Batch 仍未通过 DeploySharp 实测。vendor `trtexec` 可以构建并执行 batch=2 Engine，但该随机输入、GPU-only 运行不包含 DeploySharp Provider、预处理/后处理或数据搬运；DeploySharp 在当前机器则被 TensorRT native bridge 的结构化异常 `3228369022` 阻断。故这只定位为 bridge/runtime 初始化待查，不能宣称动态 Batch 已支持，也不改动既有单 Batch 精确模型状态。详情见[独立探针报告](../../eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-probe-20261007.md)。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：

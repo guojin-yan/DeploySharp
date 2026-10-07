@@ -30,6 +30,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
     public sealed class PaddleDocumentDynamicBatchIntegrationTests
     {
         private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
+        private const string FormulaSourceRoot = @"E:\Model\PaddleDocument\source";
+        private const string FormulaImagePath = @"E:\Model\PaddleDocument\validation\general_formula_rec_001.png";
         private const string ImagePath = @"E:\Data\image\bus.jpg";
         private const string TableImagePath = @"E:\Model\PaddleDocument\validation\table_recognition.jpg";
         private const string SlanextOpenVinoRoot = @"E:\Model\PaddleDocument\onnx-normalized-rerun-20260929";
@@ -120,6 +122,117 @@ namespace DeploySharp.Visual.OpenCV.Tests
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(6, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialFormulaPlusSDynamicBatchMatchesIndependentRunsOnOrtCpu()
+        {
+            RequireExternal();
+            RequireFile(FormulaImagePath, "official formula example image");
+            string modelPath = Path.Combine(ModelRoot, "pp-formulanet-plus-s.onnx");
+            string tokenizerPath = Path.Combine(FormulaSourceRoot, "pp-formulanet-plus-s", "PP-FormulaNet_plus-S_infer", "inference.yml");
+            RequireFile(modelPath, "PP-FormulaNet Plus-S dynamic-batch ONNX export");
+            RequireFile(tokenizerPath, "PP-FormulaNet Plus-S official tokenizer");
+
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(tokenizerPath);
+            int endTokenId = FindTokenId(tokenizer.Tokens, "</s>");
+            int startTokenId = FindTokenId(tokenizer.Tokens, "<s>");
+            int padTokenId = FindTokenId(tokenizer.Tokens, "<pad>");
+            int unknownTokenId = FindTokenId(tokenizer.Tokens, "<unk>");
+            Assert.IsTrue(endTokenId >= 0, "The official formula tokenizer must expose its EOS token.");
+
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(
+                descriptor,
+                new PaddleDocumentFormulaSchema(tokenizer, endTokenId, startTokenId, padTokenId, unknownTokenId),
+                modelSize: new VisualSize(384, 384),
+                maximumSequenceLength: 4096,
+                maximumBatch: 2);
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0], "FormulaNet input must expose a dynamic batch axis.");
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0], "FormulaNet output must expose a dynamic batch axis.");
+
+            var formulaImageFactory = new OpenCvBgrImageFactory();
+            OpenCvBgrImage formulaSource = formulaImageFactory.Create(OpenCvImageSource.FromFile(FormulaImagePath), "formula-source");
+            int firstBandHeight = formulaSource.Height / 2;
+            OpenCvBgrImage firstBand = CropHorizontalBand(formulaSource, 0, firstBandHeight, "formula-top-band");
+            OpenCvBgrImage secondBand = CropHorizontalBand(formulaSource, firstBandHeight, formulaSource.Height - firstBandHeight, "formula-bottom-band");
+            var factory = new PaddleDocumentFormulaInputFactory();
+            using PreparedVisualInput row0 = factory.Create(firstBand, profile.VisualProfile);
+            using PreparedVisualInput row1 = factory.Create(secondBand, profile.VisualProfile);
+            Assert.AreEqual(1, row0.BatchSize);
+            Assert.AreEqual(1, row1.BatchSize);
+            Assert.IsTrue(row0.Tensor.Buffer is float[] && row1.Tensor.Buffer is float[], "Formula preprocessing must produce Float32 tensors.");
+            float[] row0Values = (float[])row0.Tensor.Buffer;
+            float[] row1Values = (float[])row1.Tensor.Buffer;
+            Assert.AreEqual(row0Values.Length, row1Values.Length);
+            Assert.AreNotEqual(TensorSha256(row0.Tensor), TensorSha256(row1.Tensor), "Distinct formula bands must produce distinct prepared batch rows.");
+            var batchedValues = new float[checked(row0Values.Length + row1Values.Length)];
+            Array.Copy(row0Values, 0, batchedValues, 0, row0Values.Length);
+            Array.Copy(row1Values, 0, batchedValues, row0Values.Length, row1Values.Length);
+            var batchedTensor = new Tensor<float>(
+                new TensorShape(2, 1, row0.Tensor.Shape[2], row0.Tensor.Shape[3]),
+                batchedValues,
+                TensorBufferOwnership.Transfer);
+            using var batchInput = new PreparedVisualInput(
+                row0.InputName,
+                batchedTensor,
+                row0.SourceSize,
+                row0.ModelSize,
+                2,
+                row0.Layout,
+                row0.Transform,
+                row0.Preprocessing,
+                "formula-distinct-session-runs-batch",
+                batchFrames: new[] { row0.BatchFrames[0], row1.BatchFrames[0] });
+            Assert.AreEqual(2L, batchInput.Tensor.Shape[0]);
+            Assert.AreEqual(TensorRowSha256(batchInput.Tensor, 0), TensorRowSha256(row0.Tensor, 0));
+            Assert.AreEqual(TensorRowSha256(batchInput.Tensor, 1), TensorRowSha256(row1.Tensor, 0));
+
+            using var registry = new BackendRegistry();
+            registry.UseOnnxRuntime();
+            var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), request);
+            PaddleDocumentFormulaResult single0 = RunFormulaRow(session, profile, row0);
+            PaddleDocumentFormulaResult single1 = RunFormulaRow(session, profile, row1);
+            InferenceOutputs batchOutputs = session.Run(InferenceInputs.Create(batchInput.InputName, batchInput.Tensor), CancellationToken.None);
+            ITensor tokenOutput = batchOutputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+            Assert.AreEqual(TensorElementType.Int64, tokenOutput.ElementType);
+            Assert.AreEqual(2L, tokenOutput.Shape[0]);
+            var batchResult = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(batchInput, profile.VisualProfile, batchOutputs, CancellationToken.None)) as PaddleDocumentFormulaBatchResult
+                ?? throw new AssertFailedException("The formula decoder did not return a batch result for batch=2.");
+            Assert.AreEqual(2, batchResult.Count);
+            CollectionAssert.AreEqual(single0.TokenIds.ToArray(), batchResult[0].TokenIds.ToArray(), "Formula batch row 0 diverged from its independent run.");
+            CollectionAssert.AreEqual(single1.TokenIds.ToArray(), batchResult[1].TokenIds.ToArray(), "Formula batch row 1 diverged from its independent run.");
+            CollectionAssert.AreNotEqual(single0.TokenIds.ToArray(), single1.TokenIds.ToArray(), "Distinct formula bands must produce distinct decoded rows for row-isolation evidence.");
+            Assert.AreEqual(single0.Latex, batchResult[0].Latex, "Formula batch row 0 changed the decoded LaTeX.");
+            Assert.AreEqual(single1.Latex, batchResult[1].Latex, "Formula batch row 1 changed the decoded LaTeX.");
+            Assert.IsFalse(batchResult[0].Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal));
+            Assert.IsFalse(batchResult[1].Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal));
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FORMULA_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-formula-plus-s-dynamic-batch-ort-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                execution = new { os = RuntimeInformation.OSDescription, architecture = RuntimeInformation.ProcessArchitecture.ToString(), framework = RuntimeInformation.FrameworkDescription, targetFramework = "net10.0", configuration = "Release" },
+                backend = "onnxruntime-cpu",
+                model = new { id = descriptor.ModelId, file = Path.GetFileName(modelPath), sha256 = FileSha256(modelPath) },
+                tokenizer = new { file = "inference.yml", sha256 = FileSha256(tokenizerPath), tokenCount = tokenizer.Tokens.Count, endTokenId },
+                input = new { file = FormulaImagePath, sha256 = FileSha256(FormulaImagePath), regions = new[] { new { row = 0, y = 0, height = firstBandHeight }, new { row = 1, y = firstBandHeight, height = formulaSource.Height - firstBandHeight } }, rowInputsAreDistinct = true },
+                batch = new { inputShape = batchInput.Tensor.Shape.ToString(), outputShape = tokenOutput.Shape.ToString(), rowInputSha256 = new[] { TensorRowSha256(batchInput.Tensor, 0), TensorRowSha256(batchInput.Tensor, 1) } },
+                rows = new[]
+                {
+                    new { row = 0, inputId = batchInput.BatchFrames[0].InputId, batchTokenCount = batchResult[0].TokenIds.Count, batchTokenSha256 = Sha256Text(string.Join(",", batchResult[0].TokenIds)), singleTokenSha256 = Sha256Text(string.Join(",", single0.TokenIds)), reachedEos = !batchResult[0].Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal), latexSha256 = Sha256Text(batchResult[0].Latex), exactSingleRunMatch = true },
+                    new { row = 1, inputId = batchInput.BatchFrames[1].InputId, batchTokenCount = batchResult[1].TokenIds.Count, batchTokenSha256 = Sha256Text(string.Join(",", batchResult[1].TokenIds)), singleTokenSha256 = Sha256Text(string.Join(",", single1.TokenIds)), reachedEos = !batchResult[1].Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal), latexSha256 = Sha256Text(batchResult[1].Latex), exactSingleRunMatch = true }
+                },
+                boundary = "True dynamic batch=2 execution with two distinct horizontal regions and exact token/LaTeX parity against independent single-region ORT CPU runs for this exact FormulaNet Plus-S artifact on one Windows host. The regions come from one official formula image and are execution probes, not separately labeled formulas; this proves row isolation, not multi-formula accuracy, cross-backend support or performance."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, batchResult.Count);
         }
 
         [TestMethod]
@@ -1081,6 +1194,33 @@ namespace DeploySharp.Visual.OpenCV.Tests
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_DYNAMIC_BATCH_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
                 Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_DYNAMIC_BATCH_RUN_EXTERNAL=1 to run the authorized local dynamic-batch evidence.");
         }
+
+        private static PaddleDocumentFormulaResult RunFormulaRow(IInferenceSession session, PaddleDocumentProfile profile, PreparedVisualInput input)
+        {
+            InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+            return profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentFormulaResult
+                ?? throw new AssertFailedException("The formula decoder did not return a single-row result.");
+        }
+
+        private static OpenCvBgrImage CropHorizontalBand(OpenCvBgrImage image, int top, int height, string inputId)
+        {
+            if (image == null) throw new ArgumentNullException(nameof(image));
+            if (top < 0 || height <= 0 || top > image.Height - height) throw new ArgumentOutOfRangeException(nameof(top));
+            int rowBytes = checked(image.Width * 3);
+            var pixels = new byte[checked(rowBytes * height)];
+            Buffer.BlockCopy(image.GetReadOnlyInteropBuffer(), checked(top * rowBytes), pixels, 0, pixels.Length);
+            return new OpenCvBgrImage(image.Width, height, pixels, TensorBufferOwnership.Transfer, inputId);
+        }
+
+        private static int FindTokenId(IReadOnlyList<string> tokens, string value)
+        {
+            for (int index = 0; index < tokens.Count; index++)
+                if (string.Equals(tokens[index], value, StringComparison.Ordinal)) return index;
+            return -1;
+        }
+
+        private static string Sha256Text(string value)
+            => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
         private static string FileSha256(string path)
         {
