@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T07:25:28.1683858+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "backend": "onnxruntime-cpu",
+  "model": {
+    "id": "paddle-formula/unimernet",
+    "file": "unimernet.onnx",
+    "sha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab"
+  },
+  "tokenizer": {
+    "file": "inference.yml",
+    "sha256": "b09b361aafce06cbb3b3aa83f5a3e3c51dd54ad01bfa7702a86a0300a57a6941",
+    "tokenCount": 50000,
+    "endTokenId": 2
+  },
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\general_formula_rec_001.png",
+    "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+    "regions": [
+      {
+        "row": 0,
+        "y": 0,
+        "height": 32
+      },
+      {
+        "row": 1,
+        "y": 32,
+        "height": 32
+      }
+    ],
+    "rowInputsAreDistinct": true
+  },
+  "batch": {
+    "inputShape": "[2,1,192,672]",
+    "outputShape": "[2,788]",
+    "rowInputSha256": [
+      "e08726180d6c8c445dd05163fc2a9e04a6dfdef368b7d71eb17ed036b1413c9d",
+      "23811bad14b82498c0335dd3af2f151b6e2bf33a77250c15f99a7478a1146a7e"
+    ]
+  },
+  "distinctDecodedRows": true,
+  "rows": [
+    {
+      "row": 0,
+      "inputId": "formula-top-band",
+      "batchTokenCount": 204,
+      "batchTokenSha256": "59e71d01db6f8a420c9e5d26692cbb7512ebc145961d40c61014d7087267ff63",
+      "singleTokenSha256": "59e71d01db6f8a420c9e5d26692cbb7512ebc145961d40c61014d7087267ff63",
+      "reachedEos": true,
+      "latexSha256": "ea9c54a3ae6aa0b92a155b41d53b9e15a1d3d243651c529ea247fc3e639ff342",
+      "exactSingleRunMatch": true
+    },
+    {
+      "row": 1,
+      "inputId": "formula-bottom-band",
+      "batchTokenCount": 786,
+      "batchTokenSha256": "e683c3c61cb47a5d6343b9c730ff5662ba474e996049572a20787406a3b59655",
+      "singleTokenSha256": "e683c3c61cb47a5d6343b9c730ff5662ba474e996049572a20787406a3b59655",
+      "reachedEos": true,
+      "latexSha256": "dca2e3e4c6438571e5f8fe822c16765b0a90438e83d57556f227523004b8938d",
+      "exactSingleRunMatch": true
+    }
+  ],
+  "boundary": "True dynamic batch=2 execution with two distinct horizontal regions and exact token/LaTeX parity against independent single-region ORT CPU runs for this exact paddle-formula/unimernet artifact on one Windows host. The regions come from one official formula image and are execution probes, not separately labeled formulas; this proves row isolation, not multi-formula accuracy, cross-backend support or performance."
+}

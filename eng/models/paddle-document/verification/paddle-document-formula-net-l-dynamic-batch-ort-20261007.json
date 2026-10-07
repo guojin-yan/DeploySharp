@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T07:23:17.402722+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "backend": "onnxruntime-cpu",
+  "model": {
+    "id": "paddle-formula/pp-formulanet-l",
+    "file": "pp-formulanet-l.onnx",
+    "sha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3"
+  },
+  "tokenizer": {
+    "file": "inference.yml",
+    "sha256": "39bcdd283d08c4328ae853a62da1c6d2a4966360dae0ff0524670ae65ae91af9",
+    "tokenCount": 50000,
+    "endTokenId": 2
+  },
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\general_formula_rec_001.png",
+    "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+    "regions": [
+      {
+        "row": 0,
+        "y": 0,
+        "height": 32
+      },
+      {
+        "row": 1,
+        "y": 32,
+        "height": 32
+      }
+    ],
+    "rowInputsAreDistinct": true
+  },
+  "batch": {
+    "inputShape": "[2,1,768,768]",
+    "outputShape": "[2,1024]",
+    "rowInputSha256": [
+      "adad6dcf3b5a1712c7575e2d5a9395037cb381f93ff927721d98017fb0a96c31",
+      "238610d7a8ca98c202939966f383f20c799abe7ee064b4070625e6223ac887d0"
+    ]
+  },
+  "distinctDecodedRows": true,
+  "rows": [
+    {
+      "row": 0,
+      "inputId": "formula-top-band",
+      "batchTokenCount": 1022,
+      "batchTokenSha256": "ef6b35ca1c157095fa9746fa93058675491024de3029d5f79bf380546a82fb0d",
+      "singleTokenSha256": "ef6b35ca1c157095fa9746fa93058675491024de3029d5f79bf380546a82fb0d",
+      "reachedEos": true,
+      "latexSha256": "214185b5719e9aeb6dd5ce7fd87f3702ff27982b5bfbf896a69d0b090ffe3733",
+      "exactSingleRunMatch": true
+    },
+    {
+      "row": 1,
+      "inputId": "formula-bottom-band",
+      "batchTokenCount": 1022,
+      "batchTokenSha256": "fbcea917014a02c81f1194c4379a0e26c5b69af6a68b65c16efcd87cce683df6",
+      "singleTokenSha256": "fbcea917014a02c81f1194c4379a0e26c5b69af6a68b65c16efcd87cce683df6",
+      "reachedEos": true,
+      "latexSha256": "e6c1240fb953dc77f379ad2deee4548c1af9e99322ef91a326b80d9db4032214",
+      "exactSingleRunMatch": true
+    }
+  ],
+  "boundary": "True dynamic batch=2 execution with two distinct horizontal regions and exact token/LaTeX parity against independent single-region ORT CPU runs for this exact paddle-formula/pp-formulanet-l artifact on one Windows host. The regions come from one official formula image and are execution probes, not separately labeled formulas; this proves row isolation, not multi-formula accuracy, cross-backend support or performance."
+}

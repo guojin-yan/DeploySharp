@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-07T06:27:33.3357684+00:00",
+  "generatedAtUtc": "2026-10-07T07:21:46.6545198+00:00",
   "execution": {
     "os": "Microsoft Windows 10.0.26200",
     "architecture": "X64",
@@ -45,6 +45,7 @@
       "b2465fd530714f3e60462acac4d62733bd025f7263dc9ee3e1e1d15cefad681b"
     ]
   },
+  "distinctDecodedRows": true,
   "rows": [
     {
       "row": 0,
@@ -67,5 +68,5 @@
       "exactSingleRunMatch": true
     }
   ],
-  "boundary": "True dynamic batch=2 execution with two distinct horizontal regions and exact token/LaTeX parity against independent single-region ORT CPU runs for this exact FormulaNet Plus-S artifact on one Windows host. The regions come from one official formula image and are execution probes, not separately labeled formulas; this proves row isolation, not multi-formula accuracy, cross-backend support or performance."
+  "boundary": "True dynamic batch=2 execution with two distinct horizontal regions and exact token/LaTeX parity against independent single-region ORT CPU runs for this exact paddle-formula/pp-formulanet-plus-s artifact on one Windows host. The regions come from one official formula image and are execution probes, not separately labeled formulas; this proves row isolation, not multi-formula accuracy, cross-backend support or performance."
 }
