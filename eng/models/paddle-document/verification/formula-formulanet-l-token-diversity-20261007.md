@@ -4,6 +4,8 @@
 
 This is a descriptive follow-up to the four-image FormulaNet-L generation-limit probe. It reads the existing raw token IDs; it does not run inference, change the model, decode new predictions, or define a production stopping rule. The selected traces use one ONNX export and ONNX Runtime CPU.
 
+Seven additional high-output samples have since been traced and checked against the pinned 121-image baseline; see the [expanded follow-up](formula-formulanet-l-token-diversity-expanded-20261007.md) and [eleven-sample machine report](formula-formulanet-l-token-diversity-expanded-20261007.json). The four rows below remain the original generation-limit subset.
+
 Generated tokens are the raw sequence after BOS and before EOS (when present). They are partitioned into non-overlapping 128-token windows. A window is flagged only for this exploratory report when it has at most four unique token IDs and a unique 4-gram ratio no greater than 0.10. Exact suffix repetition is searched only up to 64 tokens and reported when at least three cycles are present. These thresholds are descriptive, not a general degeneration detector, confidence score, or accuracy metric.
 
 ## Results
