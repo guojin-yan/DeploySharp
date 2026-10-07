@@ -94,6 +94,13 @@
     "currentReachedEos": false,
     "interpretationBoundary": "Single sample/input-preprocessing sensitivity check; does not establish general preprocessing equivalence or formula quality."
   },
-  "conclusion": "The official PaddleX runner and ONNX Runtime produced byte-for-byte identical token IDs for the exact same captured Float32 input. Neither output contains EOS; both emit BOS plus 1024 generated positions. The matching inference.yml max_seq_len=1024 is configured under the preprocessing label encoder, so this observation alone does not prove that YAML field is the causal generation cap. The trace localizes this sample's non-EOS behavior to the official/exported execution path rather than DeploySharp token decoding.",
-  "boundary": "One realFormula sample, one official checkpoint export and CPU runtime pair. This does not establish a general quality result, a semantic-equivalence judgment, or behavior on other models/backends."
+  "exportedGenerationLimitReport": "formula-formulanet-l-generation-limit-20261007.json",
+  "confirmedExportedLoopCap": 1024,
+  "learnedPositionEmbeddingShape": [1026, 512],
+  "derivedHigherCapProbes": {
+    "1025": "fails at position embedding index 1026",
+    "2048": "fails at position embedding index 1026"
+  },
+  "conclusion": "The official PaddleX runner and ONNX Runtime produced byte-for-byte identical token IDs for the exact same captured Float32 input. Neither output contains EOS; both emit BOS plus 1024 generated positions. Separate direct inspection confirms that the official Paddle IR and exported ONNX loop have a 1024-iteration cap, while the learned positional table has 1026 rows and cannot service the next position. Three additional selected samples include two that emit EOS at the last returned raw position, so EOS can occur on the final in-range step; their high CER demonstrates that EOS is not a correctness signal. This confirms the export ceiling but does not explain why the original sample failed to emit EOS before that cap.",
+  "boundary": "One original and three additional selected realFormula samples for PP-FormulaNet-L on ONNX Runtime CPU. This is a targeted EOS/graph-bound diagnostic, not an accuracy estimate, semantic-equivalence judgment, or result for other models/backends."
 }
