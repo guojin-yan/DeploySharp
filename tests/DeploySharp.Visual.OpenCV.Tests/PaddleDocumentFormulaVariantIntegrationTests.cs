@@ -174,6 +174,178 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
         Assert.AreEqual(cases.Length * 5, rows.Count, "The six-model variant report must retain one row per model and variant.");
     }
 
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void SixFormulaModelsEvaluateRealFormulaDatasetOnOrtCpu()
+    {
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA") != "1")
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_REAL_FORMULA=1 to run the realFormula quality evaluation.");
+
+        string root = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_ROOT")
+            ?? @"F:\OCRBenchmarkTesting\datasets\realFormula-zenodo-11296815\extracted\realFormula-public");
+        string manifest = Path.Combine(root, "realFormula-manifest.jsonl");
+        string csv = Path.Combine(root, "test-corrected_normalized.csv");
+        if (!File.Exists(manifest) || !File.Exists(csv))
+            Assert.Inconclusive("realFormula manifest/CSV is missing; run Prepare-RealFormulaDataset.ps1 first: " + root);
+
+        List<RealFormulaRow> samples = File.ReadLines(manifest)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(line => JsonSerializer.Deserialize<RealFormulaRow>(line, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!)
+            .ToList();
+        Assert.AreEqual(121, samples.Count, "The pinned realFormula v1 corpus should contain 121 annotated formula images.");
+        string csvSha256 = FileSha(csv);
+        string manifestSha256 = FileSha(manifest);
+        string archivePath = Path.GetFullPath(Path.Combine(root, "..", "..", "realFormula.zip"));
+        string? archiveSha256 = File.Exists(archivePath) ? FileSha(archivePath) : null;
+        int sampleLimit = 0;
+        _ = int.TryParse(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_LIMIT"), out sampleLimit);
+        if (sampleLimit > 0) samples = samples.Take(sampleLimit).ToList();
+
+        var cases = new[]
+        {
+            (Model: "pp-formulanet-plus-s", Source: "PP-FormulaNet_plus-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-m", Source: "PP-FormulaNet_plus-M_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-l", Source: "PP-FormulaNet_plus-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "pp-formulanet-s", Source: "PP-FormulaNet-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-l", Source: "PP-FormulaNet-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "unimernet", Source: "UniMERNet_infer", Size: new VisualSize(672, 192))
+        };
+        string modelFilter = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_MODELS") ?? string.Empty;
+        HashSet<string> selectedModels = modelFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var selectedCases = cases.Where(item => selectedModels.Count == 0 || selectedModels.Contains(item.Model)).ToArray();
+        Assert.IsTrue(selectedCases.Length > 0, "The model filter did not select a known formula model.");
+
+        using var registry = new BackendRegistry();
+        registry.UseOnnxRuntime();
+        var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        var factory = new OpenCvVisualInputFactory();
+        var modelReports = new List<object>();
+        foreach (var formulaCase in selectedCases)
+        {
+            string modelPath = Path.Combine(ModelRoot, formulaCase.Model + ".onnx");
+            string yaml = Path.Combine(SourceRoot, formulaCase.Model, formulaCase.Source, "inference.yml");
+            Assert.IsTrue(File.Exists(modelPath) && File.Exists(yaml), "Formula model assets are incomplete: " + formulaCase.Model);
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(yaml);
+            int end = Find(tokenizer.Tokens, "</s>"), start = Find(tokenizer.Tokens, "<s>"), pad = Find(tokenizer.Tokens, "<pad>"), unk = Find(tokenizer.Tokens, "<unk>");
+            Assert.IsTrue(end >= 0, "Official formula tokenizer is missing EOS: " + yaml);
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/" + formulaCase.Model);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor,
+                new PaddleDocumentFormulaSchema(tokenizer, end, start, pad, unk), modelSize: formulaCase.Size, maximumSequenceLength: 4096);
+            using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), request);
+
+            var resultRows = new List<object>(samples.Count);
+            long totalEditDistance = 0;
+            long totalReferenceCharacters = 0;
+            double totalSampleCer = 0;
+            long totalTokenEditDistance = 0;
+            long totalReferenceTokens = 0;
+            int exactMatches = 0, reachedEosCount = 0, emptyCount = 0;
+            int tokenExactMatches = 0;
+            foreach (RealFormulaRow sample in samples)
+            {
+                string imagePath = Path.Combine(root, sample.ImageRelPath.Replace('/', Path.DirectorySeparatorChar));
+                Assert.IsTrue(File.Exists(imagePath), "realFormula image is missing: " + imagePath);
+                Assert.AreEqual(sample.ImageSha256, FileSha(imagePath), "realFormula image SHA changed: " + sample.Image);
+                using PreparedVisualInput input = factory.CreateFromFile(imagePath, profile.VisualProfile, inputId: sample.Image);
+                InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                PaddleDocumentFormulaResult result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(
+                    new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+
+                // The realFormula labels are canonical, whitespace-tokenized LaTeX. Removing all whitespace
+                // compares the same canonical sequence as the model decoder without claiming TeX semantics.
+                string normalizedReference = string.Concat(sample.ReferenceLatex.Where(character => !char.IsWhiteSpace(character)));
+                string normalizedPrediction = string.Concat(result.Latex.Where(character => !char.IsWhiteSpace(character)));
+                int editDistance = EditDistance(normalizedReference, normalizedPrediction);
+                string[] referenceTokens = SplitTokens(sample.ReferenceLatex);
+                string[] predictionTokens = SplitTokens(result.Latex);
+                int tokenEditDistance = EditDistance(referenceTokens, predictionTokens);
+                bool reachedEos = !result.Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal);
+                totalEditDistance += editDistance;
+                totalReferenceCharacters += normalizedReference.Length;
+                totalSampleCer += (double)editDistance / Math.Max(1, normalizedReference.Length);
+                totalTokenEditDistance += tokenEditDistance;
+                totalReferenceTokens += referenceTokens.Length;
+                if (string.Equals(normalizedReference, normalizedPrediction, StringComparison.Ordinal)) exactMatches++;
+                if (referenceTokens.SequenceEqual(predictionTokens, StringComparer.Ordinal)) tokenExactMatches++;
+                if (reachedEos) reachedEosCount++;
+                if (normalizedPrediction.Length == 0) emptyCount++;
+                resultRows.Add(new
+                {
+                    image = sample.Image,
+                    imageSha256 = sample.ImageSha256,
+                    referenceSha256 = FileShaText(sample.ReferenceLatex),
+                    referenceLength = normalizedReference.Length,
+                    predictionLength = normalizedPrediction.Length,
+                    referenceTokenCount = referenceTokens.Length,
+                    predictionTokenCount = predictionTokens.Length,
+                    normalizedCharEditDistance = editDistance,
+                    normalizedCharErrorRate = (double)editDistance / Math.Max(1, normalizedReference.Length),
+                    normalizedExactMatch = string.Equals(normalizedReference, normalizedPrediction, StringComparison.Ordinal),
+                    whitespaceTokenEditDistance = tokenEditDistance,
+                    whitespaceTokenErrorRate = (double)tokenEditDistance / Math.Max(1, referenceTokens.Length),
+                    whitespaceTokenExactMatch = referenceTokens.SequenceEqual(predictionTokens, StringComparer.Ordinal),
+                    reachedEndOfSequence = reachedEos,
+                    emptyPrediction = normalizedPrediction.Length == 0,
+                    warnings = result.Warnings.ToArray(),
+                    prediction = result.Latex
+                });
+            }
+            modelReports.Add(new
+            {
+                model = "paddle-formula/" + formulaCase.Model,
+                modelSha256 = FileSha(modelPath),
+                tokenizerYamlSha256 = FileSha(yaml),
+                backend = "onnxruntime-cpu",
+                sampleCount = samples.Count,
+                exactMatches,
+                exactMatchRate = (double)exactMatches / Math.Max(1, samples.Count),
+                whitespaceTokenExactMatches = tokenExactMatches,
+                whitespaceTokenExactMatchRate = (double)tokenExactMatches / Math.Max(1, samples.Count),
+                corpusNormalizedCharErrorRate = (double)totalEditDistance / Math.Max(1, totalReferenceCharacters),
+                meanNormalizedCharErrorRate = samples.Count == 0 ? 0 : totalSampleCer / samples.Count,
+                corpusWhitespaceTokenErrorRate = (double)totalTokenEditDistance / Math.Max(1, totalReferenceTokens),
+                reachedEndOfSequenceCount = reachedEosCount,
+                emptyPredictionCount = emptyCount,
+                results = resultRows
+            });
+        }
+
+        string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_REAL_FORMULA_REPORT_PATH")
+            ?? Path.Combine(TestContext.TestResultsDirectory!, "realFormula-six-models-ort.json");
+        string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+        if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+        File.WriteAllText(report, JsonSerializer.Serialize(new
+        {
+            schemaVersion = "deploysharp-realformula-six-model-quality-v1",
+            generatedAtUtc = DateTimeOffset.UtcNow,
+            dataset = new
+            {
+                name = "MathNet realFormula",
+                version = "Zenodo 11296815 v1",
+                doi = "10.5281/zenodo.11296815",
+                recordUrl = "https://zenodo.org/records/11296815",
+                license = "CC-BY-4.0",
+                attribution = "Schmitt-Koopmann, Felix; Huang, Elaine; Hutter, Hans-Peter; Stadelmann, Thilo; Darvishy, Alireza. MER dataset realFormula. Zenodo, v1, 2024. https://doi.org/10.5281/zenodo.11296815",
+                archiveSha256,
+                csvSha256,
+                manifestSha256,
+                annotatedSampleCount = 121,
+                evaluatedSampleCount = samples.Count,
+                evaluationLimit = sampleLimit,
+                annotation = "121 manually annotated mathematical expressions from arXiv papers; image-to-label mapping is validated by exact image name and SHA-256."
+            },
+            normalization = "Remove Unicode whitespace from the dataset's canonical tokenized LaTeX and decoded LaTeX; character Levenshtein CER is diagnostic and does not measure mathematical/TeX semantic equivalence.",
+            modelCount = selectedCases.Length,
+            modelResults = modelReports,
+            boundary = "This is an external realFormula v1 corpus evaluation on local ONNX Runtime CPU assets. Training-corpus overlap for the tested Paddle checkpoints is unknown; this report is not a universal accuracy claim, and it does not establish OpenVINO/OpenCV/TensorRT accuracy or performance."
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        TestContext.AddResultFile(report);
+        Assert.AreEqual(selectedCases.Length, modelReports.Count);
+    }
+
+    private sealed record RealFormulaRow(string Image, string ImageRelPath, string ImageSha256, string ReferenceLatex);
+
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     private static string FileShaText(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
@@ -194,5 +366,25 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
             (previous, current) = (current, previous);
         }
         return previous[actual.Length];
+    }
+
+    private static string[] SplitTokens(string value) => value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+
+    private static int EditDistance(IReadOnlyList<string> expected, IReadOnlyList<string> actual)
+    {
+        int[] previous = new int[actual.Count + 1];
+        int[] current = new int[actual.Count + 1];
+        for (int column = 0; column <= actual.Count; column++) previous[column] = column;
+        for (int row = 1; row <= expected.Count; row++)
+        {
+            current[0] = row;
+            for (int column = 1; column <= actual.Count; column++)
+            {
+                int substitution = previous[column - 1] + (string.Equals(expected[row - 1], actual[column - 1], StringComparison.Ordinal) ? 0 : 1);
+                current[column] = Math.Min(Math.Min(previous[column] + 1, current[column - 1] + 1), substitution);
+            }
+            (previous, current) = (current, previous);
+        }
+        return previous[actual.Count];
     }
 }
