@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
@@ -24,7 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.OpenCV.Tests
 {
-    /// <summary>Runs real dynamic-batch PP-Structure exports through ORT and OpenVINO. / 使用真实动态 Batch PP-Structure 导出在 ORT 和 OpenVINO 上运行。</summary>
+    /// <summary>Runs real dynamic-batch PP-Structure exports through supported CPU backends. / 使用支持的 CPU 后端运行真实动态 Batch PP-Structure 导出。</summary>
     [TestClass]
     public sealed class PaddleDocumentDynamicBatchIntegrationTests
     {
@@ -192,6 +193,58 @@ namespace DeploySharp.Visual.OpenCV.Tests
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(4, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchSealDetectorsRunOnOrtOpenVinoAndOpenCvDnn()
+        {
+            RequireExternal();
+            string[] images = { @"E:\Data\ocr\demo_4.jpg", @"E:\Data\ocr\demo_5.jpg" };
+            foreach (string image in images) RequireFile(image, "dynamic-batch seal image");
+
+            var models = new[]
+            {
+                (ModelId: "paddle-seal/ppocrv4-mobile", FileName: "ppocrv4-mobile-seal-det.onnx"),
+                (ModelId: "paddle-seal/ppocrv4-server", FileName: "ppocrv4-server-seal-det.onnx")
+            };
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId),
+                new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId)
+            })
+            {
+                foreach (var model in models)
+                    rows.Add(RunSealBatchCase(backend, model.ModelId, model.FileName, images));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_SEAL_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                execution = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    architecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    targetFramework = "net10.0",
+                    configuration = "Release"
+                },
+                images = images.Select(path => new { file = path, sha256 = FileSha256(path) }).ToArray(),
+                batch = 2,
+                models = models.Select(value => new { model = value.ModelId, file = value.FileName }).ToArray(),
+                scope = "Official PP-OCRv4 mobile/server seal probability-map exports; two distinct full source images are stacked into one Float32 tensor and decoded as a batch on ORT CPU, OpenVINO CPU and OpenCV DNN CPU.",
+                results = rows,
+                boundary = "True batch binding, raw output row separation and per-row source/page metadata mapping for these exact artifacts on one Windows host. The images have no seal ground truth; no detection quality, accuracy, throughput, TensorRT batch or cross-device claim is made."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(6, rows.Count);
         }
 
         [TestMethod]
@@ -592,6 +645,130 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 distinctFirstRowLabels = decoded[0].Detections.Select(value => value.Label.Label).Distinct(StringComparer.Ordinal).ToArray(),
                 status = "passed"
             };
+        }
+
+        private static object RunSealBatchCase(BackendCase backend, string modelId, string fileName, IReadOnlyList<string> imagePaths)
+        {
+            string modelPath = Path.Combine(ModelRoot, fileName);
+            RequireFile(modelPath, modelId + " dynamic seal model");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateSealDetection(descriptor, new VisualSize(224, 224), maximumBatch: 2);
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0]);
+
+            var factory = new OpenCvVisualInputFactory();
+            string[] imageHashes = imagePaths.Select(FileSha256).ToArray();
+            using PreparedVisualInput first = factory.CreateFromFile(imagePaths[0], profile.VisualProfile, imageHashes[0]);
+            using PreparedVisualInput second = factory.CreateFromFile(imagePaths[1], profile.VisualProfile, imageHashes[1]);
+            Assert.AreEqual(first.Tensor.Shape, second.Tensor.Shape);
+            Assert.AreEqual(TensorElementType.Float32, first.Tensor.ElementType);
+            Assert.AreEqual(TensorElementType.Float32, second.Tensor.ElementType);
+            float[] firstValues = first.Tensor.Buffer as float[] ?? throw new AssertFailedException("The first seal image must produce Float32 input.");
+            float[] secondValues = second.Tensor.Buffer as float[] ?? throw new AssertFailedException("The second seal image must produce Float32 input.");
+            Assert.AreEqual(firstValues.Length, secondValues.Length);
+
+            var batchValues = new float[checked(firstValues.Length + secondValues.Length)];
+            Array.Copy(firstValues, 0, batchValues, 0, firstValues.Length);
+            Array.Copy(secondValues, 0, batchValues, firstValues.Length, secondValues.Length);
+            long[] batchShape = first.Tensor.Shape.ToArray();
+            batchShape[0] = 2;
+            var frames = new[] { first.BatchFrames[0], second.BatchFrames[0] };
+            using var input = new PreparedVisualInput(
+                first.InputName,
+                new Tensor<float>(new TensorShape(batchShape), batchValues, TensorBufferOwnership.Transfer),
+                first.SourceSize,
+                first.ModelSize,
+                2,
+                first.Layout,
+                first.Transform,
+                first.Preprocessing,
+                inputId: "paddle-seal-dynamic-batch",
+                batchFrames: frames);
+            Assert.AreEqual(2L, input.Tensor.Shape[0]);
+            string[] inputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(input.Tensor, row)).ToArray();
+            Assert.AreNotEqual(inputRowSha256[0], inputRowSha256[1], backend.Name + " prepared duplicate seal image rows.");
+
+            using var registry = new BackendRegistry();
+            BackendRequest request;
+            if (backend.Id == OnnxRuntimeBackendProvider.BackendId)
+            {
+                registry.UseOnnxRuntime();
+                request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            }
+            else
+            {
+                if (backend.Id == OpenVinoBackendProvider.BackendId)
+                {
+                    registry.UseOpenVino();
+                    request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+                }
+                else
+                {
+                    var contract = new OpenCvDnnModelContract(
+                        profile.VisualProfile.ModelId,
+                        new[] { new TensorDescriptor("x", TensorElementType.Float32, new TensorShape(-1, 3, 224, 224)) },
+                        new[] { new TensorDescriptor("fetch_name_0", TensorElementType.Float32, new TensorShape(-1, 1, 224, 224)) },
+                        imageInputNames: new[] { "x" });
+                    registry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+                    request = new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu");
+                }
+            }
+
+            using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, backend.Id), request);
+            InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+            ITensor mask = outputs.GetRequired("fetch_name_0");
+            Assert.AreEqual(4, mask.Shape.Rank);
+            Assert.AreEqual(2L, mask.Shape[0]);
+            string[] outputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(mask, row)).ToArray();
+            Assert.AreNotEqual(outputRowSha256[0], outputRowSha256[1], backend.Name + " returned duplicate raw seal-mask rows for distinct images.");
+
+            var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentSealBatchResult
+                ?? throw new AssertFailedException(modelId + " did not return a PaddleDocumentSealBatchResult for batch=2.");
+            Assert.AreEqual(2, decoded.Count);
+            var resultRows = new List<object>(decoded.Count);
+            for (int row = 0; row < decoded.Count; row++)
+            {
+                PaddleDocumentSealResult result = decoded[row];
+                Assert.AreEqual(row, result.Metadata.PageIndex, backend.Name + " changed seal batch row order.");
+                Assert.AreEqual(imageHashes[row], result.Metadata.InputSha256, backend.Name + " mapped seal output to the wrong source image.");
+                Assert.IsTrue(result.MaskWidth > 0 && result.MaskHeight > 0);
+                resultRows.Add(new
+                {
+                    row,
+                    input = imagePaths[row],
+                    inputSha256 = result.Metadata.InputSha256,
+                    pageIndex = result.Metadata.PageIndex,
+                    mask = new { width = result.MaskWidth, height = result.MaskHeight },
+                    regionCount = result.Regions.Count,
+                    regionSummarySha256 = SealRegionsSha256(result)
+                });
+            }
+
+            return new
+            {
+                backend = backend.Name,
+                model = modelId,
+                modelSha256 = FileSha256(modelPath),
+                inputShape = input.Tensor.Shape.ToString(),
+                inputRowSha256,
+                outputShape = mask.Shape.ToString(),
+                outputRowSha256,
+                resultRows,
+                status = "passed"
+            };
+        }
+
+        private static string SealRegionsSha256(PaddleDocumentSealResult result)
+        {
+            var canonical = new StringBuilder(result.Regions.Count * 96);
+            foreach (PaddleDocumentRegion region in result.Regions)
+                canonical.Append(region.Category).Append('|')
+                    .Append(region.Score.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                    .Append(region.Bounds.X.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                    .Append(region.Bounds.Y.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                    .Append(region.Bounds.Width.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                    .Append(region.Bounds.Height.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString()))).ToLowerInvariant();
         }
 
         private static object RunCase(BackendCase backend, ClassifierCase item)

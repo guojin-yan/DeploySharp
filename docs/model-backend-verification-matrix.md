@@ -89,6 +89,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 2026-10-07 又对官方 `PP-DocLayout_plus-L` 和 `PP-DocBlockLayout` 完成 batch=2 全解码运行：ORT CPU、OpenVINO CPU 共四个精确组合均成功绑定动态图像轴与 `im_shape`/`scale_factor` 辅助轴。每行来自 `bus.jpg` 的不同半幅裁剪，输入张量 SHA 与解码结果 SHA 均按行不同；每行返回 300 个图导出候选。半幅只是行隔离执行探针，不用于版面质量评价；候选数不是准确率指标，也不代表数值 parity、性能、TensorRT/OpenCV Batch 或所有版面模型支持。详见[动态 Batch 验证报告](../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.json)。
 
+2026-10-07 对 PP-OCRv4 mobile/server seal probability-map 两个动态图完成 batch=2 ORT CPU、OpenVINO CPU 和 OpenCV DNN CPU 实测，六个精确模型/后端组合均通过：每个组合都用 `demo_4.jpg`、`demo_5.jpg` 两张不同图片绑定 `[2,3,224,224]`，输出 `[2,1,224,224]`，解码成两条结果并保留 page index `0,1` 和对应输入 SHA；每个组合的输入行及各自 raw mask 行摘要均不同。OpenCV mask SHA 与 ORT/OpenVINO 不同，本轮不声明数值 parity。mobile 两行均为 0 个区域、server 为 `1,0`，但这两张图没有印章真值，因此区域数只作为输出诊断，不能用于召回率/准确率判断。详见[三后端印章动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)；这不表示 TensorRT batch、印章质量或性能通过。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -102,9 +104,11 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
 | 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‖ |
 | 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | △ |
-| 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
-| 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | △ | ✓§ |
+| 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
+| 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
 | 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | △ | ✓¶ |
+
+2026-10-07 补充的印章 batch=2 验证现已覆盖 ORT CPU、OpenVINO CPU 与 OpenCV DNN CPU：PP-OCRv4 mobile/server 的六个精确组合均完成两张不同图像的真实 Batch 绑定、概率图输出与 Decoder 行/来源映射。OpenCV mask SHA 与另外两个后端不同，因此只登记为执行/行隔离通过，不登记数值 parity。相关矩阵中的 OpenCV 状态仅对这两个印章 ONNX 工件成立；其它 PP-Structure 模型的未验证状态不变。详见[三后端印章动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)。
 
 ### PP-Structure 精确资产状态（29 个目录项 + 2 个派生兼容图）
 
@@ -142,8 +146,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 | `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | △ | △ |
 | `paddle-formula/unimernet` | ✓ | ✗¹ | △ | △ |
-| `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | △ | ✓ |
-| `paddle-seal/ppocrv4-server` | ✓ | ✓ | △ | ✓ |
+| `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ |
+| `paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
 
 ¹ 六个公式工件已经通过隔离进程逐项尝试，当前 OpenVINO 组合全部不支持：Loop-body 参数 alpha-renaming 后，Plus-S/FormulaNet-S 虽进入执行但没有通过 ORT token parity，Plus-M/Plus-L/FormulaNet-L 在 Loop reshape 处发生形状冲突，UniMERNet 在 `ov_core_read_model_utf8` 发生 native crash。逐项 SHA、token 计数和错误摘要见 [`formula-openvino-loop-compat-20261004.json`](../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json)。这表示当前精确后端准入失败，不代表公式识别准确率。
@@ -177,6 +181,8 @@ TensorRT 设备为 RTX 3060 Laptop 6GB、TensorRT 10.11.0、CUDA 12.9、cuDNN 9.
 | `paddle-table/slanext-wireless` | 结构序列：专用表格 Decoder；派生兼容图通过 OpenVINO | ✓ | ✓** |
 | `paddle-seal/ppocrv4-mobile` | 概率图掩码：`224x224`，专用印章 Decoder | ✓ | ✓ |
 | `paddle-seal/ppocrv4-server` | 概率图掩码：`224x224`，专用印章 Decoder | ✓ | ✓ |
+
+印章模型的上述 ORT/OpenVINO 解码证据现另有真实 batch=2 OpenCV DNN 运行补充；该批结果只扩展到 mobile/server 两张精确图，不构成其它图或其它 PP-Structure 模型的 OpenCV 支持声明。机器可读的逐行输入/输出 hash 见[报告 JSON](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)。
 
 ### TensorRT 精确工件证据
 

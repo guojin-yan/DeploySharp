@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T05:54:03.1098321+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "images": [
+    {
+      "file": "E:\\Data\\ocr\\demo_4.jpg",
+      "sha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593"
+    },
+    {
+      "file": "E:\\Data\\ocr\\demo_5.jpg",
+      "sha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e"
+    }
+  ],
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-seal/ppocrv4-mobile",
+      "file": "ppocrv4-mobile-seal-det.onnx"
+    },
+    {
+      "model": "paddle-seal/ppocrv4-server",
+      "file": "ppocrv4-server-seal-det.onnx"
+    }
+  ],
+  "scope": "Official PP-OCRv4 mobile/server seal probability-map exports; two distinct full source images are stacked into one Float32 tensor and decoded as a batch on ORT CPU, OpenVINO CPU and OpenCV DNN CPU.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-seal/ppocrv4-mobile",
+      "modelSha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "810e669be84f29ebe3e932f4497d4181c6133ee7c887c04657c5aad370ddb741",
+        "854232f1ab8209e1ac24356e113c6cd2e1184cd01093b3175142ce8dc9caf88b"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-seal/ppocrv4-server",
+      "modelSha256": "f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "b92277b99f155141009514eda60ad8f548e8007c0f768ac76efaada27c2be6f3",
+        "60c9bb762e87e243d69c243361aacf7fd68d0ebad66632084432786de46513e0"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 1,
+          "regionSummarySha256": "1782579b7e721a138c8f8dea93d01c9f765d3149d1bb1d641187b367648f04fb"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-seal/ppocrv4-mobile",
+      "modelSha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "9e4cf0bb4310f56ab8f4271791d2f6fe10b588f68498c20b7ccadaad28719a3e",
+        "8029eb488d35fd78519b52d670042b4b8aac9e683fa16cbd210d0407aecce05a"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-seal/ppocrv4-server",
+      "modelSha256": "f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "a16fa9ca8495e6dfa875cf924462c33a114ed2e9f7dd221bfc286981c90fa5cc",
+        "cc0b08a191b1a626bc5bd20520aa42c3e5943f2f7b4593ed389a9524b65c1cd3"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 1,
+          "regionSummarySha256": "1782579b7e721a138c8f8dea93d01c9f765d3149d1bb1d641187b367648f04fb"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-seal/ppocrv4-mobile",
+      "modelSha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "ad41b169de69fc8817ff0fd84b6370060cf49ef35ca7f115c0540cdcf024dbd6",
+        "62e89facd1c710a12e2c56c05a4bd25deee53b19e318b894b67ea0d1a0ce116b"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-seal/ppocrv4-server",
+      "modelSha256": "f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7",
+      "inputShape": "[2,3,224,224]",
+      "inputRowSha256": [
+        "5e6c017f040a30526a27e6d30c17f7018350f2a9068693abad0af335d47edb6b",
+        "c21b5533e0dd7dbf265ebd0abfe69887fadf516cb2fbdaecdcd32d641c013869"
+      ],
+      "outputShape": "[2,1,224,224]",
+      "outputRowSha256": [
+        "4ecc111f421588a05414d99315a741eba27d6d0d3f48c9513d3379c68b6b951e",
+        "0c03132f58082c3aa418acc41efb0c69a4e0ee656977072beca679f8fc800113"
+      ],
+      "resultRows": [
+        {
+          "row": 0,
+          "input": "E:\\Data\\ocr\\demo_4.jpg",
+          "inputSha256": "1b3978f3708bc31e3acfe603b052531a480db87ebaa1460559ee7d3eb1160593",
+          "pageIndex": 0,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 1,
+          "regionSummarySha256": "9d933f99bae688dd265d63a708134d2812f9a812f5f0a44f74b7e25e0312eb2d"
+        },
+        {
+          "row": 1,
+          "input": "E:\\Data\\ocr\\demo_5.jpg",
+          "inputSha256": "f76ac52816fa74fa9efac12ab4c382cbed3c137d02b689738edbcb63717abe9e",
+          "pageIndex": 1,
+          "mask": {
+            "width": 224,
+            "height": 224
+          },
+          "regionCount": 0,
+          "regionSummarySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True batch binding, raw output row separation and per-row source/page metadata mapping for these exact artifacts on one Windows host. The images have no seal ground truth; no detection quality, accuracy, throughput, TensorRT batch or cross-device claim is made."
+}

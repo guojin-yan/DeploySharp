@@ -71,6 +71,8 @@ UVDoc 也已完成双行动态 Batch：使用 `bus.jpg` 左/右两个不重叠 R
 
 2026-10-07 另对官方 `PP-DocLayout_plus-L` 与 `PP-DocBlockLayout` 做了 batch=2 真模型验证。ORT CPU 和 OpenVINO CPU 四个模型/后端组合均绑定各自的动态图像输入及 `[2,2]` 几何辅助张量，并经 NMS Decoder 返回两行；行输入和结果摘要 SHA 均不同。两个模型分别使用 `[2,3,800,800]` 与 `[2,3,640,640]`；每行各有 300 个图导出候选。测试切自 `bus.jpg` 上下两个半幅，仅作为 batch 行隔离探针，不是文档质量样本、准确率或性能证据。详见[验证报告](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.json)。
 
+PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 `demo_4.jpg` 与 `demo_5.jpg`，ORT CPU、OpenVINO CPU、OpenCV DNN CPU 均把两图组成 `[2,3,224,224]` 并得到 `[2,1,224,224]` 概率图，六个模型/后端组合都完成 Decoder 行映射。page index 与来源 SHA 保持输入顺序；不同后端 raw mask 摘要不一致，因此只证明执行和行隔离，不作为数值 parity。样本没有印章真值，mobile `0/0`、server `1/0` 区域数不能解释为检测准确性，也不是速度结论。见[三后端报告](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)。
+
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：
@@ -458,7 +460,7 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 同一固定 `ChartQA/val` 选择已扩展为 12 张图并在相同 TensorRT plans 上复测：`12/12` EOS、`9/12` 行列维度一致、单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 `4,398.95/12,209.76 ms`，Decode P50/P95 范围 `33.37–39.48 / 35.85–48.81 ms`。这仍是有界任务质量和阶段计时诊断，不是 split accuracy、问答分数或受控性能基准。详见 [TensorRT 12 图记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。
 
-文档链接可用性由[最新审计记录](../../eng/models/paddle-document/verification/document-link-audit-20261007-additional-layout.md)维护；审计脚本检查六份 PP-OCR/PP-Structure 入口文档的相对本地链接，本轮共检查 `227` 条、断链 `0`。外部 URL 与运行时生成路径不在此审计范围。
+文档链接可用性由[最新审计 JSON](../../eng/models/paddle-document/verification/document-link-audit-20261007-seal-dynamic-batch.json)维护；审计脚本检查六份 PP-OCR/PP-Structure 入口文档的相对本地链接，并在 JSON 中记录检查数量与断链数。外部 URL 与运行时生成路径不在此审计范围。
 
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
 
