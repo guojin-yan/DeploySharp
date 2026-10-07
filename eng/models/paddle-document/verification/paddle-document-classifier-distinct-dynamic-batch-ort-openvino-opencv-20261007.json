@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T06:12:12.2406115+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+    "regions": "top and bottom non-overlapping horizontal bands"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "file": "pp-lcnet-x1-0-doc-ori.onnx"
+    },
+    {
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "file": "pp-lcnet-x1-0-table-cls.onnx"
+    }
+  ],
+  "backends": [
+    "onnxruntime-cpu",
+    "openvino-cpu",
+    "opencv-dnn-cpu"
+  ],
+  "scope": "Official PP-LCNet document-orientation and table-classification ONNX exports; each batch row is a distinct top/bottom region from the same table-recognition image.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "modelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,4]",
+      "rawOutputRowSha256": [
+        "9f34ecfbd5dbc80c33c7b77fc351013d3a0c7d1f5a746cb4f59b93d7c2e7947c",
+        "6ec5f05b7d8d4224f75681c856225ea69567d40634e687c0f767ea7ff881a63e"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "0_degree",
+        "0_degree"
+      ],
+      "scores": [
+        0.9243435,
+        0.92513317
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "modelSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,2]",
+      "rawOutputRowSha256": [
+        "1d8fc76df587e418d52e18d1e5a267525170766ccdfc2202ceba5fe160f0aaf7",
+        "9ad281138b326e08f6d78198470b66385be4ac2eeccf64c5d6f0db17f91dcd32"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "wired",
+        "wired"
+      ],
+      "scores": [
+        0.9560565,
+        0.9477461
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "modelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,4]",
+      "rawOutputRowSha256": [
+        "0e8bb143383b1ed4e29b7de8322fda7aa5a0c431df2fcc3db42031a4cdefda28",
+        "3c3f3cf173e928e8aa0d13fe326ae4af648be6b98fd796c26efa6d39ce444ac5"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "0_degree",
+        "0_degree"
+      ],
+      "scores": [
+        0.9243434,
+        0.92513305
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "modelSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,2]",
+      "rawOutputRowSha256": [
+        "670efb15f7a595c4391ede0bea790ba62f7bebf5e037687e00bf680ccaaf3c83",
+        "99ed2e3b7826f43a0d097460d872fce8eaed598395509521490997fda6efd580"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "wired",
+        "wired"
+      ],
+      "scores": [
+        0.9560565,
+        0.9477462
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "modelSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,4]",
+      "rawOutputRowSha256": [
+        "dd0cf2df18b4c63d11b14d508dc18ed03fb15fe482894b463dcbcc275598952a",
+        "a9fa74d8a415e4a8bdfe6afcd4d45a7881b0e28d56a7ca15ee33877eb9217130"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "0_degree",
+        "0_degree"
+      ],
+      "scores": [
+        0.9243435,
+        0.92513317
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "modelSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "inputShape": "[2,3,224,224]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+        "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+      ],
+      "outputNames": [
+        "fetch_name_0"
+      ],
+      "rawOutputShape": "[2,2]",
+      "rawOutputRowSha256": [
+        "efef661e4a98e4bf2dc5e37292c39ca1d3ac39b7d9f70302e6e6b83989167651",
+        "708f504d82386e0daa35e62572d7bd2864362d505e36e7f4f207e27769bdb9a7"
+      ],
+      "resultCount": 2,
+      "labels": [
+        "wired",
+        "wired"
+      ],
+      "scores": [
+        0.9560565,
+        0.9477461
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True batch binding, distinct raw input/output rows and decoder result mapping for these exact artifacts/backends on one Windows host. Regions are execution probes, not classification ground truth; no accuracy, cross-backend numeric parity, throughput or cross-device claim is made."
+}

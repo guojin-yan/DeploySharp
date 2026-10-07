@@ -75,6 +75,52 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchClassifiersPreserveDistinctRowsAcrossCpuBackends()
+        {
+            RequireExternal();
+            RequireFile(TableImagePath, "dynamic-batch classifier image");
+            var rows = new List<object>();
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId),
+                new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId)
+            })
+            {
+                foreach (ClassifierCase item in Cases)
+                    rows.Add(RunCase(backend, item, useDistinctHorizontalBands: true));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_CLASSIFIER_DISTINCT_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                execution = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    architecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    targetFramework = "net10.0",
+                    configuration = "Release"
+                },
+                input = new { file = TableImagePath, sha256 = FileSha256(TableImagePath), regions = "top and bottom non-overlapping horizontal bands" },
+                batch = 2,
+                models = Cases.Select(item => new { model = item.ModelId, file = item.FileName }).ToArray(),
+                backends = new[] { "onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu" },
+                scope = "Official PP-LCNet document-orientation and table-classification ONNX exports; each batch row is a distinct top/bottom region from the same table-recognition image.",
+                results = rows,
+                boundary = "True batch binding, distinct raw input/output rows and decoder result mapping for these exact artifacts/backends on one Windows host. Regions are execution probes, not classification ground truth; no accuracy, cross-backend numeric parity, throughput or cross-device claim is made."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(6, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchLayoutRunsOnOrtAndOpenVino()
         {
             RequireExternal();
@@ -771,7 +817,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString()))).ToLowerInvariant();
         }
 
-        private static object RunCase(BackendCase backend, ClassifierCase item)
+        private static object RunCase(BackendCase backend, ClassifierCase item, bool useDistinctHorizontalBands = false)
         {
             string path = Path.Combine(ModelRoot, item.FileName);
             RequireFile(path, item.ModelId);
@@ -785,12 +831,27 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0], item.ModelId + " must expose a dynamic input batch axis.");
             Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0], item.ModelId + " must expose a dynamic output batch axis.");
 
+            string imagePath = useDistinctHorizontalBands ? TableImagePath : ImagePath;
             var factory = new OpenCvVisualInputFactory();
-            using PreparedVisualInput probe = factory.CreateFromFile(ImagePath, profile.VisualProfile, inputId: "dynamic-batch-probe");
-            var fullSource = new RectangleRoiGeometry(new RectangleF(0, 0, probe.SourceSize.Width, probe.SourceSize.Height));
+            using OpenCvDecodedRoiImage source = factory.DecodeForRois(OpenCvImageSource.FromFile(imagePath));
+            IVisualRoiGeometry[] regions;
+            if (useDistinctHorizontalBands)
+            {
+                float halfHeight = source.SourceSize.Height / 2f;
+                regions = new IVisualRoiGeometry[]
+                {
+                    new RectangleRoiGeometry(new RectangleF(0, 0, source.SourceSize.Width, halfHeight)),
+                    new RectangleRoiGeometry(new RectangleF(0, halfHeight, source.SourceSize.Width, source.SourceSize.Height - halfHeight))
+                };
+            }
+            else
+            {
+                var fullSource = new RectangleRoiGeometry(new RectangleF(0, 0, source.SourceSize.Width, source.SourceSize.Height));
+                regions = new IVisualRoiGeometry[] { fullSource, fullSource };
+            }
             using PreparedVisualInput input = factory.CreateRoiBatch(
-                OpenCvImageSource.FromFile(ImagePath),
-                new IVisualRoiGeometry[] { fullSource, fullSource },
+                OpenCvImageSource.FromFile(imagePath),
+                regions,
                 profile.VisualProfile.Input.Name,
                 profile.VisualProfile.Preprocessing!.ToOpenCvOptions(),
                 inputId: "dynamic-batch-rows",
@@ -798,6 +859,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(2, input.BatchSize);
             Assert.AreEqual(2L, input.Tensor.Shape[0]);
             Assert.AreEqual(2, input.BatchFrames.Count);
+            string[] inputRowSha256 = Enumerable.Range(0, input.BatchSize).Select(row => TensorRowSha256(input.Tensor, row)).ToArray();
+            if (useDistinctHorizontalBands)
+                Assert.AreNotEqual(inputRowSha256[0], inputRowSha256[1], backend.Name + " received duplicate classifier batch rows.");
+            else
+                Assert.AreEqual(inputRowSha256[0], inputRowSha256[1], backend.Name + " changed identical classifier rows.");
 
             using var registry = new BackendRegistry();
             BackendRequest request;
@@ -806,23 +872,43 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 registry.UseOnnxRuntime();
                 request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
             }
-            else
+            else if (backend.Id == OpenVinoBackendProvider.BackendId)
             {
                 registry.UseOpenVino();
                 request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+            }
+            else
+            {
+                var contract = new OpenCvDnnModelContract(
+                    profile.VisualProfile.ModelId,
+                    new[] { new TensorDescriptor(profile.VisualProfile.Input.Name, profile.VisualProfile.Input.ElementType, profile.VisualProfile.Input.ShapePattern) },
+                    profile.VisualProfile.Outputs.Select(output => new TensorDescriptor(output.Name, output.ElementType, output.ShapePattern)),
+                    imageInputNames: new[] { profile.VisualProfile.Input.Name });
+                registry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+                request = new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu");
             }
 
             using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(path, backend.Id), request);
             var inputs = new List<NamedTensor>(1 + input.AuxiliaryInputs.Count) { new NamedTensor(input.InputName, input.Tensor) };
             inputs.AddRange(input.AuxiliaryInputs);
             InferenceOutputs outputs = session.Run(new InferenceInputs(inputs), CancellationToken.None);
+            ITensor logits = outputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+            Assert.AreEqual(2L, logits.Shape[0], item.ModelId + " returned the wrong raw output batch size.");
+            string[] outputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(logits, row)).ToArray();
+            if (useDistinctHorizontalBands)
+                Assert.AreNotEqual(outputRowSha256[0], outputRowSha256[1], backend.Name + " returned duplicate raw classifier rows for distinct regions.");
+            else
+                Assert.AreEqual(outputRowSha256[0], outputRowSha256[1], backend.Name + " changed raw outputs for identical classifier rows.");
             var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as ClassificationBatchResult
                 ?? throw new AssertFailedException(item.ModelId + " did not return a ClassificationBatchResult.");
             Assert.AreEqual(2, decoded.Count, item.ModelId + " returned an unexpected batch row count.");
             LabelScore first = decoded[0].TopPrediction ?? throw new AssertFailedException(item.ModelId + " returned no first prediction.");
             LabelScore second = decoded[1].TopPrediction ?? throw new AssertFailedException(item.ModelId + " returned no second prediction.");
-            Assert.AreEqual(first.Label, second.Label, item.ModelId + " changed labels between identical batch rows.");
-            Assert.AreEqual(first.Score, second.Score, .00001f, item.ModelId + " changed scores between identical batch rows.");
+            if (!useDistinctHorizontalBands)
+            {
+                Assert.AreEqual(first.Label, second.Label, item.ModelId + " changed labels between identical batch rows.");
+                Assert.AreEqual(first.Score, second.Score, .00001f, item.ModelId + " changed scores between identical batch rows.");
+            }
 
             Console.WriteLine("PADDLE_DOCUMENT_DYNAMIC_BATCH backend=" + backend.Name + ";model=" + item.ModelId + ";batch=" + input.BatchSize + ";label=" + first.Label + ";score=" + first.Score);
             return new
@@ -832,7 +918,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 modelSha256 = FileSha256(path),
                 inputShape = input.Tensor.Shape.ToString(),
                 inputBatch = input.BatchSize,
+                inputRowSha256,
                 outputNames = outputs.Select(value => value.Name).ToArray(),
+                rawOutputShape = logits.Shape.ToString(),
+                rawOutputRowSha256 = outputRowSha256,
                 resultCount = decoded.Count,
                 labels = decoded.Results.Select(value => value.TopPrediction!.Label).ToArray(),
                 scores = decoded.Results.Select(value => value.TopPrediction!.Score).ToArray(),

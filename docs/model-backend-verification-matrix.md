@@ -91,6 +91,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 2026-10-07 对 PP-OCRv4 mobile/server seal probability-map 两个动态图完成 batch=2 ORT CPU、OpenVINO CPU 和 OpenCV DNN CPU 实测，六个精确模型/后端组合均通过：每个组合都用 `demo_4.jpg`、`demo_5.jpg` 两张不同图片绑定 `[2,3,224,224]`，输出 `[2,1,224,224]`，解码成两条结果并保留 page index `0,1` 和对应输入 SHA；每个组合的输入行及各自 raw mask 行摘要均不同。OpenCV mask SHA 与 ORT/OpenVINO 不同，本轮不声明数值 parity。mobile 两行均为 0 个区域、server 为 `1,0`，但这两张图没有印章真值，因此区域数只作为输出诊断，不能用于召回率/准确率判断。详见[三后端印章动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)及[机器可读 JSON](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)；这不表示 TensorRT batch、印章质量或性能通过。
 
+2026-10-07 又以 `table_recognition.jpg` 顶/底两个不重叠区域，验证 PP-LCNet 文档方向与表格分类在 ORT CPU、OpenVINO CPU、OpenCV DNN CPU 的六个真实 batch=2 组合。每个模型/后端均绑定 `[2,3,224,224]`，两行 input SHA 和 raw logits SHA 不同；六个组合均返回两条 Decoder 结果，且同一输入区域在三个后端观察到的 top label 相同。raw logits 哈希不同，测试没有施加跨后端数值容差；无标注真值，不作为精度结论。详见[分类模型跨后端动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.md)及[JSON](../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
