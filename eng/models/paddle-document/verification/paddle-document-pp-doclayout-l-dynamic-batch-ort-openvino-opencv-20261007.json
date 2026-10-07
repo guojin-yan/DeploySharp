@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T07:56:11.1817166+00:00",
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "osArchitecture": "X64",
+    "processArchitecture": "X64",
+    "framework": ".NET 10.0.12",
+    "processorCount": 16
+  },
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "regions": "distinct top/bottom horizontal bands"
+  },
+  "batch": 2,
+  "model": {
+    "id": "paddle-doc/pp-doclayout-l",
+    "file": "pp-doclayout-l.onnx",
+    "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9"
+  },
+  "backends": [
+    "onnxruntime-cpu",
+    "openvino-cpu",
+    "opencv-dnn-cpu"
+  ],
+  "scope": "Official PP-DocLayout-L dynamic Paddle-NMS export. Each backend receives two distinct bus.jpg horizontal regions and both geometry inputs; OpenCV DNN adapter failures are retained as exact unsupported evidence.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-doclayout-l",
+      "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "23842c06be2d7076307c661352168a5b9fb14e2695f589622192828416e5a1d8",
+        "bb574743426eb92cf05b332d94d2731ae96bc3b5588f304c2e54c25a327322ca"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "chart",
+        "text",
+        "formula",
+        "figure_title",
+        "seal",
+        "header_image",
+        "paragraph_title",
+        "footer_image",
+        "number",
+        "table",
+        "doc_title",
+        "chart_title",
+        "table_title",
+        "aside_text",
+        "abstract",
+        "header",
+        "footer",
+        "reference",
+        "footnote"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-doclayout-l",
+      "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "b424afd0053c5ce2ae8d8e5cd1bcf07bbccea2cf797dfe5953133f1b3c38f8b0",
+        "e043b59a8a696372d1c1217f1224187e30fc71d838d677723278e94ffdd33328"
+      ],
+      "detectionRowSha256": [
+        "86b866215d7d6d8c8ac9fb4e574b31c9708f7990cabbf976370181d848a56cc5",
+        "e324df656d352d9dc06ff52ea9cecb1bf958f1069d3e32502b1d41bdcc7633dd"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 540
+        },
+        {
+          "x": 0,
+          "y": 540,
+          "width": 810,
+          "height": 540
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "chart",
+        "text",
+        "formula",
+        "figure_title",
+        "seal",
+        "header_image",
+        "paragraph_title",
+        "footer_image",
+        "number",
+        "table",
+        "doc_title",
+        "chart_title",
+        "table_title",
+        "aside_text",
+        "abstract",
+        "header",
+        "footer",
+        "reference",
+        "footnote"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-doc/pp-doclayout-l",
+      "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    }
+  ],
+  "boundary": "Only the exact PP-DocLayout-L batch=2 contract on these Windows CPU backends is measured. Successful backend rows execute the complete region decoder; failed OpenCV execution is recorded separately. The crops have no layout ground truth and this is not an accuracy or throughput result."
+}
