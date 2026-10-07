@@ -1,0 +1,3626 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-07T14:06:31.4160140\u002B00:00",
+  "sourceRevision": "45932e16620b75759a090a258b1e7f916f95d530",
+  "sourceWorkingTreeDirty": true,
+  "runtime": {
+    "onnxRuntime": {
+      "device": "CPU",
+      "package": "Microsoft.ML.OnnxRuntime",
+      "version": "1.28.0"
+    },
+    "openVino": {
+      "device": "CPU",
+      "package": "OpenVINO.runtime.win",
+      "version": "2026.2.1"
+    },
+    "targetFramework": ".NET 10.0.12",
+    "operatingSystem": "Microsoft Windows NT 10.0.26200.0"
+  },
+  "dataset": {
+    "source": "HierText validation sample-003; local smoke-only selection",
+    "manifestPath": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-003.jsonl",
+    "manifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+    "images": 24,
+    "imageDigests": [
+      {
+        "fileName": "012bfb1d9f9afc48.jpg",
+        "sha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54"
+      },
+      {
+        "fileName": "04c69de1d1bf9892.jpg",
+        "sha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1"
+      },
+      {
+        "fileName": "07f328166c0ebbf7.jpg",
+        "sha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4"
+      },
+      {
+        "fileName": "16f097c5d6407f7d.jpg",
+        "sha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf"
+      },
+      {
+        "fileName": "26e97e9f6d719dee.jpg",
+        "sha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e"
+      },
+      {
+        "fileName": "291e9c3df3a9ffb5.jpg",
+        "sha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062"
+      },
+      {
+        "fileName": "3ea969425b1c88bd.jpg",
+        "sha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea"
+      },
+      {
+        "fileName": "466c6ce044b8bd46.jpg",
+        "sha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402"
+      },
+      {
+        "fileName": "4e0277825c80fed8.jpg",
+        "sha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6"
+      },
+      {
+        "fileName": "62bd21d5af1428d9.jpg",
+        "sha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029"
+      },
+      {
+        "fileName": "7a7d0f471fe900e2.jpg",
+        "sha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12"
+      },
+      {
+        "fileName": "7d9138e29dd9b711.jpg",
+        "sha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889"
+      },
+      {
+        "fileName": "83499e8f67512938.jpg",
+        "sha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606"
+      },
+      {
+        "fileName": "86760f63da399e07.jpg",
+        "sha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727"
+      },
+      {
+        "fileName": "870b721faf7b475d.jpg",
+        "sha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c"
+      },
+      {
+        "fileName": "945782e585e04e0e.jpg",
+        "sha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261"
+      },
+      {
+        "fileName": "973b7f62446f02cd.jpg",
+        "sha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a"
+      },
+      {
+        "fileName": "a2364c31de73114d.jpg",
+        "sha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1"
+      },
+      {
+        "fileName": "b4cc87af903b8270.jpg",
+        "sha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d"
+      },
+      {
+        "fileName": "c2291a13c825966f.jpg",
+        "sha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d"
+      },
+      {
+        "fileName": "c237f9cec8e311b0.jpg",
+        "sha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2"
+      },
+      {
+        "fileName": "d989ba898a556309.jpg",
+        "sha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0"
+      },
+      {
+        "fileName": "e02496ac77418748.jpg",
+        "sha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5"
+      },
+      {
+        "fileName": "e4de4f4143491a9d.jpg",
+        "sha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0"
+      }
+    ],
+    "redistribution": "Images, labels and predictions are not included in this repository or a Release."
+  },
+  "protocol": {
+    "sharedInput": "Each image is decoded and preprocessed once per detector; the same Float32 tensor instance is run sequentially by both Sessions and its SHA-256 is checked after each inference.",
+    "output": "Raw DB probability outputs must have identical Float32 shapes and finite values.",
+    "probabilityThreshold": 0.30000001192092896,
+    "maximumAbsDifferenceTolerance": 0.01,
+    "metrics": [
+      "maxAbsDiff",
+      "meanAbsDiff",
+      "differentElements",
+      "thresholdMismatchElements",
+      "ortPositiveOpenVinoNegative",
+      "ortNegativeOpenVinoPositive"
+    ],
+    "interpretation": "Runtime tensor-contract diagnostics only; threshold mismatch pixels are not detection recall, precision or accuracy."
+  },
+  "summary": {
+    "detectorCount": 7,
+    "imageCount": 24,
+    "detectorImagePairs": 168,
+    "comparedElements": 135790592,
+    "maximumAbsDiff": 0.006894439458847046,
+    "maximumMeanAbsDiff": 1.9046836713995342E-07,
+    "differentElements": 133311985,
+    "thresholdMismatchElements": 11,
+    "maximumAbsDifferenceTolerance": 0.01,
+    "passed": true
+  },
+  "detectors": [
+    {
+      "variant": "v4-mobile",
+      "modelId": "paddleocr/ppocrv4/mobile-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_det.onnx",
+      "modelSha256": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.00021696090698242188,
+      "meanAbsDifference": 1.7510847024362482E-08,
+      "differentElements": 18858616,
+      "thresholdMismatchElements": 1,
+      "ortPositiveOpenVinoNegative": 1,
+      "ortNegativeOpenVinoPositive": 0,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "516514f9f837acf5eef84981af5fc410a208f13186c1d71877a6e3032281ca5b",
+          "openVinoOutputSha256": "31cc4f956f5ed1a88a092fc6093d29626e45a774f2ae384175ebcae277e06f80",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.3812055587768555E-05,
+          "meanAbsDifference": 1.523299623313594E-08,
+          "differentElements": 767399,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "a57fea5519e7b11ac973a247e133ed1776ce03204e85c581125b1bdcf38b064c",
+          "openVinoOutputSha256": "4c213164a030903572bec0a53d782046a221868bb58ff7f9a08796c1edaa088d",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 6.914138793945312E-05,
+          "meanAbsDifference": 3.78349630454222E-08,
+          "differentElements": 639719,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "eceb44c2c846a152594acbb2eb2860542f99f24ac6b63f972246b83cc128ae88",
+          "openVinoOutputSha256": "e1cb184fb5886e4f16785b573efd1d7723194b7b4adb6683310acc2ba0ec314c",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.2411346435546875E-05,
+          "meanAbsDifference": 8.240733677446678E-09,
+          "differentElements": 778171,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "106061c1e556cb49e8674c79da6b4a81a8da3730b753349e6b98b03193f3f262",
+          "openVinoOutputSha256": "beb93b6296a48dbc50d2eb93be704a82167cd056b02d3edb36f1dbb5f2116279",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.09808349609375E-05,
+          "meanAbsDifference": 3.855457785379464E-09,
+          "differentElements": 1044998,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "bf53141b32bd141a27303a683689feb8ea1a7e51738c000266566d4dff59065f",
+          "openVinoOutputSha256": "0fabff38c6dc637b05f113691e816ddd30fd857b2e8abcf012cf0f7d72b6883e",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.415346145629883E-05,
+          "meanAbsDifference": 2.663577872690998E-08,
+          "differentElements": 746484,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "1e94a3e8652dcf55ed15420784e6c454c6782f3b071589c05b32cb01c8370d5a",
+          "openVinoOutputSha256": "e3052d3fde81ffeefa4aded2c137dc6209a14b81461fe3a9dadb81670eac2f44",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.919269561767578E-05,
+          "meanAbsDifference": 4.738434130451721E-09,
+          "differentElements": 784039,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "81e6cbf2a1a074d90089c48904d731400f502a98fa470a0d58db5b3727d3aaa3",
+          "openVinoOutputSha256": "84bed5cdd94cc37b04769c3a2029d872a7a5894a73a3e29a747754a3749cb322",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 4.315376281738281E-05,
+          "meanAbsDifference": 2.323314032814203E-08,
+          "differentElements": 952398,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "300c14e95d7f15d46c3872fd767cf72cca841cdf7852a564f2abfca0c14dcf43",
+          "openVinoOutputSha256": "6c5d4001cdd71d5c6263fd806b6c12a49be88532b140a0e42580498aab2cde0e",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.384185791015625E-05,
+          "meanAbsDifference": 9.204121364055541E-09,
+          "differentElements": 650709,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "0d14f796430d8ac238bda17dab5a5e08cde6692401c46ae9a25c2a5a99f0a36a",
+          "openVinoOutputSha256": "5ba236ba32a9ac56660f0a08a8756418d65653553d076d0c8306246b50437553",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.9103288650512695E-05,
+          "meanAbsDifference": 1.5337563641604576E-08,
+          "differentElements": 777807,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "647403030f18c2477d9c0f3507b094dcb634938d7976822921aecf266643161d",
+          "openVinoOutputSha256": "37e58454a40369282e4e29ee117740152b6c6ed556e2ff93fb76dd1b33143c32",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.5033950805664062E-05,
+          "meanAbsDifference": 3.825268484886703E-09,
+          "differentElements": 784026,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "b8d403580c8b14dfa2e88bfc99870b37989af72c885cbb9ad57f3049deeb92c8",
+          "openVinoOutputSha256": "c1ea447eedb20bbbe231742b84021e8afde29c8692d9992f2167b183b7983d5b",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 3.24249267578125E-05,
+          "meanAbsDifference": 2.566952660025678E-08,
+          "differentElements": 950428,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "80c9b167611233940b3f2ada72979ce5dcde605ce8d97927c14bd56cd1d5cf62",
+          "openVinoOutputSha256": "c5893d299e48cc53d598d926583fe575df6cd457fec2352a2c3f566dde8e9e45",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.1097402572631836E-05,
+          "meanAbsDifference": 2.074220235918616E-08,
+          "differentElements": 643353,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "3bc508f6551b9138f0dba4393ff1776fbbef572f6fe981e92e677ba6d2978094",
+          "openVinoOutputSha256": "e0d8c8938e9ec3c65e45f2faa17510f5f8f987a10f3710c4e97ba303d9ca7827",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.0623207092285156E-05,
+          "meanAbsDifference": 1.791598273475522E-09,
+          "differentElements": 1043444,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "fcd87e1e94826f4961996338a57afee2afced1fcdb5ad14c51897346963e3f88",
+          "openVinoOutputSha256": "16e69261432c4fae0991ad485bbcf5d1a1230ceec25e40051495f46d646a2290",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.886222839355469E-05,
+          "meanAbsDifference": 9.361902610908975E-09,
+          "differentElements": 774786,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "ccac7225a1deb325fc660086b0e53a5f689dd557ec5f4826c0d38020f98a29a7",
+          "openVinoOutputSha256": "698e7b28536ff4356058ea8c21d3812726c8cb9fb3219a93d5c9bc71125eec93",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.7954578399658203E-05,
+          "meanAbsDifference": 1.1346932952213552E-08,
+          "differentElements": 647744,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "9666e420722473ba16361e08448f14e44f8f042905b0937720542ec78da9ffa1",
+          "openVinoOutputSha256": "fc5a8897ef90809e3770a8e54ee9645732c2026229f082c2065a701938531758",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 3.725290298461914E-05,
+          "meanAbsDifference": 8.15407889611009E-09,
+          "differentElements": 641941,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "2d023c6988052a4a7ecea3fac1bdb39716e67ae0affccbf9c0ab6acdb0791b50",
+          "openVinoOutputSha256": "7edc662a2c654b3fb21e6dc9a9ede8df0851ed9b1d5c74657daf566f23c2d0cf",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.536177635192871E-05,
+          "meanAbsDifference": 1.3226822272847678E-08,
+          "differentElements": 645789,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "2871bbcd0599fc1aad0ec928a88a4080d59e1abaf6524480c6473ccbf3aefc7e",
+          "openVinoOutputSha256": "150611eebf333bbb2edbe2efd67eef20cf064fe7258d79959406c9cfe68de2fe",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 3.0934810638427734E-05,
+          "meanAbsDifference": 6.2799199076343095E-09,
+          "differentElements": 653000,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "018c861a9191db3fdd03d54b56f47f49c2200403c825f05676178a23d6a8ba2e",
+          "openVinoOutputSha256": "07a2bf6727106c2481759a0ba3f9e927df0501884ca888d45f44bc54fba12adb",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.4497509002685547E-05,
+          "meanAbsDifference": 9.225241866065199E-09,
+          "differentElements": 649298,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "6b84cc570673d48331071cfb92dc1c487be447b13a5d301030674b7e05f6839a",
+          "openVinoOutputSha256": "545a5a899f4db0c44feadcfd4c12d28931f214acd54e362d8a8eff1f703cce41",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00021696090698242188,
+          "meanAbsDifference": 8.577925006355553E-08,
+          "differentElements": 933539,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "43223d0d6fddad44f6878dd23a50e8b0cbbf646a7b50db182c2b5011910e7690",
+          "openVinoOutputSha256": "52e09c4dd0b96623f876859e3b5a42b9363aadeb4f1b75e19f3bcbc8d2c1359b",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.9295682907104492E-05,
+          "meanAbsDifference": 6.8052039064424946E-09,
+          "differentElements": 639328,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "a36713e942fc1d63e96945fbe6172a8d163c0216dfaa8300d3a5513b8ef92204",
+          "openVinoOutputSha256": "8e8220f0628994d79ac7d6ce4cef10ec6366b351b75e0fab40e9762844e294bd",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 7.367134094238281E-05,
+          "meanAbsDifference": 2.605517524518367E-08,
+          "differentElements": 897905,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "8f7a9c7296a0f222b81a7dfeadf253020d0832e54147ad2bca5d8fafa61dc7b9",
+          "openVinoOutputSha256": "b1f573e5efbac831c971b8a6c3bc13db7a28e0abce814277f174d820be7a8975",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 5.7190656661987305E-05,
+          "meanAbsDifference": 2.0739733500249784E-08,
+          "differentElements": 1026190,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "f894a3506cc92ac07cf9fbf1c3f7f9811aae87bcba6098a3abb377c8aae51303",
+          "openVinoOutputSha256": "eea51b988136419bea8ef3d2304c5b7f954385907ea14b38662002dd2fef4d76",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.6689300537109375E-05,
+          "meanAbsDifference": 1.055997099822507E-09,
+          "differentElements": 786121,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v4-server",
+      "modelId": "paddleocr/ppocrv4/server-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_det.onnx",
+      "modelSha256": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.006894439458847046,
+      "meanAbsDifference": 1.7287849854541042E-07,
+      "differentElements": 19123804,
+      "thresholdMismatchElements": 3,
+      "ortPositiveOpenVinoNegative": 1,
+      "ortNegativeOpenVinoPositive": 2,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "f370251829d4a697a9354cce48480ae8dc182b35678ad45362f5d6f4b29aa4cd",
+          "openVinoOutputSha256": "f957dfd1c560f922eec23917214983f9aff69bad14488ba751a3739c8f5d19fc",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00016874074935913086,
+          "meanAbsDifference": 8.104566691379041E-08,
+          "differentElements": 777900,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "1a7d0b857964b167ecc3c545bc6a84ac23f16b870843544d56f23423658afc71",
+          "openVinoOutputSha256": "af2bc5946a2d8fc483cd7c9e588454906d9b23cd9323ac35c110897f2ebe84e4",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.0001716017723083496,
+          "meanAbsDifference": 6.830957438514236E-08,
+          "differentElements": 647889,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "a46ea4e0a1d2257e6ef35d1e9626d50d3517aee23bc2de55683e46274fd36e31",
+          "openVinoOutputSha256": "d262fc71a2aef3a191f6f6ac5f27dd7562f99795afd7cdf8e10e8140f5cfe469",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00010371208190917969,
+          "meanAbsDifference": 2.7824483805299224E-08,
+          "differentElements": 780780,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "1ecdfef027cea28bb25ffdb98c9befa8fef2878641bff8f23663436355192823",
+          "openVinoOutputSha256": "cc56cee17d127ed1581061c4a5fd70f52d81af2b05a2bd96fd4d02a7cd2b2b2a",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.000375896692276001,
+          "meanAbsDifference": 9.586747236943792E-08,
+          "differentElements": 1044579,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "73bea8e9585647e3676f9a0a3fe0b19cffe1a616e9644062008727e39652cc7c",
+          "openVinoOutputSha256": "2d30d27fe3cc1a3f8770ec98bc47744f2ec1d5d1c58b2eac67bdcd12e1922d43",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.0006462335586547852,
+          "meanAbsDifference": 1.4397904207229452E-07,
+          "differentElements": 762931,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 1
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "628847c34ea368d63997aeaf7d9e3fa17de45fc47437d3bf8c5c15b3a672b893",
+          "openVinoOutputSha256": "1ce3986d3574c9a8cabebbd39415af14a52b7e2a10dbd1cfa014080c06350e49",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00011527538299560547,
+          "meanAbsDifference": 2.7595703085139857E-08,
+          "differentElements": 783952,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "c7915d4918f4dca6f5eca7199fd2267f39e5f3f1a5a88b7e84fc76a3ea42cfc3",
+          "openVinoOutputSha256": "b6f2bb3237ecfae28f7038e52504215e72122b16d3188ef3a99f8e8b6f63a84f",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00014010071754455566,
+          "meanAbsDifference": 5.241733874196922E-08,
+          "differentElements": 989858,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "56208418cff4511a5693d05863f2f5e31abd523b77352f04167b396670255ceb",
+          "openVinoOutputSha256": "b81256b2d08905398fae92d314b807c85edc258c44e644e24c4d5da133208207",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00013870000839233398,
+          "meanAbsDifference": 2.5943574781886644E-08,
+          "differentElements": 653667,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "a03d4f8862328698ebadc16e9009122ac92056a58ff8cd9cdfa3e21303a48af8",
+          "openVinoOutputSha256": "2367ad5550b813435a2ec7032eca4fbe6cc3c9f63d476f5306780140848c86fc",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 8.344650268554688E-05,
+          "meanAbsDifference": 2.7667198914788813E-08,
+          "differentElements": 782035,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "3635377098155b408f030be2b83bf6f03ca43c4e97e97bf64a3ec5bec4d081e2",
+          "openVinoOutputSha256": "046781ea80386208202600a933a4f8cf7846658267bb6d5195551a94d98a9120",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.000858604907989502,
+          "meanAbsDifference": 1.0217918358107225E-07,
+          "differentElements": 785043,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "d96791b43e6c7ef3fded7fe718c3307e9eca37cefe4648519c4a8cbcf9a61d7c",
+          "openVinoOutputSha256": "6f02b193caff3419e45a7d2f1e5365c5e9887d95444d1d823a5a87c1357f3952",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.0006014704704284668,
+          "meanAbsDifference": 4.636660891767434E-07,
+          "differentElements": 1029274,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "e4a06a61456b66a8431543b6d48269262704016dcdbda597ff8550072c507cf7",
+          "openVinoOutputSha256": "13a2562179e6b5d4e5c0621134657e0cca4910c02eeefbd8aac6f6fee87c09bb",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00015145540237426758,
+          "meanAbsDifference": 6.938937309932085E-08,
+          "differentElements": 645464,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "59b7cdce8133a9437db7771e4dd1aeb78c933db132a9a321211e22ad1550dc93",
+          "openVinoOutputSha256": "2995f1bf0d787d6f84cc0b56e6fd4501e5a3b88d619c69d8c77d405361013d8d",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00010311603546142578,
+          "meanAbsDifference": 1.923816461913198E-08,
+          "differentElements": 1042760,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "9c5ad0d34e0a6ec315bd7391a1c28dc0452bd18a73ce3f9fafdf40c420661ed5",
+          "openVinoOutputSha256": "9e2879d942591f4cb79e3460972ab189952976a4bfcb1c9e0441f08f599cc72f",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.0006690025329589844,
+          "meanAbsDifference": 1.4853761021576954E-07,
+          "differentElements": 781059,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "fb3bb0ea499dabe3580dc433c4b8b94b0b4b103899f9413974f44fc257aba119",
+          "openVinoOutputSha256": "c04047b62667568fcc3e761b509471b4e2d43ef9ee570fb564f4dd28287d68e1",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00015294551849365234,
+          "meanAbsDifference": 6.336868796979861E-08,
+          "differentElements": 650844,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "7439315561e067a480e860fccd98fa10b38ed9dfc680edfcaa1b20caeb0efe61",
+          "openVinoOutputSha256": "a89abb33c18444f78613e05255d901f1e2104237422178e16050bd43b040570a",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00016188621520996094,
+          "meanAbsDifference": 4.6193475609617386E-08,
+          "differentElements": 647886,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "680c4763ba5502d2ba8ddaa64cdfe62991fbda35ef4a56f023003055ffe88adc",
+          "openVinoOutputSha256": "a2578b3a61da0eb29d06bcdc485d43d9cca5072953a1dcfe4ad8d520c6e7a30c",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00023168325424194336,
+          "meanAbsDifference": 5.964928829667177E-08,
+          "differentElements": 649642,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "7eebfb687554f843fe6b7a4f96efb5bb93299d75c2ab2223da11fd6e28ebd331",
+          "openVinoOutputSha256": "3d97ec9997627b51759005e9106e04148cfe4e136fb910dc1b99576919db6634",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 7.280707359313965E-05,
+          "meanAbsDifference": 1.981281113124277E-08,
+          "differentElements": 652084,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "76da38b60ca0bde975c2ee7a24a8348faa47f2d76437a82f31a8003440b51b66",
+          "openVinoOutputSha256": "dbcfe56ea804fc6cc6afb814fc624886908e5bc6bbc87c9e5ddaad1e61bcce64",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00016479194164276123,
+          "meanAbsDifference": 2.7210189564381303E-08,
+          "differentElements": 649884,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "2861ef8ccea8851760670f3b2bd9a87ad5f4d039d1562c734b9041f54fb03d75",
+          "openVinoOutputSha256": "19f63a836e7322ff09f49a7cbb9476dbebd0f6d4b7f0285d2248b51f2150965f",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.006894439458847046,
+          "meanAbsDifference": 1.7415260434495071E-06,
+          "differentElements": 994817,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 1
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "98eca8810fe021371aca6570f9a1781a87312ebead40f1bef3bd59e3da2a21dd",
+          "openVinoOutputSha256": "c3a3302c6c0b910e07597814bec223148ea11142dc3c306c2a662d465379d5be",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00011670589447021484,
+          "meanAbsDifference": 2.9057357235732702E-08,
+          "differentElements": 646573,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "a56b978d5d6af08105be065046a7f27aabb6dc97349f03873ba7468e55ca79eb",
+          "openVinoOutputSha256": "0b1f2a3d57c4b9927e2799220aee260079e69fc8172ebf63fdaf9564aefa9909",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 0.0002232193946838379,
+          "meanAbsDifference": 3.9902403305430944E-08,
+          "differentElements": 898721,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "5710d68d2539f7f476fc87143ccaab526de8e4548078b61166f04bee03f31f90",
+          "openVinoOutputSha256": "6af714682fe6a71468b0e9b6035d0f6e93cd9f1ea135ed40089f068450c099b1",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.0004734992980957031,
+          "meanAbsDifference": 1.0380187525248918E-07,
+          "differentElements": 1040549,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "ad312bc4de768e24f54b923877f5aec96adc3b6c9a2c3a607dfbfa18cb41d4b3",
+          "openVinoOutputSha256": "12b1bb75d7d33d65d1937e656b43187a1eb02865b250f20806bf27ed1f0caa22",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 8.976459503173828E-05,
+          "meanAbsDifference": 1.6153350135099358E-08,
+          "differentElements": 785613,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v5-mobile",
+      "modelId": "paddleocr/ppocrv5/mobile-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_det.onnx",
+      "modelSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.00038748979568481445,
+      "meanAbsDifference": 5.880803032524179E-08,
+      "differentElements": 18866190,
+      "thresholdMismatchElements": 0,
+      "ortPositiveOpenVinoNegative": 0,
+      "ortNegativeOpenVinoPositive": 0,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "022fab1d0e4a78123aa6a6afb680efa367e67b856555bfa03ae37ae21218d4d8",
+          "openVinoOutputSha256": "a82508c98a9a036888a89b5d0329fb07453dba118403eb01321090f975d0eb4f",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 4.279613494873047E-05,
+          "meanAbsDifference": 5.058027894907752E-08,
+          "differentElements": 763119,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "6ab931f942a267b575cc5654089c1fed4196a6f7ca1b97da1ca29b9b6358c77f",
+          "openVinoOutputSha256": "b5b28841c2e413b5f19957d6c8fa6c20490965c056324d87c40edf901563f658",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 9.414553642272949E-05,
+          "meanAbsDifference": 5.6981671140607004E-08,
+          "differentElements": 639622,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "06155a29095fd44b18e29035d93813d62d372ee225bb3986b0b35ea999480c2a",
+          "openVinoOutputSha256": "65b7e57eeff2764bb5f2c0abcf76a51950a063c90cbfc0d32de184fa263725f0",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.451108932495117E-05,
+          "meanAbsDifference": 3.594913203764872E-08,
+          "differentElements": 779344,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "77dbff5a89b009c64ffbe8b3db8ada412f867fc2300fce4b8eaa29c80893865f",
+          "openVinoOutputSha256": "f7f9a2cb6cac211818999b4a6d1eeb67a3def87936ae63dddf80944b75c82d4f",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.2977590560913086E-05,
+          "meanAbsDifference": 2.7752022983628637E-08,
+          "differentElements": 1044688,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "72993320929543b3d00db528b042efab7300abc7d73245b308fdb4c0a0524a4d",
+          "openVinoOutputSha256": "6c7c9ddeff47d7f81c305dcb53d9adb4a992ffa4ea7266aa50fac18fa981d1b6",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 5.882978439331055E-05,
+          "meanAbsDifference": 7.480109728698011E-08,
+          "differentElements": 755133,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "cc9f23b1b9cdf9b7282bee5aab63c0a16d6fcdc7039a2b421fcfb85c7ee577b7",
+          "openVinoOutputSha256": "13c347fb659e98a2fa40a3dbf79b874814c06e0fa1aae8f7a5314cf195c0f647",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.372264862060547E-05,
+          "meanAbsDifference": 2.8532488480101067E-08,
+          "differentElements": 783207,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "9f44ceca7ed04eeb4ee89449dc0390cca1e1e1fc7cc73958f7d1f6c7b9fba084",
+          "openVinoOutputSha256": "0273aa8dae1cc0879223eec7036af2231193ebbed12653dbaa8f0c476fdcaa6d",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 4.857778549194336E-05,
+          "meanAbsDifference": 7.347346489026838E-08,
+          "differentElements": 942599,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "012d730a5ac9aa0829a29bb6eeb3216ebff4c3ac2f68d6dd200b660368c834f8",
+          "openVinoOutputSha256": "78363bcc4e093a90e3df11fb9e8cb1462e70fb0224cd70db5dd6bea61b011b84",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 3.540515899658203E-05,
+          "meanAbsDifference": 3.4596879094256926E-08,
+          "differentElements": 652014,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "f76c24a32a971b950db88575f5de75c92a223a1a1305f61010c22f55d2cda2ed",
+          "openVinoOutputSha256": "65c7615eb41710c3feddeb878a1cc0cab3114cc92d5dd754ace167a4588a1666",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.5480985641479492E-05,
+          "meanAbsDifference": 4.441101191775009E-08,
+          "differentElements": 777783,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "70d32f2979d54e2cbfc56e40cda20ee9ce84be6d0494b7ad7c07f501b9e68074",
+          "openVinoOutputSha256": "e2c6ec0cf42323f1c5980462b688f72fc04eef513a68f74acc7499c051d54472",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.962350845336914E-05,
+          "meanAbsDifference": 2.9080214713220722E-08,
+          "differentElements": 784843,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "dec5fce0931e6af8c062fabd79609c1a2884365bc6786a860466d9831e8e36eb",
+          "openVinoOutputSha256": "51da8d29e9f4726237ad98757dcf4451bf39ab8015f746d0e0944f4ef3f93229",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 6.008148193359375E-05,
+          "meanAbsDifference": 7.00555646364488E-08,
+          "differentElements": 950456,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "63d06833bf8f88a652c50caeccef3b035242a7dfa81ce31bf4be0cf00b74a4ae",
+          "openVinoOutputSha256": "0330017d78adb66e370f2280a41c104c052409386a260ccaa3a95017ec47b56e",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.0650367736816406E-05,
+          "meanAbsDifference": 4.6588298143010266E-08,
+          "differentElements": 642522,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "3adee6a6e0ab5c5a9c0a617de1ce59a640373ae97616c8a32061e3ff32d59bb3",
+          "openVinoOutputSha256": "152d74557aa6672473a16506e43295963c2d50beb4070e8845ad718b14685aea",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 4.696846008300781E-05,
+          "meanAbsDifference": 2.532400387072928E-08,
+          "differentElements": 1043257,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "01586244c3bfbf963a9c0e255371ee156c531192f2fd519598b56b9002a6571f",
+          "openVinoOutputSha256": "77d89594bec7029765953a4b8d705943263c9a258c56f5ca9b18a74d6c38c3d8",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.7388334274291992E-05,
+          "meanAbsDifference": 3.8453429724611025E-08,
+          "differentElements": 772939,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "192360eb082a1378d81f4919ec05f4b9bd86d1a230f74a76a348b03f51439291",
+          "openVinoOutputSha256": "260725259669d92e52e41aaba6754f9ec9943a455e9b1e8fdc2286359927bbc9",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.857778549194336E-05,
+          "meanAbsDifference": 6.121464777087222E-08,
+          "differentElements": 642815,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "387f62dfb54a32b8a534079957ef7a7b5bd7a368fa434df74240add05b7736bc",
+          "openVinoOutputSha256": "c8c46379dda173145578d9c3ccd2cb84c8c06d04a90f8036f4160523cd14d847",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.398822784423828E-05,
+          "meanAbsDifference": 3.224258588008363E-08,
+          "differentElements": 642275,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "673db2c179cb3d520b2fda4a7af20bcc1ec1613a0e38cb1513092206b7a93295",
+          "openVinoOutputSha256": "09f3bd2eee5ef697643e01d2955fbd466a8e1e56c758631d44d9239a2f941461",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.2378902435302734E-05,
+          "meanAbsDifference": 4.577500922023176E-08,
+          "differentElements": 647125,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "4285bd8817898d76762017e43395f2f8b70e30880944a29c1988cc20cb9bfdc5",
+          "openVinoOutputSha256": "45bc115d572c6485c6d4ed3dde9273500e8757be16305934a94d7cb01b4dc616",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 3.165006637573242E-05,
+          "meanAbsDifference": 3.4187536974318116E-08,
+          "differentElements": 653148,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "c9e1217de9fab1e9d31cbf1e7cb2dd0c9e1a3cab4ab3c811b97e315c8ae4ed3e",
+          "openVinoOutputSha256": "f7112a7ac656835f48e2913a2d394097e10f75aef2b5293cf57dedb4b32b82d9",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.589557647705078E-05,
+          "meanAbsDifference": 4.587663702759432E-08,
+          "differentElements": 651547,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "77504677d83b60947d39bc468b19729e4273e97175d0d8a1e2ca0ccb61722f75",
+          "openVinoOutputSha256": "9b873adc6ca217f3a6e215104b604319492b9e5d4cf91e85125755c2d4204772",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00038748979568481445,
+          "meanAbsDifference": 2.3862775361572176E-07,
+          "differentElements": 943833,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "9a65d2e5d63feab258b501408264a4a3401cdd21da5175b4ca31b951dad21ad9",
+          "openVinoOutputSha256": "47c4c0b4c7384a7d91b9f1dd98820b017e54de92feeb6934dc4d9ec98bc465a5",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 3.612041473388672E-05,
+          "meanAbsDifference": 3.389831671789427E-08,
+          "differentElements": 643540,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "51e349ac5b6f3f00fdcb587993f32f4a125b6cd6b16b1d4ef6cb18b4362f194d",
+          "openVinoOutputSha256": "cef271bb15a426fda31bea4a5044df4a1aaf9f08e2dd20ed63889fd4f30c3898",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 4.023313522338867E-05,
+          "meanAbsDifference": 5.2409428265773317E-08,
+          "differentElements": 902273,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "7597b2a18f083c83bc52fc86cfd1044556ca8cf54c6fa26b879583e0f97391cd",
+          "openVinoOutputSha256": "5fb0a4777bf0174655198a1bb1b07faace8b4a9241f37f1353eadaf517077c93",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00015532970428466797,
+          "meanAbsDifference": 1.1698873691304862E-07,
+          "differentElements": 1022536,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "aa4185a98a99dd7a44a33dcdd7c812324d639c0e51d48d57f72aed47284bb440",
+          "openVinoOutputSha256": "04828387d0c3a8af5caa1c213bd37ab5196d9d2d5151c27f119b1c81413c46ff",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.1636486053466797E-05,
+          "meanAbsDifference": 2.521604774932153E-08,
+          "differentElements": 785572,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v5-server",
+      "modelId": "paddleocr/ppocrv5/server-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_det.onnx",
+      "modelSha256": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.00017708539962768555,
+      "meanAbsDifference": 2.8852304458868645E-08,
+      "differentElements": 18970941,
+      "thresholdMismatchElements": 1,
+      "ortPositiveOpenVinoNegative": 1,
+      "ortNegativeOpenVinoPositive": 0,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "0498381611abebabae868580af328ec0ed68d65e35b401bccfe13b568029f954",
+          "openVinoOutputSha256": "e113297c32b8b094f7a8ae76c44b6b7d6b050a7eee29d906f7c32a199070a512",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00010713934898376465,
+          "meanAbsDifference": 2.6809047675727942E-08,
+          "differentElements": 765641,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "5008ea29d6284177dbb6eb719702b543ca36c1aa3c348079e55c8c4de4eacaad",
+          "openVinoOutputSha256": "40ea5ce28fb3ae2ba3572799c93c311bad68fac34b80fa0877f0a09dbb2168b7",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 7.072091102600098E-05,
+          "meanAbsDifference": 2.576112116479569E-08,
+          "differentElements": 644429,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "a9eb84626887a830d7a3b96517449713ed92acb5b4d17a80855bce3ea35ae86e",
+          "openVinoOutputSha256": "46214db11df2fa01e947d364a0ef389a1afd002a86814a6f72f3a4c12e9ece0b",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 8.109211921691895E-05,
+          "meanAbsDifference": 2.4261938960115504E-08,
+          "differentElements": 779500,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "f0e5522226df4ad683fa055793163931c0569ca506bb7843a560d3cbb42300fa",
+          "openVinoOutputSha256": "579e6bf3a972d1fecab3184359ff79e8f177f5d15a6451c8e43cd9f013aa07b6",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 7.578730583190918E-05,
+          "meanAbsDifference": 2.318332028145687E-08,
+          "differentElements": 1044385,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "52382b2dd11abe1be5d1f3f6fee340d2d7807b26b59f3a208ee28aa4e91afad7",
+          "openVinoOutputSha256": "9205eaeb88880d6347607c8d7344b1e261b8bab9006f42ab64886b41baf4825f",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 8.147954940795898E-05,
+          "meanAbsDifference": 4.988351891461284E-08,
+          "differentElements": 757273,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "4099294559893c4838a5b94ea51d8fc63164b3f106012a2bbc2ba823303a1dfd",
+          "openVinoOutputSha256": "4e5ecb6f85c586ff3c922f0e8fbf3dde63a25bff7baa4e35d573ec64eaf27d83",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.6716461181640625E-05,
+          "meanAbsDifference": 2.022419486063986E-08,
+          "differentElements": 783348,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "e4fc43d97decc3cd24ccaa43446d1a1ff765d6c6d0f1d4718082d469e294a83b",
+          "openVinoOutputSha256": "5dced02c6897582d4c2052ef5e5176bab853c45253c8034f9be8c87a0c19f55b",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 7.781386375427246E-05,
+          "meanAbsDifference": 4.893078695571333E-08,
+          "differentElements": 973089,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "5737dd535ff0ac4be150bb63edc49cc5af2b104d4b8e2b57bd288fca4585493d",
+          "openVinoOutputSha256": "8d282f94df2e8589266c5bb500d9cc0d298079bab8629471e911461722089170",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.3272972106933594E-05,
+          "meanAbsDifference": 1.9393772615112658E-08,
+          "differentElements": 652904,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "cb17928547476a88c8271368527389f9e60f3befc77d672635674b20922e5b67",
+          "openVinoOutputSha256": "f518fdfe7cdaf5322d8a8a3e93427686a2e6e241a8c0dbc7271af8201979c313",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.1888484954833984E-05,
+          "meanAbsDifference": 2.541953353829363E-08,
+          "differentElements": 782756,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "6c800bbf24fbfc76011aeb3a2eef3429bcfda00e090dc3cc3a6c6e123cc31a0a",
+          "openVinoOutputSha256": "70badbbb3a592ef25581716de802e385bddbb22b4bc341588c2ee680b3c96575",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 4.51207160949707E-05,
+          "meanAbsDifference": 1.843431551904376E-08,
+          "differentElements": 783672,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "f7a937440f6846b16f9ed606aea65faa2edef3849e853bbd7461c880764f4ba7",
+          "openVinoOutputSha256": "eaf156c321d1fcf37e82fea507df7f234e32924754da868c614cc91bd8cd5e1c",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 9.757280349731445E-05,
+          "meanAbsDifference": 5.0402083951499175E-08,
+          "differentElements": 976358,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "d137931a69579ab7dc4972e544b7c17ec398d0cfb453aa3cc5e6b26ad040b5cd",
+          "openVinoOutputSha256": "33418021194ee607d661f1ed6991b4ef48d020219394361b3fed36216e9a05e9",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 7.134675979614258E-05,
+          "meanAbsDifference": 3.705198546472529E-08,
+          "differentElements": 641014,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "202e123c2084690a61aabf30ba59bfbaed151855e743a288f2a10969ccb67ecc",
+          "openVinoOutputSha256": "5d72de90c8376e8697474f263e3e0be9a42149da69ac239f8c790fc696bd2f4a",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 5.602836608886719E-05,
+          "meanAbsDifference": 2.111586031977869E-08,
+          "differentElements": 1043171,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "650c26acae81e9cec4c9ba71d2b55948375e8d384a7785ed3d4c1163de72454b",
+          "openVinoOutputSha256": "ab96ece8780068de12f95b0a38eb1a74c265ca0b93050fb03dd05da68c89e93a",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 5.5670738220214844E-05,
+          "meanAbsDifference": 2.6663983629209105E-08,
+          "differentElements": 773921,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "ed2769db200dc2a984e02ebed272c758db3f22f59f786ffff75133364a2f2130",
+          "openVinoOutputSha256": "1c4aeba18a04127ae64c864b39a1eda065cb5c43dbe602af9ad0e0de3dff5f2f",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 5.900859832763672E-05,
+          "meanAbsDifference": 3.2560887006831245E-08,
+          "differentElements": 649500,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "9ffa9354ea457057ced0015ada86e6efb18fd9982a62005a6fcc493b99836c64",
+          "openVinoOutputSha256": "a888a22c7ad3ffccf037e40da81c2153108971318828ee83906b92e85c75f87d",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 5.364418029785156E-05,
+          "meanAbsDifference": 1.94543965433321E-08,
+          "differentElements": 646147,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "a07a447e2441658e7673efa0556027149f6dfb8731f25c3542e13462c87f213f",
+          "openVinoOutputSha256": "a2c53ab4356c5755ddfdb98afd30a59098f3049d0caf4491345ef666935f585b",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.5299530029296875E-05,
+          "meanAbsDifference": 2.3398672108813993E-08,
+          "differentElements": 648121,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "63b8e659cd31d14203562e08d1905784b4f4b48d157e00d65d3f3cf492e98ae3",
+          "openVinoOutputSha256": "a7da0db9b4ecd7b24c9607e518c0da4a5ff057a02b1ed811421bf6fdd1d253c0",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.1365623474121094E-05,
+          "meanAbsDifference": 1.854551475597094E-08,
+          "differentElements": 651886,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "13c19a32f9a4ebb57a34375d503191104945cebd87cfc811ae33265794b1426c",
+          "openVinoOutputSha256": "94b9e0a4b7f523e6598f56bc8028e3a1e3cdef8ce0907e0da6461465e459e1b5",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 5.942583084106445E-05,
+          "meanAbsDifference": 2.0223089839174682E-08,
+          "differentElements": 649744,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "8fe253da8256ae2ca509bc8bd1df7623cbd8736a727bdd86767c1f3b2ca9d7ca",
+          "openVinoOutputSha256": "14a70728adbc06660b3d543d278ee131550702aacbaecef1ffec33a55443a8bf",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00010704994201660156,
+          "meanAbsDifference": 4.687593576131678E-08,
+          "differentElements": 967868,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "a38a995cf857b0706b06f1466e858221440b450291a0ab4725c7937b2c92ca83",
+          "openVinoOutputSha256": "08c097abb47a8e0db1ce5fd6df71f1de7ac476c69daae521ecc2a4bca2fbba8f",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 5.519390106201172E-05,
+          "meanAbsDifference": 1.707079655306618E-08,
+          "differentElements": 644831,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "31e2436bc213813bef017bb0e1c06365fabbb846b9ad55014027182e123f43d8",
+          "openVinoOutputSha256": "392e529ca8ce42bfe30cf76db5b62eb97fbd3887af7c4f6b7cd871244ac94b19",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 7.921457290649414E-05,
+          "meanAbsDifference": 2.7784520586450388E-08,
+          "differentElements": 897253,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "4b3c5599a775c799d4cec178e4c0e2af869b7c618aae62431affcd2bf18dfb74",
+          "openVinoOutputSha256": "dd91528689e65c54b87923aca86d39d94c9137d90650c379bf2f15151c4db887",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 8.940696716308594E-05,
+          "meanAbsDifference": 2.5924894474688197E-08,
+          "differentElements": 1028363,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "2fa04ee5e675ea007998d57bcb5ea6c0cc23341deacaae8a1a5bf59c010f855f",
+          "openVinoOutputSha256": "cc7a3374e99f8215c3be7b8beaf1d879587665abda4e37f7178ed50bf8fc5fdc",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00017708539962768555,
+          "meanAbsDifference": 2.1117663834468814E-08,
+          "differentElements": 785767,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v6-tiny",
+      "modelId": "paddleocr/ppocrv6/tiny-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_det_inference.onnx",
+      "modelSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.0005127787590026855,
+      "meanAbsDifference": 1.9046836713995342E-07,
+      "differentElements": 19187115,
+      "thresholdMismatchElements": 2,
+      "ortPositiveOpenVinoNegative": 1,
+      "ortNegativeOpenVinoPositive": 1,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "49fb362bbeac6d0b1843e499c3c9ed7c5cd79fb94c682331e3ee5292f7e69f1f",
+          "openVinoOutputSha256": "83e40b0584b8bc1fb3fbac46dcd7f138000e33668f48048954c72623ac003436",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 6.431341171264648E-05,
+          "meanAbsDifference": 9.533940816101698E-08,
+          "differentElements": 775267,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "91f5049747a8ff149dbf3ee84685d6fa1979e8ff7a6cdd10af511541a3716c06",
+          "openVinoOutputSha256": "17281b18bdabb9076aa76e4320ea824c4800fb0fb80071b7ced2579b5b9dc8f4",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 4.655122756958008E-05,
+          "meanAbsDifference": 4.916841248861898E-08,
+          "differentElements": 647141,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "04406c6cdfb8ac642af957f64e39ffbd83091cc3cb0767a816799e133be39205",
+          "openVinoOutputSha256": "b2b95d1abb328fe203c1972de81c3535cc697790913211f20d0e506c269d5523",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00013384222984313965,
+          "meanAbsDifference": 1.0673173635830747E-07,
+          "differentElements": 783133,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "d95daadc200a42b2bc8868bef8713980541c4d118a5c8fae2fbfa4d1d1612186",
+          "openVinoOutputSha256": "3754b55e8a536530c36f150389af64b9613e02bd6f1e3706ba9e366d68769526",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00041419267654418945,
+          "meanAbsDifference": 4.397659590014652E-07,
+          "differentElements": 1047696,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "e40234a6b9ae2232b05630a67ef550581d0cadc219027f52b8edf396778725a2",
+          "openVinoOutputSha256": "57313149adb8eb8c9b7d29c0ed1d494a7df1b3733bd9702923b409bc76175610",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00011444091796875,
+          "meanAbsDifference": 4.0133117644187225E-07,
+          "differentElements": 768307,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "3fc908f31332df4aa79925917f4e474e0c2578cf300efa0f9c88db7643ce2205",
+          "openVinoOutputSha256": "2debde591971262e471f0efb4f074b662bf70da904245885f9a5eac9278ec672",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00017243623733520508,
+          "meanAbsDifference": 1.1553118749782033E-07,
+          "differentElements": 785561,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "5767502f5baa823f44d5966b756a92fcc09b398d23a96def0b1dd8648fb2e40b",
+          "openVinoOutputSha256": "b837a8439b85633edf01b4fbfcc435de4eb25f4a6ce2f20dc42d8e2ff9ee91a6",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.0003046691417694092,
+          "meanAbsDifference": 7.158324649516066E-07,
+          "differentElements": 1023563,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "2f8019ad123afe14ef647cefa0444c83ce4f8a983b562daeabb6632d04a11ab8",
+          "openVinoOutputSha256": "c0d21deeacb4526c0b46652060f1029193095d63eb3e3ffdf589c6ef3809b00e",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00016349554061889648,
+          "meanAbsDifference": 9.806841829416709E-08,
+          "differentElements": 654254,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "1f35cd088f1658e50c91799933e30db63807888ff36cb689aeafe4e44a7964a5",
+          "openVinoOutputSha256": "8f46f159d84a533ecba4f9d5526b87f76cfde14bcf720f51dbe03dd121a7ce24",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 9.059906005859375E-05,
+          "meanAbsDifference": 1.1728744568507921E-07,
+          "differentElements": 786195,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "d2320cd139e1ff07b53dfe6b294ad479a7aa8f74285e175111d6badf44e6c439",
+          "openVinoOutputSha256": "936603edc61631a08a2a1b9d0d64371c7d571383e93e1a05120492f55ed084db",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 0.00014597177505493164,
+          "meanAbsDifference": 5.664511514888149E-08,
+          "differentElements": 785574,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "8799f2aad9a51efdb66a5c9573dace69b88ff7fe76a42e7df4a0dcfbf242d61b",
+          "openVinoOutputSha256": "95c4a8c96f278df208191b263be7130cc9d6586ba5bfd8286bfe78d7dbd942a2",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 8.738040924072266E-05,
+          "meanAbsDifference": 1.8610762094133263E-07,
+          "differentElements": 1008272,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "69aff0b3dbfdeec64c1842c92c42d6ec42ee6a16fc219b3a5fbee00ecc0f0a41",
+          "openVinoOutputSha256": "cdf6903a46cfcc95fd25e219d7b8fa3e9d48df0665938fa394e827ebf460a578",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00013870000839233398,
+          "meanAbsDifference": 1.4178286201008644E-07,
+          "differentElements": 651280,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 1
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "7b44cce4794152cbcaa38f1e390a141ea5faf5433cc4d45467c648a498a89108",
+          "openVinoOutputSha256": "230f1e535dfe4a4f899203f47a4a67e8f7c6d2752fcc152cc980e26cab0f5f6e",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 9.495019912719727E-05,
+          "meanAbsDifference": 5.435927130460411E-08,
+          "differentElements": 1046456,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "66f70b340ca796282870286854fd509a1ee6b9ee3df99f1ad9d343e1b7196ac0",
+          "openVinoOutputSha256": "e6cc8b0d5030915388528f9f6330255bf9a4033e4fb321262df22fdc3532b9b5",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 8.526444435119629E-05,
+          "meanAbsDifference": 9.108099659331482E-08,
+          "differentElements": 779231,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "8dca4fce1db357c6105f14b5eed1f635756e5b24e2830ff2739777b24402fe49",
+          "openVinoOutputSha256": "4af17c47f6bc23270b025c426f0ae93d90428999d18ae2a5bfc2e9d9b6715057",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 8.195638656616211E-05,
+          "meanAbsDifference": 2.258937507767607E-07,
+          "differentElements": 650687,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "530c49611823fce4cc3449b228831e4347e2a69880f188ce7de01c6dcea794b0",
+          "openVinoOutputSha256": "3b37f1c8b3b5b23d937a6224f656fa12a74dd6bffc3eb1101017eae3b2629e7b",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.682209014892578E-05,
+          "meanAbsDifference": 4.700841456693708E-08,
+          "differentElements": 647822,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "eab36edb72f229c5c26a4b30e52ba7ff711311b3e3e9758a4773716b72474eb9",
+          "openVinoOutputSha256": "99335d04f74c9637ca7581a50f553483a36d08a8a45d63ad08ad567ea2d42c68",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00010466575622558594,
+          "meanAbsDifference": 1.1936228996942785E-07,
+          "differentElements": 651367,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "11759c9c57047c0f4bf79fbf224595aa8e0c04755f128df3f32971a5cfa689d9",
+          "openVinoOutputSha256": "ed73459a8f904f07c915aa1433e88738b352144b3aa0c659aed5d3a22c3b9782",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.00015422701835632324,
+          "meanAbsDifference": 8.25501312310009E-08,
+          "differentElements": 654217,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "2bd9ee2f08cc78bf1a6d6e3a7afb5027bedcfd323bff58d7ba9d97f01103170b",
+          "openVinoOutputSha256": "add4dc5e78f31780cfea9a388646cf7a4f272dd5d72d871b9424a8570f419358",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 0.0001583695411682129,
+          "meanAbsDifference": 1.3708291773829425E-07,
+          "differentElements": 651502,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "de4daccec25e10c0ce6fbe3287b4969938265b87092dd72bbbc1d8226d273471",
+          "openVinoOutputSha256": "7e23a7e17013c1aa90ff64f41ae18a29a5e9cfdadf35df6bcfeea66bcf4c1063",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.0005127787590026855,
+          "meanAbsDifference": 3.6966607343568246E-07,
+          "differentElements": 1002480,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "3f34ae596a27d013dc4edc0ba763db5ebf1011b8f98644515fef5a8abce5ecbb",
+          "openVinoOutputSha256": "6cb1d837660b7c9fa54c70f973c3417775dc7d3598098ef24e16ea215c8321dd",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 8.118152618408203E-05,
+          "meanAbsDifference": 8.181447948585365E-08,
+          "differentElements": 649327,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "e27acd9fb53aca5299157dc14d9f0e83a85d7c4cb8396eba54271c0b21370627",
+          "openVinoOutputSha256": "a24cfc826d08f165f621adee3da979b5e127af93bffae4a1969b59e33214a902",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 0.00013124942779541016,
+          "meanAbsDifference": 3.047265692783608E-07,
+          "differentElements": 915148,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "8dc22886f497dcb61c293612ad23017d5bad65a9af3a2717dadf5f13406109aa",
+          "openVinoOutputSha256": "525f59878a35364319dd30332ce130d982dea077eba3507dfcf722b120b5224b",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 9.658932685852051E-05,
+          "meanAbsDifference": 1.1855335253880783E-07,
+          "differentElements": 1036648,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "99db511bf7909ea8cb6b14ff99b50dc7b4cd6da118e52336b5076b960bb8a36f",
+          "openVinoOutputSha256": "c66b14119254b1f2b35f1c4f844053c0565cb2c3d0e934d4e97a1157fc1aa24c",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.731250762939453E-05,
+          "meanAbsDifference": 2.74356060421829E-08,
+          "differentElements": 785987,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v6-small",
+      "modelId": "paddleocr/ppocrv6/small-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx",
+      "modelSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 8.535385131835938E-05,
+      "meanAbsDifference": 9.695564251758277E-08,
+      "differentElements": 19186410,
+      "thresholdMismatchElements": 3,
+      "ortPositiveOpenVinoNegative": 3,
+      "ortNegativeOpenVinoPositive": 0,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "8bba95b50118e8d98420a90e30514e99e31f9008554789b1f5d117f3177a3248",
+          "openVinoOutputSha256": "d2ef793b039b99910e1e4f8921271f801061c560723e2d6a419ed7b0036ac196",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.002716064453125E-05,
+          "meanAbsDifference": 5.212407593350721E-08,
+          "differentElements": 775911,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "ac378321990de2d1eaf6689b7223082d6eeab4ce86e26b9ad874cae4dab813dc",
+          "openVinoOutputSha256": "36030040319a9465b29bf0e4f263af69d0c1c5312e9a3b2a79888911ff89b7c7",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.8252601623535156E-05,
+          "meanAbsDifference": 7.457996310964218E-08,
+          "differentElements": 648390,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "9659b0b8e177cfe7f0a4810f2a54719af949d869eddaa6de23409e807b4d9150",
+          "openVinoOutputSha256": "27f6b5b4d5d93d09fc2d8dccfacc91d01267021fe014d394836f45dab20e64f8",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.0487775802612305E-05,
+          "meanAbsDifference": 5.46010394008954E-08,
+          "differentElements": 782684,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "1f8bdde9b3bfabf6c153f738cae5ebff9dd91751c7a7ff90e01f406e76d4d73c",
+          "openVinoOutputSha256": "7ef5232b2b41c35e5c557b94f0e7e652cbfd3d44a3e21196f4df4b236f2b30f0",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 3.2067298889160156E-05,
+          "meanAbsDifference": 9.288803135260487E-08,
+          "differentElements": 1045379,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "ce441da6758bae3c023b7a00fd9064dde3b5474f116c41987c8ebcd7c6bb5d02",
+          "openVinoOutputSha256": "e2d12c9e15e05e44e1a58982f8972299703f5525ff7f911c281353ff62033d66",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.1636486053466797E-05,
+          "meanAbsDifference": 1.2327030408704564E-07,
+          "differentElements": 759570,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "025fba7080acb946d408e0f604100577369baf0f3d72a8e548fcbd002ef6625a",
+          "openVinoOutputSha256": "5083188021fdf5819afeccb476c62f53c83d4ecf673987f77ae4c4fd295d5eba",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.7940998077392578E-05,
+          "meanAbsDifference": 3.6044450566602334E-08,
+          "differentElements": 785570,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "db77d1b65c1fa5298e3a05029069bf718ebcc3520acd03b0b12b5ae1dbd8cff2",
+          "openVinoOutputSha256": "f225e2d3840778bf2fe0e3fa84e5a15a7e19c37027b39266a9fdd864f1d47368",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 8.314847946166992E-05,
+          "meanAbsDifference": 4.152329254203373E-07,
+          "differentElements": 1019861,
+          "thresholdMismatchElements": 2,
+          "ortPositiveOpenVinoNegative": 2,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "dc0559ec64d009a5d19f2e15c78ac029118c0a112a9dd4dcbd477537f4fb2241",
+          "openVinoOutputSha256": "30b63b58c3f8178c9e64ed8bfdc2440c14006ee5d66c5232f80d9ee02f8947ad",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.4825334548950195E-05,
+          "meanAbsDifference": 6.738606491176142E-08,
+          "differentElements": 654028,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "a61fdd3a672f35cffd7a02f32d7d170b9c9c78b041edc411ac34c3ddd0faed9d",
+          "openVinoOutputSha256": "14c9721b1a58eea42c576b3b975fa678a67c8b9199d304e4210b9b8cf7eb3b83",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.0891427993774414E-05,
+          "meanAbsDifference": 5.0089969102261005E-08,
+          "differentElements": 784446,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "c7039e759496451c3e1ffb0866a51cfb03f83027bdfbe5c20bc3664726d76ba7",
+          "openVinoOutputSha256": "00b8b22ddbb33756ec1aa0b126821367c84de0a6692521ffc97b2e7feff6856d",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.4437904357910156E-05,
+          "meanAbsDifference": 4.538457462426346E-08,
+          "differentElements": 785649,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "e0fa9af1abedd0e45b43430bbe4a066434a5ac65e99230b3a474986834005163",
+          "openVinoOutputSha256": "cb504906232f508dd03c1650cc1a41278e655bc4b7590e7f2653399374cb0af9",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 8.535385131835938E-05,
+          "meanAbsDifference": 1.487861295737607E-07,
+          "differentElements": 1008756,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "7fcc04852c905fc314f74da0c84efe4b29818dfb32c67507ca5ee2225ed31bfb",
+          "openVinoOutputSha256": "eb82fb8fb8a08bf0026b8eb1979cf954336aed881b44d6bf6ad661f9138bf34f",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.3083219528198242E-05,
+          "meanAbsDifference": 5.6957390497158375E-08,
+          "differentElements": 651352,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "5118b2a2f6abffd791b3d174557ba4669eff4c768a58a428e00117d5fee1b6a2",
+          "openVinoOutputSha256": "dc7b6b3a7ff4b745e900ba81c29604719bf64c0f8f0e6ba2583052de9ab4ec64",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.0295381546020508E-05,
+          "meanAbsDifference": 4.312614913630055E-08,
+          "differentElements": 1045344,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "a5c8c5b903fed3542a7f27d5692ad1ac26bfbe0dc7cbd19d879bae9c631c6424",
+          "openVinoOutputSha256": "271c4c2178edbde3bdcd818af750baf762d5f992f3f784ec1d24be90e6a786e3",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.71661376953125E-05,
+          "meanAbsDifference": 5.2695270390314936E-08,
+          "differentElements": 778940,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "4629dd641795cf068c1a4be49e44735fd7ab8e4e43498a9ad680ebd075c6ce59",
+          "openVinoOutputSha256": "d3d71232e76cc38b37ee6297010897fead568a3f938081a3e4b401b2bfbe4f03",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.1593103408813477E-05,
+          "meanAbsDifference": 5.927106380015527E-08,
+          "differentElements": 649768,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "a9e31c29fdcf5719b2de8d5c3f2035bb3dac7cea76828028fae8d5c55a86fb34",
+          "openVinoOutputSha256": "11966d675ba8eee576405f3723d9e2f6ad8aca1eb9bfa034d1280e6dc284dbbd",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.014636993408203E-05,
+          "meanAbsDifference": 4.098884033688871E-08,
+          "differentElements": 648893,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "a92807e17772453a3cde8d6a547751f79f5ad893c0f5d66c61ca00b08a505b01",
+          "openVinoOutputSha256": "fc59bb7d25bf646d30ac77fbe108f941dfa4c078f16c8a991cb34308b15a7ddb",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.6748905181884766E-05,
+          "meanAbsDifference": 6.267563136486685E-08,
+          "differentElements": 649873,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "e7c284d308c308c031239dc347fcccbc65c3f4991627ee48015698e2777535dd",
+          "openVinoOutputSha256": "7408f4b7578315c7aed62e14d85570429dc0de5e9ad0dc97c295c89f00b8d491",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.58846378326416E-05,
+          "meanAbsDifference": 4.015015345038585E-08,
+          "differentElements": 653063,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "7c5de0f10ccc6d24a6e45c06f11b773c343bd1088ee36ccc5b2858e6df2bb6e2",
+          "openVinoOutputSha256": "b00c9cef49598b1b903620f193848c46352856f8551c411ac9962162d897cff1",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.4378299713134766E-05,
+          "meanAbsDifference": 4.660883657412755E-08,
+          "differentElements": 651102,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "0518c1c308ff55ace108671f505e8362fbb15c7dd05701021ce822a722f1c816",
+          "openVinoOutputSha256": "ce213fd99d3dc7c95bd28362b4adfb799fdb347afb30cc5ddbc27ef533f83bc1",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 5.804002285003662E-05,
+          "meanAbsDifference": 2.1577309427895273E-07,
+          "differentElements": 1021343,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "755bc285375bc4afca756a638d65e625e96d9b81d0229cbfdc6c14989e997eb9",
+          "openVinoOutputSha256": "2dde17d5e4ea8fe6a78a2d1edc9dbe81e6b4845755581956e75b94b416b8ef1e",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.2248754501342773E-05,
+          "meanAbsDifference": 3.628619157687859E-08,
+          "differentElements": 647988,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "44c16c7c755c025119e0cd2cad4fcc8e201736f786f4c0ff6d0377ae8ec01e79",
+          "openVinoOutputSha256": "eb3b8794c9d22f671656a42e6c8efb6d4b1f9d3a2109309bd8764a5393fde0ba",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 4.5239925384521484E-05,
+          "meanAbsDifference": 1.471736389567041E-07,
+          "differentElements": 913620,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "88e2b3d87f20520d470d69326ffa6e567ef0d8f9c187c5e262e894f6f8b370ea",
+          "openVinoOutputSha256": "bb9a89ef6a3723f68060814bf56b1f495a39bf3331743df0e14c2b2596c71453",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 5.0187110900878906E-05,
+          "meanAbsDifference": 1.1235627690716368E-07,
+          "differentElements": 1038869,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "bd0b72312c2ccbb7c091439d35dba32f1e4ae69389f5e6c95682580daab30413",
+          "openVinoOutputSha256": "c8c4c1e52b5bde74158854385301f61b71fccc07e667c3e14012dbaee319f12b",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.5288591384887695E-05,
+          "meanAbsDifference": 3.068999730228369E-08,
+          "differentElements": 786011,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    },
+    {
+      "variant": "v6-medium",
+      "modelId": "paddleocr/ppocrv6/medium-det",
+      "modelPath": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_det_inference.onnx",
+      "modelSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+      "imageCount": 24,
+      "comparedElements": 19398656,
+      "maximumAbsDifference": 0.00010722875595092773,
+      "meanAbsDifference": 7.531221316100881E-08,
+      "differentElements": 19118909,
+      "thresholdMismatchElements": 1,
+      "ortPositiveOpenVinoNegative": 1,
+      "ortNegativeOpenVinoPositive": 0,
+      "images": [
+        {
+          "image": "012bfb1d9f9afc48.jpg",
+          "imageSha256": "303f8fe652960253c747bf0c6e0d048daac4fb2c887bb51a83ba3cd3c144bf54",
+          "inputTensorSha256": "fad19d97246b9b1d667467ba23b8d7c6c045b38f984e5a53d2709e86c16d1b75",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "82eafb9eb98c3d38158fa5568c708345213608c9eccfd1b4827b645e4b900f7b",
+          "openVinoOutputSha256": "54ed2e5928407071b68cdd68f06929479a8c614ff9750713606912930a094f66",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.7702579498291016E-05,
+          "meanAbsDifference": 4.853283190253883E-08,
+          "differentElements": 773884,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "04c69de1d1bf9892.jpg",
+          "imageSha256": "7d321c29587e140c34d990fcfd45d85c0d56610d0944eb7472177574f42859d1",
+          "inputTensorSha256": "d4c7aa9654552a57a46e283e0b34f87fc9ae0c846c5aefee2ee59b79f0bd8c98",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "d7bf56d9c4167ae4ee80e09d482ad7289de4abe03bbf17fd25bc927a1fd33526",
+          "openVinoOutputSha256": "d65f92b0d9374d20e73b8ae83b37d04401c6d79c6033e468c7c980cb1b7289a3",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.4020671844482422E-05,
+          "meanAbsDifference": 5.0827768115361165E-08,
+          "differentElements": 647598,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "07f328166c0ebbf7.jpg",
+          "imageSha256": "b082c51f5162c88a6713e6eae3f09c0bd90119e5651015231311439c816483d4",
+          "inputTensorSha256": "c27173c866e08f2a291cd69f024cf8f97d56d7263c8e5ae6d4451aa24a56b82f",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "c28524dcccd080dfac027dbe1ca35247943c0a53ef1abd426c12cebe78ab9c1f",
+          "openVinoOutputSha256": "f3b1248c0b67aad387ce05ca1ee763e5954be1c3c52892ee777f2a742d43f30a",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 5.552172660827637E-05,
+          "meanAbsDifference": 7.069383211714659E-08,
+          "differentElements": 780636,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "16f097c5d6407f7d.jpg",
+          "imageSha256": "27055fc8303917b289c4db83c2a38b7483afc0e4da2cab4bb26ab55701f48cdf",
+          "inputTensorSha256": "c2cd48aa2af392db0a84818d8c52ed34b19aae0268ffc50a7c3749a7c334f83f",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "f58359d772841c739abe26c46b6a240473b73e84f0fade40cd2f9718fb55e077",
+          "openVinoOutputSha256": "d85b88ba1587115086e5434da6acf13de6ace3646838a97fec3df3c7845d1bb7",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 6.350874900817871E-05,
+          "meanAbsDifference": 1.3769212849632298E-07,
+          "differentElements": 1044860,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "26e97e9f6d719dee.jpg",
+          "imageSha256": "26263218d72f59bf94f7ff068b08079347170472fc812d52b36b2fd659452f0e",
+          "inputTensorSha256": "60c8a944c48b6f8a7ae47aa68fe5a5e51e772ffc08a0ac2e6780b4479aed75bb",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "25210cc1f4961a557b9a5f035cc0bc38dd6658cdfcaddb4c8f1dd4dce380e9f5",
+          "openVinoOutputSha256": "b895fc5eac47db4ac2c33b2ae0f67a42122dea948dc365bd72c43f5f98b5b7d0",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.806020736694336E-05,
+          "meanAbsDifference": 8.964289780336277E-08,
+          "differentElements": 762483,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "291e9c3df3a9ffb5.jpg",
+          "imageSha256": "27bfd8e2ab91136a7ac4ff5b1421003ac21c6c30f2e94789d87393e6c8710062",
+          "inputTensorSha256": "51bcfadc68bac8bf640677c112f8a17364191f58fd8de8dddeb58aef83036b39",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "af9a54848aa1b78add81fe025d170ac4b81c3d02c7fb91529b478265be7b2cc5",
+          "openVinoOutputSha256": "0a5248b77423aa014511f200f14e5fdf30e5c8d41b92b1c27c2ea468fc661525",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 4.5359134674072266E-05,
+          "meanAbsDifference": 4.415904374987387E-08,
+          "differentElements": 784797,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "3ea969425b1c88bd.jpg",
+          "imageSha256": "58d39ff28cdb6c0d375473608b0bab8c1dfc19c8f0157aa3ca2047e2adc96cea",
+          "inputTensorSha256": "b23fc2c16d298caa0af63b98d25d87ef2291a81bcf5d19617de9ebf6bd7fd7b2",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "c70beb35d148de5995d74939b3d3a0a85ed2c28138f85a183cf2f35389a92fe2",
+          "openVinoOutputSha256": "e1220bcb7e9c208fffa0f09a6d6516f84ce2d5de0aee7d0775688164ca371067",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 3.6597251892089844E-05,
+          "meanAbsDifference": 1.2541413788443669E-07,
+          "differentElements": 999961,
+          "thresholdMismatchElements": 1,
+          "ortPositiveOpenVinoNegative": 1,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "466c6ce044b8bd46.jpg",
+          "imageSha256": "a0463f13d0daeaef8d5c61b273e258861b2a19289bdcc8f4bdc32ea98989b402",
+          "inputTensorSha256": "2fb86c11da50292fdcd18c4692fe6445c50532e79e52a58d9dbf33d9097b0f00",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "81d423131c56495bb757c0402552f532542d39d6f5108e29aa2f427ab55e3e3f",
+          "openVinoOutputSha256": "3e020963d91f39158df29dbac8f24db2c243560f684bd53f87a488fd07065d57",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.3470649719238281E-05,
+          "meanAbsDifference": 3.809029527906016E-08,
+          "differentElements": 652556,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "4e0277825c80fed8.jpg",
+          "imageSha256": "3f0bf4969dd4f413a6ac9fd7ae70e8e057bd50bf66175904cc0ac8bfb60274f6",
+          "inputTensorSha256": "806931b62fee6c97ed77ad36459e18d1d7b065c9b418e2485c90428237675ff2",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "fe707c3f22c7f01905203dd5f07fa71630a2d2fb93deb52168ff06c6032cb52a",
+          "openVinoOutputSha256": "4de3718aefe2b43a4418b7f2744b709a5648533c102833028fbc56ff60fbad7d",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 2.2530555725097656E-05,
+          "meanAbsDifference": 5.9319076160090955E-08,
+          "differentElements": 782889,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "62bd21d5af1428d9.jpg",
+          "imageSha256": "33c85b637f0c934fcbd6693825cb54f562990547e70f5c810548fa4f17253029",
+          "inputTensorSha256": "fac76c1e1ed51c1514a467c803c92a169c04686d170fd6cfe93e61514c9210c6",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "7763a41f5c6705077b19b53b7ec5a123eb30b115795c05954dd56befad9df83d",
+          "openVinoOutputSha256": "ee52407674fdf88a3ba0780a28a32ee4ea78e8ea00f4a23488270b1e08df6877",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 1.7344951629638672E-05,
+          "meanAbsDifference": 4.3758421650213995E-08,
+          "differentElements": 784994,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7a7d0f471fe900e2.jpg",
+          "imageSha256": "859473355f11e2af72bd491ac1bed08d22388fee7acc91a54ffde8788ce92e12",
+          "inputTensorSha256": "31e365902ac2e1fd602e5c3d1931e9393568dadacc42b62b45161c4e9448f4bd",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "c4964ec150dbdc43afa790ff0c28fcac11bf9ff58927a2fbc29eae6d1396fa20",
+          "openVinoOutputSha256": "017c5146ad6e52ac2b8c0d4d210ca22f81a103f8361db064f3dab06caadc5316",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 0.00010722875595092773,
+          "meanAbsDifference": 2.35675425793261E-07,
+          "differentElements": 1013041,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "7d9138e29dd9b711.jpg",
+          "imageSha256": "88d711b5ff393577098461aafef5f7e4d8834f95610e98051bfe58870e8a0889",
+          "inputTensorSha256": "44ec82b9a8efb0406a2a39af0a0d3127827654f627265eeab933fa6eccc20844",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            640
+          ],
+          "ortOutputSha256": "ab9bc3f9858349b5f1cb6573fd5a26b483bfb799d302eaa475c45d9fbaa8ccc3",
+          "openVinoOutputSha256": "a647274218e92dcf568186825d703277c9d6702b20d66f4b4d50161f6b0122d7",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.1636486053466797E-05,
+          "meanAbsDifference": 6.09183656465304E-08,
+          "differentElements": 648786,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "83499e8f67512938.jpg",
+          "imageSha256": "216274140bfadbb52cc5b6700497ea9e1472824fdefe3f35c341893e15e97606",
+          "inputTensorSha256": "91ff6e059c038b616112bf765948297468cacdb7485459fbc4519f08c3c89052",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "cdf6be1cb649ecbcfba73f6cdf545817e280d626c97d6f712a66cc68f128467a",
+          "openVinoOutputSha256": "757038c44e8a3e2de3abed5793322a133ac9d3fa46776e22d12e562776e9266d",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.199411392211914E-05,
+          "meanAbsDifference": 3.9592759103516335E-08,
+          "differentElements": 1042534,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "86760f63da399e07.jpg",
+          "imageSha256": "0f0feeb5351412c9da91d721b382af14b2d4fc9d6a948fd13f6d17d21ca9d727",
+          "inputTensorSha256": "5f884e64b5623614bf55adfe0dc7f978f14f22cc5b66632f185bded1bea718e7",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            768
+          ],
+          "ortOutputSha256": "1b23f3f34400b3debd26c998fd3c31bbcd1cb67ee22bc7b500bbe5300ecc2aa4",
+          "openVinoOutputSha256": "b8d335c59270de2ef2dc7754f0df8d13108d989312417df48561de6802a1d022",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 4.988908767700195E-05,
+          "meanAbsDifference": 7.337443036768212E-08,
+          "differentElements": 778337,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "870b721faf7b475d.jpg",
+          "imageSha256": "92082ca9243324899a2298126f806440bf42de379bc0115600c5725c29f6352c",
+          "inputTensorSha256": "daa554b68a96e49ec8f6b1aa7864c60e0ed5d30eba58f9ad3323271e023fb71b",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "e97b5b604355e0a9da1c3db8429e294c630956459231087cfc7407adcca81bdd",
+          "openVinoOutputSha256": "fc8568360d9d6de3c8f5789ef56d521d77feb915982dc43bc9b88f50b4a49279",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.5348196029663086E-05,
+          "meanAbsDifference": 7.152909441681402E-08,
+          "differentElements": 650955,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "945782e585e04e0e.jpg",
+          "imageSha256": "ede67681cc7a220abab40442d794706df8431b6a7d04cdd5c19ec3cb7ef10261",
+          "inputTensorSha256": "06994e7d7f86d5665dadf46c58e699552ced1af40e62799e357596394c3ebef0",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "7e759c9765b1a0514da1bcd0e43d2e53cd540a9a653d42edb59695d2a229282f",
+          "openVinoOutputSha256": "3af1b4b606b7974c545c3d0500ca02329716705a9b163c56a96a72319d8fdb71",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.7821788787841797E-05,
+          "meanAbsDifference": 4.132465677969447E-08,
+          "differentElements": 648597,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "973b7f62446f02cd.jpg",
+          "imageSha256": "be5dc98f45771698951f20b18947185292c7292f9d3abb8c1b68ba2a3edfc29a",
+          "inputTensorSha256": "c76f4cb7ed8fa5639dd47d45f3671736fbbe6d416067068b91ba52ee6d2c15eb",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "1d4618320d88a88df756eed5b54b3b4777ce43ca954ac2b34cb97ef6778e2dd9",
+          "openVinoOutputSha256": "cc84647a5d98cf1b2cea85a97eb2ce7446c9e149546810288baa895d357cf8d7",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.8835067749023438E-05,
+          "meanAbsDifference": 4.442584922602279E-08,
+          "differentElements": 648221,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "a2364c31de73114d.jpg",
+          "imageSha256": "a9e2f6f261dcc26c556f7550f48fb3f7ee6318f56e1bd6a959240c13ee2a40f1",
+          "inputTensorSha256": "f7ed66172bcee67e4889e9d7d3cc22f6c6b021697a51903fa65d5b57f78fd081",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "4960a290813948fbc4d0cb0ba76ec857b7cb0f10f95e5ccc53ae0218e27d38c8",
+          "openVinoOutputSha256": "b6fd67246c00207abd845d932db806dcc19ed79af4124722d92b149350427ff7",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.71661376953125E-05,
+          "meanAbsDifference": 4.1342751096556355E-08,
+          "differentElements": 653100,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "b4cc87af903b8270.jpg",
+          "imageSha256": "91326908f1c3bea9a371c0a45b2971f87cacb5520951a71bac27ca713fb49b4d",
+          "inputTensorSha256": "a39e99ac3b15b10308b842f1f91939be223469600902808a6058008d44bf3d0a",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "143b8db234feb7e4fcde5482f4c121f221efb91470acdd7bdf8d6cfbc9c8c51d",
+          "openVinoOutputSha256": "971b5239a88d976f91b8f034c9717b03e1e0634dd99c7fccc3ddac2a64b52250",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 2.3484230041503906E-05,
+          "meanAbsDifference": 5.0036702440496656E-08,
+          "differentElements": 650052,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c2291a13c825966f.jpg",
+          "imageSha256": "637d0be2d5ad9f45bae22f82db56f1687f505214fd7068789452bd23e8d9362d",
+          "inputTensorSha256": "ce25071233cf3356a8b78352cf863443f137dae614bf116b9fe73d6eec886ab3",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "17736093e14a23931cfd991e9f6ef48260b49760c696ec78d901d30c15a620e2",
+          "openVinoOutputSha256": "5383436d284e288e00bcf3fdbc14951d8e28eae9c0bc5c177d2e389546a3e643",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 2.8342008590698242E-05,
+          "meanAbsDifference": 8.690062586649354E-08,
+          "differentElements": 995617,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "c237f9cec8e311b0.jpg",
+          "imageSha256": "e8080e4fa1f1f9592852fba1b8bdc4f0f28a939507f8d55fc83683f12cd586e2",
+          "inputTensorSha256": "82681ace87deb05fad4e449dc6c9be5b5ffff101286686d7bdcfa26e4e777192",
+          "outputShape": [
+            1,
+            1,
+            640,
+            1024
+          ],
+          "ortOutputSha256": "5df83f1d95cce43432aa82efd3796a8cb8f72fc5ca1c58a8784ba15a3a858bf3",
+          "openVinoOutputSha256": "d00ec16ec1279b7871e67ebab08e378b3a4b54665fe3119374ae493afa4b56d5",
+          "comparedElements": 655360,
+          "maximumAbsDifference": 1.8537044525146484E-05,
+          "meanAbsDifference": 4.489472477282332E-08,
+          "differentElements": 647741,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "d989ba898a556309.jpg",
+          "imageSha256": "2d259b450ae8cfa5eb5388de69982bef78fb3972e688568dedf22f5900c8a3d0",
+          "inputTensorSha256": "be8afbbe452abff05279acde8c9bab75da68240cd813d179ecb3f11117c76fe4",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            896
+          ],
+          "ortOutputSha256": "052c093f770a59efe71695cae3f52cadee4e4b82bf72f8dae6163aca22a23c0c",
+          "openVinoOutputSha256": "1dbe8794ee4b23e50221b02db8479701783b126285e2b719edaf815e6dfedd6f",
+          "comparedElements": 917504,
+          "maximumAbsDifference": 3.0875205993652344E-05,
+          "meanAbsDifference": 6.423937951436266E-08,
+          "differentElements": 904919,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e02496ac77418748.jpg",
+          "imageSha256": "ed2cd9f7f1ac9cc36388f7141c3017ad1cd91a55c735ee89deb2aed8490ab5e5",
+          "inputTensorSha256": "e7fb345d2650b1bbfc09d97176f5ac342eb99d9472089367dea67689ec75efef",
+          "outputShape": [
+            1,
+            1,
+            1024,
+            1024
+          ],
+          "ortOutputSha256": "4b1e1ca54b34607d0fab68f2c80cef332f20dd017c293c13365b088c383a512f",
+          "openVinoOutputSha256": "ec69ed1c5e554bbb96501a0bd4e5653c87d62ec6d796e6b9e36fa48343bd48c7",
+          "comparedElements": 1048576,
+          "maximumAbsDifference": 7.641315460205078E-05,
+          "meanAbsDifference": 8.706324380471873E-08,
+          "differentElements": 1036305,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        },
+        {
+          "image": "e4de4f4143491a9d.jpg",
+          "imageSha256": "9695e93883be04b7b8d6826fb4ad0cb2affcdfeaea648245671dd65baff9f7e0",
+          "inputTensorSha256": "443fcea11f1e90a1792a1cb99baba09c2daef0d7d4958073079eadae4fc240fe",
+          "outputShape": [
+            1,
+            1,
+            768,
+            1024
+          ],
+          "ortOutputSha256": "610f0de59c21a612f05295d9b73a61ba44d97e44561596b011dc67d71b1209fd",
+          "openVinoOutputSha256": "9906607519af1d69ce691fd062598509f91dc2604b4b873885355adbd72b2073",
+          "comparedElements": 786432,
+          "maximumAbsDifference": 3.4689903259277344E-05,
+          "meanAbsDifference": 3.399851371108658E-08,
+          "differentElements": 786046,
+          "thresholdMismatchElements": 0,
+          "ortPositiveOpenVinoNegative": 0,
+          "ortNegativeOpenVinoPositive": 0
+        }
+      ]
+    }
+  ]
+}
