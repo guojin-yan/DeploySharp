@@ -150,8 +150,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
             RequireFile(TableImagePath, "dynamic-batch table image");
             var cases = new[]
             {
-                new TableBackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId, Path.Combine(ModelRoot, "slanext-wired.onnx")),
-                new TableBackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId, Path.Combine(SlanextOpenVinoRoot, "slanext-wired-openvino-compat.onnx"))
+                new TableBackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId, "paddle-table/slanext-wired", Path.Combine(ModelRoot, "slanext-wired.onnx")),
+                new TableBackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId, "paddle-table/slanext-wired", Path.Combine(SlanextOpenVinoRoot, "slanext-wired-openvino-compat.onnx"))
             };
             var rows = new List<object>();
             foreach (TableBackendCase backend in cases) rows.Add(RunSlaNextCase(backend));
@@ -170,6 +170,39 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 scope = "Official SLANeXt dynamic table-structure export on ORT and the separately hashed OpenVINO-compatible graph.",
                 results = rows,
                 boundary = "True model batch execution and table decoder row isolation on one Windows host; OpenVINO uses the compatibility graph because the original graph remains Loop-importer blocked; not a table accuracy score, throughput benchmark or cross-device claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchWirelessSlaNextRunsOnOrtAndOpenVino()
+        {
+            RequireExternal();
+            RequireFile(TableImagePath, "dynamic-batch wireless table image");
+            var cases = new[]
+            {
+                new TableBackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId, "paddle-table/slanext-wireless", Path.Combine(ModelRoot, "slanext-wireless.onnx")),
+                new TableBackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId, "paddle-table/slanext-wireless", Path.Combine(SlanextOpenVinoRoot, "slanext-wireless-openvino-compat.onnx"))
+            };
+            var rows = new List<object>();
+            foreach (TableBackendCase backend in cases) rows.Add(RunSlaNextCase(backend));
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_SLANEXT_WIRELESS_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                input = new { file = TableImagePath, sha256 = FileSha256(TableImagePath) },
+                batch = 2,
+                model = "paddle-table/slanext-wireless",
+                scope = "Official wireless SLANeXt dynamic table-structure export on ORT and the separately hashed OpenVINO-compatible graph.",
+                results = rows,
+                boundary = "True model batch execution and table decoder row isolation on one Windows host; OpenVINO uses the compatibility graph because the original Loop graph remains importer-blocked; not a table accuracy score, throughput benchmark or cross-device claim."
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(2, rows.Count);
@@ -367,16 +400,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private sealed class TableBackendCase
         {
-            public TableBackendCase(string name, BackendId id, string modelPath) { Name = name; Id = id; ModelPath = modelPath; }
+            public TableBackendCase(string name, BackendId id, string modelId, string modelPath) { Name = name; Id = id; ModelId = modelId; ModelPath = modelPath; }
             public string Name { get; }
             public BackendId Id { get; }
+            public string ModelId { get; }
             public string ModelPath { get; }
         }
 
         private static object RunSlaNextCase(TableBackendCase backend)
         {
             RequireFile(backend.ModelPath, backend.Name + " SLANeXt model");
-            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(backend.ModelId);
             PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateTableStructure(descriptor, modelSize: new VisualSize(512, 512), maximumBatch: 2);
             Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
             Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0]);
@@ -421,7 +455,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             Assert.AreEqual(decoded[0].Markup, decoded[1].Markup, backend.Name + " changed HTML between identical batch rows.");
             CollectionAssert.AreEqual(decoded[0].Tokens.Select(value => value.Index).ToArray(), decoded[1].Tokens.Select(value => value.Index).ToArray());
 
-            Console.WriteLine("PADDLE_DOCUMENT_SLANEXT_DYNAMIC_BATCH backend=" + backend.Name + ";batch=" + input.BatchSize + ";tokens=" + decoded[0].Tokens.Count + ";cells=" + decoded[0].Regions.Count);
+            Console.WriteLine("PADDLE_DOCUMENT_SLANEXT_DYNAMIC_BATCH model=" + descriptor.ModelId + ";backend=" + backend.Name + ";batch=" + input.BatchSize + ";tokens=" + decoded[0].Tokens.Count + ";cells=" + decoded[0].Regions.Count);
             return new
             {
                 backend = backend.Name,

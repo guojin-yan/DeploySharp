@@ -81,6 +81,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 随后对 `paddle-table/slanext-wired` 完成了真正动态 Batch 表格解码：ORT CPU 使用官方图，OpenVINO CPU 使用独立 SHA-256 的 Loop 兼容图；两行相同输入均为 `[2,3,512,512]`，两后端各返回 24 个 token、13 个 cell，HTML 哈希一致。该结果只覆盖精确工件的输入绑定和 Decoder 行隔离，不改变原始 SLANeXt/OpenVINO 的 `✗` 与派生兼容图的 `✓**` 语义，也不构成表格准确率或性能结论。详见 [`paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md`](../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md) 和 [JSON](../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino.json)。
 
+后续对 `paddle-table/slanext-wireless` 完成相同双行合同：ORT CPU 官方无线图与 OpenVINO 独立 SHA-256 兼容图均返回 24 个 token、13 个 cell，HTML 哈希一致。该证据覆盖 wireless 两个精确图与 Decoder 的动态 Batch 行隔离，不改变原始 OpenVINO 图的 importer 阻断状态。详见 [`paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md`](../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md) 和 [JSON](../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json)。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

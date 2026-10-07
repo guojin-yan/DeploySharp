@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T04:21:29.2102927+00:00",
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c"
+  },
+  "batch": 2,
+  "model": "paddle-table/slanext-wireless",
+  "scope": "Official wireless SLANeXt dynamic table-structure export on ORT and the separately hashed OpenVINO-compatible graph.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-table/slanext-wireless",
+      "modelPath": "E:\\Model\\PaddleDocument\\onnx\\slanext-wireless.onnx",
+      "modelSha256": "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97",
+      "inputShape": "[2,3,512,512]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "tokenCounts": [
+        24,
+        24
+      ],
+      "cellCounts": [
+        13,
+        13
+      ],
+      "markupSha256": [
+        "53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557",
+        "53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-table/slanext-wireless",
+      "modelPath": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wireless-openvino-compat.onnx",
+      "modelSha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "inputShape": "[2,3,512,512]",
+      "inputBatch": 2,
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "tokenCounts": [
+        24,
+        24
+      ],
+      "cellCounts": [
+        13,
+        13
+      ],
+      "markupSha256": [
+        "53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557",
+        "53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557"
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True model batch execution and table decoder row isolation on one Windows host; OpenVINO uses the compatibility graph because the original Loop graph remains importer-blocked; not a table accuracy score, throughput benchmark or cross-device claim."
+}
