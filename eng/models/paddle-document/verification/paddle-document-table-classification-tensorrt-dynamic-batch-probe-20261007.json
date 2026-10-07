@@ -54,6 +54,54 @@
         "observed": "The current rerun of the existing batch-1 table-classification baseline and the new batch-2 case both stopped at TensorRT builder creation with structured exception 3228369022 (0xC06D007E); each was reported inconclusive. The historical batch-1 TRT10 pass dated 2026-10-04 is not invalidated, but the current environment no longer reproduced it."
       }
     ],
+    "explicitRuntimePathRetry": {
+      "generatedAtUtc": "2026-10-07T08:52:23Z",
+      "host": "Windows x64 build 10.0.26200; NVIDIA GeForce RTX 3060 Laptop GPU; driver 576.02",
+      "runtime": {
+        "tensorRt": "11.0.0.114-cu12",
+        "tensorRtRoot": "D:\\Program Files\\TensorRT-11.0.0.114-cu12",
+        "cuda": "12.9",
+        "cudaRoot": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9",
+        "cuDnn": "9.22",
+        "cuDnnRoot": "D:\\Program Files\\cuDNN-9.22.0-cuda12.9",
+        "bridgePath": "F:\\deploysharp-bin\\DeploySharp-DeviceBenchmark-20260829-223446\\vendor\\tensorrt-11.0\\bin\\jyppxtrtbridge.dll",
+        "bridgeSha256": "a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6f"
+      },
+      "vendorTrtexec": {
+        "status": "passed-build-and-deserialize",
+        "profile": {
+          "input": "x=[1,3,224,224] / [2,3,224,224] / [2,3,224,224]",
+          "minBatch": 1,
+          "optBatch": 2,
+          "maxBatch": 2
+        },
+        "engineSha256": "908a9d77f3ec32052dec0f03837637517d88369c50a11f7a6f01f2b6a381c16e",
+        "engineBytes": 7728860,
+        "buildSeconds": 43.2961,
+        "inference": "skipped",
+        "boundary": "Vendor TensorRT accepted and serialized the dynamic profile; no engine inference timing or DeploySharp support is implied."
+      },
+      "deploySharpBuilderPath": {
+        "status": "inconclusive-before-inference",
+        "phase": "createInferBuilder",
+        "exceptionCode": "3228369022 (0xC06D007E)",
+        "nativeLogs": "none"
+      },
+      "deploySharpPrebuiltEnginePath": {
+        "status": "inconclusive-before-inference",
+        "engineSha256": "908a9d77f3ec32052dec0f03837637517d88369c50a11f7a6f01f2b6a381c16e",
+        "phase": "createInferRuntime",
+        "exceptionCode": "3228369022 (0xC06D007E)"
+      },
+      "tensorRt10Followup": {
+        "runtime": "TensorRT 10.11.0.33 / CUDA 12.9 / cuDNN 9.22 / matching bridge SHA 2c08b9282d3b89b1b863a927912a87164f1c79a8f58a1d5c06a3e2afc57aab84",
+        "deploySharpBuilderStatus": "inconclusive-before-inference",
+        "deploySharpExceptionCode": "3228369022 (0xC06D007E)",
+        "vendorTrtexecStatus": "blocked-before-onnx-parse",
+        "vendorTrtexecObserved": "Unable to open library: nvinfer_plugin_10.dll; the file was present in the selected TensorRT lib directory, but the dependency-load cause was not isolated."
+      },
+      "conclusion": "Explicit matching runtime paths and a vendor-built TRT11 engine did not enable DeploySharp TensorRT builder or runtime creation on this host. The exact PP-LCNet dynamic-batch TensorRT path remains unverified; do not promote the vendor-only build to a backend pass."
+    },
     "conclusion": "PP-LCNet table-classifier TensorRT dynamic batch is unverified in DeploySharp. Preserve the existing exact single-batch evidence separately; do not promote this vendor trtexec probe to a DeploySharp backend checkmark. Investigate native bridge/runtime initialization before retrying managed parity."
   }
 }

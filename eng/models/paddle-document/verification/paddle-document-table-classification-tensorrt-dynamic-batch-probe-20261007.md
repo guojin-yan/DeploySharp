@@ -8,6 +8,19 @@ For this GPU-only probe, batch-query latency was P50 `0.417847 ms`, P95 `0.51814
 
 DeploySharp did not reach inference with this engine. Using the local TensorRT 11 bridge, provider runtime creation raised structured exception `3228369022` (`0xC06D007E`). A separate retry with the matching TensorRT 10.11 NuGet bridge also stopped at builder creation; the existing batch-1 classifier baseline and the new batch-2 test were both inconclusive in this current run. The historical 2026-10-04 TensorRT 10.11 batch-1 result remains an earlier exact run, but today's rerun did not reproduce it. The dynamic-batch TensorRT path therefore remains unverified in DeploySharp; no backend status checkmark is added from this probe.
 
+## Explicitly configured runtime retry (2026-10-07)
+
+The failure was retried with explicit, matching runtime paths rather than relying on the process `PATH`: TensorRT 11.0.0.114-cu12 at `D:\Program Files\TensorRT-11.0.0.114-cu12`, CUDA 12.9, cuDNN 9.22, and the Windows bridge from the existing device bundle. The bridge SHA-256 was `a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6f`, matching the hash in the earlier probe.
+
+| Route | Result |
+|---|---|
+| TensorRT 11 `trtexec` builds the exact ONNX with min/opt/max batch `1/2/2` | Passed build and engine deserialize; engine SHA-256 `908a9d77f3ec32052dec0f03837637517d88369c50a11f7a6f01f2b6a381c16e`, size `7,728,860` bytes. Inference was skipped in this build-only probe. |
+| DeploySharp TensorRT 11 builder path, same explicit runtime roots and bridge | Inconclusive before parsing/building the model: `createInferBuilder` raised structured exception `3228369022 (0xC06D007E)`; native logger had no messages. |
+| DeploySharp loads the externally built TensorRT 11 engine and runs batch 2 | Inconclusive before inference: `createInferRuntime` raised the same structured exception. |
+| DeploySharp TensorRT 10.11 builder path with its matching bridge and explicit CUDA/cuDNN/TensorRT paths | Inconclusive at builder creation with the same code. A separate vendor `trtexec` attempt also stopped while loading `nvinfer_plugin_10.dll`; although that file exists in the selected TensorRT `lib` directory, the dependency-load cause was not isolated. |
+
+This narrows the blocker: it is not the PP-LCNet graph's dynamic profile, because the vendor TensorRT 11 builder accepted the exact `1/2/2` profile and serialized/deserialized an engine. DeploySharp still cannot create either the TensorRT 11 builder or runtime on this host, even with explicit matching paths; therefore it never exercised this model's batch-2 inference or ORT parity. Keep the exact TensorRT dynamic-batch result **unverified (`△`)**. The vendor build duration and engine size are not a DeploySharp performance result.
+
 ## Artifacts and host
 
 | Item | Value |
