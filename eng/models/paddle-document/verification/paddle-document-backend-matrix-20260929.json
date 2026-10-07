@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-07T08:21:36.7647035Z",
+  "generatedUtc": "2026-10-07T08:34:19.2598786Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -66,6 +66,72 @@
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "tensorRtCuda": "unverified",
       "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-s",
+      "batch": 2,
+      "onnxSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-s",
+      "batch": 2,
+      "onnxSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-m",
+      "batch": 2,
+      "onnxSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-l",
+      "batch": 2,
+      "onnxSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-l",
+      "batch": 2,
+      "onnxSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-formula/unimernet",
+      "batch": 2,
+      "onnxSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "onnxruntimeCpu": "pass-separate-report",
+      "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "errorCode": "DS-OCV-8002",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     }
   ],
   "assets": [
