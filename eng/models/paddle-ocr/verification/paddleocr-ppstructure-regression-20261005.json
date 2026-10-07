@@ -1,8 +1,10 @@
 {
   "schemaVersion": "deploysharp-paddleocr-ppstructure-regression-v2",
-  "generatedUtc": "2026-10-04T20:16:13.4508668Z",
-  "repositoryRevision": "913cd8d",
+  "generatedUtc": "2026-10-07T04:49:28Z",
+  "repositoryRevision": "c14908a",
   "branch": "DeploySharpV2.0",
+  "workingTreeState": "modified before the run; results describe the exact local snapshot and do not independently certify a clean checkout",
+  "testDate": "2026-10-07",
   "configuration": "Release",
   "targetFramework": "net10.0",
   "commandTemplate": "dotnet test <project> -f net10.0 --configuration Release --no-restore --verbosity minimal",
@@ -38,9 +40,9 @@
       "project": "DeploySharp.Visual.OpenCV.Tests",
       "path": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj",
       "passed": 99,
-      "skipped": 111,
+      "skipped": 113,
       "failed": 0,
-      "total": 210,
+      "total": 212,
       "scope": "OpenCV contracts and gated external model probes"
     },
     {
@@ -55,14 +57,17 @@
   ],
   "totals": {
     "passed": 697,
-    "skipped": 133,
+    "skipped": 135,
     "failed": 0,
-    "total": 830
+    "total": 832
   },
   "warnings": [
     "Legacy target frameworks emit dependency support warnings; no Release net10.0 test failed.",
     "Skipped tests are external-asset or explicit environment gates and are not support claims.",
+    "The working tree was already modified before the run; results apply to that exact local snapshot, with repositoryRevision identifying Git HEAD.",
+    "The newly added UVDoc dynamic-batch integration test is opt-in and was reported as skipped in this default-gate regression; it passed separately with its external-model gate enabled.",
     "DeploySharp.Visual.Configuration.Json.Tests has no source project file in this checkout and is not included."
   ],
-  "boundary": "This is a local Release contract/regression gate. It does not close external model, dataset accuracy, cross-device performance, or long-running soak gates."
+  "boundary": "This is a local Release contract/regression gate. It does not close external model, dataset accuracy, cross-device performance, or long-running soak gates.",
+  "executionOrder": "Five test projects were run sequentially from the same working tree."
 }

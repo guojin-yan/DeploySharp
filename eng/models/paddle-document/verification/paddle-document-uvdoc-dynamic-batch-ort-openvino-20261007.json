@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T04:48:07.6084637+00:00",
+  "model": "paddle-doc/uvdoc",
+  "modelSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "preparedInputSha256": "ea644a214e4e9cfe0d2169d3558275990bed25016e373a436372cfc7e2f6e7cf",
+  "batch": 2,
+  "inputShape": "[2,3,640,640]",
+  "outputShape": [
+    2,
+    3,
+    640,
+    640
+  ],
+  "scope": "Official UVDoc dynamic batch with two distinct, non-overlapping full-height ROIs from one real source image, decoded independently by ORT CPU and OpenVINO CPU.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "modelSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+      "inputShape": "[2,3,640,640]",
+      "outputShape": "[2,3,640,640]",
+      "resultCount": 2,
+      "resultSizes": [
+        {
+          "Width": 640,
+          "Height": 640,
+          "Channels": 3,
+          "Count": 1228800
+        },
+        {
+          "Width": 640,
+          "Height": 640,
+          "Channels": 3,
+          "Count": 1228800
+        }
+      ],
+      "pageIndexes": [
+        0,
+        1
+      ],
+      "roiRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 405,
+          "height": 1080
+        },
+        {
+          "x": 405,
+          "y": 0,
+          "width": 405,
+          "height": 1080
+        }
+      ],
+      "rowMeanAbsoluteDifference": 72.43291623991135,
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "modelSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+      "inputShape": "[2,3,640,640]",
+      "outputShape": "[2,3,640,640]",
+      "resultCount": 2,
+      "resultSizes": [
+        {
+          "Width": 640,
+          "Height": 640,
+          "Channels": 3,
+          "Count": 1228800
+        },
+        {
+          "Width": 640,
+          "Height": 640,
+          "Channels": 3,
+          "Count": 1228800
+        }
+      ],
+      "pageIndexes": [
+        0,
+        1
+      ],
+      "roiRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 405,
+          "height": 1080
+        },
+        {
+          "x": 405,
+          "y": 0,
+          "width": 405,
+          "height": 1080
+        }
+      ],
+      "rowMeanAbsoluteDifference": 72.43294685006391,
+      "status": "passed"
+    }
+  ],
+  "backendParity": {
+    "meanAbsoluteDifference": 0.0021706665407343925,
+    "meanAbsoluteDifferenceByRow": [
+      0.002077916789815883,
+      0.002263416291652902
+    ],
+    "maxAbsoluteDifference": 0.10301971435546875,
+    "meanDiagnosticThreshold": 0.01
+  },
+  "boundary": "True dynamic batch execution on two distinct source regions, output decoder row isolation and bounded numerical parity for this exact Windows-host model/input pair; not a visual-quality score, throughput benchmark, pixel-equivalence claim or TensorRT/OpenCV support claim."
+}

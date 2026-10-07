@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -206,6 +207,143 @@ namespace DeploySharp.Visual.OpenCV.Tests
             }, new JsonSerializerOptions { WriteIndented = true }));
             TestContext.AddResultFile(report);
             Assert.AreEqual(2, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchUnwarpingRunsOnOrtAndOpenVino()
+        {
+            RequireExternal();
+            RequireFile(ImagePath, "dynamic-batch UVDoc image");
+            string modelPath = Path.Combine(ModelRoot, "uvdoc.onnx");
+            RequireFile(modelPath, "dynamic-batch UVDoc model");
+
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-doc/uvdoc");
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateUnwarping(
+                descriptor,
+                new VisualSize(640, 640),
+                maximumBatch: 2);
+            Assert.AreEqual(-1L, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, profile.VisualProfile.Outputs[0].ShapePattern[0]);
+
+            var factory = new OpenCvVisualInputFactory();
+            using PreparedVisualInput probe = factory.CreateFromFile(ImagePath, profile.VisualProfile, inputId: "uvdoc-dynamic-batch-probe");
+            float leftWidth = probe.SourceSize.Width / 2f;
+            var leftRegion = new RectangleRoiGeometry(new RectangleF(0, 0, leftWidth, probe.SourceSize.Height));
+            var rightRegion = new RectangleRoiGeometry(new RectangleF(leftWidth, 0, probe.SourceSize.Width - leftWidth, probe.SourceSize.Height));
+            using PreparedVisualInput input = factory.CreateRoiBatch(
+                OpenCvImageSource.FromFile(ImagePath),
+                new IVisualRoiGeometry[] { leftRegion, rightRegion },
+                profile.VisualProfile.Input.Name,
+                profile.VisualProfile.Preprocessing!.ToOpenCvOptions(),
+                inputId: "uvdoc-dynamic-batch-rows",
+                cancellationToken: CancellationToken.None);
+            Assert.AreEqual(2, input.BatchSize);
+            Assert.AreEqual(2L, input.Tensor.Shape[0]);
+            string preparedInputSha256 = TensorSha256(input.Tensor);
+
+            var reportRows = new List<object>();
+            var outputsByBackend = new Dictionary<string, float[]>(StringComparer.Ordinal);
+            foreach (BackendCase backend in new[]
+            {
+                new BackendCase("onnxruntime-cpu", OnnxRuntimeBackendProvider.BackendId),
+                new BackendCase("openvino-cpu", OpenVinoBackendProvider.BackendId)
+            })
+            {
+                using var registry = new BackendRegistry();
+                BackendRequest request;
+                if (backend.Id == OnnxRuntimeBackendProvider.BackendId)
+                {
+                    registry.UseOnnxRuntime();
+                    request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+                }
+                else
+                {
+                    registry.UseOpenVino();
+                    request = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+                }
+
+                using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, backend.Id), request);
+                InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                ITensor output = outputs.GetRequired("fetch_name_0");
+                Assert.AreEqual(TensorElementType.Float32, output.ElementType);
+                Assert.AreEqual(2L, output.Shape[0]);
+                Assert.AreEqual(3L, output.Shape[1]);
+                Assert.AreEqual(640L, output.Shape[2]);
+                Assert.AreEqual(640L, output.Shape[3]);
+                Assert.IsTrue(output.Buffer is float[], backend.Name + " UVDoc output must expose a Float32 buffer.");
+                float[] outputValues = (float[])output.Buffer;
+                Assert.IsTrue(outputValues.All(float.IsFinite), backend.Name + " returned a non-finite UVDoc pixel.");
+
+                var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentUnwarpingBatchResult
+                    ?? throw new AssertFailedException(backend.Name + " did not return a PaddleDocumentUnwarpingBatchResult.");
+                Assert.AreEqual(2, decoded.Count);
+                Assert.AreEqual(0, decoded[0].Metadata.PageIndex);
+                Assert.AreEqual(1, decoded[1].Metadata.PageIndex);
+                Assert.AreEqual(decoded[0].Width, decoded[1].Width);
+                Assert.AreEqual(decoded[0].Height, decoded[1].Height);
+                Assert.AreEqual(decoded[0].Channels, decoded[1].Channels);
+                Assert.AreEqual(640, decoded[0].Width);
+                Assert.AreEqual(640, decoded[0].Height);
+
+                int rowLength = outputValues.Length / 2;
+                double rowMeanAbs = MeanAbsoluteDifference(outputValues, 0, outputValues, rowLength, rowLength);
+                Assert.IsTrue(rowMeanAbs > 0.001, backend.Name + " did not preserve distinct UVDoc results for the left/right source regions: " + rowMeanAbs.ToString("R"));
+                outputsByBackend.Add(backend.Name, (float[])outputValues.Clone());
+                reportRows.Add(new
+                {
+                    backend = backend.Name,
+                    modelSha256 = FileSha256(modelPath),
+                    inputShape = input.Tensor.Shape.ToString(),
+                    outputShape = output.Shape.ToString(),
+                    resultCount = decoded.Count,
+                    resultSizes = decoded.Items.Select(value => new { value.Width, value.Height, value.Channels, value.Pixels.Count }).ToArray(),
+                    pageIndexes = decoded.Items.Select(value => value.Metadata.PageIndex).ToArray(),
+                    roiRegions = new object[]
+                    {
+                        new { x = 0, y = 0, width = leftWidth, height = probe.SourceSize.Height },
+                        new { x = leftWidth, y = 0, width = probe.SourceSize.Width - leftWidth, height = probe.SourceSize.Height }
+                    },
+                    rowMeanAbsoluteDifference = rowMeanAbs,
+                    status = "passed"
+                });
+            }
+
+            float[] ortValues = outputsByBackend["onnxruntime-cpu"];
+            float[] openVinoValues = outputsByBackend["openvino-cpu"];
+            Assert.AreEqual(ortValues.Length, openVinoValues.Length);
+            int outputRowLength = ortValues.Length / 2;
+            double[] backendMeanAbsByRow = new double[2];
+            for (int row = 0; row < backendMeanAbsByRow.Length; row++)
+            {
+                backendMeanAbsByRow[row] = MeanAbsoluteDifference(ortValues, row * outputRowLength, openVinoValues, row * outputRowLength, outputRowLength);
+                Assert.IsTrue(backendMeanAbsByRow[row] < 0.01, "UVDoc ORT/OpenVINO mean pixel drift exceeded the existing diagnostic threshold for row " + row + ": " + backendMeanAbsByRow[row].ToString("R"));
+            }
+            double backendMeanAbs = backendMeanAbsByRow.Average();
+            double backendMaxAbs = MaxAbsoluteDifference(ortValues, openVinoValues);
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_UVDOC_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-uvdoc-dynamic-batch-ort-openvino.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                model = descriptor.ModelId,
+                modelSha256 = FileSha256(modelPath),
+                input = new { file = ImagePath, sha256 = FileSha256(ImagePath) },
+                preparedInputSha256,
+                batch = 2,
+                inputShape = input.Tensor.Shape.ToString(),
+                outputShape = new[] { 2, 3, 640, 640 },
+                scope = "Official UVDoc dynamic batch with two distinct, non-overlapping full-height ROIs from one real source image, decoded independently by ORT CPU and OpenVINO CPU.",
+                results = reportRows,
+                backendParity = new { meanAbsoluteDifference = backendMeanAbs, meanAbsoluteDifferenceByRow = backendMeanAbsByRow, maxAbsoluteDifference = backendMaxAbs, meanDiagnosticThreshold = 0.01 },
+                boundary = "True dynamic batch execution on two distinct source regions, output decoder row isolation and bounded numerical parity for this exact Windows-host model/input pair; not a visual-quality score, throughput benchmark, pixel-equivalence claim or TensorRT/OpenCV support claim."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Console.WriteLine("PADDLE_DOCUMENT_UVDOC_DYNAMIC_BATCH input=" + input.Tensor.Shape + ";output=" + string.Join(";", reportRows.Select(value => JsonSerializer.Serialize(value))) + ";meanAbs=" + backendMeanAbs.ToString("R") + ";maxAbs=" + backendMaxAbs.ToString("R"));
         }
 
         private static readonly ClassifierCase[] Cases =
@@ -488,6 +626,26 @@ namespace DeploySharp.Visual.OpenCV.Tests
         {
             using var stream = File.OpenRead(path);
             return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+        }
+
+        private static string TensorSha256(ITensor tensor)
+        {
+            if (!(tensor.Buffer is float[] values)) throw new AssertFailedException("The prepared dynamic batch must be Float32.");
+            return Convert.ToHexString(SHA256.HashData(MemoryMarshal.AsBytes(values.AsSpan()))).ToLowerInvariant();
+        }
+
+        private static double MeanAbsoluteDifference(float[] left, int leftOffset, float[] right, int rightOffset, int length)
+        {
+            double sum = 0;
+            for (int index = 0; index < length; index++) sum += Math.Abs((double)left[leftOffset + index] - right[rightOffset + index]);
+            return sum / length;
+        }
+
+        private static double MaxAbsoluteDifference(float[] left, float[] right)
+        {
+            double max = 0;
+            for (int index = 0; index < left.Length; index++) max = Math.Max(max, Math.Abs((double)left[index] - right[index]));
+            return max;
         }
     }
 }

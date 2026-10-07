@@ -83,6 +83,8 @@ UVDoc OpenCV DNN 精确组合已尝试但失败：OpenCV 5.0 importer 在 `Paddi
 
 后续对 `paddle-table/slanext-wireless` 完成相同双行合同：ORT CPU 官方无线图与 OpenVINO 独立 SHA-256 兼容图均返回 24 个 token、13 个 cell，HTML 哈希一致。该证据覆盖 wireless 两个精确图与 Decoder 的动态 Batch 行隔离，不改变原始 OpenVINO 图的 importer 阻断状态。详见 [`paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md`](../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md) 和 [JSON](../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json)。
 
+2026-10-07 又对 `paddle-doc/uvdoc` 官方动态导出执行双行 ORT CPU / OpenVINO CPU 解码，输入为 `bus.jpg` 左/右两个不重叠区域。两后端均绑定 `[2,3,640,640]` 并输出 `[2,3,640,640]`，每行生成独立的 `640×640×3` 图像结果且 page index 为 `[0,1]`；行间输出 mean absolute difference `72.4329`，证明两条结果没有互相覆盖。对应行的 ORT/OpenVINO mean absolute difference 为 `0.002078/0.002263`，全量 max 为 `0.103020`。这只证明动态 Batch 绑定、结果行隔离和有界数值对照，不表示视觉质量或吞吐通过。详见 [`paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md`](../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md) 及 [JSON](../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.json)；OpenCV DNN 的 importer 阻断和 TensorRT 未验证状态不变。
+
 | 模块 | 代码合同 | 独立 ONNX Release | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 文档方向：`paddle-doc/pp-lcnet-x1-0-doc-ori` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
