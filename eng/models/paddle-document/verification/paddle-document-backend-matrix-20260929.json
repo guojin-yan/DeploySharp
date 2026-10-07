@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-07T08:11:24.0886967Z",
+  "generatedUtc": "2026-10-07T08:21:36.7647035Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -46,6 +46,26 @@
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "tensorRtCuda": "unverified",
       "report": "eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-table/rt-detr-l-wired-cell-det",
+      "batch": 2,
+      "onnxSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "modelId": "paddle-table/rt-detr-l-wireless-cell-det",
+      "batch": 2,
+      "onnxSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "tensorRtCuda": "unverified",
+      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
     }
   ],
   "assets": [

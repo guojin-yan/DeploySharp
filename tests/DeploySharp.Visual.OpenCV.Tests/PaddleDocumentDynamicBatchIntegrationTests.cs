@@ -645,6 +645,58 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialDynamicBatchTableCellDetectorsRunOnOpenCvDnn()
+        {
+            RequireExternal();
+            RequireFile(TableImagePath, "dynamic-batch OpenCV table-cell image");
+            var models = new[]
+            {
+                (ModelId: "paddle-table/rt-detr-l-wired-cell-det", FileName: "rt-detr-l-wired-cell-det.onnx"),
+                (ModelId: "paddle-table/rt-detr-l-wireless-cell-det", FileName: "rt-detr-l-wireless-cell-det.onnx")
+            };
+            var rows = new List<object>();
+            var backend = new BackendCase("opencv-dnn-cpu", OpenCvDnnBackendProvider.BackendId);
+            foreach (var model in models)
+            {
+                rows.Add(RunNmsCaseWithOpenCvFailureEvidence(
+                    backend,
+                    model.ModelId,
+                    model.FileName,
+                    new[] { "table-cell" },
+                    TableImagePath,
+                    useDistinctHorizontalBands: true));
+            }
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TABLE_CELL_OPENCV_DYNAMIC_BATCH_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-table-cell-dynamic-batch-opencv-20261007.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                generatedAtUtc = DateTimeOffset.UtcNow,
+                execution = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    architecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    targetFramework = "net10.0",
+                    configuration = "Release"
+                },
+                input = new { file = TableImagePath, sha256 = FileSha256(TableImagePath), regions = "distinct top/bottom horizontal bands" },
+                batch = 2,
+                models = models.Select(value => new { model = value.ModelId, file = value.FileName }).ToArray(),
+                backend = "opencv-dnn-cpu",
+                scope = "Official wired and wireless RT-DETR-L table-cell dynamic NMS exports with two distinct non-overlapping regions on OpenCV DNN CPU; adapter failures are retained as exact unsupported evidence.",
+                results = rows,
+                boundary = "Only these exact model artifacts, dynamic batch=2 contract, OpenCV DNN runtime and one Windows host are measured. The table-image bands have no cell annotations; this is not cell-detection quality, numerical parity, throughput or cross-device evidence. An OpenCV failure does not change existing single-image evidence, and importer/native root-cause investigation is out of scope."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(2, rows.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchSlaNextRunsOnOrtAndOpenVino()
         {
             RequireExternal();

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-07T08:21:36.7647035+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+    "regions": "distinct top/bottom horizontal bands"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "file": "rt-detr-l-wired-cell-det.onnx"
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "file": "rt-detr-l-wireless-cell-det.onnx"
+    }
+  ],
+  "backend": "opencv-dnn-cpu",
+  "scope": "Official wired and wireless RT-DETR-L table-cell dynamic NMS exports with two distinct non-overlapping regions on OpenCV DNN CPU; adapter failures are retained as exact unsupported evidence.",
+  "results": [
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "modelSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "modelSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "status": "dynamic-batch-execution-unsupported",
+      "errorCode": "DS-OCV-8004",
+      "technicalDetails": "operation=run;jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n",
+      "innerException": "jyppx_ocv_dnn_net_forward_many failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\net_impl.cpp:1495: error: (-204:Requested object was not found) Requested blob not found in function \u0027cv::dnn::dnn5_v20260605::Net::Impl::getBlob\u0027\n"
+    }
+  ],
+  "boundary": "Only these exact model artifacts, dynamic batch=2 contract, OpenCV DNN runtime and one Windows host are measured. The table-image bands have no cell annotations; this is not cell-detection quality, numerical parity, throughput or cross-device evidence. An OpenCV failure does not change existing single-image evidence, and importer/native root-cause investigation is out of scope."
+}
