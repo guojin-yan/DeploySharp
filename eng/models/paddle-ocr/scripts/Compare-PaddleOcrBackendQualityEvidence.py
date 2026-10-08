@@ -1,4 +1,4 @@
-"""Compare complete-pipeline PaddleOCR quality runs across CPU backends.
+"""Compare complete-pipeline PaddleOCR quality runs across backends.
 
 The comparator intentionally checks run provenance before comparing page and
 region outputs. It reports behavior differences; it does not decide whether a
@@ -268,19 +268,22 @@ def compare_pair(model_id: str, reference: dict[str, Any], candidate: dict[str, 
 
 
 def markdown_report(report: dict[str, Any]) -> str:
+    reference_backend = str(report.get("referenceBackend") or "unknown")
+    candidate_backends = ", ".join(str(value) for value in report.get("candidateBackends", [])) or "unknown"
     lines = [
-        "# PP-OCR core-model CPU backend quality comparison (2026-10-08)",
+        "# PP-OCR core-model backend quality comparison (2026-10-08)",
         "",
         "This report compares complete DET → optional CLS → REC pipeline outputs on the same ten HierText `sample-002` pages. It is smoke evidence, not a release accuracy score or formal performance benchmark. Each page has one warm-up and one measured run.",
         "",
         f"- Machine: `{report['runtime']['machine']}` / `{report['runtime']['operatingSystem']}` / `{report['runtime']['processorArchitecture']}`.",
+        f"- Reference backend: `{reference_backend}`; candidate backend(s): `{candidate_backends}`.",
         f"- Models: {report['summary']['models']}; backend comparisons: {report['summary']['comparisons']}; page runs: {report['summary']['successfulPageRuns']}/{report['summary']['expectedPageRuns']} successful.",
         f"- Selection SHA-256: `{report['dataset']['selectedManifestSha256']}`; model, image, evaluator and assembly provenance are preserved in the JSON evidence.",
         "- The dataset remains local smoke data pending image-specific redistribution review. No images, annotations, or predictions are included in the repository.",
         "",
         "## Results",
         "",
-        "| Model | Backend | Pages | Det F1 | Matched CER/WER | End-to-end CER/WER | Text pages vs ORT | Regions | Text mismatches | Max indexed polygon drift (px) | Max confidence drift | One-shot total P50/P95 (ms) |",
+        "| Model | Backend | Pages | Det F1 | Matched CER/WER | End-to-end CER/WER | Text pages vs reference | Regions | Text mismatches | Max indexed polygon drift (px) | Max confidence drift | One-shot total P50/P95 (ms) |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for item in report["comparisons"]:
@@ -303,11 +306,11 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Interpretation and limits",
         "",
-        "- The table reports each backend relative to ORT CPU for the exact model assets and ten-page selection. A matching aggregate CER/F1 does not imply identical region outputs.",
+        f"- The table reports each candidate backend relative to `{reference_backend}` for the exact model assets and ten-page selection. A matching aggregate CER/F1 does not imply identical region outputs.",
         "- Polygon and confidence drift are indexed comparisons only, and are omitted when a page has different region counts. They are not IoU-based region reassociation.",
         "- End-to-end CER/WER can exceed 100% because missed labels count as deletions and unmatched predictions as insertions. Matched-crop CER alone overstates complete-page quality.",
         "- Latency values in the JSON are one-shot observations across different pages; they are not 5-warmup/50-iteration performance results and must not be used as a backend ranking.",
-        "- This result covers ORT CPU, OpenVINO CPU and OpenCV DNN CPU only. It does not change CUDA or TensorRT support status, and it does not close the formal P2 quality gate.",
+        "- This result covers only the backends named above. It does not promote untested backend/model combinations, and it does not close the formal P2 quality gate or the 5-warmup/50-iteration performance matrix.",
         "",
         "## Reproduction",
         "",
@@ -318,8 +321,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         "  --reference-root .\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111 `",
         "  --candidate-root .\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008 `",
         "  --candidate-root .\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008 `",
-        "  --output-json .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-three-cpu-backend-sample-002-quality-20261008.json `",
-        "  --output-markdown .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-three-cpu-backend-sample-002-quality-20261008.md",
+        "  --output-json .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-backend-sample-002-quality-20261008.json `",
+        "  --output-markdown .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-backend-sample-002-quality-20261008.md",
         "```",
         "",
     ]
@@ -378,7 +381,7 @@ def main() -> int:
     all_page_failures = sum(item["candidateMetrics"]["pageFailures"] for item in comparisons)
     report = {
         "schemaVersion": 1,
-        "scope": "PP-OCR v4/v5/v6 complete-pipeline CPU backend quality comparison",
+        "scope": "PP-OCR v4/v5/v6 complete-pipeline backend quality comparison",
         "referenceBackend": reference_meta.get("backend"),
         "candidateBackends": sorted(backends),
         "runtime": {

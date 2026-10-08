@@ -163,6 +163,17 @@ def main() -> int:
     first_report = next(iter(widths.values()), {})
     first_timing = next(iter(timings.values()), {})
     environment = first_timing.get("__environment", {})
+    backend_name = str(run_metadata.get("backend", "")).strip().lower()
+    # Keep the prediction metadata faithful to the benchmark that produced the
+    # width reports.  The original evaluator always emitted ``device=cpu``,
+    # which made an ORT CUDA run look like a CPU run even though the backend
+    # and timing files clearly identified CUDA.  This field is descriptive
+    # provenance only; it does not infer support or change any metrics.
+    execution_device = (
+        "cuda"
+        if any(token in backend_name for token in ("cuda", "tensorrt", "trt"))
+        else "cpu"
+    )
     prediction = {
         "schema_version": "1.0",
         "run_id": run_metadata["generatedUtc"],
@@ -180,7 +191,7 @@ def main() -> int:
                 "platform": environment.get("os", run_metadata.get("operatingSystem", "unknown")),
                 "machine": environment.get("machine", run_metadata.get("machine", "unknown")),
                 "processor_count": environment.get("processorCount", run_metadata.get("processorCount")),
-                "device": "cpu",
+                "device": execution_device,
             },
             "batch_size": run_metadata["batchSize"],
             "preprocessing": "DeploySharp PaddleOCR full-page DET -> optional CLS -> REC; polygons scored at IoU thresholds",
