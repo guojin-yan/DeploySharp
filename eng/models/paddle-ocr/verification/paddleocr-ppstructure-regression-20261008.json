@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-08T04:30:00Z",
+  "sourceRevision": "d8efcba",
+  "worktreeWasDirty": true,
+  "branch": "DeploySharpV2.0",
+  "remote": "origin/DeploySharpV2.0",
+  "runtime": {
+    "os": "Microsoft Windows 11 家庭版 中文版",
+    "osVersion": "10.0.26200",
+    "dotnet": "10.0.401",
+    "configuration": "Release",
+    "targetFramework": "net10.0",
+    "restore": "no-restore"
+  },
+  "runs": [
+    {
+      "project": "DeploySharp.Core.Tests",
+      "filter": "FullyQualifiedName~GenericBatchScheduler",
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0,
+      "total": 2,
+      "scope": "batch scheduler split/order and preparation bound contracts"
+    },
+    {
+      "project": "DeploySharp.Visual.Tests",
+      "filter": "FullyQualifiedName~RunPrefetchedAsync|FullyQualifiedName~ConcurrentMultiPagePipeline",
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0,
+      "total": 4,
+      "scope": "frame preparation overlap, input ordering, cancellation and page concurrency contracts"
+    },
+    {
+      "project": "DeploySharp.Visual.Tests",
+      "filter": "TestCategory!=ExternalModels",
+      "passed": 498,
+      "skipped": 5,
+      "failed": 0,
+      "total": 503,
+      "scope": "non-external visual regression"
+    },
+    {
+      "project": "DeploySharp.Visual.OpenCV.Tests",
+      "filter": "TestCategory!=ExternalModels",
+      "passed": 99,
+      "skipped": 4,
+      "failed": 0,
+      "total": 103,
+      "scope": "non-external OpenCV/PP-Structure regression"
+    },
+    {
+      "project": "DeploySharp.Visual.OpenCV.Tests",
+      "filter": "FullyQualifiedName~PaddleOcrHierTextComposedLongIntegrationTests",
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0,
+      "total": 2,
+      "scope": "PP-OCRv6 Small recognizer-only attributable 3,603-character composition; ORT/OpenVINO"
+    },
+    {
+      "project": "DeploySharp.Visual.OpenCV.Tests",
+      "filter": "FullyQualifiedName~PaddleOcrHierTextVerticalIntegrationTests",
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0,
+      "total": 2,
+      "scope": "18 natural vertical rows with explicit 0/clockwise90/counterClockwise90 candidates; ORT/OpenVINO"
+    }
+  ],
+  "longText": {
+    "model": "PP-OCRv6 Small REC",
+    "dataset": "HierText attributable composition",
+    "sourcePages": 18,
+    "sourceSegments": 102,
+    "expectedCharacters": 3603,
+    "windowCount": 32,
+    "onnxRuntimeCer": 0.19789064668331946,
+    "openVinoCer": 0.19789064668331946,
+    "onnxRuntimeWer": 0.507168458781362,
+    "openVinoWer": 0.507168458781362,
+    "textSha256": "7880bb2ce0ee3e58ccea551c0502169a353528efecbf29e58143f1e17a08a463",
+    "boundary": "The composition uses real HierText crops and source mappings but is not a natural continuous line or a release accuracy result."
+  },
+  "vertical": {
+    "rows": 18,
+    "candidateBackendsAgree": true,
+    "oracleSelectedOrientationCounts": {
+      "degrees0": 7,
+      "clockwise90": 10,
+      "counterClockwise90": 1
+    },
+    "oracleAverageCaseFoldedCer": 0.463355780022447,
+    "boundary": "Oracle selection is diagnostic; no automatic orientation classifier or natural angle accuracy claim is made."
+  },
+  "boundaries": [
+    "Runs were executed in a dirty worktree; unrelated local changes are not part of this evidence.",
+    "Skipped tests are explicit external-model/runtime gates, not failures or support claims.",
+    "This report does not close natural >=3200-character text, automatic angle classification, formal accuracy, long-running soak, or cross-device throughput gates."
+  ]
+}
