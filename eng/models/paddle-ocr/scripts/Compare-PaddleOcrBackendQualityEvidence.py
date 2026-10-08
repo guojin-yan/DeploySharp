@@ -270,6 +270,23 @@ def compare_pair(model_id: str, reference: dict[str, Any], candidate: dict[str, 
 def markdown_report(report: dict[str, Any]) -> str:
     reference_backend = str(report.get("referenceBackend") or "unknown")
     candidate_backends = ", ".join(str(value) for value in report.get("candidateBackends", [])) or "unknown"
+    reproduction = report.get("reproduction", {})
+    command = [
+        "uv run --offline python .\\eng\\models\\paddle-ocr\\scripts\\Compare-PaddleOcrBackendQualityEvidence.py `",
+        f"  --reference-root {reproduction.get('referenceRoot', '<reference-run-root>')} `",
+    ]
+    candidate_roots = reproduction.get("candidateRoots", [])
+    if candidate_roots:
+        command.extend(
+            f"  --candidate-root {root} `"
+            for root in candidate_roots
+        )
+    else:
+        command.append("  --candidate-root <candidate-run-root> `")
+    command.extend((
+        f"  --output-json {reproduction.get('outputJson', '<output.json>')} `",
+        f"  --output-markdown {reproduction.get('outputMarkdown', '<output.md>')}",
+    ))
     lines = [
         "# PP-OCR core-model backend quality comparison (2026-10-08)",
         "",
@@ -317,12 +334,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         "Run the quality evaluations first with the same selected manifest and protocol, then compare their local run directories. The script refuses to compare different model hashes, selected manifests, source revisions, assemblies or run protocols.",
         "",
         "```powershell",
-        "uv run --offline python .\\eng\\models\\paddle-ocr\\scripts\\Compare-PaddleOcrBackendQualityEvidence.py `",
-        "  --reference-root .\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111 `",
-        "  --candidate-root .\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008 `",
-        "  --candidate-root .\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008 `",
-        "  --output-json .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-backend-sample-002-quality-20261008.json `",
-        "  --output-markdown .\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-backend-sample-002-quality-20261008.md",
+        *command,
         "```",
         "",
     ]
@@ -417,6 +429,12 @@ def main() -> int:
             "failedPageRuns": all_page_failures,
             "outputMismatches": sum(item["pageComparison"]["indexedRegionTextMismatches"] for item in comparisons),
             "candidateBackends": sorted(backends),
+        },
+        "reproduction": {
+            "referenceRoot": str(args.reference_root),
+            "candidateRoots": [str(root) for root in args.candidate_root],
+            "outputJson": str(args.output_json),
+            "outputMarkdown": str(args.output_markdown),
         },
         "comparisons": comparisons,
     }

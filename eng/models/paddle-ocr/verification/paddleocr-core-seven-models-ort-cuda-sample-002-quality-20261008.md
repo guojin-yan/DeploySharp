@@ -34,9 +34,8 @@ Run the quality evaluations first with the same selected manifest and protocol, 
 
 ```powershell
 uv run --offline python .\eng\models\paddle-ocr\scripts\Compare-PaddleOcrBackendQualityEvidence.py `
-  --reference-root .\artifacts\public-ocr-evaluation\core-quality-20261008-125111 `
-  --candidate-root .\artifacts\public-ocr-evaluation\core-seven-models-openvino-sample-002-20261008 `
-  --candidate-root .\artifacts\public-ocr-evaluation\core-seven-models-opencv-dnn-sample-002-20261008 `
-  --output-json .\eng\models\paddle-ocr\verification\paddleocr-core-seven-models-backend-sample-002-quality-20261008.json `
-  --output-markdown .\eng\models\paddle-ocr\verification\paddleocr-core-seven-models-backend-sample-002-quality-20261008.md
+  --reference-root artifacts\public-ocr-evaluation\cpu-seven-models-sample-002-20261008 `
+  --candidate-root artifacts\public-ocr-evaluation\cuda-seven-models-sample-002-20261008 `
+  --output-json eng\models\paddle-ocr\verification\paddleocr-core-seven-models-ort-cuda-sample-002-quality-20261008.json `
+  --output-markdown eng\models\paddle-ocr\verification\paddleocr-core-seven-models-ort-cuda-sample-002-quality-20261008.md
 ```

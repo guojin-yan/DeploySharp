@@ -93,6 +93,14 @@
       "onnxruntime-cuda"
     ]
   },
+  "reproduction": {
+    "referenceRoot": "artifacts\\public-ocr-evaluation\\cpu-seven-models-sample-002-20261008",
+    "candidateRoots": [
+      "artifacts\\public-ocr-evaluation\\cuda-seven-models-sample-002-20261008"
+    ],
+    "outputJson": "eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-ort-cuda-sample-002-quality-20261008.json",
+    "outputMarkdown": "eng\\models\\paddle-ocr\\verification\\paddleocr-core-seven-models-ort-cuda-sample-002-quality-20261008.md"
+  },
   "comparisons": [
     {
       "model": "v4-mobile",
