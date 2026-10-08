@@ -1,0 +1,1582 @@
+{
+  "schemaVersion": 1,
+  "scope": "PP-OCR v4/v5/v6 complete-pipeline ORT CUDA fixed-device performance matrix",
+  "runtime": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "processorArchitecture": "X64",
+    "processorCount": 16,
+    "python": "3.14.3"
+  },
+  "protocol": {
+    "backend": "onnxruntime-cuda",
+    "device": "cuda",
+    "warmup": 5,
+    "iterations": 50,
+    "batchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "Clamp",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "pipelineTimeoutMs": 60000,
+    "sourceRevision": "c9e45a67740082e18c99c9efdff1d40008aa9af9",
+    "benchmarkAssemblySha256": "6f3426f989f9a7c95fb0e572511d05e1de17eca96ae689ad38251d30e63da3ed",
+    "selectedManifestSha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c"
+  },
+  "summary": {
+    "models": 7,
+    "expectedPages": 70,
+    "successfulPages": 70,
+    "failedPages": 0,
+    "gpuTelemetryCaptured": false
+  },
+  "models": [
+    {
+      "model": "v4-mobile",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 55.755,
+        "median": 277.78,
+        "max": 496.62,
+        "p25": 71.77475,
+        "p75": 288.22974999999997
+      },
+      "pageP95Ms": {
+        "min": 75.39,
+        "median": 314.60799999999995,
+        "max": 558.006,
+        "p25": 92.902,
+        "p75": 373.01525000000004
+      },
+      "pageMeanMs": {
+        "min": 58.704,
+        "median": 281.7495,
+        "max": 500.519,
+        "p25": 72.5625,
+        "p75": 300.83325
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 4.645,
+          "median": 10.434,
+          "max": 18.513,
+          "p25": 8.20025,
+          "p75": 11.369250000000001
+        },
+        "detection_ms": {
+          "min": 13.978,
+          "median": 19.9335,
+          "max": 22.25,
+          "p25": 18.5825,
+          "p75": 21.96375
+        },
+        "detection_inference_ms": {
+          "min": 10.666,
+          "median": 15.7105,
+          "max": 17.325,
+          "p25": 14.74075,
+          "p75": 17.2275
+        },
+        "detection_postprocess_ms": {
+          "min": 3.303,
+          "median": 4.423,
+          "max": 4.969,
+          "p25": 3.993,
+          "p75": 4.83825
+        },
+        "crop_ms": {
+          "min": 0.014,
+          "median": 0.017,
+          "max": 0.041,
+          "p25": 0.016,
+          "p75": 0.018
+        },
+        "orientation_ms": {
+          "min": 6.32,
+          "median": 95.0385,
+          "max": 162.673,
+          "p25": 7.3585,
+          "p75": 146.45925
+        },
+        "recognition_ms": {
+          "min": 16.745,
+          "median": 110.162,
+          "max": 436.575,
+          "p25": 33.154250000000005,
+          "p75": 115.4305
+        },
+        "recognition_prepare_work_ms": {
+          "min": 1.084,
+          "median": 2.687,
+          "max": 12.874,
+          "p25": 2.1785,
+          "p75": 3.0149999999999997
+        },
+        "recognition_inference_work_ms": {
+          "min": 13.479,
+          "median": 104.285,
+          "max": 408.763,
+          "p25": 27.24275,
+          "p75": 109.15575
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 2.093,
+          "median": 3.3875,
+          "max": 14.662,
+          "p25": 2.98075,
+          "p75": 5.0344999999999995
+        },
+        "merge_ms": {
+          "min": 0.01,
+          "median": 0.0125,
+          "max": 0.039,
+          "p25": 0.011,
+          "p75": 0.013
+        },
+        "total_ms": {
+          "min": 58.704,
+          "median": 281.7495,
+          "max": 500.519,
+          "p25": 72.5625,
+          "p75": 300.83325
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 16,
+          "totalMeanMs": 91.548,
+          "totalP50Ms": 90.014,
+          "totalP95Ms": 104.197,
+          "resultTextSha256": "dc623612c063fb9444f4f63a0f41068a3b25f66bb236482ac924e7a7cf8cf3b2",
+          "resultContractSha256": "1452c009756fccce7dd05e7e3d2f167b21351e5187167e634b83e54b718cfa6a"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 24,
+          "totalMeanMs": 304.883,
+          "totalP50Ms": 290.013,
+          "totalP95Ms": 385.144,
+          "resultTextSha256": "9ce990ce39c4d7b646917ddc9a615ba1423eb3750b45099efe91c35df37493c4",
+          "resultContractSha256": "cb591907523ddfb3917d2c456b8ef06eca43898fee0dca22c3d46b91e369d4ee"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 8,
+          "totalMeanMs": 58.704,
+          "totalP50Ms": 55.755,
+          "totalP95Ms": 89.137,
+          "resultTextSha256": "b98f8ac3e62f110ab23bf04c0ac8aa0f15e469c6d926c5cc1967969a688652f6",
+          "resultContractSha256": "c1a7080a17920968b1836a1c972c24cd0a4a3b3ae5a45f7a75add09dfcc4a446"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 78,
+          "totalMeanMs": 459.532,
+          "totalP50Ms": 456.65,
+          "totalP95Ms": 506.175,
+          "resultTextSha256": "d4b372eba8cb86b07a8c32d4064656437d5a2e9ab25c03cd99f889bc2ef22d7d",
+          "resultContractSha256": "3d1c0842a82506a0447933e5cd373e5af7e15737922a50335915784f4223dc9e"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 27,
+          "totalMeanMs": 283.845,
+          "totalP50Ms": 279.226,
+          "totalP95Ms": 323.174,
+          "resultTextSha256": "06f3a1b4b3b0b1167edb6bb6651105db602a083c65c29f768d264b730ccc11ba",
+          "resultContractSha256": "5d7e2970774e69f8de0d11b9db7402ecbf76b0d2781656cc8131362f7436182d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 23,
+          "totalMeanMs": 279.654,
+          "totalP50Ms": 276.334,
+          "totalP95Ms": 306.042,
+          "resultTextSha256": "0e55d3c2e127a3e145894d165ee770269c492eeb8056acddca786c958c2b2754",
+          "resultContractSha256": "77682c4de5bd7967614975b3788d0177fd88d0a8452ee8bf86d998aa5ffb1a88"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 11,
+          "totalMeanMs": 65.785,
+          "totalP50Ms": 64.233,
+          "totalP95Ms": 75.39,
+          "resultTextSha256": "d6c7c180988a1e7213dcd59813c76751823f2c8e06e3f6584ea1fe192689fe42",
+          "resultContractSha256": "876f374a23f7caa43afaf57798ed4d195a21e808c2e060a6a655da97d0682929"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 18,
+          "totalMeanMs": 288.684,
+          "totalP50Ms": 282.88,
+          "totalP95Ms": 336.629,
+          "resultTextSha256": "929e2cb3009bb7bf1baff831cc246faf94076b7c9307a4b8cb96890fbde6bbcb",
+          "resultContractSha256": "fb4a3ac4fda2da80ff4ff386fe3950704fcea145064db44ad5eca1257321c79b"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 13,
+          "totalMeanMs": 66.234,
+          "totalP50Ms": 65.695,
+          "totalP95Ms": 75.978,
+          "resultTextSha256": "7c7c284a793ab16c2cbbf8a99eb4a4e3d6c0f49cc4f623330853177986efd586",
+          "resultContractSha256": "0fea7b6184bec47675b5abd3ae68d6ed8d9f2c60dbe94e753a45225b78c6ad6e"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-mobile\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 500.519,
+          "totalP50Ms": 496.62,
+          "totalP95Ms": 558.006,
+          "resultTextSha256": "f85dd1732475abd6be5756968015c15cfe4278808f4020c498ac7decc1f6b37d",
+          "resultContractSha256": "b03f3575d5bda4e49e0b11947313a858e00dfe22daf85ac0fda1919c719ac3d9"
+        }
+      ]
+    },
+    {
+      "model": "v4-server",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 127.474,
+        "median": 415.82849999999996,
+        "max": 782.692,
+        "p25": 290.78025,
+        "p75": 473.68325
+      },
+      "pageP95Ms": {
+        "min": 137.912,
+        "median": 495.06550000000004,
+        "max": 944.024,
+        "p25": 337.78,
+        "p75": 558.05225
+      },
+      "pageMeanMs": {
+        "min": 128.342,
+        "median": 421.504,
+        "max": 802.466,
+        "p25": 297.89750000000004,
+        "p75": 481.618
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 4.346,
+          "median": 10.346499999999999,
+          "max": 18.752,
+          "p25": 8.2715,
+          "p75": 11.99725
+        },
+        "detection_ms": {
+          "min": 47.721,
+          "median": 80.8715,
+          "max": 89.502,
+          "p25": 74.021,
+          "p75": 88.5715
+        },
+        "detection_inference_ms": {
+          "min": 44.017,
+          "median": 77.035,
+          "max": 84.105,
+          "p25": 69.886,
+          "p75": 83.81299999999999
+        },
+        "detection_postprocess_ms": {
+          "min": 3.599,
+          "median": 4.1145,
+          "max": 5.501,
+          "p25": 3.82525,
+          "p75": 4.7705
+        },
+        "crop_ms": {
+          "min": 0.011,
+          "median": 0.014499999999999999,
+          "max": 0.045,
+          "p25": 0.01225,
+          "p75": 0.016
+        },
+        "orientation_ms": {
+          "min": 6.154,
+          "median": 147.7695,
+          "max": 194.24,
+          "p25": 16.643250000000002,
+          "p75": 161.4895
+        },
+        "recognition_ms": {
+          "min": 22.104,
+          "median": 184.3505,
+          "max": 704.496,
+          "p25": 170.18275,
+          "p75": 217.92025
+        },
+        "recognition_prepare_work_ms": {
+          "min": 0.849,
+          "median": 2.8695,
+          "max": 11.33,
+          "p25": 2.2177499999999997,
+          "p75": 3.47625
+        },
+        "recognition_inference_work_ms": {
+          "min": 19.469,
+          "median": 176.68099999999998,
+          "max": 678.47,
+          "p25": 163.82049999999998,
+          "p75": 210.46825
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 1.743,
+          "median": 4.1675,
+          "max": 14.418,
+          "p25": 3.79775,
+          "p75": 5.3675
+        },
+        "merge_ms": {
+          "min": 0.007,
+          "median": 0.011,
+          "max": 0.036,
+          "p25": 0.01,
+          "p75": 0.01175
+        },
+        "total_ms": {
+          "min": 128.342,
+          "median": 421.504,
+          "max": 802.466,
+          "p25": 297.89750000000004,
+          "p75": 481.618
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 24,
+          "totalMeanMs": 482.15,
+          "totalP50Ms": 470.213,
+          "totalP95Ms": 556.385,
+          "resultTextSha256": "17a072a808d198d9d3ba7b4a6fb4994f62090f4476054dee0d79b97238b60747",
+          "resultContractSha256": "0b2ee2b2bca83a52d36faaa7e3a5c73092d8d5231114a451ad254f5e1dda857a"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 14,
+          "totalMeanMs": 151.835,
+          "totalP50Ms": 151.32,
+          "totalP95Ms": 157.245,
+          "resultTextSha256": "39cbb45a624a05c3a423da45ac137a99e957da5a73faeb4889c0c7e949e11a12",
+          "resultContractSha256": "85969e0fd09481301a557693ad322fd093bee4e504ae222733a072d0da496b2e"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 17,
+          "totalMeanMs": 421.067,
+          "totalP50Ms": 416.486,
+          "totalP95Ms": 488.189,
+          "resultTextSha256": "291586f160b6335905bc4bceb7715667b466b5bc72bd5e9ddf4a88df0f6a837b",
+          "resultContractSha256": "6ffe493fbf1c504ead8b5bae1d7c6cf803a011479057075a4e48f3fd015da938"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 59,
+          "totalMeanMs": 721.781,
+          "totalP50Ms": 714.731,
+          "totalP95Ms": 845.703,
+          "resultTextSha256": "95657bc128511696c79f909229fc44ac31dca57c2d97db784e5ba454eb6a0e92",
+          "resultContractSha256": "2aca003dee59b821ab6ea64c6d1bbf67992feda4dd70ef43986a0f3bd48cdb91"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 31,
+          "totalMeanMs": 418.961,
+          "totalP50Ms": 408.741,
+          "totalP95Ms": 469.588,
+          "resultTextSha256": "17a50a8bdf2336db4bbdadabf9c65819e6d74575162beb86214052656b86d109",
+          "resultContractSha256": "aa11bbdfa261b53827c9c6ffeb4ff095ba9f652eb8b7ba53ac798bfcc78fb9fe"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 24,
+          "totalMeanMs": 480.022,
+          "totalP50Ms": 474.84,
+          "totalP95Ms": 558.608,
+          "resultTextSha256": "c45fe4c8a483317fd9fadaa7d3abc5d1546f9882e4ba1558bf7fb3bdc3d75727",
+          "resultContractSha256": "28b770c3c9e0b6a9291c76f3406e45964e4d7db752264167dd2c8eb2369fce71"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 5,
+          "totalMeanMs": 128.342,
+          "totalP50Ms": 127.474,
+          "totalP95Ms": 137.912,
+          "resultTextSha256": "199546f52c09647df95cc220a96df1d11943648ea7a08856a136a126c617a0e3",
+          "resultContractSha256": "b9927fc293eebde2335efd9e1173581c9ef1a9e217e45c6cd8055b4a876a0967"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 26,
+          "totalMeanMs": 421.941,
+          "totalP50Ms": 415.171,
+          "totalP95Ms": 501.942,
+          "resultTextSha256": "fdd9f4f009db00dcd3da685ec84fff1880dc7449927fd3f983140538f848c7b2",
+          "resultContractSha256": "f648d7214ab7b05cb750f5ae773d43dfa206d6b04c544703fb7fcef745a26b80"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 17,
+          "totalMeanMs": 257.543,
+          "totalP50Ms": 251.46,
+          "totalP95Ms": 293.844,
+          "resultTextSha256": "35981e8ede8285094fcac6645fb7a223740335bdc15299c7a3213cfdee30fa6e",
+          "resultContractSha256": "3b01759f6f7a0b0bfb5d4f627fee1c0c598cb198e9262b902e97b37d2604cb1f"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v4-server\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 802.466,
+          "totalP50Ms": 782.692,
+          "totalP95Ms": 944.024,
+          "resultTextSha256": "0a440dc71f406c8e7239a8c26e8cc73ce7528a99f91ece4cedce0acda17c966e",
+          "resultContractSha256": "4edae59c2a50d9d9bd1258c14b9be44e147b1c5d17675cb1c3ab39e9588cca55"
+        }
+      ]
+    },
+    {
+      "model": "v5-mobile",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 55.598,
+        "median": 273.575,
+        "max": 691.302,
+        "p25": 123.7125,
+        "p75": 314.02275
+      },
+      "pageP95Ms": {
+        "min": 62.102,
+        "median": 335.501,
+        "max": 806.638,
+        "p25": 149.055,
+        "p75": 408.0865
+      },
+      "pageMeanMs": {
+        "min": 55.958,
+        "median": 280.6595,
+        "max": 694.62,
+        "p25": 127.42475,
+        "p75": 320.01775
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 5.393,
+          "median": 11.895,
+          "max": 21.257,
+          "p25": 9.71925,
+          "p75": 12.44025
+        },
+        "detection_ms": {
+          "min": 14.346,
+          "median": 19.8015,
+          "max": 22.97,
+          "p25": 18.8565,
+          "p75": 21.36075
+        },
+        "detection_inference_ms": {
+          "min": 10.085,
+          "median": 15.000499999999999,
+          "max": 17.758,
+          "p25": 14.21575,
+          "p75": 16.24625
+        },
+        "detection_postprocess_ms": {
+          "min": 4.242,
+          "median": 4.799,
+          "max": 5.84,
+          "p25": 4.5714999999999995,
+          "p75": 5.1145000000000005
+        },
+        "crop_ms": {
+          "min": 0.014,
+          "median": 0.0175,
+          "max": 0.048,
+          "p25": 0.01625,
+          "p75": 0.018
+        },
+        "orientation_ms": {
+          "min": 5.167,
+          "median": 100.6645,
+          "max": 133.488,
+          "p25": 28.848999999999997,
+          "p75": 114.92675
+        },
+        "recognition_ms": {
+          "min": 18.455,
+          "median": 151.1515,
+          "max": 541.3,
+          "p25": 65.14225,
+          "p75": 165.85399999999998
+        },
+        "recognition_prepare_work_ms": {
+          "min": 1.122,
+          "median": 3.25,
+          "max": 17.343,
+          "p25": 2.414,
+          "p75": 3.64675
+        },
+        "recognition_inference_work_ms": {
+          "min": 12.974,
+          "median": 136.44,
+          "max": 480.963,
+          "p25": 53.435249999999996,
+          "p75": 149.19975
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 4.297,
+          "median": 10.6525,
+          "max": 42.662,
+          "p25": 8.58775,
+          "p75": 13.53025
+        },
+        "merge_ms": {
+          "min": 0.011,
+          "median": 0.013,
+          "max": 0.045,
+          "p25": 0.012,
+          "p75": 0.015
+        },
+        "total_ms": {
+          "min": 55.958,
+          "median": 280.6595,
+          "max": 694.62,
+          "p25": 127.42475,
+          "p75": 320.01775
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 21,
+          "totalMeanMs": 332.276,
+          "totalP50Ms": 324.103,
+          "totalP95Ms": 428.751,
+          "resultTextSha256": "0b7d0353519cd799ef7ced5b1a49d2c33905af88086f5d41b3efa87aba860c07",
+          "resultContractSha256": "b29f8ceb0a421160167d8c857a17b85e555ad4eae631b4e937f66d637f70fbff"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 31,
+          "totalMeanMs": 281.001,
+          "totalP50Ms": 278.08,
+          "totalP95Ms": 328.353,
+          "resultTextSha256": "10fc5a2e4dffabfd87e911fcaa28094b6a5be155c4ed98e705645bda1243175c",
+          "resultContractSha256": "88541f666ca178b05912ae4d0e5c6d470008d35c3cd6049d973f288fd31373d5"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 8,
+          "totalMeanMs": 61.616,
+          "totalP50Ms": 60.121,
+          "totalP95Ms": 75.975,
+          "resultTextSha256": "916eb4b611abf47b774a44b5ca6ce62221a331b36e0ca78dd57ff311ca2df180",
+          "resultContractSha256": "51b1f8d7052b387a70a5695f8976ed687bbe6840c583b35c65cf7f7bf96c613c"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 102,
+          "totalMeanMs": 624.175,
+          "totalP50Ms": 599.962,
+          "totalP95Ms": 758.501,
+          "resultTextSha256": "27b4138956cf42d1fbc4747ce2f7eaa536fdf12588a4241844f5adada86a5b2f",
+          "resultContractSha256": "9b9ae9535819769d5a54c195f3102ebaa24d5cd9f56177acf485c745ed834b6a"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 29,
+          "totalMeanMs": 274.349,
+          "totalP50Ms": 264.951,
+          "totalP95Ms": 341.944,
+          "resultTextSha256": "9cdeed9465458671a1d0ba95d08a253dbf15bca7db7f453331acc9818de4dfc7",
+          "resultContractSha256": "1935ed44c1f26a1662268b36b432e89c35ff3e508c130de0b5fc6a891175f145"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 24,
+          "totalMeanMs": 280.318,
+          "totalP50Ms": 269.07,
+          "totalP95Ms": 346.093,
+          "resultTextSha256": "7eb7644ab51cd7f3ef9cd013b46bca2ff9419358c522c8b9519f4ec88f89eaf5",
+          "resultContractSha256": "a6edeb8fca2134346754d91d5e6996215e3be3cdbb1086f517335b1a4c1d1765"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 5,
+          "totalMeanMs": 55.958,
+          "totalP50Ms": 55.598,
+          "totalP95Ms": 62.102,
+          "resultTextSha256": "0802d55f6cc269332c7f6df85098aea4cfeb93e9cad4fd8105f8ad0c75ea42b3",
+          "resultContractSha256": "ae36a1d6c6e79d149907055a7178ab6922ca905a679fdc5d4c95e0372bd2ee1d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 18,
+          "totalMeanMs": 283.243,
+          "totalP50Ms": 283.782,
+          "totalP95Ms": 329.058,
+          "resultTextSha256": "0ae98535970bbbcf2c26adf5a16463627e245903aa2162c59b84d6e24187efc6",
+          "resultContractSha256": "aa53155c9da4828274c0e498b64aeb57206ff23385418e0872d790e5470bf0de"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 12,
+          "totalMeanMs": 78.45,
+          "totalP50Ms": 76.633,
+          "totalP95Ms": 89.289,
+          "resultTextSha256": "50b41e243865bdf4c2b30e0965b681a4f684be6fc6fda8484dbd9fe957897a3f",
+          "resultContractSha256": "f35bd90318c929ce6eb63949fb01990717b2df3bc9c3d3cc00a1a6bd21e0c063"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-mobile\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 694.62,
+          "totalP50Ms": 691.302,
+          "totalP95Ms": 806.638,
+          "resultTextSha256": "7d01b5869ec607a9ea2c03b33053218ee0b059b755370a86c9fb1765ba66c7b5",
+          "resultContractSha256": "459b6ab9a0805023266c739ccea547d11681843e9d3630f95c3bc268f3975d0a"
+        }
+      ]
+    },
+    {
+      "model": "v5-server",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 117.275,
+        "median": 474.6735,
+        "max": 1340.753,
+        "p25": 370.2505,
+        "p75": 508.78975
+      },
+      "pageP95Ms": {
+        "min": 127.827,
+        "median": 567.2125,
+        "max": 1542.102,
+        "p25": 438.01125,
+        "p75": 732.8597500000001
+      },
+      "pageMeanMs": {
+        "min": 117.62,
+        "median": 491.092,
+        "max": 1360.271,
+        "p25": 375.1985,
+        "p75": 534.867
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 4.878,
+          "median": 11.184000000000001,
+          "max": 18.413,
+          "p25": 9.3445,
+          "p75": 11.92075
+        },
+        "detection_ms": {
+          "min": 39.847,
+          "median": 68.6395,
+          "max": 73.73,
+          "p25": 64.15575,
+          "p75": 70.04625
+        },
+        "detection_inference_ms": {
+          "min": 36.415,
+          "median": 64.1395,
+          "max": 68.4,
+          "p25": 60.21725,
+          "p75": 65.39824999999999
+        },
+        "detection_postprocess_ms": {
+          "min": 3.422,
+          "median": 4.4555,
+          "max": 5.306,
+          "p25": 4.2059999999999995,
+          "p75": 4.75175
+        },
+        "crop_ms": {
+          "min": 0.01,
+          "median": 0.0155,
+          "max": 0.043,
+          "p25": 0.013,
+          "p75": 0.017
+        },
+        "orientation_ms": {
+          "min": 5.888,
+          "median": 79.368,
+          "max": 114.338,
+          "p25": 22.352,
+          "p75": 100.5975
+        },
+        "recognition_ms": {
+          "min": 30.211,
+          "median": 313.07349999999997,
+          "max": 1237.109,
+          "p25": 269.40774999999996,
+          "p75": 340.06875
+        },
+        "recognition_prepare_work_ms": {
+          "min": 1.222,
+          "median": 3.5404999999999998,
+          "max": 16.646,
+          "p25": 2.69525,
+          "p75": 4.1297500000000005
+        },
+        "recognition_inference_work_ms": {
+          "min": 23.332,
+          "median": 299.30600000000004,
+          "max": 1176.549,
+          "p25": 254.86975,
+          "p75": 323.722
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 5.61,
+          "median": 11.5175,
+          "max": 43.612,
+          "p25": 8.052,
+          "p75": 13.80875
+        },
+        "merge_ms": {
+          "min": 0.008,
+          "median": 0.0115,
+          "max": 0.042,
+          "p25": 0.01,
+          "p75": 0.01275
+        },
+        "total_ms": {
+          "min": 117.62,
+          "median": 491.092,
+          "max": 1360.271,
+          "p25": 375.1985,
+          "p75": 534.867
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 23,
+          "totalMeanMs": 436.481,
+          "totalP50Ms": 424.426,
+          "totalP95Ms": 527.061,
+          "resultTextSha256": "4430269b2f1a57bb5fb44e7e61e4bb3663ec03def7099bc1be3fd1d6838597ea",
+          "resultContractSha256": "56d0f35c9c5666d19aaf7870e81fceb93615842486812c6851ca155b2ac195e5"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 20,
+          "totalMeanMs": 338.369,
+          "totalP50Ms": 336.041,
+          "totalP95Ms": 367.206,
+          "resultTextSha256": "cd46db170d46f8e5745b9b458a11d48478a67a2602caafa0f170954843063c4f",
+          "resultContractSha256": "c62eb65dbf681aaecf20501fda379aa97a9a0f4248066d1c20bdce45a4d1351b"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 23,
+          "totalMeanMs": 545.286,
+          "totalP50Ms": 513.07,
+          "totalP95Ms": 715.12,
+          "resultTextSha256": "ad7872d58e95147e88e433c4facb858baf222a9bada72975abc7a5e395c899ca",
+          "resultContractSha256": "4c879b619b56a364f95ca68f411f45446fc2c74d511ddcc8430de0b418d1e37c"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 106,
+          "totalMeanMs": 1133.769,
+          "totalP50Ms": 1118.63,
+          "totalP95Ms": 1274.71,
+          "resultTextSha256": "c5cf9ea82969c7bb3511d4865a08da2193dfac4f533f20f05c03d9ea95e0da5b",
+          "resultContractSha256": "5a900201d826ba3541d4bbc4f8a989f0abf4575655bac6363735c2412e47896c"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 31,
+          "totalMeanMs": 486.811,
+          "totalP50Ms": 476.851,
+          "totalP95Ms": 559.257,
+          "resultTextSha256": "b314a0d7c6b07f55efc0c1afdf4b5780871d3f9b434b75cd69c48973b120a2d6",
+          "resultContractSha256": "fda44214fb040cbc287f0089b87e869649a4a1af1e03c95533a71ffd886e637f"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 19,
+          "totalMeanMs": 354.771,
+          "totalP50Ms": 352.192,
+          "totalP95Ms": 408.328,
+          "resultTextSha256": "e1288909b80ed9536d26dec65d46b2a37f6e38145a787e4d7031091320ffbae9",
+          "resultContractSha256": "6476b7de945b467b9924022bf07d38167c2e8e2a7f2c9e985ed5d9cfb6e32b4f"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 7,
+          "totalMeanMs": 117.62,
+          "totalP50Ms": 117.275,
+          "totalP95Ms": 127.827,
+          "resultTextSha256": "20f4ed722085dd0a81136fb4dccef57ee69b986c6669dfe1d3c85ac01fbfd0fd",
+          "resultContractSha256": "dd8cbd87b75d9fb5111b38d734fe14b8428ae47cff832f34e60fafb2ab2d86aa"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 26,
+          "totalMeanMs": 503.61,
+          "totalP50Ms": 472.496,
+          "totalP95Ms": 738.773,
+          "resultTextSha256": "32dd61cfcb582ad2273dcb80806a499c8bdd7aaab5f9bc46431dd60c636d6f33",
+          "resultContractSha256": "e8727b8b7772a90c464482d7cbfa50a503d6f856a238e989a6c4bc426abff69f"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 21,
+          "totalMeanMs": 495.373,
+          "totalP50Ms": 495.949,
+          "totalP95Ms": 575.168,
+          "resultTextSha256": "980f8daa6bbd0ce4b37e3e5e982c83062115a2c6ca253efc22a2093fb4b47e43",
+          "resultContractSha256": "be0001e67e5a2fce2bc89a58ab45e78f3c86fa1a45cb9afc2f97518d8ed06b0c"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v5-server\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 1360.271,
+          "totalP50Ms": 1340.753,
+          "totalP95Ms": 1542.102,
+          "resultTextSha256": "f8b691c76590d80488c9914c51ba5afa3d0f51a60c9f690737619809d22c0f6a",
+          "resultContractSha256": "5317882eae86e11a68c4e2663a803bf56d229b0a96da8519a2d5b5b2eef43b67"
+        }
+      ]
+    },
+    {
+      "model": "v6-medium",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 90.581,
+        "median": 357.2655,
+        "max": 851.669,
+        "p25": 285.621,
+        "p75": 379.13800000000003
+      },
+      "pageP95Ms": {
+        "min": 157.257,
+        "median": 552.139,
+        "max": 1253.631,
+        "p25": 400.58625,
+        "p75": 628.21275
+      },
+      "pageMeanMs": {
+        "min": 97.823,
+        "median": 384.644,
+        "max": 875.593,
+        "p25": 298.11,
+        "p75": 405.46950000000004
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 5.885,
+          "median": 13.1395,
+          "max": 24.95,
+          "p25": 9.889,
+          "p75": 15.44875
+        },
+        "detection_ms": {
+          "min": 30.575,
+          "median": 49.354,
+          "max": 57.474,
+          "p25": 47.318,
+          "p75": 53.50725
+        },
+        "detection_inference_ms": {
+          "min": 26.424,
+          "median": 44.055,
+          "max": 50.969,
+          "p25": 42.80375,
+          "p75": 48.173
+        },
+        "detection_postprocess_ms": {
+          "min": 4.11,
+          "median": 4.7225,
+          "max": 6.487,
+          "p25": 4.4755,
+          "p75": 5.7135
+        },
+        "crop_ms": {
+          "min": 0.015,
+          "median": 0.02,
+          "max": 0.053,
+          "p25": 0.0165,
+          "p75": 0.02075
+        },
+        "orientation_ms": {
+          "min": 0.0,
+          "median": 0.0,
+          "max": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "recognition_ms": {
+          "min": 29.628,
+          "median": 309.2415,
+          "max": 839.043,
+          "p25": 235.47199999999998,
+          "p75": 344.15299999999996
+        },
+        "recognition_prepare_work_ms": {
+          "min": 1.405,
+          "median": 3.818,
+          "max": 16.021,
+          "p25": 3.51275,
+          "p75": 5.952
+        },
+        "recognition_inference_work_ms": {
+          "min": 20.596,
+          "median": 287.062,
+          "max": 773.153,
+          "p25": 220.2475,
+          "p75": 321.93525
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 7.557,
+          "median": 13.367,
+          "max": 49.529,
+          "p25": 11.0295,
+          "p75": 20.111
+        },
+        "merge_ms": {
+          "min": 0.01,
+          "median": 0.013999999999999999,
+          "max": 0.044,
+          "p25": 0.01125,
+          "p75": 0.01825
+        },
+        "total_ms": {
+          "min": 97.823,
+          "median": 384.644,
+          "max": 875.593,
+          "p25": 298.11,
+          "p75": 405.46950000000004
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 26,
+          "totalMeanMs": 388.095,
+          "totalP50Ms": 370.055,
+          "totalP95Ms": 576.552,
+          "resultTextSha256": "768d1d2bfee676153ebc18a947937fa6fa5bc1530c2904b17fc47488f046abfe",
+          "resultContractSha256": "2aeb779f7b27595536135b01a561b4d52c8da5a0877473108a10f44fbdbf00bf"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 23,
+          "totalMeanMs": 381.574,
+          "totalP50Ms": 344.476,
+          "totalP95Ms": 549.638,
+          "resultTextSha256": "2b9f9fcdaf0b468b39bc662c85d730072778c370e053e03944b6a2950bca1819",
+          "resultContractSha256": "50813f6d109d62cad5abc8c1d3543a65e49b8304700a2bf1d90f251aa9e18b24"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 24,
+          "totalMeanMs": 290.372,
+          "totalP50Ms": 281.303,
+          "totalP95Ms": 364.014,
+          "resultTextSha256": "d7123e2859da521072dac0c5e169f5031fbb57e59ce1d7094786680b5446c670",
+          "resultContractSha256": "001ad25a951d3585b959024d12f5536b3a738aa1c16a783c40f0fe55afeb8a6e"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 112,
+          "totalMeanMs": 850.713,
+          "totalP50Ms": 790.746,
+          "totalP95Ms": 1253.631,
+          "resultTextSha256": "23fab64df65af2eac761ac54c5d6f79bbbdbaf510f4c923c8ccf67bb720653ca",
+          "resultContractSha256": "f742fcd009ca9e1d78f1c85fe232aef9d129b2dedf8bc34013e8fe26987bb5a3"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 33,
+          "totalMeanMs": 387.714,
+          "totalP50Ms": 376.858,
+          "totalP95Ms": 510.303,
+          "resultTextSha256": "5f9cdd082f3ed8574cc2c20ee6b36783c839b9329b9087d395f62a675d4eaea9",
+          "resultContractSha256": "caf972833746aed4c44a2928e18c7ec5f4f726446cafffc4de7a15e4726127df"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 23,
+          "totalMeanMs": 321.324,
+          "totalP50Ms": 298.575,
+          "totalP95Ms": 554.64,
+          "resultTextSha256": "675dd4133018e81ce21ce9c414421c976dc17e433d8daf0fb0c7a7273a9a604b",
+          "resultContractSha256": "388106c2bab2b2f6b22b9bff12ddc8bd16f6b650155f83c3bf2c03a07f56bd9b"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 6,
+          "totalMeanMs": 97.823,
+          "totalP50Ms": 90.581,
+          "totalP95Ms": 157.257,
+          "resultTextSha256": "68f866b62bd422c12c38efd6b2a7a5ef1e941f916b91faef56ca486c96cdb3e8",
+          "resultContractSha256": "7efffa5576b998c8be2f932c50f30d49747b5c80fcb03738027cd1350b1531a8"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 35,
+          "totalMeanMs": 411.261,
+          "totalP50Ms": 379.898,
+          "totalP95Ms": 645.433,
+          "resultTextSha256": "452c9198cc87b82243cc2fa1313e572f296865e7c40526099db0acd4a324295f",
+          "resultContractSha256": "8a803b1237effe3cebe4f763f6eb83a5db0f240a56d88f7df092c28594c70dfd"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 21,
+          "totalMeanMs": 278.202,
+          "totalP50Ms": 274.913,
+          "totalP95Ms": 327.147,
+          "resultTextSha256": "09b58754c7d23483b1af0e6e64f5941adea3dc08800634510cb0edd1a3f357d9",
+          "resultContractSha256": "dba89684dd4967fbdbdd92808f214b010e6c82aeb8728a1e3e02a09f51be9e3d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-medium\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 875.593,
+          "totalP50Ms": 851.669,
+          "totalP95Ms": 1139.621,
+          "resultTextSha256": "05b94d0156aa87a93e95cd97e40f15e9b7a0154adb98a1f460087a064d969f3c",
+          "resultContractSha256": "51cda19780a25ab658247080c9ec2e8a9f4616d19e309ff2de7e9ced954a1200"
+        }
+      ]
+    },
+    {
+      "model": "v6-small",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 49.704,
+        "median": 237.3235,
+        "max": 790.159,
+        "p25": 218.53375,
+        "p75": 301.8245
+      },
+      "pageP95Ms": {
+        "min": 57.544,
+        "median": 286.466,
+        "max": 1073.948,
+        "p25": 272.27475,
+        "p75": 390.431
+      },
+      "pageMeanMs": {
+        "min": 50.101,
+        "median": 242.2835,
+        "max": 828.085,
+        "p25": 225.394,
+        "p75": 319.806
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 5.787,
+          "median": 11.2015,
+          "max": 25.188,
+          "p25": 8.96225,
+          "p75": 13.2095
+        },
+        "detection_ms": {
+          "min": 14.203,
+          "median": 20.374499999999998,
+          "max": 23.503,
+          "p25": 18.72925,
+          "p75": 22.91075
+        },
+        "detection_inference_ms": {
+          "min": 10.133,
+          "median": 15.890500000000001,
+          "max": 17.341,
+          "p25": 14.306000000000001,
+          "p75": 16.883
+        },
+        "detection_postprocess_ms": {
+          "min": 4.057,
+          "median": 4.515000000000001,
+          "max": 6.481,
+          "p25": 4.33625,
+          "p75": 5.80825
+        },
+        "crop_ms": {
+          "min": 0.015,
+          "median": 0.018,
+          "max": 0.049,
+          "p25": 0.017,
+          "p75": 0.01975
+        },
+        "orientation_ms": {
+          "min": 0.0,
+          "median": 0.0,
+          "max": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "recognition_ms": {
+          "min": 12.314,
+          "median": 209.8265,
+          "max": 807.999,
+          "p25": 198.25225,
+          "p75": 274.1175
+        },
+        "recognition_prepare_work_ms": {
+          "min": 0.984,
+          "median": 3.1235,
+          "max": 19.268,
+          "p25": 2.958,
+          "p75": 4.1217500000000005
+        },
+        "recognition_inference_work_ms": {
+          "min": 9.1,
+          "median": 191.0155,
+          "max": 739.704,
+          "p25": 185.7765,
+          "p75": 251.95850000000002
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 2.154,
+          "median": 12.7075,
+          "max": 48.671,
+          "p25": 9.54575,
+          "p75": 20.7035
+        },
+        "merge_ms": {
+          "min": 0.011,
+          "median": 0.012,
+          "max": 0.047,
+          "p25": 0.012,
+          "p75": 0.016999999999999998
+        },
+        "total_ms": {
+          "min": 50.101,
+          "median": 242.2835,
+          "max": 828.085,
+          "p25": 225.394,
+          "p75": 319.806
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 27,
+          "totalMeanMs": 333.904,
+          "totalP50Ms": 310.188,
+          "totalP95Ms": 432.828,
+          "resultTextSha256": "629ff3fea07f4d1301dd2162b499f75a7c8434276be34f7f83592d89aaa2742a",
+          "resultContractSha256": "3446eb5fced23ed6f3f4233181378990ea27b35224c2ecf6bc803f10015eb872"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 17,
+          "totalMeanMs": 277.512,
+          "totalP50Ms": 276.734,
+          "totalP95Ms": 330.167,
+          "resultTextSha256": "cae06da899f52ed834cc142ad4f2f6a83be3b88e5af545d37adc34821c73a3e0",
+          "resultContractSha256": "aff849bd8f47a0cebfec2300affcc5107e80a353db062ca167ace90137e87785"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 28,
+          "totalMeanMs": 235.527,
+          "totalP50Ms": 228.601,
+          "totalP95Ms": 280.343,
+          "resultTextSha256": "3f080b1942604ca035535d0a12740661da848ec73941a709c6e8188fec7a2be5",
+          "resultContractSha256": "7ee0a9c5c7a09f3cd8890726ad95fb87fc1294d0b744e73ef93054a9311f5f0d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 64,
+          "totalMeanMs": 361.786,
+          "totalP50Ms": 357.683,
+          "totalP95Ms": 410.519,
+          "resultTextSha256": "e89a8c8e60eb637cd4fa61269a8555d349bd63fcdbd081735b01a1f2e95340f5",
+          "resultContractSha256": "ea3d38094d7f07c95872e95fa34fa106f8ca5dfdc8748451f5639f22d0d9c0f8"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 32,
+          "totalMeanMs": 197.62,
+          "totalP50Ms": 195.25,
+          "totalP95Ms": 231.504,
+          "resultTextSha256": "b2d1b79333dc861c6cef93bed9a48377f2f08fdd868cacb4def0a2c542c8014a",
+          "resultContractSha256": "d20caa11b8ec2b8f5e1a6c543214062444c00767a43b09b1e4b8f8371c140b3d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 24,
+          "totalMeanMs": 223.087,
+          "totalP50Ms": 215.748,
+          "totalP95Ms": 274.512,
+          "resultTextSha256": "91bb38b282a37d1816e162384291aaedf21ed49f932ac8f7ecfb383b0335ef6a",
+          "resultContractSha256": "2ebe06ee79c89eb1788f9dc036179bc39fbddcaf1f4b8908fb2857774a136ef2"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 3,
+          "totalMeanMs": 50.101,
+          "totalP50Ms": 49.704,
+          "totalP95Ms": 57.544,
+          "resultTextSha256": "cc7d4d6ca23b107ff8ad7f595c5aa4364cb5afae29cbc479dd5721355a1b57a6",
+          "resultContractSha256": "ddde2420da11e75b480da432998c36e820d14cb2ce757f34916dbf45b01a41a1"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 26,
+          "totalMeanMs": 249.04,
+          "totalP50Ms": 246.046,
+          "totalP95Ms": 292.589,
+          "resultTextSha256": "aa50c43ee4f2707ca7126592c79892d37803ab8c86cd5157ef1aa0fa809dbff3",
+          "resultContractSha256": "3a2e4d05fa3e44755db52ade2966c9099f13ad06fdd7dd06cb4f4949cdce2ed9"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 18,
+          "totalMeanMs": 232.315,
+          "totalP50Ms": 226.891,
+          "totalP95Ms": 271.529,
+          "resultTextSha256": "fa44cb1ca018afb0233be00e53e4bff12da49f8bbc4d18c92930631c8e4c5485",
+          "resultContractSha256": "a0fe06445a9ce443132feea325ab6de2e7c9666541d5f37f4c235c25eb6d80b7"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-small\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 828.085,
+          "totalP50Ms": 790.159,
+          "totalP95Ms": 1073.948,
+          "resultTextSha256": "0a661d6693cd4455a3681d0494bd99a1bc27efeff1764e6ce244fe062487fba5",
+          "resultContractSha256": "b2a7e145cf587776f12db996b88f9a42338692fa47407c3d296b27d117702db9"
+        }
+      ]
+    },
+    {
+      "model": "v6-tiny",
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny",
+      "pageCount": 10,
+      "successfulPages": 10,
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "batchSize": 16,
+      "inferenceChannels": 1,
+      "warmup": 5,
+      "iterations": 50,
+      "pageP50Ms": {
+        "min": 37.723,
+        "median": 136.051,
+        "max": 419.655,
+        "p25": 47.736999999999995,
+        "p75": 156.825
+      },
+      "pageP95Ms": {
+        "min": 43.579,
+        "median": 175.3125,
+        "max": 575.723,
+        "p25": 67.49175,
+        "p75": 194.41225
+      },
+      "pageMeanMs": {
+        "min": 38.18,
+        "median": 139.9755,
+        "max": 435.673,
+        "p25": 49.663,
+        "p75": 157.4945
+      },
+      "stagesMs": {
+        "preprocess_ms": {
+          "min": 4.913,
+          "median": 10.3595,
+          "max": 20.357,
+          "p25": 8.153500000000001,
+          "p75": 12.78575
+        },
+        "detection_ms": {
+          "min": 12.505,
+          "median": 15.8095,
+          "max": 19.292,
+          "p25": 15.14375,
+          "p75": 17.320749999999997
+        },
+        "detection_inference_ms": {
+          "min": 8.644,
+          "median": 11.4405,
+          "max": 12.506,
+          "p25": 10.897749999999998,
+          "p75": 12.217
+        },
+        "detection_postprocess_ms": {
+          "min": 3.848,
+          "median": 4.4915,
+          "max": 6.75,
+          "p25": 4.11925,
+          "p75": 5.078
+        },
+        "crop_ms": {
+          "min": 0.015,
+          "median": 0.0205,
+          "max": 0.048,
+          "p25": 0.0175,
+          "p75": 0.02675
+        },
+        "orientation_ms": {
+          "min": 0.0,
+          "median": 0.0,
+          "max": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "recognition_ms": {
+          "min": 11.846,
+          "median": 117.8325,
+          "max": 418.165,
+          "p25": 16.89825,
+          "p75": 129.804
+        },
+        "recognition_prepare_work_ms": {
+          "min": 1.843,
+          "median": 2.9835000000000003,
+          "max": 12.735,
+          "p25": 2.7584999999999997,
+          "p75": 3.10025
+        },
+        "recognition_inference_work_ms": {
+          "min": 6.902,
+          "median": 111.3335,
+          "max": 388.423,
+          "p25": 8.56375,
+          "p75": 123.44825
+        },
+        "recognition_postprocess_work_ms": {
+          "min": 2.543,
+          "median": 3.8064999999999998,
+          "max": 16.645,
+          "p25": 3.38475,
+          "p75": 4.849
+        },
+        "merge_ms": {
+          "min": 0.01,
+          "median": 0.015,
+          "max": 0.043,
+          "p25": 0.01125,
+          "p75": 0.017
+        },
+        "total_ms": {
+          "min": 38.18,
+          "median": 139.9755,
+          "max": 435.673,
+          "p25": 49.663,
+          "p75": 157.4945
+        }
+      },
+      "pageRows": [
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-41ec68d29b5f5db0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\41ec68d29b5f5db0.jpg",
+          "regions": 15,
+          "totalMeanMs": 57.388,
+          "totalP50Ms": 56.695,
+          "totalP95Ms": 64.286,
+          "resultTextSha256": "be87fa4bcd3eec69a9099c7a3dde4c904022d7375bfad64be3ce7b71fd1f125c",
+          "resultContractSha256": "69ea4342bc65e54c429deb317739a1a6284f40e411f9f5da5acc446df13a53e9"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-507f4f0db1f4fed7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\507f4f0db1f4fed7.jpg",
+          "regions": 16,
+          "totalMeanMs": 46.006,
+          "totalP50Ms": 44.751,
+          "totalP95Ms": 55.006,
+          "resultTextSha256": "fd5feda011b6e43eebb34055648f19c2ae702a05dff82061210ae36c6bbc7e1c",
+          "resultContractSha256": "00df5de882543cfbf2f5431caf749482bd4c0f7769afad5bf52d013e0382c6ef"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-5c4d5de59518fe4d.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\5c4d5de59518fe4d.jpg",
+          "regions": 12,
+          "totalMeanMs": 38.18,
+          "totalP50Ms": 37.723,
+          "totalP95Ms": 43.579,
+          "resultTextSha256": "8e0d017562da59cc7ac0e2bea16cbb3b8d617739dfd005bded9eb1ade64f73c9",
+          "resultContractSha256": "85d86a0374ab1c29d2c940a057a51525248f11e0da88f341404369e00848041d"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-975414ca1e6b155c.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\975414ca1e6b155c.jpg",
+          "regions": 36,
+          "totalMeanMs": 197.136,
+          "totalP50Ms": 189.882,
+          "totalP95Ms": 244.394,
+          "resultTextSha256": "2fbabb57a86bd43895f3c693ab04de076068a4c7b95f52077b41211ca51b5ef9",
+          "resultContractSha256": "93ef0d3d79a258909b58f24468a74207f38f2b27f749e5871f5a836eb1072dec"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-97a0add3f8f47b65.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+          "regions": 22,
+          "totalMeanMs": 140.002,
+          "totalP50Ms": 136.681,
+          "totalP95Ms": 177.355,
+          "resultTextSha256": "a1a1e41037258dd64d4e9dd5c7e311a397fcfa28ee3eba6908791ac0a9ff5737",
+          "resultContractSha256": "2e00eb54c132431f740b9800c41d83a9abd44409e04423c4ef1cdc6d6b6528fb"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-ab6fb759938e462b.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\ab6fb759938e462b.jpg",
+          "regions": 25,
+          "totalMeanMs": 139.949,
+          "totalP50Ms": 135.421,
+          "totalP95Ms": 173.27,
+          "resultTextSha256": "42881939ddc91da8a52a3e702f036120500ac782b9bd036962e10910a1c231fc",
+          "resultContractSha256": "8081b58106c9f2fb118d97ce8292febec702d64066fc0807adc392dfa7bae310"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-c4c9ba09a6640ad0.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c4c9ba09a6640ad0.jpg",
+          "regions": 16,
+          "totalMeanMs": 47.088,
+          "totalP50Ms": 43.913,
+          "totalP95Ms": 77.109,
+          "resultTextSha256": "711e11cd2279a47a6d767803a272bb1fe48a15ac9f53472b7ee69fb897ab35e8",
+          "resultContractSha256": "b9fb1507a3889786f89019bf65ea8b5a1c29610d99cbcbbe049fa711f26f4c2c"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-c9ecf7b1e970a65a.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\c9ecf7b1e970a65a.jpg",
+          "regions": 23,
+          "totalMeanMs": 160.291,
+          "totalP50Ms": 160.587,
+          "totalP95Ms": 195.986,
+          "resultTextSha256": "7b2ef23051886201eba903c33fd462c4ef50cd70e902323dd555f729bad2f189",
+          "resultContractSha256": "6b5d3f0bd0bb86eca60b06da836842a12f53deeb26a09d3b207898dc46bcc5a8"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-d14658b78cec2cf7.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\d14658b78cec2cf7.jpg",
+          "regions": 14,
+          "totalMeanMs": 149.105,
+          "totalP50Ms": 145.539,
+          "totalP95Ms": 189.691,
+          "resultTextSha256": "218c1fdb88959df8f08fd4444bc8f5aa7ade00695491c7623a0186b14789cb0a",
+          "resultContractSha256": "35b21ade8ce8bf5d0900a3408ced3a9513a3e42384aefac59b4780ddfebf52e6"
+        },
+        {
+          "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-seven-models-performance-sample-002-20261008\\v6-tiny\\csv\\hiertext-validation-e8987917745126f6.csv",
+          "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e8987917745126f6.jpg",
+          "regions": 128,
+          "totalMeanMs": 435.673,
+          "totalP50Ms": 419.655,
+          "totalP95Ms": 575.723,
+          "resultTextSha256": "84a0b640c943d566b4b78513f882a8ef46f2a34295dbd32ee4ecdc6e268840c2",
+          "resultContractSha256": "f8309fca4da5257eaa11012ca5402ef7f673a49075085ae2104ecf12fe63034d"
+        }
+      ]
+    }
+  ]
+}
