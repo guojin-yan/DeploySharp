@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "scope": "PP-OCRv6 Tiny complete-pipeline ORT CUDA dependency and execution smoke",
+  "status": "passed_after_cuda_loader_fix",
+  "sourceRevision": "03c8830388c5552b713467929a5aa7d734b5a0d6",
+  "sourceWorkingTreeDirty": true,
+  "sourceWorkingTreeStatusSha256": "50ad2685406aaf57aff2fd37331d2179ed2170e7d531efd2e622e400c63081d7",
+  "benchmarkAssemblySha256": "9d575bb667f4a360cca8b19408aa8fa0372a583ac33bb4118bd8c26034dcc307",
+  "machine": {
+    "name": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "processorCount": 16,
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "576.02",
+    "cuda": "12.9",
+    "cudnn": "9.2.0.82",
+    "observedPstate": "P0",
+    "observedGpuClockMHz": 1425,
+    "observedMemoryClockMHz": 7000,
+    "observedGpuUtilizationPercent": 3,
+    "observedMemoryUsedMiB": 1650,
+    "memoryTotalMiB": 6144
+  },
+  "dataset": {
+    "source": "google-research-datasets/HierText",
+    "sourceRevision": "70b6620b2b112597d8219e11eee9773a1403827c",
+    "sourceManifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+    "selectedManifestSha256": "3733777cd67cc48acb50d7c8d21f961465203ea1f86ad331f063a1494975d858",
+    "imageId": "hiertext-validation-5c4d5de59518fe4d",
+    "imageSha256": "ff72c2547e08783ceda36401a9a4482f387f148aea30065eff16e7a65306d82f",
+    "licenseBoundary": "Local smoke only; no image, annotation or prediction is redistributed."
+  },
+  "model": {
+    "version": "v6",
+    "variant": "tiny",
+    "detectorSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+    "recognizerSha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+    "classifier": null
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> rec -> merge",
+    "backend": "onnxruntime-cuda",
+    "device": "cuda",
+    "runnerWarmupPerPage": 0,
+    "measuredIterationsPerPage": 1,
+    "recognitionBatchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "Clamp",
+    "pageTimeoutMs": 60000,
+    "benchmarkEnvironmentWarmup": 3,
+    "note": "The runner metadata requested zero warm-ups while the benchmark environment subrecord retained its internal default of three. This is a functional smoke, not a formal performance run."
+  },
+  "cudaLoaderFix": {
+    "before": {
+      "status": "failed",
+      "error": "ONNX Runtime provider load reported missing cublasLt64_12.dll (Win32 error 126) even though the CUDA DLL existed on disk."
+    },
+    "after": {
+      "status": "passed",
+      "change": "Register CUDA_PATH\bin, explicit DEPLOYSHARP_ONNXRUNTIME_CUDA_DLL_DIRECTORIES entries and PATH entries containing cudnn64_8.dll or cudnn64_9.dll with Windows AddDllDirectory before ORT provider creation.",
+      "dependencyDirectories": [
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9\\bin",
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.6\\bin"
+      ]
+    }
+  },
+  "result": {
+    "pages": 1,
+    "failures": 0,
+    "emptyOutputs": 0,
+    "regions": 12,
+    "preprocessMs": 40.395,
+    "detectionMs": 14.97,
+    "recognitionMs": 11.791,
+    "totalMs": 67.194,
+    "resultTextSha256": "8e0d017562da59cc7ac0e2bea16cbb3b8d617739dfd005bded9eb1ade64f73c9",
+    "resultContractSha256": "85d86a0374ab1c29d2c940a057a51525248f11e0da88f341404369e00848041d"
+  },
+  "cpuReference": {
+    "backend": "onnxruntime",
+    "sameImage": true,
+    "sameModel": true,
+    "sameRecognitionBatch": true,
+    "resultTextSha256": "8e0d017562da59cc7ac0e2bea16cbb3b8d617739dfd005bded9eb1ade64f73c9",
+    "textShaMatch": true,
+    "note": "The contract hash includes backend/runtime fields and is not expected to match across providers."
+  },
+  "boundaries": [
+    "One page and one model only.",
+    "No CUDA multi-page quality score, 5/50 performance result, or TensorRT evidence is implied.",
+    "The GPU was not reserved; this run is functional evidence, not a speed limit or ranking."
+  ]
+}

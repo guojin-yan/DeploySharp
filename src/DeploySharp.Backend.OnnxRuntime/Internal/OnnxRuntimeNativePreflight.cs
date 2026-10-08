@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Models;
 
@@ -10,6 +11,9 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime.Internal
     internal static class OnnxRuntimeNativePreflight
     {
         private static readonly object LoadSync = new object();
+        private static readonly object CudaDirectorySync = new object();
+        private static readonly HashSet<string> RegisteredCudaDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<IntPtr> CudaDirectoryCookies = new List<IntPtr>();
         private static IntPtr _nativeHandle;
         private static string? _nativePath;
 
@@ -75,6 +79,67 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime.Internal
             // Check presence here; session creation performs the authoritative
             // dependency check and preserves ORT's native error details.
         }
+
+        /// <summary>Registers CUDA/cuDNN directories with the Windows loader before ORT loads its CUDA provider. / 在 ORT 加载 CUDA Provider 前，将 CUDA/cuDNN 目录注册到 Windows Loader。</summary>
+        public static void PrepareCudaDependencySearchPath()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+            lock (CudaDirectorySync)
+            {
+                string? configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_ONNXRUNTIME_CUDA_DLL_DIRECTORIES");
+                if (!string.IsNullOrWhiteSpace(configured))
+                {
+                    foreach (string directory in configured.Split(Path.PathSeparator)) AddCudaDirectory(directory);
+                }
+
+                string? cudaRoot = Environment.GetEnvironmentVariable("CUDA_PATH");
+                if (!string.IsNullOrWhiteSpace(cudaRoot)) AddCudaDirectory(Path.Combine(cudaRoot, "bin"));
+
+                foreach (string variable in new[] { "CUDNN_PATH", "CUDNN_ROOT" })
+                {
+                    string? root = Environment.GetEnvironmentVariable(variable);
+                    if (string.IsNullOrWhiteSpace(root)) continue;
+                    AddCudaDirectory(root);
+                    AddCudaDirectory(Path.Combine(root, "bin"));
+                }
+
+                // cuDNN is frequently installed into a separate directory that
+                // is already on PATH rather than beneath CUDA_PATH. Register
+                // only entries containing a known cuDNN runtime, not every
+                // machine-wide PATH directory. CUDA 11/12 provider packages
+                // may use cuDNN 8 or 9 depending on the selected ORT line.
+                string? processPath = Environment.GetEnvironmentVariable("PATH");
+                if (!string.IsNullOrWhiteSpace(processPath))
+                {
+                    foreach (string directory in processPath.Split(Path.PathSeparator))
+                    {
+                        string candidate = directory.Trim().Trim('"');
+                        if (candidate.Length > 0 && (File.Exists(Path.Combine(candidate, "cudnn64_9.dll")) || File.Exists(Path.Combine(candidate, "cudnn64_8.dll"))))
+                            AddCudaDirectory(candidate);
+                    }
+                }
+            }
+        }
+
+        private static void AddCudaDirectory(string directory)
+        {
+            string candidate = directory.Trim().Trim('"');
+            if (candidate.Length == 0 || !Directory.Exists(candidate)) return;
+            string fullPath = Path.GetFullPath(candidate);
+            if (!RegisteredCudaDirectories.Add(fullPath)) return;
+            IntPtr cookie = AddDllDirectory(fullPath);
+            if (cookie == IntPtr.Zero)
+            {
+                RegisteredCudaDirectories.Remove(fullPath);
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not register a CUDA dependency directory with the Windows DLL loader: " + fullPath);
+            }
+            // Keep the cookie alive for the process lifetime. The execution
+            // provider and its transitive dependencies can load lazily.
+            CudaDirectoryCookies.Add(cookie);
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "AddDllDirectory")]
+        private static extern IntPtr AddDllDirectory(string newDirectory);
 
 #if NETSTANDARD2_0
         // NativeLibrary was introduced after netstandard2.0. Keep the same ABI

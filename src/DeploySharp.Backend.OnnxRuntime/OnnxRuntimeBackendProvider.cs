@@ -94,6 +94,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 throw new BackendNotCompatibleException(artifact.ModelId, request.BackendId ?? BackendId);
             }
             string modelPath = OnnxModelArtifactValidator.Validate(artifact);
+            if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda)
+                OnnxRuntimeNativePreflight.PrepareCudaDependencySearchPath();
             OnnxRuntimeNativePreflight.Validate(artifact);
             if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda)
                 OnnxRuntimeNativePreflight.ValidateCudaProvider(artifact);
