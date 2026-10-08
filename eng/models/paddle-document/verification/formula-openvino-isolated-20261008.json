@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-08T04:38:00Z",
+  "sourceRevision": "c83df2d",
+  "worktreeWasDirty": true,
+  "runtime": {
+    "os": "Microsoft Windows 11 家庭版 中文版",
+    "osVersion": "10.0.26200",
+    "dotnet": "10.0.401",
+    "openVinoRuntimePackage": "2026.2.1",
+    "managedApi": "JYPPX.OpenVINO.CSharp.API 3.3.1",
+    "configuration": "Release net10.0"
+  },
+  "modelRoot": "E:/Model/PaddleDocument/onnx",
+  "image": "E:/Model/PaddleDocument/validation/general_formula_rec_001.png",
+  "models": [
+    { "model": "pp-formulanet-plus-s", "status": "unsupported", "processExit": 1, "operation": "Loop-18", "detail": "canonical_inputs size 1 does not match loop-carried dependencies plus mandatory inputs 31" },
+    { "model": "pp-formulanet-plus-m", "status": "unsupported", "processExit": 1, "operation": "Loop-18", "detail": "canonical_inputs size 1 does not match loop-carried dependencies plus mandatory inputs 63" },
+    { "model": "pp-formulanet-plus-l", "status": "unsupported", "processExit": 1, "operation": "Loop-18", "detail": "canonical_inputs size 1 does not match loop-carried dependencies plus mandatory inputs 79" },
+    { "model": "pp-formulanet-s", "status": "unsupported", "processExit": 1, "operation": "Loop-18", "detail": "canonical_inputs size 1 does not match loop-carried dependencies plus mandatory inputs 31" },
+    { "model": "pp-formulanet-l", "status": "unsupported", "processExit": 1, "operation": "Loop-18", "detail": "canonical_inputs size 1 does not match loop-carried dependencies plus mandatory inputs 79" },
+    { "model": "unimernet", "status": "unsupported", "processExit": 1, "processCrashed": true, "operation": "OpenVINO model reader", "detail": "Isolated test host aborted while reading the ONNX model; no token inference was reached." }
+  ],
+  "summary": {
+    "pass": 0,
+    "unsupported": 6,
+    "failedWithoutClassification": 0,
+    "unverified": 0,
+    "conclusion": "No exact formula ONNX export is admitted for OpenVINO on this runtime. The failure is in OpenVINO ONNX Loop import/native model reading, before DeploySharp decoding. ORT CPU evidence is unchanged."
+  },
+  "boundary": "This is an exact-artifact backend admission probe, not a formula accuracy result. A future compatible export must pass isolated importer stability and token-level parity with ORT before support is changed."
+}
