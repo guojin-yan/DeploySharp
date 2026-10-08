@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-10-08T03:16:00Z",
-  "sourceRevision": "70c0ac714ce59cdf1b3d21dc6d459f04bbc67bb2",
+  "generatedUtc": "2026-10-08T04:04:26Z",
+  "sourceRevision": "bdaa063c29d6542d174b60cf1dd1d20d0e554028",
   "sourceWorkingTreeDirty": true,
   "benchmarkAssemblySha256": "a2a0b20f6a794a90f2f9349dd47865994160a3c1eca90cd62220da74c42f9320",
   "runtime": {
@@ -11,6 +11,7 @@
     "processorCount": 16,
     "onnxRuntime": "1.23.2",
     "openVino": "2026.2.1",
+    "openCv": "5.0.0",
     "device": "CPU"
   },
   "dataset": {
@@ -99,6 +100,30 @@
           "totalP50": 2386.694,
           "totalP95": 3583.8507
         }
+      },
+      "opencv-dnn-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 178, "fp": 167, "fn": 359, "f1": 0.4036281179138322 },
+        "matched": { "cer": 0.3986083499005964, "wer": 0.6650485436893204 },
+        "endToEnd": { "cer": 1.0944992947813823, "wer": 1.1750788643533123 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 3568.6525,
+          "detectorP95": 3888.92345,
+          "classifierP50": 104.3195,
+          "classifierP95": 311.30485,
+          "recognizerP50": 3557.184,
+          "recognizerP95": 8179.0121,
+          "totalMean": 7620.1559,
+          "totalP50": 7304.8245,
+          "totalP95": 11203.92665
+        }
       }
     },
     "v5-server": {
@@ -149,6 +174,30 @@
           "totalP50": 2110.429,
           "totalP95": 3841.16485
         }
+      },
+      "opencv-dnn-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 195, "fp": 209, "fn": 342, "f1": 0.4144527098831031 },
+        "matched": { "cer": 0.461472602739726, "wer": 0.6458333333333334 },
+        "endToEnd": { "cer": 1.1078984485190408, "wer": 1.1782334384858044 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 3471.0545,
+          "detectorP95": 4141.5128,
+          "classifierP50": 282.8635,
+          "classifierP95": 941.07145,
+          "recognizerP50": 2954.8835,
+          "recognizerP95": 8801.5985,
+          "totalMean": 7713.6743,
+          "totalP50": 6919.035,
+          "totalP95": 12336.64055
+        }
       }
     }
   },
@@ -161,7 +210,16 @@
       "ortRegions": 345,
       "openVinoRegions": 345,
       "maxPolygonCoordinateAbsDiffPx": 0.0,
-      "maxConfidenceAbsDiff": 0.00002527
+      "maxConfidenceAbsDiff": 0.00002527,
+      "opencvDnn": {
+        "orderedPageTextMatches": 10,
+        "regionCountMatches": 10,
+        "regionTextMismatches": 0,
+        "ortRegions": 345,
+        "opencvRegions": 345,
+        "maxPolygonCoordinateAbsDiffPx": 0.0,
+        "maxConfidenceAbsDiff": 0.00001592
+      }
     },
     "v5-server": {
       "pages": 10,
@@ -175,14 +233,23 @@
       "differencePage": "hiertext-validation-ab6fb759938e462b",
       "differenceRegionIndex": 9,
       "ortText": "cYanalowb",
-      "openVinoText": "400o"
+      "openVinoText": "400o",
+      "opencvDnn": {
+        "orderedPageTextMatches": 10,
+        "regionCountMatches": 10,
+        "regionTextMismatches": 0,
+        "ortRegions": 404,
+        "opencvRegions": 404,
+        "maxPolygonCoordinateAbsDiffPx": 0.0,
+        "maxConfidenceAbsDiff": 0.0000121
+      }
     }
   },
   "limitations": [
     "This is a ten-page smoke selection and not a release-accuracy or leaderboard result.",
     "The selection has no natural text line at or above 32 characters in the scorer buckets and does not close the A2 natural-long-text gate.",
     "The one-iteration timings are observations, not a formal 5-warmup/50-measurement performance matrix.",
-    "Only ONNX Runtime CPU and OpenVINO CPU are covered here; OpenCV DNN, CUDA and TensorRT are not implied.",
+    "ORT CPU, OpenVINO CPU and OpenCV DNN CPU are covered here; CUDA and TensorRT are not implied.",
     "The v5 extra/changed output has no separate ground-truth adjudication beyond the page-level metrics; the single text difference is retained as an unresolved backend boundary."
   ]
 }
