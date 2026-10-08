@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "scope": "Representative ORT CUDA PaddleOCR GPU telemetry",
+  "telemetryCsv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\gpu-telemetry-v6-tiny-20261008.csv",
+  "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-tiny-telemetry-sample-002-20261008",
+  "sampleCount": 508,
+  "activeThresholdPercent": 10.0,
+  "activeSampleCount": 188,
+  "pstates": [
+    "P0"
+  ],
+  "utilizationPercent": {
+    "min": 10.0,
+    "median": 12.0,
+    "mean": 15.170212765957446,
+    "max": 36.0
+  },
+  "graphicsClockMHz": {
+    "min": 1425.0,
+    "median": 1425.0,
+    "mean": 1425.0,
+    "max": 1425.0
+  },
+  "powerWatts": {
+    "min": 25.56,
+    "median": 28.15,
+    "mean": 29.21936170212766,
+    "max": 42.84
+  },
+  "temperatureCelsius": {
+    "min": 49.0,
+    "median": 50.0,
+    "mean": 50.180851063829785,
+    "max": 51.0
+  },
+  "softwarePowerCapSamples": 0,
+  "softwareThermalSlowdownSamples": 0,
+  "hardwareSlowdownSamples": 0,
+  "allSampleUtilizationPercent": {
+    "min": 1.0,
+    "median": 8.0,
+    "mean": 8.614173228346457,
+    "max": 36.0
+  },
+  "interpretation": "Representative telemetry only. Stable clocks and no slowdown flags were observed, but low utilization indicates that this end-to-end pipeline is not GPU-saturated; the result is not a device-limit or locked-frequency proof."
+}
