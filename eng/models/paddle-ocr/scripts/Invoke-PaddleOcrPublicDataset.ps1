@@ -84,8 +84,10 @@ $env:DEPLOYSHARP_PADDLEOCR_VERSIONS = "$Version-$Variant"
 $env:DEPLOYSHARP_PADDLEOCR_AUTOTUNE = '0'
 $env:DEPLOYSHARP_PADDLEOCR_WARMUP = [string]$Warmup
 $env:DEPLOYSHARP_PADDLEOCR_ITERATIONS = [string]$Iterations
+$env:DEPLOYSHARP_PADDLEOCR_REUSE_INPUT = '0'
 $env:DEPLOYSHARP_PADDLEOCR_STAGE_CONCURRENCY = [string]$InferenceChannels
 $env:DEPLOYSHARP_PADDLEOCR_BATCH_SIZE = [string]$BatchSize
+$env:DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE = '1'
 $env:DEPLOYSHARP_PADDLEOCR_MAX_REGIONS = [string]$MaximumRegions
 $env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = $OverflowMode
 $env:DEPLOYSHARP_PADDLEOCR_WINDOW_OVERLAP = [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:R}', $WindowOverlap)
@@ -128,6 +130,25 @@ foreach ($record in $selected) {
             continue
         }
         throw "Expected exactly one passing model/backend row for $($record.image_id). See $csv"
+    }
+    $environmentPath = "$csv.environment.json"
+    if (-not (Test-Path -LiteralPath $environmentPath -PathType Leaf)) {
+        throw "Benchmark environment metadata is missing for $($record.image_id): $environmentPath"
+    }
+    $environment = Get-Content -LiteralPath $environmentPath -Raw | ConvertFrom-Json
+    $protocol = $environment.protocol
+    if ($null -eq $protocol) {
+        throw "Benchmark environment protocol is missing for $($record.image_id): $environmentPath"
+    }
+    $protocolMismatches = @()
+    if ([int]$protocol.warmup -ne $Warmup) { $protocolMismatches += "warmup expected $Warmup, found $($protocol.warmup)" }
+    if ([int]$protocol.iterations -ne $Iterations) { $protocolMismatches += "iterations expected $Iterations, found $($protocol.iterations)" }
+    if ([int]$protocol.stageConcurrency -ne $InferenceChannels) { $protocolMismatches += "stageConcurrency expected $InferenceChannels, found $($protocol.stageConcurrency)" }
+    if ([int]$protocol.batchSize -ne $BatchSize) { $protocolMismatches += "batchSize expected $BatchSize, found $($protocol.batchSize)" }
+    if ([int]$protocol.tensorRtBatchSize -ne 1) { $protocolMismatches += "tensorRtBatchSize expected 1, found $($protocol.tensorRtBatchSize)" }
+    if ([bool]$protocol.reusePreparedInput) { $protocolMismatches += 'reusePreparedInput expected false, found true' }
+    if ($protocolMismatches.Count -gt 0) {
+        throw "Benchmark protocol metadata mismatch for $($record.image_id): $($protocolMismatches -join '; '). See $environmentPath"
     }
     $report = Get-ChildItem -LiteralPath $imageReportDirectory -Filter "$Version-$Variant-$Backend-*.width.json" -File | Select-Object -First 1
     if ($null -eq $report) {

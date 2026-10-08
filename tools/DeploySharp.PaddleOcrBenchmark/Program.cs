@@ -27,7 +27,11 @@ internal static partial class Program
     {
         if (args.Length > 0 && args[0] == "--audit-characters") return RunCharacterAuditCommand(args);
         string root = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? DefaultModelRoot();
-        int warmup = ReadInt("DEPLOYSHARP_PADDLEOCR_WARMUP", 3);
+        // A zero-warmup smoke run is valid and must not silently fall back to
+        // the default. Keep the other integer settings on the positive-only
+        // reader because batch, concurrency and measured iterations require a
+        // non-zero value.
+        int warmup = ReadNonNegativeInt("DEPLOYSHARP_PADDLEOCR_WARMUP", 3);
         int iterations = ReadInt("DEPLOYSHARP_PADDLEOCR_ITERATIONS", 15);
         int stageConcurrency = ReadInt("DEPLOYSHARP_PADDLEOCR_STAGE_CONCURRENCY", 1);
         int batchSize = ReadInt("DEPLOYSHARP_PADDLEOCR_BATCH_SIZE", 4);
