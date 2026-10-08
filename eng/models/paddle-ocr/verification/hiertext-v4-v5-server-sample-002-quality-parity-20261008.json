@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-08T03:16:00Z",
+  "sourceRevision": "70c0ac714ce59cdf1b3d21dc6d459f04bbc67bb2",
+  "sourceWorkingTreeDirty": true,
+  "benchmarkAssemblySha256": "a2a0b20f6a794a90f2f9349dd47865994160a3c1eca90cd62220da74c42f9320",
+  "runtime": {
+    "targetFramework": ".NET 10.0.12",
+    "operatingSystem": "Microsoft Windows 10.0.26200.0",
+    "architecture": "X64",
+    "processorCount": 16,
+    "onnxRuntime": "1.23.2",
+    "openVino": "2026.2.1",
+    "device": "CPU"
+  },
+  "dataset": {
+    "source": "google-research-datasets/hiertext",
+    "revision": "70b6620b2b112597d8219e11eee9773a1403827c",
+    "sourceManifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+    "selectedManifestSha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c",
+    "images": 10,
+    "groundTruthRegions": 537,
+    "verticalLines": 17,
+    "licenseScope": "CC-BY-2.0 images; CC-BY-SA-4.0 annotations; smoke-only until source-specific redistribution review"
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> optional cls -> rec -> merge",
+    "warmup": 1,
+    "iterations": 1,
+    "batchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "maximumRegions": 1024,
+    "maximumWidth": 320,
+    "metricNotes": "CER/WER are case-sensitive NFC metrics. Matched-region metrics require IoU >= 0.5; end-to-end metrics count missed ground-truth regions as deletions and unmatched detections as insertions. Backend parity compares ordered region outputs for the same page."
+  },
+  "models": {
+    "v4-server": {
+      "detectorSha256": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+      "recognizerSha256": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+      "classifierSha256": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+      "dictionarySha256": "8e9dc37300253c08a5db6d75f8ae7dbf9ab8dc8c8f88827400bfe974269d3953"
+    },
+    "v5-server": {
+      "detectorSha256": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+      "recognizerSha256": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+      "classifierSha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+      "dictionarySha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+    }
+  },
+  "backends": {
+    "v4-server": {
+      "onnxruntime-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 178, "fp": 167, "fn": 359, "f1": 0.4036281179138322 },
+        "matched": { "cer": 0.3986083499005964, "wer": 0.6650485436893204 },
+        "endToEnd": { "cer": 1.0944992947813823, "wer": 1.1750788643533123 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 1896.5675,
+          "detectorP95": 2219.56475,
+          "classifierP50": 50.8925,
+          "classifierP95": 198.34075,
+          "recognizerP50": 1360.132,
+          "recognizerP95": 4049.34595,
+          "totalMean": 3752.4072,
+          "totalP50": 3430.3705,
+          "totalP95": 5759.84485
+        }
+      },
+      "openvino-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 178, "fp": 167, "fn": 359, "f1": 0.4036281179138322 },
+        "matched": { "cer": 0.3986083499005964, "wer": 0.6650485436893204 },
+        "endToEnd": { "cer": 1.0944992947813823, "wer": 1.1750788643533123 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 1543.186,
+          "detectorP95": 1750.9826,
+          "classifierP50": 21.3795,
+          "classifierP95": 53.91265,
+          "recognizerP50": 824.1945,
+          "recognizerP95": 2311.7529,
+          "totalMean": 2606.908,
+          "totalP50": 2386.694,
+          "totalP95": 3583.8507
+        }
+      }
+    },
+    "v5-server": {
+      "onnxruntime-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 195, "fp": 209, "fn": 342, "f1": 0.4144527098831031 },
+        "matched": { "cer": 0.461472602739726, "wer": 0.6458333333333334 },
+        "endToEnd": { "cer": 1.1078984485190408, "wer": 1.1782334384858044 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 1165.596,
+          "detectorP95": 1315.3909,
+          "classifierP50": 177.727,
+          "classifierP95": 985.99555,
+          "recognizerP50": 1135.6695,
+          "recognizerP95": 3273.5282,
+          "totalMean": 2905.029,
+          "totalP50": 2581.407,
+          "totalP95": 5230.70435
+        }
+      },
+      "openvino-cpu": {
+        "completedPages": 10,
+        "failures": 0,
+        "emptyOutputs": 0,
+        "detector": { "tp": 196, "fp": 208, "fn": 341, "f1": 0.41657810839532405 },
+        "matched": { "cer": 0.46121057118499575, "wer": 0.6473029045643154 },
+        "endToEnd": { "cer": 1.1036671368124118, "wer": 1.1766561514195584 },
+        "longText": {
+          "ge32": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge128": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 },
+          "ge3200": { "regions": 0, "characters": 0, "edits": 0, "matchedRegions": 0 }
+        },
+        "latencyMs": {
+          "detectorP50": 1067.5515,
+          "detectorP95": 1467.5958,
+          "classifierP50": 153.331,
+          "classifierP95": 759.5986,
+          "recognizerP50": 653.044,
+          "recognizerP95": 2164.00235,
+          "totalMean": 2343.5514,
+          "totalP50": 2110.429,
+          "totalP95": 3841.16485
+        }
+      }
+    }
+  },
+  "parity": {
+    "v4-server": {
+      "pages": 10,
+      "orderedPageTextMatches": 10,
+      "regionCountMatches": 10,
+      "regionTextMismatches": 0,
+      "ortRegions": 345,
+      "openVinoRegions": 345,
+      "maxPolygonCoordinateAbsDiffPx": 0.0,
+      "maxConfidenceAbsDiff": 0.00002527
+    },
+    "v5-server": {
+      "pages": 10,
+      "orderedPageTextMatches": 9,
+      "regionCountMatches": 10,
+      "regionTextMismatches": 1,
+      "ortRegions": 404,
+      "openVinoRegions": 404,
+      "maxPolygonCoordinateAbsDiffPx": 1.47354,
+      "maxConfidenceAbsDiff": 0.06779492,
+      "differencePage": "hiertext-validation-ab6fb759938e462b",
+      "differenceRegionIndex": 9,
+      "ortText": "cYanalowb",
+      "openVinoText": "400o"
+    }
+  },
+  "limitations": [
+    "This is a ten-page smoke selection and not a release-accuracy or leaderboard result.",
+    "The selection has no natural text line at or above 32 characters in the scorer buckets and does not close the A2 natural-long-text gate.",
+    "The one-iteration timings are observations, not a formal 5-warmup/50-measurement performance matrix.",
+    "Only ONNX Runtime CPU and OpenVINO CPU are covered here; OpenCV DNN, CUDA and TensorRT are not implied.",
+    "The v5 extra/changed output has no separate ground-truth adjudication beyond the page-level metrics; the single text difference is retained as an unresolved backend boundary."
+  ]
+}
