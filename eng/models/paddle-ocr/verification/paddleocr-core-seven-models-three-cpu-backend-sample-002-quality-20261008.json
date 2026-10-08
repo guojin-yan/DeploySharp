@@ -1,0 +1,2844 @@
+{
+  "schemaVersion": 1,
+  "scope": "PP-OCR v4/v5/v6 complete-pipeline CPU backend quality comparison",
+  "referenceBackend": "onnxruntime",
+  "candidateBackends": [
+    "opencv-dnn",
+    "openvino"
+  ],
+  "runtime": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "processorArchitecture": "X64",
+    "processorCount": 16
+  },
+  "dataset": {
+    "sourceManifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+    "selectedManifestSha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c",
+    "imageCount": 10,
+    "imageIds": [
+      "hiertext-validation-5c4d5de59518fe4d",
+      "hiertext-validation-97a0add3f8f47b65",
+      "hiertext-validation-d14658b78cec2cf7",
+      "hiertext-validation-c9ecf7b1e970a65a",
+      "hiertext-validation-ab6fb759938e462b",
+      "hiertext-validation-975414ca1e6b155c",
+      "hiertext-validation-c4c9ba09a6640ad0",
+      "hiertext-validation-507f4f0db1f4fed7",
+      "hiertext-validation-41ec68d29b5f5db0",
+      "hiertext-validation-e8987917745126f6"
+    ],
+    "images": [
+      {
+        "imageId": "hiertext-validation-5c4d5de59518fe4d",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-97a0add3f8f47b65",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-d14658b78cec2cf7",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-ab6fb759938e462b",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-975414ca1e6b155c",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-507f4f0db1f4fed7",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-41ec68d29b5f5db0",
+        "imageSha256": null
+      },
+      {
+        "imageId": "hiertext-validation-e8987917745126f6",
+        "imageSha256": null
+      }
+    ],
+    "redistributionBoundary": "Smoke-only pending per-image source review; no dataset assets or predictions are committed."
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> optional cls -> rec -> merge",
+    "warmupPerPage": 1,
+    "measuredIterationsPerPage": 1,
+    "recognitionBatchSize": 16,
+    "inferenceChannels": 1,
+    "overflowMode": "Clamp",
+    "benchmarkAssemblySha256": "a2a0b20f6a794a90f2f9349dd47865994160a3c1eca90cd62220da74c42f9320",
+    "sourceRevision": "af1ec3fa6f41ad6f183cd911a6976d200222237b",
+    "performanceBoundary": "One measured iteration across ten distinct pages; not the formal 5-warmup/50-iteration benchmark."
+  },
+  "summary": {
+    "models": 7,
+    "comparisons": 14,
+    "expectedPageRuns": 140,
+    "successfulPageRuns": 140,
+    "failedPageRuns": 0,
+    "outputMismatches": 1,
+    "candidateBackends": [
+      "opencv-dnn",
+      "openvino"
+    ]
+  },
+  "comparisons": [
+    {
+      "model": "v4-mobile",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v4-mobile-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v4-mobile",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+          "recognizer": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        },
+        "candidate": {
+          "detector": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+          "recognizer": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 177,
+          "fp": 169,
+          "fn": 360,
+          "f1_hmean": 0.40090600226500567
+        },
+        "matchedCer": 0.4740810556079171,
+        "matchedWer": 0.7647058823529411,
+        "endToEndCer": 0.941114245416079,
+        "endToEndWer": 1.1167192429022081,
+        "totalLatencyMs": {
+          "p50": 957.271,
+          "p95": 2724.0676999999982
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 177,
+          "fp": 169,
+          "fn": 360,
+          "f1_hmean": 0.40090600226500567
+        },
+        "matchedCer": 0.4740810556079171,
+        "matchedWer": 0.7647058823529411,
+        "endToEndCer": 0.941114245416079,
+        "endToEndWer": 1.1167192429022081,
+        "totalLatencyMs": {
+          "p50": 205.793,
+          "p95": 519.8693999999999
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 346,
+        "candidateRegions": 346,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.694925000000012,
+        "maxIndexedConfidenceAbsDelta": 0.00039690999999997256,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.839999999977195e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.694925000000012,
+          "maxIndexedConfidenceAbsDelta": 0.00039690999999997256
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 8,
+          "candidateRegions": 8,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.340000000023329e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 78,
+          "candidateRegions": 78,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.990000000006713e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 27,
+          "candidateRegions": 27,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.0999999999801204e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1949999999982808e-05
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 11,
+          "candidateRegions": 11,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.069999999993911e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.740000000001075e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 13,
+          "candidateRegions": 13,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.859999999997424e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.8000000000018e-05
+        }
+      ]
+    },
+    {
+      "model": "v4-server",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v4-server-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v4-server",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+          "recognizer": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        },
+        "candidate": {
+          "detector": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+          "recognizer": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 178,
+          "fp": 167,
+          "fn": 359,
+          "f1_hmean": 0.4036281179138322
+        },
+        "matchedCer": 0.39363817097415504,
+        "matchedWer": 0.6601941747572816,
+        "endToEndCer": 1.0352609308885754,
+        "endToEndWer": 1.1498422712933754,
+        "totalLatencyMs": {
+          "p50": 3582.4425,
+          "p95": 6838.832
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 178,
+          "fp": 167,
+          "fn": 359,
+          "f1_hmean": 0.4036281179138322
+        },
+        "matchedCer": 0.39363817097415504,
+        "matchedWer": 0.6601941747572816,
+        "endToEndCer": 1.0352609308885754,
+        "endToEndWer": 1.1498422712933754,
+        "totalLatencyMs": {
+          "p50": 3010.9905,
+          "p95": 9607.87234999999
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 345,
+        "candidateRegions": 345,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 1.563000000004422e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.720000000097869e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 14,
+          "candidateRegions": 14,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.25999999997817e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.4999999999341114e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 59,
+          "candidateRegions": 59,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.499999999909356e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.799999999915983e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.6599999999609167e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 5,
+          "candidateRegions": 5,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.6999999999933735e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.96000000005381e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.3000000000393825e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.563000000004422e-05
+        }
+      ]
+    },
+    {
+      "model": "v5-mobile",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v5-mobile-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v5-mobile",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "recognizer": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+          "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        },
+        "candidate": {
+          "detector": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "recognizer": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+          "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 117,
+          "fp": 260,
+          "fn": 420,
+          "f1_hmean": 0.25601750547045954
+        },
+        "matchedCer": 0.3573487031700288,
+        "matchedWer": 0.6382978723404256,
+        "endToEndCer": 1.2341325811001411,
+        "endToEndWer": 1.3659305993690851,
+        "totalLatencyMs": {
+          "p50": 814.3455,
+          "p95": 2328.2288499999995
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 117,
+          "fp": 260,
+          "fn": 420,
+          "f1_hmean": 0.25601750547045954
+        },
+        "matchedCer": 0.3573487031700288,
+        "matchedWer": 0.6382978723404256,
+        "endToEndCer": 1.2341325811001411,
+        "endToEndWer": 1.3659305993690851,
+        "totalLatencyMs": {
+          "p50": 846.0815,
+          "p95": 1957.1974999999984
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 377,
+        "candidateRegions": 377,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 2.0595999999997727e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.439999999994448e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.650000000025692e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 8,
+          "candidateRegions": 8,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.450000000044696e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 101,
+          "candidateRegions": 101,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.0595999999997727e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 29,
+          "candidateRegions": 29,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.940000000035582e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.079999999965892e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 5,
+          "candidateRegions": 5,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.5000000000451337e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.700000000022129e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 12,
+          "candidateRegions": 12,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.920000000017353e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 9.02000000002623e-06
+        }
+      ]
+    },
+    {
+      "model": "v5-server",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v5-server-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v5-server",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+          "recognizer": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+          "classifier": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        },
+        "candidate": {
+          "detector": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+          "recognizer": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+          "classifier": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 195,
+          "fp": 209,
+          "fn": 342,
+          "f1_hmean": 0.4144527098831031
+        },
+        "matchedCer": 0.476027397260274,
+        "matchedWer": 0.6458333333333334,
+        "endToEndCer": 1.0828631875881523,
+        "endToEndWer": 1.1719242902208202,
+        "totalLatencyMs": {
+          "p50": 2338.8165,
+          "p95": 4157.51085
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 196,
+          "fp": 208,
+          "fn": 341,
+          "f1_hmean": 0.41657810839532405
+        },
+        "matchedCer": 0.47570332480818417,
+        "matchedWer": 0.6473029045643154,
+        "endToEndCer": 1.0786318758815232,
+        "endToEndWer": 1.1703470031545742,
+        "totalLatencyMs": {
+          "p50": 2352.3675,
+          "p95": 5024.768949999997
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 9,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 9,
+        "referenceRegions": 404,
+        "candidateRegions": 404,
+        "indexedRegionTextMismatches": 1,
+        "maxIndexedPolygonAbsDeltaPx": 1.473540000000014,
+        "maxIndexedConfidenceAbsDelta": 0.06779491999999998,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.982999999999846e-05
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 20,
+          "candidateRegions": 20,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1039999999962191e-05
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.800000000084516e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 106,
+          "candidateRegions": 106,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.0860000000056935e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.7300000000618496e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 19,
+          "candidateRegions": 19,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": false,
+          "indexedRegionTextMismatches": 1,
+          "maxIndexedPolygonAbsDeltaPx": 1.473540000000014,
+          "maxIndexedConfidenceAbsDelta": 0.06779491999999998
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 7,
+          "candidateRegions": 7,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1340000000026329e-05
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.0100000000012876e-05
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 9.119999999973594e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.0300000000189655e-06
+        }
+      ]
+    },
+    {
+      "model": "v6-medium",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-medium-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v6-medium",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+          "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        },
+        "candidate": {
+          "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+          "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 187,
+          "fp": 244,
+          "fn": 350,
+          "f1_hmean": 0.38636363636363635
+        },
+        "matchedCer": 0.184188393608074,
+        "matchedWer": 0.5063291139240507,
+        "endToEndCer": 1.0535966149506346,
+        "endToEndWer": 1.250788643533123,
+        "totalLatencyMs": {
+          "p50": 1737.105,
+          "p95": 3058.778699999998
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 187,
+          "fp": 244,
+          "fn": 350,
+          "f1_hmean": 0.38636363636363635
+        },
+        "matchedCer": 0.184188393608074,
+        "matchedWer": 0.5063291139240507,
+        "endToEndCer": 1.0535966149506346,
+        "endToEndWer": 1.250788643533123,
+        "totalLatencyMs": {
+          "p50": 1395.5819999999999,
+          "p95": 3332.6580999999996
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 431,
+        "candidateRegions": 431,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 2.1849999999989933e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.4159999999985295e-05
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1659999999968917e-05
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.4489999999978131e-05
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 112,
+          "candidateRegions": 112,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.069999999998462e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 33,
+          "candidateRegions": 33,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.2040000000101969e-05
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.700000000054885e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 6,
+          "candidateRegions": 6,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.439999999969693e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 35,
+          "candidateRegions": 35,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.9300000000055384e-05
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 9.299999999989872e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.1849999999989933e-05
+        }
+      ]
+    },
+    {
+      "model": "v6-small",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-small-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v6-small",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+          "recognizer": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        },
+        "candidate": {
+          "detector": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+          "recognizer": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 152,
+          "fp": 215,
+          "fn": 385,
+          "f1_hmean": 0.33628318584070793
+        },
+        "matchedCer": 0.16614420062695925,
+        "matchedWer": 0.4947916666666667,
+        "endToEndCer": 1.11212976022567,
+        "endToEndWer": 1.2697160883280758,
+        "totalLatencyMs": {
+          "p50": 553.5764999999999,
+          "p95": 1306.51625
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 152,
+          "fp": 215,
+          "fn": 385,
+          "f1_hmean": 0.33628318584070793
+        },
+        "matchedCer": 0.16614420062695925,
+        "matchedWer": 0.4947916666666667,
+        "endToEndCer": 1.11212976022567,
+        "endToEndWer": 1.2697160883280758,
+        "totalLatencyMs": {
+          "p50": 292.602,
+          "p95": 649.5912999999997
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 367,
+        "candidateRegions": 367,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 2.6799999999993496e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 27,
+          "candidateRegions": 27,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.7299999999997873e-05
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.539999999945813e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 28,
+          "candidateRegions": 28,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.6799999999993496e-05
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 64,
+          "candidateRegions": 64,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.673000000002034e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 32,
+          "candidateRegions": 32,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.950000000007563e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.3180000000057035e-05
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 3,
+          "candidateRegions": 3,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.6099999999852344e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.2400000000023503e-05
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1600000000000499e-05
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.9659999999976918e-05
+        }
+      ]
+    },
+    {
+      "model": "v6-tiny",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "openvino",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-tiny-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-openvino-sample-002-20261008\\v6-tiny",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+          "recognizer": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+          "classifier": null,
+          "dictionary": "05a0d96bff6d70516cab895869a95aeb6cc8e4fd98d846e4cc27f52ca1fdac78"
+        },
+        "candidate": {
+          "detector": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+          "recognizer": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+          "classifier": null,
+          "dictionary": "05a0d96bff6d70516cab895869a95aeb6cc8e4fd98d846e4cc27f52ca1fdac78"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matchedCer": 0.211139896373057,
+        "matchedWer": 0.5167785234899329,
+        "endToEndCer": 1.1054301833568405,
+        "endToEndWer": 1.2444794952681388,
+        "totalLatencyMs": {
+          "p50": 168.35649999999998,
+          "p95": 303.4291499999999
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matchedCer": 0.211139896373057,
+        "matchedWer": 0.5167785234899329,
+        "endToEndCer": 1.1054301833568405,
+        "endToEndWer": 1.2444794952681388,
+        "totalLatencyMs": {
+          "p50": 138.75400000000002,
+          "p95": 230.11484999999996
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 306,
+        "candidateRegions": 306,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 8.269999999976907e-06,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 15,
+          "candidateRegions": 15,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.2999999999283602e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.269999999976907e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 12,
+          "candidateRegions": 12,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.969999999995036e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 35,
+          "candidateRegions": 35,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.500000000016378e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 22,
+          "candidateRegions": 22,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1500000000053134e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 25,
+          "candidateRegions": 25,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.820000000098744e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.7799999999800207e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.239999999961942e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 14,
+          "candidateRegions": 14,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.7900000000015126e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.7999999999982492e-06
+        }
+      ]
+    },
+    {
+      "model": "v4-mobile",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v4-mobile-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v4-mobile",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+          "recognizer": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        },
+        "candidate": {
+          "detector": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+          "recognizer": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 177,
+          "fp": 169,
+          "fn": 360,
+          "f1_hmean": 0.40090600226500567
+        },
+        "matchedCer": 0.4740810556079171,
+        "matchedWer": 0.7647058823529411,
+        "endToEndCer": 0.941114245416079,
+        "endToEndWer": 1.1167192429022081,
+        "totalLatencyMs": {
+          "p50": 957.271,
+          "p95": 2724.0676999999982
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 177,
+          "fp": 169,
+          "fn": 360,
+          "f1_hmean": 0.40090600226500567
+        },
+        "matchedCer": 0.4740810556079171,
+        "matchedWer": 0.7647058823529411,
+        "endToEndCer": 0.941114245416079,
+        "endToEndWer": 1.1167192429022081,
+        "totalLatencyMs": {
+          "p50": 1716.1889999999999,
+          "p95": 3696.928499999998
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 346,
+        "candidateRegions": 346,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.694925000000012,
+        "maxIndexedConfidenceAbsDelta": 0.00039794000000004104,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.710000000018866e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.694925000000012,
+          "maxIndexedConfidenceAbsDelta": 0.00039794000000004104
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 8,
+          "candidateRegions": 8,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.050000000033194e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 78,
+          "candidateRegions": 78,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.180000000000625e-05
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 27,
+          "candidateRegions": 27,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.330000000024592e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.839999999981195e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 11,
+          "candidateRegions": 11,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.0299999999852094e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.4299999999977118e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 13,
+          "candidateRegions": 13,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.049999999979683e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.299999999961116e-06
+        }
+      ]
+    },
+    {
+      "model": "v4-server",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v4-server-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v4-server",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+          "recognizer": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        },
+        "candidate": {
+          "detector": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+          "recognizer": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+          "classifier": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "dictionary": "97905f22dff929c28136ce45f565ce07005ba688ccd1669d4a9d5770834b8813"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 178,
+          "fp": 167,
+          "fn": 359,
+          "f1_hmean": 0.4036281179138322
+        },
+        "matchedCer": 0.39363817097415504,
+        "matchedWer": 0.6601941747572816,
+        "endToEndCer": 1.0352609308885754,
+        "endToEndWer": 1.1498422712933754,
+        "totalLatencyMs": {
+          "p50": 3582.4425,
+          "p95": 6838.832
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 178,
+          "fp": 167,
+          "fn": 359,
+          "f1_hmean": 0.4036281179138322
+        },
+        "matchedCer": 0.39363817097415504,
+        "matchedWer": 0.6601941747572816,
+        "endToEndCer": 1.0352609308885754,
+        "endToEndWer": 1.1498422712933754,
+        "totalLatencyMs": {
+          "p50": 7045.437,
+          "p95": 10928.461299999999
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 345,
+        "candidateRegions": 345,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 1.592000000005811e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.970000000021791e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 14,
+          "candidateRegions": 14,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.499999999823089e-07
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1600000000000499e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 59,
+          "candidateRegions": 59,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.8999999999991246e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.9699999999910354e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.849999999998687e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 5,
+          "candidateRegions": 5,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.5399999999953238e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.630000000003463e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.5399999999953238e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.592000000005811e-05
+        }
+      ]
+    },
+    {
+      "model": "v5-mobile",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v5-mobile-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v5-mobile",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "recognizer": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+          "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        },
+        "candidate": {
+          "detector": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "recognizer": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+          "classifier": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 117,
+          "fp": 260,
+          "fn": 420,
+          "f1_hmean": 0.25601750547045954
+        },
+        "matchedCer": 0.3573487031700288,
+        "matchedWer": 0.6382978723404256,
+        "endToEndCer": 1.2341325811001411,
+        "endToEndWer": 1.3659305993690851,
+        "totalLatencyMs": {
+          "p50": 814.3455,
+          "p95": 2328.2288499999995
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 117,
+          "fp": 260,
+          "fn": 420,
+          "f1_hmean": 0.25601750547045954
+        },
+        "matchedCer": 0.3573487031700288,
+        "matchedWer": 0.6382978723404256,
+        "endToEndCer": 1.2341325811001411,
+        "endToEndWer": 1.3659305993690851,
+        "totalLatencyMs": {
+          "p50": 1665.6115,
+          "p95": 4127.2415
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 377,
+        "candidateRegions": 377,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 4.789999999998962e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.000000000002e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.789999999998962e-05
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 8,
+          "candidateRegions": 8,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.840000000005951e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 101,
+          "candidateRegions": 101,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.949999999974807e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 29,
+          "candidateRegions": 29,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.850000000056198e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.899999999949614e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 5,
+          "candidateRegions": 5,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.6000000000747647e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.4999999999053557e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 12,
+          "candidateRegions": 12,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.0260000000039682e-05
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.1399999999303105e-06
+        }
+      ]
+    },
+    {
+      "model": "v5-server",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v5-server-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v5-server",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+          "recognizer": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+          "classifier": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        },
+        "candidate": {
+          "detector": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+          "recognizer": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+          "classifier": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+          "dictionary": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 195,
+          "fp": 209,
+          "fn": 342,
+          "f1_hmean": 0.4144527098831031
+        },
+        "matchedCer": 0.476027397260274,
+        "matchedWer": 0.6458333333333334,
+        "endToEndCer": 1.0828631875881523,
+        "endToEndWer": 1.1719242902208202,
+        "totalLatencyMs": {
+          "p50": 2338.8165,
+          "p95": 4157.51085
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 195,
+          "fp": 209,
+          "fn": 342,
+          "f1_hmean": 0.4144527098831031
+        },
+        "matchedCer": 0.476027397260274,
+        "matchedWer": 0.6458333333333334,
+        "endToEndCer": 1.0828631875881523,
+        "endToEndWer": 1.1719242902208202,
+        "totalLatencyMs": {
+          "p50": 5776.312,
+          "p95": 10307.790149999999
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 404,
+        "candidateRegions": 404,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 2.3329999999988082e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.3329999999988082e-05
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 20,
+          "candidateRegions": 20,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.2099999999959365e-05
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.900000000031881e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 106,
+          "candidateRegions": 106,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.399999999990747e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 31,
+          "candidateRegions": 31,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.2000000000345068e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 19,
+          "candidateRegions": 19,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.06000000002993e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 7,
+          "candidateRegions": 7,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.140000000041333e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.0460000000045433e-05
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.135999999990478e-05
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 9.950000000036319e-06
+        }
+      ]
+    },
+    {
+      "model": "v6-medium",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-medium-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v6-medium",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+          "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        },
+        "candidate": {
+          "detector": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+          "recognizer": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 187,
+          "fp": 244,
+          "fn": 350,
+          "f1_hmean": 0.38636363636363635
+        },
+        "matchedCer": 0.184188393608074,
+        "matchedWer": 0.5063291139240507,
+        "endToEndCer": 1.0535966149506346,
+        "endToEndWer": 1.250788643533123,
+        "totalLatencyMs": {
+          "p50": 1737.105,
+          "p95": 3058.778699999998
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 187,
+          "fp": 244,
+          "fn": 350,
+          "f1_hmean": 0.38636363636363635
+        },
+        "matchedCer": 0.184188393608074,
+        "matchedWer": 0.5063291139240507,
+        "endToEndCer": 1.0535966149506346,
+        "endToEndWer": 1.250788643533123,
+        "totalLatencyMs": {
+          "p50": 4971.0975,
+          "p95": 9399.769899999998
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 431,
+        "candidateRegions": 431,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 7.900000000060636e-06,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.3400000000718393e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 7.900000000060636e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.430000000001712e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 112,
+          "candidateRegions": 112,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.799999999973494e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 33,
+          "candidateRegions": 33,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.2400000000134526e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.500000000016378e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 6,
+          "candidateRegions": 6,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.1699999999947863e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 35,
+          "candidateRegions": 35,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.050000000033194e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 21,
+          "candidateRegions": 21,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.580000000003025e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.849999999973932e-06
+        }
+      ]
+    },
+    {
+      "model": "v6-small",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-small-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v6-small",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+          "recognizer": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        },
+        "candidate": {
+          "detector": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+          "recognizer": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+          "classifier": null,
+          "dictionary": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 152,
+          "fp": 215,
+          "fn": 385,
+          "f1_hmean": 0.33628318584070793
+        },
+        "matchedCer": 0.16614420062695925,
+        "matchedWer": 0.4947916666666667,
+        "endToEndCer": 1.11212976022567,
+        "endToEndWer": 1.2697160883280758,
+        "totalLatencyMs": {
+          "p50": 553.5764999999999,
+          "p95": 1306.51625
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 152,
+          "fp": 215,
+          "fn": 385,
+          "f1_hmean": 0.33628318584070793
+        },
+        "matchedCer": 0.16614420062695925,
+        "matchedWer": 0.4947916666666667,
+        "endToEndCer": 1.11212976022567,
+        "endToEndWer": 1.2697160883280758,
+        "totalLatencyMs": {
+          "p50": 1543.6925,
+          "p95": 2817.122649999999
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 367,
+        "candidateRegions": 367,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.18993999999997868,
+        "maxIndexedConfidenceAbsDelta": 0.004520999999999997,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 27,
+          "candidateRegions": 27,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.22999999993845e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 17,
+          "candidateRegions": 17,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.18993999999997868,
+          "maxIndexedConfidenceAbsDelta": 0.004520999999999997
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 28,
+          "candidateRegions": 28,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.1000000000336314e-06
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 64,
+          "candidateRegions": 64,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.9700000000465465e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 32,
+          "candidateRegions": 32,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.5999999999349868e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 24,
+          "candidateRegions": 24,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.9599999999695434e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 3,
+          "candidateRegions": 3,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.599999999272853e-07
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 26,
+          "candidateRegions": 26,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 6.960000000000299e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 18,
+          "candidateRegions": 18,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.9599999999675433e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.099999999955365e-06
+        }
+      ]
+    },
+    {
+      "model": "v6-tiny",
+      "referenceBackend": "onnxruntime",
+      "candidateBackend": "opencv-dnn",
+      "referenceDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-quality-20261008-125111\\v6-tiny-ort",
+      "candidateDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\core-seven-models-opencv-dnn-sample-002-20261008\\v6-tiny",
+      "protocolCompatible": true,
+      "protocolDifferences": {},
+      "modelAssetsMatch": true,
+      "modelAssetsSha256": {
+        "reference": {
+          "detector": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+          "recognizer": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+          "classifier": null,
+          "dictionary": "05a0d96bff6d70516cab895869a95aeb6cc8e4fd98d846e4cc27f52ca1fdac78"
+        },
+        "candidate": {
+          "detector": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+          "recognizer": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+          "classifier": null,
+          "dictionary": "05a0d96bff6d70516cab895869a95aeb6cc8e4fd98d846e4cc27f52ca1fdac78"
+        }
+      },
+      "referenceMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matchedCer": 0.211139896373057,
+        "matchedWer": 0.5167785234899329,
+        "endToEndCer": 1.1054301833568405,
+        "endToEndWer": 1.2444794952681388,
+        "totalLatencyMs": {
+          "p50": 168.35649999999998,
+          "p95": 303.4291499999999
+        }
+      },
+      "candidateMetrics": {
+        "pages": 10,
+        "pageFailures": 0,
+        "emptyPages": 0,
+        "detIou05": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matchedCer": 0.211139896373057,
+        "matchedWer": 0.5167785234899329,
+        "endToEndCer": 1.1054301833568405,
+        "endToEndWer": 1.2444794952681388,
+        "totalLatencyMs": {
+          "p50": 630.5764999999999,
+          "p95": 989.4526499999996
+        }
+      },
+      "pageComparison": {
+        "pagesCompared": 10,
+        "orderedTextSequenceMatches": 10,
+        "regionCountMatches": 10,
+        "orderedRegionTextMatchPages": 10,
+        "referenceRegions": 306,
+        "candidateRegions": 306,
+        "indexedRegionTextMismatches": 0,
+        "maxIndexedPolygonAbsDeltaPx": 0.0,
+        "maxIndexedConfidenceAbsDelta": 1.5080000000000648e-05,
+        "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+      },
+      "pages": [
+        {
+          "imageId": "hiertext-validation-41ec68d29b5f5db0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 15,
+          "candidateRegions": 15,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.649999999998936e-06
+        },
+        {
+          "imageId": "hiertext-validation-507f4f0db1f4fed7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.83000000003997e-06
+        },
+        {
+          "imageId": "hiertext-validation-5c4d5de59518fe4d",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 12,
+          "candidateRegions": 12,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 1.5080000000000648e-05
+        },
+        {
+          "imageId": "hiertext-validation-975414ca1e6b155c",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 35,
+          "candidateRegions": 35,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 8.200000000013752e-06
+        },
+        {
+          "imageId": "hiertext-validation-97a0add3f8f47b65",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 22,
+          "candidateRegions": 22,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 2.500000000016378e-06
+        },
+        {
+          "imageId": "hiertext-validation-ab6fb759938e462b",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 25,
+          "candidateRegions": 25,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.760000000048059e-06
+        },
+        {
+          "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 16,
+          "candidateRegions": 16,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 4.5300000000025875e-06
+        },
+        {
+          "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 23,
+          "candidateRegions": 23,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.099999999922609e-06
+        },
+        {
+          "imageId": "hiertext-validation-d14658b78cec2cf7",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 14,
+          "candidateRegions": 14,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 5.200000000038507e-06
+        },
+        {
+          "imageId": "hiertext-validation-e8987917745126f6",
+          "referenceStatus": "ok",
+          "candidateStatus": "ok",
+          "referenceRegions": 128,
+          "candidateRegions": 128,
+          "regionCountMatch": true,
+          "orderedTextSequenceMatch": true,
+          "indexedRegionTextMismatches": 0,
+          "maxIndexedPolygonAbsDeltaPx": 0.0,
+          "maxIndexedConfidenceAbsDelta": 3.4600000000106768e-06
+        }
+      ]
+    }
+  ]
+}
