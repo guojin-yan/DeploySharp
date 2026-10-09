@@ -21,6 +21,11 @@ using DnnCv2 = JYPPX.OpenCvSharp.Dnn.Cv2;
 internal static partial class Program
 {
     private const string FallbackRoot = @"E:\Model\paddleocr";
+    // Keep the benchmark default aligned with the core DB decoder contract.
+    // A 32-region cap caused valid dense pages (for example
+    // HierText 97a0add3f8f47b65) to fail before timing, making channel and
+    // performance evidence depend on an accidental harness limit.
+    private const int DefaultMaximumRegions = 128;
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
     private static int Main(string[] args)
@@ -273,7 +278,7 @@ internal static partial class Program
             using (PreparedVisualInput probe = new OpenCvVisualInputFactory().CreateFromFile(imagePath, detector.InputName, new OpenCvPreprocessOptions(new VisualSize(32, 32), OpenCvResizeMode.Resize, VisualColorOrder.Bgr))) sourceSize = probe.SourceSize;
             OpenCvPreprocessOptions detOptions = OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize);
             int effectiveBatchSize = backend == "tensorrt" ? tensorRtBatchSize : batchSize;
-            int maximumRegions = ReadInt("DEPLOYSHARP_PADDLEOCR_MAX_REGIONS", 32);
+            int maximumRegions = ReadInt("DEPLOYSHARP_PADDLEOCR_MAX_REGIONS", DefaultMaximumRegions);
             if (maximumRegions <= 0) throw new ArgumentOutOfRangeException("DEPLOYSHARP_PADDLEOCR_MAX_REGIONS", "Maximum regions must be greater than zero.");
             if (backend == "tensorrt")
             {
@@ -450,7 +455,7 @@ internal static partial class Program
             }
             if (widthReportResult != null)
                 WriteWidthReport(widthReportDirectory!, version, detector.Variant, backend, widthReportResult, recognitionCrop,
-                    imagePath, detectorPath, recognizerPath, classifierPath, warmup, iterations, effectiveBatchSize, stageConcurrency, reusePreparedInput);
+                    imagePath, detectorPath, recognizerPath, classifierPath, warmup, iterations, effectiveBatchSize, stageConcurrency, reusePreparedInput, maximumRegions);
             accelerationDetail = (accelerationDetail == null ? string.Empty : accelerationDetail + "; ")
                 + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant)
                 + ";cropTransform=" + recognitionCrop.TransformMode;
@@ -658,7 +663,7 @@ internal static partial class Program
     }
 
     private static void WriteWidthReport(string directory, string version, string variant, string backend, OcrResult result, TextCropProfile crop,
-        string image, string detector, string recognizer, string? classifier, int warmup, int iterations, int batch, int sessions, bool reusePreparedInput)
+        string image, string detector, string recognizer, string? classifier, int warmup, int iterations, int batch, int sessions, bool reusePreparedInput, int maximumRegions)
     {
         // Export outside timed spans. Keep text/geometry and width provenance in separate fields so existing text/contract hashes stay stable.
         static object Artifact(string path)
@@ -675,7 +680,7 @@ internal static partial class Program
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
-            Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
+            Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, MaximumRegions = maximumRegions, ReusePreparedInput = reusePreparedInput },
             Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result), SemanticContractSha256 = ComputeSemanticContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),

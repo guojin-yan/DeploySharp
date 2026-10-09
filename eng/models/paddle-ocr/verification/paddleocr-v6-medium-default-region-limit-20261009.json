@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "scope": "PaddleOCR benchmark default maximum-region regression",
+  "generatedUtc": "2026-10-09T04:26:18Z",
+  "sourceRevision": "40d2ea73acbe4b42dd2cbeb77afde5115ddac2d5",
+  "benchmarkAssemblySha256": "708aaff3500f114d6107e1395b0de201121caf7d72435caa43497369484cab05",
+  "programSha256": "da327cd821dd08fc57bed8854866c606047f3a6935ed20222c2f56e5f695bc5c",
+  "machine": {
+    "name": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "architecture": "X64",
+    "processorCount": 16,
+    "backend": "onnxruntime-cuda",
+    "device": "RTX 3060 Laptop"
+  },
+  "input": {
+    "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+    "imageSha256": "4be415e823941b14c4df515b2956c536303cf7f8d05cda450035083b36afb438"
+  },
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "batchSize": 16,
+    "inferenceChannels": 2,
+    "reusePreparedInput": false,
+    "overflowMode": "Clamp",
+    "maximumRegions": 128,
+    "maximumRegionsSource": "benchmark default; DEPLOYSHARP_PADDLEOCR_MAX_REGIONS unset",
+    "strictContractRequired": true
+  },
+  "results": [
+    {
+      "model": "v6/medium",
+      "regions": 33,
+      "status": "pass",
+      "resultContractVariants": 1,
+      "resultNumericMaxAbsDrift": 0.0,
+      "totalP50Ms": 193.425,
+      "totalP95Ms": 204.081,
+      "resultTextSha256": "5f9cdd082f3ed8574cc2c20ee6b36783c839b9329b9087d395f62a675d4eaea9",
+      "resultContractSha256": "caf972833746aed4c44a2928e18c7ec5f4f726446cafffc4de7a15e4726127df",
+      "resultSemanticContractSha256": "6b3c4e4d3aaafe4c8e07391b82898f4b08af33715b08ef6d90e35d647b1de052"
+    },
+    {
+      "model": "v6/small",
+      "regions": 32,
+      "status": "pass",
+      "resultContractVariants": 1,
+      "resultNumericMaxAbsDrift": 0.0,
+      "totalP50Ms": 53.598,
+      "totalP95Ms": 105.228,
+      "resultTextSha256": "b2d1b79333dc861c6cef93bed9a48377f2f08fdd868cacb4def0a2c542c8014a",
+      "resultContractSha256": "d20caa11b8ec2b8f5e1a6c543214062444c00767a43b09b1e4b8f8371c140b3d",
+      "resultSemanticContractSha256": "1b2e3a0469a12007209d2c3ad13f4738eb4018fa8e8897c6e617549bebcb48ea"
+    },
+    {
+      "model": "v6/tiny",
+      "regions": 22,
+      "status": "pass",
+      "resultContractVariants": 1,
+      "resultNumericMaxAbsDrift": 0.0,
+      "totalP50Ms": 68.304,
+      "totalP95Ms": 73.215,
+      "resultTextSha256": "a1a1e41037258dd64d4e9dd5c7e311a397fcfa28ee3eba6908791ac0a9ff5737",
+      "resultContractSha256": "2e00eb54c132431f740b9800c41d83a9abd44409e04423c4ef1cdc6d6b6528fb",
+      "resultSemanticContractSha256": "ef785ec4551ad1f9d126c3bf11072fad4b578e8e0f494fda73751bca142d46fd"
+    }
+  ],
+  "conclusion": {
+    "defaultLimitAccepted33Regions": true,
+    "strictContractsStableForAllRows": true,
+    "accuracyClaim": false,
+    "globalChannelsDefaultChanged": false,
+    "notes": [
+      "The run is a benchmark-harness regression, not a model accuracy evaluation.",
+      "The earlier 32-region channel report remains valid as an explicitly configured historical diagnostic.",
+      "No numeric-drift override was enabled; all three rows passed the strict result contract in this process."
+    ]
+  }
+}

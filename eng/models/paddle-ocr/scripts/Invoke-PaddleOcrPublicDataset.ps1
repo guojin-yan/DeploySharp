@@ -180,6 +180,7 @@ $runMetadata = [ordered]@{
     iterations = $Iterations
     batchSize = $BatchSize
     inferenceChannels = $InferenceChannels
+    maximumRegions = $MaximumRegions
     overflowMode = $OverflowMode
     windowOverlap = $WindowOverlap
     maximumWindowsPerRegion = $MaximumWindowsPerRegion
