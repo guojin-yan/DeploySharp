@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-10-09T00:00:00Z",
+  "generatedUtc": "2026-10-09T05:26:44Z",
   "scope": "PP-OCRv6 Small complete-page quality and ORT/OpenVINO parity on all 10 local SROIE receipt pages",
   "sourceRevision": "f75c82d0f50a39976d12a76def04bfa596094fab",
+  "sourceWorkingTreeDirty": true,
+  "sourceWorkingTreeStatusSha256": "eb27acd6a76c4d8e8fa0a11b7792278233be8e4c6743dd23c12032cf2ccbab4f",
   "benchmarkAssemblySha256": "9305cb0e6d50cb7e6a98c1045d4306a5583dfe52119a69f3dbe9309cc3761724",
   "runtime": {
     "machine": "JYPPX",

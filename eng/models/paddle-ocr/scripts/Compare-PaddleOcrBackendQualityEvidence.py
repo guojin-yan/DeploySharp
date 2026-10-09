@@ -8,6 +8,7 @@ backend is accurate or suitable for release.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -287,10 +288,14 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"  --output-json {reproduction.get('outputJson', '<output.json>')} `",
         f"  --output-markdown {reproduction.get('outputMarkdown', '<output.md>')}",
     ))
+    generated_date = str(report.get("generatedUtc", ""))[:10] or "unknown-date"
+    image_count = report.get("dataset", {}).get("imageCount", "selected")
+    source_datasets = ", ".join(report.get("dataset", {}).get("sourceDatasets", [])) or "the pinned public selection"
+    source_splits = ", ".join(report.get("dataset", {}).get("sourceSplits", [])) or "the selected split"
     lines = [
-        "# PP-OCR core-model backend quality comparison (2026-10-08)",
+        f"# PP-OCR core-model backend quality comparison ({generated_date})",
         "",
-        "This report compares complete DET → optional CLS → REC pipeline outputs on the same ten HierText `sample-002` pages. It is smoke evidence, not a release accuracy score or formal performance benchmark. Each page has one warm-up and one measured run.",
+        f"This report compares complete DET → optional CLS → REC pipeline outputs on the same {image_count} selected pages from {source_datasets} ({source_splits}). It is smoke evidence, not a release accuracy score or formal performance benchmark. Each page has one warm-up and one measured run.",
         "",
         f"- Machine: `{report['runtime']['machine']}` / `{report['runtime']['operatingSystem']}` / `{report['runtime']['processorArchitecture']}`.",
         f"- Reference backend: `{reference_backend}`; candidate backend(s): `{candidate_backends}`.",
@@ -323,7 +328,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Interpretation and limits",
         "",
-        f"- The table reports each candidate backend relative to `{reference_backend}` for the exact model assets and ten-page selection. A matching aggregate CER/F1 does not imply identical region outputs.",
+        f"- The table reports each candidate backend relative to `{reference_backend}` for the exact model assets and {image_count}-page selection. A matching aggregate CER/F1 does not imply identical region outputs.",
         "- Polygon and confidence drift are indexed comparisons only, and are omitted when a page has different region counts. They are not IoU-based region reassociation.",
         "- End-to-end CER/WER can exceed 100% because missed labels count as deletions and unmatched predictions as insertions. Matched-crop CER alone overstates complete-page quality.",
         "- Latency values in the JSON are one-shot observations across different pages; they are not 5-warmup/50-iteration performance results and must not be used as a backend ranking.",
@@ -378,14 +383,24 @@ def main() -> int:
     image_ids = [image.get("image_id") for image in reference_prediction.get("images", [])]
     selected_manifest_path = Path(str(reference_meta.get("selectedManifest", "")))
     manifest_images: list[dict[str, Any]] = []
+    source_datasets: set[str] = set()
+    source_splits: set[str] = set()
     if selected_manifest_path.is_file():
         for line in selected_manifest_path.read_text(encoding="utf-8-sig").splitlines():
             if not line.strip():
                 continue
             record = json.loads(line)
+            if record.get("source_dataset"):
+                source_datasets.add(str(record["source_dataset"]))
+            if record.get("source_split"):
+                source_splits.add(str(record["source_split"]))
             manifest_images.append({
                 "imageId": record.get("image_id"),
-                "imageSha256": record.get("source_image_sha256") or record.get("image_sha256"),
+                "imageSha256": (
+                    record.get("source_image_sha256")
+                    or record.get("image_sha256")
+                    or record.get("source_provenance", {}).get("image_sha256")
+                ),
             })
         if [item["imageId"] for item in manifest_images] != image_ids:
             raise ValueError("Selected manifest image order does not match the reference prediction document")
@@ -393,7 +408,8 @@ def main() -> int:
     all_page_failures = sum(item["candidateMetrics"]["pageFailures"] for item in comparisons)
     report = {
         "schemaVersion": 1,
-        "scope": "PP-OCR v4/v5/v6 complete-pipeline backend quality comparison",
+        "generatedUtc": datetime.now(timezone.utc).isoformat(),
+        "scope": "PP-OCR complete-pipeline backend quality comparison",
         "referenceBackend": reference_meta.get("backend"),
         "candidateBackends": sorted(backends),
         "runtime": {
@@ -406,6 +422,8 @@ def main() -> int:
             "sourceManifestSha256": reference_meta.get("manifestSha256"),
             "selectedManifestSha256": reference_meta.get("selectedManifestSha256"),
             "imageCount": reference_meta.get("selectedImageCount"),
+            "sourceDatasets": sorted(source_datasets),
+            "sourceSplits": sorted(source_splits),
             "imageIds": image_ids,
             "images": manifest_images,
             "redistributionBoundary": "Smoke-only pending per-image source review; no dataset assets or predictions are committed.",

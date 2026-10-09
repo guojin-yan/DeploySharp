@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-09T08:50:13Z",
+  "scope": "PP-OCRv6 Small complete-page quality smoke across ONNX Runtime CPU, OpenVINO CPU and OpenCV DNN CPU",
+  "sourceRevision": "cbaae7a6b8353a9fd0fe84131df8feec5126389e",
+  "sourceWorkingTreeDirty": true,
+  "sourceWorkingTreeStatusSha256": "d85f5b96cec0590178c0370d3c0e36a1f05df47655f2e4fea003a2c4b0e64221",
+  "benchmarkAssemblySha256": "9305cb0e6d50cb7e6a98c1045d4306a5583dfe52119a69f3dbe9309cc3761724",
+  "runtime": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "processorArchitecture": "X64",
+    "processorCount": 16
+  },
+  "dataset": {
+    "source": "jsdnrs/ICDAR2019-SROIE",
+    "split": "train",
+    "sourceManifestSha256": "2975c4e967b485f2b064980fe62b1df5e2e43acb954c44f144d87b020f8f8e41",
+    "selectedManifestSha256": "946fb167a92c9646ee28d938f622114136dc97728b52aea0bdf183da522f9d83",
+    "images": 10,
+    "imageIds": [
+      "sroie-train-X00016469612",
+      "sroie-train-X00016469619",
+      "sroie-train-X00016469620",
+      "sroie-train-X00016469622",
+      "sroie-train-X00016469623",
+      "sroie-train-X00016469669",
+      "sroie-train-X00016469672",
+      "sroie-train-X00016469676",
+      "sroie-train-X51005200938",
+      "sroie-train-X51005230617"
+    ],
+    "imageSha256": [
+      "fbf32fef1e3c9b30a217537294d637fb724c3c5591a16e302986f889799f944c",
+      "503590a2a573d4ef9234bb5db734ec0c8ca2c6faef29dd52b9a2a538aaf69452",
+      "efb25720ae864ba27dd9e08cdb8fdef3615b0e7ca971305e2e163278b5624688",
+      "6f2d9dd4a2a734f002e60ea6f6455276ffbaf24a0d2b9092ae67fef5f75c1499",
+      "cd13975a0f05b6edab0b0209a3fc1ba24ceda35c7f9a6a404ea699037b65470b",
+      "bae0765f90d2ae056f45f076288ad7c081a28223381ff30ec772554bd8fa5dba",
+      "e70c9633d1ffc80e3cc5d66ac06188ab0c1f3268be845fad1db197d0fd657758",
+      "392290ff4cfa92961fc7e1865a10754b0208110fd53f41b24f5a8e615a8341ec",
+      "ca87e22a7cc8f606156301bb5acfc37dc361e300c6baabc456040632716bb159",
+      "9f1ce3f5bc0189b6db808eab9e7382a5c2c2a61cc7adc4421b983480555d9931"
+    ],
+    "redistributionBoundary": "Smoke-only pending per-image source review; no dataset assets, annotations, predictions or raw runs are committed."
+  },
+  "model": {
+    "id": "v6/small",
+    "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "recognizerSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "dictionarySha256": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> rec -> merge",
+    "warmupPerPage": 1,
+    "measuredIterationsPerPage": 1,
+    "recognitionBatchSize": 1,
+    "inferenceChannels": 1,
+    "maximumRegions": 1024,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "pipelineTimeoutMs": 60000,
+    "performanceBoundary": "One measured iteration across ten distinct pages; not the formal 5-warmup/50-iteration benchmark. Batch 1 is used so the static OpenCV DNN contract is compared fairly."
+  },
+  "backends": {
+    "onnxruntime-cpu": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "detIou05": { "tp": 489, "fp": 42, "fn": 53, "f1": 0.9114631873252563 },
+      "matchedCer": 0.3009967960128159,
+      "matchedWer": 0.45436702649656524,
+      "endToEndCer": 0.3739115588185078,
+      "endToEndWer": 0.5537190082644629,
+      "totalLatencyMs": { "p50": 1302.8725, "p95": 2534.9527 }
+    },
+    "openvino-cpu": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "detIou05": { "tp": 489, "fp": 42, "fn": 53, "f1": 0.9114631873252563 },
+      "matchedCer": 0.3009967960128159,
+      "matchedWer": 0.45436702649656524,
+      "endToEndCer": 0.3739115588185078,
+      "endToEndWer": 0.5537190082644629,
+      "totalLatencyMs": { "p50": 779.7615, "p95": 1054.14715 }
+    },
+    "opencv-dnn-cpu": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "detIou05": { "tp": 489, "fp": 42, "fn": 53, "f1": 0.9114631873252563 },
+      "matchedCer": 0.3009967960128159,
+      "matchedWer": 0.45436702649656524,
+      "endToEndCer": 0.3739115588185078,
+      "endToEndWer": 0.5537190082644629,
+      "totalLatencyMs": { "p50": 7722.313, "p95": 10131.54505 }
+    }
+  },
+  "parityAgainstOnnxRuntime": {
+    "openvino": { "pagesCompared": 10, "orderedTextSequenceMatches": 10, "regionCountMatches": 10, "indexedRegionTextMismatches": 0, "referenceRegions": 531, "candidateRegions": 531, "maxIndexedPolygonAbsDeltaPx": 0.0, "maxIndexedConfidenceAbsDelta": 0.00002909 },
+    "opencvDnn": { "pagesCompared": 10, "orderedTextSequenceMatches": 10, "regionCountMatches": 10, "indexedRegionTextMismatches": 0, "referenceRegions": 531, "candidateRegions": 531, "maxIndexedPolygonAbsDeltaPx": 0.0, "maxIndexedConfidenceAbsDelta": 0.00001639 }
+  },
+  "limits": [
+    "SROIE provides word-level axis-aligned boxes while PP-OCR emits text-line polygons; the metrics are smoke diagnostics, not official line accuracy.",
+    "The 10 pages contain 21 ground-truth regions with at least 32 characters and no regions at least 128 or 3200 characters; natural long-text A2 remains open.",
+    "OpenCV DNN is approximately 5.9x the ORT one-shot P50 in this host/protocol observation; this is not a 5/50 performance ranking.",
+    "Matching all three backends on this model and selection does not promote other models, CUDA or TensorRT, and does not close the formal P2 quality gate."
+  ],
+  "reproduction": {
+    "comparator": "eng/models/paddle-ocr/scripts/Compare-PaddleOcrBackendQualityEvidence.py",
+    "evidence": "eng/models/paddle-ocr/verification/sroie-v6-small-10page-three-backend-quality-20261009.md",
+    "localRunRoots": [
+      "artifacts/public-ocr-evaluation/sroie-v6-small-ort-batch1-20261009",
+      "artifacts/public-ocr-evaluation/sroie-v6-small-openvino-batch1-20261009",
+      "artifacts/public-ocr-evaluation/sroie-v6-small-opencv-20261009"
+    ]
+  }
+}

@@ -157,7 +157,9 @@ def main() -> int:
     merged_metadata.update(
         {
             "generatedUtc": datetime.now(timezone.utc).isoformat(),
-            "manifest": "merged-selected-manifest.jsonl",
+            # Keep the consumer-facing path aligned with the artifact actually
+            # emitted above. The manifest is the union of the selected shards.
+            "manifest": "selected-manifest.jsonl",
             "manifestSha256": selected_manifest_sha256,
             "sourceManifests": [str((run / "selected-manifest.jsonl").resolve()) for run in runs],
             "sourceManifestSha256s": source_manifest_hashes,
