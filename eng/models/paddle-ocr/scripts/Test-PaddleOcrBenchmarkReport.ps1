@@ -62,6 +62,24 @@ foreach ($row in $rows) {
     foreach ($digestColumn in @('result_text_sha256', 'result_contract_sha256')) {
         if ([string]$row.$digestColumn -notmatch '^[0-9a-fA-F]{64}$') { $failures.Add("$($row.version)/$($row.variant)/$($row.backend): $digestColumn is not a SHA-256 digest") }
     }
+    # Newer benchmark rows expose a discrete semantic fingerprint and the
+    # number of strict (floating-point-inclusive) contract variants. Keep old
+    # reports readable, but validate both fields whenever they are present.
+    if ('result_semantic_contract_sha256' -in $columns -and [string]$row.result_semantic_contract_sha256 -notmatch '^[0-9a-fA-F]{64}$') {
+        $failures.Add("$($row.version)/$($row.variant)/$($row.backend): result_semantic_contract_sha256 is not a SHA-256 digest")
+    }
+    if ('result_contract_variants' -in $columns) {
+        $variants = 0
+        if (-not [int]::TryParse([string]$row.result_contract_variants, [Globalization.NumberStyles]::Integer, [Globalization.CultureInfo]::InvariantCulture, [ref]$variants) -or $variants -lt 1) {
+            $failures.Add("$($row.version)/$($row.variant)/$($row.backend): result_contract_variants must be a positive integer")
+        }
+    }
+    if ('result_numeric_max_abs_drift' -in $columns) {
+        $drift = 0.0
+        if (-not [double]::TryParse([string]$row.result_numeric_max_abs_drift, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$drift) -or [double]::IsNaN($drift) -or [double]::IsInfinity($drift) -or $drift -lt 0) {
+            $failures.Add("$($row.version)/$($row.variant)/$($row.backend): result_numeric_max_abs_drift must be a non-negative finite number")
+        }
+    }
     foreach ($numberColumn in @('preprocess_ms', 'detection_inference_ms', 'detection_postprocess_ms', 'crop_ms', 'orientation_ms', 'recognition_prepare_work_ms', 'recognition_inference_work_ms', 'recognition_postprocess_work_ms', 'total_ms', 'total_p50_ms', 'total_p95_ms')) {
         $number = 0.0
         if (-not [double]::TryParse([string]$row.$numberColumn, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or [double]::IsNaN($number) -or [double]::IsInfinity($number) -or $number -lt 0) {

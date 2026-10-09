@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 1,
+  "scope": "PP-OCR ORT CUDA channel tuning and strict/semantic contract diagnostic",
+  "groups": [
+    {
+      "model": "v5/mobile",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 1,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-channel-tuning-3pages-20261009\\v5-mobile-channels-1",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 60.862,
+        "median": 68.302,
+        "mean": 119.276,
+        "max": 228.664,
+        "p25": 64.58200000000001,
+        "p75": 148.483
+      },
+      "pageP50Ms": {
+        "min": 58.221,
+        "median": 67.276,
+        "mean": 115.02866666666667,
+        "max": 219.589,
+        "p25": 62.74849999999999,
+        "p75": 143.4325
+      },
+      "pageP95Ms": {
+        "min": 74.36,
+        "median": 80.656,
+        "mean": 144.8456666666667,
+        "max": 279.521,
+        "p25": 77.50800000000001,
+        "p75": 180.0885
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    },
+    {
+      "model": "v5/mobile",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 2,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-channel-tuning-3pages-20261009\\v5-mobile-channels-2",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 59.358,
+        "median": 67.38,
+        "mean": 70.034,
+        "max": 83.364,
+        "p25": 63.369,
+        "p75": 75.372
+      },
+      "pageP50Ms": {
+        "min": 58.756,
+        "median": 66.371,
+        "mean": 67.777,
+        "max": 78.204,
+        "p25": 62.5635,
+        "p75": 72.2875
+      },
+      "pageP95Ms": {
+        "min": 65.902,
+        "median": 75.777,
+        "mean": 82.81700000000001,
+        "max": 106.772,
+        "p25": 70.8395,
+        "p75": 91.2745
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    },
+    {
+      "model": "v6/medium",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 1,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-channel-tuning-3pages-20261009\\v6-medium-channels-1",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 265.489,
+        "median": 282.719,
+        "mean": 277.667,
+        "max": 284.793,
+        "p25": 274.104,
+        "p75": 283.756
+      },
+      "pageP50Ms": {
+        "min": 243.185,
+        "median": 277.229,
+        "mean": 267.1123333333333,
+        "max": 280.923,
+        "p25": 260.207,
+        "p75": 279.076
+      },
+      "pageP95Ms": {
+        "min": 302.632,
+        "median": 329.914,
+        "mean": 339.401,
+        "max": 385.657,
+        "p25": 316.273,
+        "p75": 357.78549999999996
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    },
+    {
+      "model": "v6/medium",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 2,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-channel-tuning-3pages-20261009\\v6-medium-channels-2",
+      "selectedImageCount": 3,
+      "successfulPages": 2,
+      "failedPages": 1,
+      "failedImages": [
+        "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg"
+      ],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 137.417,
+        "median": 139.2715,
+        "mean": 139.2715,
+        "max": 141.126,
+        "p25": 138.34425,
+        "p75": 140.19875000000002
+      },
+      "pageP50Ms": {
+        "min": 125.153,
+        "median": 127.81700000000001,
+        "mean": 127.81700000000001,
+        "max": 130.481,
+        "p25": 126.485,
+        "p75": 129.149
+      },
+      "pageP95Ms": {
+        "min": 187.509,
+        "median": 192.724,
+        "mean": 192.724,
+        "max": 197.939,
+        "p25": 190.11649999999997,
+        "p75": 195.3315
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 2,
+      "strictContractSha256Variants": 2
+    },
+    {
+      "model": "v6/tiny",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 1,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-tiny-channel-tuning-3pages-20261009\\channels-1",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 47.559,
+        "median": 161.461,
+        "mean": 132.39233333333334,
+        "max": 188.157,
+        "p25": 104.51,
+        "p75": 174.80900000000003
+      },
+      "pageP50Ms": {
+        "min": 46.079,
+        "median": 149.257,
+        "mean": 125.48,
+        "max": 181.104,
+        "p25": 97.668,
+        "p75": 165.1805
+      },
+      "pageP95Ms": {
+        "min": 61.027,
+        "median": 232.212,
+        "mean": 176.5823333333333,
+        "max": 236.508,
+        "p25": 146.61950000000002,
+        "p75": 234.36
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    },
+    {
+      "model": "v6/tiny",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 2,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-tiny-channel-tuning-3pages-20261009\\channels-2",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 44.113,
+        "median": 104.361,
+        "mean": 88.98899999999999,
+        "max": 118.493,
+        "p25": 74.237,
+        "p75": 111.42699999999999
+      },
+      "pageP50Ms": {
+        "min": 43.442,
+        "median": 120.043,
+        "mean": 96.09666666666668,
+        "max": 124.805,
+        "p25": 81.7425,
+        "p75": 122.424
+      },
+      "pageP95Ms": {
+        "min": 55.167,
+        "median": 151.918,
+        "mean": 122.80266666666667,
+        "max": 161.323,
+        "p25": 103.5425,
+        "p75": 156.6205
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    },
+    {
+      "model": "v6/tiny",
+      "backend": "onnxruntime-cuda",
+      "device": "cuda",
+      "channels": 4,
+      "batchSize": 16,
+      "warmup": 5,
+      "iterations": 50,
+      "runDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-tiny-channel-tuning-3pages-20261009\\channels-4",
+      "selectedImageCount": 3,
+      "successfulPages": 3,
+      "failedPages": 0,
+      "failedImages": [],
+      "sourceRevision": "c1dcb4123c9d720852e4c3251ab24a4ac39b67ae",
+      "pageMeanMs": {
+        "min": 54.729,
+        "median": 131.109,
+        "mean": 111.09566666666667,
+        "max": 147.449,
+        "p25": 92.91900000000001,
+        "p75": 139.279
+      },
+      "pageP50Ms": {
+        "min": 53.608,
+        "median": 129.11,
+        "mean": 110.20633333333335,
+        "max": 147.901,
+        "p25": 91.35900000000001,
+        "p75": 138.5055
+      },
+      "pageP95Ms": {
+        "min": 74.648,
+        "median": 214.082,
+        "mean": 176.12333333333333,
+        "max": 239.64,
+        "p25": 144.365,
+        "p75": 226.861
+      },
+      "contractVariantCounts": [
+        1
+      ],
+      "semanticContractSha256": [],
+      "textSha256Variants": 3,
+      "strictContractSha256Variants": 3
+    }
+  ],
+  "diagnostics": [
+    {
+      "csv": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-medium-channel-diagnostic-50-20261009.csv",
+      "metadata": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\public-ocr-evaluation\\cuda-v6-medium-channel-diagnostic-50-20261009.csv.environment.json",
+      "model": "v6/medium",
+      "backend": "onnxruntime-cuda",
+      "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+      "status": "pass",
+      "warmup": 5,
+      "iterations": 50,
+      "batchSize": "16",
+      "channels": "2",
+      "totalMs": 234.788,
+      "totalP50Ms": 228.703,
+      "totalP95Ms": 251.027,
+      "regions": 33,
+      "resultTextSha256": "5f9cdd082f3ed8574cc2c20ee6b36783c839b9329b9087d395f62a675d4eaea9",
+      "resultContractSha256": "caf972833746aed4c44a2928e18c7ec5f4f726446cafffc4de7a15e4726127df",
+      "resultSemanticContractSha256": "6b3c4e4d3aaafe4c8e07391b82898f4b08af33715b08ef6d90e35d647b1de052",
+      "resultContractVariants": 2,
+      "resultNumericMaxAbsDrift": 3.57627869e-07,
+      "detail": "end-to-end OCR pipeline; timings exclude model load; preprocess includes image decode and detector tensor creation; crop/recognition scale with detected region count; overflowMode=Clamp;maximumWidth=320;cropTransform=Perspective; strictContractVariants=2; semanticContractStable=true; numericMaxAbsDrift=3.57627869E-07; numericContractDrift=accepted by explicit diagnostic switch"
+    }
+  ],
+  "decision": "do-not-change-global-default"
+}

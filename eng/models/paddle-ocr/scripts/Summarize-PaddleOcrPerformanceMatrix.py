@@ -144,6 +144,8 @@ def load_model(run_dir: Path) -> dict[str, Any]:
                 "totalP95Ms": number(row, "total_p95_ms"),
                 "resultTextSha256": row.get("result_text_sha256"),
                 "resultContractSha256": row.get("result_contract_sha256"),
+                "resultSemanticContractSha256": row.get("result_semantic_contract_sha256"),
+                "resultContractVariants": int(row["result_contract_variants"]) if row.get("result_contract_variants") else None,
             }
             for path, row in zip(csv_paths, rows)
         ],

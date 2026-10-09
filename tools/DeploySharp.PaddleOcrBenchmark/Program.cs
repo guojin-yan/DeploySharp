@@ -106,7 +106,7 @@ internal static partial class Program
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
         using (var writer = new StreamWriter(output, false, new System.Text.UTF8Encoding(false)))
         {
-            writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_min_ms,total_max_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,image_path,detail");
+            writer.WriteLine("version,variant,backend,device,status,selected_batch_size,selected_inference_channels,preprocess_ms,detection_ms,detection_inference_ms,detection_postprocess_ms,crop_ms,orientation_ms,recognition_ms,recognition_prepare_work_ms,recognition_inference_work_ms,recognition_postprocess_work_ms,recognition_batches,merge_ms,total_ms,total_min_ms,total_max_ms,total_p50_ms,total_p95_ms,preprocess_allocated_bytes,pipeline_process_allocated_bytes,regions,result_text_sha256,result_contract_sha256,result_semantic_contract_sha256,result_contract_variants,result_numeric_max_abs_drift,image_path,detail");
             foreach (FullResultRow row in rows) writer.WriteLine(row.ToCsv());
         }
         WriteRunMetadata(output, root, imagePath, models, selectedBackends, selectedVersions, warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion, reusePreparedInput);
@@ -211,10 +211,16 @@ internal static partial class Program
 
         var best = passed[0];
         string selectedContract = best.Row.Timing!.Value.ResultContractSha256;
+        string selectedSemanticContract = best.Row.Timing.Value.ResultSemanticContractSha256;
         int selectedIntraOpThreads = ResolveStageIntraOpThreads(backend, best.Concurrency, configuredIntraOpThreads);
         FullResultRow result = RunFullBackend(version, backend, device, detector, recognizer, classifier, imagePath, warmup, iterations, tensorRtApiVersion, reusePreparedInput, best.Concurrency, best.Batch, best.Batch, selectedIntraOpThreads, detectionIntraOpThreads, maximumPaddingRatio);
+        bool allowNumericContractDrift = ReadBool("DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT", false);
         if (result.Timing.HasValue && !string.Equals(result.Timing.Value.ResultContractSha256, selectedContract, StringComparison.Ordinal))
-            return FullResultRow.Fail(version, detector.Variant, backend, device, imagePath, new InvalidOperationException("The formal run result contract differs from the selected autotune candidate."));
+        {
+            bool semanticMatch = string.Equals(result.Timing.Value.ResultSemanticContractSha256, selectedSemanticContract, StringComparison.Ordinal);
+            if (!allowNumericContractDrift || !semanticMatch)
+                return FullResultRow.Fail(version, detector.Variant, backend, device, imagePath, new InvalidOperationException("The formal run result contract differs from the selected autotune candidate; strict and semantic contracts must match unless numeric-drift diagnostics are explicitly enabled."));
+        }
         string summary = string.Join("|", trials.Select(value => value.Concurrency.ToString(Invariant) + "x" + value.Batch.ToString(Invariant) + "=" + (value.Row.Timing.HasValue ? "stage:" + TunedStageMilliseconds(value.Row.Timing.Value).ToString("F3", Invariant) + "/total:" + value.Row.Timing.Value.Total.ToString("F3", Invariant) + "/batches:" + value.Row.Timing.Value.RecognitionBatches.ToString(Invariant) : value.Row.Status)));
         int contractVariants = allPassed.Select(value => value.Row.Timing!.Value.ResultContractSha256).Distinct(StringComparer.Ordinal).Count();
         return result with { SelectedInferenceChannels = best.Concurrency, SelectedBatchSize = best.Batch, Detail = result.Detail + "; autotune used prepared input and ranked complete-pipeline latency (orientation+recognition is the tie-breaker); selected concurrency=" + best.Concurrency.ToString(Invariant) + ",batch=" + best.Batch.ToString(Invariant) + ",stageIntraOpThreads=" + selectedIntraOpThreads.ToString(Invariant) + "; deterministicContractVariantsAcrossShapes=" + contractVariants.ToString(Invariant) + "; trials=" + summary };
@@ -421,7 +427,11 @@ internal static partial class Program
                         pipelineAllocated,
                         result.Regions.Count,
                         ComputeTextSha256(result),
-                        ComputeContractSha256(result));
+                        ComputeContractSha256(result),
+                        ComputeSemanticContractSha256(result),
+                        1,
+                        0d,
+                        ComputeNumericContractValues(result));
                 }
                 finally
                 {
@@ -444,7 +454,8 @@ internal static partial class Program
             accelerationDetail = (accelerationDetail == null ? string.Empty : accelerationDetail + "; ")
                 + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant)
                 + ";cropTransform=" + recognitionCrop.TransformMode;
-            return FullResultRow.Pass(version, detector.Variant, backend, device, imagePath, FullTiming.Average(values), reusePreparedInput, stageConcurrency, effectiveBatchSize, accelerationDetail);
+            bool allowNumericContractDrift = ReadBool("DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT", false);
+            return FullResultRow.Pass(version, detector.Variant, backend, device, imagePath, FullTiming.Average(values, allowNumericContractDrift), reusePreparedInput, stageConcurrency, effectiveBatchSize, accelerationDetail);
         }
         catch (OcrPipelineException ex) when (ex.InnerException is OperationCanceledException || ex.Message.Contains("cancel", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
         {
@@ -666,7 +677,7 @@ internal static partial class Program
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, ReusePreparedInput = reusePreparedInput },
             Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
-            SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result),
+            SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result), SemanticContractSha256 = ComputeSemanticContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             PixelQualityOptions = ReadPixelQualityOptions(), result.PixelQuality,
             Regions = result.Regions.Select(item => new
@@ -733,6 +744,61 @@ internal static partial class Program
             }
         }
         return Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Computes the result contract after removing floating-point fields.  OCR
+    /// backends are allowed to produce tiny score/coordinate/confidence drift
+    /// between repeated GPU executions; source indices, polygon cardinality,
+    /// token decisions and text must remain stable.  This fingerprint is used
+    /// only to distinguish that numeric drift from a semantic result change.
+    /// </summary>
+    private static string ComputeSemanticContractSha256(OcrResult result)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            foreach (OcrRegionResult item in result.Regions.OrderBy(value => value.Region.SourceIndex))
+            {
+                writer.Write(item.Region.SourceIndex);
+                writer.Write(item.Region.Polygon.Vertices.Count);
+                writer.Write(item.Region.Orientation.ToString());
+                RecognizedText recognition = item.Recognition;
+                writer.Write(recognition.Text);
+                writer.Write(recognition.CharacterSetId);
+                writer.Write(recognition.CharacterSetVersion);
+                writer.Write(recognition.CharacterSetSha256);
+                writer.Write(recognition.Tokens.Count);
+                foreach (OcrToken token in recognition.Tokens)
+                {
+                    writer.Write(token.Timestep);
+                    writer.Write(token.ClassIndex);
+                    writer.Write(token.Text ?? string.Empty);
+                    writer.Write(token.IsBlank);
+                    writer.Write(token.IsCollapsedRepeat);
+                    writer.Write(token.IsUnknown);
+                    writer.Write(token.Emitted);
+                }
+            }
+        }
+        return Convert.ToHexString(SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)))).ToLowerInvariant();
+    }
+
+    private static float[] ComputeNumericContractValues(OcrResult result)
+    {
+        var values = new List<float>();
+        foreach (OcrRegionResult item in result.Regions.OrderBy(value => value.Region.SourceIndex))
+        {
+            values.Add(item.Region.Score);
+            foreach (JYPPX.DeploySharp.Geometry.PointF vertex in item.Region.Polygon.Vertices)
+            {
+                values.Add(vertex.X);
+                values.Add(vertex.Y);
+            }
+            values.Add(item.Recognition.Confidence);
+            foreach (OcrToken token in item.Recognition.Tokens) values.Add(token.Confidence);
+        }
+        return values.ToArray();
     }
 
     private static PaddleOcrProfile CreateDetectionProfile(string version, ModelCase model, string modelFormat = "onnx")
@@ -1029,14 +1095,27 @@ internal static partial class Program
         private static string Csv(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 
-    private readonly record struct FullTiming(double Preprocess, double Detection, double DetectionInference, double DetectionPostprocess, double Crop, double Orientation, double Recognition, double RecognitionPrepareWork, double RecognitionInferenceWork, double RecognitionPostprocessWork, int RecognitionBatches, double Merge, double Total, double TotalMin, double TotalMax, double TotalP50, double TotalP95, long PreprocessAllocatedBytes, long PipelineProcessAllocatedBytes, int Regions, string ResultTextSha256, string ResultContractSha256)
+    private readonly record struct FullTiming(double Preprocess, double Detection, double DetectionInference, double DetectionPostprocess, double Crop, double Orientation, double Recognition, double RecognitionPrepareWork, double RecognitionInferenceWork, double RecognitionPostprocessWork, int RecognitionBatches, double Merge, double Total, double TotalMin, double TotalMax, double TotalP50, double TotalP95, long PreprocessAllocatedBytes, long PipelineProcessAllocatedBytes, int Regions, string ResultTextSha256, string ResultContractSha256, string ResultSemanticContractSha256, int ResultContractVariants, double ResultNumericMaxAbsDrift, float[] ResultNumericValues)
     {
-        public static FullTiming Average(IReadOnlyList<FullTiming> values)
+        public static FullTiming Average(IReadOnlyList<FullTiming> values, bool allowNumericContractDrift)
         {
             string[] hashes = values.Select(value => value.ResultTextSha256).Distinct(StringComparer.Ordinal).ToArray();
             if (hashes.Length != 1) throw new InvalidOperationException("OCR text output changed between timed iterations.");
             string[] contractHashes = values.Select(value => value.ResultContractSha256).Distinct(StringComparer.Ordinal).ToArray();
-            if (contractHashes.Length != 1) throw new InvalidOperationException("OCR result contract changed between timed iterations.");
+            string[] semanticHashes = values.Select(value => value.ResultSemanticContractSha256).Distinct(StringComparer.Ordinal).ToArray();
+            if (semanticHashes.Length != 1)
+                throw new InvalidOperationException("OCR semantic result contract changed between timed iterations; semanticContractVariants=" + semanticHashes.Length.ToString(Invariant) + ";strictContractVariants=" + contractHashes.Length.ToString(Invariant));
+            if (contractHashes.Length != 1 && !allowNumericContractDrift)
+                throw new InvalidOperationException("OCR result contract changed between timed iterations; semantic contract was stable, but strictContractVariants=" + contractHashes.Length.ToString(Invariant) + ". Set DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT=1 only for an explicit numeric-drift diagnostic.");
+            float[] baseline = values[0].ResultNumericValues;
+            double maximumNumericDrift = 0d;
+            foreach (FullTiming value in values)
+            {
+                if (value.ResultNumericValues.Length != baseline.Length)
+                    throw new InvalidOperationException("OCR numeric contract shape changed between timed iterations despite a stable semantic contract.");
+                for (int index = 0; index < baseline.Length; index++)
+                    maximumNumericDrift = Math.Max(maximumNumericDrift, Math.Abs((double)value.ResultNumericValues[index] - baseline[index]));
+            }
             double[] totals = values.Select(value => value.Total).OrderBy(value => value).ToArray();
             return new FullTiming(
                 values.Average(x => x.Preprocess),
@@ -1060,7 +1139,11 @@ internal static partial class Program
                 checked((long)values.Average(x => x.PipelineProcessAllocatedBytes)),
                 (int)Math.Round(values.Average(x => x.Regions)),
                 hashes[0],
-                contractHashes[0]);
+                contractHashes[0],
+                semanticHashes[0],
+                contractHashes.Length,
+                maximumNumericDrift,
+                Array.Empty<float>());
         }
     }
 
@@ -1071,6 +1154,8 @@ internal static partial class Program
             string inputTiming = reusedInput ? "prepared detector input and decoded source are reused; preprocess_ms is zero and total_ms is the warm pipeline latency" : "preprocess includes image decode and detector tensor creation";
             string detail = "end-to-end OCR pipeline; timings exclude model load; " + inputTiming + "; crop/recognition scale with detected region count";
             if (!string.IsNullOrWhiteSpace(accelerationDetail)) detail += "; " + accelerationDetail;
+            if (timing.ResultContractVariants > 1)
+                detail += "; strictContractVariants=" + timing.ResultContractVariants.ToString(Invariant) + "; semanticContractStable=true; numericMaxAbsDrift=" + timing.ResultNumericMaxAbsDrift.ToString("G9", Invariant) + "; numericContractDrift=accepted by explicit diagnostic switch";
             var row = new FullResultRow(version, variant, backend, device, "pass", timing, timing.Regions, batchSize, inferenceChannels, image, detail);
             Console.WriteLine(row.ToLog()); return row;
         }
@@ -1130,14 +1215,14 @@ internal static partial class Program
             }
             return null;
         }
-        public string ToLog() => "PADDLEOCR_FULL version=" + Version + ";variant=" + Variant + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Timing.HasValue ? ";selectedBatchSize=" + SelectedBatchSize + ";selectedInferenceChannels=" + SelectedInferenceChannels + ";preprocessMs=" + Timing.Value.Preprocess.ToString("F3", Invariant) + ";detectionMs=" + Timing.Value.Detection.ToString("F3", Invariant) + ";detectionInferenceMs=" + Timing.Value.DetectionInference.ToString("F3", Invariant) + ";detectionPostprocessMs=" + Timing.Value.DetectionPostprocess.ToString("F3", Invariant) + ";cropMs=" + Timing.Value.Crop.ToString("F3", Invariant) + ";orientationMs=" + Timing.Value.Orientation.ToString("F3", Invariant) + ";recognitionMs=" + Timing.Value.Recognition.ToString("F3", Invariant) + ";recognitionPrepareWorkMs=" + Timing.Value.RecognitionPrepareWork.ToString("F3", Invariant) + ";recognitionInferenceWorkMs=" + Timing.Value.RecognitionInferenceWork.ToString("F3", Invariant) + ";recognitionPostprocessWorkMs=" + Timing.Value.RecognitionPostprocessWork.ToString("F3", Invariant) + ";recognitionBatches=" + Timing.Value.RecognitionBatches.ToString(Invariant) + ";mergeMs=" + Timing.Value.Merge.ToString("F3", Invariant) + ";totalMs=" + Timing.Value.Total.ToString("F3", Invariant) + ";totalMinMs=" + Timing.Value.TotalMin.ToString("F3", Invariant) + ";totalMaxMs=" + Timing.Value.TotalMax.ToString("F3", Invariant) + ";totalP50Ms=" + Timing.Value.TotalP50.ToString("F3", Invariant) + ";totalP95Ms=" + Timing.Value.TotalP95.ToString("F3", Invariant) + ";preprocessAllocated=" + Timing.Value.PreprocessAllocatedBytes.ToString(Invariant) + ";pipelineProcessAllocated=" + Timing.Value.PipelineProcessAllocatedBytes.ToString(Invariant) + ";regions=" + Regions + ";resultTextSha256=" + Timing.Value.ResultTextSha256 + ";resultContractSha256=" + Timing.Value.ResultContractSha256 : ";detail=" + Detail);
+        public string ToLog() => "PADDLEOCR_FULL version=" + Version + ";variant=" + Variant + ";backend=" + Backend + ";device=" + Device + ";status=" + Status + (Timing.HasValue ? ";selectedBatchSize=" + SelectedBatchSize + ";selectedInferenceChannels=" + SelectedInferenceChannels + ";preprocessMs=" + Timing.Value.Preprocess.ToString("F3", Invariant) + ";detectionMs=" + Timing.Value.Detection.ToString("F3", Invariant) + ";detectionInferenceMs=" + Timing.Value.DetectionInference.ToString("F3", Invariant) + ";detectionPostprocessMs=" + Timing.Value.DetectionPostprocess.ToString("F3", Invariant) + ";cropMs=" + Timing.Value.Crop.ToString("F3", Invariant) + ";orientationMs=" + Timing.Value.Orientation.ToString("F3", Invariant) + ";recognitionMs=" + Timing.Value.Recognition.ToString("F3", Invariant) + ";recognitionPrepareWorkMs=" + Timing.Value.RecognitionPrepareWork.ToString("F3", Invariant) + ";recognitionInferenceWorkMs=" + Timing.Value.RecognitionInferenceWork.ToString("F3", Invariant) + ";recognitionPostprocessWorkMs=" + Timing.Value.RecognitionPostprocessWork.ToString("F3", Invariant) + ";recognitionBatches=" + Timing.Value.RecognitionBatches.ToString(Invariant) + ";mergeMs=" + Timing.Value.Merge.ToString("F3", Invariant) + ";totalMs=" + Timing.Value.Total.ToString("F3", Invariant) + ";totalMinMs=" + Timing.Value.TotalMin.ToString("F3", Invariant) + ";totalMaxMs=" + Timing.Value.TotalMax.ToString("F3", Invariant) + ";totalP50Ms=" + Timing.Value.TotalP50.ToString("F3", Invariant) + ";totalP95Ms=" + Timing.Value.TotalP95.ToString("F3", Invariant) + ";preprocessAllocated=" + Timing.Value.PreprocessAllocatedBytes.ToString(Invariant) + ";pipelineProcessAllocated=" + Timing.Value.PipelineProcessAllocatedBytes.ToString(Invariant) + ";regions=" + Regions + ";resultTextSha256=" + Timing.Value.ResultTextSha256 + ";resultContractSha256=" + Timing.Value.ResultContractSha256 + ";resultSemanticContractSha256=" + Timing.Value.ResultSemanticContractSha256 + ";resultContractVariants=" + Timing.Value.ResultContractVariants.ToString(Invariant) + ";resultNumericMaxAbsDrift=" + Timing.Value.ResultNumericMaxAbsDrift.ToString("G9", Invariant) : ";detail=" + Detail);
         public string ToCsv()
         {
             FullTiming t = Timing.GetValueOrDefault();
             string[] timings = Timing.HasValue
                 ? new[] { N(t.Preprocess), N(t.Detection), N(t.DetectionInference), N(t.DetectionPostprocess), N(t.Crop), N(t.Orientation), N(t.Recognition), N(t.RecognitionPrepareWork), N(t.RecognitionInferenceWork), N(t.RecognitionPostprocessWork), t.RecognitionBatches.ToString(Invariant), N(t.Merge), N(t.Total), N(t.TotalMin), N(t.TotalMax), N(t.TotalP50), N(t.TotalP95), t.PreprocessAllocatedBytes.ToString(Invariant), t.PipelineProcessAllocatedBytes.ToString(Invariant) }
                 : new[] { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
-            return string.Join(",", new[] { Csv(Version), Csv(Variant), Csv(Backend), Csv(Device), Csv(Status), SelectedBatchSize?.ToString(Invariant) ?? "", SelectedInferenceChannels?.ToString(Invariant) ?? "" }.Concat(timings).Concat(new[] { Regions?.ToString(Invariant) ?? "", Timing.HasValue ? Csv(t.ResultTextSha256) : "", Timing.HasValue ? Csv(t.ResultContractSha256) : "", Csv(ImagePath), Csv(Detail) }));
+            return string.Join(",", new[] { Csv(Version), Csv(Variant), Csv(Backend), Csv(Device), Csv(Status), SelectedBatchSize?.ToString(Invariant) ?? "", SelectedInferenceChannels?.ToString(Invariant) ?? "" }.Concat(timings).Concat(new[] { Regions?.ToString(Invariant) ?? "", Timing.HasValue ? Csv(t.ResultTextSha256) : "", Timing.HasValue ? Csv(t.ResultContractSha256) : "", Timing.HasValue ? Csv(t.ResultSemanticContractSha256) : "", Timing.HasValue ? t.ResultContractVariants.ToString(Invariant) : "", Timing.HasValue ? t.ResultNumericMaxAbsDrift.ToString("G9", Invariant) : "", Csv(ImagePath), Csv(Detail) }));
         }
         private static string N(double value) => value == 0d && double.IsNaN(value) ? "" : value.ToString("F3", Invariant);
         private static string Csv(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
