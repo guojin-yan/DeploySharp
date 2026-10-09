@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "scope": "PP-OCRv6 complete-pipeline stage-session channel diagnostic",
+  "generatedUtc": "2026-10-09T04:56:53Z",
+  "sourceRevision": "4c92c91",
+  "benchmarkAssemblySha256": "9305cb0e6d50cb7e6a98c1045d4306a5583dfe52119a69f3dbe9309cc3761724",
+  "programSha256": "da327cd821dd08fc57bed8854866c606047f3a6935ed20222c2f56e5f695bc5c",
+  "machine": {
+    "name": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "architecture": "X64",
+    "processorCount": 16,
+    "backend": "onnxruntime-cuda",
+    "device": "RTX 3060 Laptop",
+    "driver": "576.02"
+  },
+  "input": {
+    "image": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\97a0add3f8f47b65.jpg",
+    "imageSha256": "4be415e823941b14c4df515b2956c536303cf7f8d05cda450035083b36afb438"
+  },
+  "models": [
+    { "model": "v6/medium", "role": "det", "onnxSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1", "engineSha256": "f082e98aad98a42c65e08356f83b3e77e66f3d6465494ac6f416985b3b8161c0" },
+    { "model": "v6/medium", "role": "rec", "onnxSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba", "engineSha256": "535399643aac46ab39db253ab9af8efbbf8a50684e362684360db021ef1c3676" },
+    { "model": "v6/small", "role": "det", "onnxSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e", "engineSha256": "d5694643024692cd1ecd39ef306348e58fbefa5f3f556d61e39ad3be4742eeb2" },
+    { "model": "v6/small", "role": "rec", "onnxSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634", "engineSha256": "4d1e8e336ae826d2fa4077f8a09df080c3de68e7ec1c7180f9bb5b8e0ae1eae7" },
+    { "model": "v6/tiny", "role": "det", "onnxSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8", "engineSha256": "4553af8a81850a511f985372a0d3ae71ed43d41f3b840037bb8e158be33ee424" },
+    { "model": "v6/tiny", "role": "rec", "onnxSha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6", "engineSha256": "2b776c40807c0c46b1e26d05b830fb16d3a44587f95ed8eec4c85bd2ececef7d" }
+  ],
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "batchSize": 16,
+    "stageConcurrencyValues": [1, 2, 4],
+    "roundsPerConcurrency": 3,
+    "maximumRegions": 128,
+    "reusePreparedInput": false,
+    "strictContractRequired": false,
+    "allowNumericContractDrift": true,
+    "timingsExcludeModelLoad": true
+  },
+  "gpuTelemetry": {
+    "pstateSamples": ["P0"],
+    "graphicsClockMHz": [1425, 1425],
+    "smClockMHz": [1425, 1425],
+    "maximumGraphicsClockMHz": 2100,
+    "powerDrawW": [25.91, 26.38],
+    "utilizationPercent": [2, 5],
+    "temperatureC": [53, 57],
+    "frequencyLocked": false,
+    "sampling": "nvidia-smi snapshots immediately before and after each complete 5+50 process; not continuous telemetry"
+  },
+  "results": [
+    { "channels": 1, "variant": "medium", "runs": 3, "status": ["pass"], "totalP50Ms": 324.725, "totalP50RangeMs": [305.239, 349.500], "totalP95Ms": 402.155, "totalP95RangeMs": [381.477, 410.263], "contractVariants": [1, 2, 3], "maxNumericDrift": 0.000228047371, "textShaStable": true, "semanticShaStable": true, "regions": 33 },
+    { "channels": 1, "variant": "small", "runs": 3, "status": ["pass"], "totalP50Ms": 181.338, "totalP50RangeMs": [177.323, 216.304], "totalP95Ms": 219.546, "totalP95RangeMs": [194.055, 244.143], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 32 },
+    { "channels": 1, "variant": "tiny", "runs": 3, "status": ["pass"], "totalP50Ms": 131.430, "totalP50RangeMs": [124.280, 135.113], "totalP95Ms": 155.138, "totalP95RangeMs": [138.928, 168.589], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 22 },
+    { "channels": 2, "variant": "medium", "runs": 3, "status": ["pass"], "totalP50Ms": 235.507, "totalP50RangeMs": [220.164, 243.393], "totalP95Ms": 271.589, "totalP95RangeMs": [252.522, 271.983], "contractVariants": [1, 2], "maxNumericDrift": 0.000228047371, "textShaStable": true, "semanticShaStable": true, "regions": 33 },
+    { "channels": 2, "variant": "small", "runs": 3, "status": ["pass"], "totalP50Ms": 60.818, "totalP50RangeMs": [55.562, 62.086], "totalP95Ms": 129.795, "totalP95RangeMs": [88.020, 159.101], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 32 },
+    { "channels": 2, "variant": "tiny", "runs": 3, "status": ["pass"], "totalP50Ms": 76.165, "totalP50RangeMs": [45.808, 77.330], "totalP95Ms": 90.286, "totalP95RangeMs": [88.548, 95.520], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 22 },
+    { "channels": 4, "variant": "medium", "runs": 3, "status": ["pass"], "totalP50Ms": 169.711, "totalP50RangeMs": [168.936, 176.680], "totalP95Ms": 203.159, "totalP95RangeMs": [202.606, 210.939], "contractVariants": [3], "maxNumericDrift": 0.000228047371, "textShaStable": true, "semanticShaStable": true, "regions": 33 },
+    { "channels": 4, "variant": "small", "runs": 3, "status": ["pass"], "totalP50Ms": 69.318, "totalP50RangeMs": [56.967, 69.641], "totalP95Ms": 142.717, "totalP95RangeMs": [137.713, 151.917], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 32 },
+    { "channels": 4, "variant": "tiny", "runs": 3, "status": ["pass"], "totalP50Ms": 86.338, "totalP50RangeMs": [78.852, 89.681], "totalP95Ms": 101.465, "totalP95RangeMs": [97.366, 113.771], "contractVariants": [1], "maxNumericDrift": 0, "textShaStable": true, "semanticShaStable": true, "regions": 22 }
+  ],
+  "runDirectories": [
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round1-c1-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round1-c2-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round1-c4-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round2-c1-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round2-c2-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round2-c4-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round3-c1-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round3-c2-20261009",
+    "artifacts/public-ocr-evaluation/cuda-v6-dense-channel-comparison-round3-c4-20261009"
+  ],
+  "conclusion": {
+    "rows": 27,
+    "passRows": 27,
+    "textAndSemanticContractsStable": true,
+    "bestMedianP50ByVariant": { "medium": 4, "small": 2, "tiny": 2 },
+    "recommendation": "Do not make one channel count universal. Tune independently per model/backend/device; channels=2 is the lower-drift compromise in this run, while channels=4 gives the lowest v6 Medium median latency at the cost of repeated strict floating-point variants.",
+    "accuracyClaim": false,
+    "performanceClaim": false,
+    "notes": [
+      "The diagnostic explicitly enabled DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT=1. It is not a release performance gate.",
+      "The formal default-limit record remains the strict 5+50 reference for channels=2; this record does not change the production default.",
+      "GPU snapshots show P0 but 1425 MHz versus a 2100 MHz maximum and low utilization; clocks were not locked and telemetry was not continuous.",
+      "This covers one dense HierText page, v6 only, one Windows host and ORT CUDA. It does not generalize to other images, models, backends or devices."
+    ]
+  }
+}
