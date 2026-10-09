@@ -135,6 +135,105 @@ def load_diagnostic(path: Path) -> dict[str, Any]:
     }
 
 
+def load_followup_rows(path: Path) -> list[dict[str, Any]]:
+    """Load one or more page rows from a direct benchmark CSV.
+
+    The benchmark can emit all three v6 variants in one CSV when
+    ``DEPLOYSHARP_PADDLEOCR_VERSIONS=v6``.  Keeping the rows here (instead of
+    asking callers to split the file by hand) makes the follow-up report
+    faithful to the actual command output and preserves the page image path.
+    """
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    if not rows:
+        raise ValueError(f"Expected at least one benchmark row in {path}")
+    metadata_path = Path(str(path) + ".environment.json")
+    metadata = read_json(metadata_path) if metadata_path.is_file() else {}
+    protocol = metadata.get("protocol", {})
+    result: list[dict[str, Any]] = []
+    for row in rows:
+        result.append(
+            {
+                "sourceCsv": str(path),
+                "model": f"{row.get('version')}/{row.get('variant')}",
+                "version": row.get("version"),
+                "variant": row.get("variant"),
+                "backend": row.get("backend"),
+                "device": row.get("device"),
+                "status": row.get("status"),
+                "image": row.get("image_path"),
+                "batchSize": int(row["selected_batch_size"]) if row.get("selected_batch_size") else protocol.get("batchSize"),
+                "channels": int(row["selected_inference_channels"]) if row.get("selected_inference_channels") else protocol.get("stageConcurrency"),
+                "totalMs": float(row["total_ms"]) if row.get("total_ms") else None,
+                "totalP50Ms": float(row["total_p50_ms"]) if row.get("total_p50_ms") else None,
+                "totalP95Ms": float(row["total_p95_ms"]) if row.get("total_p95_ms") else None,
+                "regions": int(row["regions"]) if row.get("regions") else None,
+                "resultTextSha256": row.get("result_text_sha256"),
+                "resultContractSha256": row.get("result_contract_sha256"),
+                "resultSemanticContractSha256": row.get("result_semantic_contract_sha256"),
+                "resultContractVariants": int(row.get("result_contract_variants") or "1") if row.get("status") == "pass" else None,
+                "resultNumericMaxAbsDrift": float(row["result_numeric_max_abs_drift"]) if row.get("result_numeric_max_abs_drift") else None,
+                "detail": row.get("detail"),
+            }
+        )
+    return result
+
+
+def summarize_followup(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for row in rows:
+        key = (row["model"], row["backend"], row["channels"], row["batchSize"])
+        groups.setdefault(key, []).append(row)
+    output: list[dict[str, Any]] = []
+    for key, group_rows in sorted(groups.items(), key=lambda item: tuple(str(value) for value in item[0])):
+        passed = [row for row in group_rows if row["status"] == "pass"]
+        failed = [row for row in group_rows if row["status"] != "pass"]
+        semantic_values = {row["resultSemanticContractSha256"] for row in passed if row["resultSemanticContractSha256"]}
+        text_values = {row["resultTextSha256"] for row in passed if row["resultTextSha256"]}
+        strict_values = {row["resultContractSha256"] for row in passed if row["resultContractSha256"]}
+        strict_stable_pages = sum(1 for row in passed if row["resultContractVariants"] == 1)
+        semantic_stable_pages = sum(1 for row in passed if row["resultSemanticContractSha256"])
+        max_drift = max(
+            (row["resultNumericMaxAbsDrift"] or 0.0 for row in passed),
+            default=0.0,
+        )
+        if failed:
+            classification = "mixed-or-blocked"
+        elif strict_stable_pages == len(passed):
+            classification = "strict-stable"
+        elif semantic_stable_pages == len(passed) and len(text_values) == 1:
+            classification = "semantic-stable-numeric-drift"
+        else:
+            classification = "unstable"
+        item: dict[str, Any] = {
+            "model": key[0],
+            "backend": key[1],
+            "channels": key[2],
+            "batchSize": key[3],
+            "selectedPages": len(group_rows),
+            "successfulPages": len(passed),
+            "failedPages": len(failed),
+            "failedImages": [row["image"] for row in failed],
+            "classification": classification,
+            "pageP50Ms": summarize([row["totalP50Ms"] for row in passed if row["totalP50Ms"] is not None]) if passed else None,
+            "pageP95Ms": summarize([row["totalP95Ms"] for row in passed if row["totalP95Ms"] is not None]) if passed else None,
+            "regions": {
+                "min": min((row["regions"] for row in passed if row["regions"] is not None), default=None),
+                "max": max((row["regions"] for row in passed if row["regions"] is not None), default=None),
+            },
+            "strictStablePages": strict_stable_pages,
+            "semanticStablePages": semantic_stable_pages,
+            "textSha256Variants": len(text_values),
+            "semanticContractSha256Variants": len(semantic_values),
+            "strictContractSha256VariantsAcrossPages": len(strict_values),
+            "contractVariantCounts": sorted({row["resultContractVariants"] for row in passed if row["resultContractVariants"] is not None}),
+            "maximumNumericDrift": max_drift,
+            "rows": group_rows,
+        }
+        output.append(item)
+    return output
+
+
 def markdown(report: dict[str, Any]) -> str:
     lines = [
         "# PaddleOCR channel tuning and contract-drift follow-up (2026-10-09)",
@@ -170,7 +269,7 @@ def markdown(report: dict[str, Any]) -> str:
         "",
         "## v6 Medium strict-contract diagnostic",
         "",
-        "The same `v6/medium`, page `97a0add3f8f47b65`, batch=16/channels=2 workload was rerun with `DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT=1`. The diagnostic completed `5 + 50` calls with `result_text_sha256` and the new semantic contract SHA stable, while the full floating-point-inclusive contract had two variants. This isolates the observed drift to fields intentionally excluded from the semantic fingerprint (scores, polygon coordinates, or confidence values); it does not prove geometric tolerance or accuracy parity.",
+        "The same `v6/medium`, page `97a0add3f8f47b65`, batch=16/channels=2 workload was rerun with `DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT=1`. The diagnostic completed `5 + 50` calls with `result_text_sha256` and the new semantic contract SHA stable, while the full floating-point-inclusive contract was summarized below with its observed variant count. This isolates the observed drift to fields intentionally excluded from the semantic fingerprint (scores, polygon coordinates, or confidence values); it does not prove geometric tolerance or accuracy parity.",
         "",
     ]
     for diagnostic in report["diagnostics"]:
@@ -189,6 +288,30 @@ def markdown(report: dict[str, Any]) -> str:
         "- This report is a performance/concurrency diagnostic only; it does not close the PP-OCR accuracy gate, TensorRT/OpenVINO/OpenCV matrix, or cross-device evidence requirements.",
         "",
     ]
+    followup = report.get("followupGroups", [])
+    if followup:
+        lines += [
+            "## Multi-page contract follow-up",
+            "",
+            "These rows are direct `5 warmup + 50 measured` reruns with ORT CUDA, batch `16`, channels `2`, `MAX_REGIONS=64` for the diagnostic page. The three v6 rows in a single CSV are split by model here so the report does not hide per-variant outcomes.",
+            "",
+            "| Model | Pages pass/fail | Classification | Page P50 median (ms) | Page P95 median (ms) | Strict-stable pages | Semantic-stable pages | Max numeric drift |",
+            "|---|---:|---|---:|---:|---:|---:|---:|",
+        ]
+        for item in followup:
+            if item["pageP50Ms"] is None:
+                p50 = p95 = "—"
+            else:
+                p50 = f"{item['pageP50Ms']['median']:.3f}"
+                p95 = f"{item['pageP95Ms']['median']:.3f}"
+            lines.append(
+                f"| {item['model']} / channels={item['channels']} | {item['successfulPages']}/{item['failedPages']} | `{item['classification']}` | {p50} | {p95} | {item['strictStablePages']} | {item['semanticStablePages']} | `{item['maximumNumericDrift']:.9g}` |"
+            )
+        lines += [
+            "",
+            "The v5 Mobile and v6 Tiny groups are strict-stable across all three pages. The v6 Medium group contains one page rejected by the default 32-region budget; rerunning that page with `MAX_REGIONS=64` kept text and semantic contracts stable but produced three strict-contract variants and a maximum numeric drift of approximately `2.28047371e-4`. This is diagnostic evidence only; it does not define a release tolerance or promote channels=2 to a global default.",
+            "",
+        ]
     return "\n".join(lines)
 
 
@@ -196,6 +319,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-root", type=Path, action="append", required=True)
     parser.add_argument("--diagnostic-csv", type=Path, action="append", default=[])
+    parser.add_argument("--followup-csv", type=Path, action="append", default=[])
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-markdown", type=Path, required=True)
     args = parser.parse_args()
@@ -208,11 +332,15 @@ def main() -> int:
                 groups.append(load_group(path))
     groups.sort(key=lambda item: (item["model"] or "", item["channels"]))
     diagnostics = [load_diagnostic(path.resolve()) for path in args.diagnostic_csv]
+    followup_rows: list[dict[str, Any]] = []
+    for path in args.followup_csv:
+        followup_rows.extend(load_followup_rows(path.resolve()))
     report = {
         "schemaVersion": 1,
         "scope": "PP-OCR ORT CUDA channel tuning and strict/semantic contract diagnostic",
         "groups": groups,
         "diagnostics": diagnostics,
+        "followupGroups": summarize_followup(followup_rows),
         "decision": "do-not-change-global-default",
     }
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
