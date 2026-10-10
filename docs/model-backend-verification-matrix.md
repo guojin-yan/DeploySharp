@@ -66,6 +66,7 @@
 ### PP-OCR 核心模型质量证据索引
 
 上方 PP-OCR 的后端勾号只表示对应精确工件已完成加载、推理和结果解码，不代表数据集准确率或跨后端质量等价。当前七组 PP-OCR v4/v5/v6 DET+REC 流水线（v4/v5 Mobile/Server、v6 Tiny/Small/Medium）已有同一 SROIE 十页选择上的 ORT CPU 与 OpenVINO CPU 质量 smoke 汇总：14 个模型/后端组合均完成 `10/10` 页，详细列出检测 F1、匹配与端到端 CER/WER、区域文本 parity 及一次性延迟观察。SROIE 是词框标注、模型输出为文本行，因此这些数值只用于可复现诊断，不是官方准确率或正式性能排名；该证据也不扩展 OpenCV DNN、CUDA 或 TensorRT 的质量状态。见[七模型十页汇总](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.md)及[机器可读 JSON](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.json)。
+文档相对链接的最新审计为[2026-10-10 结果](../eng/models/paddle-document/verification/document-link-audit-20261010-matrix-quality.md)，共检查 `353` 条本地 Markdown 链接、断链 `0`；这是链接完整性检查，不是模型支持或质量通过证明。
 
 ## PP-Structure 模型状态
 
