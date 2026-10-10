@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-10T08:35:31Z",
+  "scope": "PP-OCRv6 Small recognizer-only quality on source-linked HierText text-line crops",
+  "sourceRevision": "ca0016c1338d2145045c10896cd3efa46e0bf555",
+  "sourceWorkingTreeDirty": true,
+  "dataset": {
+    "name": "google-research-datasets/hiertext",
+    "split": "validation",
+    "selection": ["sample-002", "sample-003"],
+    "rows": 32,
+    "manifestSha256": {
+      "sample-002": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+      "sample-003": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e"
+    },
+    "redistributionBoundary": "Local smoke evidence only; source images and crop predictions are not committed."
+  },
+  "model": {
+    "id": "paddleocr/ppocrv6/small-rec",
+    "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "recognizerSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "dictionarySha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+  },
+  "protocol": {
+    "path": "RecognizeOnlyAsync",
+    "cropGranularity": "text_line",
+    "maximumRows": 32,
+    "backendDevice": "CPU",
+    "detectorExecuted": false,
+    "metrics": "case-sensitive Unicode-scalar CER/WER; no implicit normalization"
+  },
+  "backends": {
+    "onnxruntime": {
+      "rows": 32,
+      "exactRows": 19,
+      "exactRate": 0.59375,
+      "referenceCharacters": 162,
+      "characterEdits": 17,
+      "characterErrorRate": 0.10493827160493827,
+      "referenceWords": 36,
+      "wordEdits": 15,
+      "wordErrorRate": 0.4166666666666667,
+      "rawSummary": "artifacts/hiertext-line-rec-20261010/paddleocr-hiertext-line-rec-onnxruntime.json"
+    },
+    "openvino": {
+      "rows": 32,
+      "exactRows": 19,
+      "exactRate": 0.59375,
+      "referenceCharacters": 162,
+      "characterEdits": 17,
+      "characterErrorRate": 0.10493827160493827,
+      "referenceWords": 36,
+      "wordEdits": 15,
+      "wordErrorRate": 0.4166666666666667,
+      "rawSummary": "artifacts/hiertext-line-rec-20261010/paddleocr-hiertext-line-rec-openvino.json"
+    }
+  },
+  "parity": {
+    "recognizedTextRowsCompared": 32,
+    "recognizedTextRowsEqual": 32,
+    "recognizedTextRowsDifferent": 0
+  },
+  "boundary": "Recognizer-only line-crop smoke evidence; does not close complete-page accuracy, long-text, robustness, formal performance, or untested backend gates."
+}
