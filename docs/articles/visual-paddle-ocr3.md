@@ -76,7 +76,7 @@ OcrResult result = pipeline.Run(input);
 
 ## Batch、Session 池和性能
 
-检测通常使用一个 Session；方向分类和识别可以分别配置独立 Session 池，并使用动态 batch 一次处理多条文本行。`maximumRecognitionBatch` 控制单批行数，Session 池大小控制并发通道数；剩余批次等待空闲通道，不共享 native predictor 或 TensorRT execution context。
+检测通常使用一个 Session；方向分类和识别可以分别配置独立 Session 池，并使用动态 batch 一次处理多条文本行。`maximumRecognitionBatch` 控制单批行数，Session 池大小控制并发通道数；剩余批次等待空闲通道，不共享 native predictor 或 TensorRT execution context。每个阶段使用固定数量 worker 调度批次，不会为一页中的全部识别批次预先创建 Task；准备、后端或解码失败/取消后会停止分配尚未开始的批次，并等待已进入后端的 batch 安全退出。
 
 推荐的调度顺序是：检测完成后立即把 crop 描述排入有界队列；方向分类和识别各自从队列取满一个 batch；一个阶段的 Session 忙碌时让其他独立 Session 接管，不增加无限线程。设备显存不足时优先降低 Session 数，再降低 batch；batch 太小会增加提交开销，batch 太大则会增加 padding 和尾批等待。
 

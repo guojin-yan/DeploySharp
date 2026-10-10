@@ -833,26 +833,57 @@ namespace JYPPX.DeploySharp.Visual
         private static async Task<BatchExecution<T>[]> RunBatchesAsync<T>(IOcrRecognitionImageInput input, string inputName, IReadOnlyList<OcrBatchDescriptor> batches, int maximumConcurrency, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken)
         {
             if (batches.Count == 0) return Array.Empty<BatchExecution<T>>();
-            int concurrency = Math.Min(batches.Count, Math.Max(1, maximumConcurrency));
-            using var gate = new SemaphoreSlim(concurrency, concurrency);
-            var tasks = new List<Task<BatchExecution<T>>>(batches.Count);
+            int workerCount = Math.Min(batches.Count, Math.Max(1, maximumConcurrency));
+            // Keep the OCR batch queue bounded. Creating one Task per crop batch
+            // makes a large page retain all queue closures and can continue
+            // preparing later crops after an earlier batch has already failed.
+            using var stopSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var completed = new BatchExecution<T>?[batches.Count];
+            var nextBatch = new[] { -1 };
+            var workers = new Task[workerCount];
             try
             {
-                for (int index = 0; index < batches.Count; index++)
-                {
-                    await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    tasks.Add(ExecuteBatchAsync(input, inputName, batches[index], run, cancellationToken, gate));
-                }
-                return await Task.WhenAll(tasks).ConfigureAwait(false);
+                for (int worker = 0; worker < workerCount; worker++)
+                    workers[worker] = Task.Run(() => RunBatchWorkerAsync(input, inputName, batches, completed, nextBatch, run, stopSource), CancellationToken.None);
+                await Task.WhenAll(workers).ConfigureAwait(false);
+                var results = new BatchExecution<T>[completed.Length];
+                for (int index = 0; index < completed.Length; index++)
+                    results[index] = completed[index] ?? throw new InvalidOperationException("OCR batch scheduling completed without a result.");
+                return results;
             }
             catch
             {
-                try { await Task.WhenAll(tasks).ConfigureAwait(false); } catch { }
+                CancelBatchWorkers(stopSource);
+                try { await Task.WhenAll(workers).ConfigureAwait(false); } catch { }
                 throw;
             }
         }
 
-        private static async Task<BatchExecution<T>> ExecuteBatchAsync<T>(IOcrRecognitionImageInput input, string inputName, OcrBatchDescriptor batch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken, SemaphoreSlim gate)
+        private static async Task RunBatchWorkerAsync<T>(IOcrRecognitionImageInput input, string inputName, IReadOnlyList<OcrBatchDescriptor> batches, BatchExecution<T>?[] completed, int[] nextBatch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationTokenSource stopSource)
+        {
+            try
+            {
+                while (true)
+                {
+                    stopSource.Token.ThrowIfCancellationRequested();
+                    int batchIndex = Interlocked.Increment(ref nextBatch[0]);
+                    if (batchIndex >= batches.Count) return;
+                    completed[batchIndex] = await ExecuteBatchAsync(input, inputName, batches[batchIndex], run, stopSource.Token).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                CancelBatchWorkers(stopSource);
+                throw;
+            }
+        }
+
+        private static void CancelBatchWorkers(CancellationTokenSource stopSource)
+        {
+            try { stopSource.Cancel(); } catch (AggregateException) { }
+        }
+
+        private static async Task<BatchExecution<T>> ExecuteBatchAsync<T>(IOcrRecognitionImageInput input, string inputName, OcrBatchDescriptor batch, Func<PreparedVisualInput, CancellationToken, Task<T>> run, CancellationToken cancellationToken)
         {
             PreparedVisualInput? prepared = null;
             OcrPreparedCropBatch? processed = null;
@@ -885,7 +916,6 @@ namespace JYPPX.DeploySharp.Visual
             finally
             {
                 if (prepared != null) prepared.Dispose();
-                gate.Release();
             }
         }
 

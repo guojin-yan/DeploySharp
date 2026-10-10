@@ -421,6 +421,25 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RecognitionFailureStopsPreparingUnstartedBatches()
+        {
+            using OcrFixture fixture = CreateOcrFixture(
+                recognitionWidth: 8,
+                overflowMode: RecognitionOverflowMode.SlidingWindow,
+                windowOptions: new OcrRecognitionWindowOptions(overlapRatio: .2, maximumWindowsPerRegion: 8, maximumWindowsPerImage: 16),
+                maximumConcurrency: 2,
+                detectionFactory: _ => ThreeDistinctDetectionOutputs());
+            fixture.RecognitionProvider.Delay = TimeSpan.FromMilliseconds(50);
+            fixture.RecognitionProvider.Failure = new InvalidOperationException("synthetic recognition failure");
+            using var input = new FakeOcrImageInput();
+
+            await Assert.ThrowsExactlyAsync<OcrPipelineException>(() => fixture.Pipeline.RunAsync(input));
+
+            Assert.IsTrue(input.RecognitionBatchCount > 0 && input.RecognitionBatchCount < 3,
+                "A recognition failure must cancel fixed workers before the third batch is prepared.");
+        }
+
+        [TestMethod]
         public void OcrPolygonAndCtcPerformanceEntryRecordsThroughputAndAllocation()
         {
             const int candidates = 128;
@@ -623,7 +642,7 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(0, bounded.RecognitionProvider.LastSession!.RunCount + bounded.RecognitionProvider.LastSession.SequenceArgMaxRunCount);
         }
 
-        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null)
+        private static OcrFixture CreateOcrFixture(int recognitionWidth = 16, RecognitionOverflowMode overflowMode = RecognitionOverflowMode.Clamp, bool dynamicWidth = false, OcrRecognitionWindowOptions? windowOptions = null, long maximumResultBytes = 16L * 1024L * 1024L, OcrGeometryOptions? geometryOptions = null, OcrOrientationRetryOptions? retryOptions = null, Func<InferenceInputs, InferenceOutputs>? recognitionFactory = null, int maximumConcurrency = 1, Func<InferenceInputs, InferenceOutputs>? detectionFactory = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null, int maximumRecognitionBatch = 2)
         {
             var detectorDecoder = new ExplicitTextDetectionDecoder(new ExplicitTextDetectionSchema("polygons", "scores", 4, quadrilateralCornerOrder: TextCornerOrder.TopLeftClockwise), new TextDetectionDecoderOptions(.1f, .3f, maximumCandidates: 3, maximumRegions: 3));
             VisualModelProfile detectorProfile = DetectionProfile(detectorDecoder, TensorElementType.Float32, 3, "fake-detector");
@@ -652,7 +671,7 @@ namespace DeploySharp.Visual.Tests
             if (cropProcessing != null) crop = crop.WithCropProcessing(cropProcessing);
             if (enhancementRetry != null) crop = crop.WithEnhancementRetry(enhancementRetry);
             if (widthRetry != null) crop = crop.WithWidthRetry(widthRetry);
-            var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: 2, maximumRecognitionPaddingRatio: 2, maximumResultBytes: maximumResultBytes, maximumConcurrency: maximumConcurrency), new SessionOptions(1), new SessionOptions(maximumConcurrency));
+            var pipeline = new OcrPipeline(registry, detectorSelection, detectorRequest, recognizerSelection, recognizerRequest, crop, new OcrPipelineOptions(maximumRegions: 3, maximumRecognitionBatch: maximumRecognitionBatch, maximumRecognitionPaddingRatio: 2, maximumResultBytes: maximumResultBytes, maximumConcurrency: maximumConcurrency), new SessionOptions(1), new SessionOptions(maximumConcurrency));
             return new OcrFixture(registry, detectionProvider, recognitionProvider, pipeline);
         }
 
@@ -694,6 +713,18 @@ namespace DeploySharp.Visual.Tests
                     50f,50f, 95f,50f, 95f,80f, 50f,80f
                 })),
                 ("scores", new Tensor<float>(new TensorShape(1, 3), new[] { .95f, .8f, .9f })));
+        }
+
+        private static InferenceOutputs ThreeDistinctDetectionOutputs()
+        {
+            return Outputs(
+                ("polygons", new Tensor<float>(new TensorShape(1, 3, 4, 2), new[]
+                {
+                    5f,5f, 20f,5f, 20f,15f, 5f,15f,
+                    30f,5f, 50f,5f, 50f,15f, 30f,15f,
+                    5f,30f, 25f,30f, 25f,45f, 5f,45f
+                })),
+                ("scores", new Tensor<float>(new TensorShape(1, 3), new[] { .95f, .9f, .85f })));
         }
 
         private static InferenceOutputs ParallelDetectionOutputs()
@@ -756,12 +787,15 @@ namespace DeploySharp.Visual.Tests
             public int LastBatchSize { get; private set; }
             public int DisposeCount { get; private set; }
             public int MaximumActivePreparedBatches { get; private set; }
+            public int RecognitionBatchCount => Volatile.Read(ref _recognitionBatchCount);
             public int ActivePreparedBatches => _activePreparedBatches;
             private int _activePreparedBatches;
+            private int _recognitionBatchCount;
             public PreparedVisualInput PrepareRecognitionBatch(string inputName, IReadOnlyList<TextCropRequest> requests, CancellationToken cancellationToken)
             {
                 if (_disposed) throw new ObjectDisposedException(nameof(FakeOcrImageInput));
                 cancellationToken.ThrowIfCancellationRequested();
+                Interlocked.Increment(ref _recognitionBatchCount);
                 LastBatchSize = requests.Count;
                 int width = requests[0].TargetWidth;
                 var size = new VisualSize(width, requests[0].TargetHeight);
