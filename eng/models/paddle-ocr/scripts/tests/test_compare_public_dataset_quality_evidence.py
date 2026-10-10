@@ -91,6 +91,10 @@ class ComparePublicDatasetQualityEvidenceTests(unittest.TestCase):
         self.assertEqual(["example/SROIE"], report["dataset"]["sourceDatasets"])
         self.assertEqual(["train"], report["dataset"]["sourceSplits"])
         self.assertEqual("image-sha256-from-provenance", report["dataset"]["images"][0]["imageSha256"])
+        self.assertEqual(
+            "One measured iteration across 1 distinct page; not the formal 5-warmup/50-iteration benchmark.",
+            report["protocol"]["performanceBoundary"],
+        )
         markdown = self.output_md.read_text(encoding="utf-8")
         self.assertIn("example/SROIE (train)", markdown)
         self.assertNotIn("HierText `sample-002`", markdown)

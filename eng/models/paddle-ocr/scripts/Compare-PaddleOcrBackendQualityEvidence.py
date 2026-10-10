@@ -406,6 +406,12 @@ def main() -> int:
             raise ValueError("Selected manifest image order does not match the reference prediction document")
     all_page_runs = sum(item["candidateMetrics"]["pages"] for item in comparisons)
     all_page_failures = sum(item["candidateMetrics"]["pageFailures"] for item in comparisons)
+    selected_page_count = reference_meta.get("selectedImageCount")
+    page_word = "page" if selected_page_count == 1 else "pages"
+    performance_boundary = (
+        f"One measured iteration across {selected_page_count} distinct {page_word}; "
+        "not the formal 5-warmup/50-iteration benchmark."
+    )
     report = {
         "schemaVersion": 1,
         "generatedUtc": datetime.now(timezone.utc).isoformat(),
@@ -437,7 +443,7 @@ def main() -> int:
             "overflowMode": reference_meta.get("overflowMode"),
             "benchmarkAssemblySha256": reference_meta.get("benchmarkAssemblySha256"),
             "sourceRevision": reference_meta.get("sourceRevision"),
-            "performanceBoundary": "One measured iteration across ten distinct pages; not the formal 5-warmup/50-iteration benchmark.",
+            "performanceBoundary": performance_boundary,
         },
         "summary": {
             "models": len(reference_runs),
