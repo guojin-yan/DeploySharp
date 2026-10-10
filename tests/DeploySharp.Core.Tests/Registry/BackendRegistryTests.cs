@@ -118,6 +118,41 @@ namespace JYPPX.DeploySharp.Core.Tests.Registry
         }
 
         [TestMethod]
+        public async Task DisposingPooledSessionCancelsActiveCallAndWaitsForLeaseBeforeReleasingChannels()
+        {
+            using var runStarted = new ManualResetEventSlim(false);
+            var provider = new FakeBackendProvider("dispose-active")
+            {
+                RunDelay = TimeSpan.FromSeconds(5),
+                RunStarted = () => runStarted.Set()
+            };
+            using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().AddBackend(provider).Build();
+            IInferenceSession session = runtime.CreateSession(
+                CreateArtifact("onnx"),
+                new BackendRequest(BackendCapabilities.TensorInference),
+                new SessionOptions(2));
+            var inputs = InferenceInputs.Create("input", new Tensor<float>(new TensorShape(1), new[] { 1f }));
+
+            Task<InferenceOutputs> run = session.RunAsync(inputs, CancellationToken.None);
+            Assert.IsTrue(runStarted.Wait(TimeSpan.FromSeconds(2)), "The test call did not acquire a pooled session.");
+            Task dispose = Task.Run(session.Dispose);
+
+            try
+            {
+                await run.ConfigureAwait(false);
+                Assert.Fail("Disposing the pool should cancel its active operation.");
+            }
+            catch (OperationCanceledException)
+            {
+                // The fake backend returns TaskCanceledException for the pool token.
+            }
+
+            await dispose.ConfigureAwait(false);
+            session.Dispose();
+            Assert.IsTrue(provider.CreatedSessions.All(value => value.IsDisposed));
+        }
+
+        [TestMethod]
         public async Task SingleSessionPoolQueuesConcurrentCalls()
         {
             var provider = new FakeBackendProvider("single") { RunDelay = TimeSpan.FromMilliseconds(50) };
