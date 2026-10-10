@@ -827,6 +827,8 @@ PP-OCRv5 Server 也在同一十页选择上完成 ORT/OpenVINO 对照：两后�
 
 随后以同一页选集、同一源码 revision 和 batch=1 协议补做了[PP-OCRv6 Small 三后端质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-three-backend-quality-20261009.md)。ORT、OpenVINO 和 OpenCV DNN 均完成 `10/10` 页，检测 TP/FP/FN `489/42/53`、531 个区域和页面有序文本全部一致；P50/P95 观察分别为 `1302.87/2534.95 ms`、`779.76/1054.15 ms`、`7722.31/10131.55 ms`。OpenCV 的 batch=1 是当前静态 importer 合同，不代表批量性能；该记录仍是 SROIE 词框/文本行异粒度的 smoke，不能关闭自然长文本、正式质量或 5/50 性能门。完整机器摘要见[JSON](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-three-backend-quality-20261009.json)。
 
+为统一当前 revision，v6 Small 又完成了[十页 ORT/OpenVINO 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-quality-parity-20261010.md)。两后端均 `10/10` 页完成，IoU0.5 TP/FP/FN `489/42/53`（F1 `91.15%`），matched CER/WER `30.42%/46.03%`，端到端 CER/WER `37.63%/55.74%`；531 个索引区域和页面有序文本全部一致，polygon 坐标无漂移，最大 confidence 漂移 `3.028e-5`。一次性总耗时 P50/P95 为 ORT `1140.60/1839.85 ms`、OpenVINO `647.60/781.49 ms`。这是 one-warm-up/one-measured-iteration 的词框/文本行 smoke 证据，不是官方准确率或正式 5/50 性能结果；早期三后端记录的 OpenCV 边界保持独立。七个核心模型的统一索引见[十页汇总](../../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.md)。
+
 ### 2026-09-29 受控与真实关联边界补充
 
 - **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。
