@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-10T01:20:00Z",
+  "scope": "PP-OCRv5 Mobile complete-page quality and ORT/OpenVINO parity on ten local SROIE receipt pages",
+  "sourceRevision": "c26540f27befc6806513d9741187cc73136695f8",
+  "sourceWorkingTreeDirty": true,
+  "benchmarkAssemblySha256": "9305cb0e6d50cb7e6a98c1045d4306a5583dfe52119a69f3dbe9309cc3761724",
+  "runtime": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "processorArchitecture": "X64",
+    "processorCount": 16
+  },
+  "dataset": {
+    "source": "jsdnrs/ICDAR2019-SROIE",
+    "sourceRevision": "bffe40c26759f3376ec2b3ae9031dbba54cd587c",
+    "split": "train",
+    "sourceManifestSha256s": [
+      "3015917423e64aad275f7e3626187d0061cae2738ba6d780907aa87de06b4cb4",
+      "3b9c8159d88d1da188483ede63c067bcaf8564e73137c5cdf278ce292ad25518"
+    ],
+    "selectedManifestSha256": "2975c4e967b485f2b064980fe62b1df5e2e43acb954c44f144d87b020f8f8e41",
+    "images": 10,
+    "imageSha256": [
+      "fbf32fef1e3c9b30a217537294d637fb724c3c5591a16e302986f889799f944c",
+      "503590a2a573d4ef9234bb5db734ec0c8ca2c6faef29dd52b9a2a538aaf69452",
+      "efb25720ae864ba27dd9e08cdb8fdef3615b0e7ca971305e2e163278b5624688",
+      "6f2d9dd4a2a734f002e60ea6f6455276ffbaf24a0d2b9092ae67fef5f75c1499",
+      "cd13975a0f05b6edab0b0209a3fc1ba24ceda35c7f9a6a404ea699037b65470b",
+      "bae0765f90d2ae056f45f076288ad7c081a28223381ff30ec772554bd8fa5dba",
+      "e70c9633d1ffc80e3cc5d66ac06188ab0c1f3268be845fad1db197d0fd657758",
+      "392290ff4cfa92961fc7e1865a10754b0208110fd53f41b24f5a8e615a8341ec",
+      "ca87e22a7cc8f606156301bb5acfc37dc361e300c6baabc456040632716bb159",
+      "9f1ce3f5bc0189b6db808eab9e7382a5c2c2a61cc7adc4421b983480555d9931"
+    ],
+    "redistributionBoundary": "Smoke-only pending per-image source review; no dataset assets or predictions are committed."
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> optional cls -> rec -> merge",
+    "warmupPerPage": 1,
+    "measuredIterationsPerPage": 1,
+    "recognitionBatchSize": 16,
+    "inferenceChannels": 1,
+    "maximumRegions": 1024,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "performanceBoundary": "One measured iteration across ten distinct pages; not the formal 5-warmup/50-iteration benchmark."
+  },
+  "model": {
+    "version": "v5",
+    "variant": "mobile",
+    "detectorSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+    "recognizerSha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+    "classifierSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+    "dictionarySha256": "260633e4593156b8d07cee934ae43d4baffbe352c23083d64723023de5c1bb3e"
+  },
+  "backends": {
+    "onnxruntime-cpu": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "detIou05": { "tp": 492, "fp": 46, "fn": 50, "f1": 0.9111111111111111 },
+      "matchedCer": 0.3809266270055886,
+      "matchedWer": 0.6980392156862745,
+      "endToEndCer": 0.4510841727847021,
+      "endToEndWer": 0.7640036730945822,
+      "regions": 538,
+      "totalLatencyMs": { "p50": 2640.8215, "p95": 3289.8366 }
+    },
+    "openvino-cpu": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "detIou05": { "tp": 492, "fp": 46, "fn": 50, "f1": 0.9111111111111111 },
+      "matchedCer": 0.3809266270055886,
+      "matchedWer": 0.6980392156862745,
+      "endToEndCer": 0.4510841727847021,
+      "endToEndWer": 0.7640036730945822,
+      "regions": 538,
+      "totalLatencyMs": { "p50": 1113.669, "p95": 1468.34545 }
+    }
+  },
+  "parity": {
+    "pagesCompared": 10,
+    "orderedTextSequenceMatches": 10,
+    "regionCountMatches": 10,
+    "indexedRegionTextMismatches": 0,
+    "referenceRegions": 538,
+    "candidateRegions": 538,
+    "maxIndexedPolygonAbsDeltaPx": 0.0,
+    "maxIndexedConfidenceAbsDelta": 0.0000225,
+    "alignmentNote": "Coordinate and confidence deltas are index-aligned only when page region counts match; this does not perform geometric rematching."
+  },
+  "limits": [
+    "SROIE is a distributor train subset with word-level boxes while PP-OCR emits text-line polygons; these metrics are smoke diagnostics, not official line accuracy.",
+    "The run uses one warm-up and one measured iteration per page, not the formal 5-warmup/50-iteration performance protocol.",
+    "The ten pages contain 21 regions with at least 32 characters but none at least 128 or 3200 characters; the natural-long-text A2 gate remains open.",
+    "Matching ORT/OpenVINO quality and text does not promote CUDA, TensorRT or other PP-OCR variants; the earlier OpenCV DNN smoke has a separate source revision and scope."
+  ],
+  "reproduction": {
+    "runner": "eng/models/paddle-ocr/scripts/Invoke-PaddleOcrPublicDataset.ps1",
+    "mergeTool": "eng/models/paddle-ocr/scripts/Merge-PaddleOcrPublicDatasetRuns.py",
+    "evaluator": "eng/models/paddle-ocr/scripts/Evaluate-DeploySharpPublicOcrDataset.py",
+    "comparator": "eng/models/paddle-ocr/scripts/Compare-PaddleOcrBackendQualityEvidence.py",
+    "comparisonEvidence": "artifacts/public-ocr-evaluation/sroie-v5-mobile-backend-compare-20261010/compare.json"
+  }
+}
