@@ -199,6 +199,58 @@ namespace JYPPX.DeploySharp.Core.Tests.Registry
         }
 
         [TestMethod]
+        public async Task GenericBatchSchedulerStopsUnstartedBatchesAfterDecodeFailure()
+        {
+            var provider = new FakeBackendProvider("batch-scheduler-failure");
+            using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().AddBackend(provider).Build();
+            using IInferenceSession session = runtime.CreateSession(CreateArtifact("onnx"), new BackendRequest(BackendCapabilities.TensorInference), new SessionOptions(2));
+            int prepared = 0;
+            var scheduler = new InferenceBatchScheduler<int, int>(session, 1,
+                batch =>
+                {
+                    Interlocked.Increment(ref prepared);
+                    return InferenceInputs.Create("input", new Tensor<float>(new TensorShape(batch.Count), batch.Select(value => (float)value).ToArray()));
+                },
+                (outputs, count) => throw new InvalidOperationException("synthetic decode failure"));
+
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => scheduler.RunAsync(Enumerable.Range(0, 100).ToArray()));
+
+            Assert.IsTrue(Volatile.Read(ref prepared) <= 2,
+                "A decode failure must cancel the fixed worker set instead of preparing the entire backlog.");
+        }
+
+        [TestMethod]
+        public async Task GenericBatchSchedulerCanBeReusedAfterCancellation()
+        {
+            var provider = new FakeBackendProvider("batch-scheduler-cancel") { RunDelay = TimeSpan.FromMilliseconds(250) };
+            using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().AddBackend(provider).Build();
+            using IInferenceSession session = runtime.CreateSession(CreateArtifact("onnx"), new BackendRequest(BackendCapabilities.TensorInference), new SessionOptions(2));
+            var scheduler = new InferenceBatchScheduler<int, int>(session, 2,
+                batch => InferenceInputs.Create("input", new Tensor<float>(new TensorShape(batch.Count), batch.Select(value => (float)value).ToArray())),
+                (outputs, count) => ((float[])outputs.GetRequired("output").Buffer).Take(count).Select(value => (int)value).ToArray());
+
+            using var cancellation = new CancellationTokenSource();
+            Task<IReadOnlyList<int>> cancelled = scheduler.RunAsync(Enumerable.Range(0, 8).ToArray(), cancellation.Token);
+            await Task.Delay(30).ConfigureAwait(false);
+            cancellation.Cancel();
+            try
+            {
+                await cancelled.ConfigureAwait(false);
+                Assert.Fail("The cancelled batch run unexpectedly completed.");
+            }
+            catch (OperationCanceledException)
+            {
+                // TaskCanceledException is the normal Task wrapper for a
+                // backend cancellation and is still an OperationCanceledException.
+            }
+
+            IReadOnlyList<int> results = await scheduler.RunAsync(new[] { 4, 3, 2, 1 });
+            CollectionAssert.AreEqual(new[] { 4, 3, 2, 1 }, results.ToArray());
+            Assert.IsTrue(provider.CreatedSessions.All(value => !value.IsDisposed));
+        }
+
+        [TestMethod]
         public void MissingExplicitBackendReturnsStableErrorCode()
         {
             using DeploySharpRuntime runtime = DeploySharpRuntime.CreateBuilder().Build();

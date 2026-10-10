@@ -54,38 +54,37 @@ namespace JYPPX.DeploySharp
             // its collection while asynchronous batches are in flight.
             var snapshot = new TInput[items.Count];
             for (int index = 0; index < snapshot.Length; index++) snapshot[index] = items[index];
-            int batchCount = checked((snapshot.Length + MaximumBatchSize - 1) / MaximumBatchSize);
-            int inFlightLimit = Math.Min(batchCount, ResolveMaximumInFlightBatches());
-            using var inFlight = new SemaphoreSlim(inFlightLimit, inFlightLimit);
-            var tasks = new List<Task<BatchResult>>(batchCount);
+            int batchCount = snapshot.Length / MaximumBatchSize;
+            if (snapshot.Length % MaximumBatchSize != 0) batchCount++;
+            int workerCount = Math.Min(batchCount, ResolveMaximumInFlightBatches());
+            // Use a fixed worker set instead of creating one Task per batch. This
+            // keeps the scheduler bounded for large OCR/ROI workloads and lets a
+            // preparation/decode failure cancel batches that have not started yet.
+            using var stopSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var completed = new BatchResult?[batchCount];
+            var nextBatch = new[] { -1 };
+            var workers = new Task[workerCount];
             try
             {
-                for (int batchIndex = 0; batchIndex < batchCount; batchIndex++)
+                for (int worker = 0; worker < workerCount; worker++)
                 {
-                    int offset = checked(batchIndex * MaximumBatchSize);
-                    int count = Math.Min(MaximumBatchSize, snapshot.Length - offset);
-                    await inFlight.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        IReadOnlyList<TInput> batch = new ArraySegment<TInput>(snapshot, offset, count);
-                        InferenceInputs prepared = _prepareBatch(batch) ?? throw new InvalidOperationException("The batch input factory returned null.");
-                        tasks.Add(ExecuteBatchAsync(offset, count, prepared, cancellationToken, inFlight));
-                    }
-                    catch
-                    {
-                        inFlight.Release();
-                        throw;
-                    }
+                    workers[worker] = Task.Run(
+                        () => RunWorkerAsync(snapshot, batchCount, completed, nextBatch, stopSource),
+                        CancellationToken.None);
                 }
-                BatchResult[] completed = await Task.WhenAll(tasks).ConfigureAwait(false);
+                await Task.WhenAll(workers).ConfigureAwait(false);
                 var results = new TOutput[items.Count];
-                foreach (BatchResult batch in completed)
+                for (int batchIndex = 0; batchIndex < completed.Length; batchIndex++)
+                {
+                    BatchResult batch = completed[batchIndex] ?? throw new InvalidOperationException("The batch scheduler completed without a result for batch " + batchIndex + ".");
                     for (int index = 0; index < batch.Outputs.Count; index++) results[batch.Offset + index] = batch.Outputs[index];
+                }
                 return Array.AsReadOnly(results);
             }
             catch
             {
-                try { await Task.WhenAll(tasks).ConfigureAwait(false); }
+                CancelWorkers(stopSource);
+                try { await Task.WhenAll(workers).ConfigureAwait(false); }
                 catch { }
                 throw;
             }
@@ -98,19 +97,44 @@ namespace JYPPX.DeploySharp
             return 1;
         }
 
-        private async Task<BatchResult> ExecuteBatchAsync(int offset, int expectedCount, InferenceInputs inputs, CancellationToken cancellationToken, SemaphoreSlim inFlight)
+        private async Task RunWorkerAsync(
+            TInput[] snapshot,
+            int batchCount,
+            BatchResult?[] completed,
+            int[] nextBatch,
+            CancellationTokenSource stopSource)
         {
             try
             {
-                InferenceOutputs outputs = await _session.RunAsync(inputs, cancellationToken).ConfigureAwait(false);
-                IReadOnlyList<TOutput> decoded = _decodeBatch(outputs, expectedCount) ?? throw new InvalidOperationException("The batch output decoder returned null.");
-                if (decoded.Count != expectedCount) throw new InvalidOperationException("The decoded output count does not match the submitted batch size.");
-                return new BatchResult(offset, decoded);
+                while (true)
+                {
+                    stopSource.Token.ThrowIfCancellationRequested();
+                    int batchIndex = Interlocked.Increment(ref nextBatch[0]);
+                    if (batchIndex >= batchCount) return;
+
+                    int offset = checked(batchIndex * MaximumBatchSize);
+                    int count = Math.Min(MaximumBatchSize, snapshot.Length - offset);
+                    IReadOnlyList<TInput> batch = new ArraySegment<TInput>(snapshot, offset, count);
+                    InferenceInputs prepared = _prepareBatch(batch) ?? throw new InvalidOperationException("The batch input factory returned null.");
+                    InferenceOutputs outputs = await _session.RunAsync(prepared, stopSource.Token).ConfigureAwait(false);
+                    IReadOnlyList<TOutput> decoded = _decodeBatch(outputs, count) ?? throw new InvalidOperationException("The batch output decoder returned null.");
+                    if (decoded.Count != count) throw new InvalidOperationException("The decoded output count does not match the submitted batch size.");
+                    completed[batchIndex] = new BatchResult(offset, decoded);
+                }
             }
-            finally
+            catch
             {
-                inFlight.Release();
+                // Cancel other workers immediately. The caller still observes
+                // the original failure after all workers have unwound.
+                CancelWorkers(stopSource);
+                throw;
             }
+        }
+
+        private static void CancelWorkers(CancellationTokenSource stopSource)
+        {
+            try { stopSource.Cancel(); }
+            catch (AggregateException) { }
         }
 
         private sealed class BatchResult

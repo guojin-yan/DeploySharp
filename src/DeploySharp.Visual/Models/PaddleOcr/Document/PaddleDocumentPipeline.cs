@@ -198,37 +198,65 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (maxDegreeOfParallelism <= 0) throw new ArgumentOutOfRangeException(nameof(maxDegreeOfParallelism));
 
             PaddleDocumentPage[] selected = pages.ToArray();
-            var results = new PaddleDocumentPipelineResult[selected.Length];
-            using var gate = new SemaphoreSlim(maxDegreeOfParallelism, maxDegreeOfParallelism);
-            var tasks = new Task[selected.Length];
+            if (selected.Length == 0) return Array.Empty<PaddleDocumentPipelineResult>();
             for (int index = 0; index < selected.Length; index++)
+                if (selected[index] == null) throw new ArgumentException("A document page cannot be null.", nameof(pages));
+            var results = new PaddleDocumentPipelineResult[selected.Length];
+            int workerCount = Math.Min(maxDegreeOfParallelism, selected.Length);
+            int[] nextIndex = { -1 };
+            using var stopSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var workers = new Task[workerCount];
+            for (int worker = 0; worker < workerCount; worker++)
             {
-                int resultIndex = index;
-                tasks[index] = RunPageAsync(selected[resultIndex], resultIndex, results, gate, cancellationToken);
+                workers[worker] = Task.Run(
+                    () => RunPageWorkerAsync(selected, results, nextIndex, stopSource),
+                    CancellationToken.None);
             }
 
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-            return Array.AsReadOnly(results);
-        }
-
-        private async Task RunPageAsync(
-            PaddleDocumentPage page,
-            int resultIndex,
-            PaddleDocumentPipelineResult[] results,
-            SemaphoreSlim gate,
-            CancellationToken cancellationToken)
-        {
-            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (page == null) throw new ArgumentException("A document page cannot be null.", nameof(page));
-                results[resultIndex] = await RunAsync(page, cancellationToken).ConfigureAwait(false);
+                await Task.WhenAll(workers).ConfigureAwait(false);
+                return Array.AsReadOnly(results);
             }
-            finally
+            catch
             {
-                gate.Release();
+                CancelWorkers(stopSource);
+                try { await Task.WhenAll(workers).ConfigureAwait(false); }
+                catch { }
+                throw;
             }
+        }
+
+        private async Task RunPageWorkerAsync(
+            PaddleDocumentPage[] selected,
+            PaddleDocumentPipelineResult[] results,
+            int[] nextIndex,
+            CancellationTokenSource stopSource)
+        {
+            try
+            {
+                while (true)
+                {
+                    stopSource.Token.ThrowIfCancellationRequested();
+                    int resultIndex = Interlocked.Increment(ref nextIndex[0]);
+                    if (resultIndex >= selected.Length) return;
+                    PaddleDocumentPage page = selected[resultIndex] ?? throw new ArgumentException("A document page cannot be null.", nameof(selected));
+                    results[resultIndex] = await RunAsync(page, stopSource.Token).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                // Stop assigning new pages as soon as one worker fails. Pages
+                // already inside a stage receive the same linked cancellation.
+                CancelWorkers(stopSource);
+                throw;
+            }
+        }
+
+        private static void CancelWorkers(CancellationTokenSource stopSource)
+        {
+            try { stopSource.Cancel(); }
+            catch (AggregateException) { }
         }
 
         public async Task<PaddleDocumentPipelineResult> RunAsync(PaddleDocumentPage page, CancellationToken cancellationToken = default(CancellationToken))

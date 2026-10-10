@@ -29,7 +29,7 @@ IReadOnlyList<DetectionResult> results =
     await scheduler.RunAsync(images, cancellationToken);
 ```
 
-`prepareBatch` 必须按照输入合同创建一个连续张量；`decodeBatch` 必须返回与 `count` 完全相同的结果数。调度器会限制在途批次，避免在前面批次尚未解码时保留所有预处理张量。准备失败、取消或解码数量不一致会终止本次调用，不返回部分结果。
+`prepareBatch` 必须按照输入合同创建一个连续张量；`decodeBatch` 必须返回与 `count` 完全相同的结果数。调度器用固定数量的 worker 逐批准备和执行任务，而不是为整个输入创建一个 Task；默认 worker 数等于 Session 池容量，也可用 `maximumInFlightBatches` 再收紧。因此一个很大的图片/ROI 队列只会同时保留有界数量的在途批次与预处理张量。准备失败、后端异常、调用方取消或解码数量不一致会停止继续分配新批次，并等待已启动 worker 退出；本次调用不返回部分结果。失败后调度器对象仍可复用，Session 池会按自己的生命周期合同归还通道。
 
 ## batch-one Session 池
 
@@ -89,11 +89,11 @@ IReadOnlyList<VisualInferenceResult> frames =
 
 Batch 结果按输入行索引访问；每行携带自己的源图变换。固定 batch-one 任务即使通过 Session 池并发，也仍返回 batch-one 结果列表，不会包装成 `*BatchResult`。
 
-PP-Structure 的 batch decoder 合同已经覆盖版面/NMS、公式、印章和 UVDoc 的逐行结果与页码/几何或像素隔离；这只是解码合同，不代表每个后端和每个官方工件都已完成真实动态 batch 性能验证。Chart2Table 的视觉编码器可以拆分运行，但文本自回归目前保持 batch=1，需通过独立 Session 或专用调度策略扩展吞吐。
+PP-Structure 的 batch decoder 合同已经覆盖版面/NMS、公式、印章和 UVDoc 的逐行结果与页码/几何或像素隔离；页面级 `RunManyConcurrentAsync` 也采用固定 worker 数，不会为所有页面建立等待任务，并会在失败或取消时停止派发尚未开始的页面。页面和 Batch 输入集合均在运行阶段前做快照/预检，避免调用方后续改动集合顺序，或无效页面在其它页面已进入模型后才被发现。这些只是调度和解码合同，不代表每个后端和每个官方工件都已完成真实动态 Batch 性能验证。Chart2Table 的视觉编码器可以拆分运行，但文本自回归目前保持 batch=1，需通过独立 Session 或专用调度策略扩展吞吐。
 
 ## 取消、超时和释放
 
-所有异步入口都接受 `CancellationToken`。取消会停止未开始的准备和排队工作，并等待已经进入 native 的调用安全退出；不会发布半成品结果。释放 Pipeline 前应停止新请求，等待活动调用完成，再释放拥有的 Session 池。`BackendRegistry` 由应用统一拥有，不能在 Pipeline 仍使用时释放。
+所有异步入口都接受 `CancellationToken`。取消会停止尚未分配的准备和排队工作，并等待已经进入 native 的调用安全退出；不会发布半成品结果。调度器只为活动 worker 分配 Task，所以队列越大也不会额外创建同规模的等待任务。释放 Pipeline 前应停止新请求，等待活动调用完成，再释放拥有的 Session 池。`BackendRegistry` 由应用统一拥有，不能在 Pipeline 仍使用时释放。
 
 池的生命周期合同也覆盖失败路径：后端抛出异常后，已租用的通道会在 `finally` 中归还，后续请求可以继续租用该通道；调用开始前已经取消的令牌不会进入后端。关闭时先取消池令牌，再等待所有通道归还，最后逐个释放独立 Session，重复 `Dispose` 不会重复释放。Core 的 `BackendRegistryTests.PooledSessionReturnsChannelAfterBackendFailureAndAsyncPreCancellation` 和 Visual 的 `VisualPipelineTests.IndependentVisualSessionsRemainReusableAfterFailureAndDisposeExactlyOnce` 固定了这些边界。它们验证资源和并发合同，不替代真实设备吞吐测试。
 

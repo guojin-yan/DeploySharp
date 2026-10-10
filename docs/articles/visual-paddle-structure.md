@@ -268,7 +268,7 @@ string bookMarkdown = PaddleDocumentPipelineExport.ToMarkdown(pages);
 
 `RunManyAsync` 不并行复用 stage；需要并发时应由应用创建独立的 pipeline/session 通道，再自行合并结果，以免把非线程安全的视觉会话隐式共享。
 
-如果已经确认阶段适配器及其底层 Session 支持并发调用，也可以使用显式有界的 `RunManyConcurrentAsync`。该方法只控制页面级并发，不会把多个页面拼成模型 Batch，并且仍按输入顺序返回结果：
+如果已经确认阶段适配器及其底层 Session 支持并发调用，也可以使用显式有界的 `RunManyConcurrentAsync`。该方法只控制页面级并发，不会把多个页面拼成模型 Batch，并且仍按输入顺序返回结果。内部使用固定 worker 数，不会对所有页面预先创建等待 Task；取消或任一阶段失败后停止分配新页面，并等待已开始的阶段退出。页面集合会在启动任何阶段前完整校验，避免无效页导致部分页面已经进入推理：
 
 ```csharp
 IReadOnlyList<PaddleDocumentPipelineResult> pages =

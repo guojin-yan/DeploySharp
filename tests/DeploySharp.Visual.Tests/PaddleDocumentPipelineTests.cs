@@ -217,7 +217,92 @@ namespace DeploySharp.Visual.Tests
                 cancellation.Token);
             await Task.Delay(30).ConfigureAwait(false);
             cancellation.Cancel();
-            await Assert.ThrowsExactlyAsync<OperationCanceledException>(async () => await run.ConfigureAwait(false));
+            try
+            {
+                await run.ConfigureAwait(false);
+                Assert.Fail("The cancelled multi-page run unexpectedly completed.");
+            }
+            catch (OperationCanceledException)
+            {
+                // Native/asynchronous stage cancellation is surfaced as either
+                // OperationCanceledException or its TaskCanceledException subtype.
+            }
+        }
+
+        [TestMethod]
+        public async Task ConcurrentMultiPagePipelineStopsAssigningPagesAfterFirstStageFailure()
+        {
+            int startedAfterFailingPage = 0;
+            var failure = new InvalidOperationException("synthetic page failure");
+            var stage = new PaddleDocumentPipelineStage(PaddleDocumentModule.DocumentOrientation, async (context, token) =>
+            {
+                if (context.Page.PageIndex == 0)
+                {
+                    await Task.Delay(30, token).ConfigureAwait(false);
+                    throw failure;
+                }
+
+                Interlocked.Increment(ref startedAfterFailingPage);
+                await Task.Delay(TimeSpan.FromSeconds(5), token).ConfigureAwait(false);
+                return new PaddleDocumentOrientationResult(Metadata(PaddleDocumentModule.DocumentOrientation, context.Page.PageIndex), "0_degree", 0);
+            });
+            var pipeline = new PaddleDocumentPipeline(new[] { stage });
+            PaddleDocumentPage[] input = Enumerable.Range(0, 100)
+                .Select(index => new PaddleDocumentPage("page-" + index, new VisualSize(320, 240), index))
+                .ToArray();
+
+            InvalidOperationException thrown = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => pipeline.RunManyConcurrentAsync(input, maxDegreeOfParallelism: 2));
+
+            Assert.AreSame(failure, thrown);
+            Assert.IsTrue(Volatile.Read(ref startedAfterFailingPage) <= 1,
+                "A failed worker must cancel queued pages instead of releasing a gate that admits the entire backlog.");
+        }
+
+        [TestMethod]
+        public async Task ConcurrentMultiPagePipelineCanBeReusedAfterAWorkerFailure()
+        {
+            int failuresRemaining = 1;
+            var stage = new PaddleDocumentPipelineStage(PaddleDocumentModule.DocumentOrientation, async (context, token) =>
+            {
+                await Task.Yield();
+                if (context.Page.PageIndex == 0 && Interlocked.Exchange(ref failuresRemaining, 0) == 1)
+                    throw new InvalidOperationException("one-shot failure");
+                return new PaddleDocumentOrientationResult(Metadata(PaddleDocumentModule.DocumentOrientation, context.Page.PageIndex), "0_degree", 0);
+            });
+            var pipeline = new PaddleDocumentPipeline(new[] { stage });
+            PaddleDocumentPage[] input = Enumerable.Range(0, 4)
+                .Select(index => new PaddleDocumentPage("page-" + index, new VisualSize(320, 240), index))
+                .ToArray();
+
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => pipeline.RunManyConcurrentAsync(input, maxDegreeOfParallelism: 2));
+            IReadOnlyList<PaddleDocumentPipelineResult> results = await pipeline.RunManyConcurrentAsync(input, maxDegreeOfParallelism: 2);
+
+            Assert.AreEqual(input.Length, results.Count);
+            CollectionAssert.AreEqual(input.Select(page => page.PageIndex).ToArray(), results.Select(result => result.Page.PageIndex).ToArray());
+        }
+
+        [TestMethod]
+        public async Task ConcurrentMultiPagePipelineValidatesAllPagesBeforeStartingStages()
+        {
+            int stageCalls = 0;
+            var stage = new PaddleDocumentPipelineStage(PaddleDocumentModule.DocumentOrientation, (context, token) =>
+            {
+                Interlocked.Increment(ref stageCalls);
+                return Task.FromResult<PaddleDocumentModuleResult>(new PaddleDocumentOrientationResult(Metadata(PaddleDocumentModule.DocumentOrientation, context.Page.PageIndex), "0_degree", 0));
+            });
+            var pipeline = new PaddleDocumentPipeline(new[] { stage });
+            PaddleDocumentPage[] pages =
+            {
+                new PaddleDocumentPage("page-0", new VisualSize(320, 240), 0),
+                null!
+            };
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => pipeline.RunManyConcurrentAsync(pages, maxDegreeOfParallelism: 1));
+
+            Assert.AreEqual(0, Volatile.Read(ref stageCalls), "Invalid page collections must fail before any native/model stage starts.");
         }
 
         private static PaddleDocumentResultMetadata Metadata(PaddleDocumentModule module, int pageIndex)
