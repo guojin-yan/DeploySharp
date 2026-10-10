@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-dynamic-batch-coverage-v1",
+  "generatedDate": "2026-10-10",
+  "hostScope": "Windows x64 local verification host",
+  "axisInventory": "paddle-document-onnx-batch-axis-audit-20261005.json",
+  "coverage": [
+    { "family": "pp-lcnet-orientation-and-table-classification", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "pp-doclayout-l-plus-l-blocklayout", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "rt-detr-h-layout-3cls-17cls", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "rt-detr-l-wired-wireless-cell-det", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "slanext-wired-wireless", "ortCpu": "pass", "openvinoCpu": "compatibility-artifact-pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "formula-six-models", "ortCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "ppocrv4-seal-mobile-server", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "uvdoc", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "chart2table", "modelBatch": "not-applicable-static-batch-1", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "pass", "batch": 1 },
+    { "family": "pp-doclayout-m-s-and-picodet", "modelBatch": "static-batch-1", "ortCpu": "not-applicable", "openvinoCpu": "not-applicable", "opencvDnnCpu": "not-applicable", "tensorRtCuda": "not-applicable", "batch": 1 }
+  ],
+  "boundary": "This is an exact-artifact execution coverage index, not a quality, throughput, cross-device, or long-running stability claim. TensorRT dynamic batch and OpenCV importer boundaries remain open or unsupported as listed."
+}

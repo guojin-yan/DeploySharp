@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v2",
-  "generatedUtc": "2026-10-10T03:42:55.3162761+00:00",
+  "generatedUtc": "2026-10-10T03:54:14.0224+00:00",
   "documents": [
     "docs/articles/visual-ocr.md",
     "docs/articles/visual-paddle-structure.md",
@@ -13,7 +13,7 @@
     "docs/model-backend-verification-matrix.md",
     "eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md"
   ],
-  "localMarkdownLinksChecked": 354,
+  "localMarkdownLinksChecked": 355,
   "brokenLocalMarkdownLinks": 0,
   "broken": [],
   "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."
