@@ -63,6 +63,10 @@
 | `segmentation/sam-v1-vit-b` | — | — | — | — | — |
 | `generative-vision-language/blip-caption-base` | — | — | — | — | — |
 
+### PP-OCR 核心模型质量证据索引
+
+上方 PP-OCR 的后端勾号只表示对应精确工件已完成加载、推理和结果解码，不代表数据集准确率或跨后端质量等价。当前七组 PP-OCR v4/v5/v6 DET+REC 流水线（v4/v5 Mobile/Server、v6 Tiny/Small/Medium）已有同一 SROIE 十页选择上的 ORT CPU 与 OpenVINO CPU 质量 smoke 汇总：14 个模型/后端组合均完成 `10/10` 页，详细列出检测 F1、匹配与端到端 CER/WER、区域文本 parity 及一次性延迟观察。SROIE 是词框标注、模型输出为文本行，因此这些数值只用于可复现诊断，不是官方准确率或正式性能排名；该证据也不扩展 OpenCV DNN、CUDA 或 TensorRT 的质量状态。见[七模型十页汇总](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.md)及[机器可读 JSON](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.json)。
+
 ## PP-Structure 模型状态
 
 PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有独立 ONNX Release 资产；`PP-Chart2Table` 另以 `paddle-chart/pp-chart2table` 四图 ONNX + tokenizer Bundle 发布在同一个 `models-paddleocr` Release。Chart2Table 官方源包仍不是标准 `inference.json + inference.pdiparams`，因此单文件 Paddle archive 转换目录仍保留 `conversion-blocked`，这不影响已发布派生 Bundle 的下载和运行。下表按模型族分组，普通模型组内只要仍有未逐一执行的工件就保持 `△`；Chart2Table 则以真实完整流水线证据单独标记。PP-Structure 其它模型尚未全部逐一验证每个后端，不能把 Chart2Table 的结果外推到其它模型。
