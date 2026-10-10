@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-ppstructure-non-external-regression-v1",
+  "generatedUtc": "2026-10-10T00:00:00Z",
+  "gitRevision": "6741db41f83d0120819f483ee161f5d0acc48403",
+  "workingTreeClean": false,
+  "runtime": {
+    "os": "Windows",
+    "dotnet": "10.0.401",
+    "configuration": "Release",
+    "targetFramework": "net10.0"
+  },
+  "command": "dotnet test <project> -c Release --framework net10.0 --no-restore --filter TestCategory!=ExternalModels --logger console;verbosity=minimal",
+  "scope": "Current working-tree snapshot; non-external contract regression only. External model gates remain excluded.",
+  "projects": [
+    { "project": "DeploySharp.Core.Tests", "passed": 33, "skipped": 0, "failed": 0, "total": 33 },
+    { "project": "DeploySharp.ModelFactory.Tests", "passed": 63, "skipped": 2, "failed": 0, "total": 65 },
+    { "project": "DeploySharp.ModelPack.Json.Tests", "passed": 29, "skipped": 3, "failed": 0, "total": 32 },
+    { "project": "DeploySharp.Visual.Tests", "passed": 502, "skipped": 5, "failed": 0, "total": 507 },
+    { "project": "DeploySharp.Visual.OpenCV.Tests", "passed": 99, "skipped": 4, "failed": 0, "total": 103 }
+  ],
+  "totals": { "passed": 726, "skipped": 14, "failed": 0, "total": 740 },
+  "interpretation": [
+    "All selected non-external tests passed.",
+    "Skipped tests are explicit external model, checkpoint, or environment gates and are not support evidence.",
+    "Legacy target-framework dependency support warnings remain non-fatal.",
+    "This report does not certify clean-checkout reproducibility, model accuracy, backend parity, or performance."
+  ]
+}
