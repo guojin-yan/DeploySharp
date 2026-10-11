@@ -140,7 +140,7 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | 版面分析：`paddle-doc/pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s`、`pp-docblocklayout` | ✓ | ✓ | ✓ | ✓ | △ | △ |
 | 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls`、`rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
 | 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
-| 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | △ |
+| 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | ✗² |
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
 | 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‖ |
@@ -174,8 +174,8 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | ✗ | △ |
 | `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | ✗ | △ |
 | `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | △ |
-| `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | △ |
-| `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | △ |
+| `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | ✗² |
+| `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | ✗² |
 | `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
@@ -258,6 +258,7 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 - `✓‖` 表示两个 RT-DETR 表格单元格精确工件已完成 TensorRT 11 动态三输入 profile、图内 Paddle NMS、全候选几何 IoU/score 对照和 5/50 P50/P95 测量；wireless 的一个 score≥0.05 候选落在数值边界，按共同匹配候选记录，不能外推为 cell 召回率或表格结构准确率。
 - `✓§` 表示精确工件 `ppocrv4-mobile/server-seal-det` 已完成 TensorRT 11 概率图推理、印章 Decoder 和 ORT 尺寸/区域数一致性比较；server 构建显式关闭 TF32，当前样本的原始掩码逐元素误差通过合同，但不能外推为数据集召回率。
 - `✓¶` 表示 Chart2Table 四图 Bundle 在 ORT CPU、OpenVINO CPU 和 TensorRT CUDA 均有完整 EOS 文本证据；TensorRT 四张 plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建并完成完整生成回归。此符号仍不表示数据集级准确率验证。
+- `✗²` 表示原始 SLANeXt wired/wireless ONNX 在当前 TensorRT `11.0.0.114-cu12` `trtexec` Builder 探针中解析成功但因 `IRecurrenceLayer` 输入形状 `[]` 与 `[-1,8]` 不一致而无法创建 Engine；没有进入 DeploySharp Decoder。该状态只针对记录的 TensorRT 版本和原始图，派生 OpenVINO 兼容图仍为 `△`。证据见 [`slanext-tensorrt11-builder-probe-20261011.md`](../eng/models/paddle-document/verification/slanext-tensorrt11-builder-probe-20261011.md)。
 - `△` 表示存在适用的后端执行合同，但本机尚无该精确组合的真实运行证据；部署时应先在目标设备完成 smoke test。
 - `✗` 表示已尝试并确认当前精确组合不支持或无法运行；原始 SLANeXt 图在当前 OpenVINO `Loop` importer 下即属此类。只有尚无真实执行证据（包括 Chart2Table/OpenCV DNN 自回归）时应标 `△`，不能将“未验证”写成“已证实失败”。此状态不会被相近模型或派生图的结果覆盖。
 - 未验证的模型不再使用 `—` 混淆“未验证”和“不适用”；不会用相近模型、脚本退出码或合同测试代替真实推理证据。
