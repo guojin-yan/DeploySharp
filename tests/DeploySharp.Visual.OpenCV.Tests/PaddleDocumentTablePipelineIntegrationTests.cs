@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results;
@@ -29,21 +30,40 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
-    public async Task TableClassificationCellDetectionAndSlaNextComposeToHtmlOnOrtCpu()
+    [DataRow("onnxruntime")]
+    [DataRow("openvino")]
+    public async Task TableClassificationCellDetectionAndSlaNextComposeToHtml(string backend)
     {
-        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL") != "1")
-            Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL=1 to run the local table pipeline.");
+        bool useOpenVino = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase);
+        string gate = useOpenVino ? "DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_TABLE_PIPELINE" : "DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL";
+        if (Environment.GetEnvironmentVariable(gate) != "1")
+            Assert.Inconclusive("Set " + gate + "=1 to run the local " + backend + " table pipeline.");
         string tableClsPath = RequireModel("pp-lcnet-x1-0-table-cls.onnx");
         string cellPath = RequireModel("rt-detr-l-wired-cell-det.onnx");
-        string structurePath = RequireModel("slanext-wired.onnx");
+        string structurePath = useOpenVino
+            ? RequirePath(Path.Combine(ModelRoot, "..", "onnx-normalized-rerun-20260929", "slanext-wired-openvino-compat.onnx"))
+            : RequireModel("slanext-wired.onnx");
         if (!File.Exists(ImagePath)) Assert.Inconclusive("Missing official table image: " + ImagePath);
         string sourceSha = Sha256(ImagePath);
         var page = new PaddleDocumentPage(ImagePath, new VisualSize(1654, 1300), 0);
         using var clsRegistry = new BackendRegistry();
         using var cellRegistry = new BackendRegistry();
         using var structureRegistry = new BackendRegistry();
-        clsRegistry.UseOnnxRuntime(); cellRegistry.UseOnnxRuntime(); structureRegistry.UseOnnxRuntime();
-        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        BackendId backendId;
+        string device;
+        if (useOpenVino)
+        {
+            clsRegistry.UseOpenVino(); cellRegistry.UseOpenVino(); structureRegistry.UseOpenVino();
+            backendId = OpenVinoBackendProvider.BackendId;
+            device = "CPU";
+        }
+        else
+        {
+            clsRegistry.UseOnnxRuntime(); cellRegistry.UseOnnxRuntime(); structureRegistry.UseOnnxRuntime();
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+            device = "cpu";
+        }
+        BackendRequest request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
 
         PaddleDocumentModelDescriptor clsDescriptor = PaddleDocumentModelCatalog.Get("paddle-table/pp-lcnet-x1-0-table-cls");
         PaddleDocumentProfile clsProfile = PaddleDocumentProfiles.CreateClassification(clsDescriptor, new[] { "wired_table", "wireless_table" }, VisualTaskId.TableClassification, modelSize: new VisualSize(224, 224));
@@ -52,9 +72,17 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
         PaddleDocumentModelDescriptor structureDescriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
         PaddleDocumentProfile structureProfile = PaddleDocumentProfiles.CreateTableStructure(structureDescriptor, modelSize: new VisualSize(512, 512));
 
-        using VisualPipeline clsPipeline = CreatePipeline(clsRegistry, clsProfile, tableClsPath, request);
-        using VisualPipeline cellPipeline = CreatePipeline(cellRegistry, cellProfile, cellPath, request);
-        using VisualPipeline structurePipeline = CreatePipeline(structureRegistry, structureProfile, structurePath, request);
+        using VisualPipeline clsPipeline = CreatePipeline(clsRegistry, clsProfile, tableClsPath, request, backendId);
+        using VisualPipeline cellPipeline = CreatePipeline(cellRegistry, cellProfile, cellPath, request, backendId);
+        // The OpenVINO compatibility graph is a separately derived artifact and must be
+        // validated against its measured hash rather than the official source graph hash.
+        using VisualPipeline structurePipeline = CreatePipeline(
+            structureRegistry,
+            structureProfile,
+            structurePath,
+            request,
+            backendId,
+            useOpenVino ? Sha256(structurePath) : null);
         var clsStage = PaddleDocumentVisualPipelineStage.FromSynchronousPreparation(
             PaddleDocumentModule.TableClassification,
             clsPipeline,
@@ -95,21 +123,30 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
         Assert.IsTrue(table.Tokens.Count > 10);
         Assert.IsTrue(table.Markup.Contains("<td", StringComparison.OrdinalIgnoreCase) || table.Markup.Contains("<table", StringComparison.OrdinalIgnoreCase), "SLANeXt markup did not contain an HTML table/cell tag: " + table.Markup);
         Assert.IsTrue(table.Regions.Count >= 10);
-        Console.WriteLine("PADDLE_DOCUMENT_TABLE_PIPELINE backend=onnxruntime-cpu;classification=" + classification.Label + ";cells=" + cells.Regions.Count + ";tokens=" + table.Tokens.Count + ";htmlLength=" + table.Markup.Length + ";totalMs=" + result.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";inputSha256=" + sourceSha);
+        Console.WriteLine("PADDLE_DOCUMENT_TABLE_PIPELINE backend=" + backend + "-" + device + ";classification=" + classification.Label + ";cells=" + cells.Regions.Count + ";tokens=" + table.Tokens.Count + ";htmlLength=" + table.Markup.Length + ";totalMs=" + result.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";inputSha256=" + sourceSha + ";structureGraph=" + Sha256(structurePath));
     }
 
-    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string modelPath, BackendRequest request)
+    private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string modelPath, BackendRequest request, BackendId backendId, string? artifactSha256 = null)
     {
         var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
-        VisualProfileSelection selection = profiles.Select(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), registry, request, profile.VisualProfile.Task);
+        ModelArtifact artifact = artifactSha256 == null
+            ? profile.CreateArtifact(modelPath, backendId)
+            : profile.CreateArtifactWithSha256(modelPath, artifactSha256, backendId);
+        VisualProfileSelection selection = profiles.Select(artifact, registry, request, profile.VisualProfile.Task);
         return new VisualPipeline(registry, selection, request);
     }
 
     private static string RequireModel(string name)
     {
         string path = Path.Combine(ModelRoot, name);
-        if (!File.Exists(path)) Assert.Inconclusive("Missing local table pipeline model: " + path);
-        return path;
+        return RequirePath(path);
+    }
+
+    private static string RequirePath(string path)
+    {
+        string fullPath = Path.GetFullPath(path);
+        if (!File.Exists(fullPath)) Assert.Inconclusive("Missing local table pipeline model: " + fullPath);
+        return fullPath;
     }
 
     private static string Sha256(string path)

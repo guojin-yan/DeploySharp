@@ -379,6 +379,8 @@ var chart = new PaddleDocumentDependentStage(
 
 仓库中的 `PaddleDocumentTablePipelineIntegrationTests` 已把表格链跑成一个真实 ORT CPU 案例：`table_recognition.jpg` → `pp-lcnet-x1-0-table-cls`（`wired_table`）→ `rt-detr-l-wired-cell-det`（300 个候选，阈值 0）→ `slanext-wired`（24 tokens、13 个单元格、HTML markup）。复现命令：
 
+同一案例现在也有 OpenVINO CPU 的完整记录。ORT CPU 和 OpenVINO CPU 均返回 `wired_table`、300 个阈值为 0 的候选、24 个结构 token、HTML 长度 165；单次总耗时分别为 `2001.241 ms` 和 `2127.139 ms`。OpenVINO 的 SLANeXt 阶段使用独立 SHA-256 的 `slanext-wired-openvino-compat.onnx`，因为原始 Loop 图仍受当前 importer 限制。详细模型/输入哈希、兼容 ID 和边界说明见 [`paddle-document-table-pipeline-ort-openvino-20261011.md`](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.md) 及其 [JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.json)。这些是执行与 Decoder 合同证据，不是单元格召回、表格准确率或 P50/P95 性能结果；OpenCV DNN 与 TensorRT 仍按矩阵单独记录。
+
 ```powershell
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `

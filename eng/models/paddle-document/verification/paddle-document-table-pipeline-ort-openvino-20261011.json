@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T04:28:53Z",
+  "sourceRevision": "63f966e69bbf84b0a826d608af631b0053fe3fcb+working-tree",
+  "host": {
+    "os": "Windows",
+    "framework": ".NET 10",
+    "configuration": "Release",
+    "input": {
+      "path": "E:\\Model\\PaddleDocument\\validation\\table_recognition.jpg",
+      "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c"
+    }
+  },
+  "pipeline": [
+    "table-classification",
+    "table-cell-detection",
+    "table-structure-recognition"
+  ],
+  "contract": {
+    "batch": 1,
+    "classification": "wired_table",
+    "cellScoreThreshold": 0,
+    "expectedHtmlTag": "td/table",
+    "boundary": "Execution and result-contract evidence only; 300 candidates are the threshold-zero decoder output, not cell ground truth. This is not a throughput benchmark or dataset accuracy score."
+  },
+  "artifacts": {
+    "tableClassification": {
+      "path": "E:\\Model\\PaddleDocument\\onnx\\pp-lcnet-x1-0-table-cls.onnx",
+      "sha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45"
+    },
+    "cellDetection": {
+      "path": "E:\\Model\\PaddleDocument\\onnx\\rt-detr-l-wired-cell-det.onnx",
+      "sha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6"
+    },
+    "structureOrt": {
+      "path": "E:\\Model\\PaddleDocument\\onnx\\slanext-wired.onnx",
+      "sha256": "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f"
+    },
+    "structureOpenVino": {
+      "path": "E:\\Model\\PaddleDocument\\onnx-normalized-rerun-20260929\\slanext-wired-openvino-compat.onnx",
+      "sha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "compatibilityId": "paddle-table/slanext-wired-openvino-compat"
+    }
+  },
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "classification": "wired_table",
+      "cells": 300,
+      "tokens": 24,
+      "htmlLength": 165,
+      "totalMs": 2001.241,
+      "passed": true
+    },
+    {
+      "backend": "openvino-cpu",
+      "classification": "wired_table",
+      "cells": 300,
+      "tokens": 24,
+      "htmlLength": 165,
+      "totalMs": 2127.139,
+      "passed": true
+    }
+  ]
+}
