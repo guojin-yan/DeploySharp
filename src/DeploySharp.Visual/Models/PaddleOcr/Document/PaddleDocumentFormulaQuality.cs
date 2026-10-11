@@ -17,6 +17,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             int matchedCommandCount,
             bool expectedBalancedDelimiters,
             bool actualBalancedDelimiters,
+            bool expectedBalancedEnvironments,
+            bool actualBalancedEnvironments,
             OcrTextAccuracyMetrics textAccuracy,
             OcrTextAccuracyMetrics normalizedTextAccuracy)
         {
@@ -27,6 +29,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             MatchedCommandCount = matchedCommandCount;
             ExpectedBalancedDelimiters = expectedBalancedDelimiters;
             ActualBalancedDelimiters = actualBalancedDelimiters;
+            ExpectedBalancedEnvironments = expectedBalancedEnvironments;
+            ActualBalancedEnvironments = actualBalancedEnvironments;
             TextAccuracy = textAccuracy;
             NormalizedTextAccuracy = normalizedTextAccuracy;
         }
@@ -45,6 +49,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public bool ExpectedBalancedDelimiters { get; }
         /// <summary>Gets whether braces and left/right command pairs are balanced in the prediction. / 获取预测文本的大括号及 left/right 命令是否平衡。</summary>
         public bool ActualBalancedDelimiters { get; }
+        /// <summary>Gets whether begin/end LaTeX environments are balanced in the reference. / 获取参考文本中的 begin/end LaTeX 环境是否配对。</summary>
+        public bool ExpectedBalancedEnvironments { get; }
+        /// <summary>Gets whether begin/end LaTeX environments are balanced in the prediction. / 获取预测文本中的 begin/end LaTeX 环境是否配对。</summary>
+        public bool ActualBalancedEnvironments { get; }
         /// <summary>Gets raw Unicode-scalar CER diagnostics. / 获取原始 Unicode 标量 CER 诊断。</summary>
         public OcrTextAccuracyMetrics TextAccuracy { get; }
         /// <summary>Gets CER diagnostics after conservative whitespace normalization. / 获取保守空白规范化后的 CER 诊断。</summary>
@@ -88,6 +96,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 string.Equals(normalizedExpected, normalizedActual, StringComparison.Ordinal),
                 Count(expectedCommands), Count(actualCommands), matched,
                 BalancedDelimiters(expected), BalancedDelimiters(actual),
+                BalancedEnvironments(expected), BalancedEnvironments(actual),
                 OcrTextAccuracy.Compare(expected, actual),
                 OcrTextAccuracy.Compare(normalizedExpected, normalizedActual));
         }
@@ -162,6 +171,35 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 }
             }
             return stack.Count == 0 && left == right;
+        }
+
+        private static bool BalancedEnvironments(string value)
+        {
+            var stack = new List<string>();
+            for (int index = 0; index < value.Length; index++)
+            {
+                if (value[index] != '\\') continue;
+                int commandStart = index++;
+                if (index >= value.Length || !char.IsLetter(value[index])) continue;
+                while (index + 1 < value.Length && char.IsLetter(value[index + 1])) index++;
+                string command = value.Substring(commandStart, index - commandStart + 1);
+                if (command != "\\begin" && command != "\\end") continue;
+                int cursor = index + 1;
+                while (cursor < value.Length && char.IsWhiteSpace(value[cursor])) cursor++;
+                if (cursor >= value.Length || value[cursor] != '{') return false;
+                int nameStart = ++cursor;
+                while (cursor < value.Length && value[cursor] != '}') cursor++;
+                if (cursor >= value.Length || cursor == nameStart) return false;
+                string environment = value.Substring(nameStart, cursor - nameStart);
+                if (command == "\\begin") stack.Add(environment);
+                else
+                {
+                    if (stack.Count == 0 || !string.Equals(stack[stack.Count - 1], environment, StringComparison.Ordinal)) return false;
+                    stack.RemoveAt(stack.Count - 1);
+                }
+                index = cursor;
+            }
+            return stack.Count == 0;
         }
 
         private static bool Matches(char open, char close)

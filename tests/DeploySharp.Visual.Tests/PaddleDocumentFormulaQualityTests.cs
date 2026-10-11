@@ -55,4 +55,20 @@ public sealed class PaddleDocumentFormulaQualityTests
         Assert.IsTrue(valid.ActualBalancedDelimiters);
         Assert.IsFalse(invalid.ActualBalancedDelimiters);
     }
+
+    [TestMethod]
+    public void CompareChecksBeginEndEnvironmentBalance()
+    {
+        PaddleDocumentFormulaQualityMetrics valid = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\begin{aligned}x&=1\\end{aligned}",
+            "\\begin{aligned}x&=2\\end{aligned}");
+        PaddleDocumentFormulaQualityMetrics invalid = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\begin{matrix}x\\end{matrix}",
+            "\\begin{matrix}x\\end{aligned}");
+
+        Assert.IsTrue(valid.ExpectedBalancedEnvironments);
+        Assert.IsTrue(valid.ActualBalancedEnvironments);
+        Assert.IsTrue(invalid.ExpectedBalancedEnvironments);
+        Assert.IsFalse(invalid.ActualBalancedEnvironments);
+    }
 }

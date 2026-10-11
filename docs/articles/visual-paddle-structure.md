@@ -422,7 +422,7 @@ TensorRT 公式后端仍未验证。对 Plus-S 做的 Polygraphy 清理和掩码
 
 基于同一外部 manifest 又生成了[公式命令 token 诊断](../../eng/models/paddle-document/verification/formula-realformula-command-quality-20261011.md)：六模型逐行通过图片 SHA 关联真实参考标签，micro-F1 为 `45.15%–63.01%`。这是词法结构指标，不是 TeX 渲染、数学语义或发布精度；原始参考 LaTeX 不写入仓库。
 
-应用侧也可以复用 `PaddleDocumentFormulaQualityEvaluator`，避免各项目自行实现不一致的公式比较逻辑。`Compare(expected, actual)` 同时返回原始文本相等、仅空白规范化后的相等、Unicode 标量 CER、LaTeX 命令 token 多重集合 Precision/Recall/F1，以及大括号和 `\\left`/`\\right` 平衡检查；`NormalizeLatex` 只规范换行与空白，不改写命令。该 API 是可复现的回归/数据集诊断，不是渲染器，也不能证明数学语义等价。
+应用侧也可以复用 `PaddleDocumentFormulaQualityEvaluator`，避免各项目自行实现不一致的公式比较逻辑。`Compare(expected, actual)` 同时返回原始文本相等、仅空白规范化后的相等、Unicode 标量 CER、LaTeX 命令 token 多重集合 Precision/Recall/F1，以及大括号、`\\left`/`\\right` 和 `\\begin{...}`/`\\end{...}` 环境平衡检查；`NormalizeLatex` 只规范换行与空白，不改写命令。该 API 是可复现的回归/数据集诊断，不是渲染器，也不能证明数学语义等价。
 
 ```csharp
 var quality = PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, formula.Latex);
