@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "deploysharp-paddle-chart2table-backend-quality-status-v1",
+  "generatedUtc": "2026-10-11T00:00:00Z",
+  "modelId": "paddle-chart/pp-chart2table",
+  "bundle": {
+    "releaseRepository": "guojin-yan/DeploySharp",
+    "releaseTag": "models-paddleocr",
+    "bundleId": "paddle-chart/pp-chart2table",
+    "artifactCount": 7,
+    "sourceArtifactStatus": "conversion-blocked",
+    "sourceArtifactBoundary": "The upstream archive is a generative checkpoint and tokenizer source, not a standard inference.json/inference.pdiparams pair. The published four-graph ONNX bundle is the supported deployment artifact.",
+    "evidence": "chart2table-component-validation.json"
+  },
+  "backends": [
+    {
+      "backend": "onnxruntime-cpu",
+      "matrixStatus": "supported-with-evidence",
+      "fullGeneration": {
+        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA",
+        "officialSample": "EOS and expected six-row table",
+        "evidence": [
+          "chart2table-ort-multi-image-20260929.json",
+          "chart2table-component-validation.json"
+        ]
+      },
+      "boundedChartQaValQuality": {
+        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+        "sampleCount": 12,
+        "eos": "12/12",
+        "structureMatches": "9/12",
+        "exactTextMatches": "3/12",
+        "cellExactMatches": "140/293",
+        "latencyP50P95Seconds": "26.866/72.933",
+        "evidence": "chart2table-extended-quality-ort-20261004.json"
+      },
+      "boundary": "Execution and bounded task-quality diagnostics only; not split-level ChartQA accuracy or a controlled benchmark."
+    },
+    {
+      "backend": "openvino-cpu",
+      "matrixStatus": "supported-with-evidence",
+      "fullGeneration": {
+        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA",
+        "officialSample": "EOS and expected six-row table",
+        "evidence": [
+          "chart2table-openvino-multi-image-20260929.json",
+          "chart2table-component-validation.json"
+        ]
+      },
+      "boundedChartQaValQuality": {
+        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+        "sampleCount": 6,
+        "eos": "6/6",
+        "structureMatches": "5/6",
+        "exactTextMatches": "1/6",
+        "cellExactMatches": "44/116",
+        "latency": "The six-sample record is canonical; the same 12-sample 1024-token run was stopped without a report.",
+        "evidence": "chart2table-extended-quality-openvino-20261002.json"
+      },
+      "boundary": "Execution and bounded six-sample task-quality diagnostics only; the incomplete 12-sample attempt is not evidence."
+    },
+    {
+      "backend": "tensorrt-cuda",
+      "matrixStatus": "supported-with-evidence",
+      "runtime": "TensorRT 10.11.0.33, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop; plans are runtime/profile specific",
+      "fullGeneration": {
+        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA; 8/8 associated QA labels matched",
+        "officialSample": "EOS and expected six-row table; DeploySharp Builder-created plans passed",
+        "evidence": [
+          "chart2table-tensorrt-multi-image-20260930.json",
+          "chart2table-component-validation.json"
+        ]
+      },
+      "boundedChartQaValQuality": {
+        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+        "sampleCount": 12,
+        "eos": "12/12",
+        "structureMatches": "9/12",
+        "exactTextMatches": "3/12",
+        "cellExactMatches": "140/293",
+        "latencyP50P95Milliseconds": "4398.95/12209.76 total; decode range 33.37-39.48/35.85-48.81",
+        "evidence": "chart2table-extended-quality-tensorrt-20261005.json"
+      },
+      "boundary": "Execution and bounded task-quality diagnostics on one unclock-locked device; do not generalize plans or timings to another GPU/runtime."
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "matrixStatus": "unsupported-for-full-autoregressive-generation",
+      "isolatedProbe": {
+        "visionProjector": "loaded",
+        "tokenEmbedding": "loaded",
+        "prefill": "blocked before inference: rank-3 inputs_embeds is outside the current auxiliary tensor contract",
+        "decode": "blocked before inference: rank-4 dynamic KV inputs are outside the current auxiliary tensor contract",
+        "evidence": "chart2table-opencv-isolated-20260929.json"
+      },
+      "boundary": "The current OpenCV C# Mat bridge exposes only rank-2 auxiliary allocation/reshape. This is a precise adapter capability boundary, not evidence that the ONNX graphs are generally invalid."
+    }
+  ],
+  "crossBackendQuality": {
+    "curatedHumanSamples": "ORT/OpenVINO/TensorRT each 4/4 EOS and exact expected-table SHA",
+    "chartQaValTwelveSampleAlignment": "ORT/TensorRT use the same 12 image SHA values and both report 140/293 exact cells; this is an alignment check, not a rerun or accuracy score",
+    "evidence": "chart2table-extended-quality-backend-alignment-20261005.json"
+  },
+  "notYetVerified": [
+    "OpenCV DNN full autoregressive generation",
+    "ChartQA split-level accuracy or a larger independently labeled chart-to-table benchmark",
+    "Clock-locked, repeated cross-device performance ranking",
+    "TensorRT plan portability across GPU, TensorRT, CUDA or cuDNN versions"
+  ]
+}

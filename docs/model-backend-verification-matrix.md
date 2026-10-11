@@ -187,6 +187,8 @@ PP-LCNet 表格分类的 TensorRT batch=2 仍未验证。既有 `✓‡` 只对�
 
 Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。该边界对应当前 JYPPX OpenCV C# `Mat` bridge 只暴露二维辅助分配/reshape，已由 fail-closed 合同测试固定。因此完整 OpenCV 自回归仍保持 `△`，不是四图 Bundle 的完整支持；详细记录见 [`chart2table-opencv-isolated-20260929.json`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
 
+Chart2Table 的统一后端/质量索引见 [`chart2table-backend-quality-status-20261011.md`](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.md) 和 [机器可读 JSON](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.json)。该索引集中记录四图完整生成、ChartQA 有界质量选择和 OpenCV rank-3/rank-4 辅助输入阻断；不改变矩阵语义，也不把小样本质量结果写成 split accuracy。
+
 2026-10-04 的 ChartQA 扩展完成了 ORT CPU 12 图有界任务质量运行：`12/12` EOS、`9/12` 结构维度一致、`140/293` 单元格匹配；同一固定选择随后在 TensorRT CUDA 上完成 `12/12` EOS、`9/12` 结构维度一致和 `140/293` 单元格匹配。两份结果均为任务质量诊断，不改变后端运行矩阵。ORT 报告见 [`chart2table-extended-quality-ort-20261004.json`](../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json)，TensorRT 报告见 [`chart2table-extended-quality-tensorrt-20261005.json`](../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。同 token 上限的 OpenVINO 12 图扩展未在限定时间内完成，矩阵继续以已有六图完整证据为准。
 
 两份既有 JSON 还通过 [ORT/TensorRT 对齐报告](../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.md)进行同源核对：12/12 输入图片 SHA、结束原因、结构标志和期望单元格数量一致，两边精确单元格合计均为 `140`。该对齐只证明固定样本的后端一致性，不是重新推理、ChartQA split accuracy 或受控性能基准。
