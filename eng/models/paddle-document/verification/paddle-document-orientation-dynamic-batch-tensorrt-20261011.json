@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T11:07:21.0388411+00:00",
+  "execution": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "architecture": "x64",
+    "framework": ".NET 10.0.12"
+  },
+  "backend": {
+    "tensorRtApi": 11,
+    "runtime": "JYPPX_NATIVE_BRIDGE_PATH=E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\tensorrt11-bridge\\runtimes\\win-x64\\native;exists=False;dir=True|JYPPX_TENSORRT_ROOT=D:\\Program Files\\TensorRT-11.0.0.114-cu12;exists=False;dir=True|JYPPX_CUDA_ROOT=C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9;exists=False;dir=True|JYPPX_CUDNN_ROOT=D:\\Program Files\\cuDNN-9.22.0-cuda12.9;exists=False;dir=True|PATH=entries=85",
+    "architecture": "compute_86"
+  },
+  "model": {
+    "id": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+    "onnxSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+    "engineSha256": "02c1dbae8058ae6a41a8f63bbde57f6abbfbd5df3d92d741fbcc80d5cf5786a2",
+    "engineBytes": 8149228,
+    "engineSource": "deploysharp-builder"
+  },
+  "image": {
+    "path": "E:\\Model\\PaddleDocument\\validation\\img_rot180_demo.jpg",
+    "sha256": "c5a77e031470e13878ff4f28a06ca843fd455d95c20b1b49b486681e346209ed",
+    "regions": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Width": 512,
+        "Height": 192,
+        "Right": 512,
+        "Bottom": 192
+      },
+      {
+        "X": 0,
+        "Y": 192,
+        "Width": 512,
+        "Height": 192,
+        "Right": 512,
+        "Bottom": 384
+      }
+    ]
+  },
+  "batch": {
+    "size": 2,
+    "inputShape": "[2,3,224,224]",
+    "ortOutputShape": "[2,4]",
+    "tensorRtOutputShape": "[2,4]",
+    "inputRowSha256": [
+      "0406ede2e84f650902db7b802755f2e8da068129b4444285c0468394df73a157",
+      "2a9de475c536e9727b8cc0024b22ac99501e1bf44cb81531c143a379fb2eea44"
+    ]
+  },
+  "rows": [
+    {
+      "row": 0,
+      "ortLabel": "180_degree",
+      "tensorRtLabel": "180_degree",
+      "ortScore": 0.89456767,
+      "tensorRtScore": 0.89448833,
+      "rawOutputMaxAbsoluteDifference": 7.933378219604492E-05,
+      "tolerance": 0.01,
+      "ortRawOutputSha256": "a60e202465a7893f174df8ac8055efdd660f93c2d7bf034522102e3b754801b5",
+      "tensorRtRawOutputSha256": "6f1fd1a690d232393bd84758a2619ab0667b6b6b67506a5ed5037dc21d0edc90"
+    },
+    {
+      "row": 1,
+      "ortLabel": "180_degree",
+      "tensorRtLabel": "180_degree",
+      "ortScore": 0.9049596,
+      "tensorRtScore": 0.9048615,
+      "rawOutputMaxAbsoluteDifference": 9.810924530029297E-05,
+      "tolerance": 0.01,
+      "ortRawOutputSha256": "6973e6d5fdf69bc165f98793c727053da4068b8b7079229b0fefd8270f48a5e1",
+      "tensorRtRawOutputSha256": "76ec0cad196591494632cfc9d93fdfa03437c7d6e593028d69b5797f5afe1ab2"
+    }
+  ],
+  "boundary": "Exact dynamic batch profile, row mapping and bounded TensorRT-to-ORT raw-output parity for this PP-LCNet document-orientation artifact on one Windows GPU/runtime. The top/bottom image regions are execution probes without orientation ground truth; no accuracy or throughput claim is made."
+}
