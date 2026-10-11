@@ -141,7 +141,6 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
         private static bool BalancedDelimiters(string value)
         {
-            int braces = 0;
             int left = 0;
             int right = 0;
             IReadOnlyDictionary<string, int> commands = Commands(value);
@@ -150,13 +149,24 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 if (command.Key == "\\left") left += command.Value;
                 else if (command.Key == "\\right") right += command.Value;
             }
+            var stack = new List<char>();
             for (int index = 0; index < value.Length; index++)
             {
                 if (value[index] == '\\') { index++; continue; }
-                if (value[index] == '{') braces++;
-                else if (value[index] == '}') { braces--; if (braces < 0) return false; }
+                char current = value[index];
+                if (current == '(' || current == '[' || current == '{') { stack.Add(current); continue; }
+                if (current == ')' || current == ']' || current == '}')
+                {
+                    if (stack.Count == 0 || !Matches(stack[stack.Count - 1], current)) return false;
+                    stack.RemoveAt(stack.Count - 1);
+                }
             }
-            return braces == 0 && left == right;
+            return stack.Count == 0 && left == right;
+        }
+
+        private static bool Matches(char open, char close)
+        {
+            return (open == '(' && close == ')') || (open == '[' && close == ']') || (open == '{' && close == '}');
         }
     }
 }
