@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using JYPPX.DeploySharp.Backends.OpenVINO.Internal;
 using JYPPX.DeploySharp.Errors;
 using JYPPX.DeploySharp.Extensibility;
@@ -42,9 +43,9 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                     new BackendRuntimeDependency(BackendRuntimeDependencyKind.ManagedPackage, "JYPPX.OpenVINO.CSharp.API", "3.3.1"),
                     new BackendRuntimeDependency(
                         BackendRuntimeDependencyKind.ManagedPackage,
-                        OperatingSystem.IsWindows() ? "OpenVINO.runtime.win" : "OpenVINO.runtime.ubuntu.22-x86_64",
-                        OperatingSystem.IsWindows() ? "2026.2.1" : "2026.3.1",
-                        OperatingSystem.IsWindows() ? "win-x64" : "linux-x64",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "OpenVINO.runtime.win" : "OpenVINO.runtime.ubuntu.22-x86_64",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "2026.2.1" : "2026.3.1",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64",
                         downloadable: true,
                         licenseExpression: "Apache-2.0")
                 },
