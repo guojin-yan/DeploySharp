@@ -34,6 +34,29 @@ public sealed class PaddleDocumentFormulaQualityTests
     }
 
     [TestMethod]
+    public void CompareComputesConservativeStructuralTokenOverlapWithoutClaimingSemantics()
+    {
+        PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\frac{a_1+2}{b}\\sqrt{x}", "\\frac{c_1+2}{d}\\sqrt{y}");
+
+        Assert.IsTrue(metrics.ExpectedStructuralTokenCount > 0);
+        Assert.AreEqual(metrics.ExpectedStructuralTokenCount, metrics.ActualStructuralTokenCount);
+        Assert.AreEqual(metrics.ExpectedStructuralTokenCount, metrics.MatchedStructuralTokenCount);
+        Assert.AreEqual(1d, metrics.StructuralTokenF1, .00001);
+        Assert.IsFalse(metrics.NormalizedTextMatch);
+    }
+
+    [TestMethod]
+    public void StructuralTokensExposeNumericAndGroupingChangesAsDiagnostics()
+    {
+        PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "x_12 + y", "x_13 + y");
+
+        Assert.IsTrue(metrics.MatchedStructuralTokenCount < metrics.ExpectedStructuralTokenCount);
+        Assert.IsTrue(metrics.StructuralTokenF1 < 1d);
+    }
+
+    [TestMethod]
     public void CompareDetectsUnbalancedPredictionWithoutCallingItSemanticFailure()
     {
         PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(

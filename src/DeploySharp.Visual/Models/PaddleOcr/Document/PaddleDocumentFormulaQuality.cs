@@ -15,6 +15,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             int expectedCommandCount,
             int actualCommandCount,
             int matchedCommandCount,
+            int expectedStructuralTokenCount,
+            int actualStructuralTokenCount,
+            int matchedStructuralTokenCount,
             bool expectedBalancedDelimiters,
             bool actualBalancedDelimiters,
             bool expectedBalancedEnvironments,
@@ -27,6 +30,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             ExpectedCommandCount = expectedCommandCount;
             ActualCommandCount = actualCommandCount;
             MatchedCommandCount = matchedCommandCount;
+            ExpectedStructuralTokenCount = expectedStructuralTokenCount;
+            ActualStructuralTokenCount = actualStructuralTokenCount;
+            MatchedStructuralTokenCount = matchedStructuralTokenCount;
             ExpectedBalancedDelimiters = expectedBalancedDelimiters;
             ActualBalancedDelimiters = actualBalancedDelimiters;
             ExpectedBalancedEnvironments = expectedBalancedEnvironments;
@@ -45,6 +51,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int ActualCommandCount { get; }
         /// <summary>Gets multiset command-token overlap. / 获取命令 token 多重集合交集数量。</summary>
         public int MatchedCommandCount { get; }
+        /// <summary>Gets the number of conservative structural tokens in the reference. / 获取参考文本中的保守结构 token 数。</summary>
+        public int ExpectedStructuralTokenCount { get; }
+        /// <summary>Gets the number of conservative structural tokens in the prediction. / 获取预测文本中的保守结构 token 数。</summary>
+        public int ActualStructuralTokenCount { get; }
+        /// <summary>Gets multiset overlap for conservative structural tokens. / 获取保守结构 token 多重集合交集数量。</summary>
+        public int MatchedStructuralTokenCount { get; }
         /// <summary>Gets whether braces and left/right command pairs are balanced in the reference. / 获取参考文本的大括号及 left/right 命令是否平衡。</summary>
         public bool ExpectedBalancedDelimiters { get; }
         /// <summary>Gets whether braces and left/right command pairs are balanced in the prediction. / 获取预测文本的大括号及 left/right 命令是否平衡。</summary>
@@ -71,6 +83,21 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 return precision + recall == 0d ? 0d : 2d * precision * recall / (precision + recall);
             }
         }
+
+        /// <summary>Gets conservative structural-token precision. This is not a semantic score. / 获取保守结构 token 精确率；这不是语义分数。</summary>
+        public double StructuralTokenPrecision => ActualStructuralTokenCount == 0 ? 0d : (double)MatchedStructuralTokenCount / ActualStructuralTokenCount;
+        /// <summary>Gets conservative structural-token recall. This is not a semantic score. / 获取保守结构 token 召回率；这不是语义分数。</summary>
+        public double StructuralTokenRecall => ExpectedStructuralTokenCount == 0 ? (ActualStructuralTokenCount == 0 ? 1d : 0d) : (double)MatchedStructuralTokenCount / ExpectedStructuralTokenCount;
+        /// <summary>Gets conservative structural-token F1. This is not a semantic score. / 获取保守结构 token F1；这不是语义分数。</summary>
+        public double StructuralTokenF1
+        {
+            get
+            {
+                double precision = StructuralTokenPrecision;
+                double recall = StructuralTokenRecall;
+                return precision + recall == 0d ? 0d : 2d * precision * recall / (precision + recall);
+            }
+        }
     }
 
     /// <summary>Computes formula diagnostics without claiming rendered mathematical equivalence. / 计算公式诊断，但不宣称渲染后的数学等价性。</summary>
@@ -85,16 +112,20 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             string normalizedActual = NormalizeLatex(actual);
             IReadOnlyDictionary<string, int> expectedCommands = Commands(expected);
             IReadOnlyDictionary<string, int> actualCommands = Commands(actual);
+            IReadOnlyDictionary<string, int> expectedStructure = StructuralTokens(expected);
+            IReadOnlyDictionary<string, int> actualStructure = StructuralTokens(actual);
             int matched = 0;
             foreach (KeyValuePair<string, int> pair in expectedCommands)
             {
                 int actualCount;
                 if (actualCommands.TryGetValue(pair.Key, out actualCount)) matched += Math.Min(pair.Value, actualCount);
             }
+            int matchedStructure = Overlap(expectedStructure, actualStructure);
             return new PaddleDocumentFormulaQualityMetrics(
                 string.Equals(expected.Trim(), actual.Trim(), StringComparison.Ordinal),
                 string.Equals(normalizedExpected, normalizedActual, StringComparison.Ordinal),
                 Count(expectedCommands), Count(actualCommands), matched,
+                Count(expectedStructure), Count(actualStructure), matchedStructure,
                 BalancedDelimiters(expected), BalancedDelimiters(actual),
                 BalancedEnvironments(expected), BalancedEnvironments(actual),
                 OcrTextAccuracy.Compare(expected, actual),
@@ -121,6 +152,56 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             int count = 0;
             foreach (int value in values.Values) count += value;
             return count;
+        }
+
+        private static int Overlap(IReadOnlyDictionary<string, int> expected, IReadOnlyDictionary<string, int> actual)
+        {
+            int matched = 0;
+            foreach (KeyValuePair<string, int> pair in expected)
+            {
+                int actualCount;
+                if (actual.TryGetValue(pair.Key, out actualCount)) matched += Math.Min(pair.Value, actualCount);
+            }
+            return matched;
+        }
+
+        /// <summary>Tokenizes broad formula structure without attempting parsing or semantic normalization. / 提取宽泛公式结构 token，不尝试解析或语义规范化。</summary>
+        private static IReadOnlyDictionary<string, int> StructuralTokens(string value)
+        {
+            var result = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int index = 0; index < value.Length; index++)
+            {
+                char current = value[index];
+                if (char.IsWhiteSpace(current)) continue;
+                if (current == '\\')
+                {
+                    int start = index++;
+                    if (index >= value.Length) { Add(result, "cmd:\\"); continue; }
+                    if (char.IsLetter(value[index]))
+                    {
+                        while (index + 1 < value.Length && char.IsLetter(value[index + 1])) index++;
+                        Add(result, "cmd:" + value.Substring(start, index - start + 1));
+                    }
+                    else Add(result, "cmd:" + value.Substring(start, 1) + value[index]);
+                    continue;
+                }
+                if (char.IsDigit(current))
+                {
+                    int start = index;
+                    while (index + 1 < value.Length && char.IsDigit(value[index + 1])) index++;
+                    Add(result, "num:" + value.Substring(start, index - start + 1));
+                    continue;
+                }
+                if (char.IsLetter(current)) { Add(result, "id"); continue; }
+                if (current == '_' || current == '^') { Add(result, current == '_' ? "sub" : "sup"); continue; }
+                if (current == '{' || current == '}' || current == '[' || current == ']' || current == '(' || current == ')')
+                {
+                    Add(result, "group:" + current);
+                    continue;
+                }
+                if (current is '+' or '-' or '*' or '/' or '=' or '<' or '>' or '|' or ':' or ',' or ';' or '&') Add(result, "op:" + current);
+            }
+            return result;
         }
 
         private static IReadOnlyDictionary<string, int> Commands(string value)
