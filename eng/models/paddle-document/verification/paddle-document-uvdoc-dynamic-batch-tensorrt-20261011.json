@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T11:40:47.5518358+00:00",
+  "execution": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "architecture": "x64",
+    "framework": ".NET 10.0.12"
+  },
+  "backend": {
+    "tensorRtApi": 11,
+    "runtime": "JYPPX_NATIVE_BRIDGE_PATH=E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\tensorrt11-bridge\\runtimes\\win-x64\\native;exists=True;dir=True|JYPPX_TENSORRT_ROOT=D:\\Program Files\\TensorRT-11.0.0.114-cu12;exists=True;dir=True|JYPPX_CUDA_ROOT=C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9;exists=True;dir=True|JYPPX_CUDNN_ROOT=D:\\Program Files\\cuDNN-9.22.0-cuda12.9;exists=True;dir=True|PATH=entries=86",
+    "architecture": "compute_86"
+  },
+  "model": {
+    "id": "paddle-doc/uvdoc",
+    "onnxSha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+    "engineSha256": "9f1978f7784e8ccceef7d218484209f88f3928f321fcad28c58fa531383141c9",
+    "engineBytes": 33400452,
+    "engineSource": "deploysharp-builder"
+  },
+  "image": {
+    "path": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "regions": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Width": 810,
+        "Height": 540,
+        "Right": 810,
+        "Bottom": 540
+      },
+      {
+        "X": 0,
+        "Y": 540,
+        "Width": 810,
+        "Height": 540,
+        "Right": 810,
+        "Bottom": 1080
+      }
+    ]
+  },
+  "batch": {
+    "size": 2,
+    "inputShape": "[2,3,640,640]",
+    "ortOutputShape": "[2,3,640,640]",
+    "tensorRtOutputShape": "[2,3,640,640]",
+    "inputRowSha256": [
+      "dfbcf00cf2a089c595f459f08880036fd3ca95c6d72e42363a538135f7d18ace",
+      "66b7f87eaf9c4a51a23ba6936d22c690b071733ae3dc80756f9df115e4268147"
+    ]
+  },
+  "rows": [
+    {
+      "row": 0,
+      "width": 640,
+      "height": 640,
+      "channels": 3,
+      "rawOutputMaxAbsoluteDifference": 0.1243743896484375,
+      "rawOutputMeanAbsoluteDifference": 0.0017467973617135612,
+      "tolerance": {
+        "max": 0.2,
+        "mean": 0.01
+      },
+      "ortRawOutputSha256": "88ac5dd03beb0d054c9b13aa984d51b22513c14ac90b3a12eefb3d6316a67d26",
+      "tensorRtRawOutputSha256": "30ae088aaf77eb83c3078e573f4dc46cb7af1490832231f011bf0bbfca6e59fc"
+    },
+    {
+      "row": 1,
+      "width": 640,
+      "height": 640,
+      "channels": 3,
+      "rawOutputMaxAbsoluteDifference": 0.0770721435546875,
+      "rawOutputMeanAbsoluteDifference": 0.0018094990794371314,
+      "tolerance": {
+        "max": 0.2,
+        "mean": 0.01
+      },
+      "ortRawOutputSha256": "0269b442a99df70fe535275f82c6403cad37b62f551288844b4e289b694d5b35",
+      "tensorRtRawOutputSha256": "e5f2c8f8596aa3fdebccf75bc303dc101687af49d6121d1083d6b6628bab1084"
+    }
+  ],
+  "boundary": "Exact dynamic batch profile, row mapping and bounded TensorRT-to-ORT raw-output parity for this UVDoc artifact on one Windows GPU/runtime. The top/bottom image regions are execution probes without unwarping ground truth; no visual-quality or throughput claim is made."
+}
