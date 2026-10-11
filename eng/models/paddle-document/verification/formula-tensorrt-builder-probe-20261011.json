@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "deploysharp-formula-tensorrt-builder-probe-v1",
+  "generatedAtUtc": "2026-10-11T03:04:51Z",
+  "host": {
+    "os": "Microsoft Windows 10.0.26200",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "computeCapability": "8.6",
+    "driver": "576.02",
+    "cuda": "12.9",
+    "tensorRt": "10.11.0.33-cu12",
+    "cudnn": "9.22.0-cuda12.9"
+  },
+  "model": {
+    "id": "paddle-formula/pp-formulanet-plus-s",
+    "path": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-plus-s.onnx",
+    "sha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+    "bytes": 231878904,
+    "input": "x:[N,1,384,384]",
+    "output": "fetch_name_0:[N,sequence]"
+  },
+  "command": "trtexec --onnx=pp-formulanet-plus-s.onnx --minShapes=x:1x1x384x384 --optShapes=x:1x1x384x384 --maxShapes=x:1x1x384x384 --memPoolSize=workspace:2048M --builderOptimizationLevel=0 --skipInference --noTF32",
+  "result": {
+    "status": "blocked",
+    "exitCode": -1073741819,
+    "stage": "TensorRT ONNX parser startup",
+    "lastObservedLog": "Start parsing network model; ONNX IR 0.0.8; opset 18; no parser diagnostic before process terminated",
+    "engineCreated": false
+  },
+  "boundary": "This is a precise builder probe for one official FormulaNet Plus-S ONNX artifact on the recorded Windows/TensorRT stack. It does not establish TensorRT support or failure for the other five formula graphs. The process terminated with 0xC0000005 during parser startup, before engine creation or decoder execution; no accuracy or performance result is recorded."
+}

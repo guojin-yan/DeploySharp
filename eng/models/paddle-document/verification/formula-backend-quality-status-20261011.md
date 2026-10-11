@@ -9,7 +9,7 @@
 | ONNX Runtime CPU | **已执行，但质量未通过发布门** | MathNet realFormula v1 的 121 条人工标注样本；六模型 exact、CER、EOS 和空输出见 [六模型汇总](formula-realformula-six-models-ort-20261007.md)。 |
 | OpenVINO CPU | **不支持** | 六个精确导出逐进程隔离；五个 FormulaNet 在 Loop-18 导入/规范输入处阻断，UniMERNet 在 model-reader 阶段中止。见 [隔离报告](formula-openvino-isolated-20261008.md)。 |
 | OpenCV DNN CPU | **动态 Batch 合同不支持** | 六个精确 batch=2 导出均为 `DS-OCV-8002`；见 [OpenCV 动态 Batch 边界](paddle-document-formula-dynamic-batch-opencv-20261007.md)。这不外推 batch=1 或其它 OpenCV 版本。 |
-| TensorRT CUDA | **未验证** | 当前没有六模型公式 TensorRT 质量/性能矩阵；不能从版面、表格或 Chart2Table 的 TensorRT 证据外推。 |
+| TensorRT CUDA | **未验证 / 代表 Builder 阻断** | `pp-formulanet-plus-s` 在匹配 TensorRT 10.11/CUDA 12.9 上已完成精确 Builder 探针，但进程在 ONNX parser startup 以 `0xC0000005` 终止，未创建 Engine；其余五模型尚未逐一构建。见 [代表 Builder 探针](formula-tensorrt-builder-probe-20261011.md)。不能从版面、表格或 Chart2Table 的 TensorRT 证据外推。 |
 
 ## ORT CPU 121 条样本诊断
 
