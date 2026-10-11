@@ -44,4 +44,15 @@ public sealed class PaddleDocumentFormulaQualityTests
         Assert.IsTrue(metrics.MatchedCommandCount > 0);
         Assert.IsFalse(metrics.NormalizedTextMatch);
     }
+
+    [TestMethod]
+    public void CompareChecksNestedDelimitersAndIgnoresEscapedBraces()
+    {
+        PaddleDocumentFormulaQualityMetrics valid = PaddleDocumentFormulaQualityEvaluator.Compare("\\{ [x] \\}", "\\{ [x] \\}");
+        PaddleDocumentFormulaQualityMetrics invalid = PaddleDocumentFormulaQualityEvaluator.Compare("([x])", "([x)]");
+
+        Assert.IsTrue(valid.ExpectedBalancedDelimiters);
+        Assert.IsTrue(valid.ActualBalancedDelimiters);
+        Assert.IsFalse(invalid.ActualBalancedDelimiters);
+    }
 }
