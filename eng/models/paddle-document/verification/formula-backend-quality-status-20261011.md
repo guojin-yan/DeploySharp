@@ -26,6 +26,8 @@
 
 从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。进一步使用本地 MathNet manifest 的参考标签（只通过图片 SHA 关联，不把原始 LaTeX 写回仓库）生成了[命令 token 质量诊断](formula-realformula-command-quality-20261011.md)及[机器可读结果](formula-realformula-command-quality-20261011.json)。六模型的命令 token micro-F1 为 `45.15%–63.01%`；这仍是精确词法重叠，不是 TeX 渲染或数学语义指标。
 
+代表性的 [TensorRT Builder 探针](formula-tensorrt-builder-probe-20261011.md)显示 Plus-S 在 TensorRT 10.11/CUDA 12.9 初始化后，于 ONNX parser startup 以 `0xC0000005` 终止，未创建 Engine；这只覆盖一个图。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)显示所有图都含动态输入/输出和自回归 `Loop`，循环体包含控制流、动态 shape 与 bitwise 算子；该审计是风险盘点，不是 TensorRT 支持判定。
+
 ## 已知 FormulaNet-L 边界
 
 一个真实样本在 raw token index `1,024` 前没有 EOS。复现表明官方 Paddle IR 与 ONNX Loop 均有 1,024 步生成上限；尝试把 Loop 延长会在 learned positional embedding `[1026,512]` 的 index `1,026` 越界。该现象不能通过在 DeploySharp Decoder 中伪造 EOS 修复，否则会静默截断公式；当前保留 `missing-eos` 警告。详见 [generation-limit](formula-formulanet-l-generation-limit-20261007.md) 与 [EOS/预处理敏感性](formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md)。

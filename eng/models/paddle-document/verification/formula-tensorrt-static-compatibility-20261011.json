@@ -1,0 +1,4042 @@
+{
+  "schemaVersion": "deploysharp-formula-tensorrt-static-compatibility-v1",
+  "generatedUtc": "2026-10-11T03:10:35.581834+00:00",
+  "scope": "Static ONNX graph audit only; no TensorRT engine is built by this script.",
+  "models": [
+    {
+      "model": "paddle-formula/pp-formulanet-plus-s",
+      "filename": "pp-formulanet-plus-s.onnx",
+      "bytes": 231878904,
+      "sha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 388,
+      "opCounts": {
+        "Add": 2,
+        "BatchNormalization": 80,
+        "Cast": 4,
+        "Concat": 13,
+        "Conv": 80,
+        "Expand": 4,
+        "Identity": 129,
+        "Loop": 1,
+        "MaxPool": 1,
+        "Mul": 1,
+        "Relu": 53,
+        "Reshape": 2,
+        "Shape": 4,
+        "Slice": 3,
+        "Split": 1,
+        "Squeeze": 3,
+        "Tile": 1,
+        "Transpose": 1,
+        "Unsqueeze": 5
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 717,
+          "bodyOpCounts": {
+            "Add": 40,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 32,
+            "Concat": 42,
+            "CumSum": 1,
+            "Div": 2,
+            "Equal": 6,
+            "Erf": 2,
+            "Expand": 5,
+            "Gather": 2,
+            "GreaterOrEqual": 1,
+            "Identity": 307,
+            "If": 4,
+            "LayerNormalization": 8,
+            "Less": 1,
+            "MatMul": 26,
+            "Max": 2,
+            "Mul": 21,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "Reshape": 50,
+            "Shape": 25,
+            "Slice": 25,
+            "Softmax": 4,
+            "Squeeze": 23,
+            "Transpose": 17,
+            "Unsqueeze": 61,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.26.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.0.0",
+              "shape": [
+                "DynamicDimension.3"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.scale.0.0",
+              "shape": [
+                "DynamicDimension.4",
+                "DynamicDimension.5"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.17.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.149",
+              "shape": [
+                "DynamicDimension.6",
+                "DynamicDimension.7"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10",
+                "DynamicDimension.11"
+              ]
+            },
+            {
+              "name": "Identity.151",
+              "shape": [
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14",
+                "DynamicDimension.15"
+              ]
+            },
+            {
+              "name": "Identity.153",
+              "shape": [
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18",
+                "DynamicDimension.19"
+              ]
+            },
+            {
+              "name": "Identity.155",
+              "shape": [
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22",
+                "DynamicDimension.23"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26",
+                "DynamicDimension.27"
+              ]
+            },
+            {
+              "name": "Identity.157",
+              "shape": [
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30",
+                "DynamicDimension.31"
+              ]
+            },
+            {
+              "name": "Identity.159",
+              "shape": [
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34",
+                "DynamicDimension.35"
+              ]
+            },
+            {
+              "name": "Identity.161",
+              "shape": [
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38",
+                "DynamicDimension.39"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.40",
+                3
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.28.0",
+              "shape": [
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.29.0",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.30.0",
+              "shape": [
+                "DynamicDimension.45",
+                3
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.31.0",
+              "shape": [
+                "DynamicDimension.46",
+                "DynamicDimension.47",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.32.0",
+              "shape": [
+                "DynamicDimension.48",
+                144,
+                2048
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.33.0",
+              "shape": [
+                "DynamicDimension.49",
+                "DynamicDimension.50",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.34.0",
+              "shape": [
+                "DynamicDimension.51",
+                16,
+                "DynamicDimension.52",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.35.0",
+              "shape": [
+                "DynamicDimension.53",
+                16,
+                "DynamicDimension.54",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.36.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.37.0",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.38.0",
+              "shape": [
+                "DynamicDimension.63",
+                16,
+                "DynamicDimension.64",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.39.0",
+              "shape": [
+                "DynamicDimension.65",
+                16,
+                "DynamicDimension.66",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.40.0",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.41.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.42.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.scale.15.0",
+            "p2o.sub_block.pd_op.add.33.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.44.0",
+            "p2o.sub_block.pd_op.add.33.0",
+            "p2o.sub_block.pd_op.slice.44.0",
+            "Identity.163",
+            "p2o.sub_block.pd_op.matmul.17.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.slice.48.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-m",
+      "filename": "pp-formulanet-plus-m.onnx",
+      "bytes": 592372919,
+      "sha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 824,
+      "opCounts": {
+        "Add": 10,
+        "BatchNormalization": 174,
+        "Cast": 4,
+        "Concat": 24,
+        "Conv": 174,
+        "Expand": 8,
+        "Identity": 286,
+        "Loop": 1,
+        "MaxPool": 1,
+        "Mul": 1,
+        "Relu": 117,
+        "Reshape": 4,
+        "Shape": 3,
+        "Slice": 3,
+        "Split": 1,
+        "Squeeze": 3,
+        "Tile": 1,
+        "Transpose": 1,
+        "Unsqueeze": 8
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 1743,
+          "bodyOpCounts": {
+            "Add": 91,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 54,
+            "Concat": 113,
+            "CumSum": 1,
+            "Div": 6,
+            "Equal": 8,
+            "Erf": 6,
+            "Expand": 5,
+            "Gather": 2,
+            "GreaterOrEqual": 1,
+            "Identity": 792,
+            "If": 8,
+            "LayerNormalization": 20,
+            "Less": 1,
+            "MatMul": 74,
+            "Max": 2,
+            "Mul": 49,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "Reshape": 134,
+            "Shape": 49,
+            "Slice": 47,
+            "Softmax": 12,
+            "Squeeze": 46,
+            "Transpose": 48,
+            "Unsqueeze": 164,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.49.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.0.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.reshape.1.0",
+              "shape": [
+                "DynamicDimension.3",
+                "DynamicDimension.4"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.24.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.317",
+              "shape": [
+                "DynamicDimension.5",
+                "DynamicDimension.6"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.7",
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10"
+              ]
+            },
+            {
+              "name": "Identity.319",
+              "shape": [
+                "DynamicDimension.11",
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14"
+              ]
+            },
+            {
+              "name": "Identity.321",
+              "shape": [
+                "DynamicDimension.15",
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18"
+              ]
+            },
+            {
+              "name": "Identity.323",
+              "shape": [
+                "DynamicDimension.19",
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.23",
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26"
+              ]
+            },
+            {
+              "name": "Identity.325",
+              "shape": [
+                "DynamicDimension.27",
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30"
+              ]
+            },
+            {
+              "name": "Identity.327",
+              "shape": [
+                "DynamicDimension.31",
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34"
+              ]
+            },
+            {
+              "name": "Identity.329",
+              "shape": [
+                "DynamicDimension.35",
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.4.0",
+              "shape": [
+                "DynamicDimension.39",
+                "DynamicDimension.40",
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "Identity.331",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                "DynamicDimension.45",
+                "DynamicDimension.46"
+              ]
+            },
+            {
+              "name": "Identity.333",
+              "shape": [
+                "DynamicDimension.47",
+                "DynamicDimension.48",
+                "DynamicDimension.49",
+                "DynamicDimension.50"
+              ]
+            },
+            {
+              "name": "Identity.335",
+              "shape": [
+                "DynamicDimension.51",
+                "DynamicDimension.52",
+                "DynamicDimension.53",
+                "DynamicDimension.54"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.5.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "Identity.337",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "Identity.339",
+              "shape": [
+                "DynamicDimension.63",
+                "DynamicDimension.64",
+                "DynamicDimension.65",
+                "DynamicDimension.66"
+              ]
+            },
+            {
+              "name": "Identity.341",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.6.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "Identity.343",
+              "shape": [
+                "DynamicDimension.75",
+                "DynamicDimension.76",
+                "DynamicDimension.77",
+                "DynamicDimension.78"
+              ]
+            },
+            {
+              "name": "Identity.345",
+              "shape": [
+                "DynamicDimension.79",
+                "DynamicDimension.80",
+                "DynamicDimension.81",
+                "DynamicDimension.82"
+              ]
+            },
+            {
+              "name": "Identity.347",
+              "shape": [
+                "DynamicDimension.83",
+                "DynamicDimension.84",
+                "DynamicDimension.85",
+                "DynamicDimension.86"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.7.0",
+              "shape": [
+                "DynamicDimension.87",
+                "DynamicDimension.88",
+                "DynamicDimension.89",
+                "DynamicDimension.90"
+              ]
+            },
+            {
+              "name": "Identity.349",
+              "shape": [
+                "DynamicDimension.91",
+                "DynamicDimension.92",
+                "DynamicDimension.93",
+                "DynamicDimension.94"
+              ]
+            },
+            {
+              "name": "Identity.351",
+              "shape": [
+                "DynamicDimension.95",
+                "DynamicDimension.96",
+                "DynamicDimension.97",
+                "DynamicDimension.98"
+              ]
+            },
+            {
+              "name": "Identity.353",
+              "shape": [
+                "DynamicDimension.99",
+                "DynamicDimension.100",
+                "DynamicDimension.101",
+                "DynamicDimension.102"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.103"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.51.0",
+              "shape": [
+                "DynamicDimension.104",
+                "DynamicDimension.105"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.52.0",
+              "shape": [
+                "DynamicDimension.106",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.53.0",
+              "shape": [
+                "DynamicDimension.107"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.54.0",
+              "shape": [
+                "DynamicDimension.108",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.55.0",
+              "shape": [
+                "DynamicDimension.109",
+                144,
+                2048
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.56.0",
+              "shape": [
+                "DynamicDimension.110",
+                "DynamicDimension.111",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.57.0",
+              "shape": [
+                "DynamicDimension.112",
+                16,
+                "DynamicDimension.113",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.58.0",
+              "shape": [
+                "DynamicDimension.114",
+                16,
+                "DynamicDimension.115",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.59.0",
+              "shape": [
+                "DynamicDimension.116",
+                "DynamicDimension.117",
+                "DynamicDimension.118",
+                "DynamicDimension.119"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.60.0",
+              "shape": [
+                "DynamicDimension.120",
+                "DynamicDimension.121",
+                "DynamicDimension.122",
+                "DynamicDimension.123"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.61.0",
+              "shape": [
+                "DynamicDimension.124",
+                16,
+                "DynamicDimension.125",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.62.0",
+              "shape": [
+                "DynamicDimension.126",
+                16,
+                "DynamicDimension.127",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.63.0",
+              "shape": [
+                "DynamicDimension.128",
+                "DynamicDimension.129",
+                "DynamicDimension.130",
+                "DynamicDimension.131"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.64.0",
+              "shape": [
+                "DynamicDimension.132",
+                "DynamicDimension.133",
+                "DynamicDimension.134",
+                "DynamicDimension.135"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.65.0",
+              "shape": [
+                "DynamicDimension.136",
+                16,
+                "DynamicDimension.137",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.66.0",
+              "shape": [
+                "DynamicDimension.138",
+                16,
+                "DynamicDimension.139",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.67.0",
+              "shape": [
+                "DynamicDimension.140",
+                "DynamicDimension.141",
+                "DynamicDimension.142",
+                "DynamicDimension.143"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.68.0",
+              "shape": [
+                "DynamicDimension.144",
+                "DynamicDimension.145",
+                "DynamicDimension.146",
+                "DynamicDimension.147"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.69.0",
+              "shape": [
+                "DynamicDimension.148",
+                16,
+                "DynamicDimension.149",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.70.0",
+              "shape": [
+                "DynamicDimension.150",
+                16,
+                "DynamicDimension.151",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.71.0",
+              "shape": [
+                "DynamicDimension.152",
+                "DynamicDimension.153",
+                "DynamicDimension.154",
+                "DynamicDimension.155"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.72.0",
+              "shape": [
+                "DynamicDimension.156",
+                "DynamicDimension.157",
+                "DynamicDimension.158",
+                "DynamicDimension.159"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.73.0",
+              "shape": [
+                "DynamicDimension.160",
+                16,
+                "DynamicDimension.161",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.74.0",
+              "shape": [
+                "DynamicDimension.162",
+                16,
+                "DynamicDimension.163",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.75.0",
+              "shape": [
+                "DynamicDimension.164",
+                "DynamicDimension.165",
+                "DynamicDimension.166",
+                "DynamicDimension.167"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.76.0",
+              "shape": [
+                "DynamicDimension.168",
+                "DynamicDimension.169",
+                "DynamicDimension.170",
+                "DynamicDimension.171"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.77.0",
+              "shape": [
+                "DynamicDimension.172",
+                16,
+                "DynamicDimension.173",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.78.0",
+              "shape": [
+                "DynamicDimension.174",
+                16,
+                "DynamicDimension.175",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.79.0",
+              "shape": [
+                "DynamicDimension.176",
+                "DynamicDimension.177",
+                "DynamicDimension.178",
+                "DynamicDimension.179"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.80.0",
+              "shape": [
+                "DynamicDimension.180",
+                "DynamicDimension.181",
+                "DynamicDimension.182",
+                "DynamicDimension.183"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.81.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.scale.35.0",
+            "p2o.sub_block.pd_op.unsqueeze.2.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.104.0",
+            "p2o.sub_block.pd_op.add.81.0",
+            "p2o.sub_block.pd_op.slice.104.0",
+            "Identity.355",
+            "p2o.sub_block.pd_op.matmul.49.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.slice.108.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-l",
+      "filename": "pp-formulanet-plus-l.onnx",
+      "bytes": 733525676,
+      "sha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 1897,
+      "opCounts": {
+        "Add": 113,
+        "Cast": 44,
+        "Concat": 119,
+        "Conv": 5,
+        "Div": 22,
+        "Einsum": 24,
+        "Erf": 12,
+        "Expand": 10,
+        "Floor": 8,
+        "Identity": 781,
+        "LayerNormalization": 24,
+        "Loop": 1,
+        "MatMul": 73,
+        "Mul": 53,
+        "Pad": 8,
+        "Pow": 2,
+        "ReduceMean": 4,
+        "Reshape": 146,
+        "Shape": 55,
+        "Slice": 63,
+        "Softmax": 12,
+        "Split": 13,
+        "Sqrt": 2,
+        "Squeeze": 90,
+        "Sub": 4,
+        "Tile": 1,
+        "Transpose": 55,
+        "Unsqueeze": 153
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 2265,
+          "bodyOpCounts": {
+            "Add": 117,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 66,
+            "Concat": 149,
+            "CumSum": 1,
+            "Div": 8,
+            "Equal": 10,
+            "Erf": 8,
+            "Expand": 5,
+            "Gather": 2,
+            "GreaterOrEqual": 1,
+            "Identity": 1038,
+            "If": 10,
+            "LayerNormalization": 26,
+            "Less": 1,
+            "MatMul": 98,
+            "Max": 2,
+            "Mul": 63,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "Reshape": 176,
+            "Shape": 61,
+            "Slice": 59,
+            "Softmax": 16,
+            "Squeeze": 58,
+            "Transpose": 64,
+            "Unsqueeze": 216,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.666.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.48.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.reshape.117.0",
+              "shape": [
+                "DynamicDimension.3",
+                "DynamicDimension.4"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.633.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.2021",
+              "shape": [
+                "DynamicDimension.5",
+                "DynamicDimension.6"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.7",
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10"
+              ]
+            },
+            {
+              "name": "Identity.2023",
+              "shape": [
+                "DynamicDimension.11",
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14"
+              ]
+            },
+            {
+              "name": "Identity.2025",
+              "shape": [
+                "DynamicDimension.15",
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18"
+              ]
+            },
+            {
+              "name": "Identity.2027",
+              "shape": [
+                "DynamicDimension.19",
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.23",
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26"
+              ]
+            },
+            {
+              "name": "Identity.2029",
+              "shape": [
+                "DynamicDimension.27",
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30"
+              ]
+            },
+            {
+              "name": "Identity.2031",
+              "shape": [
+                "DynamicDimension.31",
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34"
+              ]
+            },
+            {
+              "name": "Identity.2033",
+              "shape": [
+                "DynamicDimension.35",
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.4.0",
+              "shape": [
+                "DynamicDimension.39",
+                "DynamicDimension.40",
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "Identity.2035",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                "DynamicDimension.45",
+                "DynamicDimension.46"
+              ]
+            },
+            {
+              "name": "Identity.2037",
+              "shape": [
+                "DynamicDimension.47",
+                "DynamicDimension.48",
+                "DynamicDimension.49",
+                "DynamicDimension.50"
+              ]
+            },
+            {
+              "name": "Identity.2039",
+              "shape": [
+                "DynamicDimension.51",
+                "DynamicDimension.52",
+                "DynamicDimension.53",
+                "DynamicDimension.54"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.5.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "Identity.2041",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "Identity.2043",
+              "shape": [
+                "DynamicDimension.63",
+                "DynamicDimension.64",
+                "DynamicDimension.65",
+                "DynamicDimension.66"
+              ]
+            },
+            {
+              "name": "Identity.2045",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.6.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "Identity.2047",
+              "shape": [
+                "DynamicDimension.75",
+                "DynamicDimension.76",
+                "DynamicDimension.77",
+                "DynamicDimension.78"
+              ]
+            },
+            {
+              "name": "Identity.2049",
+              "shape": [
+                "DynamicDimension.79",
+                "DynamicDimension.80",
+                "DynamicDimension.81",
+                "DynamicDimension.82"
+              ]
+            },
+            {
+              "name": "Identity.2051",
+              "shape": [
+                "DynamicDimension.83",
+                "DynamicDimension.84",
+                "DynamicDimension.85",
+                "DynamicDimension.86"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.7.0",
+              "shape": [
+                "DynamicDimension.87",
+                "DynamicDimension.88",
+                "DynamicDimension.89",
+                "DynamicDimension.90"
+              ]
+            },
+            {
+              "name": "Identity.2053",
+              "shape": [
+                "DynamicDimension.91",
+                "DynamicDimension.92",
+                "DynamicDimension.93",
+                "DynamicDimension.94"
+              ]
+            },
+            {
+              "name": "Identity.2055",
+              "shape": [
+                "DynamicDimension.95",
+                "DynamicDimension.96",
+                "DynamicDimension.97",
+                "DynamicDimension.98"
+              ]
+            },
+            {
+              "name": "Identity.2057",
+              "shape": [
+                "DynamicDimension.99",
+                "DynamicDimension.100",
+                "DynamicDimension.101",
+                "DynamicDimension.102"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.8.0",
+              "shape": [
+                "DynamicDimension.103",
+                "DynamicDimension.104",
+                "DynamicDimension.105",
+                "DynamicDimension.106"
+              ]
+            },
+            {
+              "name": "Identity.2059",
+              "shape": [
+                "DynamicDimension.107",
+                "DynamicDimension.108",
+                "DynamicDimension.109",
+                "DynamicDimension.110"
+              ]
+            },
+            {
+              "name": "Identity.2061",
+              "shape": [
+                "DynamicDimension.111",
+                "DynamicDimension.112",
+                "DynamicDimension.113",
+                "DynamicDimension.114"
+              ]
+            },
+            {
+              "name": "Identity.2063",
+              "shape": [
+                "DynamicDimension.115",
+                "DynamicDimension.116",
+                "DynamicDimension.117",
+                "DynamicDimension.118"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.9.0",
+              "shape": [
+                "DynamicDimension.119",
+                "DynamicDimension.120",
+                "DynamicDimension.121",
+                "DynamicDimension.122"
+              ]
+            },
+            {
+              "name": "Identity.2065",
+              "shape": [
+                "DynamicDimension.123",
+                "DynamicDimension.124",
+                "DynamicDimension.125",
+                "DynamicDimension.126"
+              ]
+            },
+            {
+              "name": "Identity.2067",
+              "shape": [
+                "DynamicDimension.127",
+                "DynamicDimension.128",
+                "DynamicDimension.129",
+                "DynamicDimension.130"
+              ]
+            },
+            {
+              "name": "Identity.2069",
+              "shape": [
+                "DynamicDimension.131",
+                "DynamicDimension.132",
+                "DynamicDimension.133",
+                "DynamicDimension.134"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.135"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.668.0",
+              "shape": [
+                "DynamicDimension.136",
+                "DynamicDimension.137"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.669.0",
+              "shape": [
+                "DynamicDimension.138",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.670.0",
+              "shape": [
+                "DynamicDimension.139"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.671.0",
+              "shape": [
+                "DynamicDimension.140",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.672.0",
+              "shape": [
+                "DynamicDimension.141",
+                144,
+                1024
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.673.0",
+              "shape": [
+                "DynamicDimension.142",
+                "DynamicDimension.143",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.674.0",
+              "shape": [
+                "DynamicDimension.144",
+                16,
+                "DynamicDimension.145",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.675.0",
+              "shape": [
+                "DynamicDimension.146",
+                16,
+                "DynamicDimension.147",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.676.0",
+              "shape": [
+                "DynamicDimension.148",
+                "DynamicDimension.149",
+                "DynamicDimension.150",
+                "DynamicDimension.151"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.677.0",
+              "shape": [
+                "DynamicDimension.152",
+                "DynamicDimension.153",
+                "DynamicDimension.154",
+                "DynamicDimension.155"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.678.0",
+              "shape": [
+                "DynamicDimension.156",
+                16,
+                "DynamicDimension.157",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.679.0",
+              "shape": [
+                "DynamicDimension.158",
+                16,
+                "DynamicDimension.159",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.680.0",
+              "shape": [
+                "DynamicDimension.160",
+                "DynamicDimension.161",
+                "DynamicDimension.162",
+                "DynamicDimension.163"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.681.0",
+              "shape": [
+                "DynamicDimension.164",
+                "DynamicDimension.165",
+                "DynamicDimension.166",
+                "DynamicDimension.167"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.682.0",
+              "shape": [
+                "DynamicDimension.168",
+                16,
+                "DynamicDimension.169",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.683.0",
+              "shape": [
+                "DynamicDimension.170",
+                16,
+                "DynamicDimension.171",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.684.0",
+              "shape": [
+                "DynamicDimension.172",
+                "DynamicDimension.173",
+                "DynamicDimension.174",
+                "DynamicDimension.175"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.685.0",
+              "shape": [
+                "DynamicDimension.176",
+                "DynamicDimension.177",
+                "DynamicDimension.178",
+                "DynamicDimension.179"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.686.0",
+              "shape": [
+                "DynamicDimension.180",
+                16,
+                "DynamicDimension.181",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.687.0",
+              "shape": [
+                "DynamicDimension.182",
+                16,
+                "DynamicDimension.183",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.688.0",
+              "shape": [
+                "DynamicDimension.184",
+                "DynamicDimension.185",
+                "DynamicDimension.186",
+                "DynamicDimension.187"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.689.0",
+              "shape": [
+                "DynamicDimension.188",
+                "DynamicDimension.189",
+                "DynamicDimension.190",
+                "DynamicDimension.191"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.690.0",
+              "shape": [
+                "DynamicDimension.192",
+                16,
+                "DynamicDimension.193",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.691.0",
+              "shape": [
+                "DynamicDimension.194",
+                16,
+                "DynamicDimension.195",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.692.0",
+              "shape": [
+                "DynamicDimension.196",
+                "DynamicDimension.197",
+                "DynamicDimension.198",
+                "DynamicDimension.199"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.693.0",
+              "shape": [
+                "DynamicDimension.200",
+                "DynamicDimension.201",
+                "DynamicDimension.202",
+                "DynamicDimension.203"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.694.0",
+              "shape": [
+                "DynamicDimension.204",
+                16,
+                "DynamicDimension.205",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.695.0",
+              "shape": [
+                "DynamicDimension.206",
+                16,
+                "DynamicDimension.207",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.696.0",
+              "shape": [
+                "DynamicDimension.208",
+                "DynamicDimension.209",
+                "DynamicDimension.210",
+                "DynamicDimension.211"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.697.0",
+              "shape": [
+                "DynamicDimension.212",
+                "DynamicDimension.213",
+                "DynamicDimension.214",
+                "DynamicDimension.215"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.698.0",
+              "shape": [
+                "DynamicDimension.216",
+                16,
+                "DynamicDimension.217",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.699.0",
+              "shape": [
+                "DynamicDimension.218",
+                16,
+                "DynamicDimension.219",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.700.0",
+              "shape": [
+                "DynamicDimension.220",
+                "DynamicDimension.221",
+                "DynamicDimension.222",
+                "DynamicDimension.223"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.701.0",
+              "shape": [
+                "DynamicDimension.224",
+                "DynamicDimension.225",
+                "DynamicDimension.226",
+                "DynamicDimension.227"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.702.0",
+              "shape": [
+                "DynamicDimension.228",
+                16,
+                "DynamicDimension.229",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.703.0",
+              "shape": [
+                "DynamicDimension.230",
+                16,
+                "DynamicDimension.231",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.704.0",
+              "shape": [
+                "DynamicDimension.232",
+                "DynamicDimension.233",
+                "DynamicDimension.234",
+                "DynamicDimension.235"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.705.0",
+              "shape": [
+                "DynamicDimension.236",
+                "DynamicDimension.237",
+                "DynamicDimension.238",
+                "DynamicDimension.239"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.706.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.8.0",
+            "p2o.sub_block.pd_op.scale.45.0",
+            "p2o.sub_block.pd_op.unsqueeze.2.0",
+            "p2o.sub_block.pd_op.if.9.0",
+            "p2o.sub_block.pd_op.concat.16.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.134.0",
+            "p2o.sub_block.pd_op.add.105.0",
+            "p2o.sub_block.pd_op.slice.134.0",
+            "Identity.2071",
+            "p2o.sub_block.pd_op.matmul.65.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.slice.138.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-s",
+      "filename": "pp-formulanet-s.onnx",
+      "bytes": 231878904,
+      "sha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            384,
+            384
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 388,
+      "opCounts": {
+        "Add": 2,
+        "BatchNormalization": 80,
+        "Cast": 4,
+        "Concat": 13,
+        "Conv": 80,
+        "Expand": 4,
+        "Identity": 129,
+        "Loop": 1,
+        "MaxPool": 1,
+        "Mul": 1,
+        "Relu": 53,
+        "Reshape": 2,
+        "Shape": 4,
+        "Slice": 3,
+        "Split": 1,
+        "Squeeze": 3,
+        "Tile": 1,
+        "Transpose": 1,
+        "Unsqueeze": 5
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 717,
+          "bodyOpCounts": {
+            "Add": 40,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 32,
+            "Concat": 42,
+            "CumSum": 1,
+            "Div": 2,
+            "Equal": 6,
+            "Erf": 2,
+            "Expand": 5,
+            "Gather": 2,
+            "GreaterOrEqual": 1,
+            "Identity": 307,
+            "If": 4,
+            "LayerNormalization": 8,
+            "Less": 1,
+            "MatMul": 26,
+            "Max": 2,
+            "Mul": 21,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "Reshape": 50,
+            "Shape": 25,
+            "Slice": 25,
+            "Softmax": 4,
+            "Squeeze": 23,
+            "Transpose": 17,
+            "Unsqueeze": 61,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.26.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.0.0",
+              "shape": [
+                "DynamicDimension.3"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.scale.0.0",
+              "shape": [
+                "DynamicDimension.4",
+                "DynamicDimension.5"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.17.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.149",
+              "shape": [
+                "DynamicDimension.6",
+                "DynamicDimension.7"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10",
+                "DynamicDimension.11"
+              ]
+            },
+            {
+              "name": "Identity.151",
+              "shape": [
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14",
+                "DynamicDimension.15"
+              ]
+            },
+            {
+              "name": "Identity.153",
+              "shape": [
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18",
+                "DynamicDimension.19"
+              ]
+            },
+            {
+              "name": "Identity.155",
+              "shape": [
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22",
+                "DynamicDimension.23"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26",
+                "DynamicDimension.27"
+              ]
+            },
+            {
+              "name": "Identity.157",
+              "shape": [
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30",
+                "DynamicDimension.31"
+              ]
+            },
+            {
+              "name": "Identity.159",
+              "shape": [
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34",
+                "DynamicDimension.35"
+              ]
+            },
+            {
+              "name": "Identity.161",
+              "shape": [
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38",
+                "DynamicDimension.39"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.40",
+                3
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.28.0",
+              "shape": [
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.29.0",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.30.0",
+              "shape": [
+                "DynamicDimension.45",
+                3
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.31.0",
+              "shape": [
+                "DynamicDimension.46",
+                "DynamicDimension.47",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.32.0",
+              "shape": [
+                "DynamicDimension.48",
+                144,
+                2048
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.33.0",
+              "shape": [
+                "DynamicDimension.49",
+                "DynamicDimension.50",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.34.0",
+              "shape": [
+                "DynamicDimension.51",
+                16,
+                "DynamicDimension.52",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.35.0",
+              "shape": [
+                "DynamicDimension.53",
+                16,
+                "DynamicDimension.54",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.36.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.37.0",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.38.0",
+              "shape": [
+                "DynamicDimension.63",
+                16,
+                "DynamicDimension.64",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.39.0",
+              "shape": [
+                "DynamicDimension.65",
+                16,
+                "DynamicDimension.66",
+                24
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.40.0",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.41.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.42.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.scale.15.0",
+            "p2o.sub_block.pd_op.add.33.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.44.0",
+            "p2o.sub_block.pd_op.add.33.0",
+            "p2o.sub_block.pd_op.slice.44.0",
+            "Identity.163",
+            "p2o.sub_block.pd_op.matmul.17.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.slice.48.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-l",
+      "filename": "pp-formulanet-l.onnx",
+      "bytes": 730379948,
+      "sha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            768,
+            768
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 1897,
+      "opCounts": {
+        "Add": 113,
+        "Cast": 44,
+        "Concat": 119,
+        "Conv": 5,
+        "Div": 22,
+        "Einsum": 24,
+        "Erf": 12,
+        "Expand": 10,
+        "Floor": 8,
+        "Identity": 781,
+        "LayerNormalization": 24,
+        "Loop": 1,
+        "MatMul": 73,
+        "Mul": 53,
+        "Pad": 8,
+        "Pow": 2,
+        "ReduceMean": 4,
+        "Reshape": 146,
+        "Shape": 55,
+        "Slice": 63,
+        "Softmax": 12,
+        "Split": 13,
+        "Sqrt": 2,
+        "Squeeze": 90,
+        "Sub": 4,
+        "Tile": 1,
+        "Transpose": 55,
+        "Unsqueeze": 153
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 2265,
+          "bodyOpCounts": {
+            "Add": 117,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 66,
+            "Concat": 149,
+            "CumSum": 1,
+            "Div": 8,
+            "Equal": 10,
+            "Erf": 8,
+            "Expand": 5,
+            "Gather": 2,
+            "GreaterOrEqual": 1,
+            "Identity": 1038,
+            "If": 10,
+            "LayerNormalization": 26,
+            "Less": 1,
+            "MatMul": 98,
+            "Max": 2,
+            "Mul": 63,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "Reshape": 176,
+            "Shape": 61,
+            "Slice": 59,
+            "Softmax": 16,
+            "Squeeze": 58,
+            "Transpose": 64,
+            "Unsqueeze": 216,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.666.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.48.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.reshape.117.0",
+              "shape": [
+                "DynamicDimension.3",
+                "DynamicDimension.4"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.633.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.2021",
+              "shape": [
+                "DynamicDimension.5",
+                "DynamicDimension.6"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.7",
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10"
+              ]
+            },
+            {
+              "name": "Identity.2023",
+              "shape": [
+                "DynamicDimension.11",
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14"
+              ]
+            },
+            {
+              "name": "Identity.2025",
+              "shape": [
+                "DynamicDimension.15",
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18"
+              ]
+            },
+            {
+              "name": "Identity.2027",
+              "shape": [
+                "DynamicDimension.19",
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.23",
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26"
+              ]
+            },
+            {
+              "name": "Identity.2029",
+              "shape": [
+                "DynamicDimension.27",
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30"
+              ]
+            },
+            {
+              "name": "Identity.2031",
+              "shape": [
+                "DynamicDimension.31",
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34"
+              ]
+            },
+            {
+              "name": "Identity.2033",
+              "shape": [
+                "DynamicDimension.35",
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.4.0",
+              "shape": [
+                "DynamicDimension.39",
+                "DynamicDimension.40",
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "Identity.2035",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                "DynamicDimension.45",
+                "DynamicDimension.46"
+              ]
+            },
+            {
+              "name": "Identity.2037",
+              "shape": [
+                "DynamicDimension.47",
+                "DynamicDimension.48",
+                "DynamicDimension.49",
+                "DynamicDimension.50"
+              ]
+            },
+            {
+              "name": "Identity.2039",
+              "shape": [
+                "DynamicDimension.51",
+                "DynamicDimension.52",
+                "DynamicDimension.53",
+                "DynamicDimension.54"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.5.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "Identity.2041",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "Identity.2043",
+              "shape": [
+                "DynamicDimension.63",
+                "DynamicDimension.64",
+                "DynamicDimension.65",
+                "DynamicDimension.66"
+              ]
+            },
+            {
+              "name": "Identity.2045",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.6.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "Identity.2047",
+              "shape": [
+                "DynamicDimension.75",
+                "DynamicDimension.76",
+                "DynamicDimension.77",
+                "DynamicDimension.78"
+              ]
+            },
+            {
+              "name": "Identity.2049",
+              "shape": [
+                "DynamicDimension.79",
+                "DynamicDimension.80",
+                "DynamicDimension.81",
+                "DynamicDimension.82"
+              ]
+            },
+            {
+              "name": "Identity.2051",
+              "shape": [
+                "DynamicDimension.83",
+                "DynamicDimension.84",
+                "DynamicDimension.85",
+                "DynamicDimension.86"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.7.0",
+              "shape": [
+                "DynamicDimension.87",
+                "DynamicDimension.88",
+                "DynamicDimension.89",
+                "DynamicDimension.90"
+              ]
+            },
+            {
+              "name": "Identity.2053",
+              "shape": [
+                "DynamicDimension.91",
+                "DynamicDimension.92",
+                "DynamicDimension.93",
+                "DynamicDimension.94"
+              ]
+            },
+            {
+              "name": "Identity.2055",
+              "shape": [
+                "DynamicDimension.95",
+                "DynamicDimension.96",
+                "DynamicDimension.97",
+                "DynamicDimension.98"
+              ]
+            },
+            {
+              "name": "Identity.2057",
+              "shape": [
+                "DynamicDimension.99",
+                "DynamicDimension.100",
+                "DynamicDimension.101",
+                "DynamicDimension.102"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.8.0",
+              "shape": [
+                "DynamicDimension.103",
+                "DynamicDimension.104",
+                "DynamicDimension.105",
+                "DynamicDimension.106"
+              ]
+            },
+            {
+              "name": "Identity.2059",
+              "shape": [
+                "DynamicDimension.107",
+                "DynamicDimension.108",
+                "DynamicDimension.109",
+                "DynamicDimension.110"
+              ]
+            },
+            {
+              "name": "Identity.2061",
+              "shape": [
+                "DynamicDimension.111",
+                "DynamicDimension.112",
+                "DynamicDimension.113",
+                "DynamicDimension.114"
+              ]
+            },
+            {
+              "name": "Identity.2063",
+              "shape": [
+                "DynamicDimension.115",
+                "DynamicDimension.116",
+                "DynamicDimension.117",
+                "DynamicDimension.118"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.9.0",
+              "shape": [
+                "DynamicDimension.119",
+                "DynamicDimension.120",
+                "DynamicDimension.121",
+                "DynamicDimension.122"
+              ]
+            },
+            {
+              "name": "Identity.2065",
+              "shape": [
+                "DynamicDimension.123",
+                "DynamicDimension.124",
+                "DynamicDimension.125",
+                "DynamicDimension.126"
+              ]
+            },
+            {
+              "name": "Identity.2067",
+              "shape": [
+                "DynamicDimension.127",
+                "DynamicDimension.128",
+                "DynamicDimension.129",
+                "DynamicDimension.130"
+              ]
+            },
+            {
+              "name": "Identity.2069",
+              "shape": [
+                "DynamicDimension.131",
+                "DynamicDimension.132",
+                "DynamicDimension.133",
+                "DynamicDimension.134"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.135"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.668.0",
+              "shape": [
+                "DynamicDimension.136",
+                "DynamicDimension.137"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.669.0",
+              "shape": [
+                "DynamicDimension.138",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.670.0",
+              "shape": [
+                "DynamicDimension.139"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.671.0",
+              "shape": [
+                "DynamicDimension.140",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.672.0",
+              "shape": [
+                "DynamicDimension.141",
+                144,
+                1024
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.673.0",
+              "shape": [
+                "DynamicDimension.142",
+                "DynamicDimension.143",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.674.0",
+              "shape": [
+                "DynamicDimension.144",
+                16,
+                "DynamicDimension.145",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.675.0",
+              "shape": [
+                "DynamicDimension.146",
+                16,
+                "DynamicDimension.147",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.676.0",
+              "shape": [
+                "DynamicDimension.148",
+                "DynamicDimension.149",
+                "DynamicDimension.150",
+                "DynamicDimension.151"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.677.0",
+              "shape": [
+                "DynamicDimension.152",
+                "DynamicDimension.153",
+                "DynamicDimension.154",
+                "DynamicDimension.155"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.678.0",
+              "shape": [
+                "DynamicDimension.156",
+                16,
+                "DynamicDimension.157",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.679.0",
+              "shape": [
+                "DynamicDimension.158",
+                16,
+                "DynamicDimension.159",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.680.0",
+              "shape": [
+                "DynamicDimension.160",
+                "DynamicDimension.161",
+                "DynamicDimension.162",
+                "DynamicDimension.163"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.681.0",
+              "shape": [
+                "DynamicDimension.164",
+                "DynamicDimension.165",
+                "DynamicDimension.166",
+                "DynamicDimension.167"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.682.0",
+              "shape": [
+                "DynamicDimension.168",
+                16,
+                "DynamicDimension.169",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.683.0",
+              "shape": [
+                "DynamicDimension.170",
+                16,
+                "DynamicDimension.171",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.684.0",
+              "shape": [
+                "DynamicDimension.172",
+                "DynamicDimension.173",
+                "DynamicDimension.174",
+                "DynamicDimension.175"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.685.0",
+              "shape": [
+                "DynamicDimension.176",
+                "DynamicDimension.177",
+                "DynamicDimension.178",
+                "DynamicDimension.179"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.686.0",
+              "shape": [
+                "DynamicDimension.180",
+                16,
+                "DynamicDimension.181",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.687.0",
+              "shape": [
+                "DynamicDimension.182",
+                16,
+                "DynamicDimension.183",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.688.0",
+              "shape": [
+                "DynamicDimension.184",
+                "DynamicDimension.185",
+                "DynamicDimension.186",
+                "DynamicDimension.187"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.689.0",
+              "shape": [
+                "DynamicDimension.188",
+                "DynamicDimension.189",
+                "DynamicDimension.190",
+                "DynamicDimension.191"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.690.0",
+              "shape": [
+                "DynamicDimension.192",
+                16,
+                "DynamicDimension.193",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.691.0",
+              "shape": [
+                "DynamicDimension.194",
+                16,
+                "DynamicDimension.195",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.692.0",
+              "shape": [
+                "DynamicDimension.196",
+                "DynamicDimension.197",
+                "DynamicDimension.198",
+                "DynamicDimension.199"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.693.0",
+              "shape": [
+                "DynamicDimension.200",
+                "DynamicDimension.201",
+                "DynamicDimension.202",
+                "DynamicDimension.203"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.694.0",
+              "shape": [
+                "DynamicDimension.204",
+                16,
+                "DynamicDimension.205",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.695.0",
+              "shape": [
+                "DynamicDimension.206",
+                16,
+                "DynamicDimension.207",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.696.0",
+              "shape": [
+                "DynamicDimension.208",
+                "DynamicDimension.209",
+                "DynamicDimension.210",
+                "DynamicDimension.211"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.697.0",
+              "shape": [
+                "DynamicDimension.212",
+                "DynamicDimension.213",
+                "DynamicDimension.214",
+                "DynamicDimension.215"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.698.0",
+              "shape": [
+                "DynamicDimension.216",
+                16,
+                "DynamicDimension.217",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.699.0",
+              "shape": [
+                "DynamicDimension.218",
+                16,
+                "DynamicDimension.219",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.700.0",
+              "shape": [
+                "DynamicDimension.220",
+                "DynamicDimension.221",
+                "DynamicDimension.222",
+                "DynamicDimension.223"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.701.0",
+              "shape": [
+                "DynamicDimension.224",
+                "DynamicDimension.225",
+                "DynamicDimension.226",
+                "DynamicDimension.227"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.702.0",
+              "shape": [
+                "DynamicDimension.228",
+                16,
+                "DynamicDimension.229",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.703.0",
+              "shape": [
+                "DynamicDimension.230",
+                16,
+                "DynamicDimension.231",
+                32
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.704.0",
+              "shape": [
+                "DynamicDimension.232",
+                "DynamicDimension.233",
+                "DynamicDimension.234",
+                "DynamicDimension.235"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.705.0",
+              "shape": [
+                "DynamicDimension.236",
+                "DynamicDimension.237",
+                "DynamicDimension.238",
+                "DynamicDimension.239"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.706.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.8.0",
+            "p2o.sub_block.pd_op.scale.45.0",
+            "p2o.sub_block.pd_op.unsqueeze.2.0",
+            "p2o.sub_block.pd_op.if.9.0",
+            "p2o.sub_block.pd_op.concat.16.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.134.0",
+            "p2o.sub_block.pd_op.add.105.0",
+            "p2o.sub_block.pd_op.slice.134.0",
+            "Identity.2071",
+            "p2o.sub_block.pd_op.matmul.65.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.slice.138.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    },
+    {
+      "model": "paddle-formula/unimernet",
+      "filename": "unimernet.onnx",
+      "bytes": 1842024100,
+      "sha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "irVersion": 8,
+      "opsets": [
+        {
+          "domain": "",
+          "version": 18
+        }
+      ],
+      "inputs": [
+        {
+          "name": "x",
+          "shape": [
+            "DynamicDimension.0",
+            1,
+            192,
+            672
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "shape": [
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "nodeCount": 11036,
+      "opCounts": {
+        "Add": 491,
+        "And": 1,
+        "Cast": 316,
+        "Concat": 212,
+        "Constant": 4113,
+        "Conv": 1,
+        "Div": 30,
+        "Equal": 20,
+        "Erf": 20,
+        "Expand": 70,
+        "Floor": 10,
+        "Gather": 90,
+        "GatherND": 20,
+        "Identity": 2508,
+        "If": 90,
+        "LayerNormalization": 44,
+        "Less": 181,
+        "LessOrEqual": 90,
+        "Loop": 1,
+        "MatMul": 163,
+        "Min": 90,
+        "Mul": 61,
+        "Not": 31,
+        "Pad": 20,
+        "Range": 1,
+        "ReduceSum": 90,
+        "Reshape": 450,
+        "Shape": 286,
+        "Slice": 248,
+        "Softmax": 20,
+        "Split": 2,
+        "Squeeze": 138,
+        "Sub": 10,
+        "Tile": 1,
+        "Transpose": 171,
+        "Unsqueeze": 746,
+        "Where": 200
+      },
+      "loopCount": 1,
+      "loops": [
+        {
+          "bodyNodeCount": 6035,
+          "bodyOpCounts": {
+            "Add": 135,
+            "And": 1,
+            "ArgMax": 1,
+            "BitwiseAnd": 1,
+            "BitwiseNot": 1,
+            "Cast": 68,
+            "Concat": 174,
+            "Constant": 2077,
+            "CumSum": 1,
+            "Div": 8,
+            "Equal": 10,
+            "Erf": 8,
+            "Expand": 6,
+            "Gather": 2,
+            "GlobalAveragePool": 1,
+            "GreaterOrEqual": 1,
+            "Identity": 1885,
+            "If": 10,
+            "LayerNormalization": 30,
+            "Less": 1,
+            "MatMul": 118,
+            "Max": 2,
+            "Mul": 73,
+            "Not": 3,
+            "Range": 1,
+            "ReduceMin": 1,
+            "ReduceSum": 4,
+            "Relu": 3,
+            "Reshape": 209,
+            "Shape": 117,
+            "Slice": 212,
+            "Softmax": 20,
+            "Squeeze": 218,
+            "Transpose": 93,
+            "Unsqueeze": 539,
+            "Where": 1
+          },
+          "bodyInputs": [
+            {
+              "name": "loop.iter.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.logical_and.0.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.full.698.0",
+              "shape": []
+            },
+            {
+              "name": "p2o.pd_op.arange.0.0",
+              "shape": [
+                1
+              ]
+            },
+            {
+              "name": "p2o.pd_op.reshape.337.0",
+              "shape": [
+                "DynamicDimension.3",
+                "DynamicDimension.4"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.665.0",
+              "shape": []
+            },
+            {
+              "name": "Identity.2574",
+              "shape": [
+                "DynamicDimension.5",
+                "DynamicDimension.6"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.2.0",
+              "shape": [
+                "DynamicDimension.7",
+                "DynamicDimension.8",
+                "DynamicDimension.9",
+                "DynamicDimension.10"
+              ]
+            },
+            {
+              "name": "Identity.2576",
+              "shape": [
+                "DynamicDimension.11",
+                "DynamicDimension.12",
+                "DynamicDimension.13",
+                "DynamicDimension.14"
+              ]
+            },
+            {
+              "name": "Identity.2578",
+              "shape": [
+                "DynamicDimension.15",
+                "DynamicDimension.16",
+                "DynamicDimension.17",
+                "DynamicDimension.18"
+              ]
+            },
+            {
+              "name": "Identity.2580",
+              "shape": [
+                "DynamicDimension.19",
+                "DynamicDimension.20",
+                "DynamicDimension.21",
+                "DynamicDimension.22"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.3.0",
+              "shape": [
+                "DynamicDimension.23",
+                "DynamicDimension.24",
+                "DynamicDimension.25",
+                "DynamicDimension.26"
+              ]
+            },
+            {
+              "name": "Identity.2582",
+              "shape": [
+                "DynamicDimension.27",
+                "DynamicDimension.28",
+                "DynamicDimension.29",
+                "DynamicDimension.30"
+              ]
+            },
+            {
+              "name": "Identity.2584",
+              "shape": [
+                "DynamicDimension.31",
+                "DynamicDimension.32",
+                "DynamicDimension.33",
+                "DynamicDimension.34"
+              ]
+            },
+            {
+              "name": "Identity.2586",
+              "shape": [
+                "DynamicDimension.35",
+                "DynamicDimension.36",
+                "DynamicDimension.37",
+                "DynamicDimension.38"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.4.0",
+              "shape": [
+                "DynamicDimension.39",
+                "DynamicDimension.40",
+                "DynamicDimension.41",
+                "DynamicDimension.42"
+              ]
+            },
+            {
+              "name": "Identity.2588",
+              "shape": [
+                "DynamicDimension.43",
+                "DynamicDimension.44",
+                "DynamicDimension.45",
+                "DynamicDimension.46"
+              ]
+            },
+            {
+              "name": "Identity.2590",
+              "shape": [
+                "DynamicDimension.47",
+                "DynamicDimension.48",
+                "DynamicDimension.49",
+                "DynamicDimension.50"
+              ]
+            },
+            {
+              "name": "Identity.2592",
+              "shape": [
+                "DynamicDimension.51",
+                "DynamicDimension.52",
+                "DynamicDimension.53",
+                "DynamicDimension.54"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.5.0",
+              "shape": [
+                "DynamicDimension.55",
+                "DynamicDimension.56",
+                "DynamicDimension.57",
+                "DynamicDimension.58"
+              ]
+            },
+            {
+              "name": "Identity.2594",
+              "shape": [
+                "DynamicDimension.59",
+                "DynamicDimension.60",
+                "DynamicDimension.61",
+                "DynamicDimension.62"
+              ]
+            },
+            {
+              "name": "Identity.2596",
+              "shape": [
+                "DynamicDimension.63",
+                "DynamicDimension.64",
+                "DynamicDimension.65",
+                "DynamicDimension.66"
+              ]
+            },
+            {
+              "name": "Identity.2598",
+              "shape": [
+                "DynamicDimension.67",
+                "DynamicDimension.68",
+                "DynamicDimension.69",
+                "DynamicDimension.70"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.6.0",
+              "shape": [
+                "DynamicDimension.71",
+                "DynamicDimension.72",
+                "DynamicDimension.73",
+                "DynamicDimension.74"
+              ]
+            },
+            {
+              "name": "Identity.2600",
+              "shape": [
+                "DynamicDimension.75",
+                "DynamicDimension.76",
+                "DynamicDimension.77",
+                "DynamicDimension.78"
+              ]
+            },
+            {
+              "name": "Identity.2602",
+              "shape": [
+                "DynamicDimension.79",
+                "DynamicDimension.80",
+                "DynamicDimension.81",
+                "DynamicDimension.82"
+              ]
+            },
+            {
+              "name": "Identity.2604",
+              "shape": [
+                "DynamicDimension.83",
+                "DynamicDimension.84",
+                "DynamicDimension.85",
+                "DynamicDimension.86"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.7.0",
+              "shape": [
+                "DynamicDimension.87",
+                "DynamicDimension.88",
+                "DynamicDimension.89",
+                "DynamicDimension.90"
+              ]
+            },
+            {
+              "name": "Identity.2606",
+              "shape": [
+                "DynamicDimension.91",
+                "DynamicDimension.92",
+                "DynamicDimension.93",
+                "DynamicDimension.94"
+              ]
+            },
+            {
+              "name": "Identity.2608",
+              "shape": [
+                "DynamicDimension.95",
+                "DynamicDimension.96",
+                "DynamicDimension.97",
+                "DynamicDimension.98"
+              ]
+            },
+            {
+              "name": "Identity.2610",
+              "shape": [
+                "DynamicDimension.99",
+                "DynamicDimension.100",
+                "DynamicDimension.101",
+                "DynamicDimension.102"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.8.0",
+              "shape": [
+                "DynamicDimension.103",
+                "DynamicDimension.104",
+                "DynamicDimension.105",
+                "DynamicDimension.106"
+              ]
+            },
+            {
+              "name": "Identity.2612",
+              "shape": [
+                "DynamicDimension.107",
+                "DynamicDimension.108",
+                "DynamicDimension.109",
+                "DynamicDimension.110"
+              ]
+            },
+            {
+              "name": "Identity.2614",
+              "shape": [
+                "DynamicDimension.111",
+                "DynamicDimension.112",
+                "DynamicDimension.113",
+                "DynamicDimension.114"
+              ]
+            },
+            {
+              "name": "Identity.2616",
+              "shape": [
+                "DynamicDimension.115",
+                "DynamicDimension.116",
+                "DynamicDimension.117",
+                "DynamicDimension.118"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.9.0",
+              "shape": [
+                "DynamicDimension.119",
+                "DynamicDimension.120",
+                "DynamicDimension.121",
+                "DynamicDimension.122"
+              ]
+            },
+            {
+              "name": "Identity.2618",
+              "shape": [
+                "DynamicDimension.123",
+                "DynamicDimension.124",
+                "DynamicDimension.125",
+                "DynamicDimension.126"
+              ]
+            },
+            {
+              "name": "Identity.2620",
+              "shape": [
+                "DynamicDimension.127",
+                "DynamicDimension.128",
+                "DynamicDimension.129",
+                "DynamicDimension.130"
+              ]
+            },
+            {
+              "name": "Identity.2622",
+              "shape": [
+                "DynamicDimension.131",
+                "DynamicDimension.132",
+                "DynamicDimension.133",
+                "DynamicDimension.134"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full_with_tensor.1.0",
+              "shape": [
+                "DynamicDimension.135"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.700.0",
+              "shape": [
+                "DynamicDimension.136",
+                "DynamicDimension.137"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.701.0",
+              "shape": [
+                "DynamicDimension.138",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.702.0",
+              "shape": [
+                "DynamicDimension.139"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.703.0",
+              "shape": [
+                "DynamicDimension.140",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.704.0",
+              "shape": [
+                "DynamicDimension.141",
+                126,
+                1024
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.705.0",
+              "shape": [
+                "DynamicDimension.142",
+                "DynamicDimension.143",
+                50000
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.706.0",
+              "shape": [
+                "DynamicDimension.144",
+                16,
+                "DynamicDimension.145",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.707.0",
+              "shape": [
+                "DynamicDimension.146",
+                16,
+                "DynamicDimension.147",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.708.0",
+              "shape": [
+                "DynamicDimension.148",
+                "DynamicDimension.149",
+                "DynamicDimension.150",
+                "DynamicDimension.151"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.709.0",
+              "shape": [
+                "DynamicDimension.152",
+                "DynamicDimension.153",
+                "DynamicDimension.154",
+                "DynamicDimension.155"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.710.0",
+              "shape": [
+                "DynamicDimension.156",
+                16,
+                "DynamicDimension.157",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.711.0",
+              "shape": [
+                "DynamicDimension.158",
+                16,
+                "DynamicDimension.159",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.712.0",
+              "shape": [
+                "DynamicDimension.160",
+                "DynamicDimension.161",
+                "DynamicDimension.162",
+                "DynamicDimension.163"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.713.0",
+              "shape": [
+                "DynamicDimension.164",
+                "DynamicDimension.165",
+                "DynamicDimension.166",
+                "DynamicDimension.167"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.714.0",
+              "shape": [
+                "DynamicDimension.168",
+                16,
+                "DynamicDimension.169",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.715.0",
+              "shape": [
+                "DynamicDimension.170",
+                16,
+                "DynamicDimension.171",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.716.0",
+              "shape": [
+                "DynamicDimension.172",
+                "DynamicDimension.173",
+                "DynamicDimension.174",
+                "DynamicDimension.175"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.717.0",
+              "shape": [
+                "DynamicDimension.176",
+                "DynamicDimension.177",
+                "DynamicDimension.178",
+                "DynamicDimension.179"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.718.0",
+              "shape": [
+                "DynamicDimension.180",
+                16,
+                "DynamicDimension.181",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.719.0",
+              "shape": [
+                "DynamicDimension.182",
+                16,
+                "DynamicDimension.183",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.720.0",
+              "shape": [
+                "DynamicDimension.184",
+                "DynamicDimension.185",
+                "DynamicDimension.186",
+                "DynamicDimension.187"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.721.0",
+              "shape": [
+                "DynamicDimension.188",
+                "DynamicDimension.189",
+                "DynamicDimension.190",
+                "DynamicDimension.191"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.722.0",
+              "shape": [
+                "DynamicDimension.192",
+                16,
+                "DynamicDimension.193",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.723.0",
+              "shape": [
+                "DynamicDimension.194",
+                16,
+                "DynamicDimension.195",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.724.0",
+              "shape": [
+                "DynamicDimension.196",
+                "DynamicDimension.197",
+                "DynamicDimension.198",
+                "DynamicDimension.199"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.725.0",
+              "shape": [
+                "DynamicDimension.200",
+                "DynamicDimension.201",
+                "DynamicDimension.202",
+                "DynamicDimension.203"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.726.0",
+              "shape": [
+                "DynamicDimension.204",
+                16,
+                "DynamicDimension.205",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.727.0",
+              "shape": [
+                "DynamicDimension.206",
+                16,
+                "DynamicDimension.207",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.728.0",
+              "shape": [
+                "DynamicDimension.208",
+                "DynamicDimension.209",
+                "DynamicDimension.210",
+                "DynamicDimension.211"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.729.0",
+              "shape": [
+                "DynamicDimension.212",
+                "DynamicDimension.213",
+                "DynamicDimension.214",
+                "DynamicDimension.215"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.730.0",
+              "shape": [
+                "DynamicDimension.216",
+                16,
+                "DynamicDimension.217",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.731.0",
+              "shape": [
+                "DynamicDimension.218",
+                16,
+                "DynamicDimension.219",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.732.0",
+              "shape": [
+                "DynamicDimension.220",
+                "DynamicDimension.221",
+                "DynamicDimension.222",
+                "DynamicDimension.223"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.733.0",
+              "shape": [
+                "DynamicDimension.224",
+                "DynamicDimension.225",
+                "DynamicDimension.226",
+                "DynamicDimension.227"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.734.0",
+              "shape": [
+                "DynamicDimension.228",
+                16,
+                "DynamicDimension.229",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.735.0",
+              "shape": [
+                "DynamicDimension.230",
+                16,
+                "DynamicDimension.231",
+                64
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.736.0",
+              "shape": [
+                "DynamicDimension.232",
+                "DynamicDimension.233",
+                "DynamicDimension.234",
+                "DynamicDimension.235"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.737.0",
+              "shape": [
+                "DynamicDimension.236",
+                "DynamicDimension.237",
+                "DynamicDimension.238",
+                "DynamicDimension.239"
+              ]
+            },
+            {
+              "name": "p2o.pd_op.full.738.0",
+              "shape": []
+            }
+          ],
+          "bodyOutputs": [
+            "p2o.sub_block.pd_op.logical_and.0.0",
+            "p2o.sub_block.pd_op.if.8.0",
+            "p2o.sub_block.pd_op.scale.54.0",
+            "p2o.sub_block.pd_op.unsqueeze.8.0",
+            "p2o.sub_block.pd_op.if.9.0",
+            "p2o.sub_block.pd_op.concat.16.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.bitwise_and.0.0",
+            "p2o.sub_block.pd_op.full_with_tensor.0.0",
+            "p2o.sub_block.pd_op.slice.203.0",
+            "p2o.sub_block.pd_op.add.122.0",
+            "p2o.sub_block.pd_op.slice.203.0",
+            "Identity.2624",
+            "p2o.sub_block.pd_op.matmul.77.0",
+            "p2o.sub_block.pd_op.concat.0.0",
+            "p2o.sub_block.pd_op.concat.1.0",
+            "p2o.sub_block.pd_op.if.0.0",
+            "p2o.sub_block.pd_op.if.0.1",
+            "p2o.sub_block.pd_op.concat.2.0",
+            "p2o.sub_block.pd_op.concat.3.0",
+            "p2o.sub_block.pd_op.if.1.0",
+            "p2o.sub_block.pd_op.if.1.1",
+            "p2o.sub_block.pd_op.concat.4.0",
+            "p2o.sub_block.pd_op.concat.5.0",
+            "p2o.sub_block.pd_op.if.2.0",
+            "p2o.sub_block.pd_op.if.2.1",
+            "p2o.sub_block.pd_op.concat.6.0",
+            "p2o.sub_block.pd_op.concat.7.0",
+            "p2o.sub_block.pd_op.if.3.0",
+            "p2o.sub_block.pd_op.if.3.1",
+            "p2o.sub_block.pd_op.concat.8.0",
+            "p2o.sub_block.pd_op.concat.9.0",
+            "p2o.sub_block.pd_op.if.4.0",
+            "p2o.sub_block.pd_op.if.4.1",
+            "p2o.sub_block.pd_op.concat.10.0",
+            "p2o.sub_block.pd_op.concat.11.0",
+            "p2o.sub_block.pd_op.if.5.0",
+            "p2o.sub_block.pd_op.if.5.1",
+            "p2o.sub_block.pd_op.concat.12.0",
+            "p2o.sub_block.pd_op.concat.13.0",
+            "p2o.sub_block.pd_op.if.6.0",
+            "p2o.sub_block.pd_op.if.6.1",
+            "p2o.sub_block.pd_op.concat.14.0",
+            "p2o.sub_block.pd_op.concat.15.0",
+            "p2o.sub_block.pd_op.if.7.0",
+            "p2o.sub_block.pd_op.if.7.1",
+            "p2o.sub_block.pd_op.slice.207.0"
+          ]
+        }
+      ],
+      "riskFlags": [
+        "autoregressiveLoop",
+        "bitwiseOpsInLoop",
+        "controlFlowInLoop",
+        "dynamicInputOrOutput",
+        "dynamicShapeOpsInLoop"
+      ]
+    }
+  ],
+  "interpretation": "All six graphs expose a dynamic batch/output axis and an autoregressive Loop. The body-level flags identify parser-risk structure; they are not proof that a specific TensorRT release cannot support an operator."
+}
