@@ -162,6 +162,8 @@ The [OpenCV DNN three-image record](verification/paddleocr-core-three-image-open
 
 The independent [PP-OCRv4 legacy CLS provider check](verification/paddleocr-v4-legacy-cls-opencv-provider-20261011.md) now binds the exact `[1,3,48,192]` artifact and returns its non-empty `[1,2]` output through the DeploySharp OpenCV DNN provider. This closes the standalone OpenCV execution evidence for that classifier only; it does not promote TensorRT, quality, parity or throughput.
 
+The matching [PP-OCRv4 TensorRT 11 Engine check](verification/paddleocr-v4-server-tensorrt11-engine-provider-20261011.md) loads the exact Server DET/REC and legacy CLS Engine files through the configured bridge (`3/3` passed). This is prebuilt-Engine provider evidence on one Windows GPU host; ONNX rebuild reproducibility, full-pipeline quality and portability remain separate gates.
+
 For video and camera callers, `OcrPipeline.RunPrefetchedAsync` overlaps bounded next-frame input preparation with independent frame inference and returns results in source order. Callback-created inputs are owned and released by the method on success, cancellation or failure. This is frame-level pipeline overlap, not a true model batch; the full contract and example are in [visual-ocr.md](../../../docs/articles/visual-ocr.md#连续帧异步预取).
 
 The same 24-page HierText long-text selection has now been run with PP-OCRv6 Small and SlidingWindow. The [v6 Small cross-check](verification/hiertext-v6-small-public-ocr-20260929.md) records 24/24 completed pages, detection TP/FP/FN `436/377/584`, matched CER `12.10%`, end-to-end CER `73.65%`, and the ≥128-character bucket `100/520` edits. It remains smoke-only and contains no line over 3,200 characters.
