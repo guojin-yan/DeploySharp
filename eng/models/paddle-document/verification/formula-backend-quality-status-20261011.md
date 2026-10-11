@@ -24,7 +24,7 @@
 
 这里的 CER 是去除 Unicode 空白后的字符串 Levenshtein 诊断，不能代表 TeX 语义等价或数学正确性；数据集与 checkpoint 的训练重叠未知。高 CER/低 exact 已经是质量风险，不应以单张官方示例的 EOS 或 Decoder 合同掩盖。
 
-从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。由于逐样本报告只保留参考标签哈希而不嵌入原始标签，索引不会伪造命令 precision/recall；这些仍是浅层字符串诊断，不是渲染或数学语义指标。
+从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。进一步使用本地 MathNet manifest 的参考标签（只通过图片 SHA 关联，不把原始 LaTeX 写回仓库）生成了[命令 token 质量诊断](formula-realformula-command-quality-20261011.md)及[机器可读结果](formula-realformula-command-quality-20261011.json)。六模型的命令 token micro-F1 为 `45.15%–63.01%`；这仍是精确词法重叠，不是 TeX 渲染或数学语义指标。
 
 ## 已知 FormulaNet-L 边界
 
@@ -32,6 +32,6 @@
 
 ## 收尾门
 
-1. 为公式模型补充有许可证、可追溯的多样本质量集，并增加渲染/结构语义指标；在此之前 ORT 结果只作诊断。
+1. 在已有 MathNet 多样本词法诊断基础上，补充可复现的 TeX 渲染/结构语义指标；当前 ORT 结果仍只作诊断。
 2. 继续定位 FormulaNet-L 的非 EOS 样本，但不得扩大 decoder 上限或合成终止 token 来掩盖模型导出边界。
 3. 获得匹配 TensorRT 运行时和可复现 Engine 后，再单独建立六模型 TensorRT 质量/性能矩阵；OpenVINO 需要新的兼容导出或 importer 修复证据。
