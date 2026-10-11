@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-11T10:40:43.6777465+00:00",
+  "model": "paddleocr/ppocrv6/small-rec",
+  "input": {
+    "image": "E:\\Data\\ocr\\demo_1.jpg",
+    "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+    "tensorSha256": "de4cf1e6e1eb115331973fd884c0ac315f483718506dc7e527cb77862b632f63",
+    "shape": [
+      2,
+      3,
+      48,
+      3200
+    ],
+    "batch": 2
+  },
+  "detector": {
+    "modelSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e"
+  },
+  "recognizer": {
+    "onnxSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "engineSha256": "26a47cb9dc17f7c255c9b21a9c11a8a70ed9110ee48e04a7cbe63442feabb208",
+    "engineBytes": 23004572
+  },
+  "backends": {
+    "ortCpu": {
+      "outputShape": [
+        2,
+        400,
+        18710
+      ],
+      "outputSha256": "97b7d89b87412b72e2d69c6c9fe0fd8aecda198274c0c43a1d524a0bbbfe545b",
+      "maximumAbs": 1,
+      "meanAbs": 5.3447358115252525E-05
+    },
+    "tensorRtCuda": {
+      "outputShape": [
+        2,
+        400,
+        18710
+      ],
+      "outputSha256": "12dbd6bf974dbc122497cb04e01b1670d6b598d9fd40a2effe22d04336817acd",
+      "maximumAbs": 1,
+      "meanAbs": 5.344735959309771E-05
+    }
+  },
+  "rows": [
+    {
+      "row": 0,
+      "ortText": "\u7EAF\u81FB\u8425\u517B\u62A4\u53D1\u7D20",
+      "trtText": "\u7EAF\u81FB\u8425\u517B\u62A4\u53D1\u7D20",
+      "ortTextSha256": "9e9a11b1ac243723626334e38dbfbdb351937563be6e7b3f42647b50277280b9",
+      "trtTextSha256": "9e9a11b1ac243723626334e38dbfbdb351937563be6e7b3f42647b50277280b9",
+      "tokenCount": 400,
+      "emittedTokenCount": 7,
+      "classMismatches": 0,
+      "nonEmittedClassMismatches": 0,
+      "emittedFlagMismatches": 0,
+      "emittedClassMismatches": 0,
+      "maximumConfidenceDifference": 0.0015450716
+    },
+    {
+      "row": 1,
+      "ortText": "\u4EA7\u54C1\u4FE1\u606F/\u53C2\u6570",
+      "trtText": "\u4EA7\u54C1\u4FE1\u606F/\u53C2\u6570",
+      "ortTextSha256": "cb69bf714986d9d583113b7fd1a88007a55082e18dd7d050e628d432df13d5db",
+      "trtTextSha256": "cb69bf714986d9d583113b7fd1a88007a55082e18dd7d050e628d432df13d5db",
+      "tokenCount": 400,
+      "emittedTokenCount": 7,
+      "classMismatches": 1,
+      "nonEmittedClassMismatches": 1,
+      "emittedFlagMismatches": 2,
+      "emittedClassMismatches": 0,
+      "maximumConfidenceDifference": 0.07490915
+    }
+  ],
+  "contract": "Text, batch order and emitted CTC class sequence must match. Non-emitted timestep class drift is reported but does not fail parity because CTC collapse removes it.",
+  "boundary": "Two detector-derived crops on one Windows host; not a CER/WER score, throughput benchmark or all-model TensorRT claim."
+}

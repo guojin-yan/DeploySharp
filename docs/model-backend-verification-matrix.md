@@ -76,6 +76,10 @@
 
 同日又对五个 REC 工件完成 TensorRT 11 动态 Batch=2 原始执行：PP-OCRv5 Mobile/Server、PP-OCRv6 Tiny/Small/Medium 均以 `min=1,opt=max=2` profile 接收 `x=[2,3,48,320]`，输出第一维保持为 `2`，`5/5` 通过。详见[动态 Batch 报告](../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-tensorrt11-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-tensorrt11-20261011.json)。该证据只表示 raw batch 行隔离，不扩展 CTC 文本 parity、完整 OCR 质量、吞吐或其它 DET/CLS 工件。
 
+在同一匹配 TRT11/Windows GPU 环境中，v6 Small REC 又完成了一条真实解码合同：由 v6 Small DET 从 `demo_1.jpg` 产生两块文本裁剪，作为 `[2,3,48,3200]` 单批输入分别运行 ORT CPU 与新构建的 TensorRT Engine。两行文本和发射 CTC 类别序列完全一致；row 1 有一个被 CTC blank/repeat collapse 消除的非发射类别漂移，已作为诊断保留而不误判为文本失败。原始输出均为 `[2,400,18710]`，但 SHA 不同，符合 CUDA 浮点执行的预期。详见[REC TensorRT 解码 parity 报告](../eng/models/paddle-ocr/verification/paddleocr-v6-small-rec-tensorrt-dynamic-batch-parity-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v6-small-rec-tensorrt-dynamic-batch-parity-20261011.json)。这仍是两裁剪、单图、单机证据，不代表 CER/WER、完整 `det→crop→cls→rec` 质量、吞吐或全部 PP-OCR TensorRT 支持。
+
+同一环境又完成 PP-OCRv5 Mobile CLS 动态 Batch=2 的真实解码合同：v6 Small DET 从 `demo_1.jpg` 产生两块裁剪，ORT CPU 与新建 TensorRT 11 Engine 均运行 `[2,3,80,160]`，两行的 batch 顺序、类别、角度和拒绝决策一致，最大归一化分数差为 `2.96e-11`。详见[CLS TensorRT 解码 parity 报告](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-cls-tensorrt-dynamic-batch-parity-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-cls-tensorrt-dynamic-batch-parity-20261011.json)。这只覆盖一个 CLS 工件和两个裁剪；DET 解码仍为 batch=1，不扩展为完整流水线、CER/WER、吞吐或全部 TensorRT 支持。
+
 ## PP-Structure 模型状态
 
 PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有独立 ONNX Release 资产；`PP-Chart2Table` 另以 `paddle-chart/pp-chart2table` 四图 ONNX + tokenizer Bundle 发布在同一个 `models-paddleocr` Release。Chart2Table 官方源包仍不是标准 `inference.json + inference.pdiparams`，因此单文件 Paddle archive 转换目录仍保留 `conversion-blocked`，这不影响已发布派生 Bundle 的下载和运行。下表按模型族分组，普通模型组内只要仍有未逐一执行的工件就保持 `△`；Chart2Table 则以真实完整流水线证据单独标记。PP-Structure 其它模型尚未全部逐一验证每个后端，不能把 Chart2Table 的结果外推到其它模型。
