@@ -471,17 +471,24 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
-        public void LayoutNmsRunsThroughTensorRtAndPreservesOrtDecoding()
+        [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx")]
+        [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx")]
+        [DataRow("paddle-doc/pp-doclayout-m", "pp-doclayout-m.onnx")]
+        [DataRow("paddle-doc/pp-doclayout-s", "pp-doclayout-s.onnx")]
+        [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx")]
+        public void LayoutNmsRunsThroughTensorRtAndPreservesOrtDecoding(string modelId, string defaultOnnxFile)
         {
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
                 Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL=1 to run the opt-in PP-Structure TensorRT test.");
 
-            string onnxPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_ONNX") ?? @"E:\Model\PaddleDocument\onnx\pp-doclayout-l.onnx";
+            string configuredLayoutPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_ONNX") ?? string.Empty;
+            string onnxPath = modelId == "paddle-doc/pp-doclayout-l" && !string.IsNullOrWhiteSpace(configuredLayoutPath)
+                ? configuredLayoutPath
+                : Path.Combine(@"E:\Model\PaddleDocument\onnx", defaultOnnxFile);
             string imagePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_IMAGE") ?? @"E:\Data\image\bus.jpg";
             if (!File.Exists(onnxPath)) Assert.Inconclusive("Missing local PP-Structure ONNX model: " + onnxPath);
             if (!File.Exists(imagePath)) Assert.Inconclusive("Missing local PP-Structure test image: " + imagePath);
 
-            const string modelId = "paddle-doc/pp-doclayout-l";
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
             PaddleDocumentProfile document = PaddleDocumentProfiles.CreatePaddleNmsRegions(
                 descriptor,
@@ -491,7 +498,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 scoreThreshold: 0);
             string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-layout-trt-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(root);
-            string enginePath = Path.Combine(root, "pp-doclayout-l.engine");
+            string enginePath = Path.Combine(root, Path.GetFileNameWithoutExtension(defaultOnnxFile) + ".engine");
             try
             {
                 string onnxSha256 = ComputeSha256(onnxPath);
