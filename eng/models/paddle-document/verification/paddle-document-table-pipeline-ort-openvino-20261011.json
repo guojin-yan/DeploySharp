@@ -46,18 +46,22 @@
     {
       "backend": "onnxruntime-cpu",
       "classification": "wired_table",
-      "cells": 300,
+      "cellDetectionCandidates": 300,
+      "structureCells": 13,
       "tokens": 24,
       "htmlLength": 165,
+      "warnings": [],
       "totalMs": 2001.241,
       "passed": true
     },
     {
       "backend": "openvino-cpu",
       "classification": "wired_table",
-      "cells": 300,
+      "cellDetectionCandidates": 300,
+      "structureCells": 13,
       "tokens": 24,
       "htmlLength": 165,
+      "warnings": [],
       "totalMs": 2127.139,
       "passed": true
     }

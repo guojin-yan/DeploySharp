@@ -123,7 +123,7 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
         Assert.IsTrue(table.Tokens.Count > 10);
         Assert.IsTrue(table.Markup.Contains("<td", StringComparison.OrdinalIgnoreCase) || table.Markup.Contains("<table", StringComparison.OrdinalIgnoreCase), "SLANeXt markup did not contain an HTML table/cell tag: " + table.Markup);
         Assert.IsTrue(table.Regions.Count >= 10);
-        Console.WriteLine("PADDLE_DOCUMENT_TABLE_PIPELINE backend=" + backend + "-" + device + ";classification=" + classification.Label + ";cells=" + cells.Regions.Count + ";tokens=" + table.Tokens.Count + ";htmlLength=" + table.Markup.Length + ";totalMs=" + result.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";inputSha256=" + sourceSha + ";structureGraph=" + Sha256(structurePath));
+        Console.WriteLine("PADDLE_DOCUMENT_TABLE_PIPELINE backend=" + backend + "-" + device + ";classification=" + classification.Label + ";cellDetectionCandidates=" + cells.Regions.Count + ";structureCells=" + table.Regions.Count + ";tokens=" + table.Tokens.Count + ";htmlLength=" + table.Markup.Length + ";warnings=" + string.Join(",", table.Warnings) + ";totalMs=" + result.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";inputSha256=" + sourceSha + ";structureGraph=" + Sha256(structurePath));
     }
 
     private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string modelPath, BackendRequest request, BackendId backendId, string? artifactSha256 = null)
