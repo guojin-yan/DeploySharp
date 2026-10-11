@@ -44,8 +44,8 @@
       "backend": "tensorrt-cuda",
       "execution": "not-verified",
       "qualityEvidence": null,
-      "report": null,
-      "boundary": "No six-model formula TensorRT quality or performance matrix is available; do not infer it from other PP-Structure TensorRT evidence."
+      "report": "formula-tensorrt-derived-graph-probe-20261011.md",
+      "boundary": "No six-model formula TensorRT quality or performance matrix is available. The Plus-S TRT10.11 exact graph terminates during parser startup; TRT11 diagnostic rewrites can parse but return an empty Engine on shape-changing Loop recurrence. No derived graph reached Decoder; do not infer support from other PP-Structure TensorRT evidence."
     }
   ],
   "knownQualityRisks": [

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "deploysharp-formula-tensorrt-derived-graph-probe-v1",
+  "generatedAtUtc": "2026-10-11T03:42:00Z",
+  "host": {
+    "os": "Microsoft Windows 10.0.26200",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "computeCapability": "8.6",
+    "driver": "576.02",
+    "cuda": "12.9",
+    "cudnn": "9.22.0-cuda12.9",
+    "tensorRt": "11.0.0.114-cu12"
+  },
+  "sourceModel": {
+    "id": "paddle-formula/pp-formulanet-plus-s",
+    "path": "E:\\Model\\PaddleDocument\\onnx\\pp-formulanet-plus-s.onnx",
+    "sha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+    "bytes": 231878904,
+    "inputProfile": "x:1x1x384x384"
+  },
+  "variants": [
+    {
+      "id": "polygraphy-sanitized",
+      "sha256": "e49c354692bb341d995d9ec22293f3e7c285db176d78c1f597d509cf9d296423",
+      "bytes": 231878904,
+      "onnxChecker": "pass",
+      "polygraphy": "surgeon sanitize --fold-constants --cleanup --toposort",
+      "tensorRtStage": "parser",
+      "status": "blocked",
+      "engineCreated": false,
+      "diagnostic": "Loop parser rejects BitwiseAnd (onnxOpCheckers.cpp:1060, checkBitwiseAnd)."
+    },
+    {
+      "id": "bool-mask",
+      "sha256": "abf33f5ff333a5551556833b8a3b3d923039cc8d29f1b5c39395d04a6d59d4ad",
+      "bytes": 231879253,
+      "onnxChecker": "pass",
+      "transformation": "Replace the two integer bitwise mask operators with bool Not/And and cast the result back to int64.",
+      "tensorRtStage": "builder",
+      "status": "blocked-empty-engine",
+      "engineCreated": false,
+      "diagnostic": "IRecurrenceLayer must have inputs with same shape: arange [3] versus scale.15 [1]."
+    },
+    {
+      "id": "bool-mask-drop-dead-carry",
+      "sha256": "d37b31f1404b3df0fc6c9b8adf76a55b9b010d2cad6d377d562198ac9382bff3",
+      "bytes": 231879142,
+      "onnxChecker": "pass",
+      "transformation": "Additionally remove one unused scalar Loop carry from the diagnostic copy.",
+      "tensorRtStage": "builder",
+      "status": "blocked-empty-engine",
+      "engineCreated": false,
+      "diagnostic": "IRecurrenceLayer must have inputs with same shape: arange [3] versus scale.15 [1]."
+    },
+    {
+      "id": "bool-mask-expand-carry",
+      "sha256": "8a143312b25994e4698278025735f9e0862f1ce70678f26ae1edf57d4ce28feb",
+      "bytes": 231879467,
+      "onnxChecker": "pass",
+      "transformation": "Broadcast the shape-changing scalar scale.15 carry to [3] for a builder-only diagnostic.",
+      "tensorRtStage": "builder",
+      "status": "blocked-empty-engine",
+      "engineCreated": false,
+      "diagnostic": "IRecurrenceLayer must have inputs with same shape: Identity.149 [-1,3] versus concat.4 [-1,6]."
+    }
+  ],
+  "conclusion": "Polygraphy cleanup and local mask/carry rewrites do not produce a TensorRT Engine. The parser boundary can be moved past BitwiseAnd, but the exported autoregressive Loop still contains shape-changing recurrence state (including growing token/cache-like concatenations). No derived graph is admitted, published, decoded, or used for a performance claim.",
+  "reproduction": {
+    "variantScript": "eng/models/paddle-document/scripts/Prepare-FormulaTensorRtCompatibilityVariants.py",
+    "profile": "x:1x1x384x384",
+    "trtexec": "TensorRT-11.0.0.114-cu12\\bin\\trtexec.exe --skipInference --builderOptimizationLevel=1"
+  }
+}

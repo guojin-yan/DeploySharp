@@ -414,6 +414,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。`FormulaModelsAndSealModelsProduceMachineReadableOrtEvidence` 进一步将六个公式模型和 mobile/server 两个印章模型的结果写入测试 JSON，记录模型/图片 SHA、token/LaTeX、mask 尺寸和区域数。公式模型随后已接入带许可证和可追溯标签的 MathNet realFormula v1（121 张图），并完成六模型 ORT CPU 逐样本诊断；当前结果和限制见[六模型汇总](../../eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md)及[公式后端状态索引](../../eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md)。
 
+TensorRT 公式后端仍未验证。对 Plus-S 做的 Polygraphy 清理和掩码/Loop 派生图探针均只通过 `onnx.checker`：布尔掩码变体可以完成 TensorRT 11 parser，但 Builder 暴露自回归 Loop 的 shape-changing recurrence 并返回空 Engine。派生文件不覆盖官方 ONNX，也没有进入 Decoder 或性能矩阵；详见[派生图探针](../../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.md)和[JSON](../../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.json)。
+
 基于同一外部 manifest 又生成了[公式命令 token 诊断](../../eng/models/paddle-document/verification/formula-realformula-command-quality-20261011.md)：六模型逐行通过图片 SHA 关联真实参考标签，micro-F1 为 `45.15%–63.01%`。这是词法结构指标，不是 TeX 渲染、数学语义或发布精度；原始参考 LaTeX 不写入仓库。
 
 当前本机数据根目录的 [`formula-data-availability-audit-20261005.md`](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.md) 和 [JSON 清单](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.json) 是 **2026-10-05 的历史盘点**，只描述当时尚未下载 MathNet 的目录状态；其中“只有一张官方公式图片”的结论不代表当前状态。MathNet 评测已经补齐 121 条真实标签，但 exact/CER 仍是 ORT CPU 字符诊断，不是数学语义准确率，也没有关闭 OpenVINO、OpenCV DNN 或 TensorRT 质量门。
