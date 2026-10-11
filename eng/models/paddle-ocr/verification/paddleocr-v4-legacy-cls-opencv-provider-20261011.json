@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-11T00:00:00Z",
+  "host": {
+    "os": "Windows x64",
+    "runtime": ".NET 10",
+    "backend": "DeploySharp OpenCV DNN",
+    "device": "CPU"
+  },
+  "command": "DEPLOYSHARP_OPENCV_RUN_EXTERNAL=1 dotnet test tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj -f net10.0 -c Release --no-restore --filter FullyQualifiedName~PaddleOcrV4LegacyClassificationUsesDeploySharpOpenCvProvider",
+  "model": {
+    "id": "paddleocr/ppocrv4/legacy-cls",
+    "path": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_cls.onnx",
+    "sha256": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+    "input": {
+      "name": "x",
+      "shape": [1, 3, 48, 192],
+      "elementType": "float32"
+    },
+    "output": {
+      "name": "softmax_0.tmp_0",
+      "shape": [1, 2],
+      "elementType": "float32"
+    }
+  },
+  "result": {
+    "status": "passed",
+    "test": "PaddleOcrV4LegacyClassificationUsesDeploySharpOpenCvProvider",
+    "observedTestDurationMs": 247
+  },
+  "boundary": "This is exact-artifact OpenCV DNN provider loading, binding and non-empty output evidence on one Windows CPU host. It is not a full-page OCR quality result, numerical parity proof, throughput benchmark, TensorRT evidence or a cross-device claim."
+}

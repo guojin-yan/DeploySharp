@@ -295,12 +295,12 @@ public sealed class AdditionalOfficialModelProbeTests
             new ImageProbeCase("rf-detr/detect", @"E:\Model\rf-detr\rf-detr.onnx", "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769", "input", 512, 512, false),
             new ImageProbeCase("rf-detr/segment", @"E:\Model\rf-detr\rf-detr-seg.onnx", "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35", "input", 432, 432, false),
             new ImageProbeCase("rt-detr/r50vd-raw-query", @"E:\Model\RT-DETR\RTDETR_cropping\rtdetr_r50vd_6x_coco.onnx", "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad", "image", 640, 640, false),
-            new ImageProbeCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80),
-            new ImageProbeCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32),
-            new ImageProbeCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, false),
-            new ImageProbeCase("paddleocr/ppocrv5/server-cls", @"E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx", "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "x", 160, 80),
-            new ImageProbeCase("paddleocr/ppocrv5/server-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx", "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "x", 32, 32, false),
-            new ImageProbeCase("paddleocr/ppocrv5/server-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx", "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "x", 320, 48, false),
+            new ImageProbeCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80),
+            new ImageProbeCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32),
+            new ImageProbeCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, false),
+            new ImageProbeCase("paddleocr/ppocrv5/server-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "x", 160, 80),
+            new ImageProbeCase("paddleocr/ppocrv5/server-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx", "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "x", 32, 32, false),
+            new ImageProbeCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48, false),
             new ImageProbeCase("anomalib/padim/mvtec-bottle", @"E:\Model\anomalib\Padim\model\padim.onnx", "bde19ca3086d3fa52bb3cbc2b9ea2d554ce1f10b4c8a8b38d7393bd54247ffff", "input", 256, 256),
             new ImageProbeCase("bria/rmbg-1.4", @"E:\Model\RMBG\bria-rmbg-1.4.onnx", "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f", "input", 1024, 1024),
             new ImageProbeCase("bria/rmbg-2.0|onnx.fp32", @"E:\Model\RMBG\RMBG-2.0.onnx", "5b486f08200f513f460da46dd701db5fbb47d79b4be4b708a19444bcd4e79958", "pixel_values", 1024, 1024, false),
@@ -408,12 +408,12 @@ public sealed class AdditionalOfficialModelProbeTests
         RequireExternal();
         var cases = new[]
         {
-            new ImageProviderCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
-            new ImageProviderCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
-            new ImageProviderCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
-            new ImageProviderCase("paddleocr/ppocrv5/server-cls", @"E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx", "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
-            new ImageProviderCase("paddleocr/ppocrv5/server-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx", "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
-            new ImageProviderCase("paddleocr/ppocrv5/server-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx", "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx", "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
             new ImageProviderCase("bria/rmbg-1.4", @"E:\Model\RMBG\bria-rmbg-1.4.onnx", "8cafcf770b06757c4eaced21b1a88e57fd2b66de01b8045f35f01535ba742e0f", "input", 1024, 1024, "output", new TensorShape(1, 1, 1024, 1024))
         };
 
@@ -437,6 +437,39 @@ public sealed class AdditionalOfficialModelProbeTests
             Assert.AreEqual(probe.OutputShape.GetElementCount(), outputs[0].Tensor.Length, probe.ModelId);
             Console.WriteLine("OPENCV_CATALOG_PROVIDER model=" + probe.ModelId + ";sha256=" + probe.Sha256 + ";output=" + probe.OutputName + ";elements=" + outputs[0].Tensor.Length);
         }
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void PaddleOcrV5ModelsUseDeploySharpOpenCvProvider()
+    {
+        RequireExternal();
+        var cases = new[]
+        {
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "x", 160, 80, "fetch_name_0", new TensorShape(1, 2)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx", "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "x", 32, 32, "fetch_name_0", new TensorShape(1, 1, 32, 32)),
+            new ImageProviderCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48, "fetch_name_0", new TensorShape(1, 40, 18385))
+        };
+        foreach (ImageProviderCase probe in cases) RunProviderCase(probe);
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void PaddleOcrV4LegacyClassificationUsesDeploySharpOpenCvProvider()
+    {
+        RequireExternal();
+        RunProviderCase(new ImageProviderCase(
+            "paddleocr/ppocrv4/legacy-cls",
+            @"E:\Model\paddleocr\PP-OCRv4\PP-OCRv4_mobile_cls.onnx",
+            "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+            "x",
+            192,
+            48,
+            "softmax_0.tmp_0",
+            new TensorShape(1, 2)));
     }
 
     [TestMethod]
@@ -538,6 +571,27 @@ public sealed class AdditionalOfficialModelProbeTests
 
     private static TensorDescriptor Output(string name, params long[] shape)
         => new TensorDescriptor(name, TensorElementType.Float32, new TensorShape(shape));
+
+    private static void RunProviderCase(ImageProviderCase probe)
+    {
+        if (!File.Exists(probe.Path)) Assert.Inconclusive("Missing local model: " + probe.Path);
+        var modelId = new ModelId(probe.ModelId);
+        var inputShape = new TensorShape(1, 3, probe.Height, probe.Width);
+        var contract = new OpenCvDnnModelContract(
+            modelId,
+            new[] { new TensorDescriptor(probe.InputName, TensorElementType.Float32, inputShape) },
+            new[] { new TensorDescriptor(probe.OutputName, TensorElementType.Float32, probe.OutputShape) });
+        using var provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(contract, enableFusion: false, enableWinograd: false));
+        using IInferenceSession session = provider.CreateSession(
+            new ModelArtifact(modelId, "onnx", probe.Path, probe.Sha256),
+            new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu"),
+            SessionOptions.Default);
+        var input = new Tensor<float>(inputShape, new float[checked(3 * probe.Width * probe.Height)]);
+        InferenceOutputs outputs = session.Run(InferenceInputs.Create(probe.InputName, input), CancellationToken.None);
+        Assert.AreEqual(1, outputs.Count, probe.ModelId);
+        Assert.AreEqual(probe.OutputShape.GetElementCount(), outputs[0].Tensor.Length, probe.ModelId);
+        Console.WriteLine("OPENCV_PADDLEOCR_PROVIDER model=" + probe.ModelId + ";sha256=" + probe.Sha256 + ";output=" + probe.OutputName + ";elements=" + outputs[0].Tensor.Length);
+    }
 
     private static string ComputeSha256(string path)
     {
