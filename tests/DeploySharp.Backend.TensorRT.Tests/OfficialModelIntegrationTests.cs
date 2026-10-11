@@ -133,6 +133,72 @@ namespace DeploySharp.Backend.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void PaddleOcrV6OnnxModelsBuildAndRunTensorRt11Engines()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                new TensorRtImageCase("paddleocr/ppocrv6/tiny-det", @"E:\Model\paddleocr\PP-OCRv6\tiny\PP-OCRv6_tiny_det_inference.onnx", "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv6/tiny-rec", @"E:\Model\paddleocr\PP-OCRv6\tiny\PP-OCRv6_tiny_rec_inference.onnx", "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv6/small-det", @"E:\Model\paddleocr\PP-OCRv6\small\PP-OCRv6_small_det_inference.onnx", "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv6/small-rec", @"E:\Model\paddleocr\PP-OCRv6\small\PP-OCRv6_small_rec_inference.onnx", "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv6/medium-det", @"E:\Model\paddleocr\PP-OCRv6\medium\PP-OCRv6_medium_det_inference.onnx", "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv6/medium-rec", @"E:\Model\paddleocr\PP-OCRv6\medium\PP-OCRv6_medium_rec_inference.onnx", "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba", "x", 320, 48)
+            };
+
+            var failed = new List<string>();
+            foreach (TensorRtImageCase model in cases)
+            {
+                if (!File.Exists(model.Path)) Assert.Inconclusive("Missing local model: " + model.Path);
+                try
+                {
+                    BuildAndRun(model);
+                }
+                catch (Exception exception)
+                {
+                    failed.Add(model.ModelId);
+                    Console.WriteLine("TENSORRT_EXTERNAL_MODEL_FAILED model=" + model.ModelId + ";sha256=" + model.Sha256 + ";error=" + exception);
+                }
+            }
+
+            if (failed.Count > 0) Assert.Fail("TensorRT ONNX conversions failed: " + string.Join(", ", failed));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void PaddleOcrV5OnnxModelsBuildAndRunTensorRt11Engines()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80),
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "x", 160, 80),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx", "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48)
+            };
+
+            var failed = new List<string>();
+            foreach (TensorRtImageCase model in cases)
+            {
+                if (!File.Exists(model.Path)) Assert.Inconclusive("Missing local model: " + model.Path);
+                try
+                {
+                    BuildAndRun(model);
+                }
+                catch (Exception exception)
+                {
+                    failed.Add(model.ModelId);
+                    Console.WriteLine("TENSORRT_EXTERNAL_MODEL_FAILED model=" + model.ModelId + ";sha256=" + model.Sha256 + ";error=" + exception);
+                }
+            }
+
+            if (failed.Count > 0) Assert.Fail("TensorRT ONNX conversions failed: " + string.Join(", ", failed));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void PadimAndRmbgOnnxModelsBuildTensorRt11EnginesAndRunInference()
         {
             RequireExternal();
