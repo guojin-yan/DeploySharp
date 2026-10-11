@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -54,6 +55,7 @@ namespace DeploySharp.Visual.Tests
                 Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, item.EnhancementRetry!.Decision);
                 Assert.AreEqual(1, item.EnhancementRetry.SelectedCandidateIndex);
                 Assert.AreSame(item.EnhancementRetry.Candidates[1].Recognition, item.Recognition);
+                Assert.AreEqual(2, item.EnhancementRetry.ConsensusMatchCount);
             }
         }
 
@@ -71,6 +73,44 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(2, calls);
             Assert.IsTrue(result.Regions.All(item => item.EnhancementRetry!.Decision == OcrEnhancementRetryDecision.InsufficientGain));
             Assert.IsTrue(result.Regions.All(item => item.EnhancementRetry!.SelectedCandidateIndex == null));
+            Assert.IsTrue(result.Regions.All(item => item.EnhancementRetry!.ConsensusMatchCount == 1));
+        }
+
+        [TestMethod]
+        public async Task ConsensusConfidenceGainRejectsDisagreeingCandidates()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[] { RetryEnhancement(), new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2) },
+                confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConsensusConfidenceGain,
+                minimumConfidenceGain: .05f,
+                maximumRegionsPerImage: 2,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => ++calls == 3 ? RetryOutputsWithAlternateText(.95f) : RetryOutputs(calls == 1 ? .4f : .85f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(3, calls);
+            OcrEnhancementRetryResult firstRetry = result.Regions[0].EnhancementRetry
+                ?? throw new AssertFailedException("First region has no enhancement evidence.");
+            OcrEnhancementRetryResult secondRetry = result.Regions[1].EnhancementRetry
+                ?? throw new AssertFailedException("Second region has no enhancement evidence.");
+
+            Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, firstRetry.Decision);
+            Assert.AreEqual(2, firstRetry.ConsensusMatchCount);
+            Assert.AreEqual(OcrEnhancementRetryDecision.InsufficientGain, secondRetry.Decision);
+            Assert.IsNull(secondRetry.SelectedCandidateIndex);
+            Assert.AreEqual(1, secondRetry.ConsensusMatchCount);
+        }
+
+        private static InferenceOutputs RetryOutputsWithAlternateText(float score)
+        {
+            float[] values = Probabilities(2, 6, 4, new[] { 0, 1, 1, 0, 2, 2, 3, 3, 0, 2, 2, 0 });
+            for (int index = 0; index < values.Length; index++) if (values[index] > 0) values[index] = score;
+            return InferenceOutputs.Create("logits", new Tensor<float>(new TensorShape(2, 6, 4), values));
         }
 
         [TestMethod]

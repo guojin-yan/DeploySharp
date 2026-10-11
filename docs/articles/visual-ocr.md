@@ -246,6 +246,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 | `PreservedByPolicy` | 已运行候选，按显式策略保留原文 |
 | `InsufficientGain` | 候选为空、平局或增量不足 |
 | `CandidateSelected` | 按配置启发式选中候选，不是正确性判定 |
+| `ConsensusMatchCount` | 与 `Candidate` 完全相同的非空文本候选数；`ConsensusConfidenceGain` 至少要求为 `2` |
 
 若先做方向重试，顶层 `OrientationRetry` 仍保留该阶段的全部尝试，其 `SelectedIndex` 表示增强之前的方向胜者；最终文字是否来自增强，应看 `EnhancementRetry.Decision`。顶层 `CropDiagnostics` 对应最终选中的识别。ROI重新编号同步更新两份识别结果和窗口的SourceRegionIndex，但诊断四角/旋转/评估索引保持原来源；全图方向恢复也不将旧证据冒充恢复后的坐标。
 

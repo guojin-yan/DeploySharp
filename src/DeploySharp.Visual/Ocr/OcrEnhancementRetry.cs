@@ -164,6 +164,7 @@ namespace JYPPX.DeploySharp.Visual
             CandidateRecipeIndices = recipeIndices.AsReadOnly();
             SelectedCandidateIndex = selectedCandidateIndex;
             Candidate = selectedCandidateIndex.HasValue ? Candidates[selectedCandidateIndex.Value] : Candidates.Count == 0 ? null : Candidates[0];
+            ConsensusMatchCount = Candidate == null || Candidate.Recognition.Text.Length == 0 ? 0 : CountTextMatches(Candidate.Recognition.Text, candidates);
             Decision = decision;
         }
         /// <summary>Gets configured thresholds, selection policy and limits. / 获取配置的阈值、选择策略及限制。</summary>
@@ -178,6 +179,8 @@ namespace JYPPX.DeploySharp.Visual
         public IReadOnlyList<int> CandidateRecipeIndices { get; }
         /// <summary>Gets the candidate index selected by the configured confidence or consensus policy, or null when the original was preserved. / 获取配置的置信度或共识策略选中的候选索引；保留原文时为 null。</summary>
         public int? SelectedCandidateIndex { get; }
+        /// <summary>Gets how many executed candidates have exactly the same non-empty text as <see cref="Candidate"/>; zero means no candidate is available. / 获取与 Candidate 完全相同的非空文本候选数量；零表示没有候选。</summary>
+        public int ConsensusMatchCount { get; }
         /// <summary>Gets the explicit outcome, not a correctness judgment. / 获取显式结果，不表示正确性判断。</summary>
         public OcrEnhancementRetryDecision Decision { get; }
         internal OcrEnhancementRetryResult WithSourceIndex(int index) => Original.Recognition.SourceRegionIndex == index ? this
@@ -189,6 +192,14 @@ namespace JYPPX.DeploySharp.Visual
             var indices = new int[candidates.Count];
             for (int index = 0; index < indices.Length; index++) indices[index] = index;
             return indices;
+        }
+
+        private static int CountTextMatches(string text, IReadOnlyList<OcrEnhancementAttempt> candidates)
+        {
+            int count = 0;
+            foreach (OcrEnhancementAttempt candidate in candidates)
+                if (string.Equals(candidate.Recognition.Text, text, StringComparison.Ordinal)) count++;
+            return count;
         }
 
         private static IReadOnlyList<OcrEnhancementAttempt> WithSourceIndex(IReadOnlyList<OcrEnhancementAttempt> source, int index)
