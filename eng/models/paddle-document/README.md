@@ -208,6 +208,18 @@ The same realFormula predictions have a derived [structural diagnostic report](v
 
 The [command-token diagnostic](verification/formula-realformula-command-quality-20261011.md) joins the same six ORT CPU prediction files to the external MathNet manifest by image SHA and computes lexical command-token precision/recall/F1 without copying raw reference LaTeX into the repository. Micro-F1 ranges from `45.15%` to `63.01%` across the six models. This is a structure-oriented string metric only; it does not prove valid TeX rendering or mathematical equivalence. Re-run it with `scripts/Summarize-FormulaCommandQuality.ps1` when the pinned external dataset is available.
 
+The reusable `PaddleDocumentFormulaQualityEvaluator` now exposes the same conservative diagnostics to applications and tests. `Compare(expected, actual)` keeps raw trimmed equality separate from whitespace-normalized equality, computes Unicode-scalar CER, command-token multiset precision/recall/F1, and checks brace plus `\\left`/`\\right` balance. `NormalizeLatex` deliberately performs whitespace and line-ending normalization only; it does not rewrite commands or claim semantic equivalence. These metrics are suitable for regression gates and dataset reports, but a rendered/semantic evaluator is still required before declaring formula accuracy.
+
+```csharp
+PaddleDocumentFormulaQualityMetrics quality =
+    PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, result.Latex);
+
+Console.WriteLine($"normalized={quality.NormalizedTextMatch}, " +
+    $"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, " +
+    $"command-F1={quality.CommandF1:P2}, " +
+    $"balanced={quality.ActualBalancedDelimiters}");
+```
+
 A focused [TensorRT builder probe](verification/formula-tensorrt-builder-probe-20261011.md) now records the first real CUDA boundary: the Plus-S graph loads TensorRT 10.11/CUDA 12.9 and initializes the GPU, then terminates with `0xC0000005` during ONNX parser startup before an Engine is created. This is one-graph builder evidence only; the six-model TensorRT quality/performance matrix remains unverified and no other formula model is inferred from it.
 
 The follow-up [derived-graph probe](verification/formula-tensorrt-derived-graph-probe-20261011.md) keeps four non-publishable Plus-S copies separate from the official ONNX. Polygraphy cleanup preserves the parser `BitwiseAnd` blocker; a diagnostic bool-mask rewrite reaches TensorRT 11 parsing but returns an empty Engine because the autoregressive Loop contains shape-changing recurrence (`[3]` to `[1]`, then `[-1,3]` to `[-1,6]`). No derived copy reached Decoder or received a TensorRT support mark. Reproduce the copies with [`Prepare-FormulaTensorRtCompatibilityVariants.py`](scripts/Prepare-FormulaTensorRtCompatibilityVariants.py); generated files stay outside Git.
