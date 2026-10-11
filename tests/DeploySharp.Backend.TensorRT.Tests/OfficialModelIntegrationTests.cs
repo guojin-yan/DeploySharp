@@ -93,9 +93,9 @@ namespace DeploySharp.Backend.TensorRT.Tests
             RequireExternal();
             var cases = new[]
             {
-                new TensorRtImageCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80),
-                new TensorRtImageCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32),
-                new TensorRtImageCase("paddleocr/ppocrv5/server-cls", @"E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx", "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f", "x", 160, 80)
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2", "x", 160, 80),
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx", "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039", "x", 32, 32),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-cls", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345", "x", 160, 80)
             };
 
             var failed = new List<string>();
@@ -114,6 +114,21 @@ namespace DeploySharp.Backend.TensorRT.Tests
             }
 
             if (failed.Count > 0) Assert.Fail("TensorRT ONNX conversions failed: " + string.Join(", ", failed));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void PaddleOcrV4OnnxModelsBuildAndRunTensorRt11Engines()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                new TensorRtImageCase("paddleocr/ppocrv4/server-det", @"E:\Model\paddleocr\PP-OCRv4\PP-OCRv4_server_det.onnx", "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9", "x", 736, 736),
+                new TensorRtImageCase("paddleocr/ppocrv4/server-rec", @"E:\Model\paddleocr\PP-OCRv4\PP-OCRv4_server_rec.onnx", "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f", "x", 160, 48),
+                new TensorRtImageCase("paddleocr/ppocrv4/legacy-cls", @"E:\Model\paddleocr\PP-OCRv4\PP-OCRv4_mobile_cls.onnx", "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e", "x", 192, 48)
+            };
+
+            foreach (TensorRtImageCase model in cases) BuildAndRun(model);
         }
 
         [TestMethod]
@@ -231,9 +246,9 @@ namespace DeploySharp.Backend.TensorRT.Tests
                 new TensorRtImageCase("rf-detr/detect", @"E:\Model\rf-detr\rf-detr.onnx", "b464822e768f5795f249a6bd08cf1c5299787806c740204ed8e46d3a369ab769", "input", 512, 512, false),
                 new TensorRtImageCase("rf-detr/segment", @"E:\Model\rf-detr\rf-detr-seg.onnx", "6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35", "input", 432, 432, false),
                 new TensorRtImageCase("rt-detr/r50vd-raw-query", @"E:\Model\RT-DETR\RTDETR_cropping\rtdetr_r50vd_6x_coco.onnx", "544133360bc01a473125f5e6c607a09d9a969744b05e2125f1ccd1dd3f1273ad", "image", 640, 640),
-                new TensorRtImageCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48),
-                new TensorRtImageCase("paddleocr/ppocrv5/server-det", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx", "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839", "x", 32, 32),
-                new TensorRtImageCase("paddleocr/ppocrv5/server-rec", @"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx", "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "x", 320, 48)
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-det", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx", "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47", "x", 32, 32),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48)
             };
 
             var failed = new List<string>();
