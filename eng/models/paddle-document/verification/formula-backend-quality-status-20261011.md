@@ -24,6 +24,8 @@
 
 这里的 CER 是去除 Unicode 空白后的字符串 Levenshtein 诊断，不能代表 TeX 语义等价或数学正确性；数据集与 checkpoint 的训练重叠未知。高 CER/低 exact 已经是质量风险，不应以单张官方示例的 EOS 或 Decoder 合同掩盖。
 
+从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。由于逐样本报告只保留参考标签哈希而不嵌入原始标签，索引不会伪造命令 precision/recall；这些仍是浅层字符串诊断，不是渲染或数学语义指标。
+
 ## 已知 FormulaNet-L 边界
 
 一个真实样本在 raw token index `1,024` 前没有 EOS。复现表明官方 Paddle IR 与 ONNX Loop 均有 1,024 步生成上限；尝试把 Loop 延长会在 learned positional embedding `[1026,512]` 的 index `1,026` 越界。该现象不能通过在 DeploySharp Decoder 中伪造 EOS 修复，否则会静默截断公式；当前保留 `missing-eos` 警告。详见 [generation-limit](formula-formulanet-l-generation-limit-20261007.md) 与 [EOS/预处理敏感性](formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md)。

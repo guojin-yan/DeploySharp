@@ -1,0 +1,404 @@
+﻿{
+    "schemaVersion":  "deploysharp-realformula-structure-quality-v1",
+    "generatedUtc":  "\/Date(1791685721673)\/",
+    "dataset":  {
+                    "name":  "MathNet realFormula",
+                    "version":  "Zenodo 11296815 v1",
+                    "license":  "CC-BY-4.0",
+                    "sampleCount":  121,
+                    "sourceReports":  [
+                                          "formula-realformula-pp-formulanet-plus-s-ort-20261007.json",
+                                          "formula-realformula-pp-formulanet-plus-m-ort-20261007.json",
+                                          "formula-realformula-pp-formulanet-plus-l-ort-20261007.json",
+                                          "formula-realformula-pp-formulanet-s-ort-20261007.json",
+                                          "formula-realformula-pp-formulanet-l-ort-20261007.json",
+                                          "formula-realformula-unimernet-ort-20261007.json"
+                                      ]
+                },
+    "metrics":  {
+                    "balancedDelimiters":  "Character-level balanced (), [] and {} diagnostic; escaped literal delimiters are ignored.",
+                    "predictionCommandCount":  "Mean count of LaTeX command tokens in the generated string; reference LaTeX is intentionally not embedded in the checked-in per-sample reports, so command precision/recall is not fabricated.",
+                    "lengthBuckets":  "\u003c64, 64-127, 128-255 and \u003e=256 normalized reference characters."
+                },
+    "models":  [
+                   {
+                       "model":  "paddle-formula/pp-formulanet-plus-s",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-pp-formulanet-plus-s-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  14,
+                                       "exactMatchRate":  0.11570247933884298,
+                                       "eosCount":  121,
+                                       "eosRate":  1,
+                                       "predictionBalancedCount":  109,
+                                       "predictionBalancedRate":  0.90082644628099173,
+                                       "meanCharacterCer":  0.55294929649238045,
+                                       "meanPredictionCommandCount":  10.909090909090908
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  3,
+                                                                     "exactMatchRate":  0.066666666666666666,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  39,
+                                                                     "predictionBalancedRate":  0.8666666666666667,
+                                                                     "meanCharacterCer":  0.49896028189115965,
+                                                                     "meanPredictionCommandCount":  12
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  11,
+                                                                       "exactMatchRate":  0.18965517241379309,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  55,
+                                                                       "predictionBalancedRate":  0.94827586206896552,
+                                                                       "meanCharacterCer":  0.57542661481601465,
+                                                                       "meanPredictionCommandCount":  5.7586206896551726
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  16,
+                                                                      "eosRate":  1,
+                                                                      "predictionBalancedCount":  15,
+                                                                      "predictionBalancedRate":  0.9375,
+                                                                      "meanCharacterCer":  0.623701807860157,
+                                                                      "meanPredictionCommandCount":  22.375
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  0,
+                                                                         "predictionBalancedRate":  0,
+                                                                         "meanCharacterCer":  0.54983980269223676,
+                                                                         "meanPredictionCommandCount":  44
+                                                                     }
+                                                  }
+                   },
+                   {
+                       "model":  "paddle-formula/pp-formulanet-plus-m",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-pp-formulanet-plus-m-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  11,
+                                       "exactMatchRate":  0.090909090909090912,
+                                       "eosCount":  121,
+                                       "eosRate":  1,
+                                       "predictionBalancedCount":  117,
+                                       "predictionBalancedRate":  0.96694214876033058,
+                                       "meanCharacterCer":  0.59050009109436175,
+                                       "meanPredictionCommandCount":  11.314049586776859
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  2,
+                                                                     "exactMatchRate":  0.044444444444444446,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  43,
+                                                                     "predictionBalancedRate":  0.9555555555555556,
+                                                                     "meanCharacterCer":  0.524353263146666,
+                                                                     "meanPredictionCommandCount":  12.666666666666666
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  9,
+                                                                       "exactMatchRate":  0.15517241379310345,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  57,
+                                                                       "predictionBalancedRate":  0.98275862068965514,
+                                                                       "meanCharacterCer":  0.64242538618263656,
+                                                                       "meanPredictionCommandCount":  6
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  16,
+                                                                      "eosRate":  1,
+                                                                      "predictionBalancedCount":  16,
+                                                                      "predictionBalancedRate":  1,
+                                                                      "meanCharacterCer":  0.596330257525877,
+                                                                      "meanPredictionCommandCount":  22.625
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  1,
+                                                                         "predictionBalancedRate":  0.5,
+                                                                         "meanCharacterCer":  0.52632883090540283,
+                                                                         "meanPredictionCommandCount":  44.5
+                                                                     }
+                                                  }
+                   },
+                   {
+                       "model":  "paddle-formula/pp-formulanet-plus-l",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-pp-formulanet-plus-l-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  16,
+                                       "exactMatchRate":  0.13223140495867769,
+                                       "eosCount":  121,
+                                       "eosRate":  1,
+                                       "predictionBalancedCount":  118,
+                                       "predictionBalancedRate":  0.97520661157024791,
+                                       "meanCharacterCer":  0.55338243105378826,
+                                       "meanPredictionCommandCount":  11.314049586776859
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  6,
+                                                                     "exactMatchRate":  0.13333333333333333,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  43,
+                                                                     "predictionBalancedRate":  0.9555555555555556,
+                                                                     "meanCharacterCer":  0.5164562271685923,
+                                                                     "meanPredictionCommandCount":  12.866666666666667
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  10,
+                                                                       "exactMatchRate":  0.17241379310344829,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  57,
+                                                                       "predictionBalancedRate":  0.98275862068965514,
+                                                                       "meanCharacterCer":  0.58895415383910243,
+                                                                       "meanPredictionCommandCount":  5.8620689655172411
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  16,
+                                                                      "eosRate":  1,
+                                                                      "predictionBalancedCount":  16,
+                                                                      "predictionBalancedRate":  1,
+                                                                      "meanCharacterCer":  0.53718629028503806,
+                                                                      "meanPredictionCommandCount":  22.625
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  2,
+                                                                         "predictionBalancedRate":  1,
+                                                                         "meanCharacterCer":  0.48221118384657935,
+                                                                         "meanPredictionCommandCount":  44
+                                                                     }
+                                                  }
+                   },
+                   {
+                       "model":  "paddle-formula/pp-formulanet-s",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-pp-formulanet-s-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  12,
+                                       "exactMatchRate":  0.099173553719008267,
+                                       "eosCount":  121,
+                                       "eosRate":  1,
+                                       "predictionBalancedCount":  112,
+                                       "predictionBalancedRate":  0.92561983471074383,
+                                       "meanCharacterCer":  0.60198030264132918,
+                                       "meanPredictionCommandCount":  13.231404958677686
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  3,
+                                                                     "exactMatchRate":  0.066666666666666666,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  39,
+                                                                     "predictionBalancedRate":  0.8666666666666667,
+                                                                     "meanCharacterCer":  0.66476251205155978,
+                                                                     "meanPredictionCommandCount":  19
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  9,
+                                                                       "exactMatchRate":  0.15517241379310345,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  56,
+                                                                       "predictionBalancedRate":  0.96551724137931039,
+                                                                       "meanCharacterCer":  0.56626808245884452,
+                                                                       "meanPredictionCommandCount":  5.7758620689655169
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  16,
+                                                                      "eosRate":  1,
+                                                                      "predictionBalancedCount":  16,
+                                                                      "predictionBalancedRate":  1,
+                                                                      "meanCharacterCer":  0.58195179964367927,
+                                                                      "meanPredictionCommandCount":  21.625
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  1,
+                                                                         "predictionBalancedRate":  0.5,
+                                                                         "meanCharacterCer":  0.38526300018439974,
+                                                                         "meanPredictionCommandCount":  32.5
+                                                                     }
+                                                  }
+                   },
+                   {
+                       "model":  "paddle-formula/pp-formulanet-l",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-pp-formulanet-l-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  17,
+                                       "exactMatchRate":  0.14049586776859505,
+                                       "eosCount":  120,
+                                       "eosRate":  0.99173553719008267,
+                                       "predictionBalancedCount":  113,
+                                       "predictionBalancedRate":  0.93388429752066116,
+                                       "meanCharacterCer":  0.78389158294637706,
+                                       "meanPredictionCommandCount":  17.876033057851238
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  5,
+                                                                     "exactMatchRate":  0.1111111111111111,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  41,
+                                                                     "predictionBalancedRate":  0.91111111111111109,
+                                                                     "meanCharacterCer":  0.85656300080565917,
+                                                                     "meanPredictionCommandCount":  24.577777777777779
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  12,
+                                                                       "exactMatchRate":  0.20689655172413793,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  56,
+                                                                       "predictionBalancedRate":  0.96551724137931039,
+                                                                       "meanCharacterCer":  0.63473144219088928,
+                                                                       "meanPredictionCommandCount":  5.9137931034482758
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  15,
+                                                                      "eosRate":  0.9375,
+                                                                      "predictionBalancedCount":  15,
+                                                                      "predictionBalancedRate":  0.9375,
+                                                                      "meanCharacterCer":  1.1430313794581459,
+                                                                      "meanPredictionCommandCount":  38.6875
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  1,
+                                                                         "predictionBalancedRate":  0.5,
+                                                                         "meanCharacterCer":  0.60131039092753091,
+                                                                         "meanPredictionCommandCount":  47.5
+                                                                     }
+                                                  }
+                   },
+                   {
+                       "model":  "paddle-formula/unimernet",
+                       "backend":  "onnxruntime-cpu",
+                       "sourceReport":  "formula-realformula-unimernet-ort-20261007.json",
+                       "datasetSampleCount":  121,
+                       "overall":  {
+                                       "sampleCount":  121,
+                                       "exactMatches":  18,
+                                       "exactMatchRate":  0.1487603305785124,
+                                       "eosCount":  121,
+                                       "eosRate":  1,
+                                       "predictionBalancedCount":  118,
+                                       "predictionBalancedRate":  0.97520661157024791,
+                                       "meanCharacterCer":  0.51832785638646706,
+                                       "meanPredictionCommandCount":  11.041322314049587
+                                   },
+                       "referenceLengthBuckets":  {
+                                                      "64-127":  {
+                                                                     "sampleCount":  45,
+                                                                     "exactMatches":  5,
+                                                                     "exactMatchRate":  0.1111111111111111,
+                                                                     "eosCount":  45,
+                                                                     "eosRate":  1,
+                                                                     "predictionBalancedCount":  43,
+                                                                     "predictionBalancedRate":  0.9555555555555556,
+                                                                     "meanCharacterCer":  0.46419081291975062,
+                                                                     "meanPredictionCommandCount":  12.28888888888889
+                                                                 },
+                                                      "\u003c64":  {
+                                                                       "sampleCount":  58,
+                                                                       "exactMatches":  13,
+                                                                       "exactMatchRate":  0.22413793103448276,
+                                                                       "eosCount":  58,
+                                                                       "eosRate":  1,
+                                                                       "predictionBalancedCount":  58,
+                                                                       "predictionBalancedRate":  1,
+                                                                       "meanCharacterCer":  0.55949371191151231,
+                                                                       "meanPredictionCommandCount":  5.6896551724137927
+                                                                   },
+                                                      "128-255":  {
+                                                                      "sampleCount":  16,
+                                                                      "exactMatches":  0,
+                                                                      "exactMatchRate":  0,
+                                                                      "eosCount":  16,
+                                                                      "eosRate":  1,
+                                                                      "predictionBalancedCount":  16,
+                                                                      "predictionBalancedRate":  1,
+                                                                      "meanCharacterCer":  0.51830113145392465,
+                                                                      "meanPredictionCommandCount":  22.5625
+                                                                  },
+                                                      "\u003e=256":  {
+                                                                         "sampleCount":  2,
+                                                                         "exactMatches":  0,
+                                                                         "exactMatchRate":  0,
+                                                                         "eosCount":  2,
+                                                                         "eosRate":  1,
+                                                                         "predictionBalancedCount":  1,
+                                                                         "predictionBalancedRate":  0.5,
+                                                                         "meanCharacterCer":  0.54281532362161167,
+                                                                         "meanPredictionCommandCount":  46
+                                                                     }
+                                                  }
+                   }
+               ],
+    "boundary":  "Derived from the checked-in ORT CPU prediction reports. These structural diagnostics do not establish mathematical equivalence, rendered-image correctness, held-out accuracy, or any other backend quality."
+}
