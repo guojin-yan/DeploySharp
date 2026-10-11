@@ -639,11 +639,205 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 Assert.AreEqual(ortResult.Width, trtResult.Width); Assert.AreEqual(ortResult.Height, trtResult.Height); Assert.AreEqual(ortResult.Channels, trtResult.Channels);
                 Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_UVDOC " + JsonSerializer.Serialize(new { model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes, output = trtResult.Width + "x" + trtResult.Height + "x" + trtResult.Channels, maxAbs, meanAbs, status = maxAbs < .1 && meanAbs < .01 ? "close" : "ranged-difference" }));
             }
+            catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+            {
+                Assert.Inconclusive("TensorRT native runtime is unavailable or mismatched for UVDoc: " + (exception.TechnicalDetails ?? exception.Message));
+            }
             catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
             {
                 Assert.Inconclusive("TensorRT cannot build UVDoc: " + (exception.TechnicalDetails ?? exception.Message));
             }
             finally { try { Directory.Delete(root, true); } catch { } }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
+        public void UvDocRunsDynamicBatchTwoOnTensorRtAndMatchesOrtRows()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL=1 to run the UVDoc TensorRT dynamic-batch test.");
+
+            const string modelId = "paddle-doc/uvdoc";
+            const string expectedOnnxSha256 = "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338";
+            string onnxPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_ONNX") ?? @"E:\Model\PaddleDocument\onnx\uvdoc.onnx";
+            string imagePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_IMAGE") ?? @"E:\Data\image\bus.jpg";
+            if (!File.Exists(onnxPath) || !File.Exists(imagePath)) Assert.Inconclusive("Missing UVDoc TensorRT dynamic-batch model or image.");
+
+            string onnxSha256 = ComputeSha256(onnxPath);
+            Assert.AreEqual(expectedOnnxSha256, onnxSha256, "The local UVDoc ONNX file differs from the registered Release artifact.");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
+            PaddleDocumentProfile document = PaddleDocumentProfiles.CreateUnwarping(descriptor, new VisualSize(640, 640), maximumBatch: 2);
+            Assert.AreEqual(-1L, document.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, document.VisualProfile.Outputs[0].ShapePattern[0]);
+
+            TensorRtApiVersion apiVersion = ResolveApiVersion();
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-uvdoc-trt-batch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            string enginePath = Path.Combine(root, "uvdoc-batch.engine");
+            string? prebuiltEnginePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_ENGINE");
+            string effectiveEnginePath = enginePath;
+            string effectiveEngineSha256 = string.Empty;
+            long effectiveEngineBytes = 0;
+            try
+            {
+                var artifact = new ModelArtifact(new ModelId(modelId), "onnx", onnxPath, onnxSha256, TensorRtBackendProvider.BackendId);
+                if (!string.IsNullOrWhiteSpace(prebuiltEnginePath))
+                {
+                    if (!File.Exists(prebuiltEnginePath)) Assert.Inconclusive("The configured prebuilt UVDoc TensorRT engine does not exist: " + prebuiltEnginePath);
+                    effectiveEnginePath = Path.GetFullPath(prebuiltEnginePath);
+                    effectiveEngineSha256 = ComputeSha256(effectiveEnginePath);
+                    effectiveEngineBytes = new FileInfo(effectiveEnginePath).Length;
+                }
+                else
+                {
+                    TensorRtOnnxEngineBuildResult build;
+                    try
+                    {
+                        build = new TensorRtOnnxEngineBuilder().Build(artifact, enginePath, new TensorRtOnnxEngineBuildOptions(
+                            apiVersion: apiVersion,
+                            precision: TensorRtOnnxEnginePrecision.RuntimeDefault,
+                            workspaceBytes: 268435456UL,
+                            optimizationLevel: 3,
+                            disableTf32: true,
+                            inputProfiles: new[]
+                            {
+                                new TensorRtOnnxInputProfile(
+                                    "image",
+                                    new TensorShape(1, 3, 640, 640),
+                                    new TensorShape(2, 3, 640, 640),
+                                    new TensorShape(2, 3, 640, 640))
+                            },
+                            overwrite: true));
+                    }
+                    catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                    {
+                        Assert.Inconclusive("DeploySharp did not reach UVDoc TensorRT inference because native bridge initialization failed: " + (exception.TechnicalDetails ?? exception.Message));
+                        return;
+                    }
+                    catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
+                    {
+                        Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_BATCH_UNSUPPORTED model=" + modelId + ";errorCode=" + exception.ErrorCode + ";details=" + (exception.TechnicalDetails ?? exception.Message));
+                        Assert.Inconclusive("TensorRT cannot build the UVDoc dynamic Batch profile: " + (exception.TechnicalDetails ?? exception.Message));
+                        return;
+                    }
+                    effectiveEnginePath = build.EnginePath;
+                    effectiveEngineSha256 = build.EngineSha256;
+                    effectiveEngineBytes = build.EngineBytes;
+                }
+
+                using var probe = new OpenCvVisualInputFactory().CreateFromFile(imagePath, document.VisualProfile, "uvdoc-dynamic-batch-probe");
+                float halfHeight = probe.SourceSize.Height / 2f;
+                IVisualRoiGeometry[] regions =
+                {
+                    new RectangleRoiGeometry(new RectangleF(0, 0, probe.SourceSize.Width, halfHeight)),
+                    new RectangleRoiGeometry(new RectangleF(0, halfHeight, probe.SourceSize.Width, probe.SourceSize.Height - halfHeight))
+                };
+                using PreparedVisualInput input = new OpenCvVisualInputFactory().CreateRoiBatch(
+                    OpenCvImageSource.FromFile(imagePath),
+                    regions,
+                    document.VisualProfile.Input.Name,
+                    document.VisualProfile.Preprocessing!.ToOpenCvOptions(),
+                    inputId: "uvdoc-distinct-batch-rows",
+                    cancellationToken: CancellationToken.None);
+                Assert.AreEqual(2, input.BatchSize);
+                Assert.AreEqual(2L, input.Tensor.Shape[0]);
+                InferenceInputs inferenceInputs = InferenceInputs.Create(input.InputName, input.Tensor);
+
+                InferenceOutputs ortOutputs;
+                using (var ortRegistry = new BackendRegistry().UseOnnxRuntime())
+                using (IInferenceSession ort = ortRegistry.CreateSession(document.CreateArtifact(onnxPath, OnnxRuntimeBackendProvider.BackendId), new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu")))
+                    ortOutputs = ort.Run(inferenceInputs, CancellationToken.None);
+
+                TensorRtApiVersion resolvedApi = apiVersion;
+                var backendOptions = new TensorRtBackendOptions(resolvedApi, cudaTargetArchitecture: Environment.GetEnvironmentVariable("DEPLOYSHARP_CUDA_ARCHITECTURE") ?? "compute_86");
+                InferenceOutputs trtOutputs;
+                try
+                {
+                    using var provider = new TensorRtBackendProvider(backendOptions);
+                    using IInferenceSession trt = provider.CreateSession(new ModelArtifact(new ModelId(modelId), "tensorrt-engine", effectiveEnginePath, effectiveEngineSha256, TensorRtBackendProvider.BackendId), new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"), SessionOptions.Default);
+                    trtOutputs = trt.Run(inferenceInputs, CancellationToken.None);
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                {
+                    Assert.Inconclusive("DeploySharp could not create a TensorRT runtime to execute the UVDoc dynamic-batch engine: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+
+                ITensor ortOutput = ortOutputs.GetRequired("fetch_name_0");
+                ITensor trtOutput = trtOutputs.GetRequired("fetch_name_0");
+                Assert.AreEqual(4, ortOutput.Shape.Rank);
+                Assert.AreEqual(4, trtOutput.Shape.Rank);
+                Assert.AreEqual(2L, ortOutput.Shape[0]);
+                Assert.AreEqual(2L, trtOutput.Shape[0]);
+                Assert.AreEqual(ortOutput.Shape.ToString(), trtOutput.Shape.ToString(), "TensorRT changed the UVDoc output shape.");
+                Assert.IsTrue(ortOutput.Buffer is float[] && trtOutput.Buffer is float[], "UVDoc dynamic-batch outputs must be Float32.");
+                float[] ortValues = (float[])ortOutput.Buffer;
+                float[] trtValues = (float[])trtOutput.Buffer;
+                Assert.AreEqual(ortValues.Length, trtValues.Length);
+                var maxAbsByRow = new double[2];
+                var meanAbsByRow = new double[2];
+                int rowLength = checked(ortValues.Length / 2);
+                for (int row = 0; row < 2; row++)
+                {
+                    double sum = 0;
+                    for (int index = 0; index < rowLength; index++)
+                    {
+                        double delta = Math.Abs((double)ortValues[row * rowLength + index] - trtValues[row * rowLength + index]);
+                        maxAbsByRow[row] = Math.Max(maxAbsByRow[row], delta);
+                        sum += delta;
+                    }
+                    meanAbsByRow[row] = sum / rowLength;
+                    Assert.IsTrue(trtValues.Skip(row * rowLength).Take(rowLength).All(float.IsFinite), "TensorRT UVDoc output contains non-finite values for row " + row + ".");
+                    Assert.IsTrue(maxAbsByRow[row] <= .1 && meanAbsByRow[row] <= .01, "TensorRT UVDoc output drift exceeded the bounded parity tolerance for row " + row + ".");
+                }
+
+                var ortResult = document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, ortOutputs, CancellationToken.None)) as PaddleDocumentUnwarpingBatchResult
+                    ?? throw new AssertFailedException("ORT decoder did not produce a UVDoc batch result.");
+                var trtResult = document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, trtOutputs, CancellationToken.None)) as PaddleDocumentUnwarpingBatchResult
+                    ?? throw new AssertFailedException("TensorRT decoder did not produce a UVDoc batch result.");
+                Assert.AreEqual(2, ortResult.Count);
+                Assert.AreEqual(2, trtResult.Count);
+                for (int row = 0; row < 2; row++)
+                {
+                    Assert.AreEqual(ortResult[row].Width, trtResult[row].Width);
+                    Assert.AreEqual(ortResult[row].Height, trtResult[row].Height);
+                    Assert.AreEqual(ortResult[row].Channels, trtResult[row].Channels);
+                    Assert.AreEqual(ortResult[row].Pixels.Count, trtResult[row].Pixels.Count);
+                }
+
+                string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_DYNAMIC_BATCH_REPORT_PATH")
+                    ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-uvdoc-dynamic-batch-tensorrt-ort.json");
+                string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+                if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+                File.WriteAllText(report, JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    generatedAtUtc = DateTimeOffset.UtcNow,
+                    execution = new { os = Environment.OSVersion.ToString(), architecture = Environment.Is64BitProcess ? "x64" : "x86", framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+                    backend = new { tensorRtApi = (int)resolvedApi, runtime = DescribeNativeRuntime(), architecture = backendOptions.CudaTargetArchitecture },
+                    model = new { id = modelId, onnxSha256, engineSha256 = effectiveEngineSha256, engineBytes = effectiveEngineBytes, engineSource = string.IsNullOrWhiteSpace(prebuiltEnginePath) ? "deploysharp-builder" : "external-prebuilt" },
+                    image = new { path = imagePath, sha256 = ComputeSha256(imagePath), regions = regions.Select(region => region.Bounds).ToArray() },
+                    batch = new { size = 2, inputShape = input.Tensor.Shape.ToString(), ortOutputShape = ortOutput.Shape.ToString(), tensorRtOutputShape = trtOutput.Shape.ToString(), inputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(input.Tensor, row)).ToArray() },
+                    rows = Enumerable.Range(0, 2).Select(row => new { row, width = trtResult[row].Width, height = trtResult[row].Height, channels = trtResult[row].Channels, rawOutputMaxAbsoluteDifference = maxAbsByRow[row], rawOutputMeanAbsoluteDifference = meanAbsByRow[row], tolerance = new { max = .1, mean = .01 }, ortRawOutputSha256 = TensorRowSha256(ortOutput, row), tensorRtRawOutputSha256 = TensorRowSha256(trtOutput, row) }).ToArray(),
+                    boundary = "Exact dynamic batch profile, row mapping and bounded TensorRT-to-ORT raw-output parity for this UVDoc artifact on one Windows GPU/runtime. The top/bottom image regions are execution probes without unwarping ground truth; no visual-quality or throughput claim is made."
+                }, new JsonSerializerOptions { WriteIndented = true }));
+                TestContext.AddResultFile(report);
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_UVDOC_DYNAMIC_BATCH " + JsonSerializer.Serialize(new { modelId, onnxSha256, engineSha256 = effectiveEngineSha256, engineSource = string.IsNullOrWhiteSpace(prebuiltEnginePath) ? "deploysharp-builder" : "external-prebuilt", inputShape = input.Tensor.Shape.ToString(), maxAbsByRow, meanAbsByRow, report }));
+            }
+            catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+            {
+                Assert.Inconclusive("TensorRT native runtime is unavailable or mismatched for UVDoc dynamic Batch: " + (exception.TechnicalDetails ?? exception.Message));
+            }
+            catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
+            {
+                Assert.Inconclusive("TensorRT cannot build UVDoc dynamic Batch: " + (exception.TechnicalDetails ?? exception.Message));
+            }
+            finally
+            {
+                try { Directory.Delete(root, recursive: true); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
         }
 
         [TestMethod]
