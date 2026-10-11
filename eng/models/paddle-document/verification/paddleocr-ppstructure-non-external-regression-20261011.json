@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T05:20:00Z",
+  "sourceRevision": "bc873a5c277a4d91fd6949d23574cd872d5922c6+working-tree",
+  "configuration": {
+    "configuration": "Release",
+    "targetFramework": "net10.0",
+    "restore": "--no-restore",
+    "filter": "TestCategory!=ExternalModels",
+    "os": "Windows",
+    "scope": "Current working tree; unrelated pre-existing modifications were not reverted or included."
+  },
+  "projects": [
+    { "project": "DeploySharp.Core.Tests", "passed": 33, "skipped": 0, "failed": 0, "total": 33 },
+    { "project": "DeploySharp.ModelFactory.Tests", "passed": 63, "skipped": 2, "failed": 0, "total": 65 },
+    { "project": "DeploySharp.ModelPack.Json.Tests", "passed": 29, "skipped": 3, "failed": 0, "total": 32 },
+    { "project": "DeploySharp.Visual.Tests", "passed": 507, "skipped": 5, "failed": 0, "total": 512 },
+    { "project": "DeploySharp.Visual.OpenCV.Tests", "passed": 99, "skipped": 4, "failed": 0, "total": 103 }
+  ],
+  "totals": { "passed": 731, "skipped": 14, "failed": 0, "total": 745 },
+  "skipPolicy": "Skipped tests are explicit external model/checkpoint/native-environment gates. A skip is not backend support evidence.",
+  "warnings": "Older target-framework dependency compatibility warnings were emitted during multi-target builds; net10.0 test execution completed successfully."
+}
