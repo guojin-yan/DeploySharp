@@ -132,7 +132,7 @@ To build optional FP32/TF32 text plans without rebuilding the existing Vision/Em
 
 The external test accepts `DEPLOYSHARP_CHART2TABLE_TRT_PREFILL_PLAN` and `DEPLOYSHARP_CHART2TABLE_TRT_DECODE_PLAN` to select those plans; leave both unset to use the strict-FP32 plans under `DEPLOYSHARP_CHART2TABLE_TRT_ENGINE_ROOT`.
 
-The release catalog lists role, filename, size, format, and SHA-256 for each of the four ONNX graphs and three official tokenizer files. Applications can request only this bundle:
+The release catalog lists role, filename, size, format, and SHA-256 for each of the four ONNX graphs and three official tokenizer files. The bounded ChartQA `val` extension now has matching ORT/OpenVINO generated-table SHA values for `12/12` samples; see [`chart2table-extended-quality-openvino-20261011.json`](verification/chart2table-extended-quality-openvino-20261011.json). This is task-quality evidence, not split accuracy or a performance benchmark. Applications can request only this bundle:
 
 ```csharp
 using var release = new PaddleOcrReleaseClient(

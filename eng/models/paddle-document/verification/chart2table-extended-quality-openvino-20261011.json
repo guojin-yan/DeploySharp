@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "deploysharp-paddle-chart2table-extended-quality-v1",
+  "generatedAt": "2026-10-11T15:52:35+08:00",
+  "backend": "openvino-cpu",
+  "modelId": "paddle-chart/pp-chart2table",
+  "sourceRepository": "https://github.com/vis-nlp/ChartQA",
+  "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+  "split": "val",
+  "maximumNewTokens": 1024,
+  "sampleCount": 12,
+  "modelArtifacts": {
+    "chart-vision.onnx": "dea9eb175e46bb77b0c93dae08730530cd075500e6d514b15e0bc0cdc6b9a88d",
+    "chart-token-embedding-dynamic.onnx": "b83c0ce88deedd2a83d2c89e733fdbd84074d7c4ff47de797434870012389443",
+    "chart-text-prefill-full.onnx": "8ac0f38fe924511fe7ed28c7339309c94c58299b81c48bab7043d518f4d76a75",
+    "chart-text-decoder-dynamic-past-full.onnx": "043b7f618872b1ba46135928ab05128e5510ee60b7b8803719af0b24cfb2015a"
+  },
+  "aggregate": {
+    "finishReason": "EndOfSequence 12/12",
+    "structureMatches": "9/12",
+    "exactTextMatches": "3/12",
+    "cellExactMatches": "140/293",
+    "totalLatencyMsP50P95": "29616.2891/78195.865",
+    "decodeStepLatencyMsP50P95Range": "99.7753-146.6424/105.75035-282.0245",
+    "crossBackendOutputShaAgainstOrt20261004": "12/12 equal",
+    "boundary": "Bounded ChartQA val task-quality evidence; not split-level accuracy or a controlled performance benchmark."
+  },
+  "samples": [
+    {"file":"OECD_ADULT_EDUCATION_LEVEL_CZE_NZL_000011.png","imageSha256":"bc680eefc724790237d519f2079687b89065d503483e7829f3df48d296d9927d","generatedTableSha256":"9913aff8748b068647838fe193fe266678466ac9a8bafafafb6a774ba71f96bf","tokens":22,"totalMs":18394.9594,"cells":"4/6","structureMatch":true},
+    {"file":"OECD_AGRICULTURAL_SUPPORT_COL_IND_JPN_KOR_NZL_000003.png","imageSha256":"427d1ad0c9cd45a0bf2dc93b09010fef17298c64b2aef3fd9ad992ba900653f2","generatedTableSha256":"a33e7ff6183632d22b88fb92140d85a335c3b97eb9b9c6c1f3b27fd54e0c3b60","tokens":50,"totalMs":16412.1021,"cells":"5/12","structureMatch":true},
+    {"file":"OECD_BROAD_MONEY_(M3)_CHN_CRI_DNK_TUR_ZAF_000026.png","imageSha256":"d11675509ec1ea87ebe79e367c3e540d8dad107c9f81392f93e0e0e5c11b9560","generatedTableSha256":"1b1690e18b1872418baea3ea2b41b5dd2c6d7a0f6afcbde9316dd40a715fed67","tokens":41,"totalMs":13095.5928,"cells":"8/10","structureMatch":true},
+    {"file":"OECD_CAESAREAN_SECTIONS_CZE_KOR_000034.png","imageSha256":"3a54920513a488f747b7efb9727365b84fed8373f047145480fd236c6c757617","generatedTableSha256":"6b776cc9020f3d91a8d7cbf013a4110d3297a7f53778e2385e8ac96be355fab4","tokens":154,"totalMs":40041.5893,"cells":"0/27","structureMatch":false},
+    {"file":"two_col_100022.png","imageSha256":"fbef732e3b3f4b26988c60eb83affe916f6da2759b9b8a42cea48fe2b9d7f9a4","generatedTableSha256":"88ea5366bd27bdfade18083af759dddc9f2e8b9a59c053c14db0cc1d031a77da","tokens":89,"totalMs":27410.2359,"cells":"20/20","structureMatch":true},
+    {"file":"two_col_100050.png","imageSha256":"9b62d9fa1d27930884f047002e6595a6d573a53dab3c1ea4821cfb03b6d554f9","generatedTableSha256":"7291585f90d020243cd559db7f4efdc4accf8695d11cfccfc964d50148e76716","tokens":101,"totalMs":31081.4049,"cells":"11/16","structureMatch":true},
+    {"file":"two_col_100128.png","imageSha256":"c795517d2b7f43bb319d0f9e4637b55e033c1b0bd6c4eed63bf7aa1e74e78a74","generatedTableSha256":"e77f3ff2ea8574b13eadf24610b9aa68e8a7c2ac476fe346b13244008f9e1b1a","tokens":172,"totalMs":44446.0659,"cells":"42/42","structureMatch":true},
+    {"file":"two_col_100172.png","imageSha256":"707e38b7017b994ae09868b805bf29bc49dc8d691bffcacd1ea9497931c4a67b","generatedTableSha256":"96367a93c9d7f0f22f30edc31f3f816bfd52ee6dd3d1867318f63c35c587aff4","tokens":129,"totalMs":30885.9456,"cells":"24/24","structureMatch":true},
+    {"file":"00006834003066.png","imageSha256":"d3e59f9f859df6629c028494688d68aaaa813740ff94bf1506b62da912e96a26","generatedTableSha256":"5c575d64dce98fce9ef55e9862d81be7dddcec0502da0936e5f12128c5cbc208","tokens":308,"totalMs":78195.865,"cells":"0/56","structureMatch":false},
+    {"file":"00108924006058.png","imageSha256":"20b0207ecdeefccc281e7b6fe862407a43e58d62e1d20d90ae131f5603288ef3","generatedTableSha256":"bafe1450163230bbc798ca4ad195ccc6f1d0e9594a52f6f36e1440818b01b945","tokens":24,"totalMs":8856.2259,"cells":"4/6","structureMatch":true},
+    {"file":"00484591006451.png","imageSha256":"25a55984c098bad1b16c1d6b0336d6d0e46dd582a21011d2b0008ecccd045c44","generatedTableSha256":"decd17b358705af48e79d3a1e7552cb735c2331bc77c5531de94d11385fe7589","tokens":120,"totalMs":29616.2891,"cells":"22/24","structureMatch":true},
+    {"file":"00978071004853.png","imageSha256":"d437c5bf0410d0bce91cc0aee13cf4ffca2a17db7c48041ae1130528ad97e11c","generatedTableSha256":"9f0fdba80f34a7888592ebb3a1493c3ee15ae8b7a1f8c4d87fc4b7ff19359c63","tokens":285,"totalMs":75507.5963,"cells":"0/50","structureMatch":false}
+  ]
+}
