@@ -24,6 +24,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private readonly SemaphoreSlim _operationGate;
         private readonly CancellationTokenSource _disposeSource;
         private readonly List<NamedTensor> _namedOutputScratch = new List<NamedTensor>();
+        private readonly Dictionary<string, CudaMemory> _hostOutputDeviceBuffers = new Dictionary<string, CudaMemory>(StringComparer.Ordinal);
         private readonly string? _cudaTargetArchitecture;
         private readonly bool _cacheImmutableHostInputsOnDevice;
         private WeakReference<InferenceInputs>? _cachedHostInputs;
@@ -103,7 +104,11 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     TensorRtEngineTensorBinding binding = _bindings.Report.GetTensor(input.Name);
                     TensorRtBindingContract.ValidateInputShape(binding, runtimeShape, _artifact.ModelId);
                     ValidateDeviceType(binding, input);
-                    if (binding.EngineShape.Values.Any(value => value < 0)) _bindings.SetInputShape(input.Name, runtimeShape);
+                    // Defer binding-report refresh until all dynamic ports have
+                    // been assigned. SetInputShape refreshes the full report on
+                    // every call, which is unnecessary for a decoder with 48 KV
+                    // inputs whose shapes all advance together by one token.
+                    if (binding.EngineShape.Values.Any(value => value < 0)) _context.SetInputShape(input.Name, runtimeShape);
                     _bindings.UseDeviceBuffer(input.Name, input.Memory, runtimeShape);
                 }
 
@@ -121,13 +126,16 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 }
 
                 _bindings.BindAll();
-                TensorRtExecutionContextReadiness readiness = _bindings.GetReadiness(runShapeInference: true);
+                TensorRtExecutionContextReadiness readiness = _bindings.GetReadiness(runShapeInference: false);
                 if (!readiness.IsReadyForEnqueue)
                 {
                     throw new TensorRtBackendException(TensorRtErrorCodes.TensorInvalid, "TensorRT device bindings are not ready for enqueue.", modelId: _artifact.ModelId, operation: "bind", technicalDetails: readiness.ToString());
                 }
 
-                _bindings.EnqueueAsync(stream, synchronize: false, runShapeInference: false);
+                // BindAll and readiness were already checked above. Calling the
+                // high-level EnqueueAsync here would repeat both operations and
+                // refresh the binding report a second time on every decode step.
+                _context.EnqueueAsync(stream);
                 enqueued = true;
                 var resolvedOutputs = new List<TensorRtDeviceTensor>(outputs.Count);
                 foreach (TensorRtDeviceTensor output in outputs)
@@ -272,6 +280,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 DisposeResource(_ctcClassIndices, ref disposeFailure);
                 DisposeResource(_ctcTraceKernel, ref disposeFailure);
                 InvalidateHostInputCache();
+                foreach (CudaMemory memory in _hostOutputDeviceBuffers.Values)
+                {
+                    try { memory.Dispose(); }
+                    catch (Exception exception) { disposeFailure ??= exception; }
+                }
+                _hostOutputDeviceBuffers.Clear();
                 DisposeResource(_bindings, ref disposeFailure);
                 DisposeResource(_stream, ref disposeFailure);
                 DisposeResource(_context, ref disposeFailure);
@@ -307,7 +321,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             foreach (TensorRtEngineTensorBinding output in outputs)
             {
                 TensorRtDims runtimeShape = ResolveOutputShape(output, allowMaximumForDataDependent: true);
-                _bindings.AllocateDeviceBuffer(output.Name, runtimeShape, output.EstimateByteSize(runtimeShape));
+                EnsureHostOutputDeviceBuffer(output, runtimeShape);
             }
 
             _bindings.BindAll();
@@ -537,7 +551,11 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 EnsureMode(binding, TensorRtIOMode.Input, input.Name);
                 TensorRtDims runtimeShape = ToTensorRtShape(input.Tensor.Shape, input.Name);
                 TensorRtBindingContract.ValidateInputShape(binding, runtimeShape, _artifact.ModelId);
-                if (binding.EngineShape.Values.Any(value => value < 0)) _bindings.SetInputShape(input.Name, runtimeShape);
+                if (binding.EngineShape.Values.Any(value => value < 0))
+                {
+                    _bindings.SetInputShape(input.Name, runtimeShape);
+                    EnsureDynamicHostInputBuffer(binding, runtimeShape);
+                }
                 if (!reuseDeviceCopy) CopyInput(binding, input.Tensor, runtimeShape);
             }
 
@@ -594,6 +612,17 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
 
         private TensorRtDims ResolveOutputShapeAfterEnqueue(TensorRtEngineTensorBinding output)
         {
+            // TensorRT 10/11 can publish the concrete extent of a data-dependent
+            // output only after enqueue. Query the context first; otherwise the
+            // pre-enqueue maximum allocation below would be mistaken for the
+            // logical output shape and decoders would see padded rows.
+            try
+            {
+                TensorRtDims contextShape = _context.GetTensorShape(output.Name);
+                if (IsConcreteShape(contextShape)) return contextShape;
+            }
+            catch { }
+
             if (_bindings.Buffers.TryGetValue(output.Name, out TensorRtInferenceBuffer? buffer) &&
                 buffer.RuntimeShape != null &&
                 IsConcreteShape(buffer.RuntimeShape) &&
@@ -606,6 +635,55 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
 
             return ResolveOutputShape(output, allowMaximumForDataDependent: false);
+        }
+
+        private void EnsureDynamicHostInputBuffer(TensorRtEngineTensorBinding binding, TensorRtDims runtimeShape)
+        {
+            int requiredBytes = binding.EstimateByteSize(runtimeShape);
+            int existingCapacity = _bindings.Buffers.TryGetValue(binding.Name, out TensorRtInferenceBuffer? existing)
+                ? existing.Memory.SizeInBytes
+                : 0;
+            if (existingCapacity >= requiredBytes) return;
+
+            // The dynamic KV sequence grows one token at a time. Allocate with
+            // geometric slack so the binding keeps its CUDA allocation across
+            // many decode steps instead of cudaFree/cudaMalloc on every token.
+            _bindings.AllocateDeviceBuffer(binding.Name, runtimeShape, GrowCapacity(existingCapacity, requiredBytes));
+        }
+
+        private void EnsureHostOutputDeviceBuffer(TensorRtEngineTensorBinding binding, TensorRtDims runtimeShape)
+        {
+            int requiredBytes = binding.EstimateByteSize(runtimeShape);
+            if (_hostOutputDeviceBuffers.TryGetValue(binding.Name, out CudaMemory? existing) && existing.SizeInBytes >= requiredBytes)
+            {
+                // UseDeviceBuffer replaces only the lightweight binding wrapper;
+                // this session-owned allocation remains alive and is rebound at
+                // the new dynamic shape.
+                _bindings.UseDeviceBuffer(binding.Name, existing, runtimeShape);
+                return;
+            }
+
+            int existingCapacity = existing?.SizeInBytes ?? 0;
+            var replacement = new CudaMemory(GrowCapacity(existingCapacity, requiredBytes));
+            try
+            {
+                _bindings.UseDeviceBuffer(binding.Name, replacement, runtimeShape);
+                _hostOutputDeviceBuffers[binding.Name] = replacement;
+                existing?.Dispose();
+            }
+            catch
+            {
+                replacement.Dispose();
+                throw;
+            }
+        }
+
+        private static int GrowCapacity(int existingCapacity, int requiredBytes)
+        {
+            if (requiredBytes <= 0) throw new ArgumentOutOfRangeException(nameof(requiredBytes));
+            if (existingCapacity <= 0) return requiredBytes;
+            long doubled = (long)existingCapacity * 2;
+            return checked((int)Math.Max(requiredBytes, Math.Min(doubled, int.MaxValue)));
         }
 
         private void ValidateDeviceTensorCollection(
@@ -677,13 +755,26 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
 
             if (shape.Values.Length == 0 || shape.Values.Any(value => value <= 0))
             {
+                long? maximumBytes = null;
+                try { maximumBytes = _context.GetMaxOutputSize(output.Name); }
+                catch { }
                 throw new TensorRtBackendException(
                     TensorRtErrorCodes.TensorInvalid,
                     "TensorRT did not expose a concrete output shape after shape inference.",
                     modelId: _artifact.ModelId,
                     tensorName: output.Name,
                     operation: "shape",
-                    technicalDetails: "engineShape=" + output.EngineShape + ";contextShape=" + shape);
+                    technicalDetails: "engineShape=" + output.EngineShape
+                        + ";contextShape=" + shape
+                        + ";maxOutputBytes=" + (maximumBytes?.ToString() ?? "n/a")
+                        + ";dataType=" + output.DataType
+                        + ";format=" + output.Format
+                        + ";componentsPerElement=" + output.EffectiveComponentsPerElement
+                        + ";bytesPerComponent=" + output.EffectiveBytesPerComponent
+                        + ";profileMin=" + output.ProfileMinShape
+                        + ";profileOpt=" + output.ProfileOptShape
+                        + ";profileMax=" + output.ProfileMaxShape
+                        + ";diagnostics=" + string.Join("|", output.Diagnostics ?? Array.Empty<string>()));
             }
             return shape;
         }
@@ -714,8 +805,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 }
             }
 
-            if (unresolvedIndex < 0 || fixedElements <= 0 || maximumElements % fixedElements != 0) return null;
-            long unresolvedExtent = maximumElements / fixedElements;
+            if (unresolvedIndex < 0 || fixedElements <= 0) return null;
+            // GetMaxOutputSize is a byte bound and TensorRT may round it up to
+            // an allocator alignment. Use a ceiling for a single unresolved
+            // extent instead of rejecting valid [N,C] outputs such as the
+            // PP-DocLayout M/S graphs (2560 bytes for a 6-float row).
+            long unresolvedExtent = (maximumElements + fixedElements - 1) / fixedElements;
             if (unresolvedExtent <= 0 || unresolvedExtent > int.MaxValue) return null;
             dimensions[unresolvedIndex] = checked((int)unresolvedExtent);
             return new TensorRtDims(dimensions);

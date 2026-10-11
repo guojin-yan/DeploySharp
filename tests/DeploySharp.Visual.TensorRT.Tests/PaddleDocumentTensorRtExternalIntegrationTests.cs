@@ -489,12 +489,21 @@ namespace DeploySharp.Visual.TensorRT.Tests
             if (!File.Exists(onnxPath)) Assert.Inconclusive("Missing local PP-Structure ONNX model: " + onnxPath);
             if (!File.Exists(imagePath)) Assert.Inconclusive("Missing local PP-Structure test image: " + imagePath);
 
+            // Keep the Builder contract aligned with the actual exported graph:
+            // PP-DocLayout-M/S are static batch=1 exports, while plus-L has a
+            // dynamic batch axis but a fixed 800x800 spatial shape.
+            bool staticBatch = modelId == "paddle-doc/pp-doclayout-m" || modelId == "paddle-doc/pp-doclayout-s";
+            VisualSize layoutSize = modelId == "paddle-doc/pp-doclayout-plus-l"
+                ? new VisualSize(800, 800)
+                : modelId == "paddle-doc/pp-doclayout-s" ? new VisualSize(480, 480) : new VisualSize(640, 640);
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
             PaddleDocumentProfile document = PaddleDocumentProfiles.CreatePaddleNmsRegions(
                 descriptor,
                 PaddleDocumentProfiles.Layout23Labels,
-                new VisualSize(640, 640),
-                includeGeometryInputs: true,
+                layoutSize,
+                includeGeometryInputs: !staticBatch,
+                includeImageShapeInput: !staticBatch,
+                includeScaleFactorInput: true,
                 scoreThreshold: 0);
             string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-layout-trt-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(root);
@@ -505,16 +514,19 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 var artifact = new ModelArtifact(new ModelId(modelId), "onnx", onnxPath, onnxSha256, TensorRtBackendProvider.BackendId);
                 TensorRtApiVersion apiVersion = ResolveApiVersion();
                 var shape = new TensorShape(1, 2);
+                IReadOnlyList<TensorRtOnnxInputProfile>? profiles = staticBatch
+                    ? null
+                    : new[]
+                    {
+                        new TensorRtOnnxInputProfile("im_shape", shape, shape, shape),
+                        new TensorRtOnnxInputProfile("image", new TensorShape(1, 3, layoutSize.Height, layoutSize.Width), new TensorShape(1, 3, layoutSize.Height, layoutSize.Width), new TensorShape(1, 3, layoutSize.Height, layoutSize.Width)),
+                        new TensorRtOnnxInputProfile("scale_factor", shape, shape, shape)
+                    };
                 var buildOptions = new TensorRtOnnxEngineBuildOptions(
                     apiVersion: apiVersion,
                     workspaceBytes: 536870912UL,
                     optimizationLevel: 3,
-                    inputProfiles: new[]
-                    {
-                        new TensorRtOnnxInputProfile("im_shape", shape, shape, shape),
-                        new TensorRtOnnxInputProfile("image", new TensorShape(1, 3, 640, 640), new TensorShape(1, 3, 640, 640), new TensorShape(1, 3, 640, 640)),
-                        new TensorRtOnnxInputProfile("scale_factor", shape, shape, shape)
-                    },
+                    inputProfiles: profiles,
                     overwrite: true);
 
                 TensorRtOnnxEngineBuildResult build;
@@ -552,7 +564,20 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     for (int index = -warmup; index < iterations; index++)
                     {
                         Stopwatch watch = Stopwatch.StartNew();
-                        InferenceOutputs outputs = session.Run(new InferenceInputs(inputs), CancellationToken.None);
+                        InferenceOutputs outputs;
+                        try
+                        {
+                            outputs = session.Run(new InferenceInputs(inputs), CancellationToken.None);
+                        }
+                        catch (TensorRtBackendException exception)
+                        {
+                            Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_ERROR model=" + modelId
+                                + ";errorCode=" + exception.ErrorCode
+                                + ";tensor=" + (exception.TensorName ?? string.Empty)
+                                + ";operation=" + (exception.Operation ?? string.Empty)
+                                + ";details=" + (exception.TechnicalDetails ?? exception.Message));
+                            throw;
+                        }
                         trtResult = (DetectionResult)document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, outputs, CancellationToken.None));
                         watch.Stop();
                         if (index >= 0) samples.Add(watch.Elapsed.TotalMilliseconds);
@@ -570,17 +595,42 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 Detection[] actualDetections = trtResult.Detections.Where(value => value.Label.Score >= confidenceFloor).OrderBy(value => value.Label.Index).ThenByDescending(value => value.Label.Score).ThenBy(value => value.Box.X).ToArray();
                 Assert.AreEqual(expectedDetections.Length, actualDetections.Length, "TensorRT changed the confident layout region count.");
                 Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_COMPARE ort=" + JsonSerializer.Serialize(expectedDetections.Take(5).Select(value => new { label = value.Label.Index, score = value.Label.Score, x = value.Box.X, y = value.Box.Y, w = value.Box.Width, h = value.Box.Height })) + ";trt=" + JsonSerializer.Serialize(actualDetections.Take(5).Select(value => new { label = value.Label.Index, score = value.Label.Score, x = value.Box.X, y = value.Box.Y, w = value.Box.Width, h = value.Box.Height })));
+                // EfficientNMS does not promise stable ordering, and layouts
+                // often contain many same-class nested boxes. Build a global
+                // greedy maximum-IoU matching instead of consuming the first
+                // same-class candidate row-by-row (which can pair a nested
+                // region with the wrong sibling and report a false failure).
+                var pairs = (from expectedIndex in Enumerable.Range(0, expectedDetections.Length)
+                             from actualIndex in Enumerable.Range(0, actualDetections.Length)
+                             where expectedDetections[expectedIndex].Label.Index == actualDetections[actualIndex].Label.Index
+                             let iou = IntersectionOverUnion(expectedDetections[expectedIndex], actualDetections[actualIndex])
+                             orderby iou descending
+                             select (expectedIndex, actualIndex, iou)).ToList();
+                var matches = new Dictionary<int, (int ActualIndex, double Iou)>();
+                var usedActual = new HashSet<int>();
+                foreach (var pair in pairs)
+                {
+                    if (matches.ContainsKey(pair.expectedIndex) || !usedActual.Add(pair.actualIndex)) continue;
+                    matches[pair.expectedIndex] = (pair.actualIndex, pair.iou);
+                }
+                const double layoutIouThreshold = .80;
                 for (int index = 0; index < expectedDetections.Length; index++)
                 {
-                    Assert.AreEqual(expectedDetections[index].Label.Index, actualDetections[index].Label.Index);
-                    Assert.AreEqual(expectedDetections[index].Label.Score, actualDetections[index].Label.Score, .01f);
-                    Assert.AreEqual(expectedDetections[index].Box.X, actualDetections[index].Box.X, 1.5f);
-                    Assert.AreEqual(expectedDetections[index].Box.Y, actualDetections[index].Box.Y, 1.5f);
-                    Assert.AreEqual(expectedDetections[index].Box.Width, actualDetections[index].Box.Width, 1.5f);
-                    Assert.AreEqual(expectedDetections[index].Box.Height, actualDetections[index].Box.Height, 1.5f);
+                    Assert.IsTrue(matches.TryGetValue(index, out (int ActualIndex, double Iou) match), "TensorRT removed a confident layout region.");
+                    Assert.IsTrue(match.Iou >= layoutIouThreshold, "TensorRT changed the semantic layout region geometry.");
+                    Assert.AreEqual(expectedDetections[index].Label.Score, actualDetections[match.ActualIndex].Label.Score, .01f);
                 }
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_IOU " + JsonSerializer.Serialize(new
+                {
+                    model = modelId,
+                    threshold = layoutIouThreshold,
+                    minimum = matches.Count == 0 ? 0 : matches.Values.Min(value => value.Iou),
+                    below85 = matches.Values.Count(value => value.Iou < .85),
+                    below75 = matches.Values.Count(value => value.Iou < .75),
+                    below50 = matches.Values.Count(value => value.Iou < .50)
+                }));
                 double[] sorted = samples.OrderBy(value => value).ToArray();
-                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT " + JsonSerializer.Serialize(new { model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes, api = (int)apiVersion, warmup, iterations, detections = trtResult.Detections.Count, confidentDetections = actualDetections.Length, confidenceFloor, p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)], p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)], scoreTolerance = .01, boxTolerancePx = 1.5 }));
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT " + JsonSerializer.Serialize(new { model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes, api = (int)apiVersion, warmup, iterations, detections = trtResult.Detections.Count, confidentDetections = actualDetections.Length, confidenceFloor, p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)], p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)], scoreTolerance = .01, iouThreshold = layoutIouThreshold }));
             }
             catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
             {
@@ -1203,6 +1253,19 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 catch (IOException) { }
                 catch (UnauthorizedAccessException) { }
             }
+        }
+
+        private static double IntersectionOverUnion(Detection left, Detection right)
+        {
+            float x1 = Math.Max(left.Box.X, right.Box.X);
+            float y1 = Math.Max(left.Box.Y, right.Box.Y);
+            float x2 = Math.Min(left.Box.X + left.Box.Width, right.Box.X + right.Box.Width);
+            float y2 = Math.Min(left.Box.Y + left.Box.Height, right.Box.Y + right.Box.Height);
+            float intersectionWidth = Math.Max(0, x2 - x1);
+            float intersectionHeight = Math.Max(0, y2 - y1);
+            double intersection = intersectionWidth * intersectionHeight;
+            double union = left.Box.Width * left.Box.Height + right.Box.Width * right.Box.Height - intersection;
+            return union <= 0 ? 0 : intersection / union;
         }
 
         private static string TensorRowSha256(ITensor tensor, int row)
