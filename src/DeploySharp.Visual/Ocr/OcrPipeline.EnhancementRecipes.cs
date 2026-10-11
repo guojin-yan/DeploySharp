@@ -90,6 +90,8 @@ namespace JYPPX.DeploySharp.Visual
                 }
                 var candidateAttempts = new List<OcrEnhancementAttempt>(candidates.Count);
                 var candidateRecipeIndices = new List<int>(candidates.Count);
+                var candidateRecognitions = new List<RecognizedText>(candidates.Count);
+                foreach (RecipeCandidate candidate in candidates) candidateRecognitions.Add(candidate.Result.Recognition);
                 OcrRegionResult? selectedCandidate = null;
                 int? selectedIndex = null;
                 for (int index = 0; index < candidates.Count; index++)
@@ -97,7 +99,7 @@ namespace JYPPX.DeploySharp.Visual
                     OcrRegionResult candidate = candidates[index].Result;
                     candidateAttempts.Add(new OcrEnhancementAttempt(candidate));
                     candidateRecipeIndices.Add(candidates[index].RecipeIndex);
-                    if (!options.Prefer(candidate.Recognition, original.Recognition)) continue;
+                    if (!options.Prefer(candidate.Recognition, original.Recognition, candidateRecognitions)) continue;
                     if (selectedCandidate == null || candidate.Recognition.Confidence > selectedCandidate.Recognition.Confidence)
                     {
                         selectedCandidate = candidate;

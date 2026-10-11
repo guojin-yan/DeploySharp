@@ -232,7 +232,7 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 候选保留每个原始窗口的实际 `TensorWidth`，只与相同宽度候选组批，不因单行重试而缩小或扩大原始补边上下文；模型的batch维仍可能变化，minimum-batch仍需补齐。这样避免把宽度改变导致的分数变化误当作增强效果，但不同batch/backend数值仍不保证逐位一致。固定宽度引擎合同不变。
 
-每行最多一个候选，不尝试所有增强组合或不断循环。`PreserveOriginal` 是默认选择策略：实际运行候选并留下结果，但最终文字和原始合同SHA不变。选择 `ConfidenceGain` 后，非空候选仅在严格优于当前非空结果且增量达到 `minimumConfidenceGain` 时替换；平局、增量不足和空候选保留原结果，非空候选可以替换空原文。它只是可选启发式，不能保证准确率，尤其不能保证全角/半角和业务字段符合预期。
+每行最多一个候选，不尝试所有增强组合或不断循环。`PreserveOriginal` 是默认选择策略：实际运行候选并留下结果，但最终文字和原始合同SHA不变。选择 `ConfidenceGain` 后，非空候选仅在严格优于当前非空结果且增量达到 `minimumConfidenceGain` 时替换；平局、增量不足和空候选保留原结果，非空候选可以替换空原文。`ConsensusConfidenceGain` 只对多配方生效：候选必须与至少另一个配方产生完全相同的非空文本，并通过同一置信度增益门槛；单配方或文本不一致时保留原文。两种替换策略都只是可选启发式，不能保证准确率，尤其不能保证全角/半角和业务字段符合预期。
 
 结果行 `EnhancementRetry` 为 null 表示未启用或当前识别置信度足够；非空时保存：
 
@@ -277,11 +277,11 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 `CreateMany` 会复制输入集合，拒绝空集合、空元素和超过四种配方；第一个配方仍通过兼容属性 `Enhancement` 暴露。Pipeline 先按阅读顺序接收低置信度行，再按配方顺序批量执行。每个配方只提交本行真正通过该配方质量门限的裁剪，空配方不会创建 REC batch；每个配方内部继续复用现有宽度分组、minimum-batch 补齐、Session 池和取消令牌。所有配方共享同一 `maximumRegionsPerImage`、`maximumCropsPerImage`、`MaximumCropsPerCall` 与结果字节预算，任何物理 crop 或结果预算超限都整次失败，不返回部分成功。
 
-结果行的 `EnhancementRetry.Candidates` 按实际执行顺序保存候选，`CandidateRecipeIndices` 给出对应的 `Options.Enhancements` 索引。某行不满足第一种配方而只满足第二种时，索引仍为 `[1]`，不能假定候选列表位置就是配置位置。`Candidate` 为兼容快捷属性：选择策略替换成功时返回被选候选；`PreserveOriginal` 时返回第一个已执行候选；没有候选时为 `null`。`SelectedCandidateIndex` 只有 `ConfidenceGain` 真的替换原文时才有值。
+结果行的 `EnhancementRetry.Candidates` 按实际执行顺序保存候选，`CandidateRecipeIndices` 给出对应的 `Options.Enhancements` 索引。某行不满足第一种配方而只满足第二种时，索引仍为 `[1]`，不能假定候选列表位置就是配置位置。`Candidate` 为兼容快捷属性：选择策略替换成功时返回被选候选；`PreserveOriginal` 时返回第一个已执行候选；没有候选时为 `null`。`SelectedCandidateIndex` 只有 `ConfidenceGain` 或 `ConsensusConfidenceGain` 真的替换原文时才有值。
 
-`PreserveOriginal` 适合先收集真实现场证据，最终文字保持首轮结果但保留每个候选的文字、token、置信度、窗口和裁剪诊断。`ConfidenceGain` 会在所有候选完成后，从非空且超过原文 `MinimumConfidenceGain` 的候选中选择置信度最高者；这只是启发式，不是准确率判定，也不理解业务字段语义。多配方按顺序串行执行以保持确定性，墙钟 `Recognition` 只记录一次外层耗时，详细 work 计时和 `RecognitionBatchCount` 累加每个配方的真实 batch；即使保留原文，也应将额外成本纳入 P50/P95 基准。
+`PreserveOriginal` 适合先收集真实现场证据，最终文字保持首轮结果但保留每个候选的文字、token、置信度、窗口和裁剪诊断。`ConfidenceGain` 会在所有候选完成后，从非空且超过原文 `MinimumConfidenceGain` 的候选中选择置信度最高者；`ConsensusConfidenceGain` 还要求最高候选的文字至少被另一配方逐字复现，避免把单一增强配方的置信度误当成正确性。两者都不是准确率判定，也不理解业务字段语义。多配方按顺序串行执行以保持确定性，墙钟 `Recognition` 只记录一次外层耗时，详细 work 计时和 `RecognitionBatchCount` 累加每个配方的真实 batch；即使保留原文，也应将额外成本纳入 P50/P95 基准。
 
-多配方覆盖全部 `OcrCropEnhancementMode`，包括 `LocalUpscale`、`ShadowNormalize` 和 `JpegArtifactSuppress`；每种模式仍只按自身显式统计门限决定是否执行，不自动判断真实退化类别，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain`。
+多配方覆盖全部 `OcrCropEnhancementMode`，包括 `LocalUpscale`、`ShadowNormalize` 和 `JpegArtifactSuppress`；每种模式仍只按自身显式统计门限决定是否执行，不自动判断真实退化类别，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain` 或更保守的 `ConsensusConfidenceGain`；后者需要至少两个配方，额外成本和候选不一致率必须单独纳入评测。
 
 验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
 

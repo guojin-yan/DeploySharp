@@ -10,6 +10,8 @@ namespace JYPPX.DeploySharp.Visual
         PreserveOriginal,
         /// <summary>Allows replacement by an explicit confidence-gain heuristic, not accuracy proof. / 允许显式置信度增益启发式替换，不代表准确率证明。</summary>
         ConfidenceGain,
+        /// <summary>Allows replacement only when multiple enhancement recipes agree on non-empty text and the confidence gain is explicit. / 仅当多个增强配方对非空文字达成一致且满足显式置信度增益时允许替换。</summary>
+        ConsensusConfidenceGain,
     }
 
     /// <summary>Explains the outcome for a low-confidence line considered for enhancement retry. / 说明低置信度行的增强重试结果。</summary>
@@ -71,7 +73,7 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (!(confidenceThreshold > 0 && confidenceThreshold <= 1)) throw new ArgumentOutOfRangeException(nameof(confidenceThreshold));
             if (!(minimumConfidenceGain >= 0 && minimumConfidenceGain <= 1)) throw new ArgumentOutOfRangeException(nameof(minimumConfidenceGain));
-            if (selectionPolicy != OcrEnhancementSelectionPolicy.PreserveOriginal && selectionPolicy != OcrEnhancementSelectionPolicy.ConfidenceGain) throw new ArgumentOutOfRangeException(nameof(selectionPolicy));
+            if (selectionPolicy != OcrEnhancementSelectionPolicy.PreserveOriginal && selectionPolicy != OcrEnhancementSelectionPolicy.ConfidenceGain && selectionPolicy != OcrEnhancementSelectionPolicy.ConsensusConfidenceGain) throw new ArgumentOutOfRangeException(nameof(selectionPolicy));
             if (maximumRegionsPerImage < 1 || maximumRegionsPerImage > 4096) throw new ArgumentOutOfRangeException(nameof(maximumRegionsPerImage));
             if (maximumCropsPerImage < 1 || maximumCropsPerImage > 4096) throw new ArgumentOutOfRangeException(nameof(maximumCropsPerImage));
         }
@@ -90,9 +92,26 @@ namespace JYPPX.DeploySharp.Visual
         /// <summary>Gets extra physical crop rows including windows and minimum-batch padding; excess fails. / 获取包含窗口及最小批次补齐的额外物理裁剪行上限，超限失败。</summary>
         public int MaximumCropsPerImage { get; }
         internal bool NeedsRetry(RecognizedText text) => text.Text.Length == 0 || text.Confidence < ConfidenceThreshold;
-        internal bool Prefer(RecognizedText candidate, RecognizedText original) => SelectionPolicy == OcrEnhancementSelectionPolicy.ConfidenceGain
-            && candidate.Text.Length != 0 && (original.Text.Length == 0 ||
-                (candidate.Confidence > original.Confidence && candidate.Confidence - original.Confidence >= MinimumConfidenceGain));
+        internal bool Prefer(RecognizedText candidate, RecognizedText original) => Prefer(candidate, original, null);
+        internal bool Prefer(RecognizedText candidate, RecognizedText original, IReadOnlyList<RecognizedText>? peers)
+        {
+            if ((SelectionPolicy != OcrEnhancementSelectionPolicy.ConfidenceGain && SelectionPolicy != OcrEnhancementSelectionPolicy.ConsensusConfidenceGain) || candidate.Text.Length == 0) return false;
+            if (SelectionPolicy == OcrEnhancementSelectionPolicy.ConsensusConfidenceGain)
+            {
+                if (peers == null || !AgreesWithAnotherCandidate(candidate, peers)) return false;
+            }
+            return original.Text.Length == 0 || (candidate.Confidence > original.Confidence && candidate.Confidence - original.Confidence >= MinimumConfidenceGain);
+        }
+
+        private static bool AgreesWithAnotherCandidate(RecognizedText candidate, IReadOnlyList<RecognizedText> peers)
+        {
+            int matches = 0;
+            foreach (RecognizedText peer in peers)
+            {
+                if (string.Equals(peer.Text, candidate.Text, StringComparison.Ordinal)) matches++;
+            }
+            return matches >= 2;
+        }
     }
 
     /// <summary>Retains one recognition outcome without images or recursive retry traces. / 保留一次识别结果，不含图像或递归重试记录。</summary>
@@ -157,7 +176,7 @@ namespace JYPPX.DeploySharp.Visual
         public IReadOnlyList<OcrEnhancementAttempt> Candidates { get; }
         /// <summary>Gets the configured recipe index for each candidate; it aligns with <see cref="Candidates"/> even when a recipe was ineligible for a line. / 获取每个候选对应的配置配方索引；即使某个配方对该行不适用，也与 Candidates 一一对应。</summary>
         public IReadOnlyList<int> CandidateRecipeIndices { get; }
-        /// <summary>Gets the candidate index selected by confidence policy, or null when the original was preserved. / 获取置信度策略选中的候选索引；保留原文时为 null。</summary>
+        /// <summary>Gets the candidate index selected by the configured confidence or consensus policy, or null when the original was preserved. / 获取配置的置信度或共识策略选中的候选索引；保留原文时为 null。</summary>
         public int? SelectedCandidateIndex { get; }
         /// <summary>Gets the explicit outcome, not a correctness judgment. / 获取显式结果，不表示正确性判断。</summary>
         public OcrEnhancementRetryDecision Decision { get; }

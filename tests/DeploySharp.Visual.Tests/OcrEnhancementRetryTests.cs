@@ -32,6 +32,48 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task ConsensusConfidenceGainRequiresAgreementAcrossRecipes()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[] { RetryEnhancement(), new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2) },
+                confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConsensusConfidenceGain,
+                minimumConfidenceGain: .05f,
+                maximumRegionsPerImage: 2,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : calls == 2 ? .85f : .95f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(3, calls);
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, item.EnhancementRetry!.Decision);
+                Assert.AreEqual(1, item.EnhancementRetry.SelectedCandidateIndex);
+                Assert.AreSame(item.EnhancementRetry.Candidates[1].Recognition, item.Recognition);
+            }
+        }
+
+        [TestMethod]
+        public async Task ConsensusConfidenceGainWithOneRecipePreservesOriginal()
+        {
+            int calls = 0;
+            using OcrFixture fixture = CreateOcrFixture(
+                enhancementRetry: new OcrEnhancementRetryOptions(RetryEnhancement(), 1, OcrEnhancementSelectionPolicy.ConsensusConfidenceGain),
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : .95f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            OcrResult result = await fixture.Pipeline.RunAsync(input);
+
+            Assert.AreEqual(2, calls);
+            Assert.IsTrue(result.Regions.All(item => item.EnhancementRetry!.Decision == OcrEnhancementRetryDecision.InsufficientGain));
+            Assert.IsTrue(result.Regions.All(item => item.EnhancementRetry!.SelectedCandidateIndex == null));
+        }
+
+        [TestMethod]
         public void EnhancementRetryManyCopiesOrderedRecipesAndKeepsTheLegacyFirstRecipe()
         {
             OcrCropEnhancementOptions first = RetryEnhancement();
