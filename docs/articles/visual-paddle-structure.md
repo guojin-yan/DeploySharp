@@ -426,6 +426,8 @@ TensorRT 公式后端仍未验证。对 Plus-S 做的 Polygraphy 清理和掩码
 
 应用侧也可以复用 `PaddleDocumentFormulaQualityEvaluator`，避免各项目自行实现不一致的公式比较逻辑。`Compare(expected, actual)` 同时返回原始文本相等、仅空白规范化后的相等、Unicode 标量 CER、LaTeX 命令 token 多重集合 Precision/Recall/F1，以及大括号、`\\left`/`\\right` 和 `\\begin{...}`/`\\end{...}` 环境平衡检查；结构诊断脚本也按参考长度分层统计生成环境平衡。`NormalizeLatex` 只规范换行与空白，不改写命令。该 API 是可复现的回归/数据集诊断，不是渲染器，也不能证明数学语义等价。
 
+此外，`Compare` 提供有序词法 token 的 `TokenEditDistance` / `TokenErrorRate`。它把命令、连续数字和非空白符号保守地组成序列，用于发现命令多重集合无法发现的顺序、插入和删除错误；该指标同样不是 TeX 解析、渲染相似度或数学语义分数。
+
 ```csharp
 var quality = PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, formula.Latex);
 if (!quality.ActualBalancedDelimiters)

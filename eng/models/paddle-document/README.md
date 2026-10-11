@@ -216,6 +216,8 @@ The companion [structural-token diagnostic](verification/formula-realformula-str
 
 The reusable `PaddleDocumentFormulaQualityEvaluator` now exposes the same conservative diagnostics to applications and tests. `Compare(expected, actual)` keeps raw trimmed equality separate from whitespace-normalized equality, computes Unicode-scalar CER, command-token multiset precision/recall/F1, and checks brace, `\\left`/`\\right`, and `\\begin{...}`/`\\end{...}` balance. `NormalizeLatex` deliberately performs whitespace and line-ending normalization only; it does not rewrite commands or claim semantic equivalence. These metrics are suitable for regression gates and dataset reports, but a rendered/semantic evaluator is still required before declaring formula accuracy.
 
+The same API also reports `ExpectedTokenCount`, `ActualTokenCount`, `TokenEditDistance` and `TokenErrorRate`. This is an ordered, conservative lexical token diagnostic (commands, numeric runs and individual non-whitespace symbols); it catches ordering, insertion and deletion errors that a command multiset can miss. It intentionally does not parse TeX, render formulas or treat mathematically equivalent strings as equal, so it does not change the current formula quality status.
+
 ```csharp
 PaddleDocumentFormulaQualityMetrics quality =
     PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, result.Latex);

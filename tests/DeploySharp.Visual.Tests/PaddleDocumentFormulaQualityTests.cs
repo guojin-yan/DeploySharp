@@ -57,6 +57,30 @@ public sealed class PaddleDocumentFormulaQualityTests
     }
 
     [TestMethod]
+    public void CompareComputesOrderedTokenEditDistanceSeparatelyFromCommandOverlap()
+    {
+        PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\alpha+x", "x+\\alpha+z");
+
+        Assert.AreEqual(3, metrics.ExpectedTokenCount);
+        Assert.AreEqual(5, metrics.ActualTokenCount);
+        Assert.AreEqual(3, metrics.TokenEditDistance);
+        Assert.AreEqual(1d, metrics.TokenErrorRate, .00001);
+        Assert.AreEqual(1d, metrics.CommandF1, .00001);
+    }
+
+    [TestMethod]
+    public void OrderedTokenDiagnosticsIgnoreWhitespaceOnlyChanges()
+    {
+        PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\frac { a } { b }", "\\frac{a}{b}");
+
+        Assert.AreEqual(metrics.ExpectedTokenCount, metrics.ActualTokenCount);
+        Assert.AreEqual(0, metrics.TokenEditDistance);
+        Assert.AreEqual(0d, metrics.TokenErrorRate, .00001);
+    }
+
+    [TestMethod]
     public void CompareDetectsUnbalancedPredictionWithoutCallingItSemanticFailure()
     {
         PaddleDocumentFormulaQualityMetrics metrics = PaddleDocumentFormulaQualityEvaluator.Compare(

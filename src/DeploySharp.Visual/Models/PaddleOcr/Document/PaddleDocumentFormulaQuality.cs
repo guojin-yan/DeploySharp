@@ -18,6 +18,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             int expectedStructuralTokenCount,
             int actualStructuralTokenCount,
             int matchedStructuralTokenCount,
+            int expectedTokenCount,
+            int actualTokenCount,
+            int tokenEditDistance,
             bool expectedBalancedDelimiters,
             bool actualBalancedDelimiters,
             bool expectedBalancedEnvironments,
@@ -33,6 +36,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             ExpectedStructuralTokenCount = expectedStructuralTokenCount;
             ActualStructuralTokenCount = actualStructuralTokenCount;
             MatchedStructuralTokenCount = matchedStructuralTokenCount;
+            ExpectedTokenCount = expectedTokenCount;
+            ActualTokenCount = actualTokenCount;
+            TokenEditDistance = tokenEditDistance;
             ExpectedBalancedDelimiters = expectedBalancedDelimiters;
             ActualBalancedDelimiters = actualBalancedDelimiters;
             ExpectedBalancedEnvironments = expectedBalancedEnvironments;
@@ -57,6 +63,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int ActualStructuralTokenCount { get; }
         /// <summary>Gets multiset overlap for conservative structural tokens. / 获取保守结构 token 多重集合交集数量。</summary>
         public int MatchedStructuralTokenCount { get; }
+        /// <summary>Gets the number of ordered lexical tokens in the reference. This is a diagnostic tokenization, not a TeX parse. / 获取参考文本中的有序词法 token 数；这是诊断性分词，不是 TeX 解析。</summary>
+        public int ExpectedTokenCount { get; }
+        /// <summary>Gets the number of ordered lexical tokens in the prediction. / 获取预测文本中的有序词法 token 数。</summary>
+        public int ActualTokenCount { get; }
+        /// <summary>Gets Levenshtein edit distance over conservative ordered lexical tokens. / 获取保守有序词法 token 的 Levenshtein 编辑距离。</summary>
+        public int TokenEditDistance { get; }
+        /// <summary>Gets token error rate using the expected token count as denominator. This is not a semantic score. / 获取以参考 token 数为分母的 token 错误率；这不是语义分数。</summary>
+        public double TokenErrorRate => ExpectedTokenCount == 0 ? (ActualTokenCount == 0 ? 0d : 1d) : (double)TokenEditDistance / ExpectedTokenCount;
         /// <summary>Gets whether braces and left/right command pairs are balanced in the reference. / 获取参考文本的大括号及 left/right 命令是否平衡。</summary>
         public bool ExpectedBalancedDelimiters { get; }
         /// <summary>Gets whether braces and left/right command pairs are balanced in the prediction. / 获取预测文本的大括号及 left/right 命令是否平衡。</summary>
@@ -114,6 +128,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             IReadOnlyDictionary<string, int> actualCommands = Commands(actual);
             IReadOnlyDictionary<string, int> expectedStructure = StructuralTokens(expected);
             IReadOnlyDictionary<string, int> actualStructure = StructuralTokens(actual);
+            IReadOnlyList<string> expectedTokens = LexicalTokens(expected);
+            IReadOnlyList<string> actualTokens = LexicalTokens(actual);
             int matched = 0;
             foreach (KeyValuePair<string, int> pair in expectedCommands)
             {
@@ -126,6 +142,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 string.Equals(normalizedExpected, normalizedActual, StringComparison.Ordinal),
                 Count(expectedCommands), Count(actualCommands), matched,
                 Count(expectedStructure), Count(actualStructure), matchedStructure,
+                expectedTokens.Count, actualTokens.Count, EditDistance(expectedTokens, actualTokens),
                 BalancedDelimiters(expected), BalancedDelimiters(actual),
                 BalancedEnvironments(expected), BalancedEnvironments(actual),
                 OcrTextAccuracy.Compare(expected, actual),
@@ -220,6 +237,62 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 else Add(result, value.Substring(start, 1) + value[index]);
             }
             return result;
+        }
+
+        /// <summary>Tokenizes a formula into an ordered, conservative lexical sequence. It intentionally does not parse TeX or normalize mathematical equivalence. / 将公式分成保守的有序词法序列；有意不解析 TeX，也不规范数学等价写法。</summary>
+        private static IReadOnlyList<string> LexicalTokens(string value)
+        {
+            var result = new List<string>();
+            for (int index = 0; index < value.Length; index++)
+            {
+                char current = value[index];
+                if (char.IsWhiteSpace(current)) continue;
+                if (current == '\\')
+                {
+                    int start = index++;
+                    if (index >= value.Length) { result.Add(value.Substring(start, 1)); continue; }
+                    if (char.IsLetter(value[index]))
+                    {
+                        while (index + 1 < value.Length && char.IsLetter(value[index + 1])) index++;
+                        result.Add(value.Substring(start, index - start + 1));
+                    }
+                    else result.Add(value.Substring(start, 1) + value[index]);
+                    continue;
+                }
+                if (char.IsDigit(current))
+                {
+                    int start = index;
+                    while (index + 1 < value.Length && char.IsDigit(value[index + 1])) index++;
+                    result.Add(value.Substring(start, index - start + 1));
+                    continue;
+                }
+                result.Add(current.ToString());
+            }
+            return result;
+        }
+
+        private static int EditDistance(IReadOnlyList<string> expected, IReadOnlyList<string> actual)
+        {
+            if (expected.Count == 0) return actual.Count;
+            if (actual.Count == 0) return expected.Count;
+            var previous = new int[actual.Count + 1];
+            var current = new int[actual.Count + 1];
+            for (int column = 0; column <= actual.Count; column++) previous[column] = column;
+            for (int row = 1; row <= expected.Count; row++)
+            {
+                current[0] = row;
+                for (int column = 1; column <= actual.Count; column++)
+                {
+                    int substitution = previous[column - 1] + (string.Equals(expected[row - 1], actual[column - 1], StringComparison.Ordinal) ? 0 : 1);
+                    int insertion = current[column - 1] + 1;
+                    int deletion = previous[column] + 1;
+                    current[column] = Math.Min(substitution, Math.Min(insertion, deletion));
+                }
+                int[] swap = previous;
+                previous = current;
+                current = swap;
+            }
+            return previous[actual.Count];
         }
 
         private static void Add(Dictionary<string, int> values, string token)
