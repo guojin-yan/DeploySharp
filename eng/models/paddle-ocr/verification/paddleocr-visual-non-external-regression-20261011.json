@@ -1,15 +1,15 @@
 {
   "schemaVersion": "deploysharp-paddleocr-visual-regression-v1",
   "generatedUtc": "2026-10-11T05:49:20Z",
-  "sourceRevision": "d01a48d",
+  "sourceRevision": "ceb917b",
   "workingTreeWasDirty": true,
   "command": "dotnet test tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj -c Release --no-restore --filter TestCategory!=ExternalModels",
   "targetFramework": "net10.0",
   "result": {
-    "passed": 513,
+    "passed": 515,
     "failed": 0,
     "skipped": 5,
-    "total": 518
+    "total": 520
   },
   "skipped": [
     "Whisper checkpoint-gated tokenizer and log-mel tests",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "deploysharp-paddleocr-ppstructure-regression-v2",
-  "generatedUtc": "2026-10-11T05:52:00Z",
-  "sourceRevision": "1e80df5e9d0aa03b4b0ba32ebb690a74d028b884",
+  "generatedUtc": "2026-10-11T06:47:30Z",
+  "sourceRevision": "ceb917b",
   "workingTreeWasDirty": true,
   "environment": {
     "os": "Microsoft Windows NT 10.0.26200.0",
@@ -15,9 +15,9 @@
     { "project": "DeploySharp.Core.Tests", "passed": 33, "skipped": 0, "failed": 0, "total": 33 },
     { "project": "DeploySharp.ModelFactory.Tests", "passed": 63, "skipped": 2, "failed": 0, "total": 65 },
     { "project": "DeploySharp.ModelPack.Json.Tests", "passed": 29, "skipped": 3, "failed": 0, "total": 32 },
-    { "project": "DeploySharp.Visual.Tests", "passed": 513, "skipped": 5, "failed": 0, "total": 518 },
+    { "project": "DeploySharp.Visual.Tests", "passed": 515, "skipped": 5, "failed": 0, "total": 520 },
     { "project": "DeploySharp.Visual.OpenCV.Tests", "passed": 99, "skipped": 4, "failed": 0, "total": 103 }
   ],
-  "total": { "passed": 737, "skipped": 14, "failed": 0, "tests": 751 },
+  "total": { "passed": 739, "skipped": 14, "failed": 0, "tests": 753 },
   "boundary": "Non-external regression snapshot from a dirty working tree. Skips are explicit environment/checkpoint gates and do not imply backend support, model quality, clean-checkout reproducibility, or performance."
 }
