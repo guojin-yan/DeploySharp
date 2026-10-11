@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-visual-regression-v1",
+  "generatedUtc": "2026-10-11T05:49:20Z",
+  "sourceRevision": "d01a48d",
+  "workingTreeWasDirty": true,
+  "command": "dotnet test tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj -c Release --no-restore --filter TestCategory!=ExternalModels",
+  "targetFramework": "net10.0",
+  "result": {
+    "passed": 513,
+    "failed": 0,
+    "skipped": 5,
+    "total": 518
+  },
+  "skipped": [
+    "Whisper checkpoint-gated tokenizer and log-mel tests",
+    "Chart2Table four-graph checkpoint-gated integration",
+    "Qwen tiktoken checkpoint-gated integration"
+  ],
+  "boundary": "Non-external Visual regression only. Skipped external-model tests are environment-gated and do not count as backend support or model quality evidence."
+}
