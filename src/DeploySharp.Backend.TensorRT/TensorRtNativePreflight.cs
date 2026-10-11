@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.ComponentModel;
 using JYPPX.DeploySharp.Models;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
@@ -9,11 +13,27 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
     internal static class TensorRtNativePreflight
     {
         private static readonly object Sync = new object();
+        private static readonly HashSet<string> RegisteredDependencyDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<IntPtr> DependencyDirectoryCookies = new List<IntPtr>();
         private static bool _checked;
         private static TensorRtBackendException? _failure;
 
         public static void Validate(ModelId modelId)
         {
+            try
+            {
+                RegisterWindowsDependencyDirectories();
+            }
+            catch (Exception exception) when (exception is Win32Exception || exception is IOException || exception is UnauthorizedAccessException)
+            {
+                throw new TensorRtBackendException(
+                    TensorRtErrorCodes.NativeRuntimeUnavailable,
+                    "TensorRT native dependency directories could not be registered with the Windows loader.",
+                    exception,
+                    modelId,
+                    operation: "native-preflight",
+                    technicalDetails: exception.GetType().FullName + ": " + exception.Message);
+            }
             lock (Sync)
             {
                 if (!_checked)
@@ -25,6 +45,81 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             if (_failure != null)
                 throw new TensorRtBackendException(_failure.ErrorCode, _failure.Message, _failure, modelId, operation: "native-preflight", technicalDetails: _failure.TechnicalDetails);
         }
+
+        private static void RegisterWindowsDependencyDirectories()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
+            lock (Sync)
+            {
+                AddRootAndSubdirectory(Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH"), includeRoot: true, "");
+                AddRootAndSubdirectory(Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT"), includeRoot: false, "bin", "lib");
+                AddRootAndSubdirectory(Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT"), includeRoot: false, "bin", Path.Combine("bin", "x64"));
+                AddRootAndSubdirectory(Environment.GetEnvironmentVariable("CUDA_PATH"), includeRoot: false, "bin", Path.Combine("bin", "x64"));
+                AddRootAndSubdirectory(Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT"), includeRoot: true, "bin");
+
+                // cuDNN commonly lives beside, rather than beneath, CUDA_PATH.
+                // Register only PATH entries that visibly contain cuDNN DLLs.
+                string? processPath = Environment.GetEnvironmentVariable("PATH");
+                if (string.IsNullOrWhiteSpace(processPath)) return;
+                foreach (string entry in processPath.Split(Path.PathSeparator))
+                {
+                    string directory = entry.Trim().Trim('"');
+                    if (directory.Length == 0 ||
+                        (!File.Exists(Path.Combine(directory, "cudnn64_9.dll")) && !File.Exists(Path.Combine(directory, "cudnn64_8.dll")))) continue;
+                    AddDirectory(directory);
+                }
+            }
+        }
+
+        private static void AddRootAndSubdirectory(string? configuredPath, bool includeRoot, params string[] subdirectories)
+        {
+            if (string.IsNullOrWhiteSpace(configuredPath)) return;
+            string root = configuredPath.Trim().Trim('"');
+            if (File.Exists(root)) root = Path.GetDirectoryName(root) ?? string.Empty;
+            if (root.Length == 0) return;
+            if (includeRoot) AddDirectory(root);
+            foreach (string subdirectory in subdirectories)
+                AddDirectory(subdirectory.Length == 0 ? root : Path.Combine(root, subdirectory));
+        }
+
+        private static void AddDirectory(string directory)
+        {
+            if (!Directory.Exists(directory)) return;
+            string fullPath = Path.GetFullPath(directory);
+            if (!RegisteredDependencyDirectories.Add(fullPath)) return;
+            IntPtr cookie = AddDllDirectory(fullPath);
+            if (cookie == IntPtr.Zero)
+            {
+                RegisteredDependencyDirectories.Remove(fullPath);
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not register a TensorRT native dependency directory with the Windows DLL loader: " + fullPath);
+            }
+
+            // TensorRT and CUDA load some transitive libraries lazily. Keep the
+            // directory cookies alive for the process lifetime.
+            DependencyDirectoryCookies.Add(cookie);
+            PrependProcessSearchPath(fullPath);
+        }
+
+        private static void PrependProcessSearchPath(string directory)
+        {
+            string current = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            string[] entries = current.Split(Path.PathSeparator);
+            var updated = new List<string> { directory };
+            foreach (string entry in entries)
+            {
+                string candidate = entry.Trim().Trim('"');
+                if (candidate.Length == 0 || string.Equals(candidate, directory, StringComparison.OrdinalIgnoreCase)) continue;
+                bool alreadyPresent = false;
+                try { alreadyPresent = string.Equals(Path.GetFullPath(candidate), directory, StringComparison.OrdinalIgnoreCase); }
+                catch (Exception) { }
+                if (!alreadyPresent) updated.Add(candidate);
+            }
+            Environment.SetEnvironmentVariable("PATH", string.Join(Path.PathSeparator.ToString(), updated));
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "AddDllDirectory")]
+        private static extern IntPtr AddDllDirectory(string newDirectory);
 
         private static TensorRtBackendException? ProbeDriver()
         {

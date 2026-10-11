@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T07:12:43.072305+00:00",
+  "execution": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "architecture": "x64",
+    "framework": ".NET 10.0.12"
+  },
+  "backend": {
+    "tensorRtApi": 10,
+    "runtime": "JYPPX_NATIVE_BRIDGE_PATH=jyppx.tensorrt.csharp.api.runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge/4.0.0;JYPPX_TENSORRT_ROOT=D:/Program Files/TensorRT-10.11.0.33-cu12;JYPPX_CUDA_ROOT=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9;JYPPX_CUDNN_ROOT=D:/Program Files/cuDNN-9.22.0-cuda12.9",
+    "architecture": "compute_86"
+  },
+  "model": {
+    "id": "paddle-table/pp-lcnet-x1-0-table-cls",
+    "onnxSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+    "engineSha256": "c2d1fff5171797cf79016c02c6f9f5ec3440afbcc50d5a546c62c9796b28e395",
+    "engineBytes": 10929788,
+    "engineSource": "deploysharp-builder"
+  },
+  "image": {
+    "path": "E:/Model/PaddleDocument/validation/table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+    "regions": [
+      { "X": 0, "Y": 0, "Width": 551, "Height": 66, "Right": 551, "Bottom": 66 },
+      { "X": 0, "Y": 66, "Width": 551, "Height": 66, "Right": 551, "Bottom": 132 }
+    ]
+  },
+  "batch": {
+    "size": 2,
+    "inputShape": "[2,3,224,224]",
+    "ortOutputShape": "[2,2]",
+    "tensorRtOutputShape": "[2,2]",
+    "inputRowSha256": [
+      "2ca509ca4d31f954c69f29f8037e99fd1a409e7c143a7c95186594bc7b5dde30",
+      "740c01d00494ee45e4469edd968d0a8843e098161cc83087bfe0b0e4ea316aee"
+    ]
+  },
+  "rows": [
+    {
+      "row": 0,
+      "ortLabel": "wired_table",
+      "tensorRtLabel": "wired_table",
+      "ortScore": 0.9560565,
+      "tensorRtScore": 0.9561116,
+      "rawOutputMaxAbsoluteDifference": 0.000055167824029922485,
+      "tolerance": 0.01,
+      "ortRawOutputSha256": "1d8fc76df587e418d52e18d1e5a267525170766ccdfc2202ceba5fe160f0aaf7",
+      "tensorRtRawOutputSha256": "7664b269ddc4cb2e34e1eb45131e938b27fd7bcadc15a08cff9c5d16ba9233bc"
+    },
+    {
+      "row": 1,
+      "ortLabel": "wired_table",
+      "tensorRtLabel": "wired_table",
+      "ortScore": 0.9477461,
+      "tensorRtScore": 0.9471061,
+      "rawOutputMaxAbsoluteDifference": 0.0006399936974048615,
+      "tolerance": 0.01,
+      "ortRawOutputSha256": "9ad281138b326e08f6d78198470b66385be4ac2eeccf64c5d6f0db17f91dcd32",
+      "tensorRtRawOutputSha256": "4c775dc85bc1b2e3faa46c870186d4a2c3f06e5252740d50da6b508fb41e7891"
+    }
+  ],
+  "boundary": "Exact dynamic batch profile, row mapping and bounded TensorRT-to-ORT raw-output parity for this PP-LCNet table classifier artifact on one Windows GPU/runtime. The top/bottom image regions are execution probes without classification ground truth; no accuracy or throughput claim is made."
+}

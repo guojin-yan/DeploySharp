@@ -6,7 +6,7 @@ This is a coverage index for PP-Structure assets whose exported graph exposes a 
 
 | Model family | Batch contract exercised | ORT CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | Evidence boundary |
 | --- | --- | :---: | :---: | :---: | :---: | --- |
-| PP-LCNet document orientation / table classification | batch=2, distinct rows | ✓ | ✓ | ✓ | △ | TensorRT vendor engine build succeeded, but the DeploySharp batch=2 bridge/runtime path is blocked by `0xC06D007E`; no inference evidence. |
+| PP-LCNet document orientation / table classification | batch=2, distinct rows | ✓ | ✓ | ✓ | △/✓* | Table classification now has exact DeploySharp TRT10.11 batch=2 parity evidence after loader-path registration; orientation and the remaining PP-LCNet combinations remain unverified. See the 2026-10-11 table-classification report. |
 | PP-DocLayout-L / PP-DocLayout-Plus-L / PP-DocBlockLayout | batch=2, auxiliary `im_shape`/`scale_factor` where applicable | ✓ | ✓ | ✗ | △ | OpenCV batch=2 fails with `DS-OCV-8004`; this does not change existing single-image OpenCV entries. |
 | RT-DETR-H layout (3-class / 17-class) | batch=2, Paddle NMS and `bbox_num` row split | ✓ | ✓ | ✗ | △ | OpenCV `forward_many` fails with `DS-OCV-8004`; no TensorRT batch=2 evidence. |
 | RT-DETR-L table cell (wired / wireless) | batch=2, three-input geometry contract and Paddle NMS | ✓ | ✓ | ✗ | △ | OpenCV batch=2 fails with `DS-OCV-8004`; TensorRT batch=1/engine evidence must not be promoted to batch=2. |
@@ -29,5 +29,7 @@ This is a coverage index for PP-Structure assets whose exported graph exposes a 
 
 ## Interpretation
 
-The summary closes the **inventory and representative execution-coverage** item for dynamic PP-Structure Batch on this Windows host. It does not close the remaining TensorRT dynamic-batch bridge failure, OpenCV importer limitations, formula quality, long-text quality, model-level accuracy, cross-device performance, or long-running stability gates. Static exports remain valid through independent session/page concurrency and are not silently relabelled as model Batch support.
+The summary closes the **inventory and representative execution-coverage** item for dynamic PP-Structure Batch on this Windows host. The exact PP-LCNet table-classification TensorRT combination is now a checked execution/parity row; the orientation row and all other TensorRT dynamic-batch families remain `△`. OpenCV importer limitations, formula quality, long-text quality, model-level accuracy, cross-device performance, and long-running stability gates remain open. Static exports remain valid through independent session/page concurrency and are not silently relabelled as model Batch support.
+
+`*` TensorRT is shown as `△/✓` at the grouped row because only the table-classification artifact has a DeploySharp TRT10.11 batch=2 result; do not read it as a blanket PP-Structure TensorRT Batch checkmark. Evidence: [`paddle-document-table-classification-tensorrt-dynamic-batch-20261011.md`](paddle-document-table-classification-tensorrt-dynamic-batch-20261011.md).
 
