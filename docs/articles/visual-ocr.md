@@ -282,6 +282,10 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 `PreserveOriginal` 适合先收集真实现场证据，最终文字保持首轮结果但保留每个候选的文字、token、置信度、窗口和裁剪诊断。`ConfidenceGain` 会在所有候选完成后，从非空且超过原文 `MinimumConfidenceGain` 的候选中选择置信度最高者；`ConsensusConfidenceGain` 还要求最高候选的文字至少被另一配方逐字复现，避免把单一增强配方的置信度误当成正确性。两者都不是准确率判定，也不理解业务字段语义。多配方按顺序串行执行以保持确定性，墙钟 `Recognition` 只记录一次外层耗时，详细 work 计时和 `RecognitionBatchCount` 累加每个配方的真实 batch；即使保留原文，也应将额外成本纳入 P50/P95 基准。
 
+### B2/B3 安全与成本证据
+
+增强策略不能只看置信度提升。仓库脚本 `eng/models/paddle-ocr/scripts/Summarize-OcrEnhancementEvidence.py` 可对集成测试输出的逐行 JSON 计算：候选被选中的数量、候选 CER/WER 高于原文的误纠率，以及全部记录和已选候选的 P50/P95 额外耗时。例如 [2026-10-11 汇总](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-cost-20261011.md) 中，SROIE parent-linked crop 的已选子集没有 CER 变差行，而 FUNSD word-crop 子集有 `5/14` 行 CER 变差（`35.71%`）。这正是保持 `ConfidenceGain` 和 `ConsensusConfidenceGain` 显式 opt-in 的依据；该报告是有标签 crop 的边界诊断，不是页/行级鲁棒性、准确率或默认阈值批准。新增退化数据后应重新生成机器 JSON 与 Markdown，并把最大允许误纠率、延迟预算和有效样本量作为业务决策门，而不是只比较平均置信度。
+
 多配方覆盖全部 `OcrCropEnhancementMode`，包括 `LocalUpscale`、`ShadowNormalize` 和 `JpegArtifactSuppress`；每种模式仍只按自身显式统计门限决定是否执行，不自动判断真实退化类别，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain` 或更保守的 `ConsensusConfidenceGain`；后者需要至少两个配方，额外成本和候选不一致率必须单独纳入评测。
 
 验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。

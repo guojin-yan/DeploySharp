@@ -1,0 +1,795 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v1",
+  "generatedUtc": "2026-10-11T05:36:18.702804+00:00",
+  "backends": [
+    {
+      "backend": "onnxruntime",
+      "source": "eng/models/paddle-ocr/verification/synthetic-degraded-b2b3-20261002-onnxruntime.json",
+      "sourceSha256": "4182d6d978c176177b26bbc39d82fa3e79b1d0c29e764cb757028970871d6ca7",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 60,
+        "candidateAvailable": 38,
+        "candidateSelected": 22,
+        "insufficientGain": 16,
+        "noDetectedRegion": 22,
+        "selectedEqualCaseFoldedCer": 22,
+        "selectedWorseCaseFoldedCer": 0,
+        "selectedWorseCaseFoldedWer": 0,
+        "selectedFalseCorrectionRateByCer": 0.0,
+        "selectedFalseCorrectionRateByWer": 0.0,
+        "latencyMs": {
+          "all": {
+            "count": 60,
+            "mean": 80.17654833333333,
+            "p50": 99.03450000000001,
+            "p95": 154.960815
+          },
+          "selected": {
+            "count": 22,
+            "mean": 120.17676363636365,
+            "p50": 117.3792,
+            "p95": 164.06628
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 10,
+            "candidateAvailable": 3,
+            "candidateSelected": 2,
+            "insufficientGain": 1,
+            "noDetectedRegion": 7,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 46.3073,
+                "p50": 12.2349,
+                "p95": 126.5596
+              },
+              "selected": {
+                "count": 2,
+                "mean": 120.3777,
+                "p50": 120.3777,
+                "p95": 125.63352
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 10,
+            "candidateAvailable": 5,
+            "candidateSelected": 4,
+            "insufficientGain": 1,
+            "noDetectedRegion": 5,
+            "selectedEqualCaseFoldedCer": 4,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 67.94584,
+                "p50": 54.814600000000006,
+                "p95": 149.85
+              },
+              "selected": {
+                "count": 4,
+                "mean": 129.40005,
+                "p50": 130.27385,
+                "p95": 155.9022
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 10,
+            "candidateAvailable": 9,
+            "candidateSelected": 6,
+            "insufficientGain": 3,
+            "noDetectedRegion": 1,
+            "selectedEqualCaseFoldedCer": 6,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 117.48261,
+                "p50": 120.29235,
+                "p95": 172.71479499999998
+              },
+              "selected": {
+                "count": 6,
+                "mean": 131.06368333333333,
+                "p50": 120.29235,
+                "p95": 175.76137500000002
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 10,
+            "candidateAvailable": 6,
+            "candidateSelected": 2,
+            "insufficientGain": 4,
+            "noDetectedRegion": 4,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 67.5961,
+                "p50": 95.39545,
+                "p95": 119.07001499999998
+              },
+              "selected": {
+                "count": 2,
+                "mean": 110.9024,
+                "p50": 110.9024,
+                "p95": 122.49898999999999
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 10,
+            "candidateAvailable": 8,
+            "candidateSelected": 6,
+            "insufficientGain": 2,
+            "noDetectedRegion": 2,
+            "selectedEqualCaseFoldedCer": 6,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 93.26306,
+                "p50": 107.89335,
+                "p95": 138.32288
+              },
+              "selected": {
+                "count": 6,
+                "mean": 106.80475,
+                "p50": 107.89335,
+                "p95": 127.4073
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 10,
+            "candidateAvailable": 7,
+            "candidateSelected": 2,
+            "insufficientGain": 5,
+            "noDetectedRegion": 3,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 88.46437999999999,
+                "p50": 112.01310000000001,
+                "p95": 148.023375
+              },
+              "selected": {
+                "count": 2,
+                "mean": 118.2589,
+                "p50": 118.2589,
+                "p95": 137.64544
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    },
+    {
+      "backend": "openvino",
+      "source": "eng/models/paddle-ocr/verification/synthetic-degraded-b2b3-20261002-openvino.json",
+      "sourceSha256": "256ccea48f04f24d491865d33f44bc6de327febb3d8f20267a5a1fba25dbcb9d",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 60,
+        "candidateAvailable": 38,
+        "candidateSelected": 22,
+        "insufficientGain": 16,
+        "noDetectedRegion": 22,
+        "selectedEqualCaseFoldedCer": 22,
+        "selectedWorseCaseFoldedCer": 0,
+        "selectedWorseCaseFoldedWer": 0,
+        "selectedFalseCorrectionRateByCer": 0.0,
+        "selectedFalseCorrectionRateByWer": 0.0,
+        "latencyMs": {
+          "all": {
+            "count": 60,
+            "mean": 35.40612,
+            "p50": 37.27235,
+            "p95": 84.48047999999996
+          },
+          "selected": {
+            "count": 22,
+            "mean": 48.92148181818182,
+            "p50": 42.83855,
+            "p95": 69.01304999999999
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 10,
+            "candidateAvailable": 3,
+            "candidateSelected": 2,
+            "insufficientGain": 1,
+            "noDetectedRegion": 7,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 16.95583,
+                "p50": 6.94965,
+                "p95": 48.04087999999998
+              },
+              "selected": {
+                "count": 2,
+                "mean": 47.115,
+                "p50": 47.115,
+                "p95": 55.44792
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 10,
+            "candidateAvailable": 5,
+            "candidateSelected": 4,
+            "insufficientGain": 1,
+            "noDetectedRegion": 5,
+            "selectedEqualCaseFoldedCer": 4,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 26.030880000000003,
+                "p50": 20.9331,
+                "p95": 58.85185499999999
+              },
+              "selected": {
+                "count": 4,
+                "mean": 46.545025,
+                "p50": 44.4553,
+                "p95": 61.931685
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 10,
+            "candidateAvailable": 9,
+            "candidateSelected": 6,
+            "insufficientGain": 3,
+            "noDetectedRegion": 1,
+            "selectedEqualCaseFoldedCer": 6,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 49.46641,
+                "p50": 51.7111,
+                "p95": 74.81782999999997
+              },
+              "selected": {
+                "count": 6,
+                "mean": 47.523599999999995,
+                "p50": 47.08615,
+                "p95": 60.74235
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 10,
+            "candidateAvailable": 6,
+            "candidateSelected": 2,
+            "insufficientGain": 4,
+            "noDetectedRegion": 4,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 28.89178,
+                "p50": 36.292699999999996,
+                "p95": 56.343689999999995
+              },
+              "selected": {
+                "count": 2,
+                "mean": 36.40105,
+                "p50": 36.40105,
+                "p95": 38.819125
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 10,
+            "candidateAvailable": 8,
+            "candidateSelected": 6,
+            "insufficientGain": 2,
+            "noDetectedRegion": 2,
+            "selectedEqualCaseFoldedCer": 6,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 49.36922,
+                "p50": 41.785250000000005,
+                "p95": 102.905215
+              },
+              "selected": {
+                "count": 6,
+                "mean": 56.44885,
+                "p50": 48.106300000000005,
+                "p95": 92.7301
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 10,
+            "candidateAvailable": 7,
+            "candidateSelected": 2,
+            "insufficientGain": 5,
+            "noDetectedRegion": 3,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 10,
+                "mean": 41.7226,
+                "p50": 45.573049999999995,
+                "p95": 81.15288999999996
+              },
+              "selected": {
+                "count": 2,
+                "mean": 49.612849999999995,
+                "p50": 49.612849999999995,
+                "p95": 62.281745
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    },
+    {
+      "backend": "onnxruntime",
+      "source": "eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b2b3-20261002-onnxruntime.json",
+      "sourceSha256": "3a907c40cda2af1e86eec0a52936ee387d78172766df990b8a2e60ed1c6838a5",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 192,
+        "candidateAvailable": 45,
+        "candidateSelected": 14,
+        "insufficientGain": 33,
+        "noDetectedRegion": 145,
+        "selectedEqualCaseFoldedCer": 8,
+        "selectedWorseCaseFoldedCer": 5,
+        "selectedWorseCaseFoldedWer": 2,
+        "selectedFalseCorrectionRateByCer": 0.35714285714285715,
+        "selectedFalseCorrectionRateByWer": 0.14285714285714285,
+        "latencyMs": {
+          "all": {
+            "count": 192,
+            "mean": 30.5594,
+            "p50": 7.226100000000001,
+            "p95": 119.99130499999997
+          },
+          "selected": {
+            "count": 14,
+            "mean": 112.32389285714285,
+            "p50": 114.79384999999999,
+            "p95": 168.716845
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 32,
+            "candidateAvailable": 4,
+            "candidateSelected": 3,
+            "insufficientGain": 3,
+            "noDetectedRegion": 26,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.3333333333333333,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 26.032565625,
+                "p50": 6.9906500000000005,
+                "p95": 110.036515
+              },
+              "selected": {
+                "count": 3,
+                "mean": 89.53763333333335,
+                "p50": 87.7531,
+                "p95": 119.97625
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 32,
+            "candidateAvailable": 1,
+            "candidateSelected": 0,
+            "insufficientGain": 1,
+            "noDetectedRegion": 31,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": null,
+            "selectedFalseCorrectionRateByWer": null,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 14.664990625,
+                "p50": 6.139150000000001,
+                "p95": 31.887375000000002
+              },
+              "selected": {
+                "count": 0,
+                "mean": null,
+                "p50": null,
+                "p95": null
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 32,
+            "candidateAvailable": 12,
+            "candidateSelected": 4,
+            "insufficientGain": 8,
+            "noDetectedRegion": 20,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 40.8737,
+                "p50": 8.1373,
+                "p95": 123.09878
+              },
+              "selected": {
+                "count": 4,
+                "mean": 114.539575,
+                "p50": 116.0903,
+                "p95": 158.05732999999998
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 32,
+            "candidateAvailable": 2,
+            "candidateSelected": 1,
+            "insufficientGain": 1,
+            "noDetectedRegion": 30,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 17.358631250000002,
+                "p50": 4.59075,
+                "p95": 78.17306499999995
+              },
+              "selected": {
+                "count": 1,
+                "mean": 174.2826,
+                "p50": 174.2826,
+                "p95": 174.2826
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 32,
+            "candidateAvailable": 12,
+            "candidateSelected": 4,
+            "insufficientGain": 8,
+            "noDetectedRegion": 20,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 38.8892625,
+                "p50": 9.27835,
+                "p95": 121.89178999999999
+              },
+              "selected": {
+                "count": 4,
+                "mean": 116.260975,
+                "p50": 122.23259999999999,
+                "p95": 159.70801999999998
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 32,
+            "candidateAvailable": 14,
+            "candidateSelected": 2,
+            "insufficientGain": 12,
+            "noDetectedRegion": 18,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedWer": 2,
+            "selectedFalseCorrectionRateByCer": 1.0,
+            "selectedFalseCorrectionRateByWer": 1.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 45.53725,
+                "p50": 17.51115,
+                "p95": 104.10035500000001
+              },
+              "selected": {
+                "count": 2,
+                "mean": 103.2184,
+                "p50": 103.2184,
+                "p95": 104.24476
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    },
+    {
+      "backend": "openvino",
+      "source": "eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b2b3-20261002-openvino.json",
+      "sourceSha256": "e43ab677368db4ce9e4d60d8baec03f35f489136098f9826a74fd90f9fe02faa",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 192,
+        "candidateAvailable": 45,
+        "candidateSelected": 14,
+        "insufficientGain": 33,
+        "noDetectedRegion": 145,
+        "selectedEqualCaseFoldedCer": 8,
+        "selectedWorseCaseFoldedCer": 5,
+        "selectedWorseCaseFoldedWer": 2,
+        "selectedFalseCorrectionRateByCer": 0.35714285714285715,
+        "selectedFalseCorrectionRateByWer": 0.14285714285714285,
+        "latencyMs": {
+          "all": {
+            "count": 192,
+            "mean": 12.2045453125,
+            "p50": 3.69225,
+            "p95": 41.37422999999998
+          },
+          "selected": {
+            "count": 14,
+            "mean": 45.89629285714285,
+            "p50": 35.071799999999996,
+            "p95": 97.15264499999998
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 32,
+            "candidateAvailable": 4,
+            "candidateSelected": 3,
+            "insufficientGain": 3,
+            "noDetectedRegion": 26,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.3333333333333333,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 9.003015625,
+                "p50": 3.64235,
+                "p95": 40.12199
+              },
+              "selected": {
+                "count": 3,
+                "mean": 34.051433333333335,
+                "p50": 38.5055,
+                "p95": 41.73848
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 32,
+            "candidateAvailable": 1,
+            "candidateSelected": 0,
+            "insufficientGain": 1,
+            "noDetectedRegion": 31,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": null,
+            "selectedFalseCorrectionRateByWer": null,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 6.0561625,
+                "p50": 3.2615499999999997,
+                "p95": 4.429695
+              },
+              "selected": {
+                "count": 0,
+                "mean": null,
+                "p50": null,
+                "p95": null
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 32,
+            "candidateAvailable": 12,
+            "candidateSelected": 4,
+            "insufficientGain": 8,
+            "noDetectedRegion": 20,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 13.440356249999999,
+                "p50": 3.9866,
+                "p95": 31.052165
+              },
+              "selected": {
+                "count": 4,
+                "mean": 38.4216,
+                "p50": 27.875100000000003,
+                "p95": 65.66086999999997
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 32,
+            "candidateAvailable": 2,
+            "candidateSelected": 1,
+            "insufficientGain": 1,
+            "noDetectedRegion": 30,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 6.816340625,
+                "p50": 3.2921,
+                "p95": 16.57688499999998
+              },
+              "selected": {
+                "count": 1,
+                "mean": 84.0722,
+                "p50": 84.0722,
+                "p95": 84.0722
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 32,
+            "candidateAvailable": 12,
+            "candidateSelected": 4,
+            "insufficientGain": 8,
+            "noDetectedRegion": 20,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 18.410309375,
+                "p50": 4.20575,
+                "p95": 41.65953
+              },
+              "selected": {
+                "count": 4,
+                "mean": 55.15395,
+                "p50": 36.2102,
+                "p95": 109.34550999999996
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 32,
+            "candidateAvailable": 14,
+            "candidateSelected": 2,
+            "insufficientGain": 12,
+            "noDetectedRegion": 18,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedWer": 2,
+            "selectedFalseCorrectionRateByCer": 1.0,
+            "selectedFalseCorrectionRateByWer": 1.0,
+            "latencyMs": {
+              "all": {
+                "count": 32,
+                "mean": 19.5010875,
+                "p50": 4.2119,
+                "p95": 49.318389999999994
+              },
+              "selected": {
+                "count": 2,
+                "mean": 41.0097,
+                "p50": 41.0097,
+                "p95": 51.931830000000005
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    }
+  ],
+  "boundary": "Controlled parent-linked crop evidence. False-correction and latency figures are diagnostic gates, not page/line accuracy, robustness, or a default-policy approval."
+}
