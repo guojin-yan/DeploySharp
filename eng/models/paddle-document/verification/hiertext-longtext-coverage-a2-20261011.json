@@ -1,0 +1,265 @@
+{
+  "schemaVersion": "deploysharp-hiertext-longtext-coverage-v1",
+  "generatedUtc": "2026-10-11T02:39:12.9877238+00:00",
+  "source": {
+    "root": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests",
+    "manifestFiles": [
+      "hiertext-validation-sample-002.jsonl",
+      "hiertext-validation-sample-003.jsonl"
+    ],
+    "pageCount": 34,
+    "licenseBoundary": "Manifest metadata and source images remain outside this repository; this is an inventory, not a redistributed dataset."
+  },
+  "thresholds": {
+    "naturalContinuousLineCharacters": 3200,
+    "pageAggregateCharacters": 3200
+  },
+  "summary": {
+    "maximumAnnotatedLineCharacters": 132,
+    "maximumPageAggregateCharacters": 2335,
+    "pagesWithNaturalLineAtLeast3200": 0,
+    "pagesWithAggregateAtLeast3200": 0,
+    "naturalContinuousLongTextAvailable": false
+  },
+  "pages": [
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-5c4d5de59518fe4d",
+      "instanceCount": 12,
+      "pageCharacterCount": 67,
+      "maximumAnnotatedLineCharacters": 10
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-d989ba898a556309",
+      "instanceCount": 63,
+      "pageCharacterCount": 717,
+      "maximumAnnotatedLineCharacters": 31
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-c237f9cec8e311b0",
+      "instanceCount": 20,
+      "pageCharacterCount": 339,
+      "maximumAnnotatedLineCharacters": 49
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-c2291a13c825966f",
+      "instanceCount": 30,
+      "pageCharacterCount": 484,
+      "maximumAnnotatedLineCharacters": 27
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-b4cc87af903b8270",
+      "instanceCount": 35,
+      "pageCharacterCount": 200,
+      "maximumAnnotatedLineCharacters": 20
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-a2364c31de73114d",
+      "instanceCount": 34,
+      "pageCharacterCount": 263,
+      "maximumAnnotatedLineCharacters": 27
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-973b7f62446f02cd",
+      "instanceCount": 61,
+      "pageCharacterCount": 545,
+      "maximumAnnotatedLineCharacters": 19
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-945782e585e04e0e",
+      "instanceCount": 22,
+      "pageCharacterCount": 157,
+      "maximumAnnotatedLineCharacters": 44
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-870b721faf7b475d",
+      "instanceCount": 59,
+      "pageCharacterCount": 162,
+      "maximumAnnotatedLineCharacters": 29
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-86760f63da399e07",
+      "instanceCount": 72,
+      "pageCharacterCount": 201,
+      "maximumAnnotatedLineCharacters": 25
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-83499e8f67512938",
+      "instanceCount": 65,
+      "pageCharacterCount": 100,
+      "maximumAnnotatedLineCharacters": 9
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-7d9138e29dd9b711",
+      "instanceCount": 52,
+      "pageCharacterCount": 140,
+      "maximumAnnotatedLineCharacters": 19
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-7a7d0f471fe900e2",
+      "instanceCount": 64,
+      "pageCharacterCount": 2335,
+      "maximumAnnotatedLineCharacters": 132
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-62bd21d5af1428d9",
+      "instanceCount": 15,
+      "pageCharacterCount": 89,
+      "maximumAnnotatedLineCharacters": 12
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-4e0277825c80fed8",
+      "instanceCount": 34,
+      "pageCharacterCount": 322,
+      "maximumAnnotatedLineCharacters": 25
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-466c6ce044b8bd46",
+      "instanceCount": 25,
+      "pageCharacterCount": 201,
+      "maximumAnnotatedLineCharacters": 19
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-3ea969425b1c88bd",
+      "instanceCount": 50,
+      "pageCharacterCount": 104,
+      "maximumAnnotatedLineCharacters": 14
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-291e9c3df3a9ffb5",
+      "instanceCount": 48,
+      "pageCharacterCount": 192,
+      "maximumAnnotatedLineCharacters": 26
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-97a0add3f8f47b65",
+      "instanceCount": 32,
+      "pageCharacterCount": 134,
+      "maximumAnnotatedLineCharacters": 7
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-d14658b78cec2cf7",
+      "instanceCount": 29,
+      "pageCharacterCount": 184,
+      "maximumAnnotatedLineCharacters": 12
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-c9ecf7b1e970a65a",
+      "instanceCount": 103,
+      "pageCharacterCount": 507,
+      "maximumAnnotatedLineCharacters": 17
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-ab6fb759938e462b",
+      "instanceCount": 23,
+      "pageCharacterCount": 130,
+      "maximumAnnotatedLineCharacters": 8
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-975414ca1e6b155c",
+      "instanceCount": 134,
+      "pageCharacterCount": 466,
+      "maximumAnnotatedLineCharacters": 15
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-c4c9ba09a6640ad0",
+      "instanceCount": 21,
+      "pageCharacterCount": 119,
+      "maximumAnnotatedLineCharacters": 13
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-e02496ac77418748",
+      "instanceCount": 56,
+      "pageCharacterCount": 617,
+      "maximumAnnotatedLineCharacters": 42
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-507f4f0db1f4fed7",
+      "instanceCount": 28,
+      "pageCharacterCount": 186,
+      "maximumAnnotatedLineCharacters": 9
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-e8987917745126f6",
+      "instanceCount": 132,
+      "pageCharacterCount": 883,
+      "maximumAnnotatedLineCharacters": 27
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-012bfb1d9f9afc48",
+      "instanceCount": 25,
+      "pageCharacterCount": 593,
+      "maximumAnnotatedLineCharacters": 48
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-04c69de1d1bf9892",
+      "instanceCount": 75,
+      "pageCharacterCount": 478,
+      "maximumAnnotatedLineCharacters": 18
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-07f328166c0ebbf7",
+      "instanceCount": 28,
+      "pageCharacterCount": 188,
+      "maximumAnnotatedLineCharacters": 20
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-16f097c5d6407f7d",
+      "instanceCount": 33,
+      "pageCharacterCount": 190,
+      "maximumAnnotatedLineCharacters": 10
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-26e97e9f6d719dee",
+      "instanceCount": 24,
+      "pageCharacterCount": 252,
+      "maximumAnnotatedLineCharacters": 19
+    },
+    {
+      "manifest": "hiertext-validation-sample-002.jsonl",
+      "imageId": "hiertext-validation-41ec68d29b5f5db0",
+      "instanceCount": 23,
+      "pageCharacterCount": 160,
+      "maximumAnnotatedLineCharacters": 15
+    },
+    {
+      "manifest": "hiertext-validation-sample-003.jsonl",
+      "imageId": "hiertext-validation-e4de4f4143491a9d",
+      "instanceCount": 30,
+      "pageCharacterCount": 274,
+      "maximumAnnotatedLineCharacters": 37
+    }
+  ],
+  "boundary": "Page aggregate character count is not a continuous OCR line and cannot be used as a long-text accuracy sample. The current fixed HierText selection has no natural annotated line at or above 3200 characters; A2 remains open until a legal, attributable continuous-text corpus is available."
+}
