@@ -138,6 +138,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             var warnings = new List<string>();
             double scoreSum = 0;
             int scoreCount = 0;
+            bool reachedEndToken = false;
             for (int step = 0; step < sequence; step++)
             {
                 int scoreOffset = checked(((row * sequence + step) * classes));
@@ -148,7 +149,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     float candidate = scores[scoreOffset + index];
                     if (candidate > selectedScore) { selected = index; selectedScore = candidate; }
                 }
-                if (step > 0 && selected == Schema.EndTokenIndex) break;
+                if (selected == Schema.EndTokenIndex) { reachedEndToken = true; break; }
                 if (selected == Schema.StartTokenIndex || selected == Schema.PadTokenIndex || selected == Schema.UnknownTokenIndex) continue;
                 if (selectedScore < Options.MinimumTokenScore) { warnings.Add("token-score-below-threshold:" + step.ToString(CultureInfo.InvariantCulture)); continue; }
                 string token = Schema.Tokens[selected];
@@ -171,6 +172,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 }
             }
             if (tokens.Count == 0) warnings.Add("empty-structure-sequence");
+            if (!reachedEndToken) warnings.Add("missing-eos:sequence-may-be-truncated");
             float average = scoreCount == 0 ? 0 : (float)(scoreSum / scoreCount);
             VisualInputFrame frame = context.Input.BatchFrames[row];
             var metadataResult = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, frame.InputId ?? context.Input.InputId ?? "input-not-hashed", row);

@@ -234,6 +234,44 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SlanetDecoderWarnsWhenStructureSequenceHasNoEndToken()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
+            var schema = new PaddleDocumentTableStructureSchema(
+                "structure",
+                "locations",
+                new[] { "<s>", "<td></td>", "<eos>" },
+                startTokenIndex: 0,
+                endTokenIndex: 2,
+                cellTokens: new[] { "<td></td>" });
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateTableStructure(descriptor, schema, modelSize: new VisualSize(8, 8));
+            var input = new PreparedVisualInput(
+                "x",
+                new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[3 * 8 * 8], TensorBufferOwnership.Transfer),
+                new VisualSize(8, 8),
+                new VisualSize(8, 8),
+                1,
+                VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)));
+            var structure = new float[2 * 3];
+            SetWinner(structure, 3, 0, 0);
+            SetWinner(structure, 3, 1, 1);
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("structure", new Tensor<float>(new TensorShape(1, 2, 3), structure, TensorBufferOwnership.Transfer)),
+                new NamedTensor("locations", new Tensor<float>(new TensorShape(1, 2, 8), new float[16], TensorBufferOwnership.Transfer))
+            });
+
+            using (input)
+            {
+                var result = (PaddleDocumentTableResult)profile.VisualProfile.Decoder.Decode(
+                    new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+                Assert.AreEqual("<td></td>", result.Markup);
+                CollectionAssert.Contains(result.Warnings.ToArray(), "missing-eos:sequence-may-be-truncated");
+            }
+        }
+
+        [TestMethod]
         public void SlanetDecoderPreservesIndependentBatchRowsAndPageMetadata()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
