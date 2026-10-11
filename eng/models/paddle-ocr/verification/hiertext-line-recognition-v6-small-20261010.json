@@ -1,19 +1,35 @@
 {
-  "schemaVersion": 1,
-  "generatedUtc": "2026-10-10T08:35:31Z",
-  "scope": "PP-OCRv6 Small recognizer-only quality on source-linked HierText text-line crops",
-  "sourceRevision": "ca0016c1338d2145045c10896cd3efa46e0bf555",
+  "schemaVersion": 2,
+  "generatedUtc": "2026-10-11T11:46:33Z",
+  "scope": "PP-OCRv6 Small recognizer-only quality on all eligible source-linked HierText validation text-line crops from sample-002 and sample-003",
+  "sourceRevision": "03d7c20a200aea732c5ab1a09b04461db1fdb189",
   "sourceWorkingTreeDirty": true,
   "dataset": {
     "name": "google-research-datasets/hiertext",
     "split": "validation",
-    "selection": ["sample-002", "sample-003"],
-    "rows": 32,
-    "manifestSha256": {
-      "sample-002": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
-      "sample-003": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e"
+    "cropRevision": "70b6620b2b112597d8219e11eee9773a1403827c",
+    "annotationRows": 2288,
+    "ignoredAnnotationRows": 731,
+    "emptyAnnotationRows": 0,
+    "eligibleSourceLinkedRows": 1557,
+    "rows": 1557,
+    "uniqueParentImages": 34,
+    "selection": {
+      "sample-002": {
+        "rows": 537,
+        "annotationManifestSha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+        "cropManifestSha256": "1681e102b1b9c0cf4a3b6eb43e25ef4340526194619a9f441d0ca26543a8780b"
+      },
+      "sample-003": {
+        "rows": 1020,
+        "annotationManifestSha256": "f6f5500856868ee68699c88a8f941eaca8cfb06d9252c4121be75a89a6a7db3e",
+        "cropManifestSha256": "d2cd2abc8d42f93c9939d1c895d139d4448395b8ea88e9c0d7a25d165b045a7d"
+      }
     },
-    "redistributionBoundary": "Local smoke evidence only; source images and crop predictions are not committed."
+    "cropManifestRows": 1557,
+    "excludedOrUnmatchedCropRows": 0,
+    "missingCropFiles": 0,
+    "redistributionBoundary": "Local evidence only; source images and raw predictions are not committed."
   },
   "model": {
     "id": "paddleocr/ppocrv6/small-rec",
@@ -24,41 +40,52 @@
   "protocol": {
     "path": "RecognizeOnlyAsync",
     "cropGranularity": "text_line",
-    "maximumRows": 32,
+    "maximumRows": 4096,
     "backendDevice": "CPU",
     "detectorExecuted": false,
+    "ignoredAndEmptyAnnotationsExcluded": true,
+    "cropSha256Validated": true,
     "metrics": "case-sensitive Unicode-scalar CER/WER; no implicit normalization"
   },
   "backends": {
     "onnxruntime": {
-      "rows": 32,
-      "exactRows": 19,
-      "exactRate": 0.59375,
-      "referenceCharacters": 162,
-      "characterEdits": 17,
-      "characterErrorRate": 0.10493827160493827,
-      "referenceWords": 36,
-      "wordEdits": 15,
-      "wordErrorRate": 0.4166666666666667,
-      "rawSummary": "artifacts/hiertext-line-rec-20261010/paddleocr-hiertext-line-rec-onnxruntime.json"
+      "rows": 1557,
+      "exactRows": 713,
+      "exactRate": 0.457931920359666,
+      "referenceCharacters": 11979,
+      "characterEdits": 3046,
+      "characterErrorRate": 0.254278320394023,
+      "referenceWords": 2465,
+      "wordEdits": 1158,
+      "wordErrorRate": 0.469776876267748,
+      "emptyPredictions": 36,
+      "rawSummary": "artifacts/hiertext-line-rec-20261011-valid/paddleocr-hiertext-line-rec-onnxruntime.json"
     },
     "openvino": {
-      "rows": 32,
-      "exactRows": 19,
-      "exactRate": 0.59375,
-      "referenceCharacters": 162,
-      "characterEdits": 17,
-      "characterErrorRate": 0.10493827160493827,
-      "referenceWords": 36,
-      "wordEdits": 15,
-      "wordErrorRate": 0.4166666666666667,
-      "rawSummary": "artifacts/hiertext-line-rec-20261010/paddleocr-hiertext-line-rec-openvino.json"
+      "rows": 1557,
+      "exactRows": 713,
+      "exactRate": 0.457931920359666,
+      "referenceCharacters": 11979,
+      "characterEdits": 3046,
+      "characterErrorRate": 0.254278320394023,
+      "referenceWords": 2465,
+      "wordEdits": 1158,
+      "wordErrorRate": 0.469776876267748,
+      "emptyPredictions": 36,
+      "rawSummary": "artifacts/hiertext-line-rec-20261011-valid/paddleocr-hiertext-line-rec-openvino.json"
     }
   },
+  "lengthStrata": [
+    { "bucket": "01-04", "rows": 764, "exactRows": 412, "referenceCharacters": 1805, "characterEdits": 702, "characterErrorRate": 0.388919667590028, "referenceWords": 773, "wordEdits": 364, "wordErrorRate": 0.470892626131953, "emptyPredictions": 12 },
+    { "bucket": "05-10", "rows": 470, "exactRows": 176, "referenceCharacters": 3246, "characterEdits": 1141, "characterErrorRate": 0.351509550215650, "referenceWords": 590, "wordEdits": 382, "wordErrorRate": 0.647457627118644, "emptyPredictions": 20 },
+    { "bucket": "11-20", "rows": 229, "exactRows": 83, "referenceCharacters": 3235, "characterEdits": 750, "characterErrorRate": 0.231839258114374, "referenceWords": 522, "wordEdits": 273, "wordErrorRate": 0.522988505747126, "emptyPredictions": 2 },
+    { "bucket": "21-40", "rows": 64, "exactRows": 29, "referenceCharacters": 1748, "characterEdits": 322, "characterErrorRate": 0.184210526315789, "referenceWords": 277, "wordEdits": 86, "wordErrorRate": 0.310469314079422, "emptyPredictions": 1 },
+    { "bucket": "41+", "rows": 30, "exactRows": 13, "referenceCharacters": 1945, "characterEdits": 131, "characterErrorRate": 0.0673521850899743, "referenceWords": 303, "wordEdits": 53, "wordErrorRate": 0.174917491749174, "emptyPredictions": 1 }
+  ],
   "parity": {
-    "recognizedTextRowsCompared": 32,
-    "recognizedTextRowsEqual": 32,
+    "recognizedTextRowsCompared": 1557,
+    "recognizedTextRowsEqual": 1557,
     "recognizedTextRowsDifferent": 0
   },
-  "boundary": "Recognizer-only line-crop smoke evidence; does not close complete-page accuracy, long-text, robustness, formal performance, or untested backend gates."
+  "boundary": "Recognizer-only line-crop evidence on a bounded local validation selection; does not close complete-page accuracy, long-text, robustness, formal performance, or untested backend gates."
 }
