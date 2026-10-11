@@ -70,5 +70,17 @@ public sealed class PaddleDocumentFormulaQualityTests
         Assert.IsTrue(valid.ActualBalancedEnvironments);
         Assert.IsTrue(invalid.ExpectedBalancedEnvironments);
         Assert.IsFalse(invalid.ActualBalancedEnvironments);
+
+        PaddleDocumentFormulaQualityMetrics nested = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "\\begin{array}x\\begin{aligned}y\\end{aligned}\\end{array}",
+            "\\begin{array}x\\begin{aligned}y\\end{aligned}\\end{array}");
+        PaddleDocumentFormulaQualityMetrics missingName = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "x", "\\begin{}x\\end{}");
+        PaddleDocumentFormulaQualityMetrics missingClose = PaddleDocumentFormulaQualityEvaluator.Compare(
+            "x", "\\begin{alignedx");
+
+        Assert.IsTrue(nested.ActualBalancedEnvironments);
+        Assert.IsFalse(missingName.ActualBalancedEnvironments);
+        Assert.IsFalse(missingClose.ActualBalancedEnvironments);
     }
 }

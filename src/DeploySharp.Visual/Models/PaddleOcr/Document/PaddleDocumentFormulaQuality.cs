@@ -76,7 +76,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Computes formula diagnostics without claiming rendered mathematical equivalence. / 计算公式诊断，但不宣称渲染后的数学等价性。</summary>
     public static class PaddleDocumentFormulaQualityEvaluator
     {
-        /// <summary>Compares two formula strings using raw/normalized CER, command overlap and delimiter checks. / 使用原始及规范化 CER、命令重叠和分隔符检查比较两个公式字符串。</summary>
+        /// <summary>Compares formula strings using raw/normalized CER, command overlap, delimiter checks and shallow environment pairing. / 使用原始及规范化 CER、命令重叠、分隔符检查和浅层环境配对比较公式字符串。</summary>
         public static PaddleDocumentFormulaQualityMetrics Compare(string expected, string actual)
         {
             if (expected == null) throw new ArgumentNullException(nameof(expected));
