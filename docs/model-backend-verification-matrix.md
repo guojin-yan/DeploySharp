@@ -80,6 +80,8 @@
 
 同一环境又完成 PP-OCRv5 Mobile CLS 动态 Batch=2 的真实解码合同：v6 Small DET 从 `demo_1.jpg` 产生两块裁剪，ORT CPU 与新建 TensorRT 11 Engine 均运行 `[2,3,80,160]`，两行的 batch 顺序、类别、角度和拒绝决策一致，最大归一化分数差为 `2.96e-11`。详见[CLS TensorRT 解码 parity 报告](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-cls-tensorrt-dynamic-batch-parity-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-cls-tensorrt-dynamic-batch-parity-20261011.json)。这只覆盖一个 CLS 工件和两个裁剪；DET 解码仍为 batch=1，不扩展为完整流水线、CER/WER、吞吐或全部 TensorRT 支持。
 
+同一环境又完成 PP-OCRv6 Small DET 原始动态 Batch=2 图级合同：`demo_1.jpg` 左右两个 ROI 组成 `[2,3,736,736]`，ORT CPU 与 TensorRT 11 均返回有限 `[2,1,736,736]` 概率图，输入/输出行均保持不同，最大/平均绝对差 `0.00690505/2.43208e-05`。详见[DET TensorRT 动态 Batch 报告](../eng/models/paddle-ocr/verification/paddleocr-v6-small-det-tensorrt-dynamic-batch-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v6-small-det-tensorrt-dynamic-batch-20261011.json)。这只证明 raw graph/provider 行隔离；`PaddleDbTextDetectionDecoder` 仍要求 batch=1，未扩展为完整 DET batch 解码、质量、吞吐或全部 TensorRT 支持。
+
 ## PP-Structure 模型状态
 
 PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有独立 ONNX Release 资产；`PP-Chart2Table` 另以 `paddle-chart/pp-chart2table` 四图 ONNX + tokenizer Bundle 发布在同一个 `models-paddleocr` Release。Chart2Table 官方源包仍不是标准 `inference.json + inference.pdiparams`，因此单文件 Paddle archive 转换目录仍保留 `conversion-blocked`，这不影响已发布派生 Bundle 的下载和运行。下表按模型族分组，普通模型组内只要仍有未逐一执行的工件就保持 `△`；Chart2Table 则以真实完整流水线证据单独标记。PP-Structure 其它模型尚未全部逐一验证每个后端，不能把 Chart2Table 的结果外推到其它模型。

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-11T11:01:46.9149564+00:00",
+  "model": "paddleocr/ppocrv6/small-det",
+  "input": {
+    "image": "E:\\Data\\ocr\\demo_1.jpg",
+    "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+    "tensorSha256": "b6dbc3a42cff276b90b69728cb4b0d4fccb607762829d421e536d1bfd9210d35",
+    "shape": [
+      2,
+      3,
+      736,
+      736
+    ],
+    "batch": 2,
+    "rowSha256": [
+      "12588d4995211005e1c558f86e10de3a3dd93591859426b33d73c4f55e508cb2",
+      "e9f7d24bee7cc18006e447be3c4249b2e777cfe3ee44275f7e5f4eae9c0d8113"
+    ]
+  },
+  "detector": {
+    "onnxSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "engineSha256": "15decef7d52939c38dc0e2f5c17060f251fc681afe9f7d1a5dd7e3534f370cfe",
+    "engineBytes": 11346372
+  },
+  "backends": {
+    "ortCpu": {
+      "outputShape": [
+        2,
+        1,
+        736,
+        736
+      ],
+      "outputSha256": "62559d97675a154534a3675c10ca21b32a1ddab63b60ef6fd60bd63d02f8517a",
+      "rowSha256": [
+        "191c6697228a04505c56f30db6902a2f7694466ed9a61d15afd45e83aa0c64c9",
+        "c4f55775e82c49127e9c10b6945d5a687362d7321f88c78ac96e8c9b762529ab"
+      ],
+      "maximumAbs": 0.9999175071716309,
+      "meanAbs": 0.12248988877215519
+    },
+    "tensorRtCuda": {
+      "outputShape": [
+        2,
+        1,
+        736,
+        736
+      ],
+      "outputSha256": "01d4a3c3f3105fabd77cc7e126d9de6902cc726be5ae9ea4f7bc3724e476b2a0",
+      "rowSha256": [
+        "625beeef7f2913272cb65acba654cc03645ac4ad897658d7a5173c9507c4a53f",
+        "f57776ad3e09883f470e572af1b1079be332c942dce97d287aa209b272088f0b"
+      ],
+      "maximumAbs": 0.9999173879623413,
+      "meanAbs": 0.12250697549713341
+    }
+  },
+  "comparison": {
+    "maximumAbsDifference": 0.006905049085617065,
+    "meanAbsDifference": 2.432082236524494E-05
+  },
+  "contract": "Both backends must preserve batch=2, return finite raw probability maps with matching non-batch dimensions, and keep distinct input rows distinct; numeric drift is bounded by 0.05.",
+  "boundary": "Raw graph/provider dynamic-batch evidence only. PaddleDbTextDetectionDecoder currently requires batch=1 because per-row source geometry and postprocess mapping are not yet defined. This is not full DET quality, OCR pipeline parity, throughput or all-model TensorRT support."
+}
