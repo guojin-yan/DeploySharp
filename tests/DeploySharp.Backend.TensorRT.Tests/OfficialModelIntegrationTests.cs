@@ -199,6 +199,38 @@ namespace DeploySharp.Backend.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void PaddleOcrRecognitionModelsRunDynamicBatchTwoOnTensorRt11()
+        {
+            RequireExternal();
+            var cases = new[]
+            {
+                new TensorRtImageCase("paddleocr/ppocrv5/mobile-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx", "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv5/server-rec", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx", "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv6/tiny-rec", @"E:\Model\paddleocr\PP-OCRv6\tiny\PP-OCRv6_tiny_rec_inference.onnx", "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv6/small-rec", @"E:\Model\paddleocr\PP-OCRv6\small\PP-OCRv6_small_rec_inference.onnx", "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634", "x", 320, 48),
+                new TensorRtImageCase("paddleocr/ppocrv6/medium-rec", @"E:\Model\paddleocr\PP-OCRv6\medium\PP-OCRv6_medium_rec_inference.onnx", "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba", "x", 320, 48)
+            };
+
+            var failed = new List<string>();
+            foreach (TensorRtImageCase model in cases)
+            {
+                if (!File.Exists(model.Path)) Assert.Inconclusive("Missing local model: " + model.Path);
+                try
+                {
+                    BuildAndRunDynamicBatch(model, 2);
+                }
+                catch (Exception exception)
+                {
+                    failed.Add(model.ModelId);
+                    Console.WriteLine("TENSORRT_EXTERNAL_DYNAMIC_BATCH_FAILED model=" + model.ModelId + ";sha256=" + model.Sha256 + ";error=" + exception);
+                }
+            }
+
+            if (failed.Count > 0) Assert.Fail("TensorRT dynamic-batch conversions failed: " + string.Join(", ", failed));
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void PadimAndRmbgOnnxModelsBuildTensorRt11EnginesAndRunInference()
         {
             RequireExternal();
@@ -462,6 +494,55 @@ namespace DeploySharp.Backend.TensorRT.Tests
                     ";input=" + model.InputName + inputShape +
                     ";outputs=" + outputs.Count +
                     ";firstOutputElements=" + outputs[0].Tensor.Length);
+            }
+            finally
+            {
+                try { Directory.Delete(root, true); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
+        }
+
+        private static void BuildAndRunDynamicBatch(TensorRtImageCase model, int batchSize)
+        {
+            var modelId = new ModelId(model.ModelId);
+            var inputShape = new TensorShape(batchSize, 3, model.Height, model.Width);
+            var minimumShape = new TensorShape(1, 3, model.Height, model.Width);
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-trt11-dynamic-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            try
+            {
+                string enginePath = Path.Combine(root, "model.engine");
+                var options = new TensorRtOnnxEngineBuildOptions(
+                    apiVersion: TensorRtApiVersion.TensorRt11,
+                    precision: TensorRtOnnxEnginePrecision.RuntimeDefault,
+                    workspaceBytes: 268435456UL,
+                    optimizationLevel: 0,
+                    overwrite: true,
+                    inputProfiles: new[] { new TensorRtOnnxInputProfile(model.InputName, minimumShape, inputShape, inputShape) });
+                var artifact = new ModelArtifact(modelId, "onnx", model.Path, model.Sha256);
+                TensorRtOnnxEngineBuildResult build = new TensorRtOnnxEngineBuilder().Build(artifact, enginePath, options);
+
+                using var provider = new TensorRtBackendProvider(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt11));
+                using IInferenceSession session = provider.CreateSession(
+                    new ModelArtifact(modelId, "tensorrt-engine", build.EnginePath, build.EngineSha256, TensorRtBackendProvider.BackendId),
+                    new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"),
+                    SessionOptions.Default);
+                var input = new Tensor<float>(inputShape, new float[checked((int)inputShape.GetElementCount())]);
+                InferenceOutputs outputs = session.Run(InferenceInputs.Create(model.InputName, input), CancellationToken.None);
+
+                Assert.IsTrue(outputs.Count > 0, model.ModelId + " returned no outputs.");
+                Assert.IsTrue(outputs[0].Tensor.Length > 0, model.ModelId + " returned an empty output.");
+                Assert.IsTrue(outputs[0].Tensor.Shape.Rank > 0 && outputs[0].Tensor.Shape[0] == batchSize, model.ModelId + " did not preserve the requested output batch.");
+                Console.WriteLine(
+                    "TENSORRT_EXTERNAL_DYNAMIC_BATCH model=" + model.ModelId +
+                    ";batch=" + batchSize +
+                    ";onnxSha256=" + model.Sha256 +
+                    ";engineSha256=" + build.EngineSha256 +
+                    ";engineBytes=" + build.EngineBytes +
+                    ";input=" + model.InputName + inputShape +
+                    ";outputShape=" + outputs[0].Tensor.Shape +
+                    ";outputElements=" + outputs[0].Tensor.Length);
             }
             finally
             {

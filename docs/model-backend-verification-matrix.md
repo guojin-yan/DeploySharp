@@ -66,13 +66,15 @@
 ### PP-OCR 核心模型质量证据索引
 
 上方 PP-OCR 的后端勾号只表示对应精确工件已完成加载、推理和结果解码，不代表数据集准确率或跨后端质量等价。当前七组 PP-OCR v4/v5/v6 DET+REC 流水线（v4/v5 Mobile/Server、v6 Tiny/Small/Medium）已有同一 SROIE 十页选择上的 ORT CPU 与 OpenVINO CPU 质量 smoke 汇总：14 个模型/后端组合均完成 `10/10` 页，详细列出检测 F1、匹配与端到端 CER/WER、区域文本 parity 及一次性延迟观察。SROIE 是词框标注、模型输出为文本行，因此这些数值只用于可复现诊断，不是官方准确率或正式性能排名；该证据也不扩展 OpenCV DNN、CUDA 或 TensorRT 的质量状态。见[七模型十页汇总](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.md)及[机器可读 JSON](../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.json)。
-文档相对链接的最新审计为[2026-10-11 TensorRT 收口结果](../eng/models/paddle-document/verification/document-link-audit-20261011-trt-build.json)，共检查 `436` 条本地 Markdown 链接、断链 `0`；这是链接完整性检查，不是模型支持或质量通过证明。
+文档相对链接的最新审计为[2026-10-11 TensorRT 收口结果](../eng/models/paddle-document/verification/document-link-audit-20261011-trt-build.json)，共检查 `439` 条本地 Markdown 链接、断链 `0`；这是链接完整性检查，不是模型支持或质量通过证明。
 
 2026-10-11 补充了 `paddleocr/ppocrv4/legacy-cls` 的独立 OpenCV DNN provider 证据：精确工件以真实输入 `[1,3,48,192]` 绑定并返回 `[1,2]` 非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-legacy-cls-opencv-provider-20261011.md)。因此矩阵中的 OpenCV `✓` 仅表示该分类工件在单台 Windows CPU 主机上完成加载、绑定和推理，不代表整条 OCR 质量、TensorRT 或性能通过。
 
 同日补充了 PP-OCRv4 Server DET/REC 与 legacy CLS 的 TensorRT 11 精确 Engine 证据：匹配 bridge/runtime 注入后 `3/3` Engine 均加载并返回非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-server-tensorrt11-engine-provider-20261011.md)。因此该行 TensorRT `✓` 仅表示已有序列化 Engine 在单台 Windows GPU 主机上可执行，不代表 ONNX 重建、整条 OCR 质量、5/50 性能或跨设备可移植性。
 
 同日又完成 PP-OCRv5/v6 核心模型的 TensorRT 11 ONNX→Engine 重建：v5 六个 DET/REC/CLS 和 v6 六个 DET/REC 工件共 `12/12` 通过，精确 ONNX/Engine SHA、输入形状和输出元素见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v5-v6-core-tensorrt11-build-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v5-v6-core-tensorrt11-build-20261011.json)。这只补齐当前 Windows RTX 3060 主机的图级重建/执行证据，不代表完整 OCR 质量、5/50 性能、跨设备 Engine 可移植性或发布准确率。
+
+同日又对五个 REC 工件完成 TensorRT 11 动态 Batch=2 原始执行：PP-OCRv5 Mobile/Server、PP-OCRv6 Tiny/Small/Medium 均以 `min=1,opt=max=2` profile 接收 `x=[2,3,48,320]`，输出第一维保持为 `2`，`5/5` 通过。详见[动态 Batch 报告](../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-tensorrt11-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-tensorrt11-20261011.json)。该证据只表示 raw batch 行隔离，不扩展 CTC 文本 parity、完整 OCR 质量、吞吐或其它 DET/CLS 工件。
 
 ## PP-Structure 模型状态
 
