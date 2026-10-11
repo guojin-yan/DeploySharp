@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T01:57:38Z",
+  "run": {
+    "testProject": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj",
+    "targetFramework": "net10.0",
+    "configuration": "Release",
+    "buildMode": "--no-build --no-restore",
+    "filter": "FullyQualifiedName~PaddleDocumentDynamicBatchIntegrationTests",
+    "environment": {
+      "DEPLOYSHARP_PADDLE_DOCUMENT_DYNAMIC_BATCH_RUN_EXTERNAL": "1",
+      "DEPLOYSHARP_EXTERNAL_MODELS": "1",
+      "os": "Windows 10.0.26200",
+      "processArchitecture": "X64",
+      "framework": ".NET 10.0.12",
+      "processorCount": 16
+    },
+    "testCases": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "durationObservation": "约 8 分 52 秒；这是整组测试墙钟时间，不是模型吞吐基准。"
+  },
+  "aggregate": {
+    "exactModelBackendChecks": 59,
+    "executionPassed": 46,
+    "explicitlyUnsupported": 13,
+    "unexpectedFailures": 0,
+    "backendChecks": {
+      "onnxruntime-cpu": { "passed": 24, "unsupported": 0 },
+      "openvino-cpu": { "passed": 18, "unsupported": 0 },
+      "opencv-dnn-cpu": { "passed": 4, "unsupported": 13 },
+      "tensorrt-cuda": { "passed": 0, "unsupported": 0, "tested": false }
+    },
+    "unsupportedReasonFamilies": [
+      "OpenCV DNN dynamic forward_many Requested blob not found (DS-OCV-8004)",
+      "OpenCV DNN dynamic graph importer/contract boundary (DS-OCV-8002)"
+    ]
+  },
+  "coverage": [
+    {
+      "artifact": "paddle-document-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-doc/pp-lcnet-x1-0-doc-ori", "paddle-table/pp-lcnet-x1-0-table-cls"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "models": ["paddle-doc/pp-lcnet-x1-0-doc-ori", "paddle-table/pp-lcnet-x1-0-table-cls"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-plus-s-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-plus-s"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-plus-m-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-plus-m"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-plus-l-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-plus-l"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-s-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-s"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-l-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-l"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-unimernet-dynamic-batch-ort-20261007.json",
+      "models": ["paddle-formula/unimernet"],
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-formula-dynamic-batch-opencv-20261007.json",
+      "models": ["paddle-formula/pp-formulanet-plus-s", "paddle-formula/pp-formulanet-plus-m", "paddle-formula/pp-formulanet-plus-l", "paddle-formula/pp-formulanet-s", "paddle-formula/pp-formulanet-l", "paddle-formula/unimernet"],
+      "backends": ["opencv-dnn-cpu"],
+      "status": "explicitly-unsupported",
+      "count": 6
+    },
+    {
+      "artifact": "paddle-document-layout-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-doc/pp-doclayout-l"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-pp-doclayout-l-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "models": ["paddle-doc/pp-doclayout-l"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "mixed",
+      "passedCount": 2,
+      "unsupportedCount": 1
+    },
+    {
+      "artifact": "paddle-document-additional-layout-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-doc/pp-doclayout-plus-l", "paddle-doc/pp-docblocklayout"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-additional-layout-dynamic-batch-opencv-20261007.json",
+      "models": ["paddle-doc/pp-doclayout-plus-l", "paddle-doc/pp-docblocklayout"],
+      "backends": ["opencv-dnn-cpu"],
+      "status": "explicitly-unsupported",
+      "count": 2
+    },
+    {
+      "artifact": "paddle-document-rtdetr-layout-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-doc/rt-detr-h-layout-3cls"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "models": ["paddle-doc/rt-detr-h-layout-3cls"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "mixed",
+      "passedCount": 2,
+      "unsupportedCount": 1
+    },
+    {
+      "artifact": "paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "models": ["paddle-doc/rt-detr-h-layout-17cls"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "mixed",
+      "passedCount": 2,
+      "unsupportedCount": 1
+    },
+    {
+      "artifact": "paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "models": ["paddle-seal/ppocrv4-mobile", "paddle-seal/ppocrv4-server"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-slanext-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-table/slanext-wired"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-table/slanext-wireless"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-table-cell-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-table/rt-detr-l-wired-cell-det", "paddle-table/rt-detr-l-wireless-cell-det"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    },
+    {
+      "artifact": "paddle-document-table-cell-dynamic-batch-opencv-20261007.json",
+      "models": ["paddle-table/rt-detr-l-wired-cell-det", "paddle-table/rt-detr-l-wireless-cell-det"],
+      "backends": ["opencv-dnn-cpu"],
+      "status": "explicitly-unsupported",
+      "count": 2
+    },
+    {
+      "artifact": "paddle-document-uvdoc-dynamic-batch-ort-openvino.json",
+      "models": ["paddle-doc/uvdoc"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed"
+    }
+  ],
+  "boundary": [
+    "这是动态 Batch 输入绑定、批内行隔离、解码映射和预期阻断的执行回归，不是准确率、吞吐、P50/P95 或跨设备性能报告。",
+    "输入主要是单张图像的不同区域或官方验证图片；没有把区域数量、候选数量或输出哈希解释成标注精度。",
+    "OpenCV DNN 的 13 个不支持项按精确 artifact/runtime/batch 组合记录，不推翻对应单图证据，也不外推到其它 OpenCV 版本。",
+    "本轮没有运行 TensorRT Batch；TensorRT 状态仍保持未验证或已有精确证据的原状态。"
+  ],
+  "reproduce": "在 DeploySharp 仓库根目录执行：$env:DEPLOYSHARP_PADDLE_DOCUMENT_DYNAMIC_BATCH_RUN_EXTERNAL='1'; $env:DEPLOYSHARP_EXTERNAL_MODELS='1'; dotnet test .\\tests\\DeploySharp.Visual.OpenCV.Tests\\DeploySharp.Visual.OpenCV.Tests.csproj -f net10.0 -c Release --no-build --no-restore --filter 'FullyQualifiedName~PaddleDocumentDynamicBatchIntegrationTests'"
+}
