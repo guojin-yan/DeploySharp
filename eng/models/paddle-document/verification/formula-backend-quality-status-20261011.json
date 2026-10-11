@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-11T02:12:00Z",
+  "scope": "Six official Paddle formula ONNX exports; this is an evidence index, not a new benchmark run.",
+  "models": [
+    "paddle-formula/pp-formulanet-plus-s",
+    "paddle-formula/pp-formulanet-plus-m",
+    "paddle-formula/pp-formulanet-plus-l",
+    "paddle-formula/pp-formulanet-s",
+    "paddle-formula/pp-formulanet-l",
+    "paddle-formula/unimernet"
+  ],
+  "backendStatus": [
+    {
+      "backend": "onnxruntime-cpu",
+      "execution": "verified",
+      "qualityEvidence": "121-sample MathNet realFormula v1 diagnostic",
+      "report": "formula-realformula-six-models-ort-20261007.md",
+      "summary": {
+        "plus-s": { "exact": "14/121", "charCer": "57.04%", "eos": "121/121", "empty": 0 },
+        "plus-m": { "exact": "11/121", "charCer": "58.34%", "eos": "121/121", "empty": 0 },
+        "plus-l": { "exact": "16/121", "charCer": "54.60%", "eos": "121/121", "empty": 0 },
+        "formula-s": { "exact": "12/121", "charCer": "61.58%", "eos": "121/121", "empty": 0 },
+        "formula-l": { "exact": "17/121", "charCer": "89.86%", "eos": "120/121", "empty": 0 },
+        "unimernet": { "exact": "18/121", "charCer": "51.59%", "eos": "121/121", "empty": 0 }
+      },
+      "boundary": "These are string-level diagnostic metrics; they are not TeX semantic equivalence, mathematical correctness, a held-out guarantee, or a release quality pass. Training overlap is unknown."
+    },
+    {
+      "backend": "openvino-cpu",
+      "execution": "unsupported",
+      "qualityEvidence": null,
+      "report": "formula-openvino-isolated-20261008.md",
+      "boundary": "All six exact exports remain blocked in isolated processes: five FormulaNet graphs fail Loop-18 canonical-input/import validation and UniMERNet aborts the model-reader process. No formula quality result was produced."
+    },
+    {
+      "backend": "opencv-dnn-cpu",
+      "execution": "unsupported-for-dynamic-batch-contract",
+      "qualityEvidence": null,
+      "report": "paddle-document-formula-dynamic-batch-opencv-20261007.md",
+      "boundary": "The six exact batch=2 dynamic exports hit DS-OCV-8002 importer/input-specialization errors. This does not make a batch=1 or another OpenCV build implicitly supported."
+    },
+    {
+      "backend": "tensorrt-cuda",
+      "execution": "not-verified",
+      "qualityEvidence": null,
+      "report": null,
+      "boundary": "No six-model formula TensorRT quality or performance matrix is available; do not infer it from other PP-Structure TensorRT evidence."
+    }
+  ],
+  "knownQualityRisks": [
+    {
+      "model": "paddle-formula/pp-formulanet-l",
+      "issue": "One realFormula sample did not emit EOS before the 1,024-step export ceiling; the official Paddle IR and ONNX Loop share that ceiling and extending it exceeds the learned positional table.",
+      "report": "formula-formulanet-l-generation-limit-20261007.md"
+    },
+    {
+      "model": "all",
+      "issue": "High exact-match/CER on realFormula means the single-image smoke examples must not be used as accuracy claims; canonicalization and model/data suitability remain open.",
+      "report": "formula-realformula-error-patterns-20261007.md"
+    }
+  ],
+  "nextGates": [
+    "Obtain or construct an additional licensed multi-sample formula quality set with rendered/semantic checks.",
+    "Diagnose FormulaNet-L non-EOS behavior without changing the public decoder to silently truncate or synthesize EOS.",
+    "Only after exact assets are available, run controlled TensorRT quality/performance and revisit OpenVINO importer compatibility."
+  ]
+}
