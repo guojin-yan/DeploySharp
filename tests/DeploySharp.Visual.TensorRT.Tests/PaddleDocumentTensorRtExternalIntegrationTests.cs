@@ -647,6 +647,212 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9", 640, 640)]
+        [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048", 800, 800)]
+        [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218", 640, 640)]
+        public void LayoutNmsRunsDynamicBatchTwoOnTensorRtAndMatchesOrtRows(string modelId, string defaultOnnxFile, string expectedOnnxSha256, int modelWidth, int modelHeight)
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL=1 to run the opt-in PP-Structure TensorRT dynamic-batch test.");
+            string selectedModel = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_MODEL") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(selectedModel) && !string.Equals(selectedModel, modelId, StringComparison.OrdinalIgnoreCase))
+                Assert.Inconclusive("The current run selected a different layout model: " + selectedModel);
+
+            string onnxPath = Path.Combine(@"E:\Model\PaddleDocument\onnx", defaultOnnxFile);
+            string imagePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_IMAGE") ?? @"E:\Data\image\bus.jpg";
+            if (!File.Exists(onnxPath) || !File.Exists(imagePath))
+                Assert.Inconclusive("Missing local PP-Structure layout ONNX model or test image.");
+
+            string onnxSha256 = ComputeSha256(onnxPath);
+            Assert.AreEqual(expectedOnnxSha256, onnxSha256, "The local ONNX file differs from the registered Release artifact.");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
+            IReadOnlyList<string> labels = modelId == "paddle-doc/pp-doclayout-plus-l"
+                ? PaddleDocumentProfiles.LayoutPlusLabels
+                : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
+            PaddleDocumentProfile document = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor,
+                labels,
+                new VisualSize(modelWidth, modelHeight),
+                includeGeometryInputs: true,
+                maximumBatch: 2,
+                scoreThreshold: 0);
+            Assert.AreEqual(-1L, document.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1L, document.VisualProfile.AuxiliaryInputs[0].ShapePattern[0]);
+
+            TensorRtApiVersion apiVersion = ResolveApiVersion();
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-layout-trt-batch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            string enginePath = Path.Combine(root, Path.GetFileNameWithoutExtension(defaultOnnxFile) + "-batch.engine");
+            try
+            {
+                var artifact = new ModelArtifact(new ModelId(modelId), "onnx", onnxPath, onnxSha256, TensorRtBackendProvider.BackendId);
+                TensorRtOnnxEngineBuildResult build;
+                try
+                {
+                    var batchShape = new TensorShape(2, 2);
+                    build = new TensorRtOnnxEngineBuilder().Build(artifact, enginePath, new TensorRtOnnxEngineBuildOptions(
+                        apiVersion: apiVersion,
+                        precision: TensorRtOnnxEnginePrecision.RuntimeDefault,
+                        workspaceBytes: 536870912UL,
+                        optimizationLevel: 3,
+                        inputProfiles: new[]
+                        {
+                            new TensorRtOnnxInputProfile("im_shape", new TensorShape(1, 2), batchShape, batchShape),
+                            new TensorRtOnnxInputProfile("image", new TensorShape(1, 3, modelHeight, modelWidth), new TensorShape(2, 3, modelHeight, modelWidth), new TensorShape(2, 3, modelHeight, modelWidth)),
+                            new TensorRtOnnxInputProfile("scale_factor", new TensorShape(1, 2), batchShape, batchShape)
+                        },
+                        overwrite: true));
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                {
+                    Assert.Inconclusive("TensorRT native runtime is unavailable or mismatched: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
+                {
+                    Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH_UNSUPPORTED model=" + modelId + ";errorCode=" + exception.ErrorCode + ";details=" + (exception.TechnicalDetails ?? exception.Message));
+                    Assert.Inconclusive("TensorRT cannot build this dynamic layout profile: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+
+                var inputFactory = new OpenCvVisualInputFactory();
+                using PreparedVisualInput probe = inputFactory.CreateFromFile(imagePath, document.VisualProfile, "layout-tensorrt-dynamic-batch-probe");
+                float halfHeight = probe.SourceSize.Height / 2f;
+                IVisualRoiGeometry[] regions =
+                {
+                    new RectangleRoiGeometry(new RectangleF(0, 0, probe.SourceSize.Width, halfHeight)),
+                    new RectangleRoiGeometry(new RectangleF(0, halfHeight, probe.SourceSize.Width, probe.SourceSize.Height - halfHeight))
+                };
+                using PreparedVisualInput raw = inputFactory.CreateRoiBatch(
+                    OpenCvImageSource.FromFile(imagePath),
+                    regions,
+                    document.VisualProfile.Input.Name,
+                    document.VisualProfile.Preprocessing!.ToOpenCvOptions(),
+                    inputId: "layout-tensorrt-dynamic-batch-rows",
+                    cancellationToken: CancellationToken.None);
+                using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.RebindWithGeometryInputs(raw, document);
+                Assert.AreEqual(2, input.BatchSize);
+                Assert.AreEqual(2L, input.Tensor.Shape[0]);
+                string[] inputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(input.Tensor, row)).ToArray();
+                Assert.AreNotEqual(inputRowSha256[0], inputRowSha256[1], "Distinct layout ROI rows must not collapse to one prepared tensor.");
+                var inputs = new List<NamedTensor>(1 + input.AuxiliaryInputs.Count) { new NamedTensor(input.InputName, input.Tensor) };
+                inputs.AddRange(input.AuxiliaryInputs);
+                var inferenceInputs = new InferenceInputs(inputs);
+
+                InferenceOutputs ortOutputs;
+                using (var ortRegistry = new BackendRegistry().UseOnnxRuntime())
+                using (IInferenceSession ort = ortRegistry.CreateSession(document.CreateArtifact(onnxPath, OnnxRuntimeBackendProvider.BackendId), new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu")))
+                    ortOutputs = ort.Run(inferenceInputs, CancellationToken.None);
+                var ortBatch = document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, ortOutputs, CancellationToken.None)) as DetectionBatchResult
+                    ?? throw new AssertFailedException("ORT did not produce a DetectionBatchResult for " + modelId + ".");
+                Assert.AreEqual(2, ortBatch.Count);
+
+                var backendOptions = new TensorRtBackendOptions(apiVersion, cudaTargetArchitecture: Environment.GetEnvironmentVariable("DEPLOYSHARP_CUDA_ARCHITECTURE") ?? "compute_86");
+                var request = new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda");
+                int warmup = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH_WARMUP", 5);
+                int iterations = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH_ITERATIONS", 20);
+                var samples = new List<double>(iterations);
+                DetectionBatchResult trtBatch = null!;
+                try
+                {
+                    using var provider = new TensorRtBackendProvider(backendOptions);
+                    using IInferenceSession trt = provider.CreateSession(new ModelArtifact(new ModelId(modelId), "tensorrt-engine", build.EnginePath, build.EngineSha256, TensorRtBackendProvider.BackendId), request, SessionOptions.Default);
+                    for (int index = -warmup; index < iterations; index++)
+                    {
+                        Stopwatch watch = Stopwatch.StartNew();
+                        InferenceOutputs outputs = trt.Run(inferenceInputs, CancellationToken.None);
+                        trtBatch = document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, outputs, CancellationToken.None)) as DetectionBatchResult
+                            ?? throw new AssertFailedException("TensorRT did not produce a DetectionBatchResult for " + modelId + ".");
+                        watch.Stop();
+                        if (index >= 0) samples.Add(watch.Elapsed.TotalMilliseconds);
+                    }
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                {
+                    Assert.Inconclusive("TensorRT runtime creation or execution failed: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+
+                Assert.AreEqual(2, trtBatch.Count);
+                var minimumIou = new double[2];
+                var maximumScoreDrift = new double[2];
+                const float confidenceFloor = .20f;
+                for (int row = 0; row < 2; row++)
+                {
+                    int ortTotal = ortBatch[row].Detections.Count;
+                    int trtTotal = trtBatch[row].Detections.Count;
+                    Detection[] expected = ortBatch[row].Detections.Where(value => value.Label.Score >= confidenceFloor).ToArray();
+                    Detection[] actual = trtBatch[row].Detections.Where(value => value.Label.Score >= confidenceFloor).ToArray();
+                    Assert.AreEqual(expected.Length, actual.Length, "TensorRT changed the decoded detection count for row " + row + ".");
+                    var pairs = (from expectedIndex in Enumerable.Range(0, expected.Length)
+                                 from actualIndex in Enumerable.Range(0, actual.Length)
+                                 where expected[expectedIndex].Label.Index == actual[actualIndex].Label.Index
+                                 let iou = IntersectionOverUnion(expected[expectedIndex], actual[actualIndex])
+                                 orderby iou descending
+                                 select (expectedIndex, actualIndex, iou)).ToList();
+                    var matches = new Dictionary<int, (int ActualIndex, double Iou)>();
+                    var used = new HashSet<int>();
+                    foreach (var pair in pairs)
+                    {
+                        if (matches.ContainsKey(pair.expectedIndex) || !used.Add(pair.actualIndex)) continue;
+                        matches[pair.expectedIndex] = (pair.actualIndex, pair.iou);
+                    }
+                    Assert.AreEqual(expected.Length, matches.Count, "TensorRT changed the semantic class set for row " + row + ".");
+                    minimumIou[row] = matches.Count == 0 ? 1 : matches.Values.Min(value => value.Iou);
+                    maximumScoreDrift[row] = matches.Count == 0 ? 0 : matches.Max(match => Math.Abs((double)expected[match.Key].Label.Score - actual[match.Value.ActualIndex].Label.Score));
+                    Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH_COMPARE model=" + modelId
+                        + ";row=" + row
+                        + ";ortCount=" + ortTotal
+                        + ";trtCount=" + trtTotal
+                        + ";confidenceFloor=" + confidenceFloor.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+                        + ";ortConfident=" + expected.Length
+                        + ";trtConfident=" + actual.Length
+                        + ";matched=" + matches.Count
+                        + ";minimumIou=" + minimumIou[row].ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+                        + ";ortLabels=" + string.Join(",", expected.Select(value => value.Label.Index).Distinct().OrderBy(value => value))
+                        + ";trtLabels=" + string.Join(",", actual.Select(value => value.Label.Index).Distinct().OrderBy(value => value)));
+                    foreach (var match in matches)
+                    {
+                        Assert.IsTrue(match.Value.Iou >= .80, "TensorRT changed layout geometry below IoU 0.80 for row " + row + ".");
+                        Assert.AreEqual(expected[match.Key].Label.Score, actual[match.Value.ActualIndex].Label.Score, .01f, "TensorRT changed high-confidence layout score beyond 0.01 for row " + row + ".");
+                    }
+                }
+
+                double[] sorted = samples.OrderBy(value => value).ToArray();
+                double p50 = sorted[Math.Max(0, (int)Math.Ceiling(sorted.Length * .50) - 1)];
+                double p95 = sorted[Math.Max(0, (int)Math.Ceiling(sorted.Length * .95) - 1)];
+                string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH_REPORT_PATH")
+                    ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-layout-" + modelId.Replace('/', '-') + "-tensorrt11-dynamic-batch-20261011.json");
+                string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+                if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+                File.WriteAllText(report, JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    generatedAtUtc = DateTimeOffset.UtcNow,
+                    execution = new { os = Environment.OSVersion.ToString(), framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, runtime = DescribeNativeRuntime(), api = (int)apiVersion, cudaArchitecture = backendOptions.CudaTargetArchitecture },
+                    model = new { id = modelId, file = defaultOnnxFile, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes },
+                    image = new { file = imagePath, sha256 = ComputeSha256(imagePath), regions = regions.Select(value => new { x = value.Bounds.X, y = value.Bounds.Y, width = value.Bounds.Width, height = value.Bounds.Height }).ToArray() },
+                    batch = new { size = 2, inputShape = input.Tensor.Shape.ToString(), inputRowSha256, auxiliaryShapes = input.AuxiliaryInputs.Select(value => new { name = value.Name, shape = value.Tensor.Shape.ToString() }).ToArray() },
+                    rows = Enumerable.Range(0, 2).Select(row => new { row, ortDetections = ortBatch[row].Detections.Count, tensorRtDetections = trtBatch[row].Detections.Count, ortConfidentDetections = ortBatch[row].Detections.Count(value => value.Label.Score >= confidenceFloor), tensorRtConfidentDetections = trtBatch[row].Detections.Count(value => value.Label.Score >= confidenceFloor), minimumIou = minimumIou[row], maximumScoreDrift = maximumScoreDrift[row] }).ToArray(),
+                    comparison = new { confidenceFloor, iouThreshold = .80, scoreTolerance = .01 },
+                    timing = new { warmup, iterations, p50Ms = p50, p95Ms = p95 },
+                    boundary = "Exact dynamic Batch=2 Engine build, provider execution, Paddle NMS decoding and bounded ORT parity for this layout artifact on one Windows RTX host. The two bus.jpg bands are execution probes without layout ground truth; no accuracy, cross-device portability or all-model TensorRT claim is made."
+                }, new JsonSerializerOptions { WriteIndented = true }));
+                TestContext.AddResultFile(report);
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT_DYNAMIC_BATCH " + JsonSerializer.Serialize(new { model = modelId, engineSha256 = build.EngineSha256, minimumIou, p50Ms = p50, p95Ms = p95, report }));
+            }
+            catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+            {
+                Assert.Inconclusive("TensorRT native runtime is unavailable or mismatched: " + (exception.TechnicalDetails ?? exception.Message));
+            }
+            finally
+            {
+                try { Directory.Delete(root, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void UvDocRunsThroughTensorRtDecoderAndRecordsOrtDrift()
         {
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
