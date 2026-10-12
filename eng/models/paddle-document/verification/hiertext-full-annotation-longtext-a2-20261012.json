@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "deploysharp-hiertext-full-annotation-longtext-coverage-v1",
+  "reportDate": "2026-10-12",
+  "generatedUtc": "2026-10-12T12:00:05.6477508+00:00",
+  "source": {
+    "dataset": "google-research-datasets/hiertext",
+    "split": "validation",
+    "revision": "70b6620b2b112597d8219e11eee9773a1403827c",
+    "annotationGzip": {
+      "path": "F:\\OCRBenchmarkTesting\\artifacts\\cache\\hiertext\\validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz",
+      "compressedBytes": 12274736,
+      "sha256": "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a"
+    },
+    "imageCount": 1724,
+    "annotationLicense": "CC-BY-SA-4.0; source images retain per-image Open Images terms and are not redistributed by this report."
+  },
+  "thresholds": {
+    "naturalContinuousLineCharacters": 3200,
+    "pageAggregateCharacters": 3200
+  },
+  "summary": {
+    "annotationLines": 104139,
+    "totalAnnotatedCharacters": 964340,
+    "ignoredOrIllegibleLines": 24043,
+    "maximumAnnotatedLineCharacters": 182,
+    "maximumPageAggregateCharacters": 4073,
+    "linesAtLeast3200": 0,
+    "naturalContinuousLongTextAvailable": false
+  },
+  "longLines": [],
+  "boundary": "This audits the complete official validation annotation file, not downloaded images or OCR predictions. No natural annotation line reaches 3200 characters; page aggregates are not continuous-line samples. A2 quality and sliding-window accuracy therefore remain open."
+}
