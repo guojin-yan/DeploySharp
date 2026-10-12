@@ -12,6 +12,8 @@ $documents = @(
     'eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-error-patterns-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-structural-quality-20261011.md',
+    'eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md',
+    'eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-generation-limit-20261007.md',
     'docs/model-backend-verification-matrix.md',

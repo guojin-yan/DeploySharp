@@ -443,6 +443,8 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 当前本机数据根目录的 [`formula-data-availability-audit-20261005.md`](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.md) 和 [JSON 清单](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.json) 是 **2026-10-05 的历史盘点**，只描述当时尚未下载 MathNet 的目录状态；其中“只有一张官方公式图片”的结论不代表当前状态。MathNet 评测已经补齐 121 条真实标签，但 exact/CER 仍是 ORT CPU 字符诊断，不是数学语义准确率，也没有关闭 OpenVINO、OpenCV DNN 或 TensorRT 质量门。
 
+公式输出还提供一份 [保守语法/结构诊断](../../eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md)：它只检查常见命令参数、分组和环境闭合，并对抽象结构指纹做配对统计。由于参考标签中也有不满足该子集的写法，结果只能作为 malformed-output 线索，不能当作 TeX 渲染或数学语义指标。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。

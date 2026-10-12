@@ -26,6 +26,8 @@
 
 从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。进一步使用本地 MathNet manifest 的参考标签（只通过图片 SHA 关联，不把原始 LaTeX 写回仓库）生成了[命令 token 质量诊断](formula-realformula-command-quality-20261011.md)及[机器可读结果](formula-realformula-command-quality-20261011.json)。六模型的命令 token micro-F1 为 `45.15%–63.01%`；这仍是精确词法重叠，不是 TeX 渲染或数学语义指标。
 
+2026-10-12 又增加了[保守语法/结构诊断](formula-realformula-syntax-quality-20261012.md)及[机器可读结果](formula-realformula-syntax-quality-20261012.json)。该解析器只检查常见命令参数、分组和 `begin/end` 环境闭合，并将字母/数字抽象后比较结构指纹；六模型预测语法有效率为 `82.64%–96.69%`，结构指纹匹配为 `9.09%–14.88%`。MathNet 参考标签自身有 7 条不满足这个保守子集，因此这些数字只用于发现 malformed output/结构退化，不是 TeX 渲染、数学语义或发布质量分数。
+
 TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针。五个 FormulaNet 均在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；精确 SHA、profile 和错误边界分别记录在 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TensorRT 10.11 的 parser-startup `0xC0000005` 是另一条 runtime 证据，不外推给其余模型。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 
 ## 已知 FormulaNet-L 边界

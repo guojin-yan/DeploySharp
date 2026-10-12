@@ -16,6 +16,7 @@
       "execution": "verified",
       "qualityEvidence": "121-sample MathNet realFormula v1 diagnostic",
       "report": "formula-realformula-six-models-ort-20261007.md",
+      "additionalReports": ["formula-realformula-syntax-quality-20261012.md", "formula-realformula-syntax-quality-20261012.json"],
       "summary": {
         "plus-s": { "exact": "14/121", "charCer": "57.04%", "eos": "121/121", "empty": 0 },
         "plus-m": { "exact": "11/121", "charCer": "58.34%", "eos": "121/121", "empty": 0 },
