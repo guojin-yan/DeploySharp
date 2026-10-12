@@ -52,17 +52,21 @@
       },
       "boundedChartQaValQuality": {
         "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-        "sampleCount": 12,
-        "eos": "12/12",
-        "structureMatches": "9/12",
-        "exactTextMatches": "3/12",
-        "cellExactMatches": "140/293",
-        "crossBackendGeneratedTableSha": "12/12 equal to ORT 2026-10-04 record",
-        "latencyP50P95Milliseconds": "29616.2891/78195.865 total; single-host observation with 1024-token cap",
-        "evidence": "chart2table-extended-quality-openvino-20261011.json",
-        "priorSixSampleEvidence": "chart2table-extended-quality-openvino-20261002.json"
+        "sampleCount": 24,
+        "eos": "24/24",
+        "structureMatches": "16/24",
+        "exactTextMatches": "6/24",
+        "rowExactMatches": "98/161",
+        "cellExactMatches": "211/547",
+        "crossBackendGeneratedTableSha": "24/24 equal to ORT 2026-10-12 record",
+        "latencyP50P95Milliseconds": "15887.68/44197.13 total; order-statistic single-host observation with 1024-token cap",
+        "decodeStepP50MedianP95Milliseconds": "111.09/124.56",
+        "decodeStepP95MedianP95Milliseconds": "136.98/164.11",
+        "evidence": "chart2table-extended-quality-openvino-20261012.json",
+        "alignmentEvidence": "chart2table-extended-quality-backend-alignment-20261012.json",
+        "priorTwelveSampleEvidence": "chart2table-extended-quality-openvino-20261011.json"
       },
-      "boundary": "Execution and bounded twelve-sample task-quality diagnostics only; not split-level ChartQA accuracy or a controlled benchmark."
+      "boundary": "Execution and bounded 24-image task-quality diagnostics only; TensorRT was not rerun on this 24-image selection; not split-level ChartQA accuracy or a controlled benchmark."
     },
     {
       "backend": "tensorrt-cuda",
@@ -103,12 +107,13 @@
   ],
   "crossBackendQuality": {
     "curatedHumanSamples": "ORT/OpenVINO/TensorRT each 4/4 EOS and exact expected-table SHA",
-    "chartQaValTwelveSampleAlignment": "ORT/OpenVINO use the same 12 image SHA values and generated table SHA values match 12/12; both report 140/293 exact cells. This is an alignment check, not a rerun or accuracy score",
-    "evidence": "chart2table-extended-quality-backend-alignment-20261005.json"
+    "chartQaValTwentyFourSampleAlignment": "ORT/OpenVINO use the same 24 image/table SHA values, finish reasons, token counts, dimensions and generated table SHA values match 24/24; both report 211/547 exact cells. This is an alignment check, not a rerun or accuracy score",
+    "evidence": "chart2table-extended-quality-backend-alignment-20261012.json"
   },
   "notYetVerified": [
     "OpenCV DNN full autoregressive generation",
     "ChartQA split-level accuracy or a larger independently labeled chart-to-table benchmark",
+    "TensorRT CUDA rerun on the 24-image selection",
     "Clock-locked, repeated cross-device performance ranking",
     "TensorRT plan portability across GPU, TensorRT, CUDA or cuDNN versions"
   ]
