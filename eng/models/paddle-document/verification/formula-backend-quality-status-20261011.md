@@ -28,6 +28,8 @@
 
 2026-10-12 又增加了[保守语法/结构诊断](formula-realformula-syntax-quality-20261012.md)及[机器可读结果](formula-realformula-syntax-quality-20261012.json)。该解析器只检查常见命令参数、分组和 `begin/end` 环境闭合，并将字母/数字抽象后比较结构指纹；六模型预测语法有效率为 `82.64%–96.69%`，结构指纹匹配为 `9.09%–14.88%`。MathNet 参考标签自身有 7 条不满足这个保守子集，因此这些数字只用于发现 malformed output/结构退化，不是 TeX 渲染、数学语义或发布质量分数。
 
+同日补充了基于 SymPy ANTLR LaTeX parser 的[解析可接受性诊断](formula-realformula-latex-parseability-20261012.md)及[机器可读结果](formula-realformula-latex-parseability-20261012.json)。在六模型共 `726` 条输出中，`548` 条被当前 parser 接受、`178` 条被拒绝，整体接受率为 `75.48%`（各模型 `73.55%–78.51%`）。该 parser 只覆盖其自身支持的 LaTeX 子集；数据集中的 `aligned/array`、自定义宏、物理记号和不规则转义等合法或近似合法写法也可能被拒绝。因此该结果只用于定位 malformed-output 和 parser coverage 边界，**不表示 TeX 能成功渲染，不表示视觉相似，不表示数学语义等价，也不改变 ORT 的发布质量结论**。本机未安装 LaTeX 渲染器，本门仍保持未完成。
+
 TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针。五个 FormulaNet 均在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；精确 SHA、profile 和错误边界分别记录在 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TensorRT 10.11 的 parser-startup `0xC0000005` 是另一条 runtime 证据，不外推给其余模型。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 
 ## 已知 FormulaNet-L 边界

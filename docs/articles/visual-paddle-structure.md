@@ -445,6 +445,8 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 公式输出还提供一份 [保守语法/结构诊断](../../eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md)：它只检查常见命令参数、分组和环境闭合，并对抽象结构指纹做配对统计。由于参考标签中也有不满足该子集的写法，结果只能作为 malformed-output 线索，不能当作 TeX 渲染或数学语义指标。
 
+另外可以运行 [SymPy/ANTLR LaTeX 解析可接受性诊断](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.json)）。它对六模型共 726 条预测调用当前 SymPy ANTLR parser，其中 548 条接受、178 条拒绝（75.48%）。该 parser 只覆盖有限 LaTeX 子集，复杂环境、宏和数据集中的非规范写法可能被拒绝；因此数字只能帮助定位 malformed output 与 parser coverage 边界，不能当作渲染成功、视觉相似、数学语义等价或发布质量。当前环境没有 LaTeX 渲染器，公式渲染/语义门仍未关闭。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
