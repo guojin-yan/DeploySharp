@@ -1,0 +1,403 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v1",
+  "generatedUtc": "2026-10-12T11:49:19.642428+00:00",
+  "backends": [
+    {
+      "backend": "onnxruntime",
+      "evidenceId": "paddleocr-degraded-enhancement-onnxruntime",
+      "source": "E:/GitSpace/DeploySharp-V2.0/DeploySharp/artifacts/paddleocr-funsd-degraded-enhancement-20261012/guoji_JYPPX_2026-10-12_19_48_00/In/16c74bbe-1d81-48c4-9c67-d5e81c8d4fd1/JYPPX/paddleocr-degraded-enhancement-onnxruntime.json",
+      "sourceSha256": "85a287590aa4fad13f0eb9100d73037f50300389d4aae18e8c69c68dfbd83571",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 240,
+        "candidateAvailable": 60,
+        "candidateSelected": 16,
+        "insufficientGain": 46,
+        "noDetectedRegion": 178,
+        "selectedEqualCaseFoldedCer": 10,
+        "selectedWorseCaseFoldedCer": 5,
+        "selectedWorseCaseFoldedWer": 2,
+        "selectedFalseCorrectionRateByCer": 0.3125,
+        "selectedFalseCorrectionRateByWer": 0.125,
+        "latencyMs": {
+          "all": {
+            "count": 240,
+            "mean": 46.27300541666667,
+            "p50": 8.399899999999999,
+            "p95": 177.35917499999996
+          },
+          "selected": {
+            "count": 16,
+            "mean": 131.28979375,
+            "p50": 123.5423,
+            "p95": 225.746975
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 40,
+            "candidateAvailable": 4,
+            "candidateSelected": 3,
+            "insufficientGain": 3,
+            "noDetectedRegion": 34,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.3333333333333333,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 30.044900000000002,
+                "p50": 7.94955,
+                "p95": 118.30304
+              },
+              "selected": {
+                "count": 3,
+                "mean": 85.16263333333333,
+                "p50": 106.9298,
+                "p95": 118.32578
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 40,
+            "candidateAvailable": 3,
+            "candidateSelected": 1,
+            "insufficientGain": 2,
+            "noDetectedRegion": 37,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 19.5057075,
+                "p50": 5.37185,
+                "p95": 76.53189499999975
+              },
+              "selected": {
+                "count": 1,
+                "mean": 72.0168,
+                "p50": 72.0168,
+                "p95": 72.0168
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 40,
+            "candidateAvailable": 16,
+            "candidateSelected": 4,
+            "insufficientGain": 12,
+            "noDetectedRegion": 24,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 67.072045,
+                "p50": 50.70865,
+                "p95": 208.27540999999994
+              },
+              "selected": {
+                "count": 4,
+                "mean": 172.080225,
+                "p50": 187.10750000000002,
+                "p95": 227.19673999999998
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 40,
+            "candidateAvailable": 3,
+            "candidateSelected": 2,
+            "insufficientGain": 1,
+            "noDetectedRegion": 37,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 29.943455,
+                "p50": 5.47895,
+                "p95": 150.34730999999994
+              },
+              "selected": {
+                "count": 2,
+                "mean": 195.89905,
+                "p50": 195.89905,
+                "p95": 220.929175
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 40,
+            "candidateAvailable": 16,
+            "candidateSelected": 4,
+            "insufficientGain": 12,
+            "noDetectedRegion": 24,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 64.22643500000001,
+                "p50": 26.5117,
+                "p95": 224.11476999999996
+              },
+              "selected": {
+                "count": 4,
+                "mean": 136.988725,
+                "p50": 148.2593,
+                "p95": 215.57492499999998
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 40,
+            "candidateAvailable": 18,
+            "candidateSelected": 2,
+            "insufficientGain": 16,
+            "noDetectedRegion": 22,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedWer": 2,
+            "selectedFalseCorrectionRateByCer": 1.0,
+            "selectedFalseCorrectionRateByWer": 1.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 66.84549,
+                "p50": 49.3868,
+                "p95": 180.13615999999996
+              },
+              "selected": {
+                "count": 2,
+                "mean": 72.52905,
+                "p50": 72.52905,
+                "p95": 115.004235
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    },
+    {
+      "backend": "openvino",
+      "evidenceId": "paddleocr-degraded-enhancement-openvino",
+      "source": "E:/GitSpace/DeploySharp-V2.0/DeploySharp/artifacts/paddleocr-funsd-degraded-enhancement-20261012/guoji_JYPPX_2026-10-12_19_48_00/In/fbdea4c4-3feb-4e69-bb6b-b62eefc52487/JYPPX/paddleocr-degraded-enhancement-openvino.json",
+      "sourceSha256": "7a5ced0daa944d6e2a11c61fa61ca89f640b30dfb674ec6cb4aed37358e8097b",
+      "recipe": "ContrastNormalize(lowContrastThreshold=128,targetStandardDeviation=128)",
+      "selection": "ConfidenceGain(minimumGain=0)",
+      "summary": {
+        "records": 240,
+        "candidateAvailable": 60,
+        "candidateSelected": 16,
+        "insufficientGain": 46,
+        "noDetectedRegion": 178,
+        "selectedEqualCaseFoldedCer": 10,
+        "selectedWorseCaseFoldedCer": 5,
+        "selectedWorseCaseFoldedWer": 2,
+        "selectedFalseCorrectionRateByCer": 0.3125,
+        "selectedFalseCorrectionRateByWer": 0.125,
+        "latencyMs": {
+          "all": {
+            "count": 240,
+            "mean": 31.259187083333334,
+            "p50": 10.56485,
+            "p95": 110.41349999999997
+          },
+          "selected": {
+            "count": 16,
+            "mean": 99.08745625,
+            "p50": 81.02420000000001,
+            "p95": 197.13649999999998
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 40,
+            "candidateAvailable": 4,
+            "candidateSelected": 3,
+            "insufficientGain": 3,
+            "noDetectedRegion": 34,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.3333333333333333,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 16.9434425,
+                "p50": 9.791799999999999,
+                "p95": 58.032509999999974
+              },
+              "selected": {
+                "count": 3,
+                "mean": 54.58373333333333,
+                "p50": 53.0375,
+                "p95": 64.39198999999999
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 40,
+            "candidateAvailable": 3,
+            "candidateSelected": 1,
+            "insufficientGain": 2,
+            "noDetectedRegion": 37,
+            "selectedEqualCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 19.6324925,
+                "p50": 8.80615,
+                "p95": 80.78888999999991
+              },
+              "selected": {
+                "count": 1,
+                "mean": 79.1585,
+                "p50": 79.1585,
+                "p95": 79.1585
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 40,
+            "candidateAvailable": 16,
+            "candidateSelected": 4,
+            "insufficientGain": 12,
+            "noDetectedRegion": 24,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 34.0861425,
+                "p50": 12.09715,
+                "p95": 95.58476499999982
+              },
+              "selected": {
+                "count": 4,
+                "mean": 85.595,
+                "p50": 71.05770000000001,
+                "p95": 145.19857499999995
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 40,
+            "candidateAvailable": 3,
+            "candidateSelected": 2,
+            "insufficientGain": 1,
+            "noDetectedRegion": 37,
+            "selectedEqualCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 19.6017175,
+                "p50": 9.8284,
+                "p95": 66.72665499999977
+              },
+              "selected": {
+                "count": 2,
+                "mean": 159.79345,
+                "p50": 159.79345,
+                "p95": 170.44841499999998
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 40,
+            "candidateAvailable": 16,
+            "candidateSelected": 4,
+            "insufficientGain": 12,
+            "noDetectedRegion": 24,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.25,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 45.892672499999996,
+                "p50": 16.5514,
+                "p95": 137.14806499999997
+              },
+              "selected": {
+                "count": 4,
+                "mean": 125.16439999999999,
+                "p50": 88.6874,
+                "p95": 246.26263999999992
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 40,
+            "candidateAvailable": 18,
+            "candidateSelected": 2,
+            "insufficientGain": 16,
+            "noDetectedRegion": 22,
+            "selectedEqualCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedWer": 2,
+            "selectedFalseCorrectionRateByCer": 1.0,
+            "selectedFalseCorrectionRateByWer": 1.0,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 51.398655,
+                "p50": 18.3407,
+                "p95": 120.82476999999962
+              },
+              "selected": {
+                "count": 2,
+                "mean": 89.93254999999999,
+                "p50": 89.93254999999999,
+                "p95": 96.270935
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      }
+    }
+  ],
+  "boundary": "Controlled parent-linked crop evidence. False-correction and latency figures are diagnostic gates, not page/line accuracy, robustness, or a default-policy approval."
+}

@@ -53,8 +53,8 @@ def main() -> None:
     parser.add_argument("--severity", choices=("mild", "severe"), default="mild")
     parser.add_argument("--id-prefix", default="sroie", help="Prefix for generated image IDs; defaults to sroie for backwards compatibility.")
     args = parser.parse_args()
-    if args.max_crops < 1 or args.max_crops > 32:
-        raise SystemExit("max-crops must be between 1 and 32")
+    if args.max_crops < 1 or args.max_crops > 128:
+        raise SystemExit("max-crops must be between 1 and 128")
 
     parent_rows = {}
     for source_manifest in args.source_manifest:
