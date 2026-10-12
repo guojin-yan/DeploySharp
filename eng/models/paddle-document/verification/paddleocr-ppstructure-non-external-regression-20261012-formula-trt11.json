@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-ppstructure-non-external-regression-v1",
+  "generatedUtc": "2026-10-12T08:25:28Z",
+  "commit": "c79f038",
+  "environment": {
+    "os": "Windows 10.0.26200",
+    "dotnet": "10.0.401",
+    "configuration": "Release",
+    "targetFramework": "net10.0",
+    "restore": "--no-restore",
+    "filter": "TestCategory!=ExternalModels"
+  },
+  "projects": [
+    { "project": "DeploySharp.Core.Tests", "path": "tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj", "passed": 33, "skipped": 0, "failed": 0, "total": 33 },
+    { "project": "DeploySharp.ModelFactory.Tests", "path": "tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj", "passed": 63, "skipped": 2, "failed": 0, "total": 65 },
+    { "project": "DeploySharp.ModelPack.Json.Tests", "path": "tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj", "passed": 29, "skipped": 3, "failed": 0, "total": 32 },
+    { "project": "DeploySharp.Visual.Tests", "path": "tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj", "passed": 515, "skipped": 5, "failed": 0, "total": 520 },
+    { "project": "DeploySharp.Visual.OpenCV.Tests", "path": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj", "passed": 99, "skipped": 4, "failed": 0, "total": 103 }
+  ],
+  "summary": { "passed": 739, "skipped": 14, "failed": 0, "total": 753 },
+  "boundary": "This is a non-external contract/regression snapshot. It does not prove external model quality, backend coverage, portability, controlled performance or long-running stability."
+}
