@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-12T13:23:29.41386+00:00",
+  "execution": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "framework": ".NET 10.0.12",
+    "runtime": "JYPPX_NATIVE_BRIDGE_PATH=E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\tensorrt11-bridge\\runtimes\\win-x64\\native\\jyppxtrtbridge.dll|JYPPX_TENSORRT_ROOT=D:\\Program Files\\TensorRT-11.0.0.114-cu12|JYPPX_CUDA_ROOT=C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9|JYPPX_CUDNN_ROOT=D:\\Program Files\\cuDNN-9.22.0-cuda12.9",
+    "tensorRtApi": 11,
+    "cudaArchitecture": "compute_86",
+    "gpuTelemetryBeforeRun": { "name": "NVIDIA GeForce RTX 3060 Laptop GPU", "graphicsClockMhz": 1425, "memoryClockMhz": 7000, "powerDrawWatts": 25.55, "clocksLocked": false }
+  },
+  "model": {
+    "id": "paddle-seal/ppocrv4-mobile",
+    "file": "ppocrv4-mobile-seal-det.onnx",
+    "onnxSha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+    "engineSha256": "6b8bfb63891ae0b89e3c03a05e23ec6211a074a0d49aedd061d9ca08d2e34bcd",
+    "engineBytes": 7530324,
+    "engineSource": "deploysharp-builder"
+  },
+  "image": {
+    "file": "E:\\Data\\ocr\\demo_1.jpg",
+    "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+    "regions": [
+      { "x": 0, "y": 0, "width": 500, "height": 250 },
+      { "x": 0, "y": 250, "width": 500, "height": 250 }
+    ]
+  },
+  "batch": {
+    "size": 2,
+    "inputShape": "[2,3,224,224]",
+    "outputShape": "[2,1,224,224]",
+    "inputRowSha256": [
+      "b1eeb9ed5aa2b4f8b05f8971e933c56dc22dea296d1e7c578bfbeb196791a6e2",
+      "6fb6a12bb6d5fb3caad7ca7435348713e1b3240831b5f27bb73328fca68d1d2b"
+    ]
+  },
+  "rows": [
+    { "row": 0, "ortMaskRowSha256": "1058c50addc55bad50b5d0d345ea226078045d3943d1c6114b34a77d0e32b519", "tensorRtMaskRowSha256": "395d38ada29d104b10f032edc75a0066bdab23e8bce25d0b1e0b4b19b8cdce73", "ortRegions": 0, "tensorRtRegions": 0, "ortMask": "224x224", "tensorRtMask": "224x224" },
+    { "row": 1, "ortMaskRowSha256": "170ab08a1900f58097b2ba8cc1de34c7f00433b6cc5e4c2576066e06b291e607", "tensorRtMaskRowSha256": "023d36cac4b23cf8fa1d1c08d8195d3bdb470e9879c4c5e3e25ca4b64df72d28", "ortRegions": 0, "tensorRtRegions": 0, "ortMask": "224x224", "tensorRtMask": "224x224" }
+  ],
+  "comparison": { "referenceBackend": "onnxruntime-cpu", "rawMaskMaxAbsoluteTolerance": 0.05, "rawMaskMeanAbsoluteTolerance": 0.005, "assertion": "passed for both rows" },
+  "timing": { "warmup": 2, "iterations": 5, "p50Ms": 6.5686, "p95Ms": 7.2197 },
+  "boundary": "Exact PP-OCRv4 seal dynamic Batch=2 Engine build/provider execution, raw mask row binding and bounded ORT parity for this artifact on one Windows TensorRT host. ROI bands are execution probes without seal ground truth; no accuracy, throughput, cross-device portability or all-seal-model claim is made."
+}
