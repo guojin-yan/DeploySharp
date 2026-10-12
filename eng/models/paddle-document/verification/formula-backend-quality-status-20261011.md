@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | ONNX Runtime CPU | **已执行，但质量未通过发布门** | MathNet realFormula v1 的 121 条人工标注样本；六模型 exact、CER、EOS 和空输出见 [六模型汇总](formula-realformula-six-models-ort-20261007.md)。 |
 | OpenVINO CPU | **不支持** | 六个精确导出逐进程隔离；五个 FormulaNet 在 Loop-18 导入/规范输入处阻断，UniMERNet 在 model-reader 阶段中止。见 [隔离报告](formula-openvino-isolated-20261008.md)。 |
-| OpenCV DNN CPU | **动态 Batch 合同不支持** | 六个精确 batch=2 导出均为 `DS-OCV-8002`；见 [OpenCV 动态 Batch 边界](paddle-document-formula-dynamic-batch-opencv-20261007.md)。这不外推 batch=1 或其它 OpenCV 版本。 |
+| OpenCV DNN CPU | **batch=1 与动态 Batch 合同均不支持** | 六个精确导出已分别尝试 batch=1 与 batch=2；batch=1 的五个 FormulaNet 在 `ConstantOfShape` 零维度处阻断，UniMERNet 在 importer 分配阶段阻断。见 [batch=1 边界](paddle-document-formula-batch1-opencv-20261012.md) 和 [动态 Batch 边界](paddle-document-formula-dynamic-batch-opencv-20261007.md)。这只限定当前 OpenCV 5.0.0 与精确工件，不外推其它 OpenCV 版本。 |
 | TensorRT CUDA | **六图 Builder 均被当前 TRT11 importer 阻断；执行/质量/性能未验证** | 五个 FormulaNet 精确图在 TensorRT 11.0.0.114-cu12 的 Loop `BitwiseAnd` 检查失败；UniMERNet 在 If `ConcatFromSequence` 检查失败。无 Engine、Decoder 或性能结果。见 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立记录](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TRT10.11 另有 parser-startup `0xC0000005` 记录，派生图探针见[历史报告](formula-tensorrt-derived-graph-probe-20261011.md)。不能从其他 PP-Structure TensorRT 证据外推。 |
 
 ## ORT CPU 121 条样本诊断

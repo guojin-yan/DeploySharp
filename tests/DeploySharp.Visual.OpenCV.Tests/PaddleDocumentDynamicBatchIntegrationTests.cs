@@ -236,6 +236,51 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialFormulaModelsBatchOneRunOnOpenCvDnnWhenSupported()
+        {
+            RequireExternal();
+            RequireFile(FormulaImagePath, "official formula example image");
+            var models = new[]
+            {
+                new FormulaBatchCase("paddle-formula/pp-formulanet-plus-s", "pp-formulanet-plus-s", "PP-FormulaNet_plus-S_infer", new VisualSize(384, 384)),
+                new FormulaBatchCase("paddle-formula/pp-formulanet-s", "pp-formulanet-s", "PP-FormulaNet-S_infer", new VisualSize(384, 384)),
+                new FormulaBatchCase("paddle-formula/pp-formulanet-plus-m", "pp-formulanet-plus-m", "PP-FormulaNet_plus-M_infer", new VisualSize(384, 384)),
+                new FormulaBatchCase("paddle-formula/pp-formulanet-plus-l", "pp-formulanet-plus-l", "PP-FormulaNet_plus-L_infer", new VisualSize(768, 768)),
+                new FormulaBatchCase("paddle-formula/pp-formulanet-l", "pp-formulanet-l", "PP-FormulaNet-L_infer", new VisualSize(768, 768)),
+                new FormulaBatchCase("paddle-formula/unimernet", "unimernet", "UniMERNet_infer", new VisualSize(672, 192))
+            };
+            var results = new List<object>();
+            foreach (FormulaBatchCase model in models) results.Add(RunFormulaOpenCvDnnSingleBatchAttempt(model));
+
+            string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_FORMULA_OPENCV_BATCH1_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-formula-batch1-opencv-20261012.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            File.WriteAllText(report, JsonSerializer.Serialize(new
+            {
+                schemaVersion = "deploysharp-paddle-document-formula-opencv-batch1-v1",
+                generatedAtUtc = DateTimeOffset.UtcNow.ToUniversalTime(),
+                execution = new
+                {
+                    os = RuntimeInformation.OSDescription,
+                    architecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                    framework = RuntimeInformation.FrameworkDescription,
+                    targetFramework = "net10.0",
+                    configuration = "Release"
+                },
+                input = new { file = FormulaImagePath, sha256 = FileSha256(FormulaImagePath), region = "full official formula image" },
+                batch = 1,
+                backend = "opencv-dnn-cpu",
+                scope = "Six official formula exports attempted through the OpenCV DNN adapter with one prepared batch=1 input; successful cases execute the full formula decoder.",
+                results,
+                boundary = "Exact model/runtime outcomes only on one Windows host. A failure records an importer or adapter boundary for this artifact and batch=1 contract; it does not imply another OpenCV version or backend failure, and no formula accuracy or performance claim is made."
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(report);
+            Assert.AreEqual(models.Length, results.Count);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialDynamicBatchLayoutRunsOnOrtAndOpenVino()
         {
             RequireExternal();
@@ -1741,6 +1786,90 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     errorCode = exception.ErrorCode,
                     technicalDetails = exception.TechnicalDetails,
                     innerException = exception.InnerException?.Message
+                };
+            }
+        }
+
+        private object RunFormulaOpenCvDnnSingleBatchAttempt(FormulaBatchCase item)
+        {
+            string modelPath = Path.Combine(ModelRoot, item.ModelDirectory + ".onnx");
+            string tokenizerPath = Path.Combine(FormulaSourceRoot, item.ModelDirectory, item.InferenceDirectory, "inference.yml");
+            RequireFile(modelPath, item.ModelId + " OpenCV batch=1 ONNX");
+            RequireFile(tokenizerPath, item.ModelId + " official tokenizer");
+
+            PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(tokenizerPath);
+            int endTokenId = FindTokenId(tokenizer.Tokens, "</s>");
+            int startTokenId = FindTokenId(tokenizer.Tokens, "<s>");
+            int padTokenId = FindTokenId(tokenizer.Tokens, "<pad>");
+            int unknownTokenId = FindTokenId(tokenizer.Tokens, "<unk>");
+            var schema = new PaddleDocumentFormulaSchema(tokenizer, endTokenId, startTokenId, padTokenId, unknownTokenId);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(
+                PaddleDocumentModelCatalog.Get(item.ModelId), schema, item.ImageSize, maximumSequenceLength: 4096, maximumBatch: 1);
+
+            var imageFactory = new OpenCvBgrImageFactory();
+            OpenCvBgrImage source = imageFactory.Create(OpenCvImageSource.FromFile(FormulaImagePath), "formula-opencv-batch1-source");
+            var inputFactory = new PaddleDocumentFormulaInputFactory();
+            using PreparedVisualInput input = inputFactory.Create(source, profile.VisualProfile);
+            var contractInputs = new[]
+            {
+                new TensorDescriptor(profile.VisualProfile.Input.Name, profile.VisualProfile.Input.ElementType, profile.VisualProfile.Input.ShapePattern)
+            };
+            var contractOutputs = profile.VisualProfile.Outputs.Select(output =>
+                new TensorDescriptor(output.Name, output.ElementType, new TensorShape(1, -1))).ToArray();
+            var contract = new OpenCvDnnModelContract(
+                profile.VisualProfile.ModelId,
+                contractInputs,
+                contractOutputs,
+                new[] { profile.VisualProfile.Input.Name });
+            using var registry = new BackendRegistry();
+            registry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+            var request = new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu");
+            try
+            {
+                using IInferenceSession session = registry.CreateSession(profile.CreateArtifact(modelPath, OpenCvDnnBackendProvider.BackendId), request);
+                InferenceOutputs outputs = session.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                ITensor tokenOutput = outputs.GetRequired(profile.VisualProfile.Outputs[0].Name);
+                var decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentFormulaResult
+                    ?? throw new AssertFailedException(item.ModelId + " OpenCV output did not decode to a single formula result.");
+                return new
+                {
+                    model = item.ModelId,
+                    modelSha256 = FileSha256(modelPath),
+                    inputShape = input.Tensor.Shape.ToString(),
+                    inputSha256 = TensorSha256(input.Tensor),
+                    outputElementType = tokenOutput.ElementType.ToString(),
+                    outputShape = tokenOutput.Shape.ToString(),
+                    tokenCount = decoded.TokenIds.Count,
+                    reachedEos = !decoded.Warnings.Contains("missing-eos:sequence-may-be-truncated", StringComparer.Ordinal),
+                    latexSha256 = Sha256Text(decoded.Latex),
+                    status = "passed"
+                };
+            }
+            catch (OpenCvDnnBackendException exception)
+            {
+                return new
+                {
+                    model = item.ModelId,
+                    modelSha256 = FileSha256(modelPath),
+                    inputShape = input.Tensor.Shape.ToString(),
+                    inputSha256 = TensorSha256(input.Tensor),
+                    status = "opencv-dnn-batch1-unsupported-for-exact-contract",
+                    errorCode = exception.ErrorCode,
+                    technicalDetails = exception.TechnicalDetails,
+                    innerException = exception.InnerException?.Message
+                };
+            }
+            catch (Exception exception)
+            {
+                return new
+                {
+                    model = item.ModelId,
+                    modelSha256 = FileSha256(modelPath),
+                    inputShape = input.Tensor.Shape.ToString(),
+                    inputSha256 = TensorSha256(input.Tensor),
+                    status = "unexpected-error",
+                    exceptionType = exception.GetType().FullName,
+                    message = exception.Message
                 };
             }
         }

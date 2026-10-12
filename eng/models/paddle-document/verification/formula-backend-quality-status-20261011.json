@@ -35,10 +35,11 @@
     },
     {
       "backend": "opencv-dnn-cpu",
-      "execution": "unsupported-for-dynamic-batch-contract",
+      "execution": "unsupported",
       "qualityEvidence": null,
-      "report": "paddle-document-formula-dynamic-batch-opencv-20261007.md",
-      "boundary": "The six exact batch=2 dynamic exports hit DS-OCV-8002 importer/input-specialization errors. This does not make a batch=1 or another OpenCV build implicitly supported."
+      "report": "paddle-document-formula-batch1-opencv-20261012.md",
+      "additionalReports": ["paddle-document-formula-dynamic-batch-opencv-20261007.md"],
+      "boundary": "The six exact exports were attempted at both batch=1 and dynamic batch=2 on OpenCV 5.0.0 CPU. Five batch=1 imports fail at ConstantOfShape zero-dimension specialization and UniMERNet fails during importer allocation; the batch=2 attempts also fail with DS-OCV-8002. No formula decoder or quality result was produced. This is limited to the exact artifacts/runtime and does not imply another OpenCV build or backend failure."
     },
     {
       "backend": "tensorrt-cuda",
