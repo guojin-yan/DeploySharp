@@ -80,17 +80,21 @@
           "chart2table-component-validation.json"
         ]
       },
-      "boundedChartQaValQuality": {
+    "boundedChartQaValQuality": {
         "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-        "sampleCount": 12,
-        "eos": "12/12",
-        "structureMatches": "9/12",
-        "exactTextMatches": "3/12",
-        "cellExactMatches": "140/293",
-        "latencyP50P95Milliseconds": "4398.95/12209.76 total; decode range 33.37-39.48/35.85-48.81",
-        "evidence": "chart2table-extended-quality-tensorrt-20261005.json"
+      "sampleCount": 24,
+      "eos": "24/24",
+      "structureMatches": "16/24",
+      "exactTextMatches": "6/24",
+      "rowExactMatches": "98/161",
+      "cellExactMatches": "211/547",
+      "generatedTextShaMatchesToOrt": "23/24",
+      "latencyP50P95Milliseconds": "6498.09/24173.29 total; decode P50 median/P95 68.27/79.24; decode P95 median/P95 87.07/108.75",
+      "evidence": "chart2table-extended-quality-tensorrt-20261012.json",
+      "alignmentEvidence": "chart2table-extended-quality-ort-tensorrt-alignment-20261012.json",
+      "priorTwelveSampleEvidence": "chart2table-extended-quality-tensorrt-20261005.json"
       },
-      "boundary": "Execution and bounded task-quality diagnostics on one unclock-locked device; do not generalize plans or timings to another GPU/runtime."
+      "boundary": "Execution and bounded 24-image task-quality diagnostics on one unclock-locked device; one generated-text hash differs from ORT while token/shape/cell totals agree; do not generalize plans or timings to another GPU/runtime."
     },
     {
       "backend": "opencv-dnn-cpu",

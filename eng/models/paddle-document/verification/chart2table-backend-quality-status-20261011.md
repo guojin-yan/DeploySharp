@@ -14,7 +14,7 @@ The machine-readable source is [`chart2table-backend-quality-status-20261011.jso
 |---|---|---|---|
 | ONNX Runtime CPU | Official sample and 4 curated ChartQA human charts reach EOS; all 4 expected table hashes match | 24-image ChartQA `val` selection: 24/24 EOS, 16/24 structure matches, 6/24 exact text, 211/547 cells | Supported for the published bundle; quality numbers are diagnostic only |
 | OpenVINO CPU | Official sample and 4 curated ChartQA human charts reach EOS; all 4 expected table hashes match | Pinned 24-image `val` selection: 24/24 EOS, 16/24 structure matches, 6/24 exact text, 211/547 cells; generated table SHA matches ORT for 24/24 | Supported for the published bundle; quality numbers are diagnostic only |
-| TensorRT CUDA | Official sample and 4 curated ChartQA human charts reach EOS; all 4 expected table hashes match; Builder-created plans pass | ChartQA `val` selection: 12/12 EOS, 9/12 structure matches, 3/12 exact text, 140/293 cells | Supported on the recorded RTX 3060/TensorRT 10.11 profile; plans are not portable without rebuild |
+| TensorRT CUDA | Official sample and 4 curated ChartQA human charts reach EOS; all 4 expected table hashes match; Builder-created plans pass | Pinned 24-image `val` selection: 24/24 EOS, 16/24 structure matches, 6/24 exact text, 211/547 cells; generated text SHA matches ORT for 23/24 (one non-exact output hash has identical token count/shape/cell totals) | Supported on the recorded RTX 3060/TensorRT 10.11 profile; plans are not portable without rebuild |
 | OpenCV DNN CPU | Vision/Projector and token-embedding graphs load in isolation | No full generation | Unsupported for the current adapter contract: rank-3 prefill and rank-4 dynamic-KV decode inputs fail closed before inference |
 
 ## Evidence and interpretation
@@ -29,10 +29,10 @@ The machine-readable source is [`chart2table-backend-quality-status-20261011.jso
 
 - [Four-graph component validation](chart2table-component-validation.json)
 - [ORT four-image regression](chart2table-ort-multi-image-20260929.json) · [OpenVINO four-image regression](chart2table-openvino-multi-image-20260929.json) · [TensorRT four-image regression](chart2table-tensorrt-multi-image-20260930.json)
-- [ORT 24-image quality](chart2table-extended-quality-ort-20261012.json) · [OpenVINO 24-image quality](chart2table-extended-quality-openvino-20261012.json) · [ORT 12-image quality](chart2table-extended-quality-ort-20261004.json) · [TensorRT 12-image quality](chart2table-extended-quality-tensorrt-20261005.json)
-- [ORT/OpenVINO 24-image alignment](chart2table-extended-quality-backend-alignment-20261012.json) · [ORT/TensorRT 12-image alignment](chart2table-extended-quality-backend-alignment-20261005.json)
+- [ORT 24-image quality](chart2table-extended-quality-ort-20261012.json) · [OpenVINO 24-image quality](chart2table-extended-quality-openvino-20261012.json) · [TensorRT 24-image quality](chart2table-extended-quality-tensorrt-20261012.json) · [ORT 12-image quality](chart2table-extended-quality-ort-20261004.json)
+- [ORT/OpenVINO 24-image alignment](chart2table-extended-quality-backend-alignment-20261012.json) · [ORT/TensorRT 24-image alignment](chart2table-extended-quality-ort-tensorrt-alignment-20261012.json) · [ORT/TensorRT 12-image alignment](chart2table-extended-quality-backend-alignment-20261005.json)
 - [OpenCV isolated boundary](chart2table-opencv-isolated-20260929.json)
 
 ## Not closed by this index
 
-OpenCV full autoregressive generation, TensorRT rerun on the 24-image selection, split-level ChartQA accuracy, clock-locked repeated performance, and TensorRT portability across runtime/GPU versions remain open. No `✓` in the backend matrix should be read as a claim that every chart style or every PP-Structure model is accurate.
+OpenCV full autoregressive generation, split-level ChartQA accuracy, clock-locked repeated performance, and TensorRT portability across runtime/GPU versions remain open. One ORT/TensorRT generated-text hash differs in the 24-image alignment while token count, EOS, dimensions and cell totals remain equal; this must not be silently promoted to bitwise parity. No `✓` in the backend matrix should be read as a claim that every chart style or every PP-Structure model is accurate.

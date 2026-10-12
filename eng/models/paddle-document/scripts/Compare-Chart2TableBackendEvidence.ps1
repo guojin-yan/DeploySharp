@@ -33,6 +33,16 @@ function Get-SampleMap($Report, [string]$BackendName) {
     return $map
 }
 
+function Get-FirstStringProperty($Object, [string[]]$Names) {
+    foreach ($name in $Names) {
+        $property = $Object.PSObject.Properties[$name]
+        if ($null -ne $property -and $null -ne $property.Value -and -not [string]::IsNullOrWhiteSpace([string]$property.Value)) {
+            return [string]$property.Value
+        }
+    }
+    return $null
+}
+
 $ort = Read-Report $OrtReport
 $other = Read-Report $BackendReport
 $leftName = [string]$ort.backend
@@ -63,9 +73,9 @@ foreach ($name in $names) {
     $rows.Add([ordered]@{
         sample = $name
         imageSha256Match = [string]::Equals([string]$left.imageSha256, [string]$right.imageSha256, [StringComparison]::OrdinalIgnoreCase)
-        sourceTableSha256Match = [string]::Equals([string]$left.sourceTableSha256, [string]$right.sourceTableSha256, [StringComparison]::OrdinalIgnoreCase)
-        expectedTableSha256Match = [string]::Equals([string]$left.expectedTableSha256, [string]$right.expectedTableSha256, [StringComparison]::OrdinalIgnoreCase)
-        generatedTableSha256Match = [string]::Equals([string]$left.generatedTableSha256, [string]$right.generatedTableSha256, [StringComparison]::OrdinalIgnoreCase)
+        sourceTableSha256Match = [string]::Equals((Get-FirstStringProperty $left @('sourceTableSha256')), (Get-FirstStringProperty $right @('sourceTableSha256')), [StringComparison]::OrdinalIgnoreCase)
+        expectedTableSha256Match = [string]::Equals((Get-FirstStringProperty $left @('expectedTableSha256', 'expectedTextSha256')), (Get-FirstStringProperty $right @('expectedTableSha256', 'expectedTextSha256')), [StringComparison]::OrdinalIgnoreCase)
+        generatedTableSha256Match = [string]::Equals((Get-FirstStringProperty $left @('generatedTableSha256', 'generatedTextSha256')), (Get-FirstStringProperty $right @('generatedTableSha256', 'generatedTextSha256')), [StringComparison]::OrdinalIgnoreCase)
         finishReasonMatch = [string]::Equals([string]$left.finishReason, [string]$right.finishReason, [StringComparison]::Ordinal)
         leftFinishReason = $left.finishReason
         rightFinishReason = $right.finishReason
