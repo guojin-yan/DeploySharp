@@ -650,6 +650,8 @@ namespace DeploySharp.Visual.TensorRT.Tests
         [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9", 640, 640)]
         [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048", 800, 800)]
         [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218", 640, 640)]
+        [DataRow("paddle-doc/rt-detr-h-layout-3cls", "rt-detr-h-layout-3cls.onnx", "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b", 640, 640)]
+        [DataRow("paddle-doc/rt-detr-h-layout-17cls", "rt-detr-h-layout-17cls.onnx", "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a", 640, 640)]
         public void LayoutNmsRunsDynamicBatchTwoOnTensorRtAndMatchesOrtRows(string modelId, string defaultOnnxFile, string expectedOnnxSha256, int modelWidth, int modelHeight)
         {
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
@@ -668,7 +670,10 @@ namespace DeploySharp.Visual.TensorRT.Tests
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
             IReadOnlyList<string> labels = modelId == "paddle-doc/pp-doclayout-plus-l"
                 ? PaddleDocumentProfiles.LayoutPlusLabels
-                : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
+                : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels
+                : modelId == "paddle-doc/rt-detr-h-layout-3cls" ? PaddleDocumentProfiles.Layout3Labels
+                : modelId == "paddle-doc/rt-detr-h-layout-17cls" ? PaddleDocumentProfiles.Layout17Labels
+                : PaddleDocumentProfiles.Layout23Labels;
             PaddleDocumentProfile document = PaddleDocumentProfiles.CreatePaddleNmsRegions(
                 descriptor,
                 labels,

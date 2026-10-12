@@ -192,10 +192,10 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | `paddle-doc/picodet-layout-1x-table` | ✓ | ✓ | ✗ | △ |
 | `paddle-doc/picodet-s-layout-3cls` | ✓ | ✓ | ✗ | △ |
 | `paddle-doc/picodet-l-layout-3cls` | ✓ | ✓ | ✗ | △ |
-| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | △ |
+| `paddle-doc/rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | ✓# |
 | `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | ✗ | △ |
 | `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | ✗ | △ |
-| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | △ |
+| `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓# |
 | `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | ✗² |
 | `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | ✗² |
 | `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | △ |
@@ -285,7 +285,8 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 - `✓**` 表示使用 `eng/models/paddle-document/scripts/Build-PaddleDocumentOpenVinoCompatibility.ps1` 生成的派生 ONNX；原始 Release 文件保持未修改，派生文件使用独立 compatibility ID、文件名和 SHA-256 注册在 [`slanext-openvino-compatibility.json`](../eng/models/paddle-document/verification/slanext-openvino-compatibility.json)。原始 SLANeXt Release 图在当前 OpenVINO `Loop` importer 下标记为 `✗`，不能直接部署；兼容图的独立 Release 资产名已确定为 `slanext-wired-openvino-compat.onnx` 和 `slanext-wireless-openvino-compat.onnx`，上传前状态为 `planned-separate-assets`。
 - `✓†` 表示精确工件 `pp-doclayout-l` 已完成 TensorRT 11 动态输入和图内 Paddle NMS 推理，并与 ORT CPU 结果比较；输入预处理仍在 CPU，不能解释为 CUDA 端到端流水线。
 - 版面五模型新增的普通 `✓` 表示同一 Windows RTX 3060 Laptop 主机上已完成 TensorRT 11 的单图 ONNX→Engine→推理和 ORT 解码对照；详细 P50/P95 与 M/S 数据依赖输出边界见 [`paddle-document-layout-tensorrt11-20261011.md`](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.md)。它不表示动态 Batch=2、版面准确率、其余 layout 图或跨设备 Engine 可移植性。
-- 动态 Batch=2 的新增证据只覆盖 `pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-docblocklayout` 三个动态图；每个精确组合都有独立 JSON 和五次预热/五十次测量的 P50/P95。静态 `pp-doclayout-m/s`、PicoDet、RT-DETR 等图仍不能从该证据外推。
+- 动态 Batch=2 的新增证据覆盖五个动态图：`pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-docblocklayout`、`rt-detr-h-layout-3cls` 和 `rt-detr-h-layout-17cls`；每个精确组合都有独立 JSON 和五次预热/五十次测量的 P50/P95。静态 `pp-doclayout-m/s`、PicoDet 图仍不能从该证据外推。
+- `✓#` 表示 RT-DETR-H layout 精确工件已完成 TensorRT 11 动态 Batch=2、三输入几何绑定、Paddle NMS 解码和 ORT CPU 有界 parity；详见 [`paddle-document-layout-tensorrt11-dynamic-batch-20261011.md`](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)。它不表示版面准确率、静态 PicoDet 支持或跨设备 Engine 可移植性。
 - `✓‡` 表示精确工件 `pp-lcnet-x1-0-table-cls` 已完成 TensorRT 11 静态输入、CUDA 预处理、分类 Decoder 和 ORT 标签/置信度一致性比较；置信度允许明确记录的绝对误差 `0.01`，不能外推为数据集精度结论。
 - `✓‖` 表示两个 RT-DETR 表格单元格精确工件已完成 TensorRT 11 动态三输入 profile、图内 Paddle NMS、全候选几何 IoU/score 对照和 5/50 P50/P95 测量；wireless 的一个 score≥0.05 候选落在数值边界，按共同匹配候选记录，不能外推为 cell 召回率或表格结构准确率。
 - `✓§` 表示精确工件 `ppocrv4-mobile/server-seal-det` 已完成 TensorRT 11 概率图推理、印章 Decoder 和 ORT 尺寸/区域数一致性比较；server 构建显式关闭 TF32，当前样本的原始掩码逐元素误差通过合同，但不能外推为数据集召回率。
