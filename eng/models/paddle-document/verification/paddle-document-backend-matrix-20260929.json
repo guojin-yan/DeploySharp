@@ -32,6 +32,8 @@
     "tensorRtTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.json",
     "tensorRtLayoutTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.json",
     "picodetStaticTensorRt11": "eng/models/paddle-document/verification/paddle-document-picodet-static-tensorrt11-20261012.json",
+    "uvdocTensorRt11DynamicBatch": "eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-20261011.json",
+    "sealTensorRt11": "docs/model-backend-verification-matrix.md#tensorrt-精确工件证据",
     "tensorRtLayoutDynamicBatchTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
     "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs",
     "chart2tableExtendedOrt": "eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json",
@@ -153,7 +155,7 @@
   ],
   "assets": [
     { "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
-    { "modelId": "paddle-doc/uvdoc", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
+    { "modelId": "paddle-doc/uvdoc", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "pass", "tensorRtEvidence": "dynamic-batch2-bounded-parity" },
     { "modelId": "paddle-doc/pp-doclayout-plus-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-doc/pp-doclayout-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-doc/pp-doclayout-m", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "pass" },
@@ -180,8 +182,8 @@
     { "modelId": "paddle-formula/pp-formulanet-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-formula/pp-formulanet-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-formula/unimernet", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" },
-    { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" },
+    { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
+    { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
     { "modelId": "paddle-chart/pp-chart2table", "artifactKind": "four-graph-release-bundle", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" }
   ]
 }
