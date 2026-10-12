@@ -509,6 +509,8 @@ Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.Colum
 
 同一固定 `ChartQA/val` 选择已扩展为 12 张图并在相同 TensorRT plans 上复测：`12/12` EOS、`9/12` 行列维度一致、单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 `4,398.95/12,209.76 ms`，Decode P50/P95 范围 `33.37–39.48 / 35.85–48.81 ms`。这仍是有界任务质量和阶段计时诊断，不是 split accuracy、问答分数或受控性能基准。详见 [TensorRT 12 图记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。
 
+2026-10-12 又在同一 ChartQA revision 上新增 24 张固定图的 ORT CPU 扩展：`24/24` EOS、`16/24` 行列维度一致、`6/24` 文本精确匹配，累计 `211/547` 单元格（`38.57%`）和 `98/161` 行（`60.87%`）匹配。总耗时顺序统计 P50/P95 为 `19,328.80/51,708.73 ms`，每图 Decode step P50 中位数/P95 为 `106.15/136.49 ms`。这是 ORT-only 的有界任务质量诊断；OpenVINO/TensorRT 尚未对这 24 张图复跑，不能从 12 图跨后端结果外推。详见 [24 图 ORT 记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.json)。
+
 文档链接可用性由[最新审计 JSON](../../eng/models/paddle-document/verification/document-link-audit-20261007-classifier-distinct-batch.json)维护；审计脚本检查六份 PP-OCR/PP-Structure 入口文档的相对本地链接，并在 JSON 中记录检查数量与断链数。外部 URL 与运行时生成路径不在此审计范围。
 
 Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。

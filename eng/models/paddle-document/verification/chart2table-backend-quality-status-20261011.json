@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-chart2table-backend-quality-status-v1",
-  "generatedUtc": "2026-10-11T00:00:00Z",
+  "generatedUtc": "2026-10-12T00:00:00Z",
   "modelId": "paddle-chart/pp-chart2table",
   "bundle": {
     "releaseRepository": "guojin-yan/DeploySharp",
@@ -25,15 +25,19 @@
       },
       "boundedChartQaValQuality": {
         "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-        "sampleCount": 12,
-        "eos": "12/12",
-        "structureMatches": "9/12",
-        "exactTextMatches": "3/12",
-        "cellExactMatches": "140/293",
-        "latencyP50P95Seconds": "26.866/72.933",
-        "evidence": "chart2table-extended-quality-ort-20261004.json"
+        "sampleCount": 24,
+        "eos": "24/24",
+        "structureMatches": "16/24",
+        "exactTextMatches": "6/24",
+        "rowExactMatches": "98/161",
+        "cellExactMatches": "211/547",
+        "latencyP50P95Milliseconds": "19328.80/51708.73 total; order-statistic single-host observation",
+        "decodeStepP50MedianP95Milliseconds": "106.15/136.49",
+        "decodeStepP95MedianP95Milliseconds": "161.55/243.55",
+        "evidence": "chart2table-extended-quality-ort-20261012.json",
+        "priorTwelveSampleEvidence": "chart2table-extended-quality-ort-20261004.json"
       },
-      "boundary": "Execution and bounded task-quality diagnostics only; not split-level ChartQA accuracy or a controlled benchmark."
+      "boundary": "Execution and bounded 24-image task-quality diagnostics only; OpenVINO/TensorRT were not rerun on this 24-image selection; not split-level ChartQA accuracy or a controlled benchmark."
     },
     {
       "backend": "openvino-cpu",
