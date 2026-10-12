@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-12T02:00:00Z",
+  "generatedUtc": "2026-10-12T07:30:29Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -37,6 +37,8 @@
     "slanextOpenVinoCompatTensorRt11Probe": "eng/models/paddle-document/verification/slanext-openvino-compat-tensorrt11-builder-probe-20261012.json",
     "slanextOriginalTensorRt11Probe": "eng/models/paddle-document/verification/slanext-tensorrt11-builder-probe-20261011.json",
     "formulaPlusSTensorRt11Probe": "eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.json",
+    "formulaTensorRt11BuilderProbe": "eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.json",
+    "formulaUniMERNetTensorRt11Probe": "eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.json",
     "tensorRtLayoutDynamicBatchTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
     "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs",
     "chart2tableExtendedOrt": "eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json",
@@ -180,11 +182,11 @@
     { "modelId": "paddle-table/rt-detr-l-wired-cell-det", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-table/rt-detr-l-wireless-cell-det", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-formula/pp-formulanet-plus-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
-    { "modelId": "paddle-formula/pp-formulanet-plus-m", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-formula/pp-formulanet-plus-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-formula/pp-formulanet-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-formula/pp-formulanet-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-formula/unimernet", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
+    { "modelId": "paddle-formula/pp-formulanet-plus-m", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
+    { "modelId": "paddle-formula/pp-formulanet-plus-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
+    { "modelId": "paddle-formula/pp-formulanet-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
+    { "modelId": "paddle-formula/pp-formulanet-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
+    { "modelId": "paddle-formula/unimernet", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-concat-from-sequence-parser-blocked" },
     { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
     { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
     { "modelId": "paddle-chart/pp-chart2table", "artifactKind": "four-graph-release-bundle", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" }

@@ -1,4 +1,4 @@
-# 公式模型后端质量/执行状态索引（2026-10-11）
+# 公式模型后端质量/执行状态索引（2026-10-12 更新）
 
 这是一份证据索引，不是新的全量推理报告。它把六个官方 Paddle 公式 ONNX 导出的当前状态集中列出，避免把 ORT 的单后端字符串诊断、OpenVINO/OpenCV 的阻断和其它 PP-Structure 模型的 TensorRT 结果混为“公式模型全部支持”。机器可读版本见 [JSON](formula-backend-quality-status-20261011.json)。
 
@@ -9,7 +9,7 @@
 | ONNX Runtime CPU | **已执行，但质量未通过发布门** | MathNet realFormula v1 的 121 条人工标注样本；六模型 exact、CER、EOS 和空输出见 [六模型汇总](formula-realformula-six-models-ort-20261007.md)。 |
 | OpenVINO CPU | **不支持** | 六个精确导出逐进程隔离；五个 FormulaNet 在 Loop-18 导入/规范输入处阻断，UniMERNet 在 model-reader 阶段中止。见 [隔离报告](formula-openvino-isolated-20261008.md)。 |
 | OpenCV DNN CPU | **动态 Batch 合同不支持** | 六个精确 batch=2 导出均为 `DS-OCV-8002`；见 [OpenCV 动态 Batch 边界](paddle-document-formula-dynamic-batch-opencv-20261007.md)。这不外推 batch=1 或其它 OpenCV 版本。 |
-| TensorRT CUDA | **未验证 / 代表 Builder 阻断** | `pp-formulanet-plus-s` 在匹配 TensorRT 10.11/CUDA 12.9 上已完成精确 Builder 探针，但进程在 ONNX parser startup 以 `0xC0000005` 终止，未创建 Engine；其余五模型尚未逐一构建。见 [代表 Builder 探针](formula-tensorrt-builder-probe-20261011.md)。后续 TensorRT 11 派生图探针虽能把 bool-mask 副本推进到 parser，但 Builder 对 Loop 的 shape-changing recurrence 返回空 Engine，见 [派生图探针](formula-tensorrt-derived-graph-probe-20261011.md)。不能从版面、表格或 Chart2Table 的 TensorRT 证据外推。 |
+| TensorRT CUDA | **六图 Builder 均被当前 TRT11 importer 阻断；执行/质量/性能未验证** | 五个 FormulaNet 精确图在 TensorRT 11.0.0.114-cu12 的 Loop `BitwiseAnd` 检查失败；UniMERNet 在 If `ConcatFromSequence` 检查失败。无 Engine、Decoder 或性能结果。见 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立记录](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TRT10.11 另有 parser-startup `0xC0000005` 记录，派生图探针见[历史报告](formula-tensorrt-derived-graph-probe-20261011.md)。不能从其他 PP-Structure TensorRT 证据外推。 |
 
 ## ORT CPU 121 条样本诊断
 
@@ -26,7 +26,7 @@
 
 从同一六份逐样本 JSON 还生成了[结构诊断索引](formula-realformula-structure-quality-20261011.md)及[机器可读结果](formula-realformula-structure-quality-20261011.json)：按参考公式长度分层，统计生成括号是否平衡、生成 LaTeX 命令数量、exact/CER/EOS。进一步使用本地 MathNet manifest 的参考标签（只通过图片 SHA 关联，不把原始 LaTeX 写回仓库）生成了[命令 token 质量诊断](formula-realformula-command-quality-20261011.md)及[机器可读结果](formula-realformula-command-quality-20261011.json)。六模型的命令 token micro-F1 为 `45.15%–63.01%`；这仍是精确词法重叠，不是 TeX 渲染或数学语义指标。
 
-代表性的 [TensorRT Builder 探针](formula-tensorrt-builder-probe-20261011.md)显示 Plus-S 在 TensorRT 10.11/CUDA 12.9 初始化后，于 ONNX parser startup 以 `0xC0000005` 终止，未创建 Engine；这只覆盖一个图。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)显示所有图都含动态输入/输出和自回归 `Loop`，循环体包含控制流、动态 shape 与 bitwise 算子；该审计是风险盘点，不是 TensorRT 支持判定。
+TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针。五个 FormulaNet 均在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；精确 SHA、profile 和错误边界分别记录在 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TensorRT 10.11 的 parser-startup `0xC0000005` 是另一条 runtime 证据，不外推给其余模型。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 
 ## 已知 FormulaNet-L 边界
 

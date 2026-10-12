@@ -140,11 +140,11 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 
 六个公式动态图随后均尝试 OpenCV DNN CPU batch=2，且在图导入/输入特化阶段以 `DS-OCV-8002` 失败；PP-FormulaNet Plus-S/M/L、FormulaNet-S/L 对应 `ConstantOfShape` 零维度 importer 错误，UniMERNet 对应 `GatherND` importer 错误。只将这六个精确 artifact/runtime/batch 组合记为不支持，不改变 ORT 的通过状态，不外推 batch=1 或其他 OpenCV 版本，也不继续追查 importer。详见[公式 OpenCV 动态 Batch 边界报告](../eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.md)及[JSON](../eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json)。
 
-六个公式模型的当前后端状态另有一份集中索引：ORT CPU 的 121 条 realFormula 结果是质量诊断而非发布通过，OpenVINO 六项保持精确阻断，OpenCV 只记录上述动态 Batch 不支持，TensorRT 尚未建立六模型质量/性能矩阵；其中 Plus-S 已在匹配 TRT10.11/CUDA12.9 上做过 Builder 探针，但在 parser startup 以 `0xC0000005` 终止、未生成 Engine。见[公式后端质量/执行状态索引](../eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md)及[机器可读 JSON](../eng/models/paddle-document/verification/formula-backend-quality-status-20261011.json)，以及[TensorRT Builder 探针](../eng/models/paddle-document/verification/formula-tensorrt-builder-probe-20261011.md)。
+六个公式模型的当前后端状态另有一份集中索引：ORT CPU 的 121 条 realFormula 结果是质量诊断而非发布通过，OpenVINO 六项保持精确阻断，OpenCV 只记录上述动态 Batch 不支持。2026-10-12 已在 RTX 3060 Laptop / TensorRT 11.0.0.114-cu12 上对六个精确图全部执行 Batch=1 Builder 探针：五个 FormulaNet 在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；均未生成 Engine、未进入 Decoder，因此没有 TensorRT 公式质量或性能结果。汇总见[五个 FormulaNet 探针](../eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.md)和[UniMERNet 独立探针](../eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.md)，状态索引见[公式后端质量/执行状态](../eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md)。
 
-随后对同一 Plus-S 图进行了独立派生兼容性探针：Polygraphy 清理仍在 `BitwiseAnd` 处被 TensorRT 解析器阻断；将掩码改为布尔逻辑后虽能完成解析，Builder 又因 Loop recurrence 的形状变化返回空 Engine。四个派生图均只通过 `onnx.checker`，未进入 Decoder，不能改变公式 TensorRT 的 `△` 状态。详见[派生图探针](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.md)及[JSON](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.json)。
+随后对同一 Plus-S 图进行了独立派生兼容性探针：Polygraphy 清理仍在 `BitwiseAnd` 处被 TensorRT 解析器阻断；将掩码改为布尔逻辑后虽能完成解析，Builder 又因 Loop recurrence 的形状变化返回空 Engine。四个派生图均只通过 `onnx.checker`，未进入 Decoder；这些历史派生图探针不替代对官方图的逐项 Builder 结果。详见[派生图探针](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.md)及[JSON](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.json)。
 
-六个公式图的[静态 TensorRT 兼容性审计](../eng/models/paddle-document/verification/formula-tensorrt-static-compatibility-20261011.md)显示它们都包含动态输入/输出和自回归 `Loop`，循环体还包含 `If`、动态 shape 与 bitwise 算子。该审计用于定位派生兼容图的投入边界，不改变任何后端勾号，也不把 Plus-S 的 parser 崩溃外推到所有 TensorRT 版本。
+六个公式图的[静态 TensorRT 兼容性审计](../eng/models/paddle-document/verification/formula-tensorrt-static-compatibility-20261011.md)显示它们都包含动态输入/输出和自回归 `Loop`，循环体还包含 `If`、动态 shape 与 bitwise 算子。当前六条 TensorRT 状态是针对记录的 TRT11 精确运行时的 importer 阻断，不表示未来固定状态导出或 plugin 也无法支持。
 
 2026-10-07 又补齐官方 RT-DETR-H 17-class layout 导出的真实 batch=2：不同的 `bus.jpg` 上/下区域在 ORT CPU 与 OpenVINO CPU 均绑定 `[2,3,640,640]`，并传入 `[2,2]` 的 `im_shape` 与 `scale_factor`；两后端各自完成两行解码、每行 300 个候选且输入/结果行不同。OpenCV DNN session 创建成功，但动态 batch=2 forward 返回 `DS-OCV-8004` / OpenCV 5.0 `Requested blob not found`，故这个精确动态 Batch 组合不支持；不推翻该模型已有单 Batch OpenCV 证据。区域不是版面标注真值，因此此项不代表版面精度或吞吐；TensorRT Batch 仍未验证。详见[验证报告](../eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-20261007.md)及[三后端 JSON](../eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json)。
 
@@ -167,7 +167,7 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | ✗³ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
 | 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‖ |
-| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | △ |
+| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | ✗⁴/✗⁵ |
 | 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
 | 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | △ | ✓¶ |
@@ -205,11 +205,11 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
 | `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
 | `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | △ |
-| `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | △ |
-| `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | △ | △ |
-| `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | △ | △ |
-| `paddle-formula/unimernet` | ✓ | ✗¹ | △ | △ |
+| `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | ✗⁴ |
+| `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | ✗⁴ |
+| `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | △ | ✗⁴ |
+| `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | △ | ✗⁴ |
+| `paddle-formula/unimernet` | ✓ | ✗¹ | △ | ✗⁵ |
 | `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
@@ -295,7 +295,8 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 - `✓P` 表示六个 PicoDet layout 精确 ONNX 工件已在同一 Windows RTX 3060 Laptop 主机上由 DeploySharp `TensorRtOnnxEngineBuilder` 以 TensorRT 11 重建 Engine，使用静态 `batch=1` 输入完成 TensorRT CUDA 推理、`PaddleDocumentNmsDecoder` 解码和 ORT CPU 有界对照；17 类模型允许一个低置信度 NMS 边界行的 raw count 差异，但 `score ≥ 0.05` 候选全部通过 score `≤ 0.01`、IoU `≥ 0.80` 合同。详见 [`paddle-document-picodet-static-tensorrt11-20261012.md`](../eng/models/paddle-document/verification/paddle-document-picodet-static-tensorrt11-20261012.md)。这不表示动态 Batch、版面准确率、跨设备 Engine 可移植性或其它 PicoDet/后端组合支持。
 - `✗²` 表示原始 SLANeXt wired/wireless ONNX 在当前 TensorRT `11.0.0.114-cu12` `trtexec` Builder 探针中解析成功但因 `IRecurrenceLayer` 输入形状 `[]` 与 `[-1,8]` 不一致而无法创建 Engine；没有进入 DeploySharp Decoder。该状态只针对记录的 TensorRT 版本和原始图；派生 OpenVINO 兼容图的独立 TRT11 阻断见 `✗³`。证据见 [`slanext-tensorrt11-builder-probe-20261011.md`](../eng/models/paddle-document/verification/slanext-tensorrt11-builder-probe-20261011.md)。
 - `✗³` 表示 alpha-renamed 的 SLANeXt OpenVINO 兼容图在当前 TensorRT `11.0.0.114-cu12` Builder 探针中同样解析成功但因 recurrence 输入 `[]` 与 `[-1,8]` shape 不一致而生成空 Engine；没有进入 DeploySharp Decoder。该状态只针对两份精确派生图和记录的 TRT11 运行时，不是所有 TensorRT 版本的普遍结论。证据见 [`slanext-openvino-compat-tensorrt11-builder-probe-20261012.md`](../eng/models/paddle-document/verification/slanext-openvino-compat-tensorrt11-builder-probe-20261012.md)。
-- `✗⁴` 表示精确 `paddle-formula/pp-formulanet-plus-s` ONNX 在 TensorRT 11.0.0.114-cu12 的 `Loop` 内 `BitwiseAnd` parser 检查处阻断；同一图在 TensorRT 10.11 另有 parser-startup crash 记录。没有 Engine、Decoder、质量或性能结果；其它五个公式图仍为 `△`。证据见 [`formula-tensorrt-plus-s-builder-probe-20261012.md`](../eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.md) 和 [`formula-tensorrt-builder-probe-20261011.md`](../eng/models/paddle-document/verification/formula-tensorrt-builder-probe-20261011.md)。这不是所有 TensorRT 版本或所有公式模型的普遍结论。
+- `✗⁴` 表示五个精确 FormulaNet ONNX 在 TensorRT 11.0.0.114-cu12 的自回归 `Loop` 内 `BitwiseAnd` parser 检查处阻断；Plus-S 在 TensorRT 10.11 另有 parser-startup crash 记录。没有 Engine、Decoder、质量或性能结果。证据见[五图汇总](../eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.md)和[Plus-S TRT10.11/TRT11 记录](../eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.md)。这不是所有 TensorRT 版本的普遍结论。
+- `✗⁵` 表示精确 UniMERNet ONNX 在 TensorRT 11.0.0.114-cu12 的 `If` 内 `ConcatFromSequence` parser 检查处阻断；未生成 Engine、未进入 Decoder，也无质量/性能结果。详见[UniMERNet Builder 探针](../eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.md)。这与 FormulaNet 的 `BitwiseAnd` 原因不同，也不是所有 TensorRT 版本的普遍结论。
 - `△` 表示存在适用的后端执行合同，但本机尚无该精确组合的真实运行证据；部署时应先在目标设备完成 smoke test。
 - `✗` 表示已尝试并确认当前精确组合不支持或无法运行；原始 SLANeXt 图在当前 OpenVINO `Loop` importer 下即属此类。只有尚无真实执行证据（包括 Chart2Table/OpenCV DNN 自回归）时应标 `△`，不能将“未验证”写成“已证实失败”。此状态不会被相近模型或派生图的结果覆盖。
 - 未验证的模型不再使用 `—` 混淆“未验证”和“不适用”；不会用相近模型、脚本退出码或合同测试代替真实推理证据。

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "deploysharp-formula-tensorrt11-builder-probe-v1",
+  "generatedUtc": "2026-10-12T07:30:29Z",
+  "host": {
+    "os": "Windows 10.0.26200 x64",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "computeCapability": "8.6",
+    "cuda": "12.9",
+    "cudnn": "9.22",
+    "tensorRt": "11.0.0.114-cu12"
+  },
+  "commandTemplate": "trtexec --onnx=<model> --minShapes=x:<profile> --optShapes=x:<profile> --maxShapes=x:<profile> --memPoolSize=workspace:2048M --builderOptimizationLevel=0 --skipInference --noTF32 --saveEngine=<engine>",
+  "models": [
+    {
+      "id": "paddle-formula/pp-formulanet-plus-s",
+      "file": "pp-formulanet-plus-s.onnx",
+      "sha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "bytes": 231878904,
+      "input": "x:[1,1,384,384]",
+      "parserNode": "Loop.0",
+      "parserNodeIndex": 387,
+      "errorCode": "onnxOpCheckers.checkBitwiseAnd",
+      "error": "onnxOpCheckers.cpp:1060 checkBitwiseAnd returned false",
+      "status": "unsupported",
+      "engineCreated": false,
+      "inferenceRan": false
+    },
+    {
+      "id": "paddle-formula/pp-formulanet-plus-m",
+      "file": "pp-formulanet-plus-m.onnx",
+      "sha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "bytes": 592372919,
+      "input": "x:[1,1,384,384]",
+      "parserNode": "Loop.0",
+      "parserNodeIndex": 823,
+      "errorCode": "onnxOpCheckers.checkBitwiseAnd",
+      "error": "onnxOpCheckers.cpp:1060 checkBitwiseAnd returned false",
+      "status": "unsupported",
+      "engineCreated": false,
+      "inferenceRan": false
+    },
+    {
+      "id": "paddle-formula/pp-formulanet-plus-l",
+      "file": "pp-formulanet-plus-l.onnx",
+      "sha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "bytes": 733525676,
+      "input": "x:[1,1,768,768]",
+      "parserNode": "Loop.0",
+      "parserNodeIndex": 1896,
+      "errorCode": "onnxOpCheckers.checkBitwiseAnd",
+      "error": "onnxOpCheckers.cpp:1060 checkBitwiseAnd returned false",
+      "status": "unsupported",
+      "engineCreated": false,
+      "inferenceRan": false
+    },
+    {
+      "id": "paddle-formula/pp-formulanet-s",
+      "file": "pp-formulanet-s.onnx",
+      "sha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "bytes": 231878904,
+      "input": "x:[1,1,384,384]",
+      "parserNode": "Loop.0",
+      "parserNodeIndex": 387,
+      "errorCode": "onnxOpCheckers.checkBitwiseAnd",
+      "error": "onnxOpCheckers.cpp:1060 checkBitwiseAnd returned false",
+      "status": "unsupported",
+      "engineCreated": false,
+      "inferenceRan": false
+    },
+    {
+      "id": "paddle-formula/pp-formulanet-l",
+      "file": "pp-formulanet-l.onnx",
+      "sha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "bytes": 730379948,
+      "input": "x:[1,1,768,768]",
+      "parserNode": "Loop.0",
+      "parserNodeIndex": 1896,
+      "errorCode": "onnxOpCheckers.checkBitwiseAnd",
+      "error": "onnxOpCheckers.cpp:1060 checkBitwiseAnd returned false",
+      "status": "unsupported",
+      "engineCreated": false,
+      "inferenceRan": false
+    }
+  ],
+  "boundary": "These five exact FormulaNet graphs are blocked by the TensorRT 11 BitwiseAnd importer before Engine creation. This is not formula quality, Decoder parity, performance or a universal TensorRT-version claim."
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-11T02:12:00Z",
+  "generatedAtUtc": "2026-10-12T07:30:29Z",
   "scope": "Six official Paddle formula ONNX exports; this is an evidence index, not a new benchmark run.",
   "models": [
     "paddle-formula/pp-formulanet-plus-s",
@@ -42,10 +42,16 @@
     },
     {
       "backend": "tensorrt-cuda",
-      "execution": "not-verified",
+      "execution": "unsupported",
       "qualityEvidence": null,
-      "report": "formula-tensorrt-derived-graph-probe-20261011.md",
-      "boundary": "No six-model formula TensorRT quality or performance matrix is available. The Plus-S TRT10.11 exact graph terminates during parser startup; TRT11 diagnostic rewrites can parse but return an empty Engine on shape-changing Loop recurrence. No derived graph reached Decoder; do not infer support from other PP-Structure TensorRT evidence."
+      "report": "formula-tensorrt11-builder-probe-20261012.md",
+      "additionalReports": [
+        "formula-unimernet-tensorrt11-builder-probe-20261012.md",
+        "formula-tensorrt-plus-s-builder-probe-20261012.md",
+        "formula-tensorrt-builder-probe-20261011.md",
+        "formula-tensorrt-derived-graph-probe-20261011.md"
+      ],
+      "boundary": "All six exact formula ONNX exports have now had a TensorRT 11 builder attempt on the recorded host. Five FormulaNet graphs fail the Loop BitwiseAnd importer check; UniMERNet fails the If ConcatFromSequence importer check. No Engine, Decoder, formula quality or performance result exists. These causes are distinct and limited to the exact ONNX files and TensorRT 11.0.0.114-cu12; they are not universal TensorRT-version claims."
     }
   ],
   "knownQualityRisks": [
@@ -63,6 +69,7 @@
   "nextGates": [
     "Obtain or construct an additional licensed multi-sample formula quality set with rendered/semantic checks.",
     "Diagnose FormulaNet-L non-EOS behavior without changing the public decoder to silently truncate or synthesize EOS.",
-    "Only after exact assets are available, run controlled TensorRT quality/performance and revisit OpenVINO importer compatibility."
+    "For TensorRT, prototype a maintained fixed-state encoder/decoder export or plugin path; only after it creates engines should token parity, real-formula quality and controlled performance be evaluated.",
+    "For OpenVINO, pursue a new supported export or importer/runtime change before repeating isolated compatibility experiments."
   ]
 }
