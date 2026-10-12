@@ -93,6 +93,8 @@ PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 
 
 随后补齐了真实 TensorRT 动态 Batch=2：动态输入的 `pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-docblocklayout`、`rt-detr-h-layout-3cls` 和 `rt-detr-h-layout-17cls` 由 DeploySharp Builder 重新生成 Engine，以 `bus.jpg` 上下两个不同 ROI 绑定 `image`、`im_shape`、`scale_factor`，并逐行与 ORT CPU 的 Paddle NMS 结果对照，`5/5` 模型行通过。五次预热、五十次测量的 P50/P95 为 `40.0028/45.6559 ms`、`52.2604/54.0856 ms`、`34.6254/37.1798 ms`、`115.2087/116.2460 ms`、`121.8828/148.5517 ms`；这些时间包含当前 Session 与 Decoder 调用，不能当作纯 GPU kernel 或布局准确率。完整 Engine/ONNX/input SHA、置信度门槛和低分 NMS 尾部边界见[动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)及五个[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-l-tensorrt11-dynamic-batch-20261011.json)。静态 M/S、PicoDet 以及跨设备 Engine 仍不能由此宣称支持。
 
+上文 2026-10-07 的 RT-DETR/PP-DocLayout 段落保留为当日 CPU/OpenCV 快照；其中“TensorRT Batch 仍未验证”是历史时点描述，当前状态以本节 2026-10-11/12 的五模型 TensorRT 动态 Batch 报告为准。
+
 表格分类器的 TensorRT 动态 Batch 仍未通过 DeploySharp 实测。vendor `trtexec` 可以构建并执行 batch=2 Engine，但该随机输入、GPU-only 运行不包含 DeploySharp Provider、预处理/后处理或数据搬运；DeploySharp 在当前机器则被 TensorRT native bridge 的结构化异常 `3228369022` 阻断。故这只定位为 bridge/runtime 初始化待查，不能宣称动态 Batch 已支持，也不改动既有单 Batch 精确模型状态。详情见[独立探针报告](../../eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-probe-20261007.md)。
 
 ## 在代码中创建 Profile

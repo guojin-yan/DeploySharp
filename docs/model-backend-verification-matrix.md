@@ -160,8 +160,9 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | 文档矫正：`paddle-doc/uvdoc` | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
 | 版面分析：`paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓† |
 | 版面分析：`paddle-doc/pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s`、`pp-docblocklayout` | ✓ | ✓ | ✓ | ✓ | △ | ✓ |
-| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls`、`rt-detr-h-layout-3cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
-| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
+| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
+| 版面分析：`paddle-doc/rt-detr-h-layout-3cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | ✓# |
+| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | △ |
 | 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | ✗² |
 | 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | △ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
@@ -253,7 +254,7 @@ TensorRT 设备为 RTX 3060 Laptop 6GB、TensorRT 10.11.0、CUDA 12.9、cuDNN 9.
 
 2026-10-11 对五个 PP-Structure 版面图完成了同一协议的 TensorRT 11 复测：`pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s` 和 `pp-docblocklayout` 均由 DeploySharp Builder 从 ONNX 重建 Engine，并以 `bus.jpg` 对照 ORT CPU 解码，测试结果为 `5/5 passed / 0 failed / 0 skipped`。每个模型使用 5 次预热、50 次测量；P50/P95 分别为 `20.9807/23.9627 ms`、`29.3522/39.7585 ms`、`10.4862/14.1939 ms`、`7.8057/9.4161 ms`、`20.0243/22.8211 ms`。全局同类最大-IoU 匹配的最小值分别为 `0.999467/0.999202/0.832389/0.996929/0.999996`，统一语义门槛为 `IoU ≥ 0.80`、score 差 `≤0.01`。M 的 `[N,6]` 数据依赖输出还覆盖了 TensorRT 对齐的 `GetMaxOutputSize`：session 在 enqueue 后读取真实 shape，避免把分配上限当成检测行。完整 SHA、输入绑定、边界和复现命令见[版面 TensorRT 11 报告](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.md)及[JSON](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.json)。这只关闭五个精确单图工件的 TensorRT 执行/有界 parity 合同，不代表 layout accuracy、batch=2、PicoDet/RT-DETR 其余图或跨设备 Engine 可移植性。
 
-同日补充了动态 Batch=2 的 DeploySharp 证据：`pp-doclayout-l`、`pp-doclayout-plus-l` 和 `pp-docblocklayout` 三个动态图以 `image=[2,3,H,W]`、`im_shape/scale_factor=[2,2]` 绑定两个不同的 `bus.jpg` ROI，均完成 ORT CPU 对照和 Paddle NMS 行隔离（`3/3` 模型行通过）。五次预热、五十次测量的 P50/P95 为 `40.0028/45.6559 ms`、`52.2604/54.0856 ms`、`34.6254/37.1798 ms`；这些是包含现有 Session/Decoder 路径的观察值，不是纯 GPU kernel 性能。精确 Engine/ONNX/input SHA、score `0.20` 语义门槛和低分尾部边界见[动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)及三个[机器 JSON](../eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-l-tensorrt11-dynamic-batch-20261011.json)、[Plus-L JSON](../eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-plus-l-tensorrt11-dynamic-batch-20261011.json)、[DocBlockLayout JSON](../eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-docblocklayout-tensorrt11-dynamic-batch-20261011.json)。静态 M/S、PicoDet、RT-DETR 以及跨设备 Engine 仍是未验证状态。
+同日补充了动态 Batch=2 的 DeploySharp 证据：`pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-docblocklayout`、`rt-detr-h-layout-3cls` 和 `rt-detr-h-layout-17cls` 五个动态图以 `image=[2,3,H,W]`、`im_shape/scale_factor=[2,2]` 绑定两个不同的 `bus.jpg` ROI，均完成 ORT CPU 对照和 Paddle NMS 行隔离（`5/5` 模型行通过）。五次预热、五十次测量的 P50/P95 分别为 `40.0028/45.6559`、`52.2604/54.0856`、`34.6254/37.1798`、`115.2087/116.2460`、`121.8828/148.5517 ms`；这些是包含现有 Session/Decoder 路径的观察值，不是纯 GPU kernel 性能。精确 Engine/ONNX/input SHA、score `0.20` 语义门槛和低分尾部边界见[动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)及五个机器 JSON。静态 M/S、PicoDet 以及跨设备 Engine 仍是未验证状态。
 
 | 精确工件 | Engine / 运行时 | 一致性结果 | 稳态耗时 |
 |---|---|---|---:|

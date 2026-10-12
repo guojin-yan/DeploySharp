@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-11T13:45:36Z",
+  "generatedUtc": "2026-10-12T02:00:00Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -31,6 +31,7 @@
     "opencvNmsMatrix": "eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.json",
     "tensorRtTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.json",
     "tensorRtLayoutTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.json",
+    "tensorRtLayoutDynamicBatchTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
     "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs",
     "chart2tableExtendedOrt": "eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json",
     "chart2tableExtendedTensorRt": "eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json",
@@ -45,8 +46,22 @@
       "onnxruntimeCpu": "pass",
       "openvinoCpu": "pass",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
-      "tensorRtCuda": "unverified",
-      "report": "eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json"
+      "tensorRtCuda": "pass",
+      "report": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-rt-detr-h-layout-3cls-tensorrt11-dynamic-batch-20261011.json"
+    },
+    {
+      "modelId": "paddle-doc/rt-detr-h-layout-17cls",
+      "batch": 2,
+      "onnxSha256": "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
+      "tensorRtCuda": "pass",
+      "report": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-20261007.md",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-rt-detr-h-layout-17cls-tensorrt11-dynamic-batch-20261011.json"
     },
     {
       "modelId": "paddle-table/rt-detr-l-wired-cell-det",
@@ -147,10 +162,10 @@
     { "modelId": "paddle-doc/picodet-layout-1x-table", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-doc/picodet-s-layout-3cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-doc/picodet-l-layout-3cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-doc/rt-detr-h-layout-3cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "unverified" },
+    { "modelId": "paddle-doc/rt-detr-h-layout-3cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-doc/picodet-s-layout-17cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-doc/picodet-l-layout-17cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified" },
-    { "modelId": "paddle-doc/rt-detr-h-layout-17cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "unverified" },
+    { "modelId": "paddle-doc/rt-detr-h-layout-17cls", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass" },
     { "modelId": "paddle-table/slanext-wired", "artifactKind": "original-release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-table/slanext-wireless", "artifactKind": "original-release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
     { "modelId": "paddle-table/slanext-wired-openvino-compat", "artifactKind": "derived-compat-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified" },
