@@ -647,6 +647,153 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        [DataRow("paddle-doc/picodet-layout-1x", "picodet-layout-1x.onnx", "61efac8c8d3eeee09d7d16db249eb919c1432e22d8235bd408ddffa3477cb8fd", 608, 800, "layout5")]
+        [DataRow("paddle-doc/picodet-layout-1x-table", "picodet-layout-1x-table.onnx", "7cf5b8c3f7e00353bdb231fec73dd73b66ea0cbf598daaf1f113bf7e6dc4af31", 608, 800, "table")]
+        [DataRow("paddle-doc/picodet-s-layout-3cls", "picodet-s-layout-3cls.onnx", "f2b2c55af08bad9dab4030f86d34336f99bc7e39df9999676ce29db7e60b2fb1", 480, 480, "layout3")]
+        [DataRow("paddle-doc/picodet-l-layout-3cls", "picodet-l-layout-3cls.onnx", "34d873d7ec7a77448b85ae41db5785bfae0c5dda483c03c177189ebd086b1ce4", 640, 640, "layout3")]
+        [DataRow("paddle-doc/picodet-s-layout-17cls", "picodet-s-layout-17cls.onnx", "f8a43b8588f1cee80acea3646738a2704c7c7f4cb73f63bc3d325016195fd496", 480, 480, "layout17")]
+        [DataRow("paddle-doc/picodet-l-layout-17cls", "picodet-l-layout-17cls.onnx", "b3e1b8deaa9538a76418083274df9acf07232cccb30ba6ab957a77a2d73cecb3", 640, 640, "layout17")]
+        public void PicoDetLayoutRunsStaticBatchOneOnTensorRtAndMatchesOrt(string modelId, string defaultOnnxFile, string expectedOnnxSha256, int modelWidth, int modelHeight, string labelSet)
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL=1 to run the opt-in PP-Structure TensorRT test.");
+
+            string selectedModel = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_MODEL") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(selectedModel) && !string.Equals(selectedModel, modelId, StringComparison.OrdinalIgnoreCase))
+                Assert.Inconclusive("The current run selected a different layout model: " + selectedModel);
+
+            string onnxPath = Path.Combine(@"E:\Model\PaddleDocument\onnx", defaultOnnxFile);
+            string imagePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_IMAGE") ?? @"E:\Data\image\bus.jpg";
+            if (!File.Exists(onnxPath) || !File.Exists(imagePath))
+                Assert.Inconclusive("Missing local PicoDet ONNX model or test image.");
+
+            string onnxSha256 = ComputeSha256(onnxPath);
+            Assert.AreEqual(expectedOnnxSha256, onnxSha256, "The local ONNX file differs from the registered Release artifact.");
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get(modelId);
+            IReadOnlyList<string> labels = labelSet switch
+            {
+                "layout5" => PaddleDocumentProfiles.Layout5Labels,
+                "table" => PaddleDocumentProfiles.TableOnlyLabels,
+                "layout3" => PaddleDocumentProfiles.Layout3Labels,
+                "layout17" => PaddleDocumentProfiles.Layout17Labels,
+                _ => throw new AssertFailedException("Unknown PicoDet label set: " + labelSet)
+            };
+            PaddleDocumentProfile document = PaddleDocumentProfiles.CreatePaddleNmsRegions(
+                descriptor, labels, new VisualSize(modelWidth, modelHeight),
+                includeScaleFactorInput: true, maximumBatch: 1, scoreThreshold: 0);
+            Assert.AreEqual(1L, document.VisualProfile.Input.ShapePattern[0], "PicoDet must remain a static batch=1 profile.");
+
+            TensorRtApiVersion apiVersion = ResolveApiVersion();
+            string root = Path.Combine(Path.GetTempPath(), "deploysharp-paddle-picodet-trt-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            string enginePath = Path.Combine(root, Path.GetFileNameWithoutExtension(defaultOnnxFile) + ".engine");
+            try
+            {
+                var artifact = new ModelArtifact(new ModelId(modelId), "onnx", onnxPath, onnxSha256, TensorRtBackendProvider.BackendId);
+                TensorRtOnnxEngineBuildResult build;
+                try
+                {
+                    // The exported PicoDet graph has no dynamic input axes. Passing
+                    // no profiles is intentional; adding a fake dynamic profile
+                    // would change the contract rather than validate this asset.
+                    build = new TensorRtOnnxEngineBuilder().Build(artifact, enginePath, new TensorRtOnnxEngineBuildOptions(
+                        apiVersion: apiVersion, workspaceBytes: 536870912UL, optimizationLevel: 3, overwrite: true));
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
+                {
+                    Assert.Inconclusive("TensorRT native runtime is unavailable or mismatched: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+                catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
+                {
+                    Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_PICODET_UNSUPPORTED model=" + modelId + ";errorCode=" + exception.ErrorCode + ";details=" + (exception.TechnicalDetails ?? exception.Message));
+                    Assert.Inconclusive("TensorRT cannot build this static PicoDet graph: " + (exception.TechnicalDetails ?? exception.Message));
+                    return;
+                }
+
+                using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromFile(new OpenCvVisualInputFactory(), imagePath, document, inputId: "paddle-picodet-static");
+                var inputList = new List<NamedTensor>(1 + input.AuxiliaryInputs.Count) { new NamedTensor(input.InputName, input.Tensor) };
+                inputList.AddRange(input.AuxiliaryInputs);
+                var inferenceInputs = new InferenceInputs(inputList);
+                DetectionResult ortReference;
+                using (var ortRegistry = new BackendRegistry().UseOnnxRuntime())
+                using (IInferenceSession ort = ortRegistry.CreateSession(document.CreateArtifact(onnxPath, OnnxRuntimeBackendProvider.BackendId), new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu")))
+                {
+                    InferenceOutputs outputs = ort.Run(inferenceInputs, CancellationToken.None);
+                    ortReference = (DetectionResult)document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, outputs, CancellationToken.None));
+                }
+
+                var options = new TensorRtBackendOptions(apiVersion, cudaTargetArchitecture: Environment.GetEnvironmentVariable("DEPLOYSHARP_CUDA_ARCHITECTURE") ?? "compute_86");
+                DetectionResult trtResult = null!;
+                int warmup = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_PICODET_WARMUP", 5);
+                int iterations = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_PICODET_ITERATIONS", 50);
+                var samples = new List<double>(iterations);
+                using (var provider = new TensorRtBackendProvider(options))
+                using (IInferenceSession session = provider.CreateSession(new ModelArtifact(new ModelId(modelId), "tensorrt-engine", build.EnginePath, build.EngineSha256, TensorRtBackendProvider.BackendId), new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"), SessionOptions.Default))
+                {
+                    for (int index = -warmup; index < iterations; index++)
+                    {
+                        Stopwatch watch = Stopwatch.StartNew();
+                        InferenceOutputs outputs = session.Run(inferenceInputs, CancellationToken.None);
+                        trtResult = (DetectionResult)document.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, document.VisualProfile, outputs, CancellationToken.None));
+                        watch.Stop();
+                        if (index >= 0) samples.Add(watch.Elapsed.TotalMilliseconds);
+                    }
+                }
+
+                // Fused NMS kernels can move a low-confidence candidate across
+                // the score boundary because of accumulation order. Compare the
+                // meaningful confidence band and retain raw counts in evidence.
+                const float confidenceFloor = .05f;
+                Detection[] expected = ortReference.Detections.Where(d => d.Label.Score >= confidenceFloor).ToArray();
+                Detection[] actual = trtResult.Detections.Where(d => d.Label.Score >= confidenceFloor).ToArray();
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_PICODET_COUNTS " + JsonSerializer.Serialize(new { model = modelId, ortRaw = ortReference.Detections.Count, trtRaw = trtResult.Detections.Count, ortConfident = expected.Length, trtConfident = actual.Length, confidenceFloor }));
+                Assert.AreEqual(expected.Length, actual.Length, "TensorRT changed the confident PicoDet NMS row count.");
+                // Paddle NMS/TensorRT is free to emit equal-score candidates in
+                // a different order. Match globally by class and maximum IoU,
+                // as the layout contract does, instead of pairing by array index.
+                var pairs = (from expectedIndex in Enumerable.Range(0, expected.Length)
+                             from actualIndex in Enumerable.Range(0, actual.Length)
+                             where expected[expectedIndex].Label.Index == actual[actualIndex].Label.Index
+                             let iou = IntersectionOverUnion(expected[expectedIndex], actual[actualIndex])
+                             orderby iou descending
+                             select (expectedIndex, actualIndex, iou)).ToList();
+                var matches = new Dictionary<int, (int ActualIndex, double Iou)>();
+                var usedActual = new HashSet<int>();
+                foreach (var pair in pairs)
+                {
+                    if (matches.ContainsKey(pair.expectedIndex) || !usedActual.Add(pair.actualIndex)) continue;
+                    matches[pair.expectedIndex] = (pair.actualIndex, pair.iou);
+                }
+                Assert.AreEqual(expected.Length, matches.Count, "PicoDet changed the confident class set between ORT and TensorRT.");
+                const double iouThreshold = .80;
+                double minimumIou = matches.Count == 0 ? 0 : matches.Values.Min(v => v.Iou);
+                foreach (int expectedIndex in Enumerable.Range(0, expected.Length))
+                {
+                    Assert.IsTrue(matches.TryGetValue(expectedIndex, out (int ActualIndex, double Iou) match), "PicoDet removed a decoded candidate.");
+                    Assert.AreEqual(expected[expectedIndex].Label.Score, actual[match.ActualIndex].Label.Score, .01f, "PicoDet score drift exceeded the bounded parity tolerance.");
+                    Assert.IsTrue(match.Iou >= iouThreshold, "PicoDet box drift exceeded the IoU contract.");
+                }
+                double[] sorted = samples.OrderBy(v => v).ToArray();
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_PICODET " + JsonSerializer.Serialize(new
+                {
+                    model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes,
+                    input = modelWidth + "x" + modelHeight, labels = labels.Count, staticBatch = 1,
+                    ortDetections = ortReference.Detections.Count, trtDetections = trtResult.Detections.Count,
+                    minimumIou, warmup, iterations,
+                    p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)],
+                    p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)],
+                    cudaArchitecture = options.CudaTargetArchitecture
+                }));
+            }
+            finally
+            {
+                try { Directory.Delete(root, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9", 640, 640)]
         [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", "d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048", 800, 800)]
         [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218", 640, 640)]

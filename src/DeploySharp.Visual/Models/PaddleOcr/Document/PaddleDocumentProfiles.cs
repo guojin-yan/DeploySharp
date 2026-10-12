@@ -185,8 +185,13 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             var decoder = new PaddleDocumentNmsDecoder(descriptor, labelValues, outputName, countOutputName, false, scoreThreshold);
             var auxiliary = new List<VisualAuxiliaryInputBinding>();
             if (includeGeometryInputs) { includeImageShapeInput = true; includeScaleFactorInput = true; }
-            if (includeImageShapeInput) auxiliary.Add(new VisualAuxiliaryInputBinding("im_shape", TensorElementType.Float32, new TensorShape(-1, 2)));
-            if (includeScaleFactorInput) auxiliary.Add(new VisualAuxiliaryInputBinding("scale_factor", TensorElementType.Float32, new TensorShape(-1, 2)));
+            // Keep the public tensor contract aligned with the requested
+            // capacity. A single-image profile is deliberately static even
+            // when the underlying export happens to expose a dynamic axis;
+            // callers asking for true batching opt in with maximumBatch > 1.
+            long batchAxis = maximumBatch > 1 ? -1 : 1;
+            if (includeImageShapeInput) auxiliary.Add(new VisualAuxiliaryInputBinding("im_shape", TensorElementType.Float32, new TensorShape(batchAxis, 2)));
+            if (includeScaleFactorInput) auxiliary.Add(new VisualAuxiliaryInputBinding("scale_factor", TensorElementType.Float32, new TensorShape(batchAxis, 2)));
             TensorShape nmsOutputShape = countOutputName == null && maximumBatch > 1
                 ? new TensorShape(-1, -1, 6)
                 : new TensorShape(-1, 6);
@@ -197,7 +202,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (countOutputName != null)
                 outputs.Add(new VisualOutputBinding(countOutputName, TensorElementType.Int32, new TensorShape(-1), new[] { TensorElementType.Int64 }));
             var visual = new VisualModelProfile("paddle-document." + descriptor.ModelId + ".paddle-nms", new ModelId(descriptor.ModelId), decoder.Task, "paddle-document-contract-v1", descriptor.ModelFormat,
-                new VisualInputBinding(imageInputName, TensorElementType.Float32, new TensorShape(-1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
+                new VisualInputBinding(imageInputName, TensorElementType.Float32, new TensorShape(batchAxis, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw, 1, maximumBatch),
                 outputs, labelsToVisual(labelValues), decoder, auxiliaryInputs: auxiliary,
                 preprocessing: preprocessing ?? new VisualPreprocessingOptions(modelSize, VisualResizeMode.Resize, VisualColorOrder.Rgb, NmsNormalization(descriptor.ModelId), VisualTensorLayout.Nchw, 1, interpolation: VisualInterpolationMode.Cubic));
             return new PaddleDocumentProfile(descriptor, visual);
