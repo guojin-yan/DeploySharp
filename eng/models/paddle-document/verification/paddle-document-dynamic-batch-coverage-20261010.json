@@ -6,7 +6,7 @@
   "coverage": [
     { "family": "pp-lcnet-orientation-and-table-classification", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass-per-artifact", "tensorRtEvidence": ["paddle-document-table-classification-tensorrt-dynamic-batch-20261011.json", "paddle-document-orientation-dynamic-batch-tensorrt-20261011.json"], "batch": 2 },
     { "family": "pp-doclayout-l-plus-l-blocklayout", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
-    { "family": "rt-detr-h-layout-3cls-17cls", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "rt-detr-h-layout-3cls-17cls", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "pass-per-artifact", "tensorRtEvidence": ["paddle-document-layout-paddle-doc-rt-detr-h-layout-3cls-tensorrt11-dynamic-batch-20261011.json", "paddle-document-layout-paddle-doc-rt-detr-h-layout-17cls-tensorrt11-dynamic-batch-20261011.json"], "batch": 2 },
     { "family": "rt-detr-l-wired-wireless-cell-det", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
     { "family": "slanext-wired-wireless", "ortCpu": "pass", "openvinoCpu": "compatibility-artifact-pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "unverified", "batch": 2 },
     { "family": "formula-six-models", "ortCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
