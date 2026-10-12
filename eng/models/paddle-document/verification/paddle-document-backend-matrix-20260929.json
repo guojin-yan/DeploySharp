@@ -49,6 +49,32 @@
   },
   "dynamicBatchEvidence": [
     {
+      "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "batch": 2,
+      "onnxSha256": "96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass",
+      "tensorRtEvidence": "trt11-dynamic-batch2-bounded-parity",
+      "report": "eng/models/paddle-document/verification/paddle-document-orientation-dynamic-batch-tensorrt-20261011.md",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-orientation-dynamic-batch-tensorrt-20261011.json"
+    },
+    {
+      "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "batch": 2,
+      "onnxSha256": "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass",
+      "tensorRtEvidence": "trt10.11-dynamic-batch2-bounded-parity",
+      "report": "eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-20261011.md",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-20261011.json"
+    },
+    {
       "modelId": "paddle-doc/rt-detr-h-layout-3cls",
       "batch": 2,
       "onnxSha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",

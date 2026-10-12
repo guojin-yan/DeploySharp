@@ -4,7 +4,7 @@
   "hostScope": "Windows x64 local verification host",
   "axisInventory": "paddle-document-onnx-batch-axis-audit-20261005.json",
   "coverage": [
-    { "family": "pp-lcnet-orientation-and-table-classification", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "unverified", "batch": 2 },
+    { "family": "pp-lcnet-orientation-and-table-classification", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "tensorRtCuda": "pass-per-artifact", "tensorRtEvidence": ["paddle-document-table-classification-tensorrt-dynamic-batch-20261011.json", "paddle-document-orientation-dynamic-batch-tensorrt-20261011.json"], "batch": 2 },
     { "family": "pp-doclayout-l-plus-l-blocklayout", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
     { "family": "rt-detr-h-layout-3cls-17cls", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
     { "family": "rt-detr-l-wired-wireless-cell-det", "ortCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "tensorRtCuda": "unverified", "batch": 2 },
