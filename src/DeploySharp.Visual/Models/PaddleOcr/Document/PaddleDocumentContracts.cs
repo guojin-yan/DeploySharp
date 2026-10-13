@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.Results.Language;
 
 #pragma warning disable CS1591
 
@@ -280,15 +281,18 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Stores formula recognition text in LaTeX or the converter's declared sequence format. / 保存 LaTeX 或转换器声明的公式序列文本。</summary>
     public sealed class PaddleDocumentFormulaResult : PaddleDocumentModuleResult
     {
-        public PaddleDocumentFormulaResult(PaddleDocumentResultMetadata metadata, string latex, IReadOnlyList<string>? warnings = null, IEnumerable<int>? tokenIds = null)
+        public PaddleDocumentFormulaResult(PaddleDocumentResultMetadata metadata, string latex, IReadOnlyList<string>? warnings = null, IEnumerable<int>? tokenIds = null, GenerationFinishReason finishReason = GenerationFinishReason.None)
             : base(PaddleDocumentModule.FormulaRecognition, metadata, warnings: warnings)
         {
             if (latex == null) throw new ArgumentNullException(nameof(latex));
             Latex = latex;
             TokenIds = tokenIds == null ? Array.Empty<int>() : new List<int>(tokenIds).AsReadOnly();
+            FinishReason = finishReason;
         }
         public string Latex { get; }
         public IReadOnlyList<int> TokenIds { get; }
+        /// <summary>Gets how the exported formula sequence ended. A decoder-produced result is either EndOfSequence or MaxTokens; None is reserved for manually constructed results. / 获取导出公式序列的结束原因。Decoder 产生的结果为 EndOfSequence 或 MaxTokens；None 保留给手动构造的结果。</summary>
+        public GenerationFinishReason FinishReason { get; }
     }
 
     /// <summary>Stores chart-to-table output in a caller-selected structured representation. / 以调用方选择的结构化表示保存图表转表格输出。</summary>

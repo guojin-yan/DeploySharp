@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Tensors;
 
 #pragma warning disable CS1591
@@ -94,7 +95,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     }
                 }
                 var metadata = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, context.Input.BatchFrames[row].InputId ?? context.Input.InputId ?? "input-not-hashed", row);
-                results.Add(new PaddleDocumentFormulaResult(metadata, latex.ToString(), warnings, ids));
+                results.Add(new PaddleDocumentFormulaResult(
+                    metadata,
+                    latex.ToString(),
+                    warnings,
+                    ids,
+                    reachedEnd ? GenerationFinishReason.EndOfSequence : GenerationFinishReason.MaxTokens));
             }
             return batch == 1 ? (object)results[0] : new PaddleDocumentFormulaBatchResult(results);
         }

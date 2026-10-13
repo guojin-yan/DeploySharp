@@ -1,5 +1,7 @@
 # PaddleOCR / PP-Structure 文档智能模块
 
+公式结果结束状态合同：`PaddleDocumentFormulaResult.FinishReason` 为 `EndOfSequence` 时表示模型实际输出了声明的 EOS；为 `MaxTokens` 时表示输出张量在安全上限结束但未见 EOS，并会同时保留 `missing-eos:sequence-may-be-truncated` warning。调用方不得因为有非空 LaTeX 就假定结果完整，Decoder 也不会合成 EOS。
+
 DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是把“版面分析”和“表格识别”误写成普通 OCR 检测。PP-StructureV3 官方产线包含文档方向分类、文本图像矫正、版面区域检测、表格分类/单元格检测/结构识别、公式识别、印章文本检测和图表解析；DeploySharp 对这些模块保留独立的任务 ID、模型来源、转换状态和结果合同。
 
 官方 PP-StructureV3 的组合方式和模型说明见 [PaddleOCR 官方 PP-StructureV3 文档](https://paddlepaddle.github.io/PaddleOCR/main/version3.x/pipeline_usage/PP-StructureV3.html)。本项目不会把 Paddle Inference 的 `.tar` 工件自动当作 ONNX，也不会在没有转换和运行时证据时标记为“多后端已支持”。

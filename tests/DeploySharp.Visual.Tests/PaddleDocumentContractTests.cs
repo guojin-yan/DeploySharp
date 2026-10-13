@@ -5,6 +5,7 @@ using System.Threading;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Results.Vision;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
@@ -187,6 +188,50 @@ namespace DeploySharp.Visual.Tests
             Assert.ThrowsExactly<ArgumentException>(() => new PaddleDocumentTableResult(PaddleDocumentModule.ChartParsing, metadata, "<table/>"));
             var orientation = new PaddleDocumentOrientationResult(metadata, "90_degree", 90);
             Assert.AreEqual(90, orientation.RotationDegrees);
+        }
+
+        [TestMethod]
+        public void FormulaDecoderExposesEndOfSequenceFinishReason()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            var schema = new PaddleDocumentFormulaSchema(new[] { "<s>", "x", "</s>", "<pad>" }, endTokenId: 2, startTokenId: 0, padTokenId: 3);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor, schema, modelSize: new VisualSize(2, 2), maximumSequenceLength: 8);
+            using var input = FormulaInput();
+            var outputs = InferenceOutputs.Create("fetch_name_0", new Tensor<int>(new TensorShape(1, 4), new[] { 0, 1, 2, 3 }, TensorBufferOwnership.Transfer));
+
+            var result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+
+            Assert.AreEqual(GenerationFinishReason.EndOfSequence, result.FinishReason);
+            Assert.AreEqual("x", result.Latex);
+            CollectionAssert.DoesNotContain(result.Warnings.ToArray(), "missing-eos:sequence-may-be-truncated");
+        }
+
+        [TestMethod]
+        public void FormulaDecoderMarksMissingEosAsMaxTokensWithoutInventingEos()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            var schema = new PaddleDocumentFormulaSchema(new[] { "<s>", "x", "</s>", "<pad>" }, endTokenId: 2, startTokenId: 0, padTokenId: 3);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor, schema, modelSize: new VisualSize(2, 2), maximumSequenceLength: 4);
+            using var input = FormulaInput();
+            var outputs = InferenceOutputs.Create("fetch_name_0", new Tensor<int>(new TensorShape(1, 4), new[] { 0, 1, 3, 1 }, TensorBufferOwnership.Transfer));
+
+            var result = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+
+            Assert.AreEqual(GenerationFinishReason.MaxTokens, result.FinishReason);
+            CollectionAssert.Contains(result.Warnings.ToArray(), "missing-eos:sequence-may-be-truncated");
+            Assert.IsFalse(result.TokenIds.Contains(schema.EndTokenId), "The decoder must not synthesize an EOS token.");
+        }
+
+        private static PreparedVisualInput FormulaInput()
+        {
+            return new PreparedVisualInput(
+                "formula",
+                new Tensor<float>(new TensorShape(1, 3, 2, 2), new float[12], TensorBufferOwnership.Transfer),
+                new VisualSize(2, 2),
+                new VisualSize(2, 2),
+                1,
+                VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(2, 2), new VisualSize(2, 2)));
         }
 
         [TestMethod]

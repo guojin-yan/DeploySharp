@@ -1,5 +1,7 @@
 # Paddle document model acquisition
 
+Formula decoder result contract: `PaddleDocumentFormulaResult.FinishReason` is `EndOfSequence` only when the model emitted its declared EOS token. `MaxTokens` means the returned tensor ended without EOS and the result also contains `missing-eos:sequence-may-be-truncated`; the decoder never fabricates EOS. Callers should route such rows for review instead of treating non-empty LaTeX as complete output.
+
 This directory is the reproducible acquisition entry point for PP-StructureV3 document models. The checked-in manifest contains official Paddle inference archive URLs; the model bytes remain outside the repository.
 
 ```powershell
