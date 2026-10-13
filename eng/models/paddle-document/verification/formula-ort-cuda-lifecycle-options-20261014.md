@@ -11,6 +11,8 @@ This is a targeted runtime-lifecycle probe, not a new formula quality or perform
 
 The new `OnnxRuntimeOptions` escape hatches copy and freeze provider/session dictionaries and apply them only when explicitly supplied. They preserve the default path and are intended for reproducible investigations. The probe does **not** establish that CUDA Graph, allocator, stream, or output-copy configuration is the root cause. Current status remains process-isolated bounded execution for Plus-L/L/UniMERNet and ordinary multi-sample CUDA Session support remains open.
 
+The formula decoder now rejects an `Int64` value outside the CLR token-index range as a structured `DS-VISUAL` decode failure with the tensor index and value. It never silently clamps, wraps, or synthesizes an EOS token.
+
 ## Reproduction
 
 ```powershell

@@ -73,7 +73,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 bool reachedEnd = false;
                 for (int step = 0; step < sequence; step++)
                 {
-                    int id = ReadToken(tensor, checked(row * sequence + step));
+                    int id = ReadToken(tensor, checked(row * sequence + step), context);
                     if (id == Schema.EndTokenId) { reachedEnd = true; break; }
                     if (id == Schema.StartTokenId || id == Schema.PadTokenId) continue;
                     ids.Add(id);
@@ -99,9 +99,23 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             return batch == 1 ? (object)results[0] : new PaddleDocumentFormulaBatchResult(results);
         }
 
-        private static int ReadToken(ITensor tensor, int index)
+        private int ReadToken(ITensor tensor, int index, VisualDecodeContext context)
         {
-            if (tensor.ElementType == TensorElementType.Int64 && tensor.Buffer is long[] longs) return checked((int)longs[index]);
+            if (tensor.ElementType == TensorElementType.Int64 && tensor.Buffer is long[] longs)
+            {
+                long value = longs[index];
+                if (value < int.MinValue || value > int.MaxValue)
+                {
+                    throw new VisualException(
+                        VisualErrorCodes.DecodeFailed,
+                        "Formula token output contains an integer outside the supported token-index range.",
+                        profileId: context.Profile.ProfileId,
+                        tensorName: OutputName,
+                        modelId: context.Profile.ModelId,
+                        technicalDetails: "index=" + index.ToString(CultureInfo.InvariantCulture) + ";value=" + value.ToString(CultureInfo.InvariantCulture));
+                }
+                return (int)value;
+            }
             if (tensor.ElementType == TensorElementType.Int32 && tensor.Buffer is int[] ints) return ints[index];
             throw new InvalidOperationException("Formula token tensor buffer is not a compatible managed integer array.");
         }

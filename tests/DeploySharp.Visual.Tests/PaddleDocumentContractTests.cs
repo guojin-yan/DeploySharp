@@ -412,6 +412,26 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void FormulaDecoderRejectsProviderCorruptionAsDecodeFailureInsteadOfOverflow()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/pp-formulanet-plus-s");
+            PaddleDocumentFormulaSchema schema = new PaddleDocumentFormulaSchema(new[] { "<s>", "a", "</s>" }, 2, 0);
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor, schema);
+            var image = new Tensor<float>(new TensorShape(1, 1, 384, 384), new float[384 * 384], TensorBufferOwnership.Transfer);
+            var input = new PreparedVisualInput("x", image, new VisualSize(384, 384), new VisualSize(384, 384), 1, VisualTensorLayout.Nchw,
+                ImageTransform.Resize(new VisualSize(384, 384), new VisualSize(384, 384)), inputId: new string('z', 64));
+            var corruptTokens = new Tensor<long>(new TensorShape(1, 2), new[] { 0L, (long)int.MaxValue + 1L }, TensorBufferOwnership.Transfer);
+            using (input)
+            {
+                VisualException exception = Assert.ThrowsExactly<VisualException>(() => profile.VisualProfile.Decoder.Decode(
+                    new VisualDecodeContext(input, profile.VisualProfile, InferenceOutputs.Create("fetch_name_0", corruptTokens), CancellationToken.None)));
+                Assert.AreEqual(VisualErrorCodes.DecodeFailed, exception.ErrorCode);
+                StringAssert.Contains(exception.TechnicalDetails ?? string.Empty, "index=1");
+                StringAssert.Contains(exception.TechnicalDetails ?? string.Empty, "value=2147483648");
+            }
+        }
+
+        [TestMethod]
         public void ChartParsingContractDecodesIntegerTokensWhileKeepingConversionBlockedExplicit()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-chart/pp-chart2table");
