@@ -102,6 +102,17 @@
       "status": "controlled-diagnostic",
       "evidenceMarkdown": "paddleocr-funsd40-consensus-safety-cost-20261013.md",
       "boundary": "No natural low-quality split, business-field false-correction gate, or formal cost budget; default enhancement remains opt-in."
+    },
+    {
+      "id": "all-local-manifest-longtext-coverage",
+      "area": "A2 data-availability audit across the local OCR benchmark inventory",
+      "models": [],
+      "dataset": "F:/OCRBenchmarkTesting/data/annotations/manifests, 8 JSONL manifests and 243 page records",
+      "backends": [],
+      "result": "32,694 eligible annotation lines; maximum natural line 132 characters; maximum page aggregate 2,348 characters; natural continuous lines >=3,200: 0.",
+      "status": "controlled-diagnostic",
+      "evidenceMarkdown": "paddleocr-longtext-coverage-a2-20261014.md",
+      "boundary": "Inventory only; no OCR execution or accuracy result. Page aggregates, concatenated crops and synthetic compositions cannot close A2."
     }
   ],
   "openGates": [

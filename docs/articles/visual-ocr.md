@@ -836,6 +836,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。自然连续 `>=3,200` 字符（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。
 
+A2 又增加了[当前 OCR benchmark manifest 全量盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)：扫描 `F:\OCRBenchmarkTesting\data\annotations\manifests` 下 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行只有 132 字符、最长单页累计 2,348 字符，`>=3,200` 的自然连续行仍为 `0`。这是数据可用性审计，不是 OCR 准确率结果；页面累计、拼接 crop 和合成文本不能关闭 A2。
+
 为避免把单张演示图当成完整覆盖，固定使用 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg`，对 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 共 7 组 DET+CLS+REC 流水线分别运行 ONNX Runtime CPU 与 OpenVINO CPU。21 个组合在两个后端都完成检测、裁剪、方向、识别和合并；区域数与已识别数逐组合一致，按区域文本序列的 SHA-256 也为 `21/21` 一致。v6 没有独立版本化 CLS 归档，明确复用 PP-OCRv5 mobile CLS。
 
 该轮只使用演示图，没有逐字人工真值，因此不能从它计算 CER/WER、召回率或准确率；每组仅一次端到端调用，耗时不替代 5 次预热 + 50 次正式性能协议。模型、输入、结果摘要和可复现命令见[三图跨后端机器可读记录](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-openvino-ort-20260930.md)，复现脚本为 `eng/models/paddle-ocr/scripts/Invoke-PaddleOcrCoreThreeImageEvidence.ps1`。

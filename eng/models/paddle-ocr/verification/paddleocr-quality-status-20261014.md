@@ -25,6 +25,7 @@
 | FUNSD v4 Mobile | 同一 40 页与协议 | ORT/OpenVINO：40/40；2,357 个区域；39/40 页有序文本一致，1 页存在索引文本差异 | 部分通过 | 不能写成严格跨后端 parity 或发布准确率 |
 | 方向 retry 策略 | 4 个真实 SROIE 页的 32 个 parent-linked crop，构造 8 个已知角度；候选 `90°/180°/-90°` | ORT/OpenVINO：32/32 执行；右角可比较样本 16/16 选中预期方向，逐行文本/方向结果一致 | 受控诊断 | 不是自然旋转分布准确率；阈值 `1`、零增益只用于诊断，不能作为生产默认 |
 | 受控退化与增强 | SROIE/FUNSD parent-linked crop/page 的 blur、噪声、对比度、阴影、JPEG 等变体；另有 240 条三配方共识证据 | ORT/OpenVINO 执行和决策一致；共识候选存在 CER 改善也存在恶化，5 折安全阈值全部弃权 | 受控诊断 | 不能证明自然低质量鲁棒性、默认增强收益或业务字段误纠率；增强继续 opt-in |
+| 当前 OCR benchmark manifest 全量盘点 | `F:\OCRBenchmarkTesting\data\annotations\manifests` 下 8 个 JSONL、243 页记录、32,694 条有效标注行 | 最长自然标注行 132 字符；最长单页标注字符总量 2,348；自然连续 `>=3,200` 行为 `0` | 受控诊断 | 这是数据可用性审计，不是 OCR 运行或准确率；页面累计、拼接 crop 和合成文本不能替代连续行 |
 
 ## 当前仍未关闭的质量门
 
@@ -43,7 +44,8 @@
 - FUNSD：[v6 Small 40 页](funsd-v6-small-40page-ort-openvino-quality-20261010.md)、[v4 Mobile 40 页](funsd-v4-mobile-40page-ort-openvino-quality-20261010.md)
 - 三后端 SROIE：[v6 Small](sroie-v6-small-10page-three-backend-quality-20261009.md)
 - 方向策略：[A3 受控 retry](sroie-angle-orientation-retry-a3-20261014.md)
+- 长文本数据可用性：[当前 OCR benchmark manifest 全量盘点](paddleocr-longtext-coverage-a2-20261014.md)
 
 机器可读索引见 [`paddleocr-quality-status-20261014.json`](paddleocr-quality-status-20261014.json)。新增证据必须同时登记数据集/选择、模型与字典 SHA、后端/runtime、协议、结果和不能推出的边界；没有这些字段时只能标记为未完成，不能升级为支持结论。
 
-本轮维护范围的 Markdown 链接审计为 [721 条、断链 0](../../paddle-document/verification/document-link-audit-20261014-quality-status.json)；外部 URL、数据集路径和运行时下载地址不在该审计范围内。
+本轮维护范围的 Markdown 链接审计为 [724 条、断链 0](../../paddle-document/verification/document-link-audit-20261014-quality-status.json)；外部 URL、数据集路径和运行时下载地址不在该审计范围内。
