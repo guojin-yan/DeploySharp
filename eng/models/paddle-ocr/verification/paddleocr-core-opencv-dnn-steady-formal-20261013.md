@@ -6,7 +6,7 @@ All seven registered core PP-OCR combinations completed the full
 `det -> crop -> optional cls -> rec -> merge` pipeline with OpenCV DNN CPU.
 Each row used five warm-up calls followed by 50 measured calls.
 
-| Model | P50 (ms) | P95 (ms) | Regions | Ordered text vs CPU reference | Semantic contract vs CPU reference |
+| Model | P50 (ms) | P95 (ms) | Regions | Ordered text vs Batch=8 CPU formal row | Semantic contract vs Batch=8 CPU formal row |
 | --- | ---: | ---: | ---: | --- | --- |
 | PP-OCRv4 Mobile | 1285.438 | 1394.693 | 16 | match | differ |
 | PP-OCRv4 Server | 4135.023 | 4656.340 | 16 | match | differ |
@@ -18,11 +18,17 @@ Each row used five warm-up calls followed by 50 measured calls.
 
 The formal report validator accepted all `7/7` execution rows. Every row kept
 one strict result-contract variant across its 50 timed calls with zero observed
-intra-backend numeric drift. `status=pass` means the exact OpenCV DNN graph and
-pipeline completed with stable non-empty output. It does not mean that output
-is equal to another backend: v5 Mobile and Server differ in ordered text from
-the maintained ORT CPU/OpenVINO reference, and all seven semantic fingerprints
-differ because they include discrete geometry/confidence information.
+intra-backend numeric drift. The table deliberately compares this static
+Batch=1 run with the separately maintained Batch=8 CPU formal matrix. The v5
+text differences and all seven semantic differences are therefore
+configuration differences, not isolated evidence of an OpenCV backend defect.
+
+A current-revision matched-contract follow-up runs ORT 1.28 CPU and OpenCV DNN
+at Batch=1 across all seven models and `demo_1.jpg`, `demo_2.jpg`, `demo_3.jpg`.
+All `21/21` image/model pairs match exact text; recognition confidence differs
+by at most `0.01` and polygon vertices by at most `0.5 px`. The schema 2
+[matched-contract report](paddleocr-core-three-image-opencv-ort-20261013.md)
+records the protocol, input/model hashes and loaded runtime assembly hashes.
 
 ## Fixed protocol and environment
 
@@ -69,9 +75,9 @@ zero-cost cold request.
 
 CPU frequency and system load were not controlled. The report is not a
 throughput result, a quality score, a cross-device/backend ranking, or proof
-that unlisted PP-Structure models support OpenCV DNN. The v5 parity mismatch
-requires model-specific investigation before claiming cross-backend output
-equivalence, even though execution and repeated-run stability passed.
+that unlisted PP-Structure models support OpenCV DNN. Batch-dependent dynamic
+width/CTC output remains a real configuration behavior, so parity claims must
+always compare identical Batch and crop-width contracts.
 
 ## Reproduction
 

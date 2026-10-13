@@ -221,12 +221,28 @@ namespace DeploySharp.Visual.OpenCV.Tests
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
             var evidence = new
             {
-                schemaVersion = 1,
+                schemaVersion = 2,
                 generatedUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
                 sourceRevision = ResolveSourceRevision(),
-                runtime = new { left = "onnxruntime-cpu", right = "opencv-dnn-cpu" },
+                runtime = new
+                {
+                    left = "onnxruntime-cpu",
+                    right = "opencv-dnn-cpu",
+                    machine = Environment.MachineName,
+                    os = Environment.OSVersion.ToString(),
+                    framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                    processArchitecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+                    managedAssemblies = CaptureManagedAssemblies()
+                },
                 modelRoot,
-                protocol = new { images = images.Select(Path.GetFileName).ToArray(), combinations = Cases.Length * images.Count, textAndGeometryTolerance = "text exact; confidence <= 0.01; polygon vertices <= 0.5 px" },
+                protocol = new
+                {
+                    images = images.Select(Path.GetFileName).ToArray(),
+                    combinations = Cases.Length * images.Count,
+                    maximumRecognitionBatch = 1,
+                    maximumConcurrency = 1,
+                    textAndGeometryTolerance = "text exact; confidence <= 0.01; polygon vertices <= 0.5 px"
+                },
                 summary = new { expectedCombinations = Cases.Length * images.Count, passed = rows.Count(row => row.Status == "pass"), unsupportedOrFailed = rows.Count(row => row.Status != "pass"), textMatches = rows.Count(row => row.Status == "pass" && row.TextMatch), coordinateMatches = rows.Count(row => row.Status == "pass" && row.CoordinateMatch) },
                 inputs = images.Select((image, index) => new { path = image, sha256 = imageSha[index] }).ToArray(),
                 runs = rows
@@ -236,6 +252,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private static string ResolveSourceRevision()
         {
+            string? configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION");
+            if (!string.IsNullOrWhiteSpace(configured)) return configured.Trim();
             try
             {
                 using var process = new Process();
@@ -246,6 +264,29 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 return value;
             }
             catch { return "unknown"; }
+        }
+
+        private static object[] CaptureManagedAssemblies()
+        {
+            string[] names = { "Microsoft.ML.OnnxRuntime", "JYPPX.OpenCV.CSharp.API" };
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.IsDynamic && names.Contains(assembly.GetName().Name, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(assembly => assembly.GetName().Name, StringComparer.OrdinalIgnoreCase)
+                .Select(assembly =>
+                {
+                    string location = assembly.Location;
+                    FileVersionInfo version = FileVersionInfo.GetVersionInfo(location);
+                    return (object)new
+                    {
+                        name = assembly.GetName().Name,
+                        assemblyVersion = assembly.GetName().Version?.ToString(),
+                        fileVersion = version.FileVersion,
+                        productVersion = version.ProductVersion,
+                        path = location,
+                        sha256 = Sha256File(location)
+                    };
+                })
+                .ToArray();
         }
 
         private static string ComputeTextSha(OcrResult result)
