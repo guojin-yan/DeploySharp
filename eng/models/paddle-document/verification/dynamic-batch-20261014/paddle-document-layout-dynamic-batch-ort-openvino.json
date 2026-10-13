@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-13T16:02:26.5310558+00:00",
+  "input": {
+    "file": "E:\\Data\\image\\bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "batch": 2,
+  "model": "paddle-doc/pp-doclayout-l",
+  "modelFile": "pp-doclayout-l.onnx",
+  "scope": "Official PP-DocLayout-L dynamic Paddle NMS export with two identical source rows.",
+  "results": [
+    {
+      "backend": "onnxruntime-cpu",
+      "model": "paddle-doc/pp-doclayout-l",
+      "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "1aa81b0aaf7a9765e0cb4e60f0715cac89ad67487385e6e518aa3ef59bc23df6",
+        "1aa81b0aaf7a9765e0cb4e60f0715cac89ad67487385e6e518aa3ef59bc23df6"
+      ],
+      "detectionRowSha256": [
+        "452d099136393d514adc1fe9a16c07e681004c509f11b94764cebe99047c5e47",
+        "452d099136393d514adc1fe9a16c07e681004c509f11b94764cebe99047c5e47"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 1080
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 1080
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "chart",
+        "figure_title",
+        "header_image",
+        "formula",
+        "seal",
+        "footer_image",
+        "paragraph_title",
+        "number",
+        "table",
+        "chart_title",
+        "footer",
+        "doc_title",
+        "header",
+        "abstract",
+        "table_title"
+      ],
+      "status": "passed"
+    },
+    {
+      "backend": "openvino-cpu",
+      "model": "paddle-doc/pp-doclayout-l",
+      "modelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+      "inputShape": "[2,3,640,640]",
+      "inputBatch": 2,
+      "inputRowSha256": [
+        "1aa81b0aaf7a9765e0cb4e60f0715cac89ad67487385e6e518aa3ef59bc23df6",
+        "1aa81b0aaf7a9765e0cb4e60f0715cac89ad67487385e6e518aa3ef59bc23df6"
+      ],
+      "detectionRowSha256": [
+        "3f7e13f3ec1c774b37ad213863ba3e8bc2921b44bacec602b76a91f57bf30a25",
+        "3f7e13f3ec1c774b37ad213863ba3e8bc2921b44bacec602b76a91f57bf30a25"
+      ],
+      "sourceRegions": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 1080
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "width": 810,
+          "height": 1080
+        }
+      ],
+      "auxiliaryShapes": [
+        {
+          "name": "im_shape",
+          "shape": "[2,2]"
+        },
+        {
+          "name": "scale_factor",
+          "shape": "[2,2]"
+        }
+      ],
+      "outputNames": [
+        "fetch_name_0",
+        "fetch_name_1"
+      ],
+      "resultCount": 2,
+      "detectionCounts": [
+        300,
+        300
+      ],
+      "distinctFirstRowLabels": [
+        "image",
+        "text",
+        "chart",
+        "figure_title",
+        "header_image",
+        "formula",
+        "seal",
+        "footer_image",
+        "paragraph_title",
+        "number",
+        "table",
+        "chart_title",
+        "footer",
+        "doc_title",
+        "header",
+        "abstract",
+        "table_title"
+      ],
+      "status": "passed"
+    }
+  ],
+  "boundary": "True model batch execution, auxiliary geometry binding and flattened bbox_num row partitioning on one Windows host; not a quality score, throughput benchmark or cross-device claim."
+}

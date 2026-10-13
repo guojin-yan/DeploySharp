@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-formula-opencv-batch1-v1",
+  "generatedAtUtc": "2026-10-13T16:02:14.885264+00:00",
+  "execution": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "framework": ".NET 10.0.12",
+    "targetFramework": "net10.0",
+    "configuration": "Release"
+  },
+  "input": {
+    "file": "E:\\Model\\PaddleDocument\\validation\\general_formula_rec_001.png",
+    "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+    "region": "full official formula image"
+  },
+  "batch": 1,
+  "backend": "opencv-dnn-cpu",
+  "scope": "Six official formula exports attempted through the OpenCV DNN adapter with one prepared batch=1 input; successful cases execute the full formula decoder.",
+  "results": [
+    {
+      "model": "paddle-formula/pp-formulanet-plus-s",
+      "modelSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "inputShape": "[1,1,384,384]",
+      "inputSha256": "0bf9023c7cf020b552c718e776dc50118f976f2ac0b008dcc15af672647b2aa9",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E "
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-s",
+      "modelSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "inputShape": "[1,1,384,384]",
+      "inputSha256": "0bf9023c7cf020b552c718e776dc50118f976f2ac0b008dcc15af672647b2aa9",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E "
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-m",
+      "modelSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "inputShape": "[1,1,384,384]",
+      "inputSha256": "0bf9023c7cf020b552c718e776dc50118f976f2ac0b008dcc15af672647b2aa9",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E "
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-l",
+      "modelSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "inputShape": "[1,1,768,768]",
+      "inputSha256": "0d124492f5b558cb57baeb7b220b70d1953aec044a6cca26e8fa9f9184336137",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E "
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-l",
+      "modelSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "inputShape": "[1,1,768,768]",
+      "inputSha256": "0d124492f5b558cb57baeb7b220b70d1953aec044a6cca26e8fa9f9184336137",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [ConstantOfShape@ai.onnx]:(onnx_node!Expand.4) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:2637: error: (-2:Unspecified error) in function \u0027void __cdecl cv::dnn::dnn5_v20260605::ONNXImporter::parseConstantFill(class cv::dnn::dnn5_v20260605::LayerParams \u0026,const class opencv_onnx::NodeProto \u0026)\u0027\n\u003E \u003E  (expected: \u0027inpShape[i] \u003E 0\u0027), where\n\u003E \u003E     \u0027inpShape[i]\u0027 is 0\n\u003E \u003E must be greater than\n\u003E \u003E     \u00270\u0027 is 0\n\u003E "
+    },
+    {
+      "model": "paddle-formula/unimernet",
+      "modelSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "inputShape": "[1,1,192,672]",
+      "inputSha256": "f13492dc9f7a78c9d5267899f08479e1ccaa9ec835a4298cbb7b18798b0fc0bd",
+      "status": "opencv-dnn-batch1-unsupported-for-exact-contract",
+      "errorCode": "DS-OCV-8002",
+      "technicalDetails": "operation=specialize-input;jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [GatherND@ai.onnx]:(onnx_node!GatherND.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\gatherND.cpp:52: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::GatherNDLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E GatherND: requires two inputs (expected: \u0027inputs.size() == 2ull\u0027), where\n\u003E \u003E     \u0027inputs.size()\u0027 is 0\n\u003E \u003E must be equal to\n\u003E \u003E     \u00272ull\u0027 is 2\n\u003E ",
+      "innerException": "jyppx_ocv_dnn_read_net_from_onnx_buffer failed: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\onnx\\onnx_importer.cpp:1114: error: (-2:Unspecified error) in function \u0027cv::dnn::dnn5_v20260605::ONNXImporter::handleNode\u0027\n\u003E Node [GatherND@ai.onnx]:(onnx_node!GatherND.0) parse error: OpenCV(5.0.0) D:\\a\\OpenCV-CSharp-API\\opencv-source\\opencv-5.0.0\\modules\\dnn\\src\\layers\\gatherND.cpp:52: error: (-2:Unspecified error) in function \u0027bool __cdecl cv::dnn::GatherNDLayerImpl::getMemoryShapes(const class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,const int,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026,class std::vector\u003Cstruct cv::MatShape,class std::allocator\u003Cstruct cv::MatShape\u003E \u003E \u0026) const\u0027\n\u003E \u003E GatherND: requires two inputs (expected: \u0027inputs.size() == 2ull\u0027), where\n\u003E \u003E     \u0027inputs.size()\u0027 is 0\n\u003E \u003E must be equal to\n\u003E \u003E     \u00272ull\u0027 is 2\n\u003E "
+    }
+  ],
+  "boundary": "Exact model/runtime outcomes only on one Windows host. A failure records an importer or adapter boundary for this artifact and batch=1 contract; it does not imply another OpenCV version or backend failure, and no formula accuracy or performance claim is made."
+}

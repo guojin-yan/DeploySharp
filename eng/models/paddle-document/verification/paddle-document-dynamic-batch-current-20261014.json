@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "paddle-document-dynamic-batch-current.v1",
+  "generatedAtUtc": "2026-10-13T16:18:37Z",
+  "sourceRevision": "c7589d257a566a245f921039fd2c14ab1b364167",
+  "archiveRevision": "188b06942090162f4be64b445835f153e7f1d891",
+  "environment": {
+    "osVersion": "Windows NT 10.0.26200.0",
+    "dotnetSdk": "10.0.401",
+    "testTargetFramework": "net10.0",
+    "configuration": "Release",
+    "restore": "--no-restore"
+  },
+  "command": "DEPLOYSHARP_PADDLE_DOCUMENT_DYNAMIC_BATCH_RUN_EXTERNAL=1 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj -c Release --no-restore --framework net10.0 --filter FullyQualifiedName~PaddleDocumentDynamicBatchIntegrationTests",
+  "testSummary": {
+    "testCasesPassed": 23,
+    "testCasesFailed": 0,
+    "testCasesSkipped": 0,
+    "wallClock": "11m35s",
+    "artifactReports": 23
+  },
+  "backendSummary": {
+    "onnxruntimeCpu": {
+      "status": "passed",
+      "scope": "dynamic-batch execution and decoder row isolation for registered PP-Structure artifacts"
+    },
+    "openvinoCpu": {
+      "status": "passed",
+      "scope": "dynamic-batch execution and decoder row isolation; SLANeXt uses the checked compatibility graph"
+    },
+    "opencvDnnCpu": {
+      "passedChecks": 4,
+      "unsupportedChecks": 19,
+      "status": "mixed",
+      "unsupportedReason": "Exact OpenCV 5.0.0 dynamic-batch/auxiliary-shape/importer contracts return DS-OCV-8002 or DS-OCV-8004; no third-party importer investigation was performed."
+    },
+    "tensorrtCuda": {
+      "status": "not-in-this-run",
+      "scope": "TensorRT dynamic-batch evidence is maintained in separate per-model reports."
+    }
+  },
+  "modelFamilies": [
+    {
+      "family": "PP-LCNet document/table classification",
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "passed",
+      "evidence": "paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json"
+    },
+    {
+      "family": "PP-DocLayout/PP-DocBlockLayout/RT-DETR layout",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed",
+      "opencvBoundary": "DS-OCV-8004",
+      "evidence": "paddle-document-dynamic-batch-ort-openvino.json; paddle-document-layout-dynamic-batch-ort-openvino.json; paddle-document-rtdetr-layout-dynamic-batch-ort-openvino.json; paddle-document-additional-layout-dynamic-batch-ort-openvino.json"
+    },
+    {
+      "family": "Seal detector",
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "status": "passed",
+      "scope": "PP-OCRv4 mobile/server exact artifacts; execution and row/source mapping only",
+      "evidence": "paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json"
+    },
+    {
+      "family": "Table-cell detector",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed",
+      "opencvBoundary": "DS-OCV-8004",
+      "evidence": "paddle-document-table-cell-dynamic-batch-ort-openvino.json; paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
+    },
+    {
+      "family": "FormulaNet/UniMERNet",
+      "backends": ["onnxruntime-cpu"],
+      "status": "passed",
+      "scope": "dynamic-batch token-row isolation and EOS contract; not semantic formula accuracy",
+      "opencvBoundary": "DS-OCV-8002",
+      "evidence": "paddle-document-formula-*-dynamic-batch-ort-20261007.json; paddle-document-formula-dynamic-batch-opencv-20261007.json; paddle-document-formula-batch1-opencv-20261012.json"
+    },
+    {
+      "family": "SLANeXt wired/wireless",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed",
+      "scope": "OpenVINO compatibility graph only; original Loop graph remains importer-blocked",
+      "evidence": "paddle-document-slanext-dynamic-batch-ort-openvino.json; paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json"
+    },
+    {
+      "family": "UVDoc",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "status": "passed",
+      "scope": "output-shape, row isolation and bounded numeric parity",
+      "evidence": "paddle-document-uvdoc-dynamic-batch-ort-openvino.json"
+    }
+  ],
+  "opencvBlockers": [
+    {
+      "code": "DS-OCV-8004",
+      "scope": "layout, RT-DETR and table-cell dynamic batch exact combinations",
+      "message": "Requested blob not found during forward_many in OpenCV 5.0.0"
+    },
+    {
+      "code": "DS-OCV-8002",
+      "scope": "six formula exact artifacts, including batch=1 follow-up",
+      "message": "OpenCV 5.0.0 ONNX importer/input-specialization failure at ConstantOfShape or allocation boundary"
+    }
+  ],
+  "boundaries": [
+    "This is one Windows host and a dirty working-tree test run; it is not clean-checkout evidence.",
+    "The dynamic-batch contracts verify binding, row isolation and decoder execution, not accuracy, CER/WER, throughput or cross-device portability.",
+    "FormulaNet and UniMERNet rows are token/EOS contracts only; formula rendering and mathematical-semantic quality remain open.",
+    "OpenCV failures are exact adapter/runtime boundaries and are not generalized to all OpenCV versions.",
+    "TensorRT is intentionally excluded from this aggregate; use its separate model reports for TensorRT evidence."
+  ],
+  "evidenceDirectory": "dynamic-batch-20261014",
+  "artifactFiles": [
+    "paddle-document-additional-layout-dynamic-batch-opencv-20261007.json",
+    "paddle-document-additional-layout-dynamic-batch-ort-openvino.json",
+    "paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.json",
+    "paddle-document-dynamic-batch-ort-openvino.json",
+    "paddle-document-formula-batch1-opencv-20261012.json",
+    "paddle-document-formula-dynamic-batch-opencv-20261007.json",
+    "paddle-document-formula-l-dynamic-batch-ort-20261007.json",
+    "paddle-document-formula-plus-l-dynamic-batch-ort-20261007.json",
+    "paddle-document-formula-plus-m-dynamic-batch-ort-20261007.json",
+    "paddle-document-formula-plus-s-dynamic-batch-ort-20261007.json",
+    "paddle-document-formula-s-dynamic-batch-ort-20261007.json",
+    "paddle-document-formula-unimernet-dynamic-batch-ort-20261007.json",
+    "paddle-document-layout-dynamic-batch-ort-openvino.json",
+    "paddle-document-pp-doclayout-l-dynamic-batch-ort-openvino-opencv-20261007.json",
+    "paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json",
+    "paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json",
+    "paddle-document-rtdetr-layout-dynamic-batch-ort-openvino.json",
+    "paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json",
+    "paddle-document-slanext-dynamic-batch-ort-openvino.json",
+    "paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json",
+    "paddle-document-table-cell-dynamic-batch-opencv-20261007.json",
+    "paddle-document-table-cell-dynamic-batch-ort-openvino.json",
+    "paddle-document-uvdoc-dynamic-batch-ort-openvino.json"
+  ]
+}

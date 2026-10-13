@@ -881,6 +881,14 @@ PP-OCRv5 Server 也在同一十页选择上完成 ORT/OpenVINO 对照：两后�
 
 详细测速方法和批量调度方式见[推理性能测试](performance-benchmarking.md)，不同设备的实际结果见[设备性能实测](device-performance-benchmarks.md)。
 
+### PP-Structure 动态 Batch 当前证据（2026-10-14）
+
+按外部模型门控运行 `PaddleDocumentDynamicBatchIntegrationTests`，本机得到 **23/23 通过、0 失败、0 跳过**。测试覆盖 PP-LCNet 文档/表格分类、PP-DocLayout/PP-DocBlockLayout、RT-DETR 版面与表格单元格、PP-OCRv4 mobile/server 印章、FormulaNet/UniMERNet、SLANeXt wired/wireless 和 UVDoc。ORT CPU 与 OpenVINO CPU 的真实动态 Batch 绑定、辅助几何输入、解码行隔离和顺序合同均通过；SLANeXt 的 OpenVINO 行使用独立的 alpha-renamed 兼容图，不代表原始 Loop 图可直接导入。
+
+OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执行；版面、RT-DETR 单元格的精确组合在 `forward_many` 返回 `DS-OCV-8004`，六个公式图在 batch=2 以及随后 batch=1 探针中均在导入/输入专门化阶段返回 `DS-OCV-8002`。这些是当前适配器与 OpenCV 5.0.0 的精确阻断，不外推到所有 OpenCV 版本，也不继续追查第三方 importer。
+
+完整的模型/后端/边界表见[聚合 Markdown 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-current-20261014.md)，原始 JSON 见 [`dynamic-batch-20261014/`](../../eng/models/paddle-document/verification/dynamic-batch-20261014/)。该轮只证明动态 Batch 执行和结果行隔离，不证明数据集准确率、CER/WER、正式 P50/P95、GPU 吞吐、TensorRT 覆盖或跨设备可移植性；公式渲染/数学语义质量门仍保持开放。
+
 ## 常见问题
 
 | 现象 | 处理 |

@@ -324,6 +324,8 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 - `✗` 表示已尝试并确认当前精确组合不支持或无法运行；原始 SLANeXt 图在当前 OpenVINO `Loop` importer 下即属此类。只有尚无真实执行证据（包括 Chart2Table/OpenCV DNN 自回归）时应标 `△`，不能将“未验证”写成“已证实失败”。此状态不会被相近模型或派生图的结果覆盖。
 - 未验证的模型不再使用 `—` 混淆“未验证”和“不适用”；不会用相近模型、脚本退出码或合同测试代替真实推理证据。
 
+2026-10-14 的 [PP-Structure 动态 Batch 聚合证据](../eng/models/paddle-document/verification/paddle-document-dynamic-batch-current-20261014.md)记录了外部测试入口的 **23/23 通过、0 失败、0 跳过**。在当前 Windows 主机上，ORT CPU 和 OpenVINO CPU 对注册的分类、版面、印章、单元格、公式 token、SLANeXt 和 UVDoc 工件完成动态 Batch 绑定与 Decoder 行隔离；OpenCV DNN 只有分类/印章精确组合通过，版面/单元格的 `forward_many` 为 `DS-OCV-8004`，六个公式图（包括 batch=1 复核）为 `DS-OCV-8002`。SLANeXt 的 OpenVINO 通过项使用单独的 alpha-renamed 兼容图。该聚合只表示执行合同和行隔离，不改变表中逐工件状态，也不构成准确率、CER/WER、正式性能、TensorRT 或跨设备支持证明；23 份原始 JSON 保存在 [`dynamic-batch-20261014/`](../eng/models/paddle-document/verification/dynamic-batch-20261014/)。
+
 ## PaddleOCR 完整流水线证据
 
 当前已完成真实 `det → crop → cls/orientation → rec → merge` 的核心组合包括：PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium，共 7 组。`PaddleOcrAllCorePipelineOrtIntegrationTests` 在 Windows x64、`E:\Data\ocr\demo_1.jpg`、ONNX Runtime CPU 上逐组返回 16 个区域且全部产生识别结果；单次冷启动端到端耗时为 v4 mobile `676.431 ms`、v4 server `2840.955 ms`、v5 mobile `911.419 ms`、v5 server `1890.864 ms`、v6 tiny `356.106 ms`、v6 small `1044.636 ms`、v6 medium `2286.589 ms`。v6 没有独立 CLS 归档，测试明确复用 PP-OCRv5 mobile text-line CLS。OpenCV DNN 七组短诊断的机器可读结果见 [`paddleocr-core-opencv-20260924.json`](../eng/models/paddle-ocr/verification/paddleocr-core-opencv-20260924.json)。
