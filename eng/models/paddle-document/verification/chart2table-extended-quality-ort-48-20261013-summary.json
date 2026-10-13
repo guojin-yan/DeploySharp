@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "deploysharp-chart2table-quality-summary-v1",
+  "generatedUtc": "2026-10-13T11:40:32.5668964+00:00",
+  "backend": "onnxruntime-cpu",
+  "modelId": "paddle-chart/pp-chart2table",
+  "sourceReport": "chart2table-extended-quality-ort-48-20261013.json",
+  "sourceReportSha256": "a39b00a9f5f2befbcfb4e7ad5752c403a2d3f0af6e50452de9dff7dda940d301",
+  "manifest": {
+    "dataset": "ChartQA",
+    "split": "val",
+    "sourceRepository": "https://github.com/vis-nlp/ChartQA",
+    "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+    "sampleCount": 48,
+    "fileSha256": "66b8c6d0698e3619cb49f77f4e971e51d5b25ebca46d6926d0c7aed98528fb83",
+    "selectionIdentitySha256": "137dee01beac021e004d6ec2af0c00dc94cd4ef834558f2bbbe61863f9aaedcb",
+    "selectionGroups": [
+      {
+        "name": "OECD",
+        "sampleCount": 16
+      },
+      {
+        "name": "other",
+        "sampleCount": 16
+      },
+      {
+        "name": "two_col",
+        "sampleCount": 16
+      }
+    ]
+  },
+  "maximumNewTokens": 1024,
+  "metrics": {
+    "sampleCount": 48,
+    "endOfSequenceCount": 48,
+    "structurallyValidCount": 47,
+    "structureMatchCount": 33,
+    "exactTextMatchCount": 17,
+    "rowExactMatchCount": 205,
+    "expectedRowCount": 319,
+    "rowMicroAccuracy": 0.6426332288401254,
+    "cellExactMatchCount": 450,
+    "expectedCellCount": 1051,
+    "cellMicroAccuracy": 0.42816365366317793,
+    "totalMillisecondsP50": 20614.8323,
+    "totalMillisecondsP95": 50117.460145,
+    "visionMillisecondsP50": 5468.54875,
+    "visionMillisecondsP95": 8074.321774999999,
+    "tokenCountP50": 98.0,
+    "tokenCountP95": 290.84999999999997
+  },
+  "invalidStructureSamples": [
+    {
+      "sample": "OECD_HOUSEHOLDS_WITH_BROADBAND_ACCESS_CAN_SVN_USA_000027.png",
+      "finishReason": "EndOfSequence",
+      "expectedRows": 4,
+      "expectedColumns": 8,
+      "actualRows": 7,
+      "actualColumns": 4,
+      "actualCells": 26
+    }
+  ],
+  "supersetBaseline": {
+    "source": "chart2table-extended-quality-ort-20261012.json",
+    "sourceSha256": "102121d0c9d640bd6dc6564364dd1d06324883e7abf2f84a67b8dbad4d2f4fe8",
+    "sampleCount": 24,
+    "retainedSampleCount": 24,
+    "artifactOrOutputMismatchCount": 0,
+    "artifactOrOutputMismatches": []
+  },
+  "boundary": "Bounded official ChartQA table-reconstruction evidence. These metrics are not split-level ChartQA accuracy, question answering accuracy, a controlled backend performance comparison, or a cross-device guarantee."
+}

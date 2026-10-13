@@ -50,6 +50,12 @@ $rightName = [string]$other.backend
 if ([string]::IsNullOrWhiteSpace($leftName) -or [string]::IsNullOrWhiteSpace($rightName)) {
     throw 'Both reports must declare a non-empty backend.'
 }
+if (-not [string]::Equals([string]$ort.modelId, [string]$other.modelId, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "Reports do not use the same modelId. $leftName=$($ort.modelId); $rightName=$($other.modelId)"
+}
+if ([int]$ort.sampleCount -ne @($ort.results).Count -or [int]$other.sampleCount -ne @($other.results).Count) {
+    throw 'At least one report sampleCount does not match its result rows.'
+}
 foreach ($property in @('dataset', 'sourceRepository', 'sourceRevision', 'split')) {
     if (-not [string]::Equals([string]$ort.$property, [string]$other.$property, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Reports do not use the same $property. $leftName=$($ort.$property); $rightName=$($other.$property)"
@@ -84,12 +90,23 @@ foreach ($name in $names) {
         rightTokenCount = [int]$right.tokenCountIncludingEos
         expectedDimensionsMatch = ([int]$leftStructure.expectedRows -eq [int]$rightStructure.expectedRows) -and ([int]$leftStructure.expectedColumns -eq [int]$rightStructure.expectedColumns)
         generatedDimensionsMatch = ([int]$leftStructure.actualRows -eq [int]$rightStructure.actualRows) -and ([int]$leftStructure.actualColumns -eq [int]$rightStructure.actualColumns)
+        actualStructurallyValidMatch = [bool]$leftStructure.actualStructurallyValid -eq [bool]$rightStructure.actualStructurallyValid
+        leftActualStructurallyValid = [bool]$leftStructure.actualStructurallyValid
+        rightActualStructurallyValid = [bool]$rightStructure.actualStructurallyValid
         structureMatchesMatch = [bool]$leftStructure.structureMatches -eq [bool]$rightStructure.structureMatches
         leftStructureMatches = [bool]$leftStructure.structureMatches
         rightStructureMatches = [bool]$rightStructure.structureMatches
+        exactTextMatchFlagMatch = [bool]$leftStructure.exactTextMatch -eq [bool]$rightStructure.exactTextMatch
+        leftExactTextMatch = [bool]$leftStructure.exactTextMatch
+        rightExactTextMatch = [bool]$rightStructure.exactTextMatch
         expectedCellCountMatch = [int]$leftStructure.expectedCells -eq [int]$rightStructure.expectedCells
+        actualCellCountMatch = [int]$leftStructure.actualCells -eq [int]$rightStructure.actualCells
+        leftActualCellCount = [int]$leftStructure.actualCells
+        rightActualCellCount = [int]$rightStructure.actualCells
         leftCellExactMatchCount = [int]$leftStructure.cellExactMatchCount
         rightCellExactMatchCount = [int]$rightStructure.cellExactMatchCount
+        leftRowExactMatchCount = [int]$leftStructure.rowExactMatchCount
+        rightRowExactMatchCount = [int]$rightStructure.rowExactMatchCount
         cellExactMatchDeltaRightMinusLeft = [int]$rightStructure.cellExactMatchCount - [int]$leftStructure.cellExactMatchCount
         rowExactMatchDeltaRightMinusLeft = [int]$rightStructure.rowExactMatchCount - [int]$leftStructure.rowExactMatchCount
         leftTotalMs = [double]$left.totalMs
@@ -108,7 +125,7 @@ function Count-Matches([string]$Property) {
 }
 
 $output = [ordered]@{
-    schemaVersion = 'deploysharp-chart2table-backend-alignment-v2'
+    schemaVersion = 'deploysharp-chart2table-backend-alignment-v3'
     generatedUtc = [DateTimeOffset]::UtcNow
     dataset = if ([string]::IsNullOrWhiteSpace([string]$ort.dataset)) { 'ChartQA' } else { $ort.dataset }
     split = $ort.split
@@ -126,8 +143,13 @@ $output = [ordered]@{
     tokenCountMatches = Count-Matches 'tokenCountMatch'
     expectedDimensionsMatches = Count-Matches 'expectedDimensionsMatch'
     generatedDimensionsMatches = Count-Matches 'generatedDimensionsMatch'
+    actualStructurallyValidFlags = Count-Matches 'actualStructurallyValidMatch'
     structureMatchesFlags = Count-Matches 'structureMatchesMatch'
+    exactTextMatchFlags = Count-Matches 'exactTextMatchFlagMatch'
     expectedCellCountMatches = Count-Matches 'expectedCellCountMatch'
+    actualCellCountMatches = Count-Matches 'actualCellCountMatch'
+    totalRowExactMatchesLeft = [int]((@($rows | ForEach-Object { [int]$_['leftRowExactMatchCount'] }) | Measure-Object -Sum).Sum)
+    totalRowExactMatchesRight = [int]((@($rows | ForEach-Object { [int]$_['rightRowExactMatchCount'] }) | Measure-Object -Sum).Sum)
     leftEosCount = @($rows | Where-Object { $_.leftFinishReason -eq 'EndOfSequence' }).Count
     rightEosCount = @($rows | Where-Object { $_.rightFinishReason -eq 'EndOfSequence' }).Count
     totalCellExactMatchesLeft = [int]((@($rows | ForEach-Object { [int]$_['leftCellExactMatchCount'] }) | Measure-Object -Sum).Sum)
@@ -156,7 +178,9 @@ if (-not [string]::IsNullOrWhiteSpace($MarkdownPath)) {
     $lines.Add("| Finish reason / token count matches | $($output.finishReasonMatches)/$($output.sampleCount); $($output.tokenCountMatches)/$($output.sampleCount) |")
     $lines.Add("| EOS | $leftName $($output.leftEosCount)/$($output.sampleCount); $rightName $($output.rightEosCount)/$($output.sampleCount) |")
     $lines.Add("| Expected / generated dimensions match | $($output.expectedDimensionsMatches)/$($output.sampleCount); $($output.generatedDimensionsMatches)/$($output.sampleCount) |")
-    $lines.Add("| Structure flag / expected cell count matches | $($output.structureMatchesFlags)/$($output.sampleCount); $($output.expectedCellCountMatches)/$($output.sampleCount) |")
+    $lines.Add("| Parseable / structure / exact-text flags match | $($output.actualStructurallyValidFlags)/$($output.sampleCount); $($output.structureMatchesFlags)/$($output.sampleCount); $($output.exactTextMatchFlags)/$($output.sampleCount) |")
+    $lines.Add("| Expected / actual cell counts match | $($output.expectedCellCountMatches)/$($output.sampleCount); $($output.actualCellCountMatches)/$($output.sampleCount) |")
+    $lines.Add("| Exact rows | $leftName $($output.totalRowExactMatchesLeft); $rightName $($output.totalRowExactMatchesRight) |")
     $lines.Add("| Exact cells | $leftName $($output.totalCellExactMatchesLeft); $rightName $($output.totalCellExactMatchesRight) |")
     $lines.Add('')
     $lines.Add("| Sample | $leftName ms | $rightName ms | Ratio | $leftName cells | $rightName cells | Generated SHA same |")

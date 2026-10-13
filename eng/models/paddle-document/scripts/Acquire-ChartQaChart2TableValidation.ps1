@@ -40,6 +40,11 @@ function Get-Sha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Get-TextSha256([string]$Value) {
+    $bytes = [Text.Encoding]::UTF8.GetBytes($Value)
+    return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+}
+
 function Download-Asset([string]$Uri, [string]$Path) {
     if ((Test-Path -LiteralPath $Path) -and !$Force) { return }
     $temporary = "$Path.download"
@@ -86,6 +91,15 @@ foreach ($name in $selected) {
     })
 }
 
+$selectionIdentity = [ordered]@{
+    dataset = 'ChartQA'
+    split = $Split
+    sourceRepository = $repo
+    sourceRevision = $Revision
+    samples = $samples
+}
+$selectionIdentitySha256 = Get-TextSha256 ($selectionIdentity | ConvertTo-Json -Depth 8 -Compress)
+
 $manifest = [ordered]@{
     schemaVersion = 1
     dataset = 'ChartQA'
@@ -94,6 +108,7 @@ $manifest = [ordered]@{
     sourceRevision = $Revision
     generatedUtc = [DateTimeOffset]::UtcNow
     sampleCount = $samples.Count
+    selectionIdentitySha256 = $selectionIdentitySha256
     samples = $samples
     boundary = 'Bounded external quality selection; table structure/row/cell metrics are not split-level ChartQA accuracy.'
 }
@@ -101,3 +116,4 @@ $manifestPath = Join-Path $Destination 'manifest.json'
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 Write-Output "ChartQA manifest: $manifestPath"
 Write-Output "Samples: $($samples.Count); revision: $Revision"
+Write-Output "Selection identity SHA-256: $selectionIdentitySha256"

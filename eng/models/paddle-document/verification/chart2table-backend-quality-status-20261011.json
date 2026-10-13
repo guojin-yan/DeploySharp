@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "deploysharp-paddle-chart2table-backend-quality-status-v1",
-  "generatedUtc": "2026-10-13T10:30:12Z",
+  "schemaVersion": "deploysharp-paddle-chart2table-backend-quality-status-v2",
+  "generatedUtc": "2026-10-13T11:45:00Z",
   "modelId": "paddle-chart/pp-chart2table",
   "bundle": {
     "releaseRepository": "guojin-yan/DeploySharp",
@@ -11,90 +11,67 @@
     "sourceArtifactBoundary": "The upstream archive is a generative checkpoint and tokenizer source, not a standard inference.json/inference.pdiparams pair. The published four-graph ONNX bundle is the supported deployment artifact.",
     "evidence": "chart2table-component-validation.json"
   },
+  "boundedChartQaValSelection": {
+    "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
+    "sampleCount": 48,
+    "selectionIdentitySha256": "137dee01beac021e004d6ec2af0c00dc94cd4ef834558f2bbbe61863f9aaedcb",
+    "groups": {
+      "OECD": 16,
+      "other": 16,
+      "two_col": 16
+    },
+    "metrics": {
+      "eos": "48/48",
+      "structurallyValid": "47/48",
+      "structureMatches": "33/48",
+      "exactTextMatches": "17/48",
+      "rowExactMatches": "205/319",
+      "rowMicroAccuracy": 0.6426332288401254,
+      "cellExactMatches": "450/1051",
+      "cellMicroAccuracy": 0.4281636536631779
+    },
+    "boundary": "Bounded table-reconstruction evidence only; not ChartQA split accuracy, question-answering accuracy, a controlled performance comparison, or a cross-device guarantee."
+  },
   "backends": [
     {
       "backend": "onnxruntime-cpu",
       "matrixStatus": "supported-with-evidence",
-      "fullGeneration": {
-        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA",
-        "officialSample": "EOS and expected six-row table",
-        "evidence": [
-          "chart2table-ort-multi-image-20260929.json",
-          "chart2table-component-validation.json"
-        ]
-      },
-      "boundedChartQaValQuality": {
-        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-        "sampleCount": 24,
-        "eos": "24/24",
-        "structureMatches": "16/24",
-        "exactTextMatches": "6/24",
-        "rowExactMatches": "98/161",
-        "cellExactMatches": "211/547",
-        "latencyP50P95Milliseconds": "19328.80/51708.73 total; order-statistic single-host observation",
-        "decodeStepP50MedianP95Milliseconds": "106.15/136.49",
-        "decodeStepP95MedianP95Milliseconds": "161.55/243.55",
-        "evidence": "chart2table-extended-quality-ort-20261012.json",
-        "priorTwelveSampleEvidence": "chart2table-extended-quality-ort-20261004.json"
-      },
-      "boundary": "Execution and bounded 24-image task-quality diagnostics only; OpenVINO/TensorRT were not rerun on this 24-image selection; not split-level ChartQA accuracy or a controlled benchmark."
+      "fullGeneration": "Official sample and 4/4 curated human samples reach EOS and expected table SHA.",
+      "boundedQualityEvidence": "chart2table-extended-quality-ort-48-20261013.json",
+      "summaryEvidence": "chart2table-extended-quality-ort-48-20261013-summary.json",
+      "totalLatencyP50P95Milliseconds": "20614.832/50117.460",
+      "visionLatencyP50P95Milliseconds": "5468.549/8074.322",
+      "supersetBaseline": "24/24 prior rows retained with zero artifact/output mismatches",
+      "boundary": "Execution and bounded 48-image task-quality diagnostics only; not split-level accuracy or a controlled benchmark."
     },
     {
       "backend": "openvino-cpu",
       "matrixStatus": "supported-with-evidence",
-      "fullGeneration": {
-        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA",
-        "officialSample": "EOS and expected six-row table",
-        "evidence": [
-          "chart2table-openvino-multi-image-20260929.json",
-          "chart2table-component-validation.json"
-        ]
-      },
-      "boundedChartQaValQuality": {
-        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-        "sampleCount": 24,
-        "eos": "24/24",
-        "structureMatches": "16/24",
-        "exactTextMatches": "6/24",
-        "rowExactMatches": "98/161",
-        "cellExactMatches": "211/547",
-        "crossBackendGeneratedTableSha": "24/24 equal to ORT 2026-10-12 record",
-        "latencyP50P95Milliseconds": "15887.68/44197.13 total; order-statistic single-host observation with 1024-token cap",
-        "decodeStepP50MedianP95Milliseconds": "111.09/124.56",
-        "decodeStepP95MedianP95Milliseconds": "136.98/164.11",
-        "evidence": "chart2table-extended-quality-openvino-20261012.json",
-        "alignmentEvidence": "chart2table-extended-quality-backend-alignment-20261012.json",
-        "priorTwelveSampleEvidence": "chart2table-extended-quality-openvino-20261011.json"
-      },
-      "boundary": "Execution and bounded 24-image task-quality diagnostics only; TensorRT was not rerun on this 24-image selection; not split-level ChartQA accuracy or a controlled benchmark."
+      "fullGeneration": "Official sample and 4/4 curated human samples reach EOS and expected table SHA.",
+      "boundedQualityEvidence": "chart2table-extended-quality-openvino-48-20261013.json",
+      "summaryEvidence": "chart2table-extended-quality-openvino-48-20261013-summary.json",
+      "alignmentEvidence": "chart2table-extended-quality-ort-openvino-48-alignment-20261013.json",
+      "generatedTableShaMatchesToOrt": "48/48",
+      "totalLatencyP50P95Milliseconds": "18442.476/47943.732",
+      "visionLatencyP50P95Milliseconds": "4687.729/5394.689",
+      "supersetBaseline": "24/24 prior rows retained with zero artifact/output mismatches",
+      "boundary": "Execution and bounded 48-image task-quality diagnostics only; not split-level accuracy or a controlled benchmark."
     },
     {
       "backend": "tensorrt-cuda",
       "matrixStatus": "supported-with-evidence",
       "runtime": "TensorRT 10.11.0.33, CUDA 12.9, cuDNN 9.22, RTX 3060 Laptop; plans are runtime/profile specific",
-      "fullGeneration": {
-        "curatedHumanSamples": "4/4 EOS and exact expected-table SHA; 8/8 associated QA labels matched",
-        "officialSample": "EOS and expected six-row table; DeploySharp Builder-created plans passed",
-        "evidence": [
-          "chart2table-tensorrt-multi-image-20260930.json",
-          "chart2table-component-validation.json"
-        ]
-      },
-    "boundedChartQaValQuality": {
-        "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06",
-      "sampleCount": 24,
-      "eos": "24/24",
-      "structureMatches": "16/24",
-      "exactTextMatches": "6/24",
-      "rowExactMatches": "98/161",
-      "cellExactMatches": "211/547",
-      "generatedTextShaMatchesToOrt": "23/24",
-      "latencyP50P95Milliseconds": "6498.09/24173.29 total; decode P50 median/P95 68.27/79.24; decode P95 median/P95 87.07/108.75",
-      "evidence": "chart2table-extended-quality-tensorrt-20261012.json",
-      "alignmentEvidence": "chart2table-extended-quality-ort-tensorrt-alignment-20261012.json",
-      "priorTwelveSampleEvidence": "chart2table-extended-quality-tensorrt-20261005.json"
-      },
-      "boundary": "Execution and bounded 24-image task-quality diagnostics on one unclock-locked device; one generated-text hash differs from ORT while token/shape/cell totals agree; do not generalize plans or timings to another GPU/runtime."
+      "fullGeneration": "Official sample and 4/4 curated human samples reach EOS and expected table SHA; DeploySharp Builder-created plans pass.",
+      "boundedQualityEvidence": "chart2table-extended-quality-tensorrt-48-20261013.json",
+      "summaryEvidence": "chart2table-extended-quality-tensorrt-48-20261013-summary.json",
+      "alignmentEvidence": "chart2table-extended-quality-ort-tensorrt-48-alignment-20261013.json",
+      "generatedTableShaMatchesToOrt": "46/48",
+      "tokenCountMatchesToOrt": "47/48",
+      "taskMetricParityToOrt": "48/48 finish reason, dimensions, parseability, structure/exact-text flags and actual cell counts; 205/319 exact rows and 450/1051 exact cells on both reports",
+      "totalLatencyP50P95Milliseconds": "7614.772/25819.988",
+      "visionLatencyP50P95Milliseconds": "139.532/204.089",
+      "supersetBaseline": "24/24 prior rows retained with zero artifact/output mismatches",
+      "boundary": "Execution and bounded 48-image task-quality diagnostics on one unlocked-clock device; two generated outputs are not byte-identical to ORT; do not generalize plans or timings to another GPU/runtime."
     },
     {
       "backend": "opencv-dnn-cpu",
@@ -110,13 +87,17 @@
     }
   ],
   "crossBackendQuality": {
-    "curatedHumanSamples": "ORT/OpenVINO/TensorRT each 4/4 EOS and exact expected-table SHA",
-    "chartQaValTwentyFourSampleAlignment": "ORT/OpenVINO use the same 24 image/table SHA values, finish reasons, token counts, dimensions and generated table SHA values match 24/24; both report 211/547 exact cells. This is an alignment check, not a rerun or accuracy score",
-    "evidence": "chart2table-extended-quality-backend-alignment-20261012.json"
+    "ortOpenVino": "48/48 generated table SHA, token count, finish reason, dimensions, parseability, structure/exact-text flags and cell-count matches",
+    "ortTensorRt": "46/48 generated table SHA and 47/48 token-count matches; all 48 match finish reason, dimensions, parseability, structure/exact-text flags and actual cell counts",
+    "tensorRtDifferences": [
+      "08852562005685.png: generated SHA differs; ORT 254 tokens versus TensorRT 258",
+      "OECD_ENTERPRISES_BY_BUSINESS_SIZE_BEL_BGR_CZE_NOR_SWE_000003.png: generated SHA differs; both use 177 tokens"
+    ],
+    "boundary": "Alignment compares already-generated evidence files. It is not a new inference run, dataset accuracy score, semantic-equivalence proof, or controlled performance benchmark."
   },
   "notYetVerified": [
     "ChartQA split-level accuracy or a larger independently labeled chart-to-table benchmark",
-    "TensorRT CUDA rerun on the 24-image selection",
+    "ChartQA question-answering accuracy",
     "Clock-locked, repeated cross-device performance ranking",
     "TensorRT plan portability across GPU, TensorRT, CUDA or cuDNN versions"
   ]
