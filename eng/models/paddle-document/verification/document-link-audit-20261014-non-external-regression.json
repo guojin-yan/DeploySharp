@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v2",
-  "generatedUtc": "2026-10-13T17:40:57.6704047+00:00",
+  "generatedUtc": "2026-10-13T17:47:58.9037647+00:00",
   "documents": [
     "docs/articles/visual-ocr.md",
     "docs/articles/visual-paddle-structure.md",
@@ -30,7 +30,7 @@
     "eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md",
     "eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20261013.md"
   ],
-  "localMarkdownLinksChecked": 682,
+  "localMarkdownLinksChecked": 684,
   "brokenLocalMarkdownLinks": 0,
   "broken": [],
   "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."

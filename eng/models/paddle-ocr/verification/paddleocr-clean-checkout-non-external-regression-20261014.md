@@ -31,4 +31,4 @@ dotnet test DeploySharp.sln -c Release --no-build --no-restore --filter "TestCat
 
 机器可读结果见 [JSON](paddleocr-clean-checkout-non-external-regression-20261014.json)。原始测试日志 SHA-256 为 `36e8fa056020534a55a246a076a0c183da7fa576317ba46b3b5128a49723c0a0`；restore 日志 SHA-256 为 `df625ad99a18d2e219fd5df60085bf920194bc537cd850029a04f175b5c6c18f`。
 
-本轮同步后的 PP-OCR/PP-Structure 维护入口文档链接审计见 [`document-link-audit-20261014-non-external-regression.json`](../../paddle-document/verification/document-link-audit-20261014-non-external-regression.json)。
+本轮同步后的 PP-OCR/PP-Structure 维护入口文档链接审计见 [`document-link-audit-20261014-non-external-regression.json`](../../paddle-document/verification/document-link-audit-20261014-non-external-regression.json)：检查 `684` 条本地 Markdown 链接，断链 `0`。
