@@ -6,14 +6,14 @@
   "task": "text-recognition",
   "modelVersion": "PP-OCRv5-mobile-rec-release",
   "exporter": {
-    "name": "paddle2onnx",
-    "version": "2.0.2rc3",
-    "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562"
+    "name": "PaddlePaddle official Hugging Face ONNX",
+    "version": "official-huggingface-revision",
+    "sourceRevision": "ed152b8b495f84de93cda5709d768548a9127622"
   },
   "source": {
-    "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-OCRv5_mobile_rec_infer.tar",
+    "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_rec_onnx/resolve/ed152b8b495f84de93cda5709d768548a9127622/inference.onnx",
     "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-    "revision": "sha256:566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
+    "revision": "sha256:da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092",
     "author": "PaddlePaddle",
     "licenseExpression": "Apache-2.0",
     "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -57,8 +57,8 @@
       "files": [
         {
           "relativePath": "bundle/model.onnx",
-          "sha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
-          "size": 16560873,
+          "sha256": "da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092",
+          "size": 16534782,
           "mediaType": "application/onnx",
           "role": "model"
         },
@@ -82,11 +82,12 @@
       "opset": 7,
       "portable": true,
       "extensions": {
-        "deploysharp.validation-status": "local-ort-openvino-official-semantics-golden-verified",
-        "deploysharp.artifact-provenance": "byte-identical-local-export",
-        "deploysharp.source-inference-archive-sha256": "566b9512b34e34a9f0db54d87b51fa5a0b9ed2cf1ab7e49728cc0b8b5a64f414",
-        "deploysharp.export-reproducibility": "byte-identical;paddle2onnx-2.0.2rc3;paddlepaddle-3.0.0.dev20250613;default-options",
-        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
+        "deploysharp.validation-status": "official-upstream-onnx-source;runtime-golden-refresh-required",
+        "deploysharp.artifact-provenance": "official-paddlepaddle-huggingface-onnx",
+        "deploysharp.official-onnx-sha256": "da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092",
+        "deploysharp.release-admission": "alpha-preview-official-source-runtime-golden-refresh-required",
+        "deploysharp.official-onnx-revision": "ed152b8b495f84de93cda5709d768548a9127622",
+        "deploysharp.export-reproducibility": "not-applicable-official-onnx-download"
       }
     }
   ],

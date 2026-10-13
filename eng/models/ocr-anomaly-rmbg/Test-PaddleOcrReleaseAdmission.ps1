@@ -28,7 +28,7 @@ if ($evidence.releaseAdmission.state -ne 'preview-algorithm-admission-blocked') 
 if (-not [bool]$evidence.releaseAdmission.catalogRedistributionDeclared -or [bool]$evidence.releaseAdmission.algorithmAdmissionRedistributionApproved) {
     throw 'The catalog publication fact and AlgorithmVerified redistribution decision must remain explicitly separated.'
 }
-if ($evidence.releaseAdmission.immutableReleaseAsset -ne 'closed-public-prerelease' -or $evidence.releaseAdmission.releaseBoundGoldenAudit -ne 'local-ort-openvino-parity-and-independent-official-predictor-complete') {
+if ($evidence.releaseAdmission.immutableReleaseAsset -ne 'not-published-official-source-prepared' -or $evidence.releaseAdmission.releaseBoundGoldenAudit -ne 'new-official-onnx-release-golden-refresh-required') {
     throw 'The immutable Release or release-bound golden boundary drifted.'
 }
 $licenseReviewPath = Join-Path $repositoryRoot ([string]$evidence.releaseAdmission.licenseReviewEvidence).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
@@ -165,7 +165,8 @@ $catalogModelAsset = @($catalogAssets | Where-Object assetId -eq 'paddleocr-ppoc
 if ($catalogManifestAsset.Count -ne 1 -or $catalogManifestAsset[0].relativePath -ne $release.manifestAssetName -or [long]$catalogManifestAsset[0].size -ne [long]$release.manifestSize -or $catalogManifestAsset[0].sha256 -ne $release.manifestSha256) {
     throw 'The catalog-to-ModelPack Release binding drifted.'
 }
-if ($catalogModelAsset.Count -ne 1 -or [long]$catalogModelAsset[0].size -ne [long]$release.modelSize -or $catalogModelAsset[0].sha256 -ne $release.modelSha256 -or -not ([string]$catalogModelAsset[0].downloadUrl).EndsWith('/' + [string]$release.modelAssetName, [System.StringComparison]::Ordinal)) {
+$expectedOfficialModelUrl = 'https://huggingface.co/PaddlePaddle/PP-LCNet_x0_25_textline_ori_onnx/resolve/aea1f18d97338aaf84b463f90192f2820524a00a/inference.onnx'
+if ($catalogModelAsset.Count -ne 1 -or [long]$catalogModelAsset[0].size -ne [long]$release.modelSize -or $catalogModelAsset[0].sha256 -ne $release.modelSha256 -or [string]$catalogModelAsset[0].downloadUrl -ne $expectedOfficialModelUrl) {
     throw 'The catalog-to-model Release binding drifted.'
 }
 
@@ -371,9 +372,9 @@ else {
 }
 
 $openBlockers = @($evidence.blockers | Where-Object { $_.status -eq 'open' })
-if ($openBlockers.Count -ne 1 -or $openBlockers.id -notcontains 'license-and-redistribution') { throw 'The release-admission evidence must retain the attributable legal redistribution blocker.' }
+if ($openBlockers.Count -ne 3 -or $openBlockers.id -notcontains 'license-and-redistribution' -or $openBlockers.id -notcontains 'immutable-release-binding' -or $openBlockers.id -notcontains 'release-bound-local-golden') { throw 'The release-admission evidence must retain the legal, publication, and official-golden blockers.' }
 $missingSummary = if ($missing.Count -eq 0) { 'none' } else { [string]::Join(',', $missing) }
-Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED candidate=$($algorithmCandidate.catalogModelId);catalogStatus=preview;immutableReleaseBinding=closed;releaseBoundLocalGolden=closed;verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedOfficialOnnxSources=$($officialOnnx.Count)/$($expectedOfficialOnnx.Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);algorithmAdmissionRedistributionApproved=false;officialPredictorOutputStatus=recorded"
+Write-Output "DEPLOYSHARP_PADDLE_OCR_RELEASE_ADMISSION_BLOCKED candidate=$($algorithmCandidate.catalogModelId);catalogStatus=preview;immutableReleaseBinding=open;releaseBoundLocalGolden=open;verifiedLocalArtifacts=$available/$(@($evidence.artifacts).Count);verifiedOnnxOpsets=$verifiedOnnxOpsets/$(@($evidence.artifacts).Count);verifiedOfficialArchives=$officialArchiveCount/$(@($evidence.officialInferenceArchives).Count);verifiedOfficialOnnxSources=$($officialOnnx.Count)/$($expectedOfficialOnnx.Count);verifiedInferenceMetadata=$inferenceMetadataCount/$(@($evidence.localInferenceMetadata).Count);verifiedSourceInputs=$verifiedSourceInputs/$(@($evidence.artifacts).Count * 2);verifiedExactReproductions=$verifiedExactReproductions/$(@($evidence.artifacts).Count);missingLocalArtifacts=$missingSummary;openBlockers=$($openBlockers.Count);algorithmAdmissionRedistributionApproved=false;officialPredictorOutputStatus=recorded"
 
 if ($RequireReleaseEligible) {
     throw 'PaddleOCR mobile-cls is not AlgorithmVerified eligible: attributable legal redistribution approval remains open.'

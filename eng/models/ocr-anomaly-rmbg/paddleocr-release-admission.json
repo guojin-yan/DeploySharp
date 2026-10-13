@@ -186,11 +186,11 @@
       "commit": "1ac899174a7b8848559139750c5ce06768cc0a0a",
       "manifestFile": "eng/models/ocr-anomaly-rmbg/releases/mobile-cls.modelpack.json",
       "manifestAssetName": "mobile-cls.modelpack.json",
-      "manifestSize": 3077,
-      "manifestSha256": "5ce3ab3d3fcf5e1e21c9689b5d61c7c12b7ad93e8a7b1c2aaf77b046e7da0f96",
+      "manifestSize": 3160,
+      "manifestSha256": "f4f3d6fb507b4b8088843d74ab1e04233be6fb1663631eb709354252379f136d",
       "modelAssetName": "ppocrv5-mobile-cls.model.onnx",
-      "modelSize": 1018940,
-      "modelSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+      "modelSize": 1019454,
+      "modelSha256": "94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3",
       "checksumAssetName": "SHA256SUMS",
       "checksumSize": 10253,
       "checksumSha256": "72e4a8a01bfdf92c9c78cf83cf2d74ac69721b325c1b80d09796d3a06cb42bc2"
@@ -301,8 +301,8 @@
     "state": "preview-algorithm-admission-blocked",
     "catalogRedistributionDeclared": true,
     "algorithmAdmissionRedistributionApproved": false,
-    "immutableReleaseAsset": "closed-public-prerelease",
-    "releaseBoundGoldenAudit": "local-ort-openvino-parity-and-independent-official-predictor-complete",
+    "immutableReleaseAsset": "not-published-official-source-prepared",
+    "releaseBoundGoldenAudit": "new-official-onnx-release-golden-refresh-required",
     "noticeBundle": "not-recorded;review-evidence-identifies-required-contents",
     "licenseReviewEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-license-redistribution-review.json",
     "officialPredictorGoldenEvidence": "eng/models/ocr-anomaly-rmbg/paddleocr-official-predictor-golden.json"
@@ -310,8 +310,8 @@
   "blockers": [
     { "id": "source-checkpoint-identity", "status": "closed", "requirement": "Official immutable inference archives, archive SHA256 values, and the inference.json/inference.pdiparams SHA256 binding are recorded for every ONNX artifact." },
     { "id": "export-reproducibility", "status": "closed", "requirement": "The exact exporter invocation and dependency lock reproduce all six candidate ONNX files byte-for-byte." },
-    { "id": "immutable-release-binding", "status": "closed", "requirement": "The public prerelease tag, commit, ModelPack asset, ONNX asset, SHA256SUMS, and catalog entry are identity-bound for mobile-cls. This records publication fact only and does not approve AlgorithmVerified redistribution." },
-    { "id": "release-bound-local-golden", "status": "closed", "requirement": "The released mobile-cls ONNX identity is bound to the fixed official image, prepared tensor, output shape, class, label, confidence tolerance, and ORT/OpenVINO CPU parity evidence." },
+    { "id": "immutable-release-binding", "status": "open", "requirement": "A new authorized release must publish the updated ModelPack manifest, official ONNX identity, SHA256SUMS, and catalog entry together; the existing public models-visual.1 assets still describe the previous ONNX bytes." },
+    { "id": "release-bound-local-golden", "status": "open", "requirement": "Refresh and bind the fixed-image ORT/OpenVINO golden to the revision-pinned official mobile-cls ONNX after the new release is authorized." },
     { "id": "license-and-redistribution", "status": "open", "requirement": "The public Preview catalog declares redistribution, but the algorithm-admission review has no attributable approval covering the model archive and derived ONNX; this discrepancy must be resolved before AlgorithmVerified promotion." },
     { "id": "official-predictor-golden", "status": "closed", "requirement": "An independently generated Paddle Predictor CPU output is recorded for the pinned official inference.json/inference.pdiparams and fixed image, with runtime identity, input/output hashes, class, label, and confidence." },
     { "id": "server-rec-cls-semantic-evidence", "status": "closed", "requirement": "Server recognition and classification official semantic goldens are recorded; server classification preserves the 0.9 rejection threshold and 0-degree fallback." }
