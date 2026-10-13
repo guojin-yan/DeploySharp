@@ -69,6 +69,8 @@ foreach (OcrRegionResult region in result.Regions)
 
 2026-10-13 已在 TensorRT 11/RTX 3060 Laptop 上将动态 Batch→DB Decoder 合同扩展到 PP-OCRv4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 共 7 个 DET 工件：每个模型由 DeploySharp Builder 创建 `min=1,opt=max=2` Engine，ORT CPU 与 TensorRT CUDA 均运行两个不同 ROI，并由同一 DB Decoder 恢复两行源坐标。七个精确工件均通过最大/平均概率差 `≤0.10/≤0.001` 的图级合同；所有已解码区域均一对一匹配且 polygon IoU ≥ `0.90`，本次最低匹配 IoU 为 `0.99676`。v5 Server 最大 raw 差 `0.0516`、均值差 `1.91e-5`。此证据不代表检测召回、CER/WER、完整 OCR 流水线、正式吞吐或其他设备/版本 TensorRT 支持，详见[七模型验证报告](../../eng/models/paddle-ocr/verification/paddleocr-core-detectors-tensorrt-dynamic-batch-decoder-20261013.md)。
 
+随后完成了一条精确的 TensorRT 端到端 OCR 验证：v6 Small DET + v5 Mobile CLS + v6 Small REC 在 `demo_1.jpg` 上执行 `det → crop → cls → rec → merge`，TensorRT 10.11/CUDA 12.9/cuDNN 9.22 与 ORT CPU 均返回 16 个区域且有序文本 SHA 一致。该次单次总耗时观察为 ORT `1157.2269 ms`、TensorRT `1288.2198 ms`；GPU 时钟未锁定，因此不作为正式 P50/P95 性能排名。该记录只对三份精确工件、单台 Windows RTX 3060 Laptop 成立，不扩展到全部 PP-OCR 变体、准确率或跨设备可移植性，详见[端到端报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-tensorrt-full-pipeline-20261013.md)。
+
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 ### 连续帧异步预取

@@ -62,6 +62,19 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void DetectionCatalogFactoryHonorsRequestedDynamicBatch()
+        {
+            var artifact = new PaddleOcrArtifactContract(17, new string('a', 64), "test", "test", "Apache-2.0", "test-pre", "test-post");
+            PaddleOcrModelDescriptor descriptor = PaddleOcrModelCatalog.Find(new ModelId("paddleocr/ppocrv6/small-det"));
+
+            PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, artifact, maximumBatch: 4);
+
+            Assert.AreEqual(4, profile.VisualProfile.Input.MaximumBatch);
+            Assert.AreEqual(-1, profile.VisualProfile.Input.ShapePattern[0]);
+            Assert.AreEqual(-1, profile.VisualProfile.Outputs[0].ShapePattern[0]);
+        }
+
+        [TestMethod]
         public void CoreRowsMapToIndependentReleaseAssets()
         {
             foreach (PaddleOcrModelDescriptor descriptor in PaddleOcrModelCatalog.All)

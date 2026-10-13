@@ -90,7 +90,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         {
             if (descriptor == null) throw new ArgumentNullException(nameof(descriptor));
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
-            if (descriptor.Family == "det") return PaddleOcrProfiles.CreateDetection(descriptor.ModelId, artifact, descriptor.InputName, descriptor.OutputName);
+            if (descriptor.Family == "det") return PaddleOcrProfiles.CreateDetection(descriptor.ModelId, artifact, descriptor.InputName, descriptor.OutputName, maximumBatch: maximumBatch);
             if (descriptor.Family == "rec")
             {
                 if (characterSet == null) throw new ArgumentNullException(nameof(characterSet), "A recognition dictionary is required for a PaddleOCR rec profile.");

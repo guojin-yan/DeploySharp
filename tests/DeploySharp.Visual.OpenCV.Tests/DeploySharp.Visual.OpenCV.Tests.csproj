@@ -14,6 +14,8 @@
     <PackageReference Include="OpenVINO.runtime.win" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="OnnxSharp" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +23,7 @@
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenCV\DeploySharp.Backend.OpenCV.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenVINO\DeploySharp.Backend.OpenVINO.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.TensorRT\DeploySharp.Backend.TensorRT.csproj" />
   </ItemGroup>
 
   <ItemGroup>

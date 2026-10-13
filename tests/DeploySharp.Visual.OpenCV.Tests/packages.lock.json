@@ -8,6 +8,18 @@
         "resolved": "5.0.0",
         "contentHash": "TxuLKpLDQaQEST9e80MkILvHTGKihIF2/0tr1TrvEir6Cu7bb/E3aYqmsMgDwKvoTgXtHHbYXdS4/2nIdrxKbg=="
       },
+      "JYPPX.TensorRT.CSharp.API": {
+        "type": "Direct",
+        "requested": "[4.0.0, )",
+        "resolved": "4.0.0",
+        "contentHash": "jJeYAI80eoneM1uqQrxeCtxf0OaxbHwG6jnSXAa1Bz3AQunsyPWWNPIEQs4M8lu5E8hjgzQ1hy6nJU3ktjYrow=="
+      },
+      "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge": {
+        "type": "Direct",
+        "requested": "[4.0.0, )",
+        "resolved": "4.0.0",
+        "contentHash": "a9g4/SekAo4fTPLbPCueoXIR37xtA3w9xGWAz5+ipV0hHqJ5SKV+qnvZfMikK76O9s87I6CnGFDK3+zn59EZdA=="
+      },
       "Microsoft.ML.OnnxRuntime": {
         "type": "Direct",
         "requested": "[1.28.0, )",
@@ -164,6 +176,15 @@
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
           "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
           "JYPPX.OpenVINO.CSharp.API": "[3.3.1, )"
+        }
+      },
+      "JYPPX.DeploySharp.Backend.TensorRT": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Extensibility": "[2.0.0-alpha.1, )",
+          "JYPPX.TensorRT.CSharp.API": "[4.0.0, )",
+          "OnnxSharp": "[0.3.2, )"
         }
       },
       "JYPPX.DeploySharp.Core": {
