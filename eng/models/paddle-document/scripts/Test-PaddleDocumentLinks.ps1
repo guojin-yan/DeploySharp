@@ -33,7 +33,8 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20261013.md',
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md',
-    'eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md'
+    'eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md',
+    'eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md'
 )
 $records = [System.Collections.Generic.List[object]]::new()
 foreach ($relativeDocument in $documents) {

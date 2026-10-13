@@ -113,6 +113,17 @@
       "status": "controlled-diagnostic",
       "evidenceMarkdown": "paddleocr-longtext-coverage-a2-20261014.md",
       "boundary": "Inventory only; no OCR execution or accuracy result. Page aggregates, concatenated crops and synthetic compositions cannot close A2."
+    },
+    {
+      "id": "all-local-manifest-orientation-coverage-a3",
+      "area": "A3 natural orientation/angle data-availability audit",
+      "models": [],
+      "dataset": "F:/OCRBenchmarkTesting/data/annotations/manifests, 8 JSONL manifests, 243 images and 33,425 instances",
+      "backends": [],
+      "result": "Explicit natural direction labels: 0; unknown-orientation images: 209; vertical instances: 23; non-zero angle metadata instances: 0.",
+      "status": "controlled-diagnostic",
+      "evidenceMarkdown": "paddleocr-orientation-coverage-a3-20261014.md",
+      "boundary": "Inventory only; vertical and unknown fields do not provide upright/inverted or angle ground truth, so natural A3 repair/rejection/CER/WER gates remain open."
     }
   ],
   "openGates": [
