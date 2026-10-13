@@ -4,6 +4,12 @@
     <IsTestProject>true</IsTestProject>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- Formula CUDA evidence is an explicit opt-in restore variant. The
+         default solution/test graph remains on the repository CPU ORT line. -->
+    <DeploySharpFormulaOrtCuda Condition="'$(DeploySharpFormulaOrtCuda)' == ''">false</DeploySharpFormulaOrtCuda>
+    <DeploySharpPaddleOcrCuda12 Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">true</DeploySharpPaddleOcrCuda12>
+    <CentralPackageTransitivePinningEnabled Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">false</CentralPackageTransitivePinningEnabled>
+    <NuGetLockFilePath Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">$(MSBuildProjectDirectory)\packages.formula-cuda.lock.json</NuGetLockFilePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +18,11 @@
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
     <PackageReference Include="OpenVINO.runtime.win" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Condition="'$(DeploySharpFormulaOrtCuda)' != 'true'" />
+    <!-- ORT 1.23.2 is the CUDA 12.x line used by the local Windows GPU
+         runtime. It is never selected by the default CPU test restore. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" VersionOverride="1.23.2" NoWarn="NU1605" Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" VersionOverride="1.23.2" NoWarn="NU1605" Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'" />
     <PackageReference Include="OnnxSharp" />
     <PackageReference Include="JYPPX.TensorRT.CSharp.API" />
     <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" />
@@ -22,7 +32,7 @@
     <ProjectReference Include="..\..\src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenCV\DeploySharp.Backend.OpenCV.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OpenVINO\DeploySharp.Backend.OpenVINO.csproj" />
-    <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" AdditionalProperties="DeploySharpPaddleOcrCuda12=$(DeploySharpFormulaOrtCuda)" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.TensorRT\DeploySharp.Backend.TensorRT.csproj" />
   </ItemGroup>
 

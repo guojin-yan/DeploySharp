@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
@@ -396,11 +397,202 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
         Assert.AreEqual(selectedCases.Length, modelReports.Count);
     }
 
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void SixFormulaModelsRunOnOrtCudaAndMatchCpuBounded()
+    {
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA") != "1")
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA=1 and restore with DeploySharpFormulaOrtCuda=true to run the CUDA evidence probe.");
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Assert.Inconclusive("The current opt-in formula CUDA evidence package is Windows-only.");
+
+        string modelRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_MODEL_ROOT") ?? ModelRoot);
+        string sourceRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_SOURCE_ROOT") ?? SourceRoot);
+        string datasetRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ROOT")
+            ?? @"F:\OCRBenchmarkTesting\datasets\realFormula-zenodo-11296815\extracted\realFormula-public");
+        string manifest = Path.Combine(datasetRoot, "realFormula-manifest.jsonl");
+        if (!File.Exists(manifest)) Assert.Inconclusive("realFormula manifest is missing: " + manifest);
+
+        var samples = File.ReadLines(manifest)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(line => JsonSerializer.Deserialize<RealFormulaRow>(line, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!)
+            .ToList();
+        int limit = 5;
+        if (int.TryParse(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_LIMIT"), out int configuredLimit) && configuredLimit > 0)
+            limit = configuredLimit;
+        int offset = 0;
+        if (int.TryParse(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_OFFSET"), out int configuredOffset) && configuredOffset > 0)
+            offset = configuredOffset;
+        samples = samples.Skip(offset).Take(limit).ToList();
+        Assert.IsTrue(samples.Count > 0, "The CUDA probe requires at least one realFormula sample.");
+
+        var cases = new[]
+        {
+            (Model: "pp-formulanet-plus-s", Source: "PP-FormulaNet_plus-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-m", Source: "PP-FormulaNet_plus-M_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-plus-l", Source: "PP-FormulaNet_plus-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "pp-formulanet-s", Source: "PP-FormulaNet-S_infer", Size: new VisualSize(384, 384)),
+            (Model: "pp-formulanet-l", Source: "PP-FormulaNet-L_infer", Size: new VisualSize(768, 768)),
+            (Model: "unimernet", Source: "UniMERNet_infer", Size: new VisualSize(672, 192))
+        };
+        string modelFilter = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_MODELS") ?? string.Empty;
+        HashSet<string> selectedModels = modelFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (selectedModels.Count > 0)
+            cases = cases.Where(item => selectedModels.Contains(item.Model)).ToArray();
+        Assert.IsTrue(cases.Length > 0, "The CUDA probe model filter did not select a known formula model.");
+
+        string report = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_REPORT_PATH")
+            ?? Path.Combine(TestContext.TestResultsDirectory!, "formula-ort-cuda-bounded.json"));
+        string? reportDirectory = Path.GetDirectoryName(report);
+        if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+
+        var rows = new List<object>();
+        bool cudaUnavailable = false;
+        var cpuRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        var cudaRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cuda");
+        var factory = new OpenCvVisualInputFactory();
+
+        foreach (var formulaCase in cases)
+        {
+            string modelPath = Path.Combine(modelRoot, formulaCase.Model + ".onnx");
+            string yaml = Path.Combine(sourceRoot, formulaCase.Model, formulaCase.Source, "inference.yml");
+            if (!File.Exists(modelPath) || !File.Exists(yaml))
+            {
+                rows.Add(new { model = formulaCase.Model, status = "missing-asset", modelPath, tokenizerPath = yaml });
+                continue;
+            }
+
+            object? lastRawOutputSummary = null;
+            try
+            {
+                PaddleDocumentFormulaTokenizer tokenizer = PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(yaml);
+                int end = Find(tokenizer.Tokens, "</s>"), start = Find(tokenizer.Tokens, "<s>"), pad = Find(tokenizer.Tokens, "<pad>"), unk = Find(tokenizer.Tokens, "<unk>");
+                PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-formula/" + formulaCase.Model);
+                PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateFormula(descriptor,
+                    new PaddleDocumentFormulaSchema(tokenizer, end, start, pad, unk), modelSize: formulaCase.Size, maximumSequenceLength: 4096);
+                var sampleRows = new List<object>();
+                int tokenMatches = 0;
+                int latexMatches = 0;
+                double? maximumRawDifference = null;
+                foreach (RealFormulaRow sample in samples)
+                {
+                    string imagePath = Path.Combine(datasetRoot, sample.ImageRelPath.Replace('/', Path.DirectorySeparatorChar));
+                    if (!File.Exists(imagePath)) throw new FileNotFoundException("realFormula image is missing", imagePath);
+                    // Formula exports contain autoregressive Loop state. Recreate the
+                    // registries and sessions for every sample so a provider-side
+                    // state/cache issue cannot contaminate the next comparison row.
+                    using var cpuRegistry = new BackendRegistry().UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cpu));
+                    using var cudaRegistry = new BackendRegistry().UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cuda));
+                    using IInferenceSession cpuSession = cpuRegistry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), cpuRequest);
+                    using IInferenceSession cudaSession = cudaRegistry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), cudaRequest);
+                    using PreparedVisualInput input = factory.CreateFromFile(imagePath, profile.VisualProfile, inputId: sample.Image);
+                    InferenceOutputs cpuOutputs = cpuSession.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                    InferenceOutputs cudaOutputs = cudaSession.Run(InferenceInputs.Create(input.InputName, input.Tensor), CancellationToken.None);
+                    ITensor cudaRaw = cudaOutputs.GetRequired(((PaddleDocumentFormulaDecoder)profile.VisualProfile.Decoder).OutputName);
+                    lastRawOutputSummary = SummarizeIntegerTensor(cudaRaw);
+                    PaddleDocumentFormulaResult cpuResult = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, cpuOutputs, CancellationToken.None));
+                    PaddleDocumentFormulaResult cudaResult = (PaddleDocumentFormulaResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, cudaOutputs, CancellationToken.None));
+                    ITensor cpuRaw = cpuOutputs.GetRequired(((PaddleDocumentFormulaDecoder)profile.VisualProfile.Decoder).OutputName);
+                    double? rawDifference = TensorMaximumAbsDifference(cpuRaw, cudaRaw);
+                    if (rawDifference.HasValue)
+                        maximumRawDifference = Math.Max(maximumRawDifference ?? 0, rawDifference.Value);
+                    bool sameTokens = cpuResult.TokenIds.SequenceEqual(cudaResult.TokenIds);
+                    bool sameLatex = string.Equals(cpuResult.Latex, cudaResult.Latex, StringComparison.Ordinal);
+                    if (sameTokens) tokenMatches++;
+                    if (sameLatex) latexMatches++;
+                    sampleRows.Add(new
+                    {
+                        image = sample.Image,
+                        imageSha256 = sample.ImageSha256,
+                        inputShape = input.Tensor.Shape.ToArray(),
+                        cpuTokenCount = cpuResult.TokenIds.Count,
+                        cudaTokenCount = cudaResult.TokenIds.Count,
+                        tokenIdsMatch = sameTokens,
+                        latexMatch = sameLatex,
+                        cpuLatexSha256 = FileShaText(cpuResult.Latex),
+                        cudaLatexSha256 = FileShaText(cudaResult.Latex),
+                        rawOutputShape = cudaRaw.Shape.ToArray(),
+                        rawOutputsComparable = rawDifference.HasValue,
+                        rawMaximumAbsoluteDifference = rawDifference,
+                        cpuWarnings = cpuResult.Warnings.ToArray(),
+                        cudaWarnings = cudaResult.Warnings.ToArray()
+                    });
+                }
+                rows.Add(new
+                {
+                    model = formulaCase.Model,
+                    status = tokenMatches == samples.Count && latexMatches == samples.Count && maximumRawDifference.HasValue ? "pass" : "parity-failed",
+                    modelSha256 = FileSha(modelPath),
+                    tokenizerSha256 = FileSha(yaml),
+                    sampleCount = samples.Count,
+                    tokenMatches,
+                    latexMatches,
+                    maximumRawAbsoluteDifference = maximumRawDifference,
+                    results = sampleRows
+                });
+            }
+            catch (Exception exception)
+            {
+                cudaUnavailable |= exception.Message.Contains("CUDA", StringComparison.OrdinalIgnoreCase)
+                    || exception.Message.Contains("execution provider", StringComparison.OrdinalIgnoreCase)
+                    || exception.Message.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase);
+                rows.Add(new { model = formulaCase.Model, status = "unsupported", error = exception.GetType().FullName, detail = exception.Message, exception = exception.ToString(), rawOutput = lastRawOutputSummary });
+            }
+        }
+
+        File.WriteAllText(report, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            generatedAtUtc = DateTimeOffset.UtcNow,
+            backend = "onnxruntime-cuda",
+            managedAssembly = typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly.GetName().Version?.ToString(),
+            runtime = RuntimeInformation.FrameworkDescription,
+            os = RuntimeInformation.OSDescription,
+            modelCount = cases.Length,
+            sampleCountPerModel = samples.Count,
+            models = rows,
+            boundary = "Bounded ORT CUDA execution and CPU token/LaTeX parity on the selected realFormula samples. This is not a 121-sample CUDA quality score, a mathematical semantic-equivalence result, or evidence for OpenVINO/OpenCV/TensorRT."
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        TestContext.AddResultFile(report);
+        if (cudaUnavailable && rows.All(row => !row.ToString()!.Contains("status = pass", StringComparison.OrdinalIgnoreCase)))
+            Assert.Inconclusive("The CUDA execution provider was unavailable; see the machine-readable report: " + report);
+        Assert.IsTrue(rows.Any(row => row.ToString()!.Contains("status = pass", StringComparison.OrdinalIgnoreCase)), "No formula model produced a CUDA evidence row. See " + report);
+    }
+
     private sealed record RealFormulaRow(string Image, string ImageRelPath, string ImageSha256, string ReferenceLatex);
 
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     private static string FileShaText(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+    private static double? TensorMaximumAbsDifference(ITensor left, ITensor right)
+    {
+        if (left.ElementType != right.ElementType || left.Shape.Rank != right.Shape.Rank) return null;
+        for (int dimension = 0; dimension < left.Shape.Rank; dimension++)
+            if (left.Shape[dimension] != right.Shape[dimension]) return null;
+        if (left.ElementType == TensorElementType.Float32 && left.Buffer is float[] leftValues && right.Buffer is float[] rightValues)
+        {
+            double maximum = 0;
+            for (int index = 0; index < Math.Min(leftValues.Length, rightValues.Length); index++)
+                maximum = Math.Max(maximum, Math.Abs((double)leftValues[index] - rightValues[index]));
+            return maximum;
+        }
+        if (left.ElementType == TensorElementType.Int64 && left.Buffer is long[] leftInt64 && right.Buffer is long[] rightInt64)
+        {
+            decimal maximum = 0;
+            for (int index = 0; index < Math.Min(leftInt64.Length, rightInt64.Length); index++)
+                maximum = Math.Max(maximum, Math.Abs((decimal)leftInt64[index] - rightInt64[index]));
+            return (double)maximum;
+        }
+        if (left.ElementType == TensorElementType.Int32 && left.Buffer is int[] leftInt32 && right.Buffer is int[] rightInt32)
+        {
+            long maximum = 0;
+            for (int index = 0; index < Math.Min(leftInt32.Length, rightInt32.Length); index++)
+                maximum = Math.Max(maximum, Math.Abs((long)leftInt32[index] - rightInt32[index]));
+            return maximum;
+        }
+        return null;
+    }
     private static string TensorSha256(ITensor tensor)
     {
         if (tensor.ElementType == TensorElementType.Float32 && tensor.Buffer is float[] values)
@@ -438,6 +630,15 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
         if (tensor.ElementType == TensorElementType.Int64 && tensor.Buffer is long[] values64) return values64;
         if (tensor.ElementType == TensorElementType.Int32 && tensor.Buffer is int[] values32) return values32.Select(value => (long)value).ToArray();
         throw new InvalidOperationException("Formula model output is not a supported integer token tensor: " + tensor.ElementType);
+    }
+
+    private static object SummarizeIntegerTensor(ITensor tensor)
+    {
+        if (tensor.ElementType == TensorElementType.Int64 && tensor.Buffer is long[] values64 && values64.Length > 0)
+            return new { elementType = "int64", shape = tensor.Shape.ToArray(), length = values64.Length, minimum = values64.Min(), maximum = values64.Max(), first = values64.Take(Math.Min(12, values64.Length)).ToArray() };
+        if (tensor.ElementType == TensorElementType.Int32 && tensor.Buffer is int[] values32 && values32.Length > 0)
+            return new { elementType = "int32", shape = tensor.Shape.ToArray(), length = values32.Length, minimum = values32.Min(), maximum = values32.Max(), first = values32.Take(Math.Min(12, values32.Length)).ToArray() };
+        return new { elementType = tensor.ElementType.ToString(), shape = tensor.Shape.ToArray(), length = tensor.Length };
     }
 
     private static int EditDistance(string expected, string actual)

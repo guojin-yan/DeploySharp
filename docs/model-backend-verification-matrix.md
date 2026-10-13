@@ -70,6 +70,8 @@
 
 当前质量证据的分级状态和仍未关闭的 A2/A3/B1b-B3 门禁，统一见 [PaddleOCR 质量证据状态索引](../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md) 及其 [JSON](../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.json)；矩阵中的后端符号仍只表示精确工件的执行/合同证据，不代表模型质量或全部流水线支持。
 
+公式模型另外有独立的 ORT CUDA 执行证据：六个精确 ONNX 在 ORT 1.23.2 CUDA opt-in restore 下对 realFormula 样本完成 CPU/CUDA raw output、token ID 和 LaTeX 对照；详见 [公式 ORT CUDA 报告](../eng/models/paddle-document/verification/formula-realformula-ort-cuda-20261014.md)及 [JSON](../eng/models/paddle-document/verification/formula-realformula-ort-cuda-20261014.json)。该证据不新增当前表格列，也不改变公式行的 OpenVINO/OpenCV/TensorRT 状态：矩阵仍只对表中声明的后端和精确工件负责，ORT CUDA 质量与跨设备性能仍需单独验证。
+
 2026-10-11 补充了 `paddleocr/ppocrv4/legacy-cls` 的独立 OpenCV DNN provider 证据：精确工件以真实输入 `[1,3,48,192]` 绑定并返回 `[1,2]` 非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-legacy-cls-opencv-provider-20261011.md)。因此矩阵中的 OpenCV `✓` 仅表示该分类工件在单台 Windows CPU 主机上完成加载、绑定和推理，不代表整条 OCR 质量、TensorRT 或性能通过。
 
 同日补充了 PP-OCRv4 Server DET/REC 与 legacy CLS 的 TensorRT 11 精确 Engine 证据：匹配 bridge/runtime 注入后 `3/3` Engine 均加载并返回非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-server-tensorrt11-engine-provider-20261011.md)。因此该行 TensorRT `✓` 仅表示已有序列化 Engine 在单台 Windows GPU 主机上可执行，不代表 ONNX 重建、整条 OCR 质量、5/50 性能或跨设备可移植性。
