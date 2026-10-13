@@ -77,6 +77,8 @@ foreach (OcrRegionResult region in result.Regions)
 
 对应的[ORT 1.28/OpenVINO CPU 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.md)使用同一张图、prepared-input、Batch=8、两阶段通道和 `5+50` 协议覆盖七组核心组合。`14/14` 行通过，每行 50 次调用保持一个严格合同变体，逐模型在两个后端上的有序文本 SHA 和语义合同相同。P50/P95、阶段拆分和模型 SHA 见[原始 CSV](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.csv)；schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.csv.environment.json)保存实际加载的 ORT `1.28.0.0`、OpenVINO API `3.3.1.0`、OpenCV API `5.0.0.0` 版本/哈希，并明确该非 TensorRT 运行不包含 Engine 证据。CPU 未锁频且只有一个输入，不能把本轮数值当作跨设备排名、吞吐或 OCR 质量结论。
 
+同一协议现已补齐[ORT 1.23.2 CUDA 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.md)。七组核心组合 `7/7` 通过，每行 50 次调用保持一个严格合同变体，并逐模型匹配 CPU 矩阵的有序文本 SHA 和语义合同 SHA。完整流水线 P50/P95 为 v4 Mobile `69.960/160.443 ms`、v4 Server `117.107/201.558 ms`、v5 Mobile `70.545/117.800 ms`、v5 Server `105.702/168.476 ms`、v6 Tiny `22.658/28.969 ms`、v6 Small `43.704/50.460 ms`、v6 Medium `72.872/78.681 ms`。schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.csv.environment.json)保存 CUDA 12.9、cuDNN 9.22、DLL 搜索目录及实际 ORT 程序集哈希；[GPU 遥测](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.gpu.csv)显示 P0、活跃采样平均 1800 MHz，热降频和硬件 slowdown 均为 0。GPU/CPU 均未锁频，且输入只有一张图，因此仍不能当作 CER/WER、吞吐、跨设备排名或 PP-Structure 全模型支持。
+
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 ### 连续帧异步预取

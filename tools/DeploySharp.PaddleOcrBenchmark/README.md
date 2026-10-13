@@ -2,7 +2,7 @@
 
 This console tool discovers PaddleOCR v4/v5 mobile and server DET/REC ONNX files plus the v6 tiny/small/medium tiers below <code>E:\\Model\\paddleocr</code> (or <code>DEPLOYSHARP_PADDLEOCR_ROOT</code>) and runs only the complete detection -> crop/batch -> optional orientation -> recognition -> merge pipeline on one real image. PP-OCRv5 uses the matching mobile/server classifier; PP-OCRv4 shares its legacy classifier because no separate server classifier is catalogued. Windows supports the full configured backend matrix; Ubuntu 22.04 x64 supports the native OpenCV adapter and ONNX Runtime CPU directly, while CUDA/TensorRT still require matching consumer-installed NVIDIA runtimes and bridge packages. It does not emit isolated det/cls/rec benchmark rows. Each version/variant/backend produces one final row with the selected batch size, selected independently-created inference-channel count, stage breakdown, and end-to-end latency.
 
-每次完整流水线运行除了 CSV 外还会生成同名 `.environment.json`，记录机器名、操作系统、.NET、进程架构、CPU 逻辑处理器数、源码 revision（由 `DEPLOYSHARP_BENCHMARK_SOURCE_REVISION` 提供）、输入 SHA-256、模型根目录、后端选择、warmup/iteration、batch/channel、TensorRT API 和 vendor runtime 路径。GPU 时钟、功耗和 slowdown 字段由 `Invoke-WithGpuTelemetry.ps1` 的遥测 CSV 提供，不能从单次 CSV 耗时反推。
+每次完整流水线运行除了 CSV 外还会生成同名 `.environment.json`，记录机器名、操作系统、.NET、进程架构、CPU 逻辑处理器数、源码 revision（由 `DEPLOYSHARP_BENCHMARK_SOURCE_REVISION` 提供）、输入 SHA-256、模型根目录、后端选择、warmup/iteration、batch/channel、TensorRT API 和 vendor runtime 路径。schema 3 的 ORT CUDA 记录还包含 CUDA/cuDNN 根目录、显式 DLL 搜索目录以及实际加载的 ORT 程序集版本和 SHA-256；正式校验缺少任一项都会失败。GPU 时钟、功耗和 slowdown 字段由 `Invoke-WithGpuTelemetry.ps1` 的遥测 CSV 提供，不能从单次 CSV 耗时反推。
 
 ## Formal 5/50 protocol / 正式 5/50 协议
 

@@ -122,6 +122,13 @@ if ([int]$metadata.schemaVersion -ge 3) {
     if (($selectedBackends -contains 'onnxruntime' -or $selectedBackends -contains 'onnxruntime-cuda') -and -not ($assemblies.name -contains 'Microsoft.ML.OnnxRuntime')) {
         $failures.Add('ONNX Runtime pass rows require Microsoft.ML.OnnxRuntime assembly evidence')
     }
+    if ($selectedBackends -contains 'onnxruntime-cuda') {
+        foreach ($property in @('cudaRoot', 'cudnnRoot', 'onnxRuntimeCudaDllDirectories')) {
+            if ($null -eq $metadata.runtime -or [string]::IsNullOrWhiteSpace([string]$metadata.runtime.$property)) {
+                $failures.Add("ONNX Runtime CUDA pass rows require runtime.$property")
+            }
+        }
+    }
     if ($selectedBackends -contains 'openvino' -and -not ($assemblies.name -contains 'OpenVINO.CSharp.API')) {
         $failures.Add('OpenVINO pass rows require OpenVINO.CSharp.API assembly evidence')
     }

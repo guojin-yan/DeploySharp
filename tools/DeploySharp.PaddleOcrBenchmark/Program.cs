@@ -182,6 +182,9 @@ internal static partial class Program
             {
                 cudaRoot = usesCuda ? Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT") : null,
                 cudnnRoot = usesCuda ? Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT") : null,
+                onnxRuntimeCudaDllDirectories = backends.Contains("onnxruntime-cuda", StringComparer.OrdinalIgnoreCase)
+                    ? Environment.GetEnvironmentVariable("DEPLOYSHARP_ONNXRUNTIME_CUDA_DLL_DIRECTORIES")
+                    : null,
                 tensorRtRoot = usesTensorRt ? Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT") : null,
                 bridge = usesTensorRt ? Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH") : null,
                 managedAssemblies = CaptureManagedRuntimeAssemblies()
