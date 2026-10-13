@@ -173,18 +173,38 @@ namespace JYPPX.DeploySharp.Visual
     {
         /// <summary>Initializes an output binding. / 初始化输出绑定。</summary>
         public VisualOutputBinding(string name, TensorElementType elementType, TensorShape shapePattern)
+            : this(name, elementType, shapePattern, null)
+        {
+        }
+
+        /// <summary>Initializes an output binding with explicitly accepted element-type variants. / 使用明确允许的元素类型变体初始化输出绑定。</summary>
+        public VisualOutputBinding(string name, TensorElementType elementType, TensorShape shapePattern, IEnumerable<TensorElementType>? acceptedElementTypes)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new VisualException(VisualErrorCodes.ProfileInvalid, "An output tensor name is required.", tensorName: name);
             if (elementType == TensorElementType.Unknown || elementType == TensorElementType.String) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual output element type is unsupported.", tensorName: name);
             Name = name;
             ElementType = elementType;
             ShapePattern = shapePattern == null ? throw new ArgumentNullException(nameof(shapePattern)) : new TensorShape(shapePattern.ToArray());
+            var accepted = new List<TensorElementType> { elementType };
+            if (acceptedElementTypes != null)
+            {
+                foreach (TensorElementType value in acceptedElementTypes)
+                {
+                    if (value == TensorElementType.Unknown || value == TensorElementType.String) throw new VisualException(VisualErrorCodes.ProfileInvalid, "Visual output element type is unsupported.", tensorName: name);
+                    if (!accepted.Contains(value)) accepted.Add(value);
+                }
+            }
+            AcceptedElementTypes = accepted.AsReadOnly();
         }
 
         /// <summary>Gets the tensor name. / 获取张量名称。</summary>
         public string Name { get; }
         /// <summary>Gets the required element type. / 获取所需元素类型。</summary>
         public TensorElementType ElementType { get; }
+        /// <summary>Gets all element types accepted by this output contract; the first entry is the preferred type. / 获取此输出合同接受的全部元素类型；第一项为首选类型。</summary>
+        public IReadOnlyList<TensorElementType> AcceptedElementTypes { get; }
+        /// <summary>Returns whether a concrete tensor element type is accepted by this contract. / 判断具体张量元素类型是否被此合同接受。</summary>
+        public bool AcceptsElementType(TensorElementType elementType) => AcceptedElementTypes.Contains(elementType);
         /// <summary>Gets the static or dynamic shape pattern. / 获取静态或动态形状模式。</summary>
         public TensorShape ShapePattern { get; }
     }

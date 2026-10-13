@@ -191,7 +191,9 @@ namespace JYPPX.DeploySharp.Visual
             VisualDimensionRounding dimensionRounding = VisualDimensionRounding.Nearest,
             VisualInterpolationMode interpolation = VisualInterpolationMode.Linear,
             string? contractId = null,
-            bool scaleUp = true)
+            bool scaleUp = true,
+            VisualSize? shortestEdgeResize = null,
+            float? normalizedPaddingValue = null)
         {
             if (!Enum.IsDefined(typeof(VisualResizeMode), resizeMode)) throw Invalid("The resize mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualColorOrder), colorOrder) || colorOrder == VisualColorOrder.Unspecified) throw Invalid("A concrete color order is required.");
@@ -201,7 +203,10 @@ namespace JYPPX.DeploySharp.Visual
             if (!Enum.IsDefined(typeof(VisualDimensionRounding), dimensionRounding)) throw Invalid("The dimension rounding mode is invalid.");
             if (!Enum.IsDefined(typeof(VisualInterpolationMode), interpolation)) throw Invalid("The interpolation mode is invalid.");
             if (batchSize <= 0) throw Invalid("The batch size must be positive.");
+            if (normalizedPaddingValue.HasValue && (float.IsNaN(normalizedPaddingValue.Value) || float.IsInfinity(normalizedPaddingValue.Value) || outputType != VisualPreprocessingOutputType.Float32)) throw Invalid("Normalized padding requires a finite Float32 value.");
             if (interpolation == VisualInterpolationMode.PillowBicubic && resizeMode != VisualResizeMode.Resize) throw Invalid("Pillow-compatible interpolation currently requires fixed resize geometry.");
+            if (shortestEdgeResize.HasValue && resizeMode != VisualResizeMode.ShortestEdgeCenterCrop) throw Invalid("A shortest-edge intermediate size requires ShortestEdgeCenterCrop geometry.");
+            if (shortestEdgeResize.HasValue && modelSize.HasValue && (shortestEdgeResize.Value.Width < modelSize.Value.Width || shortestEdgeResize.Value.Height < modelSize.Value.Height)) throw Invalid("The shortest-edge intermediate size cannot be smaller than the crop size.");
             int channels = ChannelCount(colorOrder);
             if (alphaMode == VisualAlphaMode.Preserve && channels != 4) throw Invalid("Preserving alpha requires RGBA or BGRA output.");
             if (alphaMode == VisualAlphaMode.Composite && channels == 4) throw Invalid("Alpha compositing cannot produce an alpha-bearing output.");
@@ -222,6 +227,8 @@ namespace JYPPX.DeploySharp.Visual
             Interpolation = interpolation;
             ContractId = string.IsNullOrWhiteSpace(contractId) ? null : contractId!.Trim();
             ScaleUp = scaleUp;
+            ShortestEdgeResize = shortestEdgeResize;
+            NormalizedPaddingValue = normalizedPaddingValue;
         }
 
         /// <summary>Gets the resolved target size, or null for source-dependent dynamic sizing. / 获取已解析目标尺寸；源图相关动态尺寸返回 null。</summary>
@@ -252,11 +259,15 @@ namespace JYPPX.DeploySharp.Visual
         public string? ContractId { get; }
         /// <summary>Gets whether aspect-preserving modes may enlarge a source image. / 获取保持宽高比模式是否允许放大源图。</summary>
         public bool ScaleUp { get; }
+        /// <summary>Gets an optional intermediate canvas for shortest-edge resize followed by center crop. / 获取最短边缩放后中心裁剪的可选中间画布。</summary>
+        public VisualSize? ShortestEdgeResize { get; }
+        /// <summary>Gets an optional padding value in tensor space, applied after normalization for padded geometry. / 获取归一化后张量空间中的可选填充值，仅用于带填充的几何模式。</summary>
+        public float? NormalizedPaddingValue { get; }
 
         /// <summary>Returns a copy with resolved target size. / 返回带有已解析目标尺寸的副本。</summary>
         public VisualPreprocessingOptions WithModelSize(VisualSize modelSize) => Copy(modelSize: modelSize);
         /// <summary>Returns a copy with another geometry mode. / 返回使用另一几何模式的副本。</summary>
-        public VisualPreprocessingOptions WithResizeMode(VisualResizeMode resizeMode) => Copy(resizeMode: resizeMode);
+        public VisualPreprocessingOptions WithResizeMode(VisualResizeMode resizeMode) => Copy(resizeMode: resizeMode, clearShortestEdgeResize: resizeMode != VisualResizeMode.ShortestEdgeCenterCrop);
         /// <summary>Returns a copy with another normalization. / 返回使用另一归一化配置的副本。</summary>
         public VisualPreprocessingOptions WithNormalization(VisualNormalizationOptions normalization) => Copy(normalization: normalization ?? throw new ArgumentNullException(nameof(normalization)));
         /// <summary>Returns a copy with another color order. / 返回使用另一颜色顺序的副本。</summary>
@@ -277,6 +288,8 @@ namespace JYPPX.DeploySharp.Visual
         public VisualPreprocessingOptions WithDimensionRounding(VisualDimensionRounding rounding) => Copy(dimensionRounding: rounding);
         /// <summary>Returns a copy with a different aspect-preserving upscale policy. / 返回使用另一保持宽高比放大策略的副本。</summary>
         public VisualPreprocessingOptions WithScaleUp(bool scaleUp) => Copy(scaleUp: scaleUp);
+        /// <summary>Returns a copy with an explicit shortest-edge intermediate size. / 返回使用显式最短边中间尺寸的副本。</summary>
+        public VisualPreprocessingOptions WithShortestEdgeResize(VisualSize? size) => Copy(shortestEdgeResize: size, clearShortestEdgeResize: !size.HasValue);
 
         internal TensorElementType TensorElementType => OutputType == VisualPreprocessingOutputType.Float32 ? TensorElementType.Float32 : TensorElementType.UInt8;
 
@@ -293,7 +306,9 @@ namespace JYPPX.DeploySharp.Visual
             VisualAlphaMode? alphaMode = null,
             VisualRgbColor? alphaBackground = null,
             VisualDimensionRounding? dimensionRounding = null,
-            bool? scaleUp = null)
+            bool? scaleUp = null,
+            VisualSize? shortestEdgeResize = null,
+            bool clearShortestEdgeResize = false)
             => new VisualPreprocessingOptions(
                 modelSize ?? ModelSize,
                 resizeMode ?? ResizeMode,
@@ -308,7 +323,9 @@ namespace JYPPX.DeploySharp.Visual
                 dimensionRounding ?? DimensionRounding,
                 interpolation ?? Interpolation,
                 ContractId,
-                scaleUp ?? ScaleUp);
+                scaleUp ?? ScaleUp,
+                clearShortestEdgeResize ? null : shortestEdgeResize ?? ShortestEdgeResize,
+                NormalizedPaddingValue);
 
         internal static int ChannelCount(VisualColorOrder colorOrder)
         {

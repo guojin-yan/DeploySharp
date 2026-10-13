@@ -404,7 +404,7 @@ namespace JYPPX.DeploySharp.Visual
                 ITensor tensor;
                 try { tensor = outputs.GetRequired(binding.Name); }
                 catch (KeyNotFoundException exception) { throw new VisualException(VisualErrorCodes.TensorInvalid, "A required output tensor is missing.", exception, profile.ProfileId, binding.Name, modelId: profile.ModelId); }
-                if (tensor.ElementType != binding.ElementType) throw new VisualException(VisualErrorCodes.TensorInvalid, "Output tensor element type does not match the profile.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId);
+                if (!binding.AcceptsElementType(tensor.ElementType)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Output tensor element type does not match the profile.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId);
                 if (!TensorShapePattern.Matches(binding.ShapePattern, tensor.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Output tensor shape does not match the profile pattern.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId, technicalDetails: tensor.Shape.ToString());
             }
         }
@@ -423,7 +423,7 @@ namespace JYPPX.DeploySharp.Visual
             foreach (VisualOutputBinding binding in profile.Outputs)
             {
                 TensorDescriptor? output = metadata.Outputs.FirstOrDefault(value => string.Equals(value.Name, binding.Name, StringComparison.Ordinal));
-                if (output == null || output.ElementType != binding.ElementType || !PatternsCompatible(binding.ShapePattern, output.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Backend output metadata is incompatible with the visual profile.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId);
+                if (output == null || !binding.AcceptsElementType(output.ElementType) || !PatternsCompatible(binding.ShapePattern, output.Shape)) throw new VisualException(VisualErrorCodes.TensorInvalid, "Backend output metadata is incompatible with the visual profile.", profileId: profile.ProfileId, tensorName: binding.Name, modelId: profile.ModelId);
             }
         }
 
