@@ -878,6 +878,7 @@ PP-OCRv5 Server 也在同一十页选择上完成 ORT/OpenVINO 对照：两后�
 - **真实文档阅读顺序**：FUNSD 三页 smoke 的预测文本行与词级标注 aggregate reading-order pair accuracy `70.92%`，三页均非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 三页边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-3pages-20260929.md)。
 - **自然角度数据边界**：HierText 缓存的旋转元数据有 476 个非零角度条目，但与 1,724 个官方标注图像 ID 的交集为 0；因此不能把无真值的 Open Images 图片当成自然角度 OCR 评测。详见 [HierText 旋转覆盖审计](../../eng/models/paddle-ocr/verification/hiertext-rotation-coverage-a3-20261002.md)，A3 仍需要合法可归因的自然或明确标注角度数据。
 - **自然竖排切片**：18 条官方 `vertical=true` 且有文本的 HierText 行在 ORT/OpenVINO 上分别执行 0°、顺时针 90°、逆时针 90° 候选；两后端 18/18 候选文本一致，按真值选择的 oracle 只有 6/18 exact、平均 CER `46.3356%`。这是自然竖排输入和方向候选合同证据，不是自动方向分类准确率。详见 [HierText 竖排 A3 记录](../../eng/models/paddle-ocr/verification/hiertext-vertical-a3-20261002.md)。
+- **PP-LCNet 二分类方向合同**：使用 128 条可追溯水平 crop 构造 256 个已知变换行（原图 0°、OpenCV 旋转 180°），在 ORT/OpenVINO CPU 上以 `[2,3,80,160] → [2,2]` 动态 Batch 执行；两后端预测、类别和输入 digest `0` 差异。构造标签诊断为 `134/256`（`52.34%`），不是自然方向准确率，因为 HierText 没有 upright/inverted 真值且选集含极小 crop。该证据只关闭 PP-LCNet 的预处理、动态 Batch 和 CPU parity 合同；模型只有 0°/180° 两类，90°/270° 与 A3 自动方向质量门仍开放。详见 [动态 Batch 方向合同](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-orientation-classifier-dynamic-batch-20261014.md)。
 
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - PP-OCRv5 Mobile 与 v6 Small 的真实 REC batch=4 ORT/OpenVINO parity 已在[动态 Batch 记录](../../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md)中覆盖；这仍是 crop/decoder 合同，不是页面级准确率或 GPU 性能结果。
