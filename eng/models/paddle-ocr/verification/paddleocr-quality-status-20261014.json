@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-14T00:00:00Z",
+  "scope": "PaddleOCR quality evidence status index",
+  "host": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "architecture": "X64",
+    "note": "Evidence is host- and protocol-bound; do not generalize to other devices."
+  },
+  "statusLegend": {
+    "diagnostic-pass": "The exact model/data/backend combination completed and satisfied the report's execution/parity contract.",
+    "controlled-diagnostic": "Strategy or degradation behavior was exercised, but the data or labels cannot close a quality gate.",
+    "partial": "Execution completed with documented backend, granularity, or output differences.",
+    "incomplete": "Required legal, attributable, or cross-backend evidence is not available."
+  },
+  "evidence": [
+    {
+      "id": "sroie-core-seven-models-10page",
+      "area": "PP-OCR v4/v5/v6 core seven-model complete-page smoke",
+      "models": ["v4-mobile", "v4-server", "v5-mobile", "v5-server", "v6-tiny", "v6-small", "v6-medium"],
+      "dataset": "ICDAR2019-SROIE train selection, 10 pages",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "14 model/backend combinations completed 10/10 pages; see per-model reports and summary.",
+      "status": "diagnostic-pass",
+      "evidenceMarkdown": "sroie-core-seven-models-10page-quality-summary-20261010.md",
+      "boundary": "Word-level SROIE boxes versus text-line polygons; smoke diagnostics only; no CUDA/TensorRT/OpenCV/PP-Structure claim."
+    },
+    {
+      "id": "hiertext-v6-small-rec-1557",
+      "area": "Recognizer-only line quality",
+      "models": ["v6-small-rec"],
+      "dataset": "HierText validation sample-002/sample-003, 1,557 eligible source-linked text-line crops",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "1,557/1,557 completed; exact 713/1,557; CER 25.4278%; WER 46.9777%; text parity 1,557/1,557.",
+      "status": "diagnostic-pass",
+      "evidenceMarkdown": "hiertext-line-recognition-v6-small-20261010.md",
+      "boundary": "Recognizer-only bounded local evidence; does not close complete-page recall, long text, robustness, or other backends."
+    },
+    {
+      "id": "hiertext-v6-medium-34page-three-backend",
+      "area": "Complete-page three-backend quality smoke",
+      "models": ["v6-medium"],
+      "dataset": "HierText sample-002/sample-003, 34 pages",
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "result": "All backends completed 34/34 pages; ORT/OpenVINO page text sequences match 34/34; OpenCV matches ORT 11/34 pages and differs on 178/1,368 aligned regions.",
+      "status": "partial",
+      "evidenceMarkdown": "hiertext-v6-medium-34page-three-backend-quality-20261003.md",
+      "boundary": "OpenCV importer/text behavior remains backend-specific; one-shot latency is not a formal performance ranking."
+    },
+    {
+      "id": "funsd-v6-small-40page",
+      "area": "Complete-page ORT/OpenVINO comparison",
+      "models": ["v6-small"],
+      "dataset": "FUNSD 40-page selection",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "40/40 pages and 1,978 regions per comparison; ordered text has zero indexed mismatches.",
+      "status": "diagnostic-pass",
+      "evidenceMarkdown": "funsd-v6-small-40page-ort-openvino-quality-20261010.md",
+      "boundary": "FUNSD word-level annotations do not match text-line output granularity; metrics are diagnostic only."
+    },
+    {
+      "id": "funsd-v4-mobile-40page",
+      "area": "Complete-page ORT/OpenVINO comparison",
+      "models": ["v4-mobile"],
+      "dataset": "FUNSD 40-page selection",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "40/40 pages; 2,357 regions; ordered text matches 39/40 pages with one indexed difference.",
+      "status": "partial",
+      "evidenceMarkdown": "funsd-v4-mobile-40page-ort-openvino-quality-20261010.md",
+      "boundary": "Not strict backend parity, official accuracy, or release quality."
+    },
+    {
+      "id": "sroie-v6-small-three-backend",
+      "area": "Complete-page three-backend smoke",
+      "models": ["v6-small"],
+      "dataset": "ICDAR2019-SROIE train selection, 10 pages",
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "result": "All 3 backends completed 10/10 pages; 531 regions and ordered page text match. One-shot P50/P95 observations are ORT 1302.87/2534.95 ms, OpenVINO 779.76/1054.15 ms, OpenCV 7722.31/10131.55 ms.",
+      "status": "diagnostic-pass",
+      "evidenceMarkdown": "sroie-v6-small-10page-three-backend-quality-20261009.md",
+      "boundary": "One model, one selection, one measured iteration; no general backend or 5/50 performance claim."
+    },
+    {
+      "id": "sroie-angle-orientation-retry-a3",
+      "area": "Known-angle orientation retry strategy",
+      "models": ["v6-small-rec", "pp-lcnet-orientation"],
+      "dataset": "4 real SROIE pages, 32 parent-linked crops with controlled known-angle transforms",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "32/32 retries executed; 16/16 right-angle comparable rows selected the expected direction; text and direction outputs agree across backends.",
+      "status": "controlled-diagnostic",
+      "evidenceMarkdown": "sroie-angle-orientation-retry-a3-20261014.md",
+      "boundary": "Not natural rotation accuracy; confidence threshold 1 and zero gain are diagnostic settings, not production defaults."
+    },
+    {
+      "id": "degraded-and-consensus-evidence",
+      "area": "Degradation and enhancement routing",
+      "models": ["v6-medium", "v6-small-rec"],
+      "dataset": "Controlled SROIE/FUNSD parent-linked crops and pages",
+      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "result": "Execution and decisions agree across backends; candidate enhancement can improve and worsen CER, and 5-fold safe-threshold calibration abstained on all folds.",
+      "status": "controlled-diagnostic",
+      "evidenceMarkdown": "paddleocr-funsd40-consensus-safety-cost-20261013.md",
+      "boundary": "No natural low-quality split, business-field false-correction gate, or formal cost budget; default enhancement remains opt-in."
+    }
+  ],
+  "openGates": [
+    {"id": "formal-quality-gate", "status": "incomplete", "reason": "Need output-granularity-matched labels and explicit acceptance thresholds."},
+    {"id": "a2-natural-long-text", "status": "incomplete", "reason": "No legal attributable natural continuous line >= 3200 characters; current HierText maximum is about 132 characters."},
+    {"id": "a3-natural-orientation", "status": "incomplete", "reason": "No valid natural angle/upright-inverted OCR label intersection; controlled retry is not a natural accuracy result."},
+    {"id": "b1b-b2-b3-robustness-and-cost", "status": "incomplete", "reason": "Controlled degradation exists, but independent natural split, business-field false-correction gate, and formal cost budget are missing."},
+    {"id": "formal-performance-protocol", "status": "incomplete", "reason": "Quality reports use one-shot observations; unified 5-warm-up/50-measured and telemetry protocol remains separate."},
+    {"id": "full-model-backend-matrix", "status": "incomplete", "reason": "Backend evidence is model/runtime-specific; formula, SLANeXt, Chart2Table and other PP-Structure boundaries remain open."}
+  ],
+  "reproduction": {
+    "root": "F:/OCRBenchmarkTesting",
+    "note": "External datasets, labels and raw predictions are not committed; follow each linked report for exact manifests and commands."
+  }
+}
