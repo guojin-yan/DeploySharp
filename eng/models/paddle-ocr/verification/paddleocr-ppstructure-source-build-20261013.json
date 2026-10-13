@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-ppstructure-source-build-v1",
+  "generatedUtc": "2026-10-13T13:45:34Z",
+  "sourceRevision": "c7589d257a566a245f921039fd2c14ab1b364167",
+  "workingTreeWasDirty": true,
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "dotnet": "10.0.401",
+    "configuration": "Release",
+    "restore": "--no-restore"
+  },
+  "projects": [
+    {
+      "project": "src/DeploySharp.Backend.LlamaSharp/DeploySharp.Backend.LlamaSharp.csproj",
+      "targetFrameworks": "netstandard2.0;net8.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj",
+      "targetFrameworks": "netstandard2.0;net8.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj",
+      "targetFrameworks": "net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj",
+      "targetFrameworks": "net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj",
+      "targetFrameworks": "net8.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Core/DeploySharp.Core.csproj",
+      "targetFrameworks": "$(DeploySharpLibraryTargetFrameworks)",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Extensibility/DeploySharp.Extensibility.csproj",
+      "targetFrameworks": "net46;netstandard2.0;net8.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.LLM/DeploySharp.LLM.csproj",
+      "targetFrameworks": "netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj",
+      "targetFrameworks": "netstandard2.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj",
+      "targetFrameworks": "netstandard2.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Multimodal/DeploySharp.Multimodal.csproj",
+      "targetFrameworks": "netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj",
+      "targetFrameworks": "net46;net461;net462;net47;net471;net472;net48;net481;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Visual.TensorRT/DeploySharp.Visual.TensorRT.csproj",
+      "targetFrameworks": "net8.0",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    },
+    {
+      "project": "src/DeploySharp.Visual/DeploySharp.Visual.csproj",
+      "targetFrameworks": "$(DeploySharpLibraryTargetFrameworks)",
+      "configuration": "Release",
+      "restore": "--no-restore",
+      "exitCode": 0,
+      "success": true,
+      "errors": 0,
+      "warnings": 0,
+      "errorSummary": []
+    }
+  ],
+  "total": {
+    "projects": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "boundary": "Build-only evidence. It does not prove model availability, native runtime loading, backend support, inference correctness, quality, performance, packaging, or long-running stability."
+}
