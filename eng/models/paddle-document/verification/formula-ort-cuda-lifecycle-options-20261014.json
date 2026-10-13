@@ -23,7 +23,8 @@
     {
       "name": "static-cpu-output-preallocation",
       "preferPreallocatedCpuOutputs": true,
-      "status": "reproduced-invalid-int64"
+      "status": "not-applicable-dynamic-output",
+      "detail": "Formula output sequence dimension is dynamic; adapter intentionally kept ORT dynamic-output allocation path."
     },
     {
       "name": "unsupported-memory-arena-key",

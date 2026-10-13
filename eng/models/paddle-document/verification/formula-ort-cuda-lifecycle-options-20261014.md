@@ -6,7 +6,7 @@ This is a targeted runtime-lifecycle probe, not a new formula quality or perform
 | --- | --- |
 | Default CUDA provider options | Reproduces invalid `Int64` values in the same-process three-sample run (`OverflowException` in the formula decoder). |
 | `enable_cuda_graph=0;do_copy_in_default_stream=1;cudnn_conv_algo_search=HEURISTIC` | Same invalid `Int64` output; no parity pass. |
-| Above plus `preferPreallocatedCpuOutputs=true` | Same invalid `Int64` output; no parity pass. |
+| `preferPreallocatedCpuOutputs=true` | Not applicable: the formula output sequence dimension is dynamic, so the adapter correctly keeps ORT's dynamic-output allocation path. No preallocation claim is made. |
 | `enable_mem_arena=0` | Rejected by ORT 1.23.2 as an unknown CUDA provider option; the error is surfaced instead of being ignored. |
 
 The new `OnnxRuntimeOptions` escape hatches copy and freeze provider/session dictionaries and apply them only when explicitly supplied. They preserve the default path and are intended for reproducible investigations. The probe does **not** establish that CUDA Graph, allocator, stream, or output-copy configuration is the root cause. Current status remains process-isolated bounded execution for Plus-L/L/UniMERNet and ordinary multi-sample CUDA Session support remains open.
