@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v2",
-  "generatedUtc": "2026-10-13T12:16:05.599494+00:00",
+  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v3",
+  "generatedUtc": "2026-10-13T12:41:38.366892+00:00",
   "backends": [
     {
       "backend": "onnxruntime",
@@ -243,97 +243,378 @@
         "points": [
           {
             "minimumConfidenceGain": 0,
+            "records": 240,
             "selected": 115,
             "selectedBetterCaseFoldedCer": 2,
             "selectedWorseCaseFoldedCer": 4,
             "selectedEqualCaseFoldedCer": 109,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.30670481601731603,
             "meanFinalCaseFoldedWer": 0.4180555555555555
           },
           {
             "minimumConfidenceGain": 0.005,
+            "records": 240,
             "selected": 35,
             "selectedBetterCaseFoldedCer": 2,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 31,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3058714826839827,
             "meanFinalCaseFoldedWer": 0.4180555555555555
           },
           {
             "minimumConfidenceGain": 0.01,
+            "records": 240,
             "selected": 31,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 28,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.02,
+            "records": 240,
             "selected": 25,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 22,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.03,
+            "records": 240,
             "selected": 18,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 15,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.05,
+            "records": 240,
             "selected": 10,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 10,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.075,
+            "records": 240,
             "selected": 9,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 9,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.1,
+            "records": 240,
             "selected": 5,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 5,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.15,
+            "records": 240,
             "selected": 2,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 2,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.2,
+            "records": 240,
             "selected": 2,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 2,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           }
         ],
         "minimumObservedZeroWorseThresholdWithBenefit": null,
         "boundary": "Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split."
+      },
+      "groupedConsensusCrossValidation": {
+        "groupingKey": "sourceCropSha256",
+        "parentCrops": 40,
+        "records": 240,
+        "foldCount": 5,
+        "assignmentStrategy": "sha256-ordered-round-robin",
+        "assignmentSha256": "0e1b41458166e85b2a614dc89e67dced3a860f538da20ca2c03f0d822f03f8e8",
+        "thresholdCandidates": [
+          0,
+          0.005,
+          0.01,
+          0.02,
+          0.03,
+          0.05,
+          0.075,
+          0.1,
+          0.15,
+          0.2
+        ],
+        "calibrationSelectionRule": "minimum threshold with zero CER-worse selections and at least one CER-better selection",
+        "folds": [
+          {
+            "fold": 0,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "29b1e99c7c4a2f2154a1a5ebf92e6027c5a00f7dd2b3b33fd2adf586ca057523",
+              "18122101ce42442ce90912c9eb91cbcba34cd565afd1a4c008c34e7e7e765a26",
+              "86dd63449b149c6a9d200f5a151b174ccd9a9f90753d7e1c0c1f6600e333eb30",
+              "8e41de1e42fc9f0f702b8f75c09308378c44b6289b40e004f63d6723a67d1318",
+              "79d8f9febc5f70f60413db49f2643d733ea7950012c363fe86eb2d000c8601bd",
+              "b12cb57f296c0d3a8b720fe19697b59e38d41d86f9cf8fdee5f7504f75b54f00",
+              "29504d7398c92daa2ee00ea685fbcce9251a27fb8fe284d476a654a4d0af77e2",
+              "d25b5be37a503d4b6c05426bd2ae77db257b15fd3ccd564b17b249edeab3648f"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.29550302128427125,
+              "meanFinalCaseFoldedWer": 0.4322916666666667
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.3478082912457912,
+              "meanFinalCaseFoldedWer": 0.40277777777777773
+            }
+          },
+          {
+            "fold": 1,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "a72cdacb6f0c7260ef2db853fadf9029f68a59380c394b87e41de7e7d21ea8ed",
+              "a1820176ce0f466be1f82b5c07dabf39bb4d0e557ed768f923f9a99849afd674",
+              "df6b92eeeef677478206fba3d4430161e4f1d8fc19e2224e035cad47f5237fd6",
+              "19ac7d3d2c50fd13912ecd52dda491918034d1486c8e0ffd38b828853a205034",
+              "b32b6a2891ad87d591eb78cbd8abe5c2eb1c4fc242e15bef68398c46d805c6c9",
+              "5a338211d586b16c1794153a6f79abd0f3c0aa2374d52502b876e566babec97f",
+              "7a01ebc9a1aa92467255cfdc69c90312b8997f543f8c1604d9f79543c719f880",
+              "c30ee463856c7357f3ae0675c9bff2c42a6567aa309c814fd5a2d67246dd1e43"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.3143206243987494,
+              "meanFinalCaseFoldedWer": 0.4392361111111111
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.2725378787878788,
+              "meanFinalCaseFoldedWer": 0.375
+            }
+          },
+          {
+            "fold": 2,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "c6eaf9a0c94dcab1d10dacdad83cebab4eaa629740b484b2c5e4c2125563ee86",
+              "a38c6ef15d37b2397748711b5f176daba5651281f8289e97730695c3fd280d78",
+              "f6a96c598ce8d7fac21e91867fe9ed6f02fe6d6ac71f8afd5c74601bc1824362",
+              "d476f17ed9575331819cffb808e64580bf6c7501d3d5b3cfc4a0c6f4e2da486f",
+              "851f65ec043a5735ee3948f246127898e368a29a1ccc5bca9cb45d6c1c968c34",
+              "ba679c83a514282e937ca96b2adc74d852a754949cef1f9522fe123c664ba0bc",
+              "ae513ea60da6ca32858a93cdc0c557bd8193dce03947747c1c6274c217f2294f",
+              "87ace5379be85bf607f3598df602123e2c54a493180f063dfde16fb529c7f330"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.28704132094757095,
+              "meanFinalCaseFoldedWer": 0.41840277777777773
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.38165509259259256,
+              "meanFinalCaseFoldedWer": 0.4583333333333333
+            }
+          },
+          {
+            "fold": 3,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "b52cd2a0de515cc76b5fc634dfed2acd786ae77d560c572e4c876d7f54222f9c",
+              "b59cd6cecb64cf9c6f54407738d44f371fea00a792c1cb8f204da3b2b14c4f7b",
+              "e1301766cde7d26630acc2662c38c80dd633d07255df7e203acd547e647d1173",
+              "a0caec005f90f509a7628bdc725f2e16d1c95ed9f226e25f2050dc0244b35dc0",
+              "9671d13d7605a432c26106c9f3eb1fb03558c52157d5d1ce944e3fd2b7f20d4f",
+              "13693a17ebb91b853cc0a8234c8fecbad57f7284305261ed7fb5e22aafa2c5dd",
+              "b355cbe6522179f553a269e2f37b4b0149467178a576d183624f4f04b4cce553",
+              "756848df6f81f8d86bb99bdc161e8b3809712bd994e6ff85b4bff4eaf7765e9a"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.33585911195286194,
+              "meanFinalCaseFoldedWer": 0.40277777777777773
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.18638392857142858,
+              "meanFinalCaseFoldedWer": 0.5208333333333334
+            }
+          },
+          {
+            "fold": 4,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "fd08079015ccef41261b0da371c0ac34ad430375f458d04c3f8e960601fa3068",
+              "5cc460c5897933e16dcdf3982ed91d6740d5b0bfd26d68de74c26271a39a155a",
+              "4a433ca356d2d88dc7653646aa439839c4bad99bbee73c1b0a21fc61f06d54fd",
+              "32a121ff9d52497b6c4fb9829afdaeed1ccb476445c97fc0c1c231e6b85fbca4",
+              "d9e471bdf9150c3213eeed0cc813a0468f130050a116754169e9df7a9902e83c",
+              "b363a79df7697231605cdc7138ef273abab92617d26f0afd2725095799156dfa",
+              "a749e69598c2fd215f6fc1970feec6f85cef31496c9ebdc333051e3a98f2605f",
+              "c566ffca00487f8fa147e9ac116647bb9a342f6908dcf5cb8aa0f38e13382567"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.2970962977994228,
+              "meanFinalCaseFoldedWer": 0.4392361111111111
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.3414351851851852,
+              "meanFinalCaseFoldedWer": 0.375
+            }
+          }
+        ],
+        "validationAggregate": {
+          "records": 240,
+          "foldsWithSelectedThreshold": 0,
+          "foldsAbstained": 5,
+          "selected": 0,
+          "selectedBetterCaseFoldedCer": 0,
+          "selectedWorseCaseFoldedCer": 0,
+          "selectedEqualCaseFoldedCer": 0,
+          "meanFinalCaseFoldedCer": 0.30596407527657526,
+          "meanFinalCaseFoldedWer": 0.4263888888888889
+        },
+        "observedGatePassed": false,
+        "boundary": "Parent-grouped cross-validation on one controlled synthetic-variant set. Passing the observed gate would still not approve a production default without an independent natural-quality dataset and a business-field error gate."
       }
     },
     {
@@ -577,97 +858,378 @@
         "points": [
           {
             "minimumConfidenceGain": 0,
+            "records": 240,
             "selected": 115,
             "selectedBetterCaseFoldedCer": 2,
             "selectedWorseCaseFoldedCer": 4,
             "selectedEqualCaseFoldedCer": 109,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.30670481601731603,
             "meanFinalCaseFoldedWer": 0.4180555555555555
           },
           {
             "minimumConfidenceGain": 0.005,
+            "records": 240,
             "selected": 35,
             "selectedBetterCaseFoldedCer": 2,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 31,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3058714826839827,
             "meanFinalCaseFoldedWer": 0.4180555555555555
           },
           {
             "minimumConfidenceGain": 0.01,
+            "records": 240,
             "selected": 31,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 28,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.02,
+            "records": 240,
             "selected": 25,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 22,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.03,
+            "records": 240,
             "selected": 18,
             "selectedBetterCaseFoldedCer": 1,
             "selectedWorseCaseFoldedCer": 2,
             "selectedEqualCaseFoldedCer": 15,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3063344456469457,
             "meanFinalCaseFoldedWer": 0.4222222222222222
           },
           {
             "minimumConfidenceGain": 0.05,
+            "records": 240,
             "selected": 10,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 10,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.075,
+            "records": 240,
             "selected": 9,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 9,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.1,
+            "records": 240,
             "selected": 5,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 5,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.15,
+            "records": 240,
             "selected": 2,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 2,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           },
           {
             "minimumConfidenceGain": 0.2,
+            "records": 240,
             "selected": 2,
             "selectedBetterCaseFoldedCer": 0,
             "selectedWorseCaseFoldedCer": 0,
             "selectedEqualCaseFoldedCer": 2,
+            "finalCerRecords": 240,
+            "finalWerRecords": 240,
             "meanFinalCaseFoldedCer": 0.3059640752765753,
             "meanFinalCaseFoldedWer": 0.4263888888888889
           }
         ],
         "minimumObservedZeroWorseThresholdWithBenefit": null,
         "boundary": "Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split."
+      },
+      "groupedConsensusCrossValidation": {
+        "groupingKey": "sourceCropSha256",
+        "parentCrops": 40,
+        "records": 240,
+        "foldCount": 5,
+        "assignmentStrategy": "sha256-ordered-round-robin",
+        "assignmentSha256": "0e1b41458166e85b2a614dc89e67dced3a860f538da20ca2c03f0d822f03f8e8",
+        "thresholdCandidates": [
+          0,
+          0.005,
+          0.01,
+          0.02,
+          0.03,
+          0.05,
+          0.075,
+          0.1,
+          0.15,
+          0.2
+        ],
+        "calibrationSelectionRule": "minimum threshold with zero CER-worse selections and at least one CER-better selection",
+        "folds": [
+          {
+            "fold": 0,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "29b1e99c7c4a2f2154a1a5ebf92e6027c5a00f7dd2b3b33fd2adf586ca057523",
+              "18122101ce42442ce90912c9eb91cbcba34cd565afd1a4c008c34e7e7e765a26",
+              "86dd63449b149c6a9d200f5a151b174ccd9a9f90753d7e1c0c1f6600e333eb30",
+              "8e41de1e42fc9f0f702b8f75c09308378c44b6289b40e004f63d6723a67d1318",
+              "79d8f9febc5f70f60413db49f2643d733ea7950012c363fe86eb2d000c8601bd",
+              "b12cb57f296c0d3a8b720fe19697b59e38d41d86f9cf8fdee5f7504f75b54f00",
+              "29504d7398c92daa2ee00ea685fbcce9251a27fb8fe284d476a654a4d0af77e2",
+              "d25b5be37a503d4b6c05426bd2ae77db257b15fd3ccd564b17b249edeab3648f"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.29550302128427125,
+              "meanFinalCaseFoldedWer": 0.4322916666666667
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.3478082912457912,
+              "meanFinalCaseFoldedWer": 0.40277777777777773
+            }
+          },
+          {
+            "fold": 1,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "a72cdacb6f0c7260ef2db853fadf9029f68a59380c394b87e41de7e7d21ea8ed",
+              "a1820176ce0f466be1f82b5c07dabf39bb4d0e557ed768f923f9a99849afd674",
+              "df6b92eeeef677478206fba3d4430161e4f1d8fc19e2224e035cad47f5237fd6",
+              "19ac7d3d2c50fd13912ecd52dda491918034d1486c8e0ffd38b828853a205034",
+              "b32b6a2891ad87d591eb78cbd8abe5c2eb1c4fc242e15bef68398c46d805c6c9",
+              "5a338211d586b16c1794153a6f79abd0f3c0aa2374d52502b876e566babec97f",
+              "7a01ebc9a1aa92467255cfdc69c90312b8997f543f8c1604d9f79543c719f880",
+              "c30ee463856c7357f3ae0675c9bff2c42a6567aa309c814fd5a2d67246dd1e43"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.3143206243987494,
+              "meanFinalCaseFoldedWer": 0.4392361111111111
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.2725378787878788,
+              "meanFinalCaseFoldedWer": 0.375
+            }
+          },
+          {
+            "fold": 2,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "c6eaf9a0c94dcab1d10dacdad83cebab4eaa629740b484b2c5e4c2125563ee86",
+              "a38c6ef15d37b2397748711b5f176daba5651281f8289e97730695c3fd280d78",
+              "f6a96c598ce8d7fac21e91867fe9ed6f02fe6d6ac71f8afd5c74601bc1824362",
+              "d476f17ed9575331819cffb808e64580bf6c7501d3d5b3cfc4a0c6f4e2da486f",
+              "851f65ec043a5735ee3948f246127898e368a29a1ccc5bca9cb45d6c1c968c34",
+              "ba679c83a514282e937ca96b2adc74d852a754949cef1f9522fe123c664ba0bc",
+              "ae513ea60da6ca32858a93cdc0c557bd8193dce03947747c1c6274c217f2294f",
+              "87ace5379be85bf607f3598df602123e2c54a493180f063dfde16fb529c7f330"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.28704132094757095,
+              "meanFinalCaseFoldedWer": 0.41840277777777773
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.38165509259259256,
+              "meanFinalCaseFoldedWer": 0.4583333333333333
+            }
+          },
+          {
+            "fold": 3,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "b52cd2a0de515cc76b5fc634dfed2acd786ae77d560c572e4c876d7f54222f9c",
+              "b59cd6cecb64cf9c6f54407738d44f371fea00a792c1cb8f204da3b2b14c4f7b",
+              "e1301766cde7d26630acc2662c38c80dd633d07255df7e203acd547e647d1173",
+              "a0caec005f90f509a7628bdc725f2e16d1c95ed9f226e25f2050dc0244b35dc0",
+              "9671d13d7605a432c26106c9f3eb1fb03558c52157d5d1ce944e3fd2b7f20d4f",
+              "13693a17ebb91b853cc0a8234c8fecbad57f7284305261ed7fb5e22aafa2c5dd",
+              "b355cbe6522179f553a269e2f37b4b0149467178a576d183624f4f04b4cce553",
+              "756848df6f81f8d86bb99bdc161e8b3809712bd994e6ff85b4bff4eaf7765e9a"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.33585911195286194,
+              "meanFinalCaseFoldedWer": 0.40277777777777773
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.18638392857142858,
+              "meanFinalCaseFoldedWer": 0.5208333333333334
+            }
+          },
+          {
+            "fold": 4,
+            "calibrationParentCrops": 32,
+            "calibrationRecords": 192,
+            "validationParentCrops": 8,
+            "validationRecords": 48,
+            "validationGroupIds": [
+              "fd08079015ccef41261b0da371c0ac34ad430375f458d04c3f8e960601fa3068",
+              "5cc460c5897933e16dcdf3982ed91d6740d5b0bfd26d68de74c26271a39a155a",
+              "4a433ca356d2d88dc7653646aa439839c4bad99bbee73c1b0a21fc61f06d54fd",
+              "32a121ff9d52497b6c4fb9829afdaeed1ccb476445c97fc0c1c231e6b85fbca4",
+              "d9e471bdf9150c3213eeed0cc813a0468f130050a116754169e9df7a9902e83c",
+              "b363a79df7697231605cdc7138ef273abab92617d26f0afd2725095799156dfa",
+              "a749e69598c2fd215f6fc1970feec6f85cef31496c9ebdc333051e3a98f2605f",
+              "c566ffca00487f8fa147e9ac116647bb9a342f6908dcf5cb8aa0f38e13382567"
+            ],
+            "selectedMinimumConfidenceGain": null,
+            "selectionDecision": "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": {
+              "minimumConfidenceGain": null,
+              "records": 192,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 192,
+              "finalWerRecords": 192,
+              "meanFinalCaseFoldedCer": 0.2970962977994228,
+              "meanFinalCaseFoldedWer": 0.4392361111111111
+            },
+            "validation": {
+              "minimumConfidenceGain": null,
+              "records": 48,
+              "selected": 0,
+              "selectedBetterCaseFoldedCer": 0,
+              "selectedWorseCaseFoldedCer": 0,
+              "selectedEqualCaseFoldedCer": 0,
+              "finalCerRecords": 48,
+              "finalWerRecords": 48,
+              "meanFinalCaseFoldedCer": 0.3414351851851852,
+              "meanFinalCaseFoldedWer": 0.375
+            }
+          }
+        ],
+        "validationAggregate": {
+          "records": 240,
+          "foldsWithSelectedThreshold": 0,
+          "foldsAbstained": 5,
+          "selected": 0,
+          "selectedBetterCaseFoldedCer": 0,
+          "selectedWorseCaseFoldedCer": 0,
+          "selectedEqualCaseFoldedCer": 0,
+          "meanFinalCaseFoldedCer": 0.30596407527657526,
+          "meanFinalCaseFoldedWer": 0.4263888888888889
+        },
+        "observedGatePassed": false,
+        "boundary": "Parent-grouped cross-validation on one controlled synthetic-variant set. Passing the observed gate would still not approve a production default without an independent natural-quality dataset and a business-field error gate."
       }
     }
   ],
@@ -684,7 +1246,9 @@
       "candidateSelectedMatched": 240,
       "finalTextMatched": 240,
       "selectedCandidateIndexMatched": 240,
-      "consensusMatchCountMatched": 240
+      "consensusMatchCountMatched": 240,
+      "groupedConsensusValidationAssignmentMatched": true,
+      "groupedConsensusValidationMatched": true
     }
   ],
   "boundary": "Controlled parent-linked crop evidence. False-correction and latency figures are diagnostic gates, not page/line accuracy, robustness, or a default-policy approval."

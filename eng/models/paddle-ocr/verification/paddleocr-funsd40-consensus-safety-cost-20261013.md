@@ -11,9 +11,9 @@ The current policy remains opt-in. Any production threshold must be selected fro
 
 ## Cross-backend agreement
 
-| Pair | Common | Decision | Selection flag | Final text | Selected index | Consensus count |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| onnxruntime / openvino | 240 | 240/240 | 240/240 | 240/240 | 240/240 | 240/240 |
+| Pair | Common | Decision | Selection flag | Final text | Selected index | Consensus count | Grouped validation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| onnxruntime / openvino | 240 | 240/240 | 240/240 | 240/240 | 240/240 | 240/240 | matched |
 
 ## Consensus threshold diagnostic: onnxruntime
 
@@ -34,6 +34,22 @@ Observed zero-worse threshold with at least one CER improvement: none
 
 Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split.
 
+## Parent-grouped threshold validation: onnxruntime
+
+The 40 parent crops are assigned to 5 deterministic folds by `sha256-ordered-round-robin`. All variants of one parent remain in the same fold.
+
+| Fold | Calibration/validation parents | Selected gain | Decision | Validation selected | CER better/worse/equal | Validation final CER/WER |
+| ---: | ---: | ---: | --- | ---: | ---: | ---: |
+| 0 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3478/0.4028 |
+| 1 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.2725/0.3750 |
+| 2 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3817/0.4583 |
+| 3 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.1864/0.5208 |
+| 4 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3414/0.3750 |
+
+Validation aggregate: thresholds selected in 0/5 folds; selected 0 rows with CER better/worse/equal 0/0/0; observed gate passed: false.
+
+Parent-grouped cross-validation on one controlled synthetic-variant set. Passing the observed gate would still not approve a production default without an independent natural-quality dataset and a business-field error gate.
+
 ## Consensus threshold diagnostic: openvino
 
 | Minimum gain | Selected | CER better | CER worse | CER equal | Mean final CER/WER |
@@ -52,3 +68,19 @@ Post-hoc diagnostic on this fixed evidence set; it must not be reused as a produ
 Observed zero-worse threshold with at least one CER improvement: none
 
 Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split.
+
+## Parent-grouped threshold validation: openvino
+
+The 40 parent crops are assigned to 5 deterministic folds by `sha256-ordered-round-robin`. All variants of one parent remain in the same fold.
+
+| Fold | Calibration/validation parents | Selected gain | Decision | Validation selected | CER better/worse/equal | Validation final CER/WER |
+| ---: | ---: | ---: | --- | ---: | ---: | ---: |
+| 0 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3478/0.4028 |
+| 1 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.2725/0.3750 |
+| 2 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3817/0.4583 |
+| 3 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.1864/0.5208 |
+| 4 | 32/8 | - | abstained-no-zero-worse-beneficial-threshold | 0 | 0/0/0 | 0.3414/0.3750 |
+
+Validation aggregate: thresholds selected in 0/5 folds; selected 0 rows with CER better/worse/equal 0/0/0; observed gate passed: false.
+
+Parent-grouped cross-validation on one controlled synthetic-variant set. Passing the observed gate would still not approve a production default without an independent natural-quality dataset and a business-field error gate.

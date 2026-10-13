@@ -18,6 +18,9 @@ from pathlib import Path
 from typing import Any
 
 
+CONSENSUS_THRESHOLDS = [0, .005, .01, .02, .03, .05, .075, .1, .15, .2]
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -148,60 +151,157 @@ def best_consensus_candidate(row: dict[str, Any]) -> dict[str, Any] | None:
     return max(eligible, key=lambda candidate: float(candidate.get("confidence", 0)))
 
 
+def evaluate_consensus_threshold(records: list[dict[str, Any]], threshold: float | None) -> dict[str, Any]:
+    selected: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    final_cer: list[float] = []
+    final_wer: list[float] = []
+    for row in records:
+        candidate = best_consensus_candidate(row)
+        original_confidence = number(row.get("originalConfidence"))
+        candidate_confidence = number(candidate.get("confidence")) if candidate else None
+        gain = candidate_confidence - original_confidence if candidate_confidence is not None and original_confidence is not None else None
+        choose = threshold is not None and candidate is not None and gain is not None and gain > 0 and gain >= threshold
+        if choose:
+            selected.append((row, candidate))
+            candidate_cer = number(candidate.get("caseFoldedCer"))
+            candidate_wer = number(candidate.get("caseFoldedWer"))
+            if candidate_cer is not None:
+                final_cer.append(candidate_cer)
+            if candidate_wer is not None:
+                final_wer.append(candidate_wer)
+        else:
+            original_cer = number(row.get("originalCaseFoldedCer"))
+            original_wer = number(row.get("originalCaseFoldedWer"))
+            if original_cer is not None:
+                final_cer.append(original_cer)
+            if original_wer is not None:
+                final_wer.append(original_wer)
+    better_cer = sum(
+        number(candidate.get("caseFoldedCer")) is not None
+        and number(row.get("originalCaseFoldedCer")) is not None
+        and number(candidate["caseFoldedCer"]) < number(row["originalCaseFoldedCer"])
+        for row, candidate in selected
+    )
+    worse_cer = sum(
+        number(candidate.get("caseFoldedCer")) is not None
+        and number(row.get("originalCaseFoldedCer")) is not None
+        and number(candidate["caseFoldedCer"]) > number(row["originalCaseFoldedCer"])
+        for row, candidate in selected
+    )
+    equal_cer = sum(
+        number(candidate.get("caseFoldedCer")) is not None
+        and number(row.get("originalCaseFoldedCer")) is not None
+        and number(candidate["caseFoldedCer"]) == number(row["originalCaseFoldedCer"])
+        for row, candidate in selected
+    )
+    return {
+        "minimumConfidenceGain": threshold,
+        "records": len(records),
+        "selected": len(selected),
+        "selectedBetterCaseFoldedCer": better_cer,
+        "selectedWorseCaseFoldedCer": worse_cer,
+        "selectedEqualCaseFoldedCer": equal_cer,
+        "finalCerRecords": len(final_cer),
+        "finalWerRecords": len(final_wer),
+        "meanFinalCaseFoldedCer": mean(final_cer),
+        "meanFinalCaseFoldedWer": mean(final_wer),
+    }
+
+
 def consensus_threshold_sweep(records: list[dict[str, Any]]) -> dict[str, Any]:
-    thresholds = [0, .005, .01, .02, .03, .05, .075, .1, .15, .2]
-    rows: list[dict[str, Any]] = []
-    for threshold in thresholds:
-        selected: list[tuple[dict[str, Any], dict[str, Any]]] = []
-        final_cer: list[float] = []
-        final_wer: list[float] = []
-        for row in records:
-            candidate = best_consensus_candidate(row)
-            original_confidence = number(row.get("originalConfidence"))
-            candidate_confidence = number(candidate.get("confidence")) if candidate else None
-            gain = candidate_confidence - original_confidence if candidate_confidence is not None and original_confidence is not None else None
-            choose = candidate is not None and gain is not None and gain > 0 and gain >= threshold
-            if choose:
-                selected.append((row, candidate))
-                candidate_cer = number(candidate.get("caseFoldedCer"))
-                candidate_wer = number(candidate.get("caseFoldedWer"))
-                if candidate_cer is not None:
-                    final_cer.append(candidate_cer)
-                if candidate_wer is not None:
-                    final_wer.append(candidate_wer)
-            else:
-                original_cer = number(row.get("originalCaseFoldedCer"))
-                original_wer = number(row.get("originalCaseFoldedWer"))
-                if original_cer is not None:
-                    final_cer.append(original_cer)
-                if original_wer is not None:
-                    final_wer.append(original_wer)
-        better_cer = sum(
-            number(candidate.get("caseFoldedCer")) is not None
-            and number(row.get("originalCaseFoldedCer")) is not None
-            and number(candidate["caseFoldedCer"]) < number(row["originalCaseFoldedCer"])
-            for row, candidate in selected
-        )
-        worse_cer = sum(
-            number(candidate.get("caseFoldedCer")) is not None
-            and number(row.get("originalCaseFoldedCer")) is not None
-            and number(candidate["caseFoldedCer"]) > number(row["originalCaseFoldedCer"])
-            for row, candidate in selected
-        )
-        rows.append({
-            "minimumConfidenceGain": threshold,
-            "selected": len(selected),
-            "selectedBetterCaseFoldedCer": better_cer,
-            "selectedWorseCaseFoldedCer": worse_cer,
-            "selectedEqualCaseFoldedCer": len(selected) - better_cer - worse_cer,
-            "meanFinalCaseFoldedCer": mean(final_cer),
-            "meanFinalCaseFoldedWer": mean(final_wer),
-        })
+    rows = [evaluate_consensus_threshold(records, threshold) for threshold in CONSENSUS_THRESHOLDS]
     beneficial_safe = [row for row in rows if row["selectedWorseCaseFoldedCer"] == 0 and row["selectedBetterCaseFoldedCer"] > 0]
     return {
         "points": rows,
         "minimumObservedZeroWorseThresholdWithBenefit": beneficial_safe[0]["minimumConfidenceGain"] if beneficial_safe else None,
         "boundary": "Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split.",
+    }
+
+
+def grouped_consensus_cross_validation(records: list[dict[str, Any]], fold_count: int = 5) -> dict[str, Any]:
+    if fold_count < 2:
+        raise ValueError("Grouped consensus validation requires at least two folds.")
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for row in records:
+        group_id = str(row.get("sourceCropSha256", "")).strip().lower()
+        if not group_id:
+            raise ValueError("Grouped consensus validation requires sourceCropSha256 on every record.")
+        if len(group_id) != 64 or any(character not in "0123456789abcdef" for character in group_id):
+            raise ValueError("Grouped consensus validation requires sourceCropSha256 to be a 64-character hexadecimal SHA-256.")
+        groups.setdefault(group_id, []).append(row)
+    if len(groups) < fold_count:
+        raise ValueError(f"Grouped consensus validation needs at least {fold_count} parent crops.")
+
+    ordered_groups = sorted(groups, key=lambda value: hashlib.sha256(value.encode("ascii")).hexdigest())
+    folds: list[list[str]] = [[] for _ in range(fold_count)]
+    for index, group_id in enumerate(ordered_groups):
+        folds[index % fold_count].append(group_id)
+    assignment = "\n".join(f"{index}:{group_id}" for index, fold in enumerate(folds) for group_id in fold)
+
+    fold_results: list[dict[str, Any]] = []
+    validation_points: list[dict[str, Any]] = []
+    for fold_index, validation_groups in enumerate(folds):
+        validation_set = set(validation_groups)
+        calibration_records = [row for group_id, rows in groups.items() if group_id not in validation_set for row in rows]
+        validation_records = [row for group_id in validation_groups for row in groups[group_id]]
+        calibration_sweep = consensus_threshold_sweep(calibration_records)
+        selected_threshold = calibration_sweep["minimumObservedZeroWorseThresholdWithBenefit"]
+        calibration_point = next(
+            (point for point in calibration_sweep["points"] if point["minimumConfidenceGain"] == selected_threshold),
+            evaluate_consensus_threshold(calibration_records, None),
+        )
+        validation_point = evaluate_consensus_threshold(validation_records, selected_threshold)
+        validation_points.append(validation_point)
+        fold_results.append({
+            "fold": fold_index,
+            "calibrationParentCrops": len(groups) - len(validation_groups),
+            "calibrationRecords": len(calibration_records),
+            "validationParentCrops": len(validation_groups),
+            "validationRecords": len(validation_records),
+            "validationGroupIds": validation_groups,
+            "selectedMinimumConfidenceGain": selected_threshold,
+            "selectionDecision": "selected-on-calibration" if selected_threshold is not None else "abstained-no-zero-worse-beneficial-threshold",
+            "calibration": calibration_point,
+            "validation": validation_point,
+        })
+
+    total_records = sum(point["records"] for point in validation_points)
+    total_selected = sum(point["selected"] for point in validation_points)
+    total_better = sum(point["selectedBetterCaseFoldedCer"] for point in validation_points)
+    total_worse = sum(point["selectedWorseCaseFoldedCer"] for point in validation_points)
+    total_equal = sum(point["selectedEqualCaseFoldedCer"] for point in validation_points)
+    weighted_cer = [
+        (point["meanFinalCaseFoldedCer"], point["finalCerRecords"])
+        for point in validation_points if point["meanFinalCaseFoldedCer"] is not None
+    ]
+    weighted_wer = [
+        (point["meanFinalCaseFoldedWer"], point["finalWerRecords"])
+        for point in validation_points if point["meanFinalCaseFoldedWer"] is not None
+    ]
+    folds_with_threshold = sum(fold["selectedMinimumConfidenceGain"] is not None for fold in fold_results)
+    return {
+        "groupingKey": "sourceCropSha256",
+        "parentCrops": len(groups),
+        "records": len(records),
+        "foldCount": fold_count,
+        "assignmentStrategy": "sha256-ordered-round-robin",
+        "assignmentSha256": hashlib.sha256(assignment.encode("ascii")).hexdigest(),
+        "thresholdCandidates": CONSENSUS_THRESHOLDS,
+        "calibrationSelectionRule": "minimum threshold with zero CER-worse selections and at least one CER-better selection",
+        "folds": fold_results,
+        "validationAggregate": {
+            "records": total_records,
+            "foldsWithSelectedThreshold": folds_with_threshold,
+            "foldsAbstained": fold_count - folds_with_threshold,
+            "selected": total_selected,
+            "selectedBetterCaseFoldedCer": total_better,
+            "selectedWorseCaseFoldedCer": total_worse,
+            "selectedEqualCaseFoldedCer": total_equal,
+            "meanFinalCaseFoldedCer": sum(value * count for value, count in weighted_cer) / sum(count for _, count in weighted_cer) if weighted_cer else None,
+            "meanFinalCaseFoldedWer": sum(value * count for value, count in weighted_wer) / sum(count for _, count in weighted_wer) if weighted_wer else None,
+        },
+        "observedGatePassed": folds_with_threshold == fold_count and total_worse == 0 and total_better > 0,
+        "boundary": "Parent-grouped cross-validation on one controlled synthetic-variant set. Passing the observed gate would still not approve a production default without an independent natural-quality dataset and a business-field error gate.",
     }
 
 
@@ -246,6 +346,7 @@ def main() -> int:
         value = load(path.resolve())
         backend = value.get("backend", path.stem)
         evidence.append({"backend": backend, "value": value})
+        consensus_enabled = value.get("selection", "").startswith("ConsensusConfidenceGain")
         summaries.append({
             "backend": backend,
             "evidenceId": path.stem,
@@ -255,12 +356,23 @@ def main() -> int:
             "recipes": value.get("recipes", [value.get("recipe")] if value.get("recipe") else []),
             "selection": value.get("selection"),
             "summary": summarize_records(value["records"]),
-            "consensusThresholdSweep": consensus_threshold_sweep(value["records"]) if value.get("selection", "").startswith("ConsensusConfidenceGain") else None,
+            "consensusThresholdSweep": consensus_threshold_sweep(value["records"]) if consensus_enabled else None,
+            "groupedConsensusCrossValidation": grouped_consensus_cross_validation(value["records"]) if consensus_enabled else None,
         })
 
     comparisons = compare_backends(evidence)
+    summaries_by_backend = {item["backend"]: item for item in summaries}
+    for comparison in comparisons:
+        left_validation = summaries_by_backend[comparison["leftBackend"]].get("groupedConsensusCrossValidation")
+        right_validation = summaries_by_backend[comparison["rightBackend"]].get("groupedConsensusCrossValidation")
+        comparison["groupedConsensusValidationAssignmentMatched"] = (
+            left_validation is not None
+            and right_validation is not None
+            and left_validation["assignmentSha256"] == right_validation["assignmentSha256"]
+        )
+        comparison["groupedConsensusValidationMatched"] = left_validation == right_validation
     result = {
-        "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v2",
+        "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v3",
         "generatedUtc": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
         "backends": summaries,
         "crossBackend": comparisons,
@@ -300,15 +412,16 @@ def main() -> int:
             "",
             "## Cross-backend agreement",
             "",
-            "| Pair | Common | Decision | Selection flag | Final text | Selected index | Consensus count |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "| Pair | Common | Decision | Selection flag | Final text | Selected index | Consensus count | Grouped validation |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
         ])
         for item in comparisons:
             common = item["commonRecords"]
             lines.append(
                 f"| {item['leftBackend']} / {item['rightBackend']} | {common} | {item['decisionMatched']}/{common} | "
                 f"{item['candidateSelectedMatched']}/{common} | {item['finalTextMatched']}/{common} | "
-                f"{item['selectedCandidateIndexMatched']}/{common} | {item['consensusMatchCountMatched']}/{common} |"
+                f"{item['selectedCandidateIndexMatched']}/{common} | {item['consensusMatchCountMatched']}/{common} | "
+                f"{'matched' if item['groupedConsensusValidationMatched'] else 'different'} |"
             )
     for item in summaries:
         sweep = item.get("consensusThresholdSweep")
@@ -333,6 +446,36 @@ def main() -> int:
             + (fmt(sweep["minimumObservedZeroWorseThresholdWithBenefit"], 3) if sweep["minimumObservedZeroWorseThresholdWithBenefit"] is not None else "none"),
             "",
             sweep["boundary"],
+        ])
+        cross_validation = item.get("groupedConsensusCrossValidation")
+        if not cross_validation:
+            continue
+        lines.extend([
+            "",
+            f"## Parent-grouped threshold validation: {item['backend']}",
+            "",
+            f"The {cross_validation['parentCrops']} parent crops are assigned to {cross_validation['foldCount']} deterministic folds by `{cross_validation['assignmentStrategy']}`. All variants of one parent remain in the same fold.",
+            "",
+            "| Fold | Calibration/validation parents | Selected gain | Decision | Validation selected | CER better/worse/equal | Validation final CER/WER |",
+            "| ---: | ---: | ---: | --- | ---: | ---: | ---: |",
+        ])
+        for fold in cross_validation["folds"]:
+            point = fold["validation"]
+            lines.append(
+                f"| {fold['fold']} | {fold['calibrationParentCrops']}/{fold['validationParentCrops']} | "
+                f"{fmt(fold['selectedMinimumConfidenceGain'], 3)} | {fold['selectionDecision']} | {point['selected']} | "
+                f"{point['selectedBetterCaseFoldedCer']}/{point['selectedWorseCaseFoldedCer']}/{point['selectedEqualCaseFoldedCer']} | "
+                f"{fmt(point['meanFinalCaseFoldedCer'], 4)}/{fmt(point['meanFinalCaseFoldedWer'], 4)} |"
+            )
+        aggregate = cross_validation["validationAggregate"]
+        lines.extend([
+            "",
+            f"Validation aggregate: thresholds selected in {aggregate['foldsWithSelectedThreshold']}/{cross_validation['foldCount']} folds; "
+            f"selected {aggregate['selected']} rows with CER better/worse/equal "
+            f"{aggregate['selectedBetterCaseFoldedCer']}/{aggregate['selectedWorseCaseFoldedCer']}/{aggregate['selectedEqualCaseFoldedCer']}; "
+            f"observed gate passed: {str(cross_validation['observedGatePassed']).lower()}.",
+            "",
+            cross_validation["boundary"],
         ])
     args.output_markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps({"json": str(args.output_json), "markdown": str(args.output_markdown), "backends": [item["backend"] for item in summaries]}, ensure_ascii=False))
