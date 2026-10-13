@@ -10,6 +10,8 @@ DeploySharp did not reach inference with this engine. Using the local TensorRT 1
 
 ## Explicitly configured runtime retry (2026-10-07)
 
+The `unverified` wording in this historical probe applies only to the failed 2026-10-07 DeploySharp attempt. A later matching TensorRT 10.11 DeploySharp run is tracked separately and must not be conflated with this result.
+
 The failure was retried with explicit, matching runtime paths rather than relying on the process `PATH`: TensorRT 11.0.0.114-cu12 at `D:\Program Files\TensorRT-11.0.0.114-cu12`, CUDA 12.9, cuDNN 9.22, and the Windows bridge from the existing device bundle. The bridge SHA-256 was `a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6f`, matching the hash in the earlier probe.
 
 | Route | Result |

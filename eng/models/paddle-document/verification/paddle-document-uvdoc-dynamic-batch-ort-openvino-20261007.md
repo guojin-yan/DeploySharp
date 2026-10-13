@@ -42,4 +42,4 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~OfficialDynamicBatchUnwarpingRunsOnOrtAndOpenVino --verbosity minimal
 ```
 
-If either local asset is absent, the opt-in integration test reports an inconclusive skip rather than an execution failure. OpenCV DNN remains unsupported for this exact UVDoc graph due to its recorded importer failure; TensorRT remains unverified. This result does not change either status.
+If either local asset is absent, the opt-in integration test reports an inconclusive skip rather than an execution failure. OpenCV DNN remains unsupported for this exact UVDoc graph due to its recorded importer failure. **At the time of this 2026-10-07 snapshot, TensorRT was unverified; the later exact TensorRT result is maintained separately in the current backend matrix.** This result does not change the OpenCV status.

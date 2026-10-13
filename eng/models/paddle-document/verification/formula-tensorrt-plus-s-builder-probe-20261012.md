@@ -26,6 +26,8 @@ TensorRT 11 loaded the graph and reported ONNX IR `0.0.8`, opset `18`, then reje
 
 ## Boundary
 
+The `unverified` wording in the paragraph below is the state recorded by this 2026-10-12 probe. The subsequent six-model TRT10.11/TRT11 probes now record each remaining formula artifact's precise importer/build blocker in the current formula status index.
+
 For this exact Plus-S ONNX graph, the two tested local TensorRT lines now have independent builder blockers: TensorRT 10.11 terminated with `0xC0000005` during parser startup, while TensorRT 11 rejected `BitwiseAnd` before Engine creation. The matrix marks only this exact artifact as `✗⁴`; the other five formula models remain `△`/unverified and are not inferred from this result. This is not a universal TensorRT-version claim, and it is not a formula accuracy result. A future supported path requires a maintained export with fixed recurrent-state contracts or a dedicated plugin/encoder-decoder split.
 
 The machine-readable record is [`formula-tensorrt-plus-s-builder-probe-20261012.json`](formula-tensorrt-plus-s-builder-probe-20261012.json).

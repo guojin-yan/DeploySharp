@@ -28,7 +28,7 @@ The two prepared image rows and the two decoded result rows have distinct SHA-25
 | OpenVINO CPU | Passed | 2 rows, 300 detections per row | Full `PaddleNmsRegions` decoder; distinct input and result rows |
 | OpenCV DNN CPU | Unsupported for this exact dynamic-Batch case | — | Session creation succeeded; forward failed with `DS-OCV-8004`, OpenCV 5.0 `Requested blob not found` |
 
-The OpenCV failure is scoped to this exact model/runtime/input contract at `batch=2`; it does not change the existing single-image OpenCV evidence. No importer investigation was performed. The run does not compare ORT/OpenVINO numerical parity, and the image regions have no layout annotations; therefore it is not an accuracy or throughput result. TensorRT Batch remains unverified.
+The OpenCV failure is scoped to this exact model/runtime/input contract at `batch=2`; it does not change the existing single-image OpenCV evidence. No importer investigation was performed. The run does not compare ORT/OpenVINO numerical parity, and the image regions have no layout annotations; therefore it is not an accuracy or throughput result. **At the time of this 2026-10-07 snapshot, TensorRT Batch was unverified; later exact TensorRT evidence is indexed by the current backend matrix.**
 
 The complete per-backend input/result digests, auxiliary bindings, output names and OpenCV technical details are in the [machine-readable JSON report](paddle-document-pp-doclayout-l-dynamic-batch-ort-openvino-opencv-20261007.json).
 

@@ -33,6 +33,6 @@ To retain each JSON report in the repository verification directory, set the mod
 
 ## Boundaries
 
-- Backend: ONNX Runtime CPU only; OpenVINO formula import/parity remains unsupported for the six exact formula exports, while OpenCV DNN and TensorRT remain unverified.
+- Backend: ONNX Runtime CPU only; OpenVINO formula import/parity remains unsupported for the six exact formula exports. **At the time of this 2026-10-07 snapshot, OpenCV DNN and TensorRT were unverified; later exact OpenCV/TensorRT probes classify the current artifacts separately in the backend matrix.**
 - This is batch execution/row-isolation evidence, not a throughput measurement, labeled formula accuracy evaluation, or approval to mark other model/backend pairs as supported.
 - Each batch result matched its corresponding independent run; results should not be generalized to different model hashes, preprocessing, hardware, or runtime versions.

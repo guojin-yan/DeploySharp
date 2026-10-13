@@ -26,4 +26,4 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 ## Boundary
 
-The two regions are an execution/row-isolation probe, not representative document-layout ground truth. The result establishes neither layout accuracy nor throughput. The OpenCV DNN failure is scoped to dynamic batch=2 on this exact model/runtime/input contract; it does not overturn existing single-batch OpenCV model evidence or characterize other RT-DETR exports. TensorRT dynamic Batch remains unverified.
+The two regions are an execution/row-isolation probe, not representative document-layout ground truth. The result establishes neither layout accuracy nor throughput. The OpenCV DNN failure is scoped to dynamic batch=2 on this exact model/runtime/input contract; it does not overturn existing single-batch OpenCV model evidence or characterize other RT-DETR exports. **At the time of this 2026-10-07 snapshot, TensorRT dynamic Batch was unverified; later exact TensorRT evidence is indexed by the current backend matrix.**
