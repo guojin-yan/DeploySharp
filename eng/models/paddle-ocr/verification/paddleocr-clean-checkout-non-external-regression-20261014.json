@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "reportDate": "2026-10-14",
+  "sourceRevision": "a3c3fdc2786f759ea0b8ef53a79ce11eec065757",
+  "scope": "clean-checkout-full-solution-non-external-regression",
+  "applicationsExcluded": true,
+  "environment": {
+    "os": "Windows NT 10.0.26200.0",
+    "architecture": "win-x64",
+    "dotnetSdk": "10.0.401",
+    "configuration": "Release",
+    "framework": "net10.0"
+  },
+  "restore": {
+    "command": "dotnet restore DeploySharp.sln --nologo --verbosity minimal",
+    "exitCode": 0,
+    "logSha256": "df625ad99a18d2e219fd5df60085bf920194bc537cd850029a04f175b5c6c18f"
+  },
+  "test": {
+    "command": "dotnet test DeploySharp.sln -c Release --no-build --no-restore --filter TestCategory!=ExternalModels --nologo --verbosity minimal",
+    "exitCode": 0,
+    "logSha256": "36e8fa056020534a55a246a076a0c183da7fa576317ba46b3b5128a49723c0a0"
+  },
+  "projects": [
+    { "project": "tests/DeploySharp.LLM.Tests/DeploySharp.LLM.Tests.csproj", "passed": 10, "failed": 0, "skipped": 0, "total": 10 },
+    { "project": "tests/DeploySharp.Backend.LlamaSharp.Tests/DeploySharp.Backend.LlamaSharp.Tests.csproj", "passed": 9, "failed": 0, "skipped": 1, "total": 10 },
+    { "project": "tests/DeploySharp.Core.Tests/DeploySharp.Core.Tests.csproj", "passed": 33, "failed": 0, "skipped": 0, "total": 33 },
+    { "project": "tests/DeploySharp.ModelPack.Json.Tests/DeploySharp.ModelPack.Json.Tests.csproj", "passed": 29, "failed": 0, "skipped": 3, "total": 32 },
+    { "project": "tests/DeploySharp.Multimodal.Tests/DeploySharp.Multimodal.Tests.csproj", "passed": 7, "failed": 0, "skipped": 0, "total": 7 },
+    { "project": "tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj", "passed": 32, "failed": 0, "skipped": 0, "total": 32 },
+    { "project": "tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj", "passed": 63, "failed": 0, "skipped": 2, "total": 65 },
+    { "project": "tests/DeploySharp.Visual.TensorRT.Tests/DeploySharp.Visual.TensorRT.Tests.csproj", "passed": 8, "failed": 0, "skipped": 0, "total": 8 },
+    { "project": "tests/DeploySharp.Extensibility.Tests/DeploySharp.Extensibility.Tests.csproj", "passed": 8, "failed": 0, "skipped": 0, "total": 8 },
+    { "project": "tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj", "passed": 99, "failed": 0, "skipped": 4, "total": 103 },
+    { "project": "tests/DeploySharp.Backend.TensorRT.Tests/DeploySharp.Backend.TensorRT.Tests.csproj", "passed": 60, "failed": 0, "skipped": 0, "total": 60 },
+    { "project": "tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj", "passed": 33, "failed": 0, "skipped": 0, "total": 33 },
+    { "project": "tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj", "passed": 522, "failed": 0, "skipped": 5, "total": 527 },
+    { "project": "tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj", "passed": 25, "failed": 0, "skipped": 0, "total": 25 }
+  ],
+  "aggregate": {
+    "projects": 14,
+    "passed": 938,
+    "failed": 0,
+    "skipped": 15,
+    "total": 953,
+    "result": "passed"
+  },
+  "interpretation": {
+    "closed": [
+      "All non-external solution tests pass from a clean checkout of the committed revision.",
+      "The PaddleOCR official-source admission assertion is synchronized with the revision-pinned catalog state."
+    ],
+    "notClosed": [
+      "External-model and public-download gates remain explicitly skipped.",
+      "This report does not establish model accuracy, backend availability, performance, soak, or cross-device support."
+    ]
+  }
+}
