@@ -73,7 +73,8 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             int optimizationLevel = -1,
             bool stronglyTypedNetwork = false,
             bool overwrite = false,
-            IEnumerable<TensorRtOnnxInputProfile>? inputProfiles = null)
+            IEnumerable<TensorRtOnnxInputProfile>? inputProfiles = null,
+            bool disableTf32 = false)
         {
             if (!Enum.IsDefined(typeof(TensorRtApiVersion), apiVersion)) throw new ArgumentOutOfRangeException(nameof(apiVersion));
             if (!Enum.IsDefined(typeof(TensorRtOnnxEnginePrecision), precision)) throw new ArgumentOutOfRangeException(nameof(precision));
@@ -117,6 +118,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             StronglyTypedNetwork = apiVersion == TensorRtApiVersion.TensorRt11 || stronglyTypedNetwork;
             Overwrite = overwrite;
             InputProfiles = profiles.AsReadOnly();
+            DisableTf32 = disableTf32;
         }
 
         /// <summary>Gets the consumer-selected TensorRT API line. / 获取相关信息。</summary>
@@ -137,6 +139,8 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         public bool Overwrite { get; }
         /// <summary>Gets the dynamic input profiles keyed by exact ONNX input name. / 获取 ONNX 模型信息。</summary>
         public IReadOnlyList<TensorRtOnnxInputProfile> InputProfiles { get; }
+        /// <summary>Gets whether TensorRT's TF32 builder flag is explicitly disabled. This is independent from the weakly typed precision policy and can be used with TensorRT 11 strongly typed networks. / 获取是否显式禁用 TensorRT TF32 构建标志。</summary>
+        public bool DisableTf32 { get; }
 
         /// <summary>Gets default ONNX-to-engine build settings. / 获取 TensorRT 引擎信息。</summary>
         public static TensorRtOnnxEngineBuildOptions Default { get; } = new TensorRtOnnxEngineBuildOptions();

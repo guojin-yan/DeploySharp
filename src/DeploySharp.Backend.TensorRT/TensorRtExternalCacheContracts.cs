@@ -254,7 +254,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         private readonly ReadOnlyCollection<string> _builderFlags;
 
         /// <summary>Gets the adapter cache identity schema accepted by this assembly. / 获取缓存信息。</summary>
-        public const string CurrentAdapterSchemaVersion = "2";
+        public const string CurrentAdapterSchemaVersion = "3";
 
         /// <summary>Initializes a device-, runtime-, build-, platform-, and package-bound engine identity. / 初始化 TensorRT 引擎对象。</summary>
         public TensorRtEngineCacheIdentity(
@@ -324,7 +324,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             BuilderFlagsSha256 = TensorRtContractHash.Sequence(_builderFlags);
             LookupKeySha256 = TensorRtContractHash.Sequence(new[]
             {
-                "deploysharp-tensorrt-engine-cache-lookup-v2",
+                "deploysharp-tensorrt-engine-cache-lookup-v3",
                 AdapterSchemaVersion,
                 OnnxSha256,
                 ManagedBuildInputsSha256,
@@ -348,6 +348,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 buildOptions.WorkspaceBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 buildOptions.OptimizationLevel.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 buildOptions.StronglyTypedNetwork ? "true" : "false",
+                buildOptions.DisableTf32 ? "true" : "false",
                 ProfilesSha256,
                 BuilderFlagsSha256,
                 ArtifactExtension

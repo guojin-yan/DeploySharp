@@ -240,6 +240,7 @@ namespace DeploySharp.Backend.TensorRT.Tests
                 apiVersion: TensorRtApiVersion.TensorRt8,
                 stronglyTypedNetwork: true));
             Assert.IsTrue(new TensorRtOnnxEngineBuildOptions(apiVersion: TensorRtApiVersion.TensorRt11).StronglyTypedNetwork);
+            Assert.IsTrue(new TensorRtOnnxEngineBuildOptions(apiVersion: TensorRtApiVersion.TensorRt11, disableTf32: true).DisableTf32);
 
             string sourceHash = new string('a', 64);
             string first = TensorRtOnnxEngineBuilder.GetBuildInputsSha256(sourceHash, options);
@@ -295,6 +296,62 @@ namespace DeploySharp.Backend.TensorRT.Tests
             ModelProto normalized = ModelProto.Parser.ParseFrom(TensorRtOnnxCompatibilityPasses.Normalize(model.ToByteArray()));
             AttributeProto axes = normalized.Graph.Node.Single(node => node.OpType == "Squeeze").Attribute.Single(attribute => attribute.Name == "axes");
             CollectionAssert.AreEqual(new long[] { 1 }, axes.Ints.ToArray());
+        }
+
+        [TestMethod]
+        public void OnnxCompatibilityPassDoesNotWriteLegacySqueezeAttributeToModernOpset()
+        {
+            var model = new ModelProto
+            {
+                IrVersion = 8,
+                Graph = new GraphProto()
+            };
+            model.OpsetImport.Add(new OperatorSetIdProto { Domain = "", Version = 17 });
+            var constant = new NodeProto { OpType = "Constant" };
+            constant.Output.Add("index");
+            constant.Attribute.Add(new AttributeProto
+            {
+                Name = "value",
+                Type = AttributeProto.Types.AttributeType.Tensor,
+                T = new TensorProto { DataType = (int)TensorProto.Types.DataType.Int64, Int64Data = { 1 }, Dims = { 1 } }
+            });
+            var gather = new NodeProto { OpType = "Gather" };
+            gather.Input.Add("selected");
+            gather.Input.Add("index");
+            gather.Output.Add("gathered");
+            gather.Attribute.Add(new AttributeProto { Name = "axis", Type = AttributeProto.Types.AttributeType.Int, I = 1 });
+            var squeeze = new NodeProto { OpType = "Squeeze" };
+            squeeze.Input.Add("gathered");
+            squeeze.Output.Add("result");
+            model.Graph.Node.Add(constant);
+            model.Graph.Node.Add(gather);
+            model.Graph.Node.Add(squeeze);
+
+            ModelProto normalized = ModelProto.Parser.ParseFrom(TensorRtOnnxCompatibilityPasses.Normalize(model.ToByteArray()));
+            Assert.IsFalse(normalized.Graph.Node.Single(node => node.OpType == "Squeeze").Attribute.Any(attribute => attribute.Name == "axes"));
+        }
+
+        [TestMethod]
+        public void ModernOpsetIsScannedWithoutMaterializingLargeInitializer()
+        {
+            var model = new ModelProto
+            {
+                IrVersion = 8,
+                Graph = new GraphProto()
+            };
+            model.OpsetImport.Add(new OperatorSetIdProto { Domain = "ai.onnx", Version = 17 });
+            model.Graph.Initializer.Add(new TensorProto
+            {
+                Name = "large_initializer",
+                DataType = (int)TensorProto.Types.DataType.Float,
+                Dims = { 262144 },
+                RawData = ByteString.CopyFrom(new byte[1024 * 1024])
+            });
+
+            byte[] bytes = model.ToByteArray();
+
+            Assert.AreEqual(17, TensorRtOnnxCompatibilityPasses.ReadMaximumOnnxOpsetVersion(bytes));
+            Assert.AreSame(bytes, TensorRtOnnxCompatibilityPasses.Normalize(bytes));
         }
 
         [TestMethod]

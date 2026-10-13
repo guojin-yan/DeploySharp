@@ -792,7 +792,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 "adapterSchemaVersion", "onnxSha256", "managedBuildInputsSha256", "managedPackageIdentity", "managedApiContractSha256",
                 "tensorRtVersion", "tensorRtIdentity", "cudaRuntimeVersion", "cudaRuntimeIdentity", "cudnnVersion", "cudnnIdentity",
                 "cudaDriverVersion", "cudaDriverIdentity", "nativeBridgeIdentity", "gpuCompatibilityIdentity", "gpuComputeCapability", "operatingSystem",
-                "processArchitecture", "apiVersion", "precision", "workspaceBytes", "optimizationLevel", "stronglyTypedNetwork",
+                "processArchitecture", "apiVersion", "precision", "workspaceBytes", "optimizationLevel", "stronglyTypedNetwork", "disableTf32",
                 "profilesSha256", "builderFlagsSha256", "profiles", "builderFlags");
             RequireEqual(GetRequiredString(engine, "adapterSchemaVersion"), identity.AdapterSchemaVersion);
             RequireEqual(GetRequiredSha256(engine, "onnxSha256"), identity.OnnxSha256);
@@ -817,6 +817,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             RequireEqual(GetRequiredUInt64(engine, "workspaceBytes"), identity.BuildOptions.WorkspaceBytes);
             RequireEqual(GetRequiredInt32(engine, "optimizationLevel"), identity.BuildOptions.OptimizationLevel);
             RequireEqual(GetRequiredBoolean(engine, "stronglyTypedNetwork"), identity.BuildOptions.StronglyTypedNetwork);
+            RequireEqual(GetRequiredBoolean(engine, "disableTf32"), identity.BuildOptions.DisableTf32);
             RequireEqual(GetRequiredSha256(engine, "profilesSha256"), identity.ProfilesSha256);
             RequireEqual(GetRequiredSha256(engine, "builderFlagsSha256"), identity.BuilderFlagsSha256);
             ValidateProfiles(engine.GetProperty("profiles"), identity.InputProfiles);
@@ -882,6 +883,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             writer.WriteNumber("workspaceBytes", identity.BuildOptions.WorkspaceBytes);
             writer.WriteNumber("optimizationLevel", identity.BuildOptions.OptimizationLevel);
             writer.WriteBoolean("stronglyTypedNetwork", identity.BuildOptions.StronglyTypedNetwork);
+            writer.WriteBoolean("disableTf32", identity.BuildOptions.DisableTf32);
             writer.WriteString("profilesSha256", identity.ProfilesSha256);
             writer.WriteString("builderFlagsSha256", identity.BuilderFlagsSha256);
             writer.WriteStartArray("profiles");

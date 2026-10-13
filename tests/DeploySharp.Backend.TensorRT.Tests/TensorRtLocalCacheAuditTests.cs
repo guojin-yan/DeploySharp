@@ -41,6 +41,7 @@ namespace DeploySharp.Backend.TensorRT.Tests
                 EngineIdentity(workspaceBytes: 268435456),
                 EngineIdentity(optimizationLevel: 5),
                 EngineIdentity(stronglyTypedNetwork: true),
+                EngineIdentity(disableTf32: true),
                 EngineIdentity(profileMinimumBatch: 2),
                 EngineIdentity(profileOptimumBatch: 5),
                 EngineIdentity(profileMaximumBatch: 9),
@@ -557,6 +558,7 @@ namespace DeploySharp.Backend.TensorRT.Tests
             ulong workspaceBytes = 536870912,
             int optimizationLevel = 4,
             bool stronglyTypedNetwork = false,
+            bool disableTf32 = false,
             long profileMinimumBatch = 1,
             long profileOptimumBatch = 4,
             long profileMaximumBatch = 8,
@@ -590,7 +592,8 @@ namespace DeploySharp.Backend.TensorRT.Tests
                 workspaceBytes: workspaceBytes,
                 optimizationLevel: optimizationLevel,
                 stronglyTypedNetwork: stronglyTypedNetwork,
-                inputProfiles: selectedProfiles);
+                inputProfiles: selectedProfiles,
+                disableTf32: disableTf32);
             return new TensorRtEngineCacheIdentity(
                 onnxSha256 ?? new string('a', 64),
                 options,

@@ -1,7 +1,7 @@
 using System;
+using Google.Protobuf;
 using System.Collections.Generic;
 using System.Linq;
-using Google.Protobuf;
 using Onnx;
 
 namespace JYPPX.DeploySharp.Backends.TensorRT
@@ -14,6 +14,20 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
         {
             if (source == null || source.Length == 0) return source ?? Array.Empty<byte>();
 
+            int onnxOpset;
+            try { onnxOpset = ReadMaximumOnnxOpsetVersion(source); }
+            catch (InvalidProtocolBufferException) { return source; }
+
+            // The legacy repair writes the Squeeze `axes` attribute used by
+            // opset-11 exports. From opset-13 onward `axes` is an input, not
+            // an attribute; adding the legacy attribute would make an
+            // otherwise valid graph fail ONNX/TensorRT schema validation.
+            if (onnxOpset > 12) return source;
+
+            // Only legacy graphs need a mutable object model. Modern models
+            // often contain multi-gigabyte initializers, so materializing the
+            // complete protobuf merely to read opset metadata needlessly
+            // multiplies peak host memory before TensorRT starts building.
             ModelProto model;
             try { model = ModelProto.Parser.ParseFrom(source); }
             catch (InvalidProtocolBufferException) { return source; }
@@ -52,6 +66,34 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
 
             return changed ? model.ToByteArray() : source;
+        }
+
+        internal static int ReadMaximumOnnxOpsetVersion(byte[] source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            int maximum = 0;
+            using (var input = new CodedInputStream(source))
+            {
+                uint tag;
+                while ((tag = input.ReadTag()) != 0)
+                {
+                    if (WireFormat.GetTagFieldNumber(tag) != ModelProto.OpsetImportFieldNumber ||
+                        WireFormat.GetTagWireType(tag) != WireFormat.WireType.LengthDelimited)
+                    {
+                        input.SkipLastField();
+                        continue;
+                    }
+
+                    OperatorSetIdProto opset = OperatorSetIdProto.Parser.ParseFrom(input.ReadBytes());
+                    if (string.IsNullOrWhiteSpace(opset.Domain) || string.Equals(opset.Domain, "ai.onnx", StringComparison.Ordinal))
+                    {
+                        maximum = Math.Max(maximum, checked((int)opset.Version));
+                    }
+                }
+            }
+
+            return maximum;
         }
 
         private static bool HasAxesAttribute(NodeProto node)

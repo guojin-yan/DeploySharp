@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,10 +53,18 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             TensorRtOnnxParser? parser = null;
             TensorRtHostMemory? serialized = null;
             var profiles = new List<TensorRtOptimizationProfile>();
+            var nativeLogMessages = new ConcurrentQueue<string>();
             try
             {
                 byte[] parserBytes = TensorRtOnnxCompatibilityPasses.Normalize(source.Bytes);
-                logger = new TensorRtLogger(TensorRtApiLineMapper.Map(options.ApiVersion));
+                logger = new TensorRtLogger(
+                    TensorRtApiLineMapper.Map(options.ApiVersion),
+                    (severity, message) =>
+                    {
+                        nativeLogMessages.Enqueue(severity + ": " + message);
+                        while (nativeLogMessages.Count > 64) nativeLogMessages.TryDequeue(out _);
+                    },
+                    TensorRtLogSeverity.Info);
                 builder = new TensorRtBuilder(logger);
                 network = builder.CreateNetwork(options.StronglyTypedNetwork);
                 config = builder.CreateBuilderConfig();
@@ -75,10 +84,14 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 ApplyInputProfiles(onnxArtifact, builder, network, config, options.InputProfiles, profiles);
                 cancellationToken.ThrowIfCancellationRequested();
                 serialized = builder.BuildSerializedNetwork(network, config);
+                if (serialized == null)
+                {
+                    throw BuildFailure(onnxArtifact, TensorRtErrorCodes.EngineBuildFailed, "TensorRT returned no serialized engine.", FormatNativeDiagnostics(nativeLogMessages));
+                }
                 ulong serializedBytes = serialized.SizeInBytes;
                 if (serializedBytes < 8 || serializedBytes > (ulong)options.MaximumEngineBytes)
                 {
-                    throw BuildFailure(onnxArtifact, TensorRtErrorCodes.EngineBuildFailed, "The serialized TensorRT engine is empty, truncated, or exceeds the configured output size limit.", "bytes=" + serializedBytes);
+                    throw BuildFailure(onnxArtifact, TensorRtErrorCodes.EngineBuildFailed, "The serialized TensorRT engine is empty, truncated, or exceeds the configured output size limit.", "bytes=" + serializedBytes + ";" + FormatNativeDiagnostics(nativeLogMessages));
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -131,13 +144,21 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
             catch (BridgeProbeException exception)
             {
+                if (exception.Message.IndexOf("null TensorRT object", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    throw BuildFailure(
+                        onnxArtifact,
+                        TensorRtErrorCodes.EngineBuildFailed,
+                        "TensorRT failed to produce the serialized engine object.",
+                        exception.GetType().FullName + ": " + exception.Message + ";" + FormatNativeDiagnostics(nativeLogMessages));
+                }
                 throw new TensorRtBackendException(
                     TensorRtErrorCodes.NativeRuntimeUnavailable,
                     "ONNX-to-engine build requires the consumer-owned native bridge, TensorRT, CUDA runtime, driver, and a compatible GPU.",
                     exception,
                     onnxArtifact.ModelId,
                     operation: "build-engine",
-                    technicalDetails: exception.GetType().FullName);
+                    technicalDetails: exception.GetType().FullName + ": " + exception.Message + ";" + FormatNativeDiagnostics(nativeLogMessages));
             }
             catch (TensorRtException exception)
             {
@@ -147,7 +168,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                     exception,
                     onnxArtifact.ModelId,
                     operation: "build-engine",
-                    technicalDetails: exception.GetType().FullName);
+                    technicalDetails: exception.GetType().FullName + ": " + exception.Message + ";" + FormatNativeDiagnostics(nativeLogMessages));
             }
             catch (Exception exception)
             {
@@ -172,6 +193,12 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
             }
         }
 
+        private static string FormatNativeDiagnostics(ConcurrentQueue<string> messages)
+        {
+            string[] values = messages.ToArray();
+            return values.Length == 0 ? "nativeLogs=none" : "nativeLogs=" + string.Join(" | ", values);
+        }
+
         private static void ConfigureBuilder(TensorRtBuilderConfig config, TensorRtOnnxEngineBuildOptions options)
         {
             config.SetMemoryPoolLimit(TensorRtMemoryPoolType.Workspace, options.WorkspaceBytes);
@@ -192,6 +219,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 default:
                     throw new ArgumentOutOfRangeException(nameof(options));
             }
+            if (options.DisableTf32) config.SetFlag(TensorRtBuilderFlag.Tf32, false);
         }
 
         internal static bool ShouldAttachParserBuilderConfig(TensorRtApiVersion apiVersion)
@@ -391,6 +419,7 @@ namespace JYPPX.DeploySharp.Backends.TensorRT
                 writer.WriteNumber("workspaceBytes", options.WorkspaceBytes);
                 writer.WriteNumber("optimizationLevel", options.OptimizationLevel);
                 writer.WriteBoolean("stronglyTypedNetwork", options.StronglyTypedNetwork);
+                writer.WriteBoolean("disableTf32", options.DisableTf32);
                 writer.WriteStartArray("inputProfiles");
                 foreach (TensorRtOnnxInputProfile profile in options.InputProfiles.OrderBy(item => item.InputName, StringComparer.Ordinal))
                 {
