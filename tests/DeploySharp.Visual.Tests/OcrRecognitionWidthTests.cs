@@ -70,6 +70,42 @@ namespace DeploySharp.Visual.Tests
             Assert.IsTrue(width.WidthClamped);
         }
 
+        [TestMethod]
+        public void FixedWidthCopyPreservesPreprocessingAndClearsDynamicWidthRetry()
+        {
+            var geometry = new OcrGeometryOptions(OcrGeometryValidationMode.Report);
+            var source = new TextCropProfile(
+                    "width/backend-static", 48, OcrRecognitionWidthMode.Dynamic, 320, 640, 32,
+                    TextCropInterpolation.Cubic, VisualColorOrder.Bgr, VisualTensorLayout.Nchw,
+                    new[] { .5f, .4f, .3f }, new[] { 2f, 3f, 4f }, new TextCropColor(1, 2, 3), 123456, 48)
+                .WithRecognitionOverflowMode(RecognitionOverflowMode.Reject)
+                .WithGeometryValidation(geometry)
+                .WithTransformMode(OcrCropTransformMode.AffineWhenEquivalent)
+                .WithWidthRetry(new OcrWidthRetryOptions(960));
+
+            TextCropProfile fixedProfile = source.WithFixedWidth(320);
+
+            Assert.AreEqual(OcrRecognitionWidthMode.Dynamic, source.WidthMode);
+            Assert.IsNotNull(source.WidthRetry);
+            Assert.AreEqual(OcrRecognitionWidthMode.Fixed, fixedProfile.WidthMode);
+            Assert.AreEqual(320, fixedProfile.FixedWidth);
+            Assert.AreEqual(320, fixedProfile.MinimumWidth);
+            Assert.AreEqual(640, fixedProfile.MaximumWidth);
+            Assert.AreEqual(RecognitionOverflowMode.Reject, fixedProfile.OverflowMode);
+            Assert.AreSame(geometry, fixedProfile.Geometry);
+            Assert.AreEqual(OcrCropTransformMode.AffineWhenEquivalent, fixedProfile.TransformMode);
+            Assert.AreEqual(TextCropInterpolation.Cubic, fixedProfile.Interpolation);
+            Assert.AreEqual(VisualColorOrder.Bgr, fixedProfile.ColorOrder);
+            CollectionAssert.AreEqual(new[] { .5f, .4f, .3f }, new System.Collections.Generic.List<float>(fixedProfile.Means));
+            CollectionAssert.AreEqual(new[] { 2f, 3f, 4f }, new System.Collections.Generic.List<float>(fixedProfile.Scales));
+            Assert.AreEqual(new TextCropColor(1, 2, 3), fixedProfile.PaddingColor);
+            Assert.AreEqual(123456L, fixedProfile.MaximumCropPixels);
+            Assert.IsNull(fixedProfile.WidthRetry);
+            Assert.AreEqual(320, fixedProfile.CalculateWidth(Quad(100, 20), TextOrientation.Degrees0));
+            Assert.AreSame(fixedProfile, fixedProfile.WithFixedWidth(320));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => source.WithFixedWidth(641));
+        }
+
         private static TextQuadrilateral Quad(float width, float height) => new TextQuadrilateral(
             new PointF(0, 0), new PointF(width, 0), new PointF(width, height), new PointF(0, height), TextCornerOrder.TopLeftClockwise);
 

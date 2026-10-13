@@ -585,8 +585,18 @@ namespace JYPPX.DeploySharp.Visual
             return mode == OverflowMode ? this : new TextCropProfile(this, mode);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null, bool clearEnhancementRetry = false, int? maximumWidthOverride = null, bool clearWidthRetry = false)
-            : this(source.ProfileId, source.TargetHeight, source.WidthMode, source.FixedWidth, maximumWidthOverride ?? source.MaximumWidth,
+        /// <summary>Creates an immutable copy that always emits the requested recognition width. This is useful for backends that must specialize dynamic input shapes. / 创建始终输出指定识别宽度的不可变副本，适用于必须专门化动态输入形状的后端。</summary>
+        /// <remarks>A wider-width retry is cleared because it is defined only for dynamic-width profiles. All other crop, normalization, geometry, retry, and overflow settings are preserved. / 更宽宽度重试仅适用于动态宽度 Profile，因此会被清除；其余裁剪、归一化、几何、重试及超宽设置均保留。</remarks>
+        public TextCropProfile WithFixedWidth(int fixedWidth)
+        {
+            if (fixedWidth <= 0 || fixedWidth > MaximumWidth) throw new ArgumentOutOfRangeException(nameof(fixedWidth));
+            if (WidthMode == OcrRecognitionWidthMode.Fixed && FixedWidth == fixedWidth) return this;
+            return new TextCropProfile(this, OverflowMode, widthModeOverride: OcrRecognitionWidthMode.Fixed,
+                fixedWidthOverride: fixedWidth, clearWidthRetry: true);
+        }
+
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null, bool clearEnhancementRetry = false, int? maximumWidthOverride = null, bool clearWidthRetry = false, OcrRecognitionWidthMode? widthModeOverride = null, int? fixedWidthOverride = null)
+            : this(source.ProfileId, source.TargetHeight, widthModeOverride ?? source.WidthMode, fixedWidthOverride ?? source.FixedWidth, maximumWidthOverride ?? source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
         {

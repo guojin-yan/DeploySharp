@@ -176,7 +176,9 @@ internal static partial class Program
                 batchSize,
                 tensorRtBatchSize = usesTensorRt ? tensorRtBatchSize : (int?)null,
                 tensorRtApiVersion = usesTensorRt ? (int)tensorRtApiVersion : (int?)null,
-                reusePreparedInput
+                reusePreparedInput,
+                fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH"),
+                openCvFixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH")
             },
             runtime = new
             {
@@ -377,6 +379,10 @@ internal static partial class Program
                     maximumWindowsPerRegion: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_REGION", 32),
                     maximumWindowsPerImage: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_IMAGE", 1024),
                     minimumOverlapTokens: ReadWindowInt("DEPLOYSHARP_PADDLEOCR_WINDOW_MIN_MATCH", 2)));
+            int? fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH");
+            if (!fixedRecognitionWidth.HasValue && backend == "opencv-dnn")
+                fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH");
+            if (fixedRecognitionWidth.HasValue) recognitionCrop = recognitionCrop.WithFixedWidth(fixedRecognitionWidth.Value);
             if (backend == "onnxruntime" || backend == "onnxruntime-cuda")
             {
                 OnnxRuntimeExecutionProvider executionProvider = backend == "onnxruntime-cuda" ? OnnxRuntimeExecutionProvider.Cuda : OnnxRuntimeExecutionProvider.Cpu;
@@ -404,9 +410,12 @@ internal static partial class Program
                 TensorShape detInput = new TensorShape(1, 3, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorShape detOutput = new TensorShape(1, 1, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorDescriptor recOutput = OpenCvOutput(recognizer);
-                // Keep the batch dimension static for OpenCV's importer, but
-                // specialize recognition width for each concrete runtime batch.
-                TensorShape recInput = new TensorShape(effectiveBatchSize, 3, 48, -1);
+                // A fixed width imports one specialized graph per Session and
+                // avoids rebuilding the complete ONNX graph for every crop width.
+                // Dynamic width remains the default until parity and quality
+                // evidence justify a backend-specific production default.
+                TensorShape recInput = new TensorShape(effectiveBatchSize, 3, 48,
+                    fixedRecognitionWidth.HasValue ? fixedRecognitionWidth.Value : -1);
                 TensorShape recOutputShape = new TensorShape(effectiveBatchSize, -1, recOutput.Shape[2]);
                 detProfile = WithStaticOpenCvContract(detProfile, detInput, detOutput);
                 recProfile = WithStaticOpenCvContract(recProfile, recInput, recOutputShape);
@@ -520,7 +529,9 @@ internal static partial class Program
                 WriteWidthReport(widthReportDirectory!, version, detector.Variant, backend, widthReportResult, recognitionCrop,
                     imagePath, detectorPath, recognizerPath, classifierPath, warmup, iterations, effectiveBatchSize, stageConcurrency, reusePreparedInput, maximumRegions);
             accelerationDetail = (accelerationDetail == null ? string.Empty : accelerationDetail + "; ")
-                + "overflowMode=" + recognitionCrop.OverflowMode + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant)
+                + "overflowMode=" + recognitionCrop.OverflowMode + ";widthMode=" + recognitionCrop.WidthMode
+                + ";fixedWidth=" + recognitionCrop.FixedWidth.ToString(Invariant)
+                + ";maximumWidth=" + recognitionCrop.MaximumWidth.ToString(Invariant)
                 + ";cropTransform=" + recognitionCrop.TransformMode;
             bool allowNumericContractDrift = ReadBool("DEPLOYSHARP_PADDLEOCR_ALLOW_NUMERIC_CONTRACT_DRIFT", false);
             return FullResultRow.Pass(version, detector.Variant, backend, device, imagePath, FullTiming.Average(values, allowNumericContractDrift), reusePreparedInput, stageConcurrency, effectiveBatchSize, accelerationDetail);
@@ -1236,6 +1247,15 @@ internal static partial class Program
     private static int ReadInt(string name, int fallback)
     {
         return int.TryParse(Environment.GetEnvironmentVariable(name), NumberStyles.Integer, Invariant, out int value) && value > 0 ? value : fallback;
+    }
+
+    private static int? ReadOptionalPositiveInt(string name)
+    {
+        string? raw = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        if (!int.TryParse(raw, NumberStyles.Integer, Invariant, out int value) || value <= 0)
+            throw new ArgumentOutOfRangeException(name, "The configured value must be a positive integer.");
+        return value;
     }
 
     private static int ReadNonNegativeInt(string name, int fallback)
