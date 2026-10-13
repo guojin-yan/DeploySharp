@@ -35,7 +35,7 @@
 
 2026-10-13 已补充锁定 `MathJax 4.1.3` SVG 和 `sharp 0.35.5` 的[渲染/视觉结构诊断](formula-realformula-render-quality-20261013.md)及[逐样本机器结果](formula-realformula-render-quality-20261013.json)。121 条参考中 `118` 条由该配置成功渲染；六模型预测分别成功 `110/121`、`121/121`、`120/121`、`111/121`、`117/121` 和 `120/121`，可比较配对为 `107–118/121`。失败项保留图片、公式哈希和精确 MathJax/栅格器错误，不复制原始 LaTeX。前景 IoU P50 仅 `0.2253–0.2434`，与现有低 exact/高 CER 风险方向一致，但该像素指标对排版和字形敏感，**只关闭“没有可复现渲染器”的工具阻断，不关闭数学语义等价或发布质量门**。
 
-本次同步后的[本地文档链接审计](document-link-audit-20261013-formula-render.json)覆盖受维护的 PP-OCR/PP-Structure 入口文档；它只检查仓库内 Markdown 目标，不验证外部 URL、模型执行或质量结论。
+本次同步后的[本地文档链接审计](document-link-audit-20261014-formula-lifecycle.json)覆盖受维护的 PP-OCR/PP-Structure 入口文档；当前检查 `740` 条本地 Markdown 链接、断链 `0`。它只检查仓库内 Markdown 目标，不验证外部 URL、模型执行或质量结论。
 
 TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针；TensorRT 10.11 又以动态 batch=2 profile 对同六图完成独立 DeploySharp Builder 探针。两条 runtime 线都没有创建 Engine：五个 FormulaNet 的精确阻断原因是 `BitwiseAnd`，UniMERNet 是 `ConcatFromSequence`。精确 SHA、profile 和错误边界分别记录在 [TRT11 FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)、[TRT11 UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)和 [TRT10.11 动态 Batch 探针](paddle-document-formula-tensorrt-builder-probe-20261014.md)。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 

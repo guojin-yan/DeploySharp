@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "generatedAtUtc": "2026-10-14T00:00:00Z",
   "scope": "Six official Paddle formula ONNX exports; this is an evidence index, not a new benchmark run.",
+  "documentLinkAudit": "document-link-audit-20261014-formula-lifecycle.json",
   "models": [
     "paddle-formula/pp-formulanet-plus-s",
     "paddle-formula/pp-formulanet-plus-m",
