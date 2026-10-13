@@ -81,7 +81,7 @@ foreach (OcrRegionResult region in result.Regions)
 
 [OpenCV DNN 动态宽度正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md)也覆盖七组核心组合和 `5+50` 计时规则，但必须遵守这些图的静态 batch=1 合同，并用两个独立 Session 并发调度 16 个识别 batch。当前版本的[同 Batch=1 三图对照](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20261013.md)已证明七模型 `21/21` ORT/OpenCV 组合文本完全一致、置信度差 `≤0.01`、顶点差 `≤0.5 px`，所以与 Batch=8 矩阵的差异来自 Batch/动态宽度合同，不应归因于 OpenCV importer。
 
-后续[固定宽度 320 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)避免了 crop 宽度变化时重复专门化和导入整张 ONNX 图。七组 `5+50` 均通过：P50 降低 `26.0%–49.0%`，报告的托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度下，七组 ORT/OpenCV 的有序文本和语义合同 SHA 均一致。固定宽度仍是显式性能选项，不是默认值，因为它与动态宽度的文本并非在所有模型上都相同。使用时先在代表性数据上验证：`TextCropProfile fastCrop = cropProfile.WithFixedWidth(320);`。裁剪内容保持原宽高比，剩余列填充，不会把文字横向拉伸。两份 OpenCV 数据都不能与 Batch=8 后端直接排名。
+后续[固定宽度 320 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)避免了 crop 宽度变化时重复专门化和导入整张 ONNX 图。七组 `5+50` 均通过：P50 降低 `26.0%–49.0%`，报告的托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度下，七组 ORT/OpenCV 的有序文本和语义合同 SHA 均一致。进一步的[同后端十页 SROIE 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-opencv-fixed320-quality-20261013.md)只改变 v6 Small 的宽度策略：固定 320 的诊断总耗时 P50/P95 下降 `68.0%/69.2%`，但 matched CER/WER 上升 `0.87/2.16` 个百分点，`531` 个对齐区域中有 `101` 个文字不同；检测数量和 polygon 不变。固定宽度因此仍是显式性能选项，不是默认值。使用时先在代表性标注数据上验证：`TextCropProfile fastCrop = cropProfile.WithFixedWidth(320);`。裁剪内容保持原宽高比，剩余列填充，不会把文字横向拉伸。两份 OpenCV 数据都不能与 Batch=8 后端直接排名。
 
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 

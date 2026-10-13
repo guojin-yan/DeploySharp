@@ -96,7 +96,7 @@
 
 OpenCV DNN 随后以相同 `5+50` 计时规则覆盖七组核心组合，但按精确图合同固定 batch=1、两个独立 Session 和 16 个 recognition batch。当前版本的[同 Batch=1 三图对照](../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20261013.md)证明七模型 `21/21` ORT/OpenCV 组合文本完全一致，置信度差 `≤0.01`、顶点差 `≤0.5 px`，所以与 Batch=8 CPU 矩阵的差异属于 Batch/宽度合同差异。动态宽度基线 P50/P95 从 v6 Tiny `338.130/369.176 ms` 到 v5 Server `4582.283/5803.217 ms`，单次托管分配最高为 `7.71 GiB`；详见[动态宽度报告](../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md)。
 
-[固定宽度 320 正式矩阵](../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)关闭了这项重复导入热点：七组 `7/7` formal-ready，P50 降低 `26.0%–49.0%`，报告托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度 ORT/OpenCV 的文本和语义合同逐模型一致。固定宽度仍是 opt-in，因为它不能保证与动态宽度文本相同；这不是 CER/WER 或人工真值质量证明。OpenCV 的静态 Batch 合同也使其不能与 Batch=8 后端直接排名。
+[固定宽度 320 正式矩阵](../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)关闭了这项重复导入热点：七组 `7/7` formal-ready，P50 降低 `26.0%–49.0%`，报告托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度 ORT/OpenCV 的文本和语义合同逐模型一致。[十页 SROIE 同协议质量对照](../eng/models/paddle-ocr/verification/sroie-v6-small-opencv-fixed320-quality-20261013.md)又证明这不是无损优化：v6 Small 固定 320 相对动态宽度使诊断总耗时 P50/P95 下降 `68.0%/69.2%`，但 matched CER/WER 上升 `0.87/2.16` 个百分点，`101/531` 个对齐区域文字不同；检测结果不变。固定宽度继续标记为 opt-in，不外推到其它模型、宽度或数据集。OpenCV 的静态 Batch 合同也使其不能与 Batch=8 后端直接排名。
 
 ## PP-Structure 模型状态
 

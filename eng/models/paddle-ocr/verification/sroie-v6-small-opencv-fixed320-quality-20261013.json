@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-13T10:24:00Z",
+  "scope": "PP-OCRv6 Small dynamic-width versus fixed-width 320 quality and one-shot latency on ten SROIE receipt pages using OpenCV DNN",
+  "source": {
+    "revision": "32b9194bd3a6c46f519adfbba13fc4b4241df6f4",
+    "workingTreeDirty": true,
+    "workingTreeStatusSha256": "1d44013e71d743516cdbdd65c20132cf807e2bcf75ccc6a05b4ccc221213d099",
+    "benchmarkAssemblySha256": "a313933801f03b7895cba4d01d7b1d623252f45ec667fc36f79eecaada199cd0"
+  },
+  "runtime": {
+    "machine": "JYPPX",
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "processArchitecture": "X64",
+    "processorCount": 16,
+    "backend": "opencv-dnn",
+    "managedAssembly": {
+      "name": "JYPPX.OpenCV.CSharp.API",
+      "assemblyVersion": "5.0.0.0",
+      "sha256": "9c5744f2b1b680e5a9a80236f72110126061450ec7d076aea9799c4e7e365e48"
+    }
+  },
+  "dataset": {
+    "source": "jsdnrs/ICDAR2019-SROIE",
+    "sourceRevision": "bffe40c26759f3376ec2b3ae9031dbba54cd587c",
+    "split": "train",
+    "images": 10,
+    "inputManifestSha256": "2975c4e967b485f2b064980fe62b1df5e2e43acb954c44f144d87b020f8f8e41",
+    "sourceManifestSha256s": [
+      "3015917423e64aad275f7e3626187d0061cae2738ba6d780907aa87de06b4cb4",
+      "3b9c8159d88d1da188483ede63c067bcaf8564e73137c5cdf278ce292ad25518"
+    ],
+    "imageSha256": [
+      "fbf32fef1e3c9b30a217537294d637fb724c3c5591a16e302986f889799f944c",
+      "503590a2a573d4ef9234bb5db734ec0c8ca2c6faef29dd52b9a2a538aaf69452",
+      "efb25720ae864ba27dd9e08cdb8fdef3615b0e7ca971305e2e163278b5624688",
+      "6f2d9dd4a2a734f002e60ea6f6455276ffbaf24a0d2b9092ae67fef5f75c1499",
+      "cd13975a0f05b6edab0b0209a3fc1ba24ceda35c7f9a6a404ea699037b65470b",
+      "bae0765f90d2ae056f45f076288ad7c081a28223381ff30ec772554bd8fa5dba",
+      "e70c9633d1ffc80e3cc5d66ac06188ab0c1f3268be845fad1db197d0fd657758",
+      "392290ff4cfa92961fc7e1865a10754b0208110fd53f41b24f5a8e615a8341ec",
+      "ca87e22a7cc8f606156301bb5acfc37dc361e300c6baabc456040632716bb159",
+      "9f1ce3f5bc0189b6db808eab9e7382a5c2c2a61cc7adc4421b983480555d9931"
+    ],
+    "redistributionBoundary": "Smoke-only pending per-image source review; no dataset assets or raw predictions are committed."
+  },
+  "protocol": {
+    "pipeline": "det -> crop -> rec -> merge",
+    "warmupPerPage": 1,
+    "measuredIterationsPerPage": 1,
+    "recognitionBatchSize": 1,
+    "inferenceChannels": 2,
+    "maximumRegions": 1024,
+    "overflowMode": "SlidingWindow",
+    "windowOverlap": 0.2,
+    "maximumWindowsPerRegion": 32,
+    "dynamicRecognitionWidth": null,
+    "fixedRecognitionWidth": 320,
+    "performanceBoundary": "One measured iteration across ten distinct pages; latency is diagnostic and not the formal 5-warmup/50-iteration benchmark."
+  },
+  "model": {
+    "version": "v6",
+    "variant": "small",
+    "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "recognizerSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "classifierSha256": null,
+    "dictionarySha256": "c89959f09a966e3401cec55aa6d3b95ecb1d802910264182766ee6a88f3d0e35"
+  },
+  "results": {
+    "dynamicWidth": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "regions": 531,
+      "detIou05": {
+        "tp": 489,
+        "fp": 42,
+        "fn": 53,
+        "f1": 0.9114631873252563
+      },
+      "matchedExactCount": 258,
+      "matchedExactRate": 0.5276073619631901,
+      "matchedCer": 0.3009967960128159,
+      "matchedWer": 0.45436702649656524,
+      "endToEndCer": 0.3739115588185078,
+      "endToEndWer": 0.5537190082644629,
+      "latencyMs": {
+        "detP50": 379.5465,
+        "detP95": 546.4846499999999,
+        "recP50": 4912.3235,
+        "recP95": 7163.7328,
+        "totalP50": 5279.775,
+        "totalP95": 7671.210099999999
+      }
+    },
+    "fixedWidth320": {
+      "pages": 10,
+      "pageFailures": 0,
+      "emptyPages": 0,
+      "regions": 531,
+      "detIou05": {
+        "tp": 489,
+        "fp": 42,
+        "fn": 53,
+        "f1": 0.9114631873252563
+      },
+      "matchedExactCount": 251,
+      "matchedExactRate": 0.5132924335378323,
+      "matchedCer": 0.3097187611249555,
+      "matchedWer": 0.4759568204121688,
+      "endToEndCer": 0.38091172955437935,
+      "endToEndWer": 0.5693296602387512,
+      "latencyMs": {
+        "detP50": 387.73400000000004,
+        "detP95": 492.96339999999987,
+        "recP50": 1306.6195,
+        "recP95": 1893.9589499999997,
+        "totalP50": 1690.0729999999999,
+        "totalP95": 2362.80335
+      }
+    }
+  },
+  "comparison": {
+    "pagesCompared": 10,
+    "regionCountMatches": 10,
+    "referenceRegions": 531,
+    "candidateRegions": 531,
+    "pageTextSequenceMatches": 0,
+    "pagesWithIndexedTextDifferences": 10,
+    "indexedRegionTextMismatches": 101,
+    "indexedRegionTextMismatchRate": 0.19020715630885123,
+    "maxIndexedPolygonAbsDeltaPx": 0.0,
+    "maxIndexedConfidenceAbsDelta": 0.68113484,
+    "fixedMinusDynamic": {
+      "matchedExactCount": -7,
+      "matchedExactRate": -0.0143149284253578,
+      "matchedCer": 0.0087219651121396,
+      "matchedWer": 0.02158979391560356,
+      "endToEndCer": 0.00700017073587155,
+      "endToEndWer": 0.0156106519742883
+    },
+    "fixedLatencyReduction": {
+      "recognitionP50": 0.7340119192068681,
+      "recognitionP95": 0.7356184264717411,
+      "totalP50": 0.6798967759042762,
+      "totalP95": 0.6919907916483736
+    },
+    "alignmentNote": "Both runs contain the same ten image IDs, hashes and 531 index-aligned regions. The fixed run was merged from two five-page shards while the dynamic run was emitted as one ten-page run, so their reserialized selected-manifest byte hashes differ even though the input manifest hash is identical."
+  },
+  "decision": {
+    "defaultRecognitionWidth": "dynamic",
+    "fixedWidth320Status": "explicit opt-in",
+    "reason": "Fixed width substantially reduces OpenCV DNN latency and allocation, but the matched ten-page quality run has higher CER/WER and 101 of 531 indexed region texts differ. Applications must validate a representative labelled set before enabling it."
+  },
+  "limits": [
+    "SROIE annotations are word-level while PP-OCR emits text-line polygons; the metrics are smoke diagnostics, not official SROIE line accuracy.",
+    "The sample has 21 ground-truth regions with at least 32 characters and none with at least 128 or 3200 characters; the natural-long-text gate remains open.",
+    "The latency values use one measured iteration per page and must not replace the formal 5-warmup/50-iteration fixed-width performance matrix.",
+    "This result covers PP-OCRv6 Small, OpenCV DNN and width 320 only. It does not select a universal fixed width or promote another model/backend combination.",
+    "The source worktree was dirty. Source revision, working-tree status hash, benchmark assembly hash, model hashes and raw evidence hashes are retained to bound reproduction."
+  ],
+  "rawEvidence": {
+    "committed": false,
+    "dynamicWidth": {
+      "runSha256": "b4fccdf22fa970fbd7d035cc1e6ef7e6f36051b5ac054203e543c210e5607031",
+      "evaluationSha256": "f7d5ad098736e55260dd5710984bb3ce3d3b7387b5b748d9d0acec1b9176fd97",
+      "predictionsSha256": "b5ceca09d3a6391a4d5e821dbf0410f13ee012a35bd8edb197ee799e22a12c6e"
+    },
+    "fixedWidth320": {
+      "runSha256": "f1820616569b967535ba5ab80f42a845773ccadf3b3b5cc65d8e02701cb3e10f",
+      "evaluationSha256": "f673f4dd3d76391ea837852aae09dd03fa872b433a8cb7ff9e188e3cbbd8d239",
+      "predictionsSha256": "3aaf4945e3385be2027bb0c1311f8661b850d65ce22db391d236ed5af7ff694a"
+    }
+  },
+  "reproduction": {
+    "runner": "eng/models/paddle-ocr/scripts/Invoke-PaddleOcrPublicDataset.ps1",
+    "evaluator": "eng/models/paddle-ocr/scripts/Evaluate-DeploySharpPublicOcrDataset.py",
+    "fixedWidthParameter": "-FixedRecognitionWidth 320",
+    "dynamicWidthParameter": "omit -FixedRecognitionWidth or pass 0"
+  }
+}

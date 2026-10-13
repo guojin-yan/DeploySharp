@@ -49,10 +49,14 @@ because backend confidence values are floating-point results.
 
 Fixed width is an explicit performance/quality trade-off, not the default.
 v6 Tiny retained the dynamic-width text on this page, while v5 Server did not.
-This report therefore does not prove CER/WER, recognition accuracy, detection
-recall, a universal recommended width or equivalence to dynamic-width output.
+The follow-up [ten-page SROIE quality check](sroie-v6-small-opencv-fixed320-quality-20261013.md)
+holds the model, backend, batch, channels, overflow policy and pages constant.
+Fixed width reduces diagnostic total P50/P95 by `68.0%/69.2%`, but raises
+matched CER/WER by `0.87/2.16` percentage points and changes `101/531`
+index-aligned region texts. Detection counts and polygons remain identical.
 Use dynamic width for the quality-first default. Select fixed width only after
-validating representative data, especially long or densely padded text lines.
+validating representative labelled data, especially long or densely padded
+text lines. Neither report proves a universal recommended width.
 
 ## Reproduction
 
