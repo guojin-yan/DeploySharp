@@ -1,9 +1,9 @@
 # FormulaNet / UniMERNet TensorRT 10.11 dynamic-Batch=2 builder probe
 
-Date: 2026-10-14  
-Host: Windows 10.0.26200 x64, RTX 3060 Laptop (`compute_86`)  
-Runtime: TensorRT `10.11.0.33-cu12`, CUDA `12.9`, cuDNN `9.22`  
-API/bridge: DeploySharp TensorRT API 10 bridge  
+Date: 2026-10-14
+Host: Windows 10.0.26200 x64, RTX 3060 Laptop (`compute_86`)
+Runtime: TensorRT `10.11.0.33-cu12`, CUDA `12.9`, cuDNN `9.22`
+API/bridge: DeploySharp TensorRT API 10 bridge
 Test: `PaddleDocumentTensorRtFormulaBuilderProbeTests.FormulaModelsDynamicBatchTwoHaveExplicitTensorRtBuilderEvidence`
 
 ## Scope
