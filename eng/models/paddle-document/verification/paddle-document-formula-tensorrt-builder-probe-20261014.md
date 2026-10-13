@@ -32,4 +32,4 @@ The external test completed `1/1` test with `0` failures and `0` skips. All six 
 - This is not evidence that every TensorRT release, a fixed-state export, or a dedicated plugin would fail. A future supported implementation needs a maintained encoder/decoder export or plugin, then a separate Engine, dynamic-KV, tokenizer and token-parity contract.
 - The results do not alter the ORT CPU formula execution evidence or the existing OpenVINO/OpenCV importer boundaries.
 
-The machine-readable source is [`paddle-document-formula-tensorrt-builder-probe-20261014.json`](paddle-document-formula-tensorrt-builder-probe-20261014.json). The probe source is [`PaddleDocumentTensorRtFormulaBuilderProbeTests.cs`](../../../tests/DeploySharp.Visual.TensorRT.Tests/PaddleDocumentTensorRtFormulaBuilderProbeTests.cs).
+The machine-readable source is [`paddle-document-formula-tensorrt-builder-probe-20261014.json`](paddle-document-formula-tensorrt-builder-probe-20261014.json). The probe source is [`PaddleDocumentTensorRtFormulaBuilderProbeTests.cs`](../../../../tests/DeploySharp.Visual.TensorRT.Tests/PaddleDocumentTensorRtFormulaBuilderProbeTests.cs).
