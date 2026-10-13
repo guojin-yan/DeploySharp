@@ -1,0 +1,337 @@
+{
+  "schemaVersion": "deploysharp-formula-formulanet-l-cuda-lifecycle-v1",
+  "generatedAtUtc": "2026-10-13T22:20:25.848194+00:00",
+  "backend": "onnxruntime-cuda",
+  "model": "paddle-formula/pp-formulanet-l",
+  "modelSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+  "tokenizerSha256": "39bcdd283d08c4328ae853a62da1c6d2a4966360dae0ff0524670ae65ae91af9",
+  "processId": 29156,
+  "sessionCreationCount": 1,
+  "sampleOffset": 0,
+  "requestedSampleCount": 3,
+  "evaluatedSampleCount": 3,
+  "cudaProviderOptions": {},
+  "sessionConfigEntries": {},
+  "preferPreallocatedCpuOutputs": false,
+  "samples": [
+    {
+      "sampleIndex": 0,
+      "image": "220808471-63.png",
+      "imageSha256": "f6af58ce95d3b20c257e3df8f8729a17356485523201bbd09416c54ead10ad66",
+      "processId": 29156,
+      "sessionCreationCount": 1,
+      "cpuRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          220
+        ],
+        "length": 220,
+        "minimum": 0,
+        "maximum": 26922,
+        "first": [
+          0,
+          82,
+          1121,
+          243,
+          113,
+          380,
+          243,
+          115,
+          243,
+          82,
+          867,
+          30
+        ]
+      },
+      "cudaRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          220
+        ],
+        "length": 220,
+        "minimum": 0,
+        "maximum": 26922,
+        "first": [
+          0,
+          82,
+          1121,
+          243,
+          113,
+          380,
+          243,
+          115,
+          243,
+          82,
+          867,
+          30
+        ]
+      },
+      "cpuTokenDiagnostics": {
+        "Length": 220,
+        "Minimum": 0,
+        "Maximum": 26922,
+        "InvalidTokenCount": 0,
+        "ContainsEos": true,
+        "EosIndex": 219,
+        "FirstTokens": [
+          0,
+          82,
+          1121,
+          243,
+          113,
+          380,
+          243,
+          115,
+          243,
+          82,
+          867,
+          30
+        ]
+      },
+      "cudaTokenDiagnostics": {
+        "Length": 220,
+        "Minimum": 0,
+        "Maximum": 26922,
+        "InvalidTokenCount": 0,
+        "ContainsEos": true,
+        "EosIndex": 219,
+        "FirstTokens": [
+          0,
+          82,
+          1121,
+          243,
+          113,
+          380,
+          243,
+          115,
+          243,
+          82,
+          867,
+          30
+        ]
+      },
+      "tokenIdsMatch": true,
+      "rawOutputShapeMatch": true,
+      "rawMaximumAbsoluteDifference": 0,
+      "decoderResult": {
+        "tokenCount": 218,
+        "latexSha256": "d395f034ed4da92a8e3c77fe4dc9e083dcf520d498568c552b5b34d14757b2d3",
+        "warningCount": 0,
+        "warnings": []
+      },
+      "decoderError": null
+    },
+    {
+      "sampleIndex": 1,
+      "image": "220312373-25.png",
+      "imageSha256": "2cbedc4f376fce7acd9daf2e737db4b85fb57f95f3ba92b35f84293860aea3a4",
+      "processId": 29156,
+      "sessionCreationCount": 1,
+      "cpuRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          58
+        ],
+        "length": 58,
+        "minimum": 0,
+        "maximum": 2186,
+        "first": [
+          0,
+          82,
+          1595,
+          243,
+          85,
+          243,
+          113,
+          292,
+          243,
+          34,
+          298,
+          243
+        ]
+      },
+      "cudaRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          1025
+        ],
+        "length": 1025,
+        "minimum": -7961075632943492244,
+        "maximum": 6304135490424611836,
+        "first": [
+          0,
+          -3139823180343856632,
+          -3139823180343856632,
+          -4598216953084022292,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096
+        ]
+      },
+      "cpuTokenDiagnostics": {
+        "Length": 58,
+        "Minimum": 0,
+        "Maximum": 2186,
+        "InvalidTokenCount": 0,
+        "ContainsEos": true,
+        "EosIndex": 57,
+        "FirstTokens": [
+          0,
+          82,
+          1595,
+          243,
+          85,
+          243,
+          113,
+          292,
+          243,
+          34,
+          298,
+          243
+        ]
+      },
+      "cudaTokenDiagnostics": {
+        "Length": 1025,
+        "Minimum": -7961075632943492244,
+        "Maximum": 6304135490424611836,
+        "InvalidTokenCount": 1024,
+        "ContainsEos": false,
+        "EosIndex": -1,
+        "FirstTokens": [
+          0,
+          -3139823180343856632,
+          -3139823180343856632,
+          -4598216953084022292,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096,
+          1192813076762769096
+        ]
+      },
+      "tokenIdsMatch": false,
+      "rawOutputShapeMatch": false,
+      "rawMaximumAbsoluteDifference": null,
+      "decoderResult": null,
+      "decoderError": "JYPPX.DeploySharp.Visual.VisualException: Formula token output contains an integer outside the supported token-index range.\r\n   at JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document.PaddleDocumentFormulaDecoder.ReadToken(ITensor tensor, Int32 index, VisualDecodeContext context) in /_/src/DeploySharp.Visual/Models/PaddleOcr/Document/PaddleDocumentFormulaDecoder.cs:line 109\r\n   at JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document.PaddleDocumentFormulaDecoder.Decode(VisualDecodeContext context) in /_/src/DeploySharp.Visual/Models/PaddleOcr/Document/PaddleDocumentFormulaDecoder.cs:line 76\r\n   at DeploySharp.Visual.OpenCV.Tests.PaddleDocumentFormulaCudaLifecycleIntegrationTests.FormulaNetLRecordsSingleSessionCudaLifecycle() in /_/tests/DeploySharp.Visual.OpenCV.Tests/PaddleDocumentFormulaCudaLifecycleIntegrationTests.cs:line 139"
+    },
+    {
+      "sampleIndex": 2,
+      "image": "230110053-1.png",
+      "imageSha256": "0994860961ce0566f965d8aaa90ab1e7184c7d690242747197aebb2e133bf35d",
+      "processId": 29156,
+      "sessionCreationCount": 1,
+      "cpuRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          232
+        ],
+        "length": 232,
+        "minimum": 0,
+        "maximum": 5679,
+        "first": [
+          0,
+          82,
+          707,
+          243,
+          113,
+          941,
+          243,
+          85,
+          243,
+          113,
+          351,
+          243
+        ]
+      },
+      "cudaRaw": {
+        "elementType": "Int64",
+        "shape": [
+          1,
+          1025
+        ],
+        "length": 1025,
+        "minimum": -8793463525662474666,
+        "maximum": 9004901915018488034,
+        "first": [
+          0,
+          -2352909044056342212,
+          -2352909044056342212,
+          4178261732781892974,
+          6787348506918458588,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358
+        ]
+      },
+      "cpuTokenDiagnostics": {
+        "Length": 232,
+        "Minimum": 0,
+        "Maximum": 5679,
+        "InvalidTokenCount": 0,
+        "ContainsEos": true,
+        "EosIndex": 231,
+        "FirstTokens": [
+          0,
+          82,
+          707,
+          243,
+          113,
+          941,
+          243,
+          85,
+          243,
+          113,
+          351,
+          243
+        ]
+      },
+      "cudaTokenDiagnostics": {
+        "Length": 1025,
+        "Minimum": -8793463525662474666,
+        "Maximum": 9004901915018488034,
+        "InvalidTokenCount": 1024,
+        "ContainsEos": false,
+        "EosIndex": -1,
+        "FirstTokens": [
+          0,
+          -2352909044056342212,
+          -2352909044056342212,
+          4178261732781892974,
+          6787348506918458588,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358,
+          -2247190032952222358
+        ]
+      },
+      "tokenIdsMatch": false,
+      "rawOutputShapeMatch": false,
+      "rawMaximumAbsoluteDifference": null,
+      "decoderResult": null,
+      "decoderError": "JYPPX.DeploySharp.Visual.VisualException: Formula token output contains an integer outside the supported token-index range.\r\n   at JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document.PaddleDocumentFormulaDecoder.ReadToken(ITensor tensor, Int32 index, VisualDecodeContext context) in /_/src/DeploySharp.Visual/Models/PaddleOcr/Document/PaddleDocumentFormulaDecoder.cs:line 109\r\n   at JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document.PaddleDocumentFormulaDecoder.Decode(VisualDecodeContext context) in /_/src/DeploySharp.Visual/Models/PaddleOcr/Document/PaddleDocumentFormulaDecoder.cs:line 76\r\n   at DeploySharp.Visual.OpenCV.Tests.PaddleDocumentFormulaCudaLifecycleIntegrationTests.FormulaNetLRecordsSingleSessionCudaLifecycle() in /_/tests/DeploySharp.Visual.OpenCV.Tests/PaddleDocumentFormulaCudaLifecycleIntegrationTests.cs:line 139"
+    }
+  ],
+  "sessionException": null,
+  "boundary": "One CPU Session and one CUDA Session are reused for three consecutive realFormula samples in one process. Raw Int64 outputs are recorded before decoding. This is a lifecycle contamination probe, not a formula accuracy or release-quality result. A pass here does not promote FormulaNet-L to ordinary CUDA support without parity and quality evidence."
+}

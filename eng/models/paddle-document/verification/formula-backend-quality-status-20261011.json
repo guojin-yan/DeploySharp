@@ -44,9 +44,9 @@
       "execution": "verified-process-isolated-bounded-parity",
       "qualityEvidence": null,
       "report": "formula-realformula-ort-cuda-20261014.md",
-      "additionalReports": ["formula-realformula-ort-cuda-20261014.json", "formula-ort-cuda-lifecycle-options-20261014.md", "formula-ort-cuda-lifecycle-options-20261014.json"],
+      "additionalReports": ["formula-realformula-ort-cuda-20261014.json", "formula-ort-cuda-lifecycle-options-20261014.md", "formula-ort-cuda-lifecycle-options-20261014.json", "formula-formulanet-l-cuda-lifecycle-20261014.md", "formula-formulanet-l-cuda-lifecycle-20261014.json"],
       "runtime": "Microsoft.ML.OnnxRuntime.Gpu.Windows 1.23.2; explicit opt-in restore variant",
-      "boundary": "All six exact formula exports were compared with ORT CPU on bounded realFormula inputs. Plus-S/M/S have three-sample in-process evidence; Plus-L/L/UniMERNet are currently accepted only as one sample per fresh process because repeated autoregressive runs in one process can contaminate CUDA Int64 output. The lifecycle option probe did not eliminate the contamination. The report records raw-output comparability, token-ID equality and LaTeX equality. This is execution/parity evidence only: it is not a 121-sample quality score, mathematical-semantic equivalence, controlled performance benchmark or cross-device portability result."
+      "boundary": "All six exact formula exports were compared with ORT CPU on bounded realFormula inputs. Plus-S/M/S have three-sample in-process evidence; Plus-L/L/UniMERNet are currently accepted only as one sample per fresh process because repeated autoregressive runs in one process can contaminate CUDA Int64 output. The lifecycle option probe did not eliminate the contamination. The dedicated FormulaNet-L single-session probe reproduced the corruption after reusing one CPU Session and one CUDA Session for three samples: the first row was valid, while the next two returned 1,024 out-of-range Int64 values and no EOS. The report records raw-output comparability, token-ID equality and decoder error classification. This is execution/parity evidence only: it is not a 121-sample quality score, mathematical-semantic equivalence, controlled performance benchmark or cross-device portability result."
     },
     {
       "backend": "opencv-dnn-cpu",

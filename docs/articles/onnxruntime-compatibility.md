@@ -16,6 +16,8 @@ OnnxRuntimeOptions 可以设置图优化、算子内/算子间线程、顺序或
 
 公式自回归图的当前实测显示：关闭 CUDA Graph、切换默认 stream、启发式 cuDNN 搜索，以及静态输出 CPU 预分配，均未消除部分 FormulaNet-L/UniMERNet 在同一进程多样本运行中的非法 `Int64` token。该问题仍按“进程隔离有界执行”记录，不能通过这些选项宣称普通长生命周期 Session 已支持。实验性选项示例：
 
+FormulaNet-L 的更小生命周期探针进一步只创建一个 CPU Session 和一个 CUDA Session，并在同一进程连续执行三个样本。第一行 raw 输出正常；第二、第三行均出现 `[1,1025]`、1024 个越界 token 且没有 EOS，Decoder 以结构化 `DecodeFailed` 拒绝。该结果说明“每个样本重建 Session”也不是充分修复；当前仍需固定状态 encoder/decoder、隔离 worker 或 ORT/provider 原生修复。详见 [FormulaNet-L 单 Session 报告](../../eng/models/paddle-document/verification/formula-formulanet-l-cuda-lifecycle-20261014.md)。
+
 ```csharp
 var options = new OnnxRuntimeOptions(
     executionProvider: OnnxRuntimeExecutionProvider.Cuda,
