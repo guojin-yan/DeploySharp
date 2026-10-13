@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 2,
+  "protocolName": "deploysharp-paddleocr-full-5-50-v1",
+  "generatedUtc": "2026-10-13T07:42:23.6554806+00:00",
+  "machine": "JYPPX",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "framework": ".NET 10.0.12",
+  "architecture": "X64",
+  "processorCount": 16,
+  "sourceRevision": "77a7ef5b15e68934659eed0e1a11837edce38abb\u002Bworking-tree",
+  "modelRoot": "E:\\Model\\paddleocr",
+  "image": "E:\\Data\\ocr\\demo_1.jpg",
+  "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+  "models": [
+    {
+      "version": "v4",
+      "variant": "mobile",
+      "role": "cls",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_cls.onnx",
+      "onnxSha256": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv4\\PP-OCRv4_mobile_cls.onnx.engine",
+      "engineSha256": "e927932e5445cc7bbe4d229fc6bd707de3507ae3da68df4cc1a0282a9cd56427"
+    },
+    {
+      "version": "v4",
+      "variant": "mobile",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_det.onnx",
+      "onnxSha256": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv4\\PP-OCRv4_mobile_det.onnx.engine",
+      "engineSha256": "1943c43c78746de4eacd65c5fdeef7d7f936a622fad1f50db7d3961100ac4ea4"
+    },
+    {
+      "version": "v4",
+      "variant": "mobile",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_mobile_rec.onnx",
+      "onnxSha256": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv4\\PP-OCRv4_mobile_rec.onnx.engine",
+      "engineSha256": "56c8e6682c080f9b0748bf4918cff10bcdd3584aa00043de07c251db8bbf3d6b"
+    },
+    {
+      "version": "v4",
+      "variant": "server",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_det.onnx",
+      "onnxSha256": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv4\\PP-OCRv4_server_det.onnx.engine",
+      "engineSha256": "9fcbf0a01385931a528334747d21faa6a82c7a5b5d5492c36a1752bd258a1e5e"
+    },
+    {
+      "version": "v4",
+      "variant": "server",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv4\\PP-OCRv4_server_rec.onnx",
+      "onnxSha256": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv4\\PP-OCRv4_server_rec.onnx.engine",
+      "engineSha256": "75d2768b20efd1b4d68f3f95eda3abe957697cba0a196c37fa5e9e7a235e18d1"
+    },
+    {
+      "version": "v5",
+      "variant": "mobile",
+      "role": "cls",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx",
+      "onnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_mobile_cls.onnx.engine",
+      "engineSha256": "c3b5fdcb392c45be45796e6c588a3d51bbc2c49473f16d444ffaf48760ea3ec6"
+    },
+    {
+      "version": "v5",
+      "variant": "mobile",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_det.onnx",
+      "onnxSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_mobile_det.onnx.engine",
+      "engineSha256": "4054efd36e2c5baab42dc015d2b3993b18e6f6159f0ede3db7ca3ef6054d2fd3"
+    },
+    {
+      "version": "v5",
+      "variant": "mobile",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_mobile_rec.onnx",
+      "onnxSha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_mobile_rec.onnx.engine",
+      "engineSha256": "fbe821f6436ce811044be2a50f7be5650acea4adee120f8cf20a7dd6aa2f6a57"
+    },
+    {
+      "version": "v5",
+      "variant": "server",
+      "role": "cls",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_cls.onnx",
+      "onnxSha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_server_cls.onnx.engine",
+      "engineSha256": "a4740b328e60d87423a35df4adfdf4359020dd31d812fa0cfef93e7ffb856c01"
+    },
+    {
+      "version": "v5",
+      "variant": "server",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_det.onnx",
+      "onnxSha256": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_server_det.onnx.engine",
+      "engineSha256": "c5ea91f146e4665fe5b4b0ee25811aa587e577c229a72bf14c947f6d5836e00b"
+    },
+    {
+      "version": "v5",
+      "variant": "server",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv5\\PP-OCRv5_server_rec.onnx",
+      "onnxSha256": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv5\\PP-OCRv5_server_rec.onnx.engine",
+      "engineSha256": "9e221d11e7e767b5ad2965ff372a178a60fa8123d1c710242b3a952a166f9dcd"
+    },
+    {
+      "version": "v6",
+      "variant": "medium",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_det_inference.onnx",
+      "onnxSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\medium\\PP-OCRv6_medium_det_inference.onnx.engine",
+      "engineSha256": "701c4e9ea1939bb424a069064495c3f19c964dd4cc8390b5848e8fbb8b23347d"
+    },
+    {
+      "version": "v6",
+      "variant": "medium",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\medium\\PP-OCRv6_medium_rec_inference.onnx",
+      "onnxSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\medium\\PP-OCRv6_medium_rec_inference.onnx.engine",
+      "engineSha256": "4082676f87fb5cde17827a21f543f32c4bd744bc0c75204414a8c4da80854b4f"
+    },
+    {
+      "version": "v6",
+      "variant": "small",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx",
+      "onnxSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\small\\PP-OCRv6_small_det_inference.onnx.engine",
+      "engineSha256": "c66b880f65e7ad5bf6f7fa32a59ca55629f3a21a690047118fe23f5604113708"
+    },
+    {
+      "version": "v6",
+      "variant": "small",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\small\\PP-OCRv6_small_rec_inference.onnx",
+      "onnxSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\small\\PP-OCRv6_small_rec_inference.onnx.engine",
+      "engineSha256": "4b8a5c3ca611d09f28731c8a6fb2b9437b12b6ad14f21ef891c755fc3c643972"
+    },
+    {
+      "version": "v6",
+      "variant": "tiny",
+      "role": "det",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_det_inference.onnx",
+      "onnxSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_det_inference.onnx.engine",
+      "engineSha256": "ca688dbc431fe004e8062c4ef87da83b5f11904e3d3ca62bc6d4e3ed7a1b0f15"
+    },
+    {
+      "version": "v6",
+      "variant": "tiny",
+      "role": "rec",
+      "onnxPath": "E:\\Model\\paddleocr\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_rec_inference.onnx",
+      "onnxSha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+      "enginePath": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\artifacts\\local-model-benchmarks\\paddleocr-managed-trt10.11-engines-opt0-20261013\\PP-OCRv6\\tiny\\PP-OCRv6_tiny_rec_inference.onnx.engine",
+      "engineSha256": "3748ecdf2de2f3842bf5138caef968fec26952d4841fd3d76388ed003d2bf2ea"
+    }
+  ],
+  "backends": [
+    "tensorrt"
+  ],
+  "versions": [
+    "v4",
+    "v5",
+    "v6"
+  ],
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "stageConcurrency": 2,
+    "batchSize": 8,
+    "tensorRtBatchSize": 8,
+    "tensorRtApiVersion": 10,
+    "reusePreparedInput": true
+  },
+  "runtime": {
+    "cudaRoot": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9",
+    "cudnnRoot": "D:\\Program Files\\cuDNN-9.22.0-cuda12.9",
+    "tensorRtRoot": "D:\\Program Files\\TensorRT-10.11.0.33-cu12",
+    "bridge": "C:\\Users\\guoji\\.nuget\\packages\\jyppx.tensorrt.csharp.api.runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.bridge\\4.0.0\\runtimes\\win-x64\\native\\jyppxtrtbridge.dll"
+  }
+}

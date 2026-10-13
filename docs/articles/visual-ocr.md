@@ -73,6 +73,8 @@ foreach (OcrRegionResult region in result.Regions)
 
 同日又按相同完整路径覆盖 v4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 七组核心组合。`7/7` 均完成 TensorRT 10.11 Engine 构建与完整执行；每组 ORT CPU/TensorRT 都返回 16 个已识别区域，并且组内有序文本 SHA 一致。逐模型 ONNX/Engine SHA 和执行结果见[七组合完整流水线报告](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.md)及[机器 JSON](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.json)。其中耗时是排除 Engine 构建、但包含 Session/Pipeline 创建的一次调用观察，没有预热和分位数分布，GPU 也未锁频；因此不能用作正式 P50/P95 排名。该证据只关闭所列工件和单台 Windows 主机的执行/文本 parity，不关闭 CER/WER、检测召回、多页质量、跨设备 Engine 可移植性或其它运行时组合。
 
+随后在同一设备上以正式 `5 次预热 + 50 次测量` 协议补做 TensorRT 稳态性能矩阵。七组核心组合均通过校验，统一使用设备本地 Builder Engine、Batch=8、独立阶段通道=2、复用已准备输入；完整流水线 P50/P95 为 v4 Mobile `191.256/200.739 ms`、v4 Server `243.536/258.356 ms`、v5 Mobile `196.894/210.507 ms`、v5 Server `488.820/522.446 ms`、v6 Tiny `80.169/91.488 ms`、v6 Small `143.523/152.854 ms`、v6 Medium `326.212/369.506 ms`。详见[正式性能报告](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.md)、[CSV](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.csv)和[协议校验 JSON](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.validation.json)。这些是未锁频单机稳态观察，不能外推为跨设备排名、冷启动耗时或 OCR 准确率。
+
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 ### 连续帧异步预取

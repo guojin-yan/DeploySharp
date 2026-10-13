@@ -20,7 +20,8 @@ $documents = @(
     'eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md',
     'eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-detectors-tensorrt-dynamic-batch-decoder-20261013.md',
-    'eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.md'
+    'eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.md',
+    'eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.md'
 )
 $records = [System.Collections.Generic.List[object]]::new()
 foreach ($relativeDocument in $documents) {

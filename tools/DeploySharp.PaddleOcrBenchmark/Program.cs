@@ -62,6 +62,18 @@ internal static partial class Program
             Console.Error.WriteLine("PADDLEOCR_BENCHMARK_ERROR no-onnx-models-found=" + root);
             return 2;
         }
+        string? tensorRtEngineRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_TENSORRT_ENGINE_ROOT");
+        if (!string.IsNullOrWhiteSpace(tensorRtEngineRoot))
+            models = BindTensorRtEngineRoot(root, models, tensorRtEngineRoot);
+        if (ReadBool("DEPLOYSHARP_PADDLEOCR_TENSORRT_REBUILD_ENGINES", false))
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_TENSORRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                throw new InvalidOperationException("Set DEPLOYSHARP_TENSORRT_RUN_EXTERNAL=1 before rebuilding device-specific TensorRT engines.");
+            string engineRoot = string.IsNullOrWhiteSpace(tensorRtEngineRoot)
+                ? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "tensorrt-engines")
+                : tensorRtEngineRoot;
+            models = RebuildTensorRtEngines(root, models, engineRoot, tensorRtApiVersion, tensorRtBatchSize);
+        }
         int auditExit = RunStartupCharacterAudit(models, output);
         if (auditExit != 0) return auditExit;
         return RunFullPipeline(root, models, output, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, interTestDelayMs, autoTune);
@@ -895,6 +907,118 @@ internal static partial class Program
             result.Add(new ModelCase(version, variant, role, path, engine, InputShape(version, role), "x"));
         }
         return result.OrderBy(x => x.Version).ThenBy(x => x.Variant).ThenBy(x => x.Role).ToList();
+    }
+
+    private static List<ModelCase> BindTensorRtEngineRoot(string modelRoot, IReadOnlyList<ModelCase> models, string engineRoot)
+    {
+        string sourceRoot = Path.GetFullPath(modelRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string targetRoot = Path.GetFullPath(engineRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var result = new List<ModelCase>(models.Count);
+        foreach (ModelCase model in models)
+        {
+            string sourcePath = Path.GetFullPath(model.OnnxPath);
+            if (!sourcePath.StartsWith(sourceRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("A discovered PaddleOCR model is outside the configured model root: " + sourcePath);
+            string relativePath = Path.GetRelativePath(sourceRoot, sourcePath);
+            string enginePath = Path.GetFullPath(Path.Combine(targetRoot, relativePath + ".engine"));
+            if (!enginePath.StartsWith(targetRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The TensorRT engine path escaped the configured engine root: " + enginePath);
+            result.Add(model with { EnginePath = File.Exists(enginePath) ? enginePath : null });
+        }
+        return result;
+    }
+
+    private static List<ModelCase> RebuildTensorRtEngines(
+        string modelRoot,
+        IReadOnlyList<ModelCase> models,
+        string engineRoot,
+        TensorRtApiVersion apiVersion,
+        int maximumBatch)
+    {
+        int maximumWidth = ReadInt("DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH", 320);
+        if (maximumWidth < 48)
+            throw new ArgumentOutOfRangeException("DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH", "TensorRT recognition engines require a maximum width of at least 48.");
+        int optimizationLevel = ReadNonNegativeInt("DEPLOYSHARP_PADDLEOCR_TENSORRT_BUILD_OPTIMIZATION_LEVEL", 3);
+        if (optimizationLevel > 5)
+            throw new ArgumentOutOfRangeException("DEPLOYSHARP_PADDLEOCR_TENSORRT_BUILD_OPTIMIZATION_LEVEL", "TensorRT builder optimization level must be between 0 and 5.");
+
+        string sourceRoot = Path.GetFullPath(modelRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string targetRoot = Path.GetFullPath(engineRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        Directory.CreateDirectory(targetRoot);
+        var result = new List<ModelCase>(models.Count);
+        var builder = new TensorRtOnnxEngineBuilder();
+        foreach (ModelCase model in models)
+        {
+            string sourcePath = Path.GetFullPath(model.OnnxPath);
+            if (!sourcePath.StartsWith(sourceRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("A discovered PaddleOCR model is outside the configured model root: " + sourcePath);
+            string relativePath = Path.GetRelativePath(sourceRoot, sourcePath);
+            string enginePath = Path.GetFullPath(Path.Combine(targetRoot, relativePath + ".engine"));
+            if (!enginePath.StartsWith(targetRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The TensorRT engine path escaped the configured engine root: " + enginePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(enginePath)!);
+
+            PaddleOcrProfile profile = model.Role == "det"
+                ? CreateDetectionProfile(model.Version, model)
+                : model.Role == "cls"
+                    ? CreateClassificationProfile(model.Version, model, maximumBatch)
+                    : CreateRecognitionProfile(model.Version, model);
+            TensorRtOnnxInputProfile inputProfile = CreateTensorRtBuildProfile(model, maximumBatch, maximumWidth);
+            var options = new TensorRtOnnxEngineBuildOptions(
+                apiVersion,
+                TensorRtOnnxEnginePrecision.RuntimeDefault,
+                workspaceBytes: 1073741824UL,
+                optimizationLevel: optimizationLevel,
+                overwrite: true,
+                inputProfiles: new[] { inputProfile });
+            Console.WriteLine("PADDLEOCR_TENSORRT_BUILD_START model=" + model.Version + "/" + model.Variant + "/" + model.Role + ";engine=" + enginePath);
+            TensorRtOnnxEngineBuildResult build = builder.Build(profile.CreateArtifact(sourcePath), enginePath, options);
+            var buildRecord = new
+            {
+                schemaVersion = 1,
+                generatedUtc = DateTimeOffset.UtcNow,
+                machine = Environment.MachineName,
+                runtime = new
+                {
+                    tensorRtRoot = Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT"),
+                    cudaRoot = Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT"),
+                    cudnnRoot = Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT"),
+                    bridge = Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH")
+                },
+                profile = new
+                {
+                    inputProfile.InputName,
+                    minimum = inputProfile.Minimum.ToArray(),
+                    optimum = inputProfile.Optimum.ToArray(),
+                    maximum = inputProfile.Maximum.ToArray()
+                },
+                build
+            };
+            File.WriteAllText(enginePath + ".build.json", System.Text.Json.JsonSerializer.Serialize(buildRecord, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+            Console.WriteLine("PADDLEOCR_TENSORRT_BUILD_OK model=" + model.Version + "/" + model.Variant + "/" + model.Role + ";sha256=" + build.EngineSha256);
+            result.Add(model with { EnginePath = build.EnginePath });
+        }
+        return result;
+    }
+
+    private static TensorRtOnnxInputProfile CreateTensorRtBuildProfile(ModelCase model, int maximumBatch, int maximumWidth)
+    {
+        if (model.Role == "det")
+        {
+            var shape = new TensorShape(1, 3, 736, 736);
+            return new TensorRtOnnxInputProfile(model.InputName, shape, shape, shape);
+        }
+        if (model.Role == "cls")
+        {
+            var minimum = new TensorShape(1, 3, model.InputShape[2], model.InputShape[3]);
+            var optimum = new TensorShape(maximumBatch, 3, model.InputShape[2], model.InputShape[3]);
+            return new TensorRtOnnxInputProfile(model.InputName, minimum, optimum, optimum);
+        }
+
+        var recognitionMinimum = new TensorShape(1, 3, 48, 48);
+        var recognitionOptimum = new TensorShape(maximumBatch, 3, 48, Math.Min(320, maximumWidth));
+        var recognitionMaximum = new TensorShape(maximumBatch, 3, 48, maximumWidth);
+        return new TensorRtOnnxInputProfile(model.InputName, recognitionMinimum, recognitionOptimum, recognitionMaximum);
     }
 
     private static string? FindEngine(string onnxPath)
