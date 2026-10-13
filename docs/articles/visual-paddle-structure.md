@@ -445,7 +445,9 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 公式输出还提供一份 [保守语法/结构诊断](../../eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md)：它只检查常见命令参数、分组和环境闭合，并对抽象结构指纹做配对统计。由于参考标签中也有不满足该子集的写法，结果只能作为 malformed-output 线索，不能当作 TeX 渲染或数学语义指标。
 
-另外可以运行 [SymPy/ANTLR LaTeX 解析可接受性诊断](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.json)）。它对六模型共 726 条预测调用当前 SymPy ANTLR parser，其中 548 条接受、178 条拒绝（75.48%）。该 parser 只覆盖有限 LaTeX 子集，复杂环境、宏和数据集中的非规范写法可能被拒绝；因此数字只能帮助定位 malformed output 与 parser coverage 边界，不能当作渲染成功、视觉相似、数学语义等价或发布质量。当前环境没有 LaTeX 渲染器，公式渲染/语义门仍未关闭。
+另外可以运行 [SymPy/ANTLR LaTeX 解析可接受性诊断](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.json)）。它对六模型共 726 条预测调用当前 SymPy ANTLR parser，其中 548 条接受、178 条拒绝（75.48%）。该 parser 只覆盖有限 LaTeX 子集，复杂环境、宏和数据集中的非规范写法可能被拒绝；因此数字只能帮助定位 malformed output 与 parser coverage 边界，不能当作渲染成功、视觉相似、数学语义等价或发布质量。
+
+2026-10-13 又补充了锁定 MathJax 4.1.3 和 sharp 0.35.5 的[渲染/视觉结构诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json)）。121 条参考中 118 条可渲染；六模型预测分别有 110–121 条可渲染，可比较配对的前景 IoU P50 为 `0.2253–0.2434`。工具位于 `eng/models/paddle-document/tools/formula-render-quality`，报告只保存图片/公式哈希、渲染错误和像素指标，不复制原始 LaTeX。该结果关闭了“缺少可复现渲染器”的工具阻断，但像素相似度受排版和字形影响，不能证明数学语义等价、完整 TeX 兼容或发布精度。
 
 ## 状态和验证规则
 

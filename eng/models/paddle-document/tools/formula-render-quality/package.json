@@ -1,0 +1,13 @@
+{
+  "name": "@deploysharp/formula-render-quality",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "evaluate": "node ./evaluate.mjs"
+  },
+  "dependencies": {
+    "@mathjax/src": "4.1.3",
+    "sharp": "0.35.5"
+  }
+}

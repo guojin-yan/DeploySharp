@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-12T07:30:29Z",
+  "generatedAtUtc": "2026-10-13T11:00:35Z",
   "scope": "Six official Paddle formula ONNX exports; this is an evidence index, not a new benchmark run.",
   "models": [
     "paddle-formula/pp-formulanet-plus-s",
@@ -16,7 +16,12 @@
       "execution": "verified",
       "qualityEvidence": "121-sample MathNet realFormula v1 diagnostic",
       "report": "formula-realformula-six-models-ort-20261007.md",
-      "additionalReports": ["formula-realformula-syntax-quality-20261012.md", "formula-realformula-syntax-quality-20261012.json"],
+      "additionalReports": [
+        "formula-realformula-syntax-quality-20261012.md",
+        "formula-realformula-syntax-quality-20261012.json",
+        "formula-realformula-render-quality-20261013.md",
+        "formula-realformula-render-quality-20261013.json"
+      ],
       "summary": {
         "plus-s": { "exact": "14/121", "charCer": "57.04%", "eos": "121/121", "empty": 0 },
         "plus-m": { "exact": "11/121", "charCer": "58.34%", "eos": "121/121", "empty": 0 },
@@ -25,7 +30,7 @@
         "formula-l": { "exact": "17/121", "charCer": "89.86%", "eos": "120/121", "empty": 0 },
         "unimernet": { "exact": "18/121", "charCer": "51.59%", "eos": "121/121", "empty": 0 }
       },
-      "boundary": "These are string-level diagnostic metrics; they are not TeX semantic equivalence, mathematical correctness, a held-out guarantee, or a release quality pass. Training overlap is unknown."
+      "boundary": "These include string-level metrics plus a locked MathJax SVG renderability/raster-shape diagnostic. They are not mathematical-semantic equivalence, full-TeX portability, a held-out guarantee, or a release-quality pass. Training overlap is unknown."
     },
     {
       "backend": "openvino-cpu",
@@ -69,7 +74,7 @@
     }
   ],
   "nextGates": [
-    "Obtain or construct an additional licensed multi-sample formula quality set with rendered/semantic checks.",
+    "Add mathematical-semantic equivalence and an independent renderer check beyond the current MathJax SVG/raster diagnostic.",
     "Diagnose FormulaNet-L non-EOS behavior without changing the public decoder to silently truncate or synthesize EOS.",
     "For TensorRT, prototype a maintained fixed-state encoder/decoder export or plugin path; only after it creates engines should token parity, real-formula quality and controlled performance be evaluated.",
     "For OpenVINO, pursue a new supported export or importer/runtime change before repeating isolated compatibility experiments."

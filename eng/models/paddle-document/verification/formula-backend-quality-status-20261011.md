@@ -1,4 +1,4 @@
-# 公式模型后端质量/执行状态索引（2026-10-12 更新）
+# 公式模型后端质量/执行状态索引（2026-10-13 更新）
 
 这是一份证据索引，不是新的全量推理报告。它把六个官方 Paddle 公式 ONNX 导出的当前状态集中列出，避免把 ORT 的单后端字符串诊断、OpenVINO/OpenCV 的阻断和其它 PP-Structure 模型的 TensorRT 结果混为“公式模型全部支持”。机器可读版本见 [JSON](formula-backend-quality-status-20261011.json)。
 
@@ -28,7 +28,11 @@
 
 2026-10-12 又增加了[保守语法/结构诊断](formula-realformula-syntax-quality-20261012.md)及[机器可读结果](formula-realformula-syntax-quality-20261012.json)。该解析器只检查常见命令参数、分组和 `begin/end` 环境闭合，并将字母/数字抽象后比较结构指纹；六模型预测语法有效率为 `82.64%–96.69%`，结构指纹匹配为 `9.09%–14.88%`。MathNet 参考标签自身有 7 条不满足这个保守子集，因此这些数字只用于发现 malformed output/结构退化，不是 TeX 渲染、数学语义或发布质量分数。
 
-同日补充了基于 SymPy ANTLR LaTeX parser 的[解析可接受性诊断](formula-realformula-latex-parseability-20261012.md)及[机器可读结果](formula-realformula-latex-parseability-20261012.json)。在六模型共 `726` 条输出中，`548` 条被当前 parser 接受、`178` 条被拒绝，整体接受率为 `75.48%`（各模型 `73.55%–78.51%`）。该 parser 只覆盖其自身支持的 LaTeX 子集；数据集中的 `aligned/array`、自定义宏、物理记号和不规则转义等合法或近似合法写法也可能被拒绝。因此该结果只用于定位 malformed-output 和 parser coverage 边界，**不表示 TeX 能成功渲染，不表示视觉相似，不表示数学语义等价，也不改变 ORT 的发布质量结论**。本机未安装 LaTeX 渲染器，本门仍保持未完成。
+同日补充了基于 SymPy ANTLR LaTeX parser 的[解析可接受性诊断](formula-realformula-latex-parseability-20261012.md)及[机器可读结果](formula-realformula-latex-parseability-20261012.json)。在六模型共 `726` 条输出中，`548` 条被当前 parser 接受、`178` 条被拒绝，整体接受率为 `75.48%`（各模型 `73.55%–78.51%`）。该 parser 只覆盖其自身支持的 LaTeX 子集；数据集中的 `aligned/array`、自定义宏、物理记号和不规则转义等合法或近似合法写法也可能被拒绝。因此该结果只用于定位 malformed-output 和 parser coverage 边界，**不表示 TeX 能成功渲染，不表示视觉相似，不表示数学语义等价，也不改变 ORT 的发布质量结论**。
+
+2026-10-13 已补充锁定 `MathJax 4.1.3` SVG 和 `sharp 0.35.5` 的[渲染/视觉结构诊断](formula-realformula-render-quality-20261013.md)及[逐样本机器结果](formula-realformula-render-quality-20261013.json)。121 条参考中 `118` 条由该配置成功渲染；六模型预测分别成功 `110/121`、`121/121`、`120/121`、`111/121`、`117/121` 和 `120/121`，可比较配对为 `107–118/121`。失败项保留图片、公式哈希和精确 MathJax/栅格器错误，不复制原始 LaTeX。前景 IoU P50 仅 `0.2253–0.2434`，与现有低 exact/高 CER 风险方向一致，但该像素指标对排版和字形敏感，**只关闭“没有可复现渲染器”的工具阻断，不关闭数学语义等价或发布质量门**。
+
+本次同步后的[本地文档链接审计](document-link-audit-20261013-formula-render.json)覆盖受维护的 PP-OCR/PP-Structure 入口文档；它只检查仓库内 Markdown 目标，不验证外部 URL、模型执行或质量结论。
 
 TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针。五个 FormulaNet 均在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；精确 SHA、profile 和错误边界分别记录在 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TensorRT 10.11 的 parser-startup `0xC0000005` 是另一条 runtime 证据，不外推给其余模型。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 
@@ -38,6 +42,6 @@ TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探
 
 ## 收尾门
 
-1. 在已有 MathNet 多样本词法诊断基础上，补充可复现的 TeX 渲染/结构语义指标；当前 ORT 结果仍只作诊断。
+1. 在已有 MathNet 词法和 MathJax 渲染/视觉结构诊断基础上，补充数学语义等价指标及独立渲染器复核；当前 ORT 结果仍只作诊断。
 2. 继续定位 FormulaNet-L 的非 EOS 样本，但不得扩大 decoder 上限或合成终止 token 来掩盖模型导出边界。
 3. 获得匹配 TensorRT 运行时和可复现 Engine 后，再单独建立六模型 TensorRT 质量/性能矩阵；OpenVINO 需要新的兼容导出或 importer 修复证据。
