@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-14T03:43:54Z",
+  "source": {
+    "dataset": "ICDAR2019-SROIE",
+    "root": "F:\\OCRBenchmarkTesting",
+    "manifestSha256": "5e8c22b5a87911a0e940d10c614408f1a94fe6cbf16a098995c0c618ce6d53bb",
+    "records": 32,
+    "anglesDegreesCcw": [0, 12, -12, 27, -27, 90, -90, 180],
+    "eligibility": "controlled_real_crop_angle_smoke_only"
+  },
+  "models": {
+    "detector": {
+      "name": "PP-OCRv6 Small DET",
+      "sha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e"
+    },
+    "recognizer": {
+      "name": "PP-OCRv6 Small REC",
+      "sha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634"
+    },
+    "dictionarySha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+  },
+  "policy": {
+    "confidenceThreshold": 1.0,
+    "minimumConfidenceGain": 0.0,
+    "relativeRotations": ["Clockwise90", "Degrees180", "CounterClockwise90"],
+    "maximumRegionsPerImage": 2,
+    "maximumCropsPerImage": 32
+  },
+  "backends": [
+    {
+      "name": "onnxruntime-cpu",
+      "rows": 32,
+      "nonEmpty": 32,
+      "exactText": 16,
+      "meanCharacterErrorRate": 0.35096153846153844,
+      "meanWordErrorRate": 0.4375,
+      "retryExecuted": 32,
+      "expectedRightAngleRows": 16,
+      "expectedRightAngleCorrect": 16,
+      "expectedRightAngleAccuracy": 1.0,
+      "selectedOrientations": {
+        "Degrees0": 13,
+        "Clockwise90": 7,
+        "CounterClockwise90": 8,
+        "Degrees180": 4
+      }
+    },
+    {
+      "name": "openvino-cpu",
+      "rows": 32,
+      "nonEmpty": 32,
+      "exactText": 16,
+      "meanCharacterErrorRate": 0.35096153846153844,
+      "meanWordErrorRate": 0.4375,
+      "retryExecuted": 32,
+      "expectedRightAngleRows": 16,
+      "expectedRightAngleCorrect": 16,
+      "expectedRightAngleAccuracy": 1.0,
+      "selectedOrientations": {
+        "Degrees0": 13,
+        "Clockwise90": 7,
+        "CounterClockwise90": 8,
+        "Degrees180": 4
+      }
+    }
+  ],
+  "boundary": "Controlled known-angle transforms of real parent-linked SROIE crops; this measures the opt-in retry heuristic and does not establish natural rotation-distribution accuracy, a production threshold or A3 completion."
+}
