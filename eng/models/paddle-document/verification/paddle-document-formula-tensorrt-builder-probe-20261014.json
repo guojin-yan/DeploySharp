@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-13T18:46:32.0134702+00:00",
+  "backend": "tensorrt-cuda",
+  "runtime": {
+    "api": "TensorRt10",
+    "architecture": "compute_86"
+  },
+  "batch": 2,
+  "models": [
+    {
+      "model": "paddle-formula/pp-formulanet-plus-s",
+      "file": "pp-formulanet-plus-s.onnx",
+      "status": "unsupported",
+      "onnxSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=BitwiseAnd.0 op=BitwiseAnd: false",
+      "inputShape": "[2,1,384,384]"
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-s",
+      "file": "pp-formulanet-s.onnx",
+      "status": "unsupported",
+      "onnxSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=BitwiseAnd.0 op=BitwiseAnd: false",
+      "inputShape": "[2,1,384,384]"
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-m",
+      "file": "pp-formulanet-plus-m.onnx",
+      "status": "unsupported",
+      "onnxSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=BitwiseAnd.0 op=BitwiseAnd: false",
+      "inputShape": "[2,1,384,384]"
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-l",
+      "file": "pp-formulanet-plus-l.onnx",
+      "status": "unsupported",
+      "onnxSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=BitwiseAnd.0 op=BitwiseAnd: false",
+      "inputShape": "[2,1,768,768]"
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-l",
+      "file": "pp-formulanet-l.onnx",
+      "status": "unsupported",
+      "onnxSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=BitwiseAnd.0 op=BitwiseAnd: false",
+      "inputShape": "[2,1,768,768]"
+    },
+    {
+      "model": "paddle-formula/unimernet",
+      "file": "unimernet.onnx",
+      "status": "unsupported",
+      "onnxSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "errorCode": "DS-TRT-5009",
+      "message": "ONNX parser diagnostic #0 code=8 file=onnxOpCheckers.cpp node=ConcatFromSequence.2 op=ConcatFromSequence: false",
+      "inputShape": "[2,1,672,192]"
+    }
+  ],
+  "boundary": "Exact FormulaNet/UniMERNet ONNX dynamic-Batch=2 TensorRT builder/importer evidence only. A built Engine is not inference, token generation, tokenizer, mathematical semantic quality, or cross-device support.",
+  "environmentBlocked": 0
+}

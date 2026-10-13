@@ -42,6 +42,7 @@
     "formulaPlusSTensorRt11Probe": "eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.json",
     "formulaTensorRt11BuilderProbe": "eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.json",
     "formulaUniMERNetTensorRt11Probe": "eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.json",
+    "formulaTensorRt10DynamicBatchBuilderProbe": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
     "formulaOpenCvBatch1": "eng/models/paddle-document/verification/paddle-document-formula-batch1-opencv-20261012.json",
     "tensorRtLayoutDynamicBatchTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
     "tensorRtTableCellDynamicBatchTrt10": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.json",
@@ -136,7 +137,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-bitwiseand-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     },
     {
@@ -147,7 +150,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-bitwiseand-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     },
     {
@@ -158,7 +163,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-bitwiseand-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     },
     {
@@ -169,7 +176,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-bitwiseand-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     },
     {
@@ -180,7 +189,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-bitwiseand-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     },
     {
@@ -191,7 +202,9 @@
       "openvinoCpu": "not-measured-in-this-dynamic-batch-run",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
       "errorCode": "DS-OCV-8002",
-      "tensorRtCuda": "unverified",
+      "tensorRtCuda": "unsupported",
+      "tensorRtEvidence": "trt10.11-builder-concatfromsequence-parser-blocked",
+      "tensorRtReport": "eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json",
       "report": "eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.json"
     }
   ],
