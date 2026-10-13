@@ -135,9 +135,11 @@ internal static partial class Program
 
     private static void WriteRunMetadata(string output, string modelRoot, string imagePath, IReadOnlyCollection<ModelCase> models, IReadOnlyCollection<string> backends, IReadOnlyCollection<string> versions, int warmup, int iterations, int stageConcurrency, int batchSize, int tensorRtBatchSize, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput)
     {
+        bool usesTensorRt = backends.Contains("tensorrt", StringComparer.OrdinalIgnoreCase);
+        bool usesCuda = usesTensorRt || backends.Contains("onnxruntime-cuda", StringComparer.OrdinalIgnoreCase);
         var metadata = new
         {
-            schemaVersion = 2,
+            schemaVersion = 3,
             protocolName = "deploysharp-paddleocr-full-5-50-v1",
             generatedUtc = DateTimeOffset.UtcNow,
             machine = Environment.MachineName,
@@ -160,14 +162,30 @@ internal static partial class Program
                     role = value.Role,
                     onnxPath = Path.GetFullPath(value.OnnxPath),
                     onnxSha256 = File.Exists(value.OnnxPath) ? Sha256(value.OnnxPath) : null,
-                    enginePath = value.EnginePath == null ? null : Path.GetFullPath(value.EnginePath),
-                    engineSha256 = value.EnginePath != null && File.Exists(value.EnginePath) ? Sha256(value.EnginePath) : null
+                    enginePath = usesTensorRt && value.EnginePath != null ? Path.GetFullPath(value.EnginePath) : null,
+                    engineSha256 = usesTensorRt && value.EnginePath != null && File.Exists(value.EnginePath) ? Sha256(value.EnginePath) : null
                 })
                 .ToArray(),
             backends = backends.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
             versions = versions.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray(),
-            protocol = new { warmup, iterations, stageConcurrency, batchSize, tensorRtBatchSize, tensorRtApiVersion = (int)tensorRtApiVersion, reusePreparedInput },
-            runtime = new { cudaRoot = Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT"), cudnnRoot = Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT"), tensorRtRoot = Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT"), bridge = Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH") }
+            protocol = new
+            {
+                warmup,
+                iterations,
+                stageConcurrency,
+                batchSize,
+                tensorRtBatchSize = usesTensorRt ? tensorRtBatchSize : (int?)null,
+                tensorRtApiVersion = usesTensorRt ? (int)tensorRtApiVersion : (int?)null,
+                reusePreparedInput
+            },
+            runtime = new
+            {
+                cudaRoot = usesCuda ? Environment.GetEnvironmentVariable("JYPPX_CUDA_ROOT") : null,
+                cudnnRoot = usesCuda ? Environment.GetEnvironmentVariable("JYPPX_CUDNN_ROOT") : null,
+                tensorRtRoot = usesTensorRt ? Environment.GetEnvironmentVariable("JYPPX_TENSORRT_ROOT") : null,
+                bridge = usesTensorRt ? Environment.GetEnvironmentVariable("JYPPX_NATIVE_BRIDGE_PATH") : null,
+                managedAssemblies = CaptureManagedRuntimeAssemblies()
+            }
         };
         string metadataPath = Path.GetFullPath(output + ".environment.json");
         File.WriteAllText(metadataPath, System.Text.Json.JsonSerializer.Serialize(metadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
@@ -177,6 +195,36 @@ internal static partial class Program
     {
         using FileStream stream = File.OpenRead(path);
         return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+    }
+
+    private static object[] CaptureManagedRuntimeAssemblies()
+    {
+        string[] relevantNames =
+        {
+            "Microsoft.ML.OnnxRuntime",
+            "OpenVINO.CSharp.API",
+            "JYPPX.OpenCV.CSharp.API",
+            "JYPPX.TensorRtSharp"
+        };
+
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => !assembly.IsDynamic && relevantNames.Contains(assembly.GetName().Name, StringComparer.OrdinalIgnoreCase))
+            .OrderBy(assembly => assembly.GetName().Name, StringComparer.OrdinalIgnoreCase)
+            .Select(assembly =>
+            {
+                string location = assembly.Location;
+                FileVersionInfo version = FileVersionInfo.GetVersionInfo(location);
+                return (object)new
+                {
+                    name = assembly.GetName().Name,
+                    assemblyVersion = assembly.GetName().Version?.ToString(),
+                    fileVersion = version.FileVersion,
+                    productVersion = version.ProductVersion,
+                    path = location,
+                    sha256 = Sha256(location)
+                };
+            })
+            .ToArray();
     }
 
     private static string DefaultModelRoot()

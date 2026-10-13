@@ -96,14 +96,33 @@ Sidecar **schema 8** adds `PixelQualityOptions`, whole-source `PixelQuality`, an
 
 这里采样的是原 DET 区域内的源像素，不是 resize/padding 后的 REC crop。规则采样可能漏掉小结构；噪声也会提高拉普拉斯方差，黑字白纸也会有大量极暗/极亮像素。当前不输出通用质量总分，不自动增强、拒绝或分类 JPEG/噪声；最短区域边不是字形高度。固定输入、模型、宽度、采样预算和后端后再比较。详见 [OCR quality diagnostics](../../docs/articles/visual-ocr.md#可选源像素质量诊断)。
 
+## ONNX Runtime build modes / ONNX Runtime 构建模式
+
+The default restore/build uses the repository ONNX Runtime line (currently 1.28.0) and is the correct mode for `onnxruntime-cpu` and OpenVINO measurements. CUDA 12 measurements are an explicit compatibility build on ORT 1.23.2. The two graphs use `packages.lock.json` and `packages.cuda12.lock.json` respectively, so restoring one mode cannot silently rewrite the other mode's lock.
+
+```powershell
+# Default CPU/OpenVINO build.
+dotnet build tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj `
+  -c Release --artifacts-path artifacts/build/paddleocr-default `
+  -p:DeploySharpPaddleOcrCuda12=false -p:RestoreLockedMode=true
+
+# CUDA 12 build. The separate artifacts root also isolates every referenced project.
+dotnet build tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj `
+  -c Release --artifacts-path artifacts/build/paddleocr-cuda12 `
+  -p:DeploySharpPaddleOcrCuda12=true -p:RestoreLockedMode=true
+```
+
+Use the benchmark DLL below the selected artifacts root; do not mix DLLs from the two roots. Schema 3 environment sidecars record the loaded ORT/OpenVINO/OpenCV managed assembly versions, paths and SHA-256 values, and include Engine metadata only when TensorRT was selected. A managed/native ORT version mismatch can fail before session creation and is a build-graph error, not evidence that a model or backend is unsupported.
+
 ## Character dictionary audit / 字符集覆盖检查
 
 Build once, then audit a dictionary without loading models, images, CUDA or other native runtimes:
 
 ```powershell
-dotnet restore tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -p:DeploySharpPaddleOcrCuda12=true --locked-mode
-dotnet build tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release --no-restore -p:DeploySharpPaddleOcrCuda12=true
-dotnet tools/DeploySharp.PaddleOcrBenchmark/bin/Release/net10.0/DeploySharp.PaddleOcrBenchmark.dll `
+dotnet build tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj `
+  -c Release --artifacts-path artifacts/build/paddleocr-default `
+  -p:DeploySharpPaddleOcrCuda12=false -p:RestoreLockedMode=true
+dotnet artifacts/build/paddleocr-default/bin/DeploySharp.PaddleOcrBenchmark/release/DeploySharp.PaddleOcrBenchmark.dll `
   --audit-characters E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt `
   tools/DeploySharp.PaddleOcrBenchmark/character-requirements.example.json artifacts/ocr-characters/v5.json
 ```
@@ -149,7 +168,8 @@ $env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = 'Clamp' # or Reject / SlidingWindow
 $env:DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH = '320'
 $env:DEPLOYSHARP_PADDLEOCR_WIDTH_REPORT_DIR = 'artifacts/ocr-widths'
 $env:DEPLOYSHARP_BENCHMARK_SOURCE_REVISION = '<actual-commit>+dirty'
-dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- E:\Model\paddleocr artifacts/ocr-widths/full.csv
+dotnet artifacts/build/paddleocr-cuda12/bin/DeploySharp.PaddleOcrBenchmark/release/DeploySharp.PaddleOcrBenchmark.dll `
+  E:\Model\paddleocr artifacts/ocr-widths/full.csv
 ```
 
 `Clamp` preserves existing resizing and reports compressed rows. `Reject` fails the complete OCR call at `CropAndBatch` with `DS-VISUAL-4103`, before REC crop allocation/inference; DET/CLS may already have run. `SlidingWindow` recognizes bounded overlapping crops and merges them back into each original detected line. These policies apply to recognition, not the fixed-width orientation classifier. Gap-based Split is not implemented.
@@ -234,7 +254,7 @@ When CUDA is selected, ONNX Runtime may report <code>VerifyEachNodeIsAssignedToA
 $env:DEPLOYSHARP_PADDLEOCR_ROOT = 'E:\\Model\\paddleocr'
 $env:DEPLOYSHARP_PADDLEOCR_WARMUP = '5'
 $env:DEPLOYSHARP_PADDLEOCR_ITERATIONS = '10'
-dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release
+dotnet artifacts/build/paddleocr-default/bin/DeploySharp.PaddleOcrBenchmark/release/DeploySharp.PaddleOcrBenchmark.dll
 ~~~
 
 Keep enough warm-up calls when comparing versions. The first supported pipeline in a new process also initializes JIT-compiled preprocessing code, OpenCV native paths, and worker threads; a one-warm-up, low-sample mean can therefore attribute process cold-start cost to that model. The direct DLL keeps three warm-ups and fifteen measured calls as a quick diagnostic default; the portable and device runners use the formal five-warm-up/fifty-call protocol.
@@ -344,7 +364,7 @@ $env:DEPLOYSHARP_PADDLEOCR_REUSE_INPUT = '1' # omit for cold/decode timing
 $env:DEPLOYSHARP_TENSORRT_RUN_EXTERNAL = '1'
 $env:DEPLOYSHARP_TENSORRT_API_VERSION = '11'
 $env:DEPLOYSHARP_CUDA_ARCHITECTURE = 'compute_75' # RTX 2060; choose the target for the actual GPU
-dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release
+dotnet artifacts/build/paddleocr-cuda12/bin/DeploySharp.PaddleOcrBenchmark/release/DeploySharp.PaddleOcrBenchmark.dll
 ~~~
 
 On the dedicated Windows 10 / RTX 2060 host, the current code and dynamic TensorRT 11 engines with BuilderOptimizationLevel 3 were measured sequentially with ten warm-ups, fifty timed calls, stage concurrency one, and batch eight. With the CPU CTC fallback, the steady totals were v4 mobile <code>67.158 ms</code>, v5 mobile <code>104.018 ms</code>, v6 tiny <code>45.816 ms</code>, v6 small <code>88.648 ms</code>, and v6 medium <code>135.365 ms</code>. Baseline: <code>artifacts/remote-test/paddleocr-all-trt-opt3-b8-singlepassctc-20260829.csv</code>.

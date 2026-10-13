@@ -108,6 +108,32 @@ foreach ($model in $modelRecords) {
     if ([string]$model.onnxSha256 -notmatch '^[0-9a-fA-F]{64}$') { $failures.Add("model $($model.version)/$($model.variant)/$($model.role) is missing onnxSha256") }
     if ($model.enginePath -and [string]$model.engineSha256 -notmatch '^[0-9a-fA-F]{64}$') { $failures.Add("model $($model.version)/$($model.variant)/$($model.role) has an invalid engineSha256") }
 }
+if ([int]$metadata.schemaVersion -ge 3) {
+    $selectedBackends = @($metadata.backends | ForEach-Object { ([string]$_).ToLowerInvariant() })
+    $assemblies = @($metadata.runtime.managedAssemblies)
+    foreach ($assembly in $assemblies) {
+        if ([string]::IsNullOrWhiteSpace([string]$assembly.name) -or [string]::IsNullOrWhiteSpace([string]$assembly.assemblyVersion) -or [string]::IsNullOrWhiteSpace([string]$assembly.path)) {
+            $failures.Add('schema 3 managed assembly evidence requires name, assemblyVersion and path')
+        }
+        if ([string]$assembly.sha256 -notmatch '^[0-9a-fA-F]{64}$') {
+            $failures.Add("managed assembly '$($assembly.name)' is missing a valid sha256")
+        }
+    }
+    if (($selectedBackends -contains 'onnxruntime' -or $selectedBackends -contains 'onnxruntime-cuda') -and -not ($assemblies.name -contains 'Microsoft.ML.OnnxRuntime')) {
+        $failures.Add('ONNX Runtime pass rows require Microsoft.ML.OnnxRuntime assembly evidence')
+    }
+    if ($selectedBackends -contains 'openvino' -and -not ($assemblies.name -contains 'OpenVINO.CSharp.API')) {
+        $failures.Add('OpenVINO pass rows require OpenVINO.CSharp.API assembly evidence')
+    }
+    if ($selectedBackends -notcontains 'tensorrt') {
+        if (@($modelRecords | Where-Object { $_.enginePath -or $_.engineSha256 }).Count -ne 0) {
+            $failures.Add('a non-TensorRT schema 3 report must not contain Engine evidence')
+        }
+        if ($null -ne $protocol.tensorRtBatchSize -or $null -ne $protocol.tensorRtApiVersion) {
+            $failures.Add('a non-TensorRT schema 3 report must not declare TensorRT protocol fields')
+        }
+    }
+}
 if ($failures.Count -gt 0) { Fail-Report ($failures -join '; ') }
 
 $result = [ordered]@{
