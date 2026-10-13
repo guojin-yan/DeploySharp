@@ -27,6 +27,17 @@
       "backend": "onnxruntime-cpu"
     },
     {
+      "project": "tests/DeploySharp.Backend.OnnxRuntime.Tests/DeploySharp.Backend.OnnxRuntime.Tests.csproj",
+      "framework": "net10.0",
+      "configuration": "Release --no-restore",
+      "filter": "FullyQualifiedName~ProviderAndInferenceTests",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "externalModels": false,
+      "backend": "onnxruntime-cpu"
+    },
+    {
       "project": "tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj",
       "framework": "net10.0",
       "configuration": "Release --no-restore",

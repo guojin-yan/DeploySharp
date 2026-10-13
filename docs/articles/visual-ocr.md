@@ -85,7 +85,7 @@ foreach (OcrRegionResult region in result.Regions)
 
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
-P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)维护。当前回归覆盖动态 REC Batch、独立单通道 Session 池、批次顺序恢复、排队/活动取消、异常后复用、预取输入释放和幂等关闭；Visual 合同 `95/95`、ORT CPU `5/5`、OpenVINO CPU `4/4`，另有 OpenVINO provider/session-pool `9/9` 通过。两 Session 的真实设备对照仍需按后端调优，不能从 ORT 的收益外推到 OpenVINO。该证据不等于长时间 soak、跨设备吞吐或 PP-Structure 全模型并发通过。
+P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)维护。当前回归覆盖动态 REC Batch、独立单通道 Session 池、批次顺序恢复、排队/活动取消、异常后复用、预取输入释放和幂等关闭；Visual 合同 `95/95`、ORT CPU OCR/lifecycle `5/5`、ORT provider/session-pool `12/12`、OpenVINO CPU OCR/lifecycle `4/4`，另有 OpenVINO provider/session-pool `9/9` 通过。两 Session 的真实设备对照仍需按后端调优，不能从 ORT 的收益外推到 OpenVINO。该证据不等于长时间 soak、跨设备吞吐或 PP-Structure 全模型并发通过。
 
 ### 连续帧异步预取
 

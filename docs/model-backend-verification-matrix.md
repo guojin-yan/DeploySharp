@@ -334,7 +334,7 @@ PP-OCRv5 mobile 的真实 OpenCV DNN 全流程已与 ORT 在同一准备张量�
 上述三图记录还配套了[检测器中间张量对照](../eng/models/paddle-ocr/verification/paddleocr-core-det-intermediate-parity-20260930.md)：7 个 DET 工件 × 3 张图共 21 组 ORT/OpenVINO 原始 DB 输出，输入和输出形状均 `0` 不一致，最大绝对差 `0.0067548752`，低于 `0.01` 合同阈值。该结果用于定位前处理、importer 或 DB 解码差异，不等同于检测召回率或模型精度。
 同一三图集合还完成了[OpenCV DNN/ORT 全流程对照](../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20260930.md)：7 组模型 × 3 张图 `21/21` 通过，逐区域文本、置信度和坐标均符合合同。测试修正了 v4 mobile 输出名、v4 legacy CLS `[1,3,48,192]` shape 以及 batch=1 的 OpenCV 限制；这不改变 ORT/OpenVINO 的动态 Batch 合同。OpenCV 单次端到端耗时仅作兼容性观察，不能与正式 5/50 或 GPU 性能直接比较。
 
-P3 的并发与资源生命周期也已集中登记在[合同报告](../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)：Visual OCR/VisualPipeline `95/95`、ORT CPU `5/5`、OpenVINO CPU `4/4`，另有 OpenVINO provider/session-pool `9/9` focused tests 通过，覆盖动态 REC Batch、独立 Session 池、排队顺序、取消、失败复用、预取输入释放和幂等关闭。该记录只收束有界 API/资源语义，不扩展为长时间 soak、跨设备吞吐、CER/WER 或 PP-Structure 全模型支持。
+P3 的并发与资源生命周期也已集中登记在[合同报告](../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)：Visual OCR/VisualPipeline `95/95`、ORT CPU OCR/lifecycle `5/5`、ORT provider/session-pool `12/12`、OpenVINO CPU `4/4`，另有 OpenVINO provider/session-pool `9/9` focused tests 通过，覆盖动态 REC Batch、独立 Session 池、排队顺序、取消、失败复用、预取输入释放和幂等关闭。该记录只收束有界 API/资源语义，不扩展为长时间 soak、跨设备吞吐、CER/WER 或 PP-Structure 全模型支持。
 
 新增的[v6 Medium HierText 质量记录](../eng/models/paddle-ocr/verification/hiertext-v6-medium-public-ocr-20261002.md)在同一 24 页标注选择上完成 ORT CPU SlidingWindow 全流程，24/24 页面无失败或空输出。IoU 0.5 检测 TP/FP/FN 为 `459/478/561`、F1 `46.91%`，匹配区域 CER/WER 为 `12.12%/32.58%`，端到端 CER/WER 为 `71.76%/98.42%`，总耗时 P50/P95 为 `1928.53/4687.44 ms`（单次测量）。该数据仍为 smoke-only，不是发布精度或正式 5/50 性能证据，且没有 3,200 字符以上自然连续行。
 

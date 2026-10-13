@@ -8,6 +8,7 @@ The current OCR scheduling contract is covered by focused Release/net10.0 tests:
 | --- | ---: |
 | Visual OCR and VisualPipeline contracts | `95 passed / 0 failed / 0 skipped` |
 | ONNX Runtime CPU OCR and lifecycle | `5 passed / 0 failed / 0 skipped` |
+| ONNX Runtime CPU provider/session-pool contracts | `12 passed / 0 failed / 0 skipped` |
 | OpenVINO CPU OCR and lifecycle | `4 passed / 0 failed / 0 skipped` |
 | OpenVINO provider/session-pool contracts | `9 passed / 0 failed / 0 skipped` |
 
