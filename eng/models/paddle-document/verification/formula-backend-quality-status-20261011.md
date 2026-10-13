@@ -1,4 +1,4 @@
-# 公式模型后端质量/执行状态索引（2026-10-13 更新）
+# 公式模型后端质量/执行状态索引（2026-10-14 更新）
 
 这是一份证据索引，不是新的全量推理报告。它把六个官方 Paddle 公式 ONNX 导出的当前状态集中列出，避免把 ORT 的单后端字符串诊断、OpenVINO/OpenCV 的阻断和其它 PP-Structure 模型的 TensorRT 结果混为“公式模型全部支持”。机器可读版本见 [JSON](formula-backend-quality-status-20261011.json)。
 
@@ -9,7 +9,7 @@
 | ONNX Runtime CPU | **已执行，但质量未通过发布门** | MathNet realFormula v1 的 121 条人工标注样本；六模型 exact、CER、EOS 和空输出见 [六模型汇总](formula-realformula-six-models-ort-20261007.md)。 |
 | OpenVINO CPU | **不支持** | 六个精确导出逐进程隔离；五个 FormulaNet 在 Loop-18 导入/规范输入处阻断，UniMERNet 在 model-reader 阶段中止。见 [隔离报告](formula-openvino-isolated-20261008.md)。 |
 | OpenCV DNN CPU | **batch=1 与动态 Batch 合同均不支持** | 六个精确导出已分别尝试 batch=1 与 batch=2；batch=1 的五个 FormulaNet 在 `ConstantOfShape` 零维度处阻断，UniMERNet 在 importer 分配阶段阻断。见 [batch=1 边界](paddle-document-formula-batch1-opencv-20261012.md) 和 [动态 Batch 边界](paddle-document-formula-dynamic-batch-opencv-20261007.md)。这只限定当前 OpenCV 5.0.0 与精确工件，不外推其它 OpenCV 版本。 |
-| TensorRT CUDA | **六图 Builder 均被当前 TRT11 importer 阻断；执行/质量/性能未验证** | 五个 FormulaNet 精确图在 TensorRT 11.0.0.114-cu12 的 Loop `BitwiseAnd` 检查失败；UniMERNet 在 If `ConcatFromSequence` 检查失败。无 Engine、Decoder 或性能结果。见 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立记录](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TRT10.11 另有 parser-startup `0xC0000005` 记录，派生图探针见[历史报告](formula-tensorrt-derived-graph-probe-20261011.md)。不能从其他 PP-Structure TensorRT 证据外推。 |
+| TensorRT CUDA | **当前 TRT10.11/TRT11 精确 Builder 均阻断；执行/质量/性能未验证** | TensorRT 11.0.0.114-cu12 的 Batch=1 探针中，五个 FormulaNet 在 Loop `BitwiseAnd` 检查失败，UniMERNet 在 If `ConcatFromSequence` 检查失败；TensorRT 10.11.0.33-cu12 / API 10 bridge 的动态 Batch=2 探针得到相同的两类精确 importer 边界。六个 Engine 均未创建，因此没有 Decoder、token parity、公式质量或性能结果。见 [TRT11 五图汇总](formula-tensorrt11-builder-probe-20261012.md)、[TRT11 UniMERNet 记录](formula-unimernet-tensorrt11-builder-probe-20261012.md)和 [TRT10.11 动态 Batch 探针](paddle-document-formula-tensorrt-builder-probe-20261014.md)。Plus-S 的 TRT10.11 parser-startup `0xC0000005` 与上述动态 Batch importer 结果是独立历史诊断；不能从其他 PP-Structure TensorRT 证据外推。 |
 
 ## ORT CPU 121 条样本诊断
 
@@ -34,7 +34,7 @@
 
 本次同步后的[本地文档链接审计](document-link-audit-20261013-formula-render.json)覆盖受维护的 PP-OCR/PP-Structure 入口文档；它只检查仓库内 Markdown 目标，不验证外部 URL、模型执行或质量结论。
 
-TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针。五个 FormulaNet 均在 Loop 内 `BitwiseAnd` importer 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；精确 SHA、profile 和错误边界分别记录在 [FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)和 [UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)。Plus-S 在 TensorRT 10.11 的 parser-startup `0xC0000005` 是另一条 runtime 证据，不外推给其余模型。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
+TensorRT 11 已对六个官方公式 ONNX 分别执行固定 batch=1 Builder 探针；TensorRT 10.11 又以动态 batch=2 profile 对同六图完成独立 DeploySharp Builder 探针。两条 runtime 线都没有创建 Engine：五个 FormulaNet 的精确阻断原因是 `BitwiseAnd`，UniMERNet 是 `ConcatFromSequence`。精确 SHA、profile 和错误边界分别记录在 [TRT11 FormulaNet 五图汇总](formula-tensorrt11-builder-probe-20261012.md)、[TRT11 UniMERNet 独立探针](formula-unimernet-tensorrt11-builder-probe-20261012.md)和 [TRT10.11 动态 Batch 探针](paddle-document-formula-tensorrt-builder-probe-20261014.md)。六模型的[静态兼容性审计](formula-tensorrt-static-compatibility-20261011.md)仍是图结构风险盘点，不是支持判定；任何新导出/plugin 均需从 Engine、token parity、真实质量和性能重新准入。
 
 ## 已知 FormulaNet-L 边界
 
