@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "reportDate": "2026-10-14",
+  "sourceRevision": "f23d19f",
+  "sourceRevisionSha256": "f23d19fbdf7220e1084d8f03c3756c97da4d0c90",
+  "scope": "clean-checkout-focused-regression-after-openCV-and-catalog-fixes",
+  "applicationsExcluded": true,
+  "environment": {
+    "os": "Windows NT 10.0.26200.0",
+    "architecture": "win-x64",
+    "dotnetSdk": "10.0.401",
+    "configuration": "Release",
+    "framework": "net10.0"
+  },
+  "restore": {
+    "command": "dotnet restore DeploySharp.sln --nologo --verbosity minimal",
+    "exitCode": 0,
+    "logSha256": "372192889f22105415ff407a2a398d5a6eb4976b45d6e1e4f3656a9fe9f892cb"
+  },
+  "tests": [
+    {
+      "project": "tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj",
+      "command": "dotnet test tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj -c Release --no-restore --framework net10.0 --filter TestCategory!=ExternalModels --nologo --verbosity minimal",
+      "exitCode": 0,
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0,
+      "total": 32,
+      "logSha256": "3da220b34f68a14000339d4ccc376d9151acd30bfea511206394911e547824ba"
+    },
+    {
+      "project": "tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj",
+      "command": "dotnet test tests/DeploySharp.ModelFactory.Tests/DeploySharp.ModelFactory.Tests.csproj -c Release --no-restore --framework net10.0 --filter TestCategory!=ExternalModels --nologo --verbosity minimal",
+      "exitCode": 0,
+      "passed": 63,
+      "failed": 0,
+      "skipped": 2,
+      "total": 65,
+      "logSha256": "f0c87dbbb521a22246273fca8854c8a5789fe953d94bc73157ceaf167a9c8b28",
+      "skipBoundary": "Explicit release metadata and public Qwen download gates remain skipped without their external opt-in."
+    }
+  ],
+  "aggregate": {
+    "projects": 2,
+    "passed": 95,
+    "failed": 0,
+    "skipped": 2,
+    "total": 97,
+    "result": "passed"
+  },
+  "documentationAudit": {
+    "report": "eng/models/paddle-document/verification/document-link-audit-20261014-focused-tests.json",
+    "localMarkdownLinksChecked": 680,
+    "brokenLocalMarkdownLinks": 0
+  },
+  "interpretation": {
+    "closed": [
+      "The previously failing OpenCV DNN compatibility contracts pass from the committed clean checkout.",
+      "The updated official-source PaddleOCR catalog/admission contracts pass from the committed clean checkout."
+    ],
+    "notClosed": [
+      "This is a focused two-project regression, not a full solution test run.",
+      "External-model, native-runtime, accuracy, performance, soak, and cross-device gates remain separate."
+    ]
+  }
+}
