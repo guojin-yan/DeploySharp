@@ -154,7 +154,8 @@ foreach ($record in $selected) {
     if ([int]$protocol.iterations -ne $Iterations) { $protocolMismatches += "iterations expected $Iterations, found $($protocol.iterations)" }
     if ([int]$protocol.stageConcurrency -ne $InferenceChannels) { $protocolMismatches += "stageConcurrency expected $InferenceChannels, found $($protocol.stageConcurrency)" }
     if ([int]$protocol.batchSize -ne $BatchSize) { $protocolMismatches += "batchSize expected $BatchSize, found $($protocol.batchSize)" }
-    if ([int]$protocol.tensorRtBatchSize -ne 1) { $protocolMismatches += "tensorRtBatchSize expected 1, found $($protocol.tensorRtBatchSize)" }
+    if ($Backend -eq 'tensorrt' -and [int]$protocol.tensorRtBatchSize -ne 1) { $protocolMismatches += "tensorRtBatchSize expected 1, found $($protocol.tensorRtBatchSize)" }
+    if ($Backend -ne 'tensorrt' -and $null -ne $protocol.tensorRtBatchSize) { $protocolMismatches += "tensorRtBatchSize expected null for $Backend, found $($protocol.tensorRtBatchSize)" }
     if ($FixedRecognitionWidth -gt 0 -and [int]$protocol.fixedRecognitionWidth -ne $FixedRecognitionWidth) { $protocolMismatches += "fixedRecognitionWidth expected $FixedRecognitionWidth, found $($protocol.fixedRecognitionWidth)" }
     if ($FixedRecognitionWidth -eq 0 -and $null -ne $protocol.fixedRecognitionWidth) { $protocolMismatches += "fixedRecognitionWidth expected null, found $($protocol.fixedRecognitionWidth)" }
     if ([bool]$protocol.reusePreparedInput) { $protocolMismatches += 'reusePreparedInput expected false, found true' }
