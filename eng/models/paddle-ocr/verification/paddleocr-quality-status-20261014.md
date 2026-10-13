@@ -46,4 +46,4 @@
 
 机器可读索引见 [`paddleocr-quality-status-20261014.json`](paddleocr-quality-status-20261014.json)。新增证据必须同时登记数据集/选择、模型与字典 SHA、后端/runtime、协议、结果和不能推出的边界；没有这些字段时只能标记为未完成，不能升级为支持结论。
 
-本轮维护范围的 Markdown 链接审计为 [719 条、断链 0](../../paddle-document/verification/document-link-audit-20261014-quality-status.json)；外部 URL、数据集路径和运行时下载地址不在该审计范围内。
+本轮维护范围的 Markdown 链接审计为 [721 条、断链 0](../../paddle-document/verification/document-link-audit-20261014-quality-status.json)；外部 URL、数据集路径和运行时下载地址不在该审计范围内。
