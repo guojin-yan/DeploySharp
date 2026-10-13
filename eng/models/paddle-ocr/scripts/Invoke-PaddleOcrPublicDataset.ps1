@@ -19,6 +19,7 @@ param(
     [int]$BatchSize = 16,
     [int]$InferenceChannels = 1,
     [int]$MaximumRegions = 1024,
+    [int]$FixedRecognitionWidth = 0,
     [ValidateSet('Clamp', 'Reject', 'SlidingWindow')]
     [string]$OverflowMode = 'Clamp',
     [double]$WindowOverlap = 0.2,
@@ -63,8 +64,8 @@ $null = New-Item -ItemType Directory -Path $csvRoot
 $records = Get-Content -LiteralPath $manifest | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_ | ConvertFrom-Json }
 if ($records.Count -eq 0) { throw "Manifest contains no records: $manifest" }
 if ($StartIndex -lt 0 -or $StartIndex -ge $records.Count) { throw "StartIndex must be within 0..$($records.Count - 1)." }
-if ($Warmup -lt 0 -or $Iterations -lt 1 -or $BatchSize -lt 1 -or $InferenceChannels -lt 1 -or $MaximumRegions -lt 1 -or $MaximumWindowsPerRegion -lt 2 -or $PipelineTimeoutMs -lt 1) {
-    throw 'Warmup must be non-negative; iterations, batch, inference channels, maximum regions, maximum windows, and timeout must be positive.'
+if ($Warmup -lt 0 -or $Iterations -lt 1 -or $BatchSize -lt 1 -or $InferenceChannels -lt 1 -or $MaximumRegions -lt 1 -or $FixedRecognitionWidth -lt 0 -or $MaximumWindowsPerRegion -lt 2 -or $PipelineTimeoutMs -lt 1) {
+    throw 'Warmup and fixed recognition width must be non-negative; iterations, batch, inference channels, maximum regions, maximum windows, and timeout must be positive.'
 }
 if ($WindowOverlap -le 0 -or $WindowOverlap -gt 0.5) { throw 'WindowOverlap must be greater than zero and no greater than 0.5.' }
 $selected = @($records | Select-Object -Skip $StartIndex)
@@ -89,6 +90,14 @@ $env:DEPLOYSHARP_PADDLEOCR_STAGE_CONCURRENCY = [string]$InferenceChannels
 $env:DEPLOYSHARP_PADDLEOCR_BATCH_SIZE = [string]$BatchSize
 $env:DEPLOYSHARP_PADDLEOCR_TENSORRT_BATCH_SIZE = '1'
 $env:DEPLOYSHARP_PADDLEOCR_MAX_REGIONS = [string]$MaximumRegions
+if ($FixedRecognitionWidth -gt 0) {
+    $env:DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH = [string]$FixedRecognitionWidth
+} else {
+    Remove-Item Env:DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH -ErrorAction SilentlyContinue
+}
+# The public runner owns one backend-neutral width contract. Never inherit the
+# diagnostic OpenCV-only override from an interactive shell.
+Remove-Item Env:DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH -ErrorAction SilentlyContinue
 $env:DEPLOYSHARP_PADDLEOCR_OVERFLOW_MODE = $OverflowMode
 $env:DEPLOYSHARP_PADDLEOCR_WINDOW_OVERLAP = [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:R}', $WindowOverlap)
 $env:DEPLOYSHARP_PADDLEOCR_WINDOWS_PER_REGION = [string]$MaximumWindowsPerRegion
@@ -146,6 +155,8 @@ foreach ($record in $selected) {
     if ([int]$protocol.stageConcurrency -ne $InferenceChannels) { $protocolMismatches += "stageConcurrency expected $InferenceChannels, found $($protocol.stageConcurrency)" }
     if ([int]$protocol.batchSize -ne $BatchSize) { $protocolMismatches += "batchSize expected $BatchSize, found $($protocol.batchSize)" }
     if ([int]$protocol.tensorRtBatchSize -ne 1) { $protocolMismatches += "tensorRtBatchSize expected 1, found $($protocol.tensorRtBatchSize)" }
+    if ($FixedRecognitionWidth -gt 0 -and [int]$protocol.fixedRecognitionWidth -ne $FixedRecognitionWidth) { $protocolMismatches += "fixedRecognitionWidth expected $FixedRecognitionWidth, found $($protocol.fixedRecognitionWidth)" }
+    if ($FixedRecognitionWidth -eq 0 -and $null -ne $protocol.fixedRecognitionWidth) { $protocolMismatches += "fixedRecognitionWidth expected null, found $($protocol.fixedRecognitionWidth)" }
     if ([bool]$protocol.reusePreparedInput) { $protocolMismatches += 'reusePreparedInput expected false, found true' }
     if ($protocolMismatches.Count -gt 0) {
         throw "Benchmark protocol metadata mismatch for $($record.image_id): $($protocolMismatches -join '; '). See $environmentPath"
@@ -181,6 +192,7 @@ $runMetadata = [ordered]@{
     batchSize = $BatchSize
     inferenceChannels = $InferenceChannels
     maximumRegions = $MaximumRegions
+    fixedRecognitionWidth = if ($FixedRecognitionWidth -gt 0) { $FixedRecognitionWidth } else { $null }
     overflowMode = $OverflowMode
     windowOverlap = $WindowOverlap
     maximumWindowsPerRegion = $MaximumWindowsPerRegion
