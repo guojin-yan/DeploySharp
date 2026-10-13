@@ -18,7 +18,8 @@ $documents = @(
     'eng/models/paddle-document/verification/formula-formulanet-l-generation-limit-20261007.md',
     'docs/model-backend-verification-matrix.md',
     'eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md',
-    'eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.md'
+    'eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.md',
+    'eng/models/paddle-ocr/verification/paddleocr-core-detectors-tensorrt-dynamic-batch-decoder-20261013.md'
 )
 $records = [System.Collections.Generic.List[object]]::new()
 foreach ($relativeDocument in $documents) {

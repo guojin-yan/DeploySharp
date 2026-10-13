@@ -86,6 +86,43 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void PaddleDbDecoderSupportsDynamicBatchWithPerRowGeometry()
+        {
+            PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(
+                new ModelId("tests/paddle-det-batch"), PaddleArtifact(11),
+                postprocess: new PaddleDbPostprocessOptions(.3f, .6f, 1.5f, minimumSide: 2, maximumCandidates: 8, maximumRegions: 8),
+                maximumBatch: 2);
+            VisualModelProfile profile = family.VisualProfile;
+            Assert.AreEqual(new TensorShape(-1, 3, -1, -1), profile.Input.ShapePattern);
+            Assert.AreEqual(new TensorShape(-1, 1, -1, -1), profile.Outputs[0].ShapePattern);
+            var firstSource = new VisualSize(24, 12);
+            var secondSource = new VisualSize(12, 24);
+            var model = new VisualSize(12, 12);
+            var firstTransform = ImageTransform.Resize(firstSource, model);
+            var secondTransform = ImageTransform.Resize(secondSource, model);
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(2, 3, 12, 12), new float[2 * 3 * 12 * 12]), firstSource, model, 2, VisualTensorLayout.Nchw, firstTransform,
+                batchFrames: new[]
+                {
+                    new VisualInputFrame(firstSource, model, firstTransform, "row-a"),
+                    new VisualInputFrame(secondSource, model, secondTransform, "row-b")
+                });
+            var map = new float[2 * 12 * 12];
+            for (int y = 2; y <= 5; y++) for (int x = 2; x <= 6; x++) map[(y * 12) + x] = .9f;
+            for (int y = 5; y <= 9; y++) for (int x = 6; x <= 10; x++) map[(12 * 12) + (y * 12) + x] = .95f;
+            object decoded = profile.Decoder.Decode(new VisualDecodeContext(input, profile,
+                InferenceOutputs.Create("fetch_name_0", new Tensor<float>(new TensorShape(2, 1, 12, 12), map, TensorBufferOwnership.Borrow)), CancellationToken.None));
+            var batch = (TextDetectionBatchResult)decoded;
+            Assert.AreEqual(2, batch.Count);
+            Assert.AreEqual("row-a", input.BatchFrames[0].InputId);
+            Assert.AreEqual("row-b", input.BatchFrames[1].InputId);
+            Assert.AreEqual(1, batch[0].Regions.Count);
+            Assert.AreEqual(1, batch[1].Regions.Count);
+            Assert.AreEqual(firstSource.Width, batch[0].SourceSize.Width);
+            Assert.AreEqual(secondSource.Height, batch[1].SourceSize.Height);
+            Assert.IsTrue(batch[0].Regions[0].AxisAlignedBounds.Width > batch[1].Regions[0].AxisAlignedBounds.Width);
+        }
+
+        [TestMethod]
         public void PaddleDbDecoderPreservesRotatedComponentGeometry()
         {
             PaddleOcrProfile family = PaddleOcrProfiles.CreateDetection(new ModelId("tests/paddle-det"), PaddleArtifact(11),

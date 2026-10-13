@@ -24,6 +24,7 @@ namespace JYPPX.DeploySharp.Visual
                 SemanticSegmentationBatchResult value => value[batchIndex],
                 AnomalyDetectionBatchResult value => value[batchIndex],
                 BackgroundRemovalBatchResult value => value[batchIndex],
+                TextDetectionBatchResult value => value[batchIndex],
                 TextRecognitionBatchResult value => value.Items[batchIndex],
                 OcrOrientationBatchResult value => value.Items[batchIndex],
                 _ => throw new VisualException(VisualErrorCodes.DecodeFailed, "The decoded value does not expose a built-in batch row selector.", technicalDetails: "type=" + batchResult.Value.GetType().FullName)

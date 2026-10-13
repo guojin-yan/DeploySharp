@@ -65,7 +65,9 @@ foreach (OcrRegionResult region in result.Regions)
 
 ## 模型和后端配置
 
-检测模型通常使用 batch=1；识别模型可声明动态宽度和动态 batch。`OcrPipelineOptions.MaximumRecognitionBatch` 限制一次提交的文本行数量；同一配置里的 `MaximumConcurrency` 限制并发的完整 OCR 调用，**不等于 REC Session 数量**。通过构造 `OcrPipeline` 时的 `recognitionSessionOptions: new SessionOptions(2)` 配置两个独立识别通道，再由 Pipeline 将有界批任务分派给空闲通道。
+检测模型通常按单图 `batch=1` 编排，但 Paddle DB 检测 Profile 现在也可以通过 `maximumBatch > 1` 声明真正的动态 `[batch,1,H,W]` 概率图；Decoder 会按 `PreparedVisualInput.BatchFrames` 逐行恢复源坐标。是否能在目标后端实际执行仍取决于 ONNX 导出图和后端 importer。识别模型可声明动态宽度和动态 batch。`OcrPipelineOptions.MaximumRecognitionBatch` 限制一次提交的文本行数量；同一配置里的 `MaximumConcurrency` 限制并发的完整 OCR 调用，**不等于 REC Session 数量**。通过构造 `OcrPipeline` 时的 `recognitionSessionOptions: new SessionOptions(2)` 配置两个独立识别通道，再由 Pipeline 将有界批任务分派给空闲通道。
+
+2026-10-13 已在 TensorRT 11/RTX 3060 Laptop 上将动态 Batch→DB Decoder 合同扩展到 PP-OCRv4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 共 7 个 DET 工件：每个模型由 DeploySharp Builder 创建 `min=1,opt=max=2` Engine，ORT CPU 与 TensorRT CUDA 均运行两个不同 ROI，并由同一 DB Decoder 恢复两行源坐标。七个精确工件均通过最大/平均概率差 `≤0.10/≤0.001` 的图级合同；所有已解码区域均一对一匹配且 polygon IoU ≥ `0.90`，本次最低匹配 IoU 为 `0.99676`。v5 Server 最大 raw 差 `0.0516`、均值差 `1.91e-5`。此证据不代表检测召回、CER/WER、完整 OCR 流水线、正式吞吐或其他设备/版本 TensorRT 支持，详见[七模型验证报告](../../eng/models/paddle-ocr/verification/paddleocr-core-detectors-tensorrt-dynamic-batch-decoder-20261013.md)。
 
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
@@ -851,7 +853,7 @@ PP-OCRv5 Server 也在同一十页选择上完成 ORT/OpenVINO 对照：两后�
 - 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
 - PP-OCRv5 Mobile 与 v6 Small 的真实 REC batch=4 ORT/OpenVINO parity 已在[动态 Batch 记录](../../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md)中覆盖；这仍是 crop/decoder 合同，不是页面级准确率或 GPU 性能结果。
 - 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。
-- 多张独立图片可用 <code>RunManyAsync</code>；它是独立 Session 并发，不会把 batch=1 模型变成真正 batch。
+- 多张独立图片可用 <code>RunManyAsync</code>；它是独立 Session 并发。只有在 Profile、导出图和后端都声明支持时，才会形成真正的 detector batch；否则应继续使用独立 Session/页面并发。
 - GPU 后端应尽量复用输入缓冲区和 CUDA stream；TensorRT OCR 的设备侧前后处理边界见[TensorRT CUDA OCR](tensorrt-cuda-ocr.md)。
 
 详细测速方法和批量调度方式见[推理性能测试](performance-benchmarking.md)，不同设备的实际结果见[设备性能实测](device-performance-benchmarks.md)。

@@ -181,6 +181,29 @@ namespace JYPPX.DeploySharp.Visual
         private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new ArgumentException("A value is required.", name) : value;
     }
 
+    /// <summary>Contains one text-detection result for each input batch row. / 包含每个输入 Batch 行对应的文本检测结果。</summary>
+    public sealed class TextDetectionBatchResult
+    {
+        private readonly IReadOnlyList<TextDetectionResult> _items;
+
+        /// <summary>Initializes a text-detection batch result. / 初始化文本检测 Batch 结果。</summary>
+        public TextDetectionBatchResult(IEnumerable<TextDetectionResult> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var copy = new List<TextDetectionResult>();
+            foreach (TextDetectionResult item in items) copy.Add(item ?? throw new ArgumentException("Batch items cannot contain null.", nameof(items)));
+            if (copy.Count == 0) throw new ArgumentException("A text-detection batch must contain at least one item.", nameof(items));
+            _items = copy.AsReadOnly();
+        }
+
+        /// <summary>Gets the number of decoded batch rows. / 获取已解码 Batch 行数。</summary>
+        public int Count => _items.Count;
+        /// <summary>Gets one row by batch index. / 按 Batch 索引获取一行结果。</summary>
+        public TextDetectionResult this[int index] => _items[index];
+        /// <summary>Gets all decoded rows. / 获取全部已解码行。</summary>
+        public IReadOnlyList<TextDetectionResult> Items => _items;
+    }
+
     /// <summary>Represents one immutable OCR token set; tokens may contain one or more Unicode scalars. / 表示一个不可变 OCR token 字符表；token 可包含一个或多个 Unicode scalar。</summary>
     public sealed class OcrCharacterSet
     {

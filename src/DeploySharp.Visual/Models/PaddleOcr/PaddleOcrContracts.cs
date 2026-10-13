@@ -123,11 +123,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             context.CancellationToken.ThrowIfCancellationRequested();
-            if (context.Input.BatchSize != 1) throw Failure(context, "PaddleOCR detection requires batch size one.");
+            if (context.Input.BatchSize <= 0 || context.Input.BatchFrames.Count != context.Input.BatchSize) throw Failure(context, "The prepared detection input must expose one frame descriptor per batch row.");
             ITensor tensor;
             try { tensor = context.Outputs.GetRequired(OutputName); }
             catch (KeyNotFoundException exception) { throw Failure(context, "The DB probability-map output is missing.", exception); }
             if (tensor.ElementType != TensorElementType.Float32 && tensor.ElementType != TensorElementType.Float64) throw Failure(context, "DB probability maps require Float32 or Float64.");
+            if (context.Input.BatchSize > 1) return DecodeBatch(context, tensor);
             TensorShape shape = tensor.Shape;
             if (shape.Rank != 4 || shape[0] != 1 || shape[1] != 1 || shape[2] <= 0 || shape[3] <= 0 || shape[2] > int.MaxValue || shape[3] > int.MaxValue) throw Failure(context, "DB probability maps must have shape [1,1,H,W].", technicalDetails: shape.ToString());
             int height = checked((int)shape[2]);
@@ -232,6 +233,119 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             return new TextDetectionResult(regions, context.Input.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
         }
 
+        private object DecodeBatch(VisualDecodeContext context, ITensor tensor)
+        {
+            TensorShape shape = tensor.Shape;
+            int batch = context.Input.BatchSize;
+            if (shape.Rank != 4 || shape[0] != batch || shape[1] != 1 || shape[2] <= 0 || shape[3] <= 0 || shape[2] > int.MaxValue || shape[3] > int.MaxValue)
+                throw Failure(context, "DB probability maps must have shape [batch,1,H,W].", technicalDetails: shape.ToString());
+            int height = checked((int)shape[2]);
+            int width = checked((int)shape[3]);
+            if (height > MaximumSide || width > MaximumSide) throw Failure(context, "DB probability-map dimensions exceed their configured side bound.", technicalDetails: shape.ToString());
+            long rowPixels = checked((long)width * height);
+            if (rowPixels > Options.MaximumMapPixels || rowPixels > int.MaxValue || checked(rowPixels * 17L) > Options.MaximumWorkspaceBytes)
+                throw Failure(context, "DB probability-map pixels exceed their configured bound.", technicalDetails: shape.ToString());
+            long expected = checked(rowPixels * batch);
+            if (expected != tensor.Length) throw Failure(context, "DB probability-map tensor length does not match its batch shape.", technicalDetails: shape.ToString());
+
+            float[] probabilities = VisualTensorReader.ReadScoresForFusedValidation(tensor, context.Profile.ProfileId, OutputName);
+            var results = new List<TextDetectionResult>(batch);
+            for (int row = 0; row < batch; row++)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                results.Add(DecodeFloatBatchRow(context, probabilities, checked(row * (int)rowPixels), row, width, height));
+            }
+            return new TextDetectionBatchResult(results);
+        }
+
+        private TextDetectionResult DecodeFloatBatchRow(VisualDecodeContext context, float[] probabilities, int offset, int row, int width, int height)
+        {
+            long pixels = checked((long)width * height);
+            byte[] visited = RentByteScratch((int)pixels);
+            int[] queue = RentIntScratch((int)pixels);
+            var candidates = new List<Candidate>();
+            try
+            {
+                for (int index = 0; index < pixels; index++)
+                {
+                    float value = probabilities[offset + index];
+                    if (float.IsNaN(value) || float.IsInfinity(value) || value < -ProbabilityTolerance || value > 1f + ProbabilityTolerance) throw Failure(context, "DB probability values must remain finite and in [0,1].", technicalDetails: "row=" + row + ";index=" + index + ";value=" + value);
+                    visited[index] = ClampProbability(value) <= Options.ProbabilityThreshold ? (byte)1 : (byte)0;
+                }
+
+                int pixelCount = checked((int)pixels);
+                int lastRowStart = pixelCount - width;
+                for (int start = 0; start < pixels; start++)
+                {
+                    if ((start & 4095) == 0) context.CancellationToken.ThrowIfCancellationRequested();
+                    if (visited[start] != 0) continue;
+                    if (candidates.Count >= Options.MaximumCandidates) throw Failure(context, "DB connected candidates exceed their configured bound.");
+                    int head = 0;
+                    int tail = 0;
+                    double maskScore = 0d;
+                    visited[start] = 1;
+                    queue[tail++] = start;
+                    while (head < tail)
+                    {
+                        int current = queue[head++];
+                        int x = current % width;
+                        maskScore += ClampProbability(probabilities[offset + current]);
+                        if (x != 0) Visit(current - 1, visited, queue, ref tail);
+                        if (x != width - 1) Visit(current + 1, visited, queue, ref tail);
+                        if (current >= width) Visit(current - width, visited, queue, ref tail);
+                        if (current < lastRowStart) Visit(current + width, visited, queue, ref tail);
+                    }
+                    PointF[] hull = ConvexHull(queue, tail, width, height);
+                    PointF[] box = Options.BoxType == PaddleDbBoxType.Polygon ? hull : MinimumAreaRectangle(hull);
+                    if (ShortSide(box) < Options.MinimumSide) continue;
+                    float score = Options.ScoreMode == PaddleDbScoreMode.Slow
+                        ? checked((float)(maskScore / tail))
+                        : PolygonMean(probabilities, offset, width, box);
+                    if (score < Options.BoxThreshold) continue;
+                    candidates.Add(new Candidate(box, score));
+                }
+            }
+            finally
+            {
+                ReturnByteScratch(visited);
+                ReturnIntScratch(queue);
+            }
+
+            candidates.Sort(CandidateComparer.Instance);
+            VisualInputFrame frame = context.Input.BatchFrames[row];
+            var regions = new List<TextRegion>(Math.Min(candidates.Count, Options.MaximumRegions));
+            for (int index = 0; index < candidates.Count && regions.Count < Options.MaximumRegions; index++)
+            {
+                Candidate candidate = Expand(candidates[index], width, height, Options.UnclipRatio);
+                if (ShortSide(candidate.Box) < 5f) continue;
+                PointF[] restored = new PointF[candidate.Box.Length];
+                for (int point = 0; point < restored.Length; point++) restored[point] = Restore(candidate.Box[point], width, height, frame);
+                TextPolygon polygon;
+                TextQuadrilateral? quadrilateral;
+                if (Options.BoxType == PaddleDbBoxType.Polygon)
+                {
+                    double signedArea = SignedArea(restored);
+                    if (Math.Abs(signedArea) <= 0.000001f) continue;
+                    polygon = TextPolygon.Canonicalize(restored, signedArea > 0 ? OrientedVertexOrder.CounterClockwise : OrientedVertexOrder.Clockwise);
+                    quadrilateral = null;
+                }
+                else
+                {
+                    if (restored.Length != 4) continue;
+                    quadrilateral = new TextQuadrilateral(restored[0], restored[1], restored[2], restored[3], TextCornerOrder.TopLeftClockwise);
+                    polygon = quadrilateral.Polygon;
+                }
+                regions.Add(new TextRegion(index, candidate.Score, polygon, quadrilateral, metadata: new[]
+                {
+                    new KeyValuePair<string, string>("paddle.db.scoreMode", Options.ScoreMode.ToString()),
+                    new KeyValuePair<string, string>("paddle.db.boxType", Options.BoxType.ToString()),
+                    new KeyValuePair<string, string>("paddle.db.geometry", "contour-convex-hull-min-area-rectangle"),
+                    new KeyValuePair<string, string>("paddle.db.unclipRatio", Options.UnclipRatio.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                }));
+            }
+            return new TextDetectionResult(regions, frame.SourceSize, context.Profile.ProfileId, context.Profile.ModelId);
+        }
+
         private static void Visit(int index, byte[] visited, int[] queue, ref int tail)
         {
             if (visited[index] != 0) return;
@@ -240,6 +354,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         }
 
         private static float PolygonMean(float[] values, int width, PointF[] polygon)
+            => PolygonMean(values, 0, width, polygon);
+
+        private static float PolygonMean(float[] values, int offset, int width, PointF[] polygon)
         {
             float minX = polygon[0].X;
             float maxX = minX;
@@ -264,7 +381,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 int rowOffset = y * width;
                 for (int x = rowLeft; x <= rowRight; x++)
                 {
-                    sum += ClampProbability(values[rowOffset + x]);
+                    sum += ClampProbability(values[offset + rowOffset + x]);
                     count++;
                 }
             }
@@ -354,11 +471,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         }
 
         private static PointF Restore(PointF point, int mapWidth, int mapHeight, VisualDecodeContext context)
+            => Restore(point, mapWidth, mapHeight, context.Input.BatchFrames[0]);
+
+        private static PointF Restore(PointF point, int mapWidth, int mapHeight, VisualInputFrame frame)
         {
-            float modelX = point.X * context.Input.ModelSize.Width / mapWidth;
-            float modelY = point.Y * context.Input.ModelSize.Height / mapHeight;
-            PointF source = context.Input.Transform.ToSource(new PointF(modelX, modelY));
-            return new PointF(Math.Max(0f, Math.Min(context.Input.SourceSize.Width, source.X)), Math.Max(0f, Math.Min(context.Input.SourceSize.Height, source.Y)));
+            float modelX = point.X * frame.ModelSize.Width / mapWidth;
+            float modelY = point.Y * frame.ModelSize.Height / mapHeight;
+            PointF source = frame.Transform.ToSource(new PointF(modelX, modelY));
+            return new PointF(Math.Max(0f, Math.Min(frame.SourceSize.Width, source.X)), Math.Max(0f, Math.Min(frame.SourceSize.Height, source.Y)));
         }
 
         private static PointF[] ConvexHull(int[] indices, int count, int width, int height)
@@ -683,16 +803,19 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
     public static class PaddleOcrProfiles
     {
         /// <summary>Creates a DB/DB++ probability-map detection profile. / 创建 DB/DB++ 概率图检测 Profile。</summary>
-        public static PaddleOcrProfile CreateDetection(ModelId modelId, PaddleOcrArtifactContract artifact, string inputName = "x", string outputName = "fetch_name_0", PaddleDbPostprocessOptions? postprocess = null, int maximumSide = 4000)
+        /// <remarks>Set <paramref name="maximumBatch"/> above one only when the selected ONNX export and backend accept a dynamic image batch. The decoder returns <see cref="TextDetectionBatchResult"/> and restores each row through its own frame descriptor. / 只有在所选 ONNX 导出图和后端接受动态图像 Batch 时，才将 <paramref name="maximumBatch"/> 设为大于一；Decoder 返回 <see cref="TextDetectionBatchResult"/> 并使用每行独立 frame 恢复坐标。</remarks>
+        public static PaddleOcrProfile CreateDetection(ModelId modelId, PaddleOcrArtifactContract artifact, string inputName = "x", string outputName = "fetch_name_0", PaddleDbPostprocessOptions? postprocess = null, int maximumSide = 4000, int maximumBatch = 1)
         {
             if (modelId.IsEmpty) throw new VisualException(VisualErrorCodes.ProfileInvalid, "A model ID is required.");
             if (artifact == null) throw new ArgumentNullException(nameof(artifact));
             if (string.IsNullOrWhiteSpace(inputName) || string.IsNullOrWhiteSpace(outputName)) throw new ArgumentException("Exact tensor names are required.");
             if (maximumSide <= 0) throw new ArgumentOutOfRangeException(nameof(maximumSide));
+            if (maximumBatch <= 0) throw new ArgumentOutOfRangeException(nameof(maximumBatch));
             var decoder = new PaddleDbTextDetectionDecoder(outputName, postprocess, maximumSide);
+            long batchDimension = maximumBatch > 1 ? -1 : 1;
             var profile = new VisualModelProfile("paddle-ocr-det." + modelId.Value + ".opset" + artifact.Opset, modelId, VisualTaskId.TextDetection, "paddleocr-db/opset" + artifact.Opset, artifact.ModelFormat,
-                new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(1, 3, -1, -1), VisualTensorLayout.Nchw),
-                new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(1, 1, -1, -1)) }, Array.Empty<VisualLabel>(), decoder);
+                new VisualInputBinding(inputName, TensorElementType.Float32, new TensorShape(batchDimension, 3, -1, -1), VisualTensorLayout.Nchw, 1, maximumBatch),
+                new[] { new VisualOutputBinding(outputName, TensorElementType.Float32, new TensorShape(batchDimension, 1, -1, -1)) }, Array.Empty<VisualLabel>(), decoder);
             return new PaddleOcrProfile(PaddleOcrFamily.PaddleOcrDet, artifact, profile, null, null);
         }
 

@@ -20,10 +20,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DeploySharp.Visual.OpenCV.Tests
 {
     /// <summary>
-    /// Verifies PP-OCRv6 Small DET raw dynamic-batch row isolation on ORT CPU
-    /// and a freshly built TensorRT engine. The production DB decoder remains
-    /// intentionally batch=1 until source geometry per row is specified.
-    /// / 验证 PP-OCRv6 Small DET 原始动态 Batch 行隔离；生产 DB Decoder 在明确逐行几何前仍保持 batch=1。
+    /// Verifies PP-OCRv6 Small DET dynamic-batch row isolation and per-row DB
+    /// decoding on ORT CPU and a freshly built TensorRT engine.
+    /// / 验证 PP-OCRv6 Small DET 动态 Batch 行隔离，以及 ORT/TensorRT 上按行 DB 解码。
     /// </summary>
     [TestClass]
     public sealed class PaddleOcrDetectionTensorRtDynamicBatchIntegrationTests
@@ -44,7 +43,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string imagePath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_TRT_DET_PARITY_IMAGE") ?? ImageDefault);
             string modelPath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_TRT_DET_MODEL") ?? ModelDefault);
             PaddleOcrModelDescriptor descriptor = PaddleOcrModelCatalog.Find(new ModelId("paddleocr/ppocrv6/small-det"));
-            PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, Artifact(descriptor), maximumBatch: 1);
+            PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, Artifact(descriptor), maximumBatch: 2);
             using PreparedVisualInput input = CreateDistinctRoiBatch(imagePath, profile.VisualProfile.Input.Name);
             Assert.AreEqual(2, input.BatchSize);
             string[] inputRows = Enumerable.Range(0, 2).Select(row => RowSha256(input.Tensor, row)).ToArray();
@@ -76,8 +75,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 }
                 double meanDifference = count == 0 ? 0 : sumDifference / count;
                 Assert.IsTrue(maximumDifference <= 0.05, "TensorRT DET raw probability drift exceeded 0.05: " + maximumDifference.ToString("R", CultureInfo.InvariantCulture));
-                Console.WriteLine("PADDLEOCR_TRT_DET_DYNAMIC_BATCH model=paddleocr/ppocrv6/small-det;batch=2;shape=" + string.Join("x", trt.Shape) + ";maximumAbsDiff=" + maximumDifference.ToString("R", CultureInfo.InvariantCulture) + ";meanAbsDiff=" + meanDifference.ToString("R", CultureInfo.InvariantCulture) + ";engineSha=" + build.EngineSha256);
-                WriteReport(imagePath, input, build, ort, trt, maximumDifference, meanDifference);
+                TextDetectionBatchResult ortDecoded = DecodeRows(profile, input, ort);
+                TextDetectionBatchResult trtDecoded = DecodeRows(profile, input, trt);
+                Assert.AreEqual(input.BatchSize, ortDecoded.Count);
+                Assert.AreEqual(input.BatchSize, trtDecoded.Count);
+                for (int row = 0; row < input.BatchSize; row++)
+                {
+                    Assert.AreEqual(input.BatchFrames[row].SourceSize, ortDecoded[row].SourceSize, "ORT decoder lost source geometry for row " + row + ".");
+                    Assert.AreEqual(input.BatchFrames[row].SourceSize, trtDecoded[row].SourceSize, "TensorRT decoder lost source geometry for row " + row + ".");
+                }
+                Console.WriteLine("PADDLEOCR_TRT_DET_DYNAMIC_BATCH model=paddleocr/ppocrv6/small-det;batch=2;shape=" + string.Join("x", trt.Shape) + ";maximumAbsDiff=" + maximumDifference.ToString("R", CultureInfo.InvariantCulture) + ";meanAbsDiff=" + meanDifference.ToString("R", CultureInfo.InvariantCulture) + ";ortRegionCounts=" + string.Join(",", ortDecoded.Items.Select(item => item.Regions.Count)) + ";trtRegionCounts=" + string.Join(",", trtDecoded.Items.Select(item => item.Regions.Count)) + ";engineSha=" + build.EngineSha256);
+                WriteReport(imagePath, input, build, ort, trt, maximumDifference, meanDifference, ortDecoded, trtDecoded);
             }
             finally
             {
@@ -130,7 +138,14 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return Summarize(outputs.GetRequired(profile.VisualProfile.Outputs[0].Name));
         }
 
-        private void WriteReport(string imagePath, PreparedVisualInput input, TensorRtOnnxEngineBuildResult build, RawRun ort, RawRun trt, double maximumDifference, double meanDifference)
+        private static TextDetectionBatchResult DecodeRows(PaddleOcrProfile profile, PreparedVisualInput input, RawRun raw)
+        {
+            var tensor = new Tensor<float>(new TensorShape(raw.Shape), raw.Values, TensorBufferOwnership.Borrow);
+            object decoded = profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, InferenceOutputs.Create(profile.VisualProfile.Outputs[0].Name, tensor), default));
+            return decoded as TextDetectionBatchResult ?? throw new AssertFailedException("The dynamic DB decoder did not return a batch result.");
+        }
+
+        private void WriteReport(string imagePath, PreparedVisualInput input, TensorRtOnnxEngineBuildResult build, RawRun ort, RawRun trt, double maximumDifference, double meanDifference, TextDetectionBatchResult ortDecoded, TextDetectionBatchResult trtDecoded)
         {
             string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_TRT_DET_PARITY_REPORT_PATH") ?? Path.Combine(TestContext.TestResultsDirectory ?? Path.GetTempPath(), "paddleocr-v6-small-det-tensorrt-dynamic-batch.json");
             string? directory = Path.GetDirectoryName(Path.GetFullPath(report)); if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
@@ -143,8 +158,9 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 detector = new { onnxSha256 = ModelSha, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes },
                 backends = new { ortCpu = new { outputShape = ort.Shape, outputSha256 = ort.OutputSha256, rowSha256 = ort.RowSha256, maximumAbs = ort.MaximumAbs, meanAbs = ort.MeanAbs }, tensorRtCuda = new { outputShape = trt.Shape, outputSha256 = trt.OutputSha256, rowSha256 = trt.RowSha256, maximumAbs = trt.MaximumAbs, meanAbs = trt.MeanAbs } },
                 comparison = new { maximumAbsDifference = maximumDifference, meanAbsDifference = meanDifference },
-                contract = "Both backends must preserve batch=2, return finite raw probability maps with matching non-batch dimensions, and keep distinct input rows distinct; numeric drift is bounded by 0.05.",
-                boundary = "Raw graph/provider dynamic-batch evidence only. PaddleDbTextDetectionDecoder currently requires batch=1 because per-row source geometry and postprocess mapping are not yet defined. This is not full DET quality, OCR pipeline parity, throughput or all-model TensorRT support."
+                decoder = new { ortRegionCounts = ortDecoded.Items.Select(item => item.Regions.Count).ToArray(), tensorRtRegionCounts = trtDecoded.Items.Select(item => item.Regions.Count).ToArray(), sourceSizes = input.BatchFrames.Select(frame => new { width = frame.SourceSize.Width, height = frame.SourceSize.Height }).ToArray() },
+                contract = "Both backends must preserve batch=2, return finite raw probability maps with matching non-batch dimensions, keep distinct input rows distinct, and allow the DB decoder to restore one result per PreparedVisualInput.BatchFrames row; numeric drift is bounded by 0.05.",
+                boundary = "This is one PP-OCRv6 Small artifact on one Windows GPU/runtime. It proves raw graph/provider execution and decoder row/geometry isolation, not detection recall, CER/WER, full det-to-rec quality, throughput, cross-device engine portability or all-model TensorRT support."
             }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
             TestContext.AddResultFile(report);
         }
