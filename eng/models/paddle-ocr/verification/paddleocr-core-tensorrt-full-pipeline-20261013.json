@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-13T03:48:53.9216108+00:00",
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "processArchitecture": "X64",
+    "tensorRtRoot": "D:\\Program Files\\TensorRT-10.11.0.33-cu12",
+    "cudaRoot": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9",
+    "cudnnRoot": "D:\\Program Files\\cuDNN-9.22.0-cuda12.9",
+    "gpuTelemetry": "NVIDIA GeForce RTX 3060 Laptop GPU, 576.02, P0, 2002 MHz, 7001 MHz"
+  },
+  "input": {
+    "image": "E:\\Data\\ocr\\demo_1.jpg",
+    "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c"
+  },
+  "cases": [
+    {
+      "name": "v4-mobile",
+      "detector": "paddleocr/ppocrv4/mobile-det",
+      "classifier": "paddleocr/ppocrv4/legacy-cls",
+      "recognizer": "paddleocr/ppocrv4/mobile-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132",
+        "tensorRt": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      "elapsedMs": {
+        "ort": 1587.9205,
+        "tensorRt": 1667.6698
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "63e5e65c450d1fc85bf3670916cfc0041ad5acc3b8e4773de59337d413ae27eb",
+          "engineSha256": "35f060b291d01f529a7b17846b3b68927d22daf986a551c95a4361dd3cf114c5"
+        },
+        "classifier": {
+          "onnxSha256": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "engineSha256": "05deb038176e3078f2e208a89282a385a7ab07b990aeaf49f2d2fddc64588dd5"
+        },
+        "recognizer": {
+          "onnxSha256": "bfaa9bded94d704a110e2a7630be42f8a796341bb45df227121250e703ee4bc7",
+          "engineSha256": "f10f209e2ceb148cfe2fb0cebdb78d21d3cb879f6243e68122793c967ee1206d"
+        }
+      }
+    },
+    {
+      "name": "v4-server",
+      "detector": "paddleocr/ppocrv4/server-det",
+      "classifier": "paddleocr/ppocrv4/legacy-cls",
+      "recognizer": "paddleocr/ppocrv4/server-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50",
+        "tensorRt": "5c3f78951622ee64cbd51df0b9fe0a5c0dbb8eac39e97af6235f720e45453d50"
+      },
+      "elapsedMs": {
+        "ort": 4609.799,
+        "tensorRt": 1932.5052
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "1d6b24b3038d814ba5243691d4d5c2af2d3451f909f12617748aba508345f6b9",
+          "engineSha256": "8028402192bd9cc762c7c7368a2718b8975f53bb0181ec9a4dc872b55bf74611"
+        },
+        "classifier": {
+          "onnxSha256": "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e",
+          "engineSha256": "cda4947219de8dd5c063b90e0096ced193d062d36ecd5be7afd249d539dfd1aa"
+        },
+        "recognizer": {
+          "onnxSha256": "b089d3cebf235c57ee1cf1621da452c0bf25acb8f2eead7f5fb65a843f17057f",
+          "engineSha256": "9b2cc72c3f829864352e799b03f92b45f92fa8fea5750bf14d545b3749e9647c"
+        }
+      }
+    },
+    {
+      "name": "v5-mobile",
+      "detector": "paddleocr/ppocrv5/mobile-det",
+      "classifier": "paddleocr/ppocrv5/mobile-cls",
+      "recognizer": "paddleocr/ppocrv5/mobile-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304",
+        "tensorRt": "058ad17566cfd20b65e4e41c942155042737145b952f7ae0a4b19e056fc3e304"
+      },
+      "elapsedMs": {
+        "ort": 2139.1939,
+        "tensorRt": 2074.422
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039",
+          "engineSha256": "7213229c5c930e809216a107da602d4d45007b84d5ec36e005edd9ade0781b7c"
+        },
+        "classifier": {
+          "onnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "engineSha256": "10e771c7452baa40b13faafe9d7d6f601bf165fffff9899b893a296c1dbc8332"
+        },
+        "recognizer": {
+          "onnxSha256": "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9",
+          "engineSha256": "889a7eb01d27e0f5b6ddf8370cd3b242182a7bec397bfc56a7542db7aca75e5e"
+        }
+      }
+    },
+    {
+      "name": "v5-server",
+      "detector": "paddleocr/ppocrv5/server-det",
+      "classifier": "paddleocr/ppocrv5/server-cls",
+      "recognizer": "paddleocr/ppocrv5/server-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132",
+        "tensorRt": "c32e9ee8153b622a26a30a051203f5de6f152b668f87d3139f8663e617aa4132"
+      },
+      "elapsedMs": {
+        "ort": 3361.7707,
+        "tensorRt": 3178.6659
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47",
+          "engineSha256": "ea0f2759639c3a97617d079ee6638bb76d06a64ad3255d0bcb62501c2c99290b"
+        },
+        "classifier": {
+          "onnxSha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+          "engineSha256": "29e2f9050c7c100f383378cf883ffb63577e35146c571818af243297f0c585d9"
+        },
+        "recognizer": {
+          "onnxSha256": "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a",
+          "engineSha256": "54747ce8a27b262c6d03bbfcf60454f7a06f1cedc0be1da6d485a6d958840658"
+        }
+      }
+    },
+    {
+      "name": "v6-tiny",
+      "detector": "paddleocr/ppocrv6/tiny-det",
+      "classifier": "paddleocr/ppocrv5/mobile-cls",
+      "recognizer": "paddleocr/ppocrv6/tiny-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477",
+        "tensorRt": "52a0c70e660e507775bd97ef59d194705f4761947a5777c967af0e5715db6477"
+      },
+      "elapsedMs": {
+        "ort": 573.3846,
+        "tensorRt": 755.7612
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+          "engineSha256": "473e5521bc6aeecec755914b4b3852ddafcdb140385f0bbb6d63e2f09d5125c4"
+        },
+        "classifier": {
+          "onnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "engineSha256": "96d98227902e56affa10c75c0dd090305cc525fd95440f24df54a338b5ba9078"
+        },
+        "recognizer": {
+          "onnxSha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+          "engineSha256": "5a3d1af20bfcb0ebdd5fa08420a20f3417c58d6456ec033a9ee429c4a6d2c722"
+        }
+      }
+    },
+    {
+      "name": "v6-small",
+      "detector": "paddleocr/ppocrv6/small-det",
+      "classifier": "paddleocr/ppocrv5/mobile-cls",
+      "recognizer": "paddleocr/ppocrv6/small-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea",
+        "tensorRt": "2e5319967419ae76ba1f9c21efb10edca237c170f4c89dae081b088a1ccbbaea"
+      },
+      "elapsedMs": {
+        "ort": 912.413,
+        "tensorRt": 941.5433
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+          "engineSha256": "a143b5adbd8cda5c81dc2f00d01f43a7ba2fc6fd01b2d9d978befe08411204e7"
+        },
+        "classifier": {
+          "onnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "engineSha256": "d557662b704d17fd0647d478a25d7bf33c4538a3095c6cef5160b5845bb4ddf1"
+        },
+        "recognizer": {
+          "onnxSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+          "engineSha256": "1730c08fe6ea4b9a40043af10d3027c17c662efc840ca433cb92e4320680620e"
+        }
+      }
+    },
+    {
+      "name": "v6-medium",
+      "detector": "paddleocr/ppocrv6/medium-det",
+      "classifier": "paddleocr/ppocrv5/mobile-cls",
+      "recognizer": "paddleocr/ppocrv6/medium-rec",
+      "status": "passed",
+      "regions": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "recognized": {
+        "ort": 16,
+        "tensorRt": 16
+      },
+      "orderedTextSha256": {
+        "ort": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1",
+        "tensorRt": "6e9e7c8789d9389f3ae1688497843772dc62cbc4593712eb0371b33ad16020b1"
+      },
+      "elapsedMs": {
+        "ort": 2550.8853,
+        "tensorRt": 2298.4424
+      },
+      "engines": {
+        "detector": {
+          "onnxSha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+          "engineSha256": "d46b2bd71408def67f1f6b5ca45a3718b8a2ca6f0c12b7dfed2270846c1d06e2"
+        },
+        "classifier": {
+          "onnxSha256": "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2",
+          "engineSha256": "5cd48060d96c7f92f6645a35405cc7e911d39cafb80103c8c62190c3054195b2"
+        },
+        "recognizer": {
+          "onnxSha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+          "engineSha256": "f9c93402490e387f24735c44885556630129a75e9343e1ac3641397808602e3b"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "blocked": 0
+  },
+  "boundary": "Core PP-OCR v4/v5/v6 full det-crop-cls-rec-merge execution on one Windows host. Each row is scoped to its exact ONNX artifacts and runtime; blocked rows are not generalized to other TensorRT versions or models. This is not a quality score, CER/WER, formal P50/P95 benchmark or cross-device portability result."
+}

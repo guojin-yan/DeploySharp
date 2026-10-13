@@ -86,6 +86,8 @@
 
 同日新增一条完整 PP-OCR TensorRT 流水线证据：精确的 v6 Small DET + v5 Mobile CLS + v6 Small REC 工件在 `demo_1.jpg` 上完成 `det → crop → cls → rec → merge`。TensorRT 10.11/CUDA 12.9 与 ORT CPU 均返回 16 个已识别区域且有序文本 SHA 一致；单次总耗时观察为 ORT `1157.2269 ms`、TensorRT `1288.2198 ms`。GPU 时钟未锁定，这不是正式 P50/P95 性能结果；证据只对这三份工件、单台 Windows RTX 3060 Laptop 成立，不外推为全部 PP-OCR TensorRT 支持。见[完整流水线报告](../eng/models/paddle-ocr/verification/paddleocr-v6-small-tensorrt-full-pipeline-20261013.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v6-small-tensorrt-full-pipeline-20261013.json)。
 
+随后以同一完整编排覆盖 PP-OCRv4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 七组核心组合。TensorRT 10.11 + CUDA 12.9 + cuDNN 9.22 在当前 Windows RTX 3060 Laptop 上 `7/7` 完成；每组 ORT CPU/TensorRT 均返回 16 个已识别区域，且组内有序文本 SHA 一致。见[七组合完整流水线报告](../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.md)和[机器 JSON](../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.json)。报告里的耗时是排除 Engine 构建、包含 Session/Pipeline 创建、无预热的一次调用观察，不能作为 P50/P95 或后端排名；本证据也不覆盖 CER/WER、检测召回、多页质量、跨设备可移植性或其它 TensorRT/CUDA/bridge 组合。
+
 ## PP-Structure 模型状态
 
 PP-Structure 共收录 29 个官方模型合同，其中 28 个标准模型有独立 ONNX Release 资产；`PP-Chart2Table` 另以 `paddle-chart/pp-chart2table` 四图 ONNX + tokenizer Bundle 发布在同一个 `models-paddleocr` Release。Chart2Table 官方源包仍不是标准 `inference.json + inference.pdiparams`，因此单文件 Paddle archive 转换目录仍保留 `conversion-blocked`，这不影响已发布派生 Bundle 的下载和运行。下表按模型族分组，普通模型组内只要仍有未逐一执行的工件就保持 `△`；Chart2Table 则以真实完整流水线证据单独标记。PP-Structure 其它模型尚未全部逐一验证每个后端，不能把 Chart2Table 的结果外推到其它模型。
