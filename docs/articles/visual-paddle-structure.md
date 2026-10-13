@@ -294,6 +294,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 在同一台 Windows 主机按相同 `5+50` 协议复测的[2026-10-14 汇总](../../eng/models/paddle-document/verification/paddle-document-multipage-benchmark-20261014.md)显示，ORT CPU 串行/并发 P50/P95 为 `1139.597/1261.217` 与 `1018.432/1211.011 ms`，OpenVINO CPU 为 `1137.557/1280.655` 与 `915.874/987.933 ms`。两后端都保持两页顺序和每页 300 个候选；当前配置下页面并发只是单机观察，不能替代张量 Batch、质量或跨设备吞吐结论。
 
+同一流水线在 TensorRT 10.11 `compute_86` Engine 上也完成了[两页正式协议复测](../../eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261014.md)：串行/并发 P50/P95 为 `99.344/128.749` 与 `67.187/72.894 ms`，两页顺序和每页 300 个版面候选保持不变。该结果绑定当前 Engine、GPU 和 bridge/runtime，只是页面并发证据，不是 TensorRT 通用性能、准确率或跨设备承诺。
+
 ### 版面区域 → OCR
 
 版面检测结果可以交给 `PaddleDocumentRegionTextStage`。该适配器要求前序阶段产生 `LayoutDetection` 区域，然后按页面区域顺序调用应用提供的 OCR 委托；委托负责从原图按 `region.Bounds` 裁剪、调用已有 `OcrPipeline`，再返回一条 `PaddleDocumentTextItem`。库会检查区域索引、页码和输入 SHA，并把每条文本与页面坐标绑定。
