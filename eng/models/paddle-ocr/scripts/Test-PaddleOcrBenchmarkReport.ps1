@@ -132,6 +132,9 @@ if ([int]$metadata.schemaVersion -ge 3) {
     if ($selectedBackends -contains 'openvino' -and -not ($assemblies.name -contains 'OpenVINO.CSharp.API')) {
         $failures.Add('OpenVINO pass rows require OpenVINO.CSharp.API assembly evidence')
     }
+    if ($selectedBackends -contains 'opencv-dnn' -and -not ($assemblies.name -contains 'JYPPX.OpenCV.CSharp.API')) {
+        $failures.Add('OpenCV DNN pass rows require JYPPX.OpenCV.CSharp.API assembly evidence')
+    }
     if ($selectedBackends -notcontains 'tensorrt') {
         if (@($modelRecords | Where-Object { $_.enginePath -or $_.engineSha256 }).Count -ne 0) {
             $failures.Add('a non-TensorRT schema 3 report must not contain Engine evidence')

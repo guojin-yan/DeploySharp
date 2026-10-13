@@ -79,6 +79,8 @@ foreach (OcrRegionResult region in result.Regions)
 
 同一协议现已补齐[ORT 1.23.2 CUDA 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.md)。七组核心组合 `7/7` 通过，每行 50 次调用保持一个严格合同变体，并逐模型匹配 CPU 矩阵的有序文本 SHA 和语义合同 SHA。完整流水线 P50/P95 为 v4 Mobile `69.960/160.443 ms`、v4 Server `117.107/201.558 ms`、v5 Mobile `70.545/117.800 ms`、v5 Server `105.702/168.476 ms`、v6 Tiny `22.658/28.969 ms`、v6 Small `43.704/50.460 ms`、v6 Medium `72.872/78.681 ms`。schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.csv.environment.json)保存 CUDA 12.9、cuDNN 9.22、DLL 搜索目录及实际 ORT 程序集哈希；[GPU 遥测](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.gpu.csv)显示 P0、活跃采样平均 1800 MHz，热降频和硬件 slowdown 均为 0。GPU/CPU 均未锁频，且输入只有一张图，因此仍不能当作 CER/WER、吞吐、跨设备排名或 PP-Structure 全模型支持。
 
+[OpenCV DNN 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md)也覆盖七组核心组合和 `5+50` 计时规则，但必须遵守这些图的静态 batch=1 合同，并用两个独立 Session 并发调度 16 个识别 batch。七组执行均稳定；v4/v6 有序文本匹配 CPU 参考，v5 Mobile/Server 不匹配，七组语义合同均存在后端数值差异。P50 从 v6 Tiny `338.130 ms` 到 v5 Server `4582.283 ms`，每次调用的托管分配报告最高达到 `7.71 GiB`。schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.csv.environment.json)固定了 OpenCV API `5.0.0.0` 的程序集哈希。由于真实模型 Batch 合同不同，这组数据不能与 Batch=8 后端直接排名；v5 parity 和大额分配仍是后续优化项。
+
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 ### 连续帧异步预取

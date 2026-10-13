@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "protocolName": "deploysharp-paddleocr-full-5-50-v1",
+  "report": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-opencv-dnn-steady-formal-20261013.csv",
+  "environment": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\eng\\models\\paddle-ocr\\verification\\paddleocr-core-opencv-dnn-steady-formal-20261013.csv.environment.json",
+  "rows": 7,
+  "passRows": 7,
+  "nonPassRows": 0,
+  "tensorRtPassRows": 0,
+  "validatedUtc": "2026-10-13T09:17:55.2648600+00:00",
+  "status": "formal-ready"
+}
