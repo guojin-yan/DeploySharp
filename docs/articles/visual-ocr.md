@@ -93,6 +93,8 @@ P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle
 
 针对这次 clean 回归发现的 OpenCV DNN 兼容合同和 PaddleOCR release-admission 漂移，已在提交 `f23d19f` 的干净 checkout 中完成[聚焦复测](../../eng/models/paddle-ocr/verification/paddleocr-clean-checkout-focused-tests-20261014.md)：OpenCV `32/32`、ModelFactory `63/65`（2 个显式外部门控跳过），无失败。它只确认这两组修复已进入提交，不替代完整回归、外部模型质量或性能验证。
 
+之后在提交 `a3c3fdc` 的 detached clean checkout 中完成了[完整非外部回归](../../eng/models/paddle-ocr/verification/paddleocr-clean-checkout-non-external-regression-20261014.md)：14 个测试项目共 `938 passed / 0 failed / 15 skipped`（953 项），命令退出码为 `0`。跳过项仍是外部模型、公开下载、checkpoint 或运行时门控，不转换为模型或后端支持结论；本轮关闭的是 P7 clean-checkout 回归门，不是质量、正式性能、soak、跨设备或 PP-Structure 全后端门。维护范围链接审计为 `682` 条、断链 `0`。
+
 ### 连续帧异步预取
 
 视频或摄像头场景可以把下一帧的解码、缩放和输入张量准备，与当前帧的 OCR 推理重叠。`OcrPipeline.RunPrefetchedAsync` 接收输入描述和一个准备回调，按输入顺序返回 `OcrResult`；`prefetch` 控制最多提前保留的准备任务数量，`OcrPipelineOptions.MaximumConcurrency` 仍限制同时进入 OCR 执行阶段的帧数。
