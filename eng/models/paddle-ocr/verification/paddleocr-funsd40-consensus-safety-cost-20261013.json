@@ -1,0 +1,691 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-cost-v2",
+  "generatedUtc": "2026-10-13T12:16:05.599494+00:00",
+  "backends": [
+    {
+      "backend": "onnxruntime",
+      "evidenceId": "paddleocr-funsd40-consensus-20261013-enhancement-consensus-recognize-only-onnxruntime",
+      "source": "eng/models/paddle-ocr/verification/paddleocr-funsd40-consensus-20261013-enhancement-consensus-recognize-only-onnxruntime.json",
+      "sourceSha256": "f59ff135d4825b229321de1bfb93b4208e444b31f796b0fe318acba2e5c697a1",
+      "executionMode": "ground-truth-full-crop-recognize-only",
+      "recipes": [
+        "ContrastNormalize",
+        "GrayClahe",
+        "UnsharpMask"
+      ],
+      "selection": "ConsensusConfidenceGain(minimumGain=0,minimumMatchingCandidates=2)",
+      "summary": {
+        "records": 240,
+        "candidateAvailable": 233,
+        "candidateSelected": 115,
+        "insufficientGain": 125,
+        "noDetectedRegion": 0,
+        "selectedEqualCaseFoldedCer": 109,
+        "selectedWorseCaseFoldedCer": 4,
+        "selectedWorseCaseFoldedWer": 0,
+        "selectedFalseCorrectionRateByCer": 0.034782608695652174,
+        "selectedFalseCorrectionRateByWer": 0.0,
+        "meanOriginalCaseFoldedCer": 0.3059640752765753,
+        "meanFinalCaseFoldedCer": 0.30670481601731603,
+        "meanOriginalCaseFoldedWer": 0.4263888888888889,
+        "meanFinalCaseFoldedWer": 0.4180555555555555,
+        "recordsWithCandidateConsensus": 177,
+        "latencyMs": {
+          "all": {
+            "count": 240,
+            "mean": 80.71400708333334,
+            "p50": 76.21005,
+            "p95": 144.565585
+          },
+          "selected": {
+            "count": 115,
+            "mean": 82.73656434782609,
+            "p50": 78.0619,
+            "p95": 140.21949
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 3,
+            "insufficientGain": 37,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.9260694444444445,
+            "meanFinalCaseFoldedCer": 0.9260694444444445,
+            "meanOriginalCaseFoldedWer": 0.9666666666666666,
+            "meanFinalCaseFoldedWer": 0.9666666666666666,
+            "recordsWithCandidateConsensus": 4,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 84.86223,
+                "p50": 83.8445,
+                "p95": 145.59028999999995
+              },
+              "selected": {
+                "count": 3,
+                "mean": 106.37703333333333,
+                "p50": 112.6529,
+                "p95": 131.55389
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 40,
+            "candidateAvailable": 40,
+            "candidateSelected": 26,
+            "insufficientGain": 14,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 26,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.19495021645021643,
+            "meanFinalCaseFoldedCer": 0.19495021645021643,
+            "meanOriginalCaseFoldedWer": 0.36666666666666664,
+            "meanFinalCaseFoldedWer": 0.36666666666666664,
+            "recordsWithCandidateConsensus": 36,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 73.0042775,
+                "p50": 70.37085,
+                "p95": 119.38875999999999
+              },
+              "selected": {
+                "count": 26,
+                "mean": 74.14247692307693,
+                "p50": 70.96385000000001,
+                "p95": 122.83080000000001
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 23,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17243849206349207,
+            "meanFinalCaseFoldedCer": 0.17493849206349205,
+            "meanOriginalCaseFoldedWer": 0.29166666666666663,
+            "meanFinalCaseFoldedWer": 0.29166666666666663,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 82.5460225,
+                "p50": 79.78184999999999,
+                "p95": 151.976835
+              },
+              "selected": {
+                "count": 24,
+                "mean": 88.1218875,
+                "p50": 85.1276,
+                "p95": 148.73080999999996
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 40,
+            "candidateAvailable": 40,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 21,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.19772709235209235,
+            "meanFinalCaseFoldedCer": 0.1946715367965368,
+            "meanOriginalCaseFoldedWer": 0.36666666666666664,
+            "meanFinalCaseFoldedWer": 0.31666666666666665,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 80.045395,
+                "p50": 70.2384,
+                "p95": 126.53762499999995
+              },
+              "selected": {
+                "count": 24,
+                "mean": 74.32379166666666,
+                "p50": 68.1357,
+                "p95": 123.39902
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 23,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17243849206349207,
+            "meanFinalCaseFoldedCer": 0.17493849206349205,
+            "meanOriginalCaseFoldedWer": 0.29166666666666663,
+            "meanFinalCaseFoldedWer": 0.29166666666666663,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 84.42841250000001,
+                "p50": 81.20349999999999,
+                "p95": 154.76234999999997
+              },
+              "selected": {
+                "count": 24,
+                "mean": 90.80714166666667,
+                "p50": 96.83635,
+                "p95": 152.35511999999997
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 40,
+            "candidateAvailable": 36,
+            "candidateSelected": 14,
+            "insufficientGain": 26,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 13,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.07142857142857142,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17216071428571428,
+            "meanFinalCaseFoldedCer": 0.17466071428571428,
+            "meanOriginalCaseFoldedWer": 0.275,
+            "meanFinalCaseFoldedWer": 0.275,
+            "recordsWithCandidateConsensus": 26,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 79.397705,
+                "p50": 75.64975,
+                "p95": 140.43332499999997
+              },
+              "selected": {
+                "count": 14,
+                "mean": 84.98583571428571,
+                "p50": 79.3013,
+                "p95": 139.69627
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      },
+      "consensusThresholdSweep": {
+        "points": [
+          {
+            "minimumConfidenceGain": 0,
+            "selected": 115,
+            "selectedBetterCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 4,
+            "selectedEqualCaseFoldedCer": 109,
+            "meanFinalCaseFoldedCer": 0.30670481601731603,
+            "meanFinalCaseFoldedWer": 0.4180555555555555
+          },
+          {
+            "minimumConfidenceGain": 0.005,
+            "selected": 35,
+            "selectedBetterCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 31,
+            "meanFinalCaseFoldedCer": 0.3058714826839827,
+            "meanFinalCaseFoldedWer": 0.4180555555555555
+          },
+          {
+            "minimumConfidenceGain": 0.01,
+            "selected": 31,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 28,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.02,
+            "selected": 25,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 22,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.03,
+            "selected": 18,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 15,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.05,
+            "selected": 10,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 10,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.075,
+            "selected": 9,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 9,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.1,
+            "selected": 5,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 5,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.15,
+            "selected": 2,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 2,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.2,
+            "selected": 2,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 2,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          }
+        ],
+        "minimumObservedZeroWorseThresholdWithBenefit": null,
+        "boundary": "Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split."
+      }
+    },
+    {
+      "backend": "openvino",
+      "evidenceId": "paddleocr-funsd40-consensus-20261013-enhancement-consensus-recognize-only-openvino",
+      "source": "eng/models/paddle-ocr/verification/paddleocr-funsd40-consensus-20261013-enhancement-consensus-recognize-only-openvino.json",
+      "sourceSha256": "446806a0db4b7ad6d8b76d09ac7e4dd799a962beb0e43e4d9ca123cec396bc90",
+      "executionMode": "ground-truth-full-crop-recognize-only",
+      "recipes": [
+        "ContrastNormalize",
+        "GrayClahe",
+        "UnsharpMask"
+      ],
+      "selection": "ConsensusConfidenceGain(minimumGain=0,minimumMatchingCandidates=2)",
+      "summary": {
+        "records": 240,
+        "candidateAvailable": 233,
+        "candidateSelected": 115,
+        "insufficientGain": 125,
+        "noDetectedRegion": 0,
+        "selectedEqualCaseFoldedCer": 109,
+        "selectedWorseCaseFoldedCer": 4,
+        "selectedWorseCaseFoldedWer": 0,
+        "selectedFalseCorrectionRateByCer": 0.034782608695652174,
+        "selectedFalseCorrectionRateByWer": 0.0,
+        "meanOriginalCaseFoldedCer": 0.3059640752765753,
+        "meanFinalCaseFoldedCer": 0.30670481601731603,
+        "meanOriginalCaseFoldedWer": 0.4263888888888889,
+        "meanFinalCaseFoldedWer": 0.4180555555555555,
+        "recordsWithCandidateConsensus": 177,
+        "latencyMs": {
+          "all": {
+            "count": 240,
+            "mean": 34.78173833333334,
+            "p50": 34.86865,
+            "p95": 51.63591999999999
+          },
+          "selected": {
+            "count": 115,
+            "mean": 36.01942956521739,
+            "p50": 36.2114,
+            "p95": 52.371669999999995
+          }
+        },
+        "byCondition": {
+          "blur": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 3,
+            "insufficientGain": 37,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 3,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.9260694444444445,
+            "meanFinalCaseFoldedCer": 0.9260694444444445,
+            "meanOriginalCaseFoldedWer": 0.9666666666666666,
+            "meanFinalCaseFoldedWer": 0.9666666666666666,
+            "recordsWithCandidateConsensus": 4,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 34.506510000000006,
+                "p50": 34.03105,
+                "p95": 52.16027999999999
+              },
+              "selected": {
+                "count": 3,
+                "mean": 38.4471,
+                "p50": 32.678,
+                "p95": 50.070499999999996
+              }
+            },
+            "byCondition": {}
+          },
+          "jpeg": {
+            "records": 40,
+            "candidateAvailable": 40,
+            "candidateSelected": 26,
+            "insufficientGain": 14,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 26,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.0,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.19495021645021643,
+            "meanFinalCaseFoldedCer": 0.19495021645021643,
+            "meanOriginalCaseFoldedWer": 0.36666666666666664,
+            "meanFinalCaseFoldedWer": 0.36666666666666664,
+            "recordsWithCandidateConsensus": 36,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 33.207965,
+                "p50": 32.7749,
+                "p95": 48.896715
+              },
+              "selected": {
+                "count": 26,
+                "mean": 34.9924,
+                "p50": 33.363150000000005,
+                "p95": 49.043925
+              }
+            },
+            "byCondition": {}
+          },
+          "low-contrast": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 23,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17243849206349207,
+            "meanFinalCaseFoldedCer": 0.17493849206349205,
+            "meanOriginalCaseFoldedWer": 0.29166666666666663,
+            "meanFinalCaseFoldedWer": 0.29166666666666663,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 34.24729,
+                "p50": 33.91805,
+                "p95": 47.34700999999996
+              },
+              "selected": {
+                "count": 24,
+                "mean": 35.506341666666664,
+                "p50": 35.74595,
+                "p95": 46.67496
+              }
+            },
+            "byCondition": {}
+          },
+          "noise": {
+            "records": 40,
+            "candidateAvailable": 40,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 21,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.19772709235209235,
+            "meanFinalCaseFoldedCer": 0.1946715367965368,
+            "meanOriginalCaseFoldedWer": 0.36666666666666664,
+            "meanFinalCaseFoldedWer": 0.31666666666666665,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 33.8405225,
+                "p50": 34.87675,
+                "p95": 46.736164999999986
+              },
+              "selected": {
+                "count": 24,
+                "mean": 33.0405125,
+                "p50": 35.953,
+                "p95": 42.74829999999999
+              }
+            },
+            "byCondition": {}
+          },
+          "normal": {
+            "records": 40,
+            "candidateAvailable": 39,
+            "candidateSelected": 24,
+            "insufficientGain": 16,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 23,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.041666666666666664,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17243849206349207,
+            "meanFinalCaseFoldedCer": 0.17493849206349205,
+            "meanOriginalCaseFoldedWer": 0.29166666666666663,
+            "meanFinalCaseFoldedWer": 0.29166666666666663,
+            "recordsWithCandidateConsensus": 37,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 38.5079425,
+                "p50": 38.03915,
+                "p95": 68.35408
+              },
+              "selected": {
+                "count": 24,
+                "mean": 40.278275,
+                "p50": 38.88605,
+                "p95": 65.92749999999997
+              }
+            },
+            "byCondition": {}
+          },
+          "shadow": {
+            "records": 40,
+            "candidateAvailable": 36,
+            "candidateSelected": 14,
+            "insufficientGain": 26,
+            "noDetectedRegion": 0,
+            "selectedEqualCaseFoldedCer": 13,
+            "selectedWorseCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedWer": 0,
+            "selectedFalseCorrectionRateByCer": 0.07142857142857142,
+            "selectedFalseCorrectionRateByWer": 0.0,
+            "meanOriginalCaseFoldedCer": 0.17216071428571428,
+            "meanFinalCaseFoldedCer": 0.17466071428571428,
+            "meanOriginalCaseFoldedWer": 0.275,
+            "meanFinalCaseFoldedWer": 0.275,
+            "recordsWithCandidateConsensus": 26,
+            "latencyMs": {
+              "all": {
+                "count": 40,
+                "mean": 34.3802,
+                "p50": 35.38235,
+                "p95": 48.151239999999994
+              },
+              "selected": {
+                "count": 14,
+                "mean": 36.091971428571426,
+                "p50": 36.13375,
+                "p95": 46.575134999999996
+              }
+            },
+            "byCondition": {}
+          }
+        }
+      },
+      "consensusThresholdSweep": {
+        "points": [
+          {
+            "minimumConfidenceGain": 0,
+            "selected": 115,
+            "selectedBetterCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 4,
+            "selectedEqualCaseFoldedCer": 109,
+            "meanFinalCaseFoldedCer": 0.30670481601731603,
+            "meanFinalCaseFoldedWer": 0.4180555555555555
+          },
+          {
+            "minimumConfidenceGain": 0.005,
+            "selected": 35,
+            "selectedBetterCaseFoldedCer": 2,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 31,
+            "meanFinalCaseFoldedCer": 0.3058714826839827,
+            "meanFinalCaseFoldedWer": 0.4180555555555555
+          },
+          {
+            "minimumConfidenceGain": 0.01,
+            "selected": 31,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 28,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.02,
+            "selected": 25,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 22,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.03,
+            "selected": 18,
+            "selectedBetterCaseFoldedCer": 1,
+            "selectedWorseCaseFoldedCer": 2,
+            "selectedEqualCaseFoldedCer": 15,
+            "meanFinalCaseFoldedCer": 0.3063344456469457,
+            "meanFinalCaseFoldedWer": 0.4222222222222222
+          },
+          {
+            "minimumConfidenceGain": 0.05,
+            "selected": 10,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 10,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.075,
+            "selected": 9,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 9,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.1,
+            "selected": 5,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 5,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.15,
+            "selected": 2,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 2,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          },
+          {
+            "minimumConfidenceGain": 0.2,
+            "selected": 2,
+            "selectedBetterCaseFoldedCer": 0,
+            "selectedWorseCaseFoldedCer": 0,
+            "selectedEqualCaseFoldedCer": 2,
+            "meanFinalCaseFoldedCer": 0.3059640752765753,
+            "meanFinalCaseFoldedWer": 0.4263888888888889
+          }
+        ],
+        "minimumObservedZeroWorseThresholdWithBenefit": null,
+        "boundary": "Post-hoc diagnostic on this fixed evidence set; it must not be reused as a production threshold without an independent validation split."
+      }
+    }
+  ],
+  "crossBackend": [
+    {
+      "leftBackend": "onnxruntime",
+      "rightBackend": "openvino",
+      "leftRecords": 240,
+      "rightRecords": 240,
+      "commonRecords": 240,
+      "leftOnlyRecords": 0,
+      "rightOnlyRecords": 0,
+      "decisionMatched": 240,
+      "candidateSelectedMatched": 240,
+      "finalTextMatched": 240,
+      "selectedCandidateIndexMatched": 240,
+      "consensusMatchCountMatched": 240
+    }
+  ],
+  "boundary": "Controlled parent-linked crop evidence. False-correction and latency figures are diagnostic gates, not page/line accuracy, robustness, or a default-policy approval."
+}

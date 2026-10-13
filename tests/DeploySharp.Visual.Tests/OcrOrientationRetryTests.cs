@@ -13,6 +13,27 @@ namespace DeploySharp.Visual.Tests
     public sealed partial class OcrTests
     {
         [TestMethod]
+        public async Task RecognitionOnlyRunsConfiguredOrientationRetryWithoutDetector()
+        {
+            int calls = 0;
+            using OcrFixture fixture = CreateOcrFixture(
+                retryOptions: new OcrOrientationRetryOptions(confidenceThreshold: 1, minimumConfidenceGain: .05f, maximumRegionsPerImage: 1),
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : .95f));
+            using var input = new FakeOcrImageInput();
+
+            var results = await fixture.Pipeline.RecognizeOnlyAsync(input, new[] { Region(3, 0, 0, 20, 10) });
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount);
+            Assert.AreEqual(2, fixture.RecognitionProvider.LastSession!.RunCount);
+            OcrOrientationRetryResult evidence = results[0].OrientationRetry
+                ?? throw new AssertFailedException("Recognition-only execution did not retain orientation-retry evidence.");
+            Assert.AreEqual(1, evidence.SelectedIndex);
+            Assert.AreEqual(TextOrientation.Degrees180, results[0].Region.Orientation);
+            Assert.AreEqual(2, evidence.Attempts.Count);
+        }
+
+        [TestMethod]
         public void OrientationRetryOptionsAreBoundedAndPreservedByProfileCopies()
         {
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OcrOrientationRetryOptions(float.NaN));

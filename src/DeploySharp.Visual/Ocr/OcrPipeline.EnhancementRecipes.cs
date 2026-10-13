@@ -8,7 +8,7 @@ namespace JYPPX.DeploySharp.Visual
 {
     public sealed partial class OcrPipeline
     {
-        private async Task<RetryWork> RunEnhancementRecipeRetryAsync(IOcrImageInput input, List<OcrRegionResult> results, long initialBytes,
+        private async Task<RetryWork> RunEnhancementRecipeRetryAsync(IOcrRecognitionImageInput input, List<OcrRegionResult> results, long initialBytes,
             OcrExecutionOptions execution, CtcConfidenceAggregation aggregation, CancellationToken token, CropWorkBudget cropBudget)
         {
             var watch = Stopwatch.StartNew();

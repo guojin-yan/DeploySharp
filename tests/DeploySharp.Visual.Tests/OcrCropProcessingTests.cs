@@ -90,6 +90,21 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RecognitionOnlyRejectsInputWithoutConfiguredCropProcessingCapability()
+        {
+            using OcrFixture fixture = CreateOcrFixture(cropProcessing: new OcrCropProcessingOptions(16));
+            using var input = new FakeOcrImageInput();
+
+            OcrPipelineException error = await Assert.ThrowsExactlyAsync<OcrPipelineException>(() =>
+                fixture.Pipeline.RecognizeOnlyAsync(input, new[] { Region(9, 0, 0, 20, 10) }));
+
+            Assert.AreEqual(VisualErrorCodes.OcrCropProcessingUnavailable, error.ErrorCode);
+            Assert.AreEqual(OcrPipelineStage.Input, error.Stage);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount);
+            Assert.AreEqual(0, fixture.RecognitionProvider.LastSession!.RunCount);
+        }
+
+        [TestMethod]
         public async Task CropEvidenceSurvivesRoiProjectionReindexingAndConcurrentCalls()
         {
             using OcrFixture fixture = CreateOcrFixture(cropProcessing: new OcrCropProcessingOptions(), maximumConcurrency: 2);

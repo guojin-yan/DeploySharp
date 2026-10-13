@@ -279,7 +279,7 @@ namespace JYPPX.DeploySharp.Visual
                 cancellationToken);
         }
 
-        /// <summary>Runs only the recognizer on caller-provided text regions, reusing the same crop/session pool without detector execution. / 仅对调用方提供的文本区域运行识别，复用同一裁剪和 Session 池且不执行检测器。</summary>
+        /// <summary>Runs recognition and configured crop retries on caller-provided text regions without detector execution. / 对调用方提供的文本区域运行识别及已配置的裁剪重试，但不执行检测器。</summary>
         public Task<IReadOnlyList<OcrRegionResult>> RecognizeOnlyAsync(IOcrRecognitionImageInput input, IReadOnlyList<TextRegion> regions, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
@@ -300,6 +300,9 @@ namespace JYPPX.DeploySharp.Visual
                 entered = true;
                 EnsureUsable();
                 if (regions.Count > _options.MaximumRegions) throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only region count exceeds the configured limit.", OcrPipelineStage.Input);
+                if (_cropProfile.CropProcessing != null && !(input is IOcrCropProcessingInput))
+                    throw new OcrPipelineException(VisualErrorCodes.OcrCropProcessingUnavailable, "The recognition-only input does not expose crop processing.", OcrPipelineStage.Input);
+                var cropBudget = _cropProfile.CropProcessing == null ? null : new CropWorkBudget(_cropProfile.CropProcessing);
                 var requests = new List<IndexedRequest>(regions.Count);
                 var windowPlans = _cropProfile.OverflowMode == RecognitionOverflowMode.SlidingWindow ? new IReadOnlyList<OcrRecognitionWindow>?[regions.Count] : null;
                 var windowOffsets = windowPlans == null ? null : new int[regions.Count];
@@ -319,10 +322,14 @@ namespace JYPPX.DeploySharp.Visual
                         throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only windows exceed the per-image limit.", OcrPipelineStage.CropAndBatch, regionIndex: region.SourceIndex);
                 }
                 List<OcrBatchDescriptor> batches = CreateBatches(requests, RecognitionSelection.Profile.Input.MinimumBatch, EffectiveMaximumBatch(RecognitionSelection), _options.MaximumRecognitionPaddingRatio, token);
+                long resultBytes = cropBudget?.Reserve(batches) ?? 0;
+                if (resultBytes > _options.MaximumResultBytes)
+                    throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only crop diagnostics exceed the result budget.", OcrPipelineStage.CropAndBatch);
                 BatchExecution<VisualInferenceResult>[] executed = await RunBatchesAsync(input, RecognitionSelection.Profile.Input.Name, batches, _recognizer.MaximumConcurrency, async (prepared, ct) =>
                     await _recognizer.RunAsync(prepared, new VisualExecutionOptions(), ct).ConfigureAwait(false), token).ConfigureAwait(false);
                 var recognized = new RecognizedText[requests.Count];
                 var widths = new OcrRecognitionWidthInfo[requests.Count];
+                OcrCropDiagnostics[]? cropDiagnostics = cropBudget == null ? null : new OcrCropDiagnostics[requests.Count];
                 foreach (BatchExecution<VisualInferenceResult> batchExecution in executed)
                 {
                     TextRecognitionBatchResult result = batchExecution.Result.GetValue<TextRecognitionBatchResult>();
@@ -332,6 +339,7 @@ namespace JYPPX.DeploySharp.Visual
                         IndexedRequest request = batchExecution.Batch.Requests[index];
                         recognized[request.Position] = result.Items[index].WithSourceRegionIndex(request.Request.Region.SourceIndex);
                         widths[request.Position] = batchExecution.Batch.Crops[index].WidthInfo;
+                        if (cropDiagnostics != null) cropDiagnostics[request.Position] = batchExecution.Diagnostics[index];
                     }
                 }
                 var output = new List<OcrRegionResult>(regions.Count);
@@ -343,15 +351,34 @@ namespace JYPPX.DeploySharp.Visual
                     if (windows == null || windows.Count <= 1)
                     {
                         output.Add(new OcrRegionResult(regions[index], recognized[offset] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only output is missing a region.", OcrPipelineStage.Recognition), widths[offset]));
-                        continue;
                     }
-                    var rawWindows = new List<OcrRecognitionWindowResult>(windows.Count);
-                    for (int windowIndex = 0; windowIndex < windows.Count; windowIndex++)
+                    else
                     {
-                        RecognizedText raw = recognized[offset + windowIndex] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only window output is missing.", OcrPipelineStage.Recognition, regionIndex: regions[index].SourceIndex);
-                        rawWindows.Add(new OcrRecognitionWindowResult(windows[windowIndex], raw, widths[offset + windowIndex]));
+                        var rawWindows = new List<OcrRecognitionWindowResult>(windows.Count);
+                        for (int windowIndex = 0; windowIndex < windows.Count; windowIndex++)
+                        {
+                            RecognizedText raw = recognized[offset + windowIndex] ?? throw new OcrPipelineException(VisualErrorCodes.OcrPipelineFailed, "Recognition-only window output is missing.", OcrPipelineStage.Recognition, regionIndex: regions[index].SourceIndex);
+                            rawWindows.Add(new OcrRecognitionWindowResult(windows[windowIndex], raw, widths[offset + windowIndex]));
+                        }
+                        output.Add(OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, token));
                     }
-                    output.Add(OcrRecognitionWindowMerger.Merge(regions[index], _cropProfile, rawWindows, aggregation, token));
+                    int windowCount = windows?.Count ?? 1;
+                    if (cropDiagnostics != null) output[index] = output[index].WithCropDiagnostics(CropEvidenceRange(cropDiagnostics, offset, windowCount));
+                    resultBytes = checked(resultBytes + RetryTextBytes(output[index].Recognition) + regions[index].Polygon.Vertices.Count * 8L + 128L);
+                    if (resultBytes > _options.MaximumResultBytes)
+                        throw new OcrPipelineException(VisualErrorCodes.OcrLimitExceeded, "Recognition-only results exceed the result budget.", OcrPipelineStage.Merge, regionIndex: regions[index].SourceIndex);
+                }
+                OcrExecutionOptions execution = OcrExecutionOptions.Default;
+                if (_cropProfile.OrientationRetry != null)
+                    resultBytes = (await RunOrientationRetriesAsync(input, output, resultBytes, execution, aggregation, token, cropBudget).ConfigureAwait(false)).RetainedBytes;
+                if (_cropProfile.WidthRetry != null)
+                    resultBytes = (await RunWidthRetryAsync(input, output, resultBytes, execution, aggregation, token, cropBudget).ConfigureAwait(false)).RetainedBytes;
+                if (_cropProfile.EnhancementRetry != null)
+                {
+                    CropWorkBudget retryBudget = cropBudget ?? throw new OcrPipelineException(VisualErrorCodes.OcrCropProcessingUnavailable, "Enhancement retry requires crop processing.", OcrPipelineStage.Recognition);
+                    _ = _cropProfile.EnhancementRetry.Enhancements.Count == 1
+                        ? await RunEnhancementRetryAsync(input, output, resultBytes, execution, aggregation, token, retryBudget).ConfigureAwait(false)
+                        : await RunEnhancementRecipeRetryAsync(input, output, resultBytes, execution, aggregation, token, retryBudget).ConfigureAwait(false);
                 }
                 return output.AsReadOnly();
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -104,6 +105,37 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(OcrEnhancementRetryDecision.InsufficientGain, secondRetry.Decision);
             Assert.IsNull(secondRetry.SelectedCandidateIndex);
             Assert.AreEqual(1, secondRetry.ConsensusMatchCount);
+        }
+
+        [TestMethod]
+        public async Task RecognitionOnlyRunsConfiguredEnhancementRecipesWithoutDetector()
+        {
+            int calls = 0;
+            OcrEnhancementRetryOptions retry = OcrEnhancementRetryOptions.CreateMany(
+                new[] { RetryEnhancement(), new OcrCropEnhancementOptions(OcrCropEnhancementMode.LocalUpscale, upscaleFactor: 2) },
+                confidenceThreshold: 1,
+                selectionPolicy: OcrEnhancementSelectionPolicy.ConsensusConfidenceGain,
+                minimumConfidenceGain: .05f,
+                maximumRegionsPerImage: 1,
+                maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(enhancementRetry: retry,
+                recognitionFactory: _ => RetryOutputs(++calls == 1 ? .4f : calls == 2 ? .85f : .95f));
+            using var input = new CropInput { QualityStep = 6 };
+
+            IReadOnlyList<OcrRegionResult> results = await fixture.Pipeline.RecognizeOnlyAsync(input, new[] { Region(7, 0, 0, 20, 10) });
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount);
+            Assert.AreEqual(3, fixture.RecognitionProvider.LastSession!.RunCount);
+            Assert.AreEqual(3, calls);
+            OcrEnhancementRetryResult evidence = results[0].EnhancementRetry
+                ?? throw new AssertFailedException("Recognition-only execution did not retain enhancement evidence.");
+            Assert.AreEqual(OcrEnhancementRetryDecision.CandidateSelected, evidence.Decision);
+            Assert.AreEqual(1, evidence.SelectedCandidateIndex);
+            Assert.AreEqual(2, evidence.ConsensusMatchCount);
+            Assert.AreEqual(2, evidence.Candidates.Count);
+            Assert.IsTrue(evidence.Candidates.All(candidate => candidate.CropDiagnostics.Count == 1));
+            Assert.AreEqual(0, input.Inner.ActivePreparedBatches);
         }
 
         private static InferenceOutputs RetryOutputsWithAlternateText(float score)

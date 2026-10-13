@@ -9,6 +9,29 @@ namespace DeploySharp.Visual.Tests
     public sealed partial class OcrTests
     {
         [TestMethod]
+        public async Task RecognitionOnlyRunsConfiguredWidthRetryWithoutDetector()
+        {
+            var retry = new OcrWidthRetryOptions(32, confidenceThreshold: .95f,
+                selectionPolicy: OcrWidthRetrySelectionPolicy.ConfidenceGain, minimumConfidenceGain: .01f,
+                maximumRegionsPerImage: 1, maximumCropsPerImage: 8);
+            using OcrFixture fixture = CreateOcrFixture(recognitionWidth: 8, dynamicWidth: true, widthRetry: retry,
+                recognitionFactory: inputs => WidthSensitiveRecognitionOutputs(inputs.GetRequired("crops").Shape[3] > 8 ? .99f : .9f));
+            using var input = new FakeOcrImageInput();
+
+            var results = await fixture.Pipeline.RecognizeOnlyAsync(input, new[] { Region(4, 0, 0, 20, 10) });
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual(0, fixture.DetectionProvider.LastSession!.RunCount);
+            Assert.AreEqual(2, fixture.RecognitionProvider.LastSession!.RunCount);
+            OcrWidthRetryResult evidence = results[0].WidthRetry
+                ?? throw new AssertFailedException("Recognition-only execution did not retain width-retry evidence.");
+            Assert.AreEqual(OcrWidthRetryDecision.CandidateSelected, evidence.Decision);
+            OcrWidthRetryAttempt candidate = evidence.Candidate
+                ?? throw new AssertFailedException("Recognition-only width retry did not retain its candidate.");
+            Assert.IsTrue(candidate.RecognitionWidth.HasValue && candidate.RecognitionWidth.Value.TargetWidth > 8);
+        }
+
+        [TestMethod]
         public async Task WiderDynamicWidthRetrySelectsCandidateAndKeepsAdmissionEvidence()
         {
             var retry = new OcrWidthRetryOptions(32, confidenceThreshold: .95f,
