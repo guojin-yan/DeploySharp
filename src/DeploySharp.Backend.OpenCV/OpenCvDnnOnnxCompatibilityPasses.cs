@@ -65,6 +65,13 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
             changed |= NormalizeShapeConcatInputs(model.Graph);
             changed |= NormalizeMixedIntegerShapeInputs(model.Graph);
             changed |= NormalizeReshapedShapeComparisons(model.Graph);
+            // Paddle2ONNX may preserve inference-only training_mode=0 as a
+            // BatchNormalization attribute. OpenCV DNN rejects that explicit
+            // attribute even though it is semantically redundant for inference.
+            // Remove only the explicit zero form; a non-zero value must remain
+            // visible because it changes the operator semantics.
+            changed |= NormalizeInferenceBatchNormalization(model.Graph);
+            changed |= NormalizeReshapeShapeInputs(model.Graph);
 
             for (int nodeIndex = 0; nodeIndex < model.Graph.Node.Count; nodeIndex++)
             {
@@ -116,6 +123,73 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
 
             return changed ? model.ToByteArray() : source;
         }
+
+        private static bool NormalizeInferenceBatchNormalization(GraphProto graph)
+        {
+            bool changed = false;
+            foreach (NodeProto node in graph.Node)
+            {
+                if (!string.Equals(node.OpType, "BatchNormalization", StringComparison.Ordinal)) continue;
+                for (int index = node.Attribute.Count - 1; index >= 0; index--)
+                {
+                    AttributeProto attribute = node.Attribute[index];
+                    if (!string.Equals(attribute.Name, "training_mode", StringComparison.Ordinal)) continue;
+                    if (attribute.Type != AttributeProto.Types.AttributeType.Int || attribute.I != 0) continue;
+                    node.Attribute.RemoveAt(index);
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        private static bool NormalizeReshapeShapeInputs(GraphProto graph)
+        {
+            // OpenCV DNN 5 requires the second Reshape input to be an integer
+            // blob, while some Paddle2ONNX graphs route an otherwise integral
+            // shape tensor through Identity/Concat nodes whose element depth is
+            // lost during import. An explicit Int32 Cast preserves the ONNX
+            // shape semantics and gives the importer an unambiguous type.
+            var usedNames = new HashSet<string>(StringComparer.Ordinal);
+            var producers = new Dictionary<string, NodeProto>(StringComparer.Ordinal);
+            foreach (NodeProto node in graph.Node)
+            {
+                usedNames.UnionWith(node.Input);
+                usedNames.UnionWith(node.Output);
+                foreach (string output in node.Output) producers[output] = node;
+            }
+            usedNames.UnionWith(graph.Initializer.Select(tensor => tensor.Name));
+            usedNames.UnionWith(graph.Input.Select(input => input.Name));
+            var shapeInitializers = graph.Initializer.ToDictionary(tensor => tensor.Name, StringComparer.Ordinal);
+
+            bool changed = false;
+            for (int nodeIndex = 0; nodeIndex < graph.Node.Count; nodeIndex++)
+            {
+                NodeProto reshape = graph.Node[nodeIndex];
+                if (!string.Equals(reshape.OpType, "Reshape", StringComparison.Ordinal) || reshape.Input.Count < 2 || string.IsNullOrEmpty(reshape.Input[1])) continue;
+                string shapeInput = reshape.Input[1];
+                // Limit this to Identity boundaries and empty integer masks
+                // (the scalar-reshape form). Ordinary integer masks stay intact.
+                bool identity = producers.TryGetValue(shapeInput, out NodeProto? producer) && producer.OpType == "Identity";
+                bool emptyMask = shapeInitializers.TryGetValue(shapeInput, out TensorProto? initializer) && initializer.Dims.Contains(0) &&
+                    (initializer.DataType == (int)TensorProto.Types.DataType.Int64 || initializer.DataType == (int)TensorProto.Types.DataType.Int32);
+                if (!identity && !emptyMask) continue;
+
+                string baseName = string.IsNullOrEmpty(reshape.Name) ? reshape.Output.FirstOrDefault() ?? "reshape" : reshape.Name;
+                string castOutput = baseName + "__deploysharp_reshape_shape_i32";
+                int suffix = 0;
+                while (!usedNames.Add(castOutput)) castOutput = baseName + "__deploysharp_reshape_shape_i32_" + (++suffix).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                var cast = new NodeProto { OpType = "Cast", Name = castOutput };
+                cast.Input.Add(shapeInput);
+                cast.Output.Add(castOutput);
+                cast.Attribute.Add(new AttributeProto { Name = "to", Type = AttributeProto.Types.AttributeType.Int, I = (int)TensorProto.Types.DataType.Int32 });
+                graph.Node.Insert(nodeIndex, cast);
+                graph.Node[nodeIndex + 1].Input[1] = castOutput;
+                nodeIndex++;
+                changed = true;
+            }
+            return changed;
+        }
+
 
         private static bool HasAttribute(NodeProto node, string name)
             => node.Attribute.Any(attribute => string.Equals(attribute.Name, name, StringComparison.Ordinal));
