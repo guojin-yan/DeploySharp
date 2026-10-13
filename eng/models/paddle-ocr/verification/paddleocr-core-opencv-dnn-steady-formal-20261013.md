@@ -65,6 +65,13 @@ Server. These counters identify the current OpenCV static recognition path as a
 memory/copy optimization target; they do not measure peak working set or native
 OpenCV allocation.
 
+The subsequent [fixed-width 320 formal matrix](paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)
+avoids repeated dynamic-width graph specialization. It reduces P50 by `26.0%`
+to `49.0%` and reported managed allocation by `96.04%` to `99.76%`, while
+retaining fixed-contract ORT/OpenCV ordered-text and semantic parity. Dynamic
+width remains the quality-first default because fixed and dynamic text are not
+universally identical.
+
 ## Interpretation and limits
 
 These values are fixed-host steady-state observations for one image. Model and
