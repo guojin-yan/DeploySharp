@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-13T10:37:26Z",
+  "generatedUtc": "2026-10-13T22:47:05Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -39,6 +39,7 @@
     "sealOpenCvDynamicBatch": "eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json",
     "slanextOpenVinoCompatTensorRt11Probe": "eng/models/paddle-document/verification/slanext-openvino-compat-tensorrt11-builder-probe-20261012.json",
     "slanextOriginalTensorRt11Probe": "eng/models/paddle-document/verification/slanext-tensorrt11-builder-probe-20261011.json",
+    "slanextOriginalTensorRt11BuilderApi11Probe": "eng/models/paddle-document/verification/slanext-tensorrt-builder-probe-20261014.json",
     "formulaPlusSTensorRt11Probe": "eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.json",
     "formulaTensorRt11BuilderProbe": "eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.json",
     "formulaUniMERNetTensorRt11Probe": "eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.json",
