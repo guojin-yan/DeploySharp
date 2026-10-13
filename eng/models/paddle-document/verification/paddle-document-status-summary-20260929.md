@@ -1,4 +1,4 @@
-# PP-Structure backend status summary (2026-09-30)
+# PP-Structure backend status summary (updated 2026-10-13)
 
 This is a readable summary of the authoritative [31-entry backend matrix](paddle-document-backend-matrix-20260929.json). Status is exact artifact × backend evidence, not model-family extrapolation.
 
@@ -6,15 +6,15 @@ This is a readable summary of the authoritative [31-entry backend matrix](paddle
 | --- | ---: | ---: | ---: |
 | ONNX Runtime CPU | 31 | 0 | 0 |
 | OpenVINO CPU | 23 | 8 | 0 |
-| OpenCV DNN CPU | 9 | 9 | 13 |
-| TensorRT CUDA | 8 | 0 | 23 |
+| OpenCV DNN CPU | 11 | 15 | 5 |
+| TensorRT CUDA | 21 | 10 | 0 |
 
 ## Supported evidence scope
 
 - ORT CPU has graph/decoder evidence for all 31 matrix entries.
 - OpenVINO has exact evidence for document orientation, UVDoc, all twelve registered layout artifacts, PP-DocLayout-L, both derived SLANeXt compatibility graphs, table classification, both wired/wireless table-cell artifacts, both seal models and Chart2Table; formula imports are explicit unsupported rows. The layout and table-cell execution reports are [`paddle-document-openvino-layout-matrix-20260930.md`](paddle-document-openvino-layout-matrix-20260930.md) and [`paddle-document-openvino-table-cell-matrix-20260930.md`](paddle-document-openvino-table-cell-matrix-20260930.md).
-- OpenCV DNN has exact evidence for orientation, PP-DocLayout-L, PP-DocBlockLayout, two RT-DETR layout models, both table-cell models and table classification. Eight additional layout artifacts were attempted and are explicitly unsupported by the OpenCV 5.0 `MatMul` importer; Chart2Table Vision/Embedding load in isolation, but full autoregressive generation remains unverified because the current C# Mat bridge only admits 2-D auxiliary tensors while Prefill/KV Decode require rank 3/4. The complete NMS matrix is [`paddle-document-opencv-nms-matrix-20260930.md`](paddle-document-opencv-nms-matrix-20260930.md).
-- TensorRT CUDA has exact evidence for orientation, PP-DocLayout-L, table classification, both wired/wireless RT-DETR table-cell models, both seal models and the four-graph Chart2Table bundle. The table-cell 5/50 report is [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](paddle-document-tensorrt-table-cell-matrix-20260930.md). Other PP-Structure engines remain unverified.
+- OpenCV DNN has exact pass evidence for orientation, PP-DocLayout-L/Plus-L, PP-DocBlockLayout, two RT-DETR layout models, both table-cell models, table classification and both PP-OCRv4 seal models. The seal evidence is a real Batch=2 execution/row-isolation contract in [`paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md`](paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md). Fifteen exact artifacts are explicitly unsupported by the current OpenCV 5.0 importer/runtime. The five remaining unverified rows are four SLANeXt variants and the Chart2Table four-graph bundle; these must not be promoted from isolated component evidence.
+- TensorRT CUDA has exact pass evidence for 21 assets: both PP-LCNet classifiers, UVDoc, all 12 layout artifacts, both RT-DETR table-cell models, both seal models and the four-graph Chart2Table bundle. Four SLANeXt variants and six formula graphs are explicit current-runtime Builder/importer unsupported rows. There are no `unverified` TensorRT rows in the current 31-entry matrix, but pass still means only the evidence scope attached to each exact artifact, not quality or cross-device support.
 
 ## Interpretation
 

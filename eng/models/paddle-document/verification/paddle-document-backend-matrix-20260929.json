@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-12T07:30:29Z",
+  "generatedUtc": "2026-10-13T10:45:00Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -34,6 +34,7 @@
     "picodetStaticTensorRt11": "eng/models/paddle-document/verification/paddle-document-picodet-static-tensorrt11-20261012.json",
     "uvdocTensorRt11DynamicBatch": "eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-20261011.json",
     "sealTensorRt11": "docs/model-backend-verification-matrix.md#tensorrt-精确工件证据",
+    "sealOpenCvDynamicBatch": "eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json",
     "slanextOpenVinoCompatTensorRt11Probe": "eng/models/paddle-document/verification/slanext-openvino-compat-tensorrt11-builder-probe-20261012.json",
     "slanextOriginalTensorRt11Probe": "eng/models/paddle-document/verification/slanext-tensorrt11-builder-probe-20261011.json",
     "formulaPlusSTensorRt11Probe": "eng/models/paddle-document/verification/formula-tensorrt-plus-s-builder-probe-20261012.json",
@@ -214,8 +215,8 @@
     { "modelId": "paddle-formula/pp-formulanet-s", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "opencvDnnEvidence": "batch1-constantofshape-importer-blocked", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
     { "modelId": "paddle-formula/pp-formulanet-l", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "opencvDnnEvidence": "batch1-constantofshape-importer-blocked", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-bitwise-and-parser-blocked" },
     { "modelId": "paddle-formula/unimernet", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "opencvDnnEvidence": "batch1-importer-memory-blocked", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-concat-from-sequence-parser-blocked" },
-    { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
-    { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
+    { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "opencvDnnEvidence": "dynamic-batch2-execution-row-isolation", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
+    { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "opencvDnnEvidence": "dynamic-batch2-execution-row-isolation", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
     { "modelId": "paddle-chart/pp-chart2table", "artifactKind": "four-graph-release-bundle", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" }
   ]
 }
