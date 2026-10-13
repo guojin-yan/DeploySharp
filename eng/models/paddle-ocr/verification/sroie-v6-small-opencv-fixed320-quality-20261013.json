@@ -26,6 +26,7 @@
     "split": "train",
     "images": 10,
     "inputManifestSha256": "2975c4e967b485f2b064980fe62b1df5e2e43acb954c44f144d87b020f8f8e41",
+    "selectedManifestSemanticSha256": "a6551840abdd839fdf314038700f5a45ed11856f17214bd5c3e55e5fae8ac70b",
     "sourceManifestSha256s": [
       "3015917423e64aad275f7e3626187d0061cae2738ba6d780907aa87de06b4cb4",
       "3b9c8159d88d1da188483ede63c067bcaf8564e73137c5cdf278ce292ad25518"
@@ -161,6 +162,7 @@
   ],
   "rawEvidence": {
     "committed": false,
+    "comparisonSha256": "1f4dff5a8cf45cc48d05240c2a72ef38c4ce88b5b9201cfb0261aff6005b2777",
     "dynamicWidth": {
       "runSha256": "b4fccdf22fa970fbd7d035cc1e6ef7e6f36051b5ac054203e543c210e5607031",
       "evaluationSha256": "f7d5ad098736e55260dd5710984bb3ce3d3b7387b5b748d9d0acec1b9176fd97",
@@ -175,6 +177,8 @@
   "reproduction": {
     "runner": "eng/models/paddle-ocr/scripts/Invoke-PaddleOcrPublicDataset.ps1",
     "evaluator": "eng/models/paddle-ocr/scripts/Evaluate-DeploySharpPublicOcrDataset.py",
+    "comparator": "eng/models/paddle-ocr/scripts/Compare-PaddleOcrBackendQualityEvidence.py",
+    "allowedProtocolDifference": "fixedRecognitionWidth",
     "fixedWidthParameter": "-FixedRecognitionWidth 320",
     "dynamicWidthParameter": "omit -FixedRecognitionWidth or pass 0"
   }

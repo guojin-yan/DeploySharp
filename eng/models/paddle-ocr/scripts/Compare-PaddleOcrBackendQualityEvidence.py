@@ -1,4 +1,4 @@
-"""Compare complete-pipeline PaddleOCR quality runs across backends.
+"""Compare complete-pipeline PaddleOCR quality runs across backends or controlled protocol variants.
 
 The comparator intentionally checks run provenance before comparing page and
 region outputs. It reports behavior differences; it does not decide whether a
@@ -16,6 +16,35 @@ from pathlib import Path
 from typing import Any
 
 
+PROTOCOL_FIELDS = (
+    "sourceRevision",
+    "benchmarkAssemblySha256",
+    "selectedManifestSemanticSha256",
+    "selectedImageCount",
+    "warmup",
+    "iterations",
+    "batchSize",
+    "inferenceChannels",
+    "maximumRegions",
+    "fixedRecognitionWidth",
+    "overflowMode",
+    "windowOverlap",
+    "maximumWindowsPerRegion",
+    "pipelineTimeoutMs",
+)
+
+ALLOWABLE_PROTOCOL_DIFFERENCES = (
+    "batchSize",
+    "inferenceChannels",
+    "maximumRegions",
+    "fixedRecognitionWidth",
+    "overflowMode",
+    "windowOverlap",
+    "maximumWindowsPerRegion",
+    "pipelineTimeoutMs",
+)
+
+
 def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
@@ -26,6 +55,25 @@ def first_existing(directory: Path, names: tuple[str, ...]) -> Path:
         if path.is_file():
             return path
     raise FileNotFoundError(f"None of {names!r} exists in {directory}")
+
+
+def load_selected_manifest(run_dir: Path, metadata: dict[str, Any]) -> tuple[Path, list[dict[str, Any]], str]:
+    configured = Path(str(metadata.get("selectedManifest", "")))
+    candidates = [configured, run_dir / "selected-manifest.jsonl"]
+    selected_path = next((path for path in candidates if path.is_file()), None)
+    if selected_path is None:
+        raise FileNotFoundError(f"Selected manifest does not exist for {run_dir}")
+    records = [
+        json.loads(line)
+        for line in selected_path.read_text(encoding="utf-8-sig").splitlines()
+        if line.strip()
+    ]
+    canonical = "\n".join(
+        json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        for record in records
+    ) + "\n"
+    semantic_sha256 = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return selected_path, records, semantic_sha256
 
 
 def discover_runs(root: Path) -> dict[str, Path]:
@@ -44,6 +92,7 @@ def discover_runs(root: Path) -> dict[str, Path]:
 
 def load_run(run_dir: Path) -> dict[str, Any]:
     metadata = read_json(run_dir / "run.json")
+    manifest_path, manifest_records, manifest_semantic_sha256 = load_selected_manifest(run_dir, metadata)
     predictions_path = first_existing(
         run_dir,
         ("predictions-corrected.json", "predictions-verified.json", "predictions.json"),
@@ -64,6 +113,9 @@ def load_run(run_dir: Path) -> dict[str, Any]:
         "predictions": predictions,
         "evaluation": evaluation,
         "widthSample": width_sample,
+        "selectedManifestPath": manifest_path,
+        "selectedManifestRecords": manifest_records,
+        "selectedManifestSemanticSha256": manifest_semantic_sha256,
     }
 
 
@@ -134,30 +186,38 @@ def metric_summary(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def compare_pair(model_id: str, reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
+def compare_pair(
+    model_id: str,
+    reference: dict[str, Any],
+    candidate: dict[str, Any],
+    allowed_protocol_differences: frozenset[str] = frozenset(),
+) -> dict[str, Any]:
     ref_meta = reference["metadata"]
     cand_meta = candidate["metadata"]
     ref_assets = model_assets(reference)
     cand_assets = model_assets(candidate)
-    protocol_fields = (
-        "sourceRevision",
-        "benchmarkAssemblySha256",
-        "manifestSha256",
-        "selectedManifestSha256",
-        "selectedImageCount",
-        "warmup",
-        "iterations",
-        "batchSize",
-        "inferenceChannels",
-        "overflowMode",
-        "windowOverlap",
-        "maximumWindowsPerRegion",
-        "pipelineTimeoutMs",
-    )
+    reference_protocol = {
+        **ref_meta,
+        "selectedManifestSemanticSha256": reference["selectedManifestSemanticSha256"],
+    }
+    candidate_protocol = {
+        **cand_meta,
+        "selectedManifestSemanticSha256": candidate["selectedManifestSemanticSha256"],
+    }
     protocol_differences = {
-        field: {"reference": ref_meta.get(field), "candidate": cand_meta.get(field)}
-        for field in protocol_fields
-        if ref_meta.get(field) != cand_meta.get(field)
+        field: {"reference": reference_protocol.get(field), "candidate": candidate_protocol.get(field)}
+        for field in PROTOCOL_FIELDS
+        if reference_protocol.get(field) != candidate_protocol.get(field)
+    }
+    blocking_protocol_differences = {
+        field: values
+        for field, values in protocol_differences.items()
+        if field not in allowed_protocol_differences
+    }
+    allowed_differences = {
+        field: values
+        for field, values in protocol_differences.items()
+        if field in allowed_protocol_differences
     }
 
     ref_images = {image["image_id"]: image for image in reference["predictions"].get("images", [])}
@@ -246,8 +306,15 @@ def compare_pair(model_id: str, reference: dict[str, Any], candidate: dict[str, 
         "candidateBackend": cand_meta.get("backend"),
         "referenceDirectory": str(reference["directory"]),
         "candidateDirectory": str(candidate["directory"]),
-        "protocolCompatible": not protocol_differences,
+        "protocolCompatible": not blocking_protocol_differences,
         "protocolDifferences": protocol_differences,
+        "allowedProtocolDifferences": allowed_differences,
+        "blockingProtocolDifferences": blocking_protocol_differences,
+        "selectedManifestByteSha256": {
+            "reference": ref_meta.get("selectedManifestSha256"),
+            "candidate": cand_meta.get("selectedManifestSha256"),
+        },
+        "selectedManifestSemanticSha256": reference["selectedManifestSemanticSha256"],
         "modelAssetsMatch": common_assets,
         "modelAssetsSha256": {"reference": ref_assets, "candidate": cand_assets},
         "referenceMetrics": reference_metrics,
@@ -284,6 +351,10 @@ def markdown_report(report: dict[str, Any]) -> str:
         )
     else:
         command.append("  --candidate-root <candidate-run-root> `")
+    command.extend(
+        f"  --allow-protocol-difference {field} `"
+        for field in report.get("protocol", {}).get("allowedProtocolDifferences", [])
+    )
     command.extend((
         f"  --output-json {reproduction.get('outputJson', '<output.json>')} `",
         f"  --output-markdown {reproduction.get('outputMarkdown', '<output.md>')}",
@@ -293,14 +364,14 @@ def markdown_report(report: dict[str, Any]) -> str:
     source_datasets = ", ".join(report.get("dataset", {}).get("sourceDatasets", [])) or "the pinned public selection"
     source_splits = ", ".join(report.get("dataset", {}).get("sourceSplits", [])) or "the selected split"
     lines = [
-        f"# PP-OCR core-model backend quality comparison ({generated_date})",
+        f"# PP-OCR core-model quality comparison ({generated_date})",
         "",
         f"This report compares complete DET → optional CLS → REC pipeline outputs on the same {image_count} selected pages from {source_datasets} ({source_splits}). It is smoke evidence, not a release accuracy score or formal performance benchmark. Each page has one warm-up and one measured run.",
         "",
         f"- Machine: `{report['runtime']['machine']}` / `{report['runtime']['operatingSystem']}` / `{report['runtime']['processorArchitecture']}`.",
         f"- Reference backend: `{reference_backend}`; candidate backend(s): `{candidate_backends}`.",
         f"- Models: {report['summary']['models']}; backend comparisons: {report['summary']['comparisons']}; page runs: {report['summary']['successfulPageRuns']}/{report['summary']['expectedPageRuns']} successful.",
-        f"- Selection SHA-256: `{report['dataset']['selectedManifestSha256']}`; model, image, evaluator and assembly provenance are preserved in the JSON evidence.",
+        f"- Canonical selection SHA-256: `{report['dataset']['selectedManifestSemanticSha256']}`; original byte hashes, model, image, evaluator and assembly provenance are preserved in the JSON evidence.",
         "- The dataset remains local smoke data pending image-specific redistribution review. No images, annotations, or predictions are included in the repository.",
         "",
         "## Results",
@@ -336,7 +407,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Reproduction",
         "",
-        "Run the quality evaluations first with the same selected manifest and protocol, then compare their local run directories. The script refuses to compare different model hashes, selected manifests, source revisions, assemblies or run protocols.",
+        "Run the quality evaluations first with the same semantic selected manifest and protocol, then compare their local run directories. The script refuses to compare different model hashes, selected records, source revisions, assemblies or run protocols unless a named protocol field is explicitly allowed for a controlled A/B comparison.",
         "",
         "```powershell",
         *command,
@@ -352,7 +423,15 @@ def main() -> int:
     parser.add_argument("--candidate-root", required=True, type=Path, action="append")
     parser.add_argument("--output-json", required=True, type=Path)
     parser.add_argument("--output-markdown", required=True, type=Path)
+    parser.add_argument(
+        "--allow-protocol-difference",
+        action="append",
+        default=[],
+        choices=ALLOWABLE_PROTOCOL_DIFFERENCES,
+        help="Allow one named protocol field to differ for a controlled A/B comparison; repeat as needed.",
+    )
     args = parser.parse_args()
+    allowed_protocol_differences = frozenset(args.allow_protocol_difference)
 
     reference_runs = discover_runs(args.reference_root.resolve())
     if not reference_runs:
@@ -368,9 +447,9 @@ def main() -> int:
         for model_id in sorted(reference_runs):
             reference = load_run(reference_runs[model_id])
             candidate = load_run(candidate_runs[model_id])
-            comparison = compare_pair(model_id, reference, candidate)
+            comparison = compare_pair(model_id, reference, candidate, allowed_protocol_differences)
             if not comparison["protocolCompatible"]:
-                raise ValueError(f"Protocol mismatch for {model_id} vs {comparison['candidateBackend']}: {comparison['protocolDifferences']}")
+                raise ValueError(f"Protocol mismatch for {model_id} vs {comparison['candidateBackend']}: {comparison['blockingProtocolDifferences']}")
             if not comparison["modelAssetsMatch"]:
                 raise ValueError(f"Model asset hash mismatch for {model_id} vs {comparison['candidateBackend']}")
             expected_backend = str(candidate["metadata"].get("backend", "unknown"))
@@ -381,29 +460,25 @@ def main() -> int:
     reference_meta = read_json(reference_run_dir / "run.json")
     reference_prediction = read_json(first_existing(reference_run_dir, ("predictions-corrected.json", "predictions-verified.json", "predictions.json")))
     image_ids = [image.get("image_id") for image in reference_prediction.get("images", [])]
-    selected_manifest_path = Path(str(reference_meta.get("selectedManifest", "")))
     manifest_images: list[dict[str, Any]] = []
     source_datasets: set[str] = set()
     source_splits: set[str] = set()
-    if selected_manifest_path.is_file():
-        for line in selected_manifest_path.read_text(encoding="utf-8-sig").splitlines():
-            if not line.strip():
-                continue
-            record = json.loads(line)
-            if record.get("source_dataset"):
-                source_datasets.add(str(record["source_dataset"]))
-            if record.get("source_split"):
-                source_splits.add(str(record["source_split"]))
-            manifest_images.append({
-                "imageId": record.get("image_id"),
-                "imageSha256": (
-                    record.get("source_image_sha256")
-                    or record.get("image_sha256")
-                    or record.get("source_provenance", {}).get("image_sha256")
-                ),
-            })
-        if [item["imageId"] for item in manifest_images] != image_ids:
-            raise ValueError("Selected manifest image order does not match the reference prediction document")
+    reference_loaded = load_run(reference_run_dir)
+    for record in reference_loaded["selectedManifestRecords"]:
+        if record.get("source_dataset"):
+            source_datasets.add(str(record["source_dataset"]))
+        if record.get("source_split"):
+            source_splits.add(str(record["source_split"]))
+        manifest_images.append({
+            "imageId": record.get("image_id"),
+            "imageSha256": (
+                record.get("source_image_sha256")
+                or record.get("image_sha256")
+                or record.get("source_provenance", {}).get("image_sha256")
+            ),
+        })
+    if [item["imageId"] for item in manifest_images] != image_ids:
+        raise ValueError("Selected manifest image order does not match the reference prediction document")
     all_page_runs = sum(item["candidateMetrics"]["pages"] for item in comparisons)
     all_page_failures = sum(item["candidateMetrics"]["pageFailures"] for item in comparisons)
     selected_page_count = reference_meta.get("selectedImageCount")
@@ -415,7 +490,7 @@ def main() -> int:
     report = {
         "schemaVersion": 1,
         "generatedUtc": datetime.now(timezone.utc).isoformat(),
-        "scope": "PP-OCR complete-pipeline backend quality comparison",
+        "scope": "PP-OCR complete-pipeline quality comparison",
         "referenceBackend": reference_meta.get("backend"),
         "candidateBackends": sorted(backends),
         "runtime": {
@@ -427,6 +502,7 @@ def main() -> int:
         "dataset": {
             "sourceManifestSha256": reference_meta.get("manifestSha256"),
             "selectedManifestSha256": reference_meta.get("selectedManifestSha256"),
+            "selectedManifestSemanticSha256": reference_loaded["selectedManifestSemanticSha256"],
             "imageCount": reference_meta.get("selectedImageCount"),
             "sourceDatasets": sorted(source_datasets),
             "sourceSplits": sorted(source_splits),
@@ -443,6 +519,7 @@ def main() -> int:
             "overflowMode": reference_meta.get("overflowMode"),
             "benchmarkAssemblySha256": reference_meta.get("benchmarkAssemblySha256"),
             "sourceRevision": reference_meta.get("sourceRevision"),
+            "allowedProtocolDifferences": sorted(allowed_protocol_differences),
             "performanceBoundary": performance_boundary,
         },
         "summary": {
@@ -457,6 +534,7 @@ def main() -> int:
         "reproduction": {
             "referenceRoot": str(args.reference_root),
             "candidateRoots": [str(root) for root in args.candidate_root],
+            "allowedProtocolDifferences": sorted(allowed_protocol_differences),
             "outputJson": str(args.output_json),
             "outputMarkdown": str(args.output_markdown),
         },

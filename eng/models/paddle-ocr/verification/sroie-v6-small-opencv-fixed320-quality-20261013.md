@@ -38,7 +38,11 @@ record does not establish `320` as a universal optimum.
 Use `Invoke-PaddleOcrPublicDataset.ps1` twice with the same manifest and
 protocol. Omit `-FixedRecognitionWidth` for the dynamic run and pass
 `-FixedRecognitionWidth 320` for the fixed run, then score both with
-`Evaluate-DeploySharpPublicOcrDataset.py`. The machine-readable
+`Evaluate-DeploySharpPublicOcrDataset.py`. Compare the runs with
+`Compare-PaddleOcrBackendQualityEvidence.py --allow-protocol-difference
+fixedRecognitionWidth`; all other provenance and protocol fields remain strict.
+The comparator uses a canonical JSON selection hash, so harmless JSONL key
+ordering and whitespace changes do not masquerade as different data. The machine-readable
 [JSON record](sroie-v6-small-opencv-fixed320-quality-20261013.json) retains the
 source/runtime/model hashes, aggregate results and raw run hashes.
 

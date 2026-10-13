@@ -100,6 +100,94 @@ class ComparePublicDatasetQualityEvidenceTests(unittest.TestCase):
         self.assertNotIn("HierText `sample-002`", markdown)
         self.assertTrue(report["generatedUtc"])
 
+    def test_semantically_identical_manifest_formatting_is_accepted(self) -> None:
+        reformatted = json.dumps(self.manifest_record, sort_keys=True, separators=(", ", ": ")) + "\n"
+        candidate_manifest = self.candidate / "selected-manifest.jsonl"
+        candidate_manifest.write_text(reformatted, encoding="utf-8")
+        candidate_metadata_path = self.candidate / "run.json"
+        candidate_metadata = json.loads(candidate_metadata_path.read_text(encoding="utf-8"))
+        candidate_metadata["selectedManifestSha256"] = hashlib.sha256(reformatted.encode("utf-8")).hexdigest()
+        candidate_metadata_path.write_text(json.dumps(candidate_metadata), encoding="utf-8")
+
+        with patch("sys.argv", [
+            str(SCRIPT),
+            "--reference-root", str(self.ref.parent),
+            "--candidate-root", str(self.candidate.parent),
+            "--output-json", str(self.output_json),
+            "--output-markdown", str(self.output_md),
+        ]):
+            COMPARATOR.main()
+
+        report = json.loads(self.output_json.read_text(encoding="utf-8"))
+        comparison = report["comparisons"][0]
+        self.assertTrue(comparison["protocolCompatible"])
+        self.assertNotEqual(
+            comparison["selectedManifestByteSha256"]["reference"],
+            comparison["selectedManifestByteSha256"]["candidate"],
+        )
+        self.assertEqual(
+            report["dataset"]["selectedManifestSemanticSha256"],
+            comparison["selectedManifestSemanticSha256"],
+        )
+
+    def test_named_protocol_difference_requires_explicit_allowance(self) -> None:
+        candidate_metadata_path = self.candidate / "run.json"
+        candidate_metadata = json.loads(candidate_metadata_path.read_text(encoding="utf-8"))
+        candidate_metadata["fixedRecognitionWidth"] = 320
+        candidate_metadata_path.write_text(json.dumps(candidate_metadata), encoding="utf-8")
+
+        reference = COMPARATOR.load_run(self.ref)
+        candidate = COMPARATOR.load_run(self.candidate)
+        blocked = COMPARATOR.compare_pair("v6-small", reference, candidate)
+        allowed = COMPARATOR.compare_pair(
+            "v6-small",
+            reference,
+            candidate,
+            frozenset({"fixedRecognitionWidth"}),
+        )
+
+        self.assertFalse(blocked["protocolCompatible"])
+        self.assertIn("fixedRecognitionWidth", blocked["blockingProtocolDifferences"])
+        self.assertTrue(allowed["protocolCompatible"])
+        self.assertIn("fixedRecognitionWidth", allowed["allowedProtocolDifferences"])
+
+        with patch("sys.argv", [
+            str(SCRIPT),
+            "--reference-root", str(self.ref.parent),
+            "--candidate-root", str(self.candidate.parent),
+            "--allow-protocol-difference", "fixedRecognitionWidth",
+            "--output-json", str(self.output_json),
+            "--output-markdown", str(self.output_md),
+        ]):
+            COMPARATOR.main()
+
+        report = json.loads(self.output_json.read_text(encoding="utf-8"))
+        self.assertEqual(["fixedRecognitionWidth"], report["protocol"]["allowedProtocolDifferences"])
+        self.assertEqual(["fixedRecognitionWidth"], report["reproduction"]["allowedProtocolDifferences"])
+        self.assertIn(
+            "--allow-protocol-difference fixedRecognitionWidth",
+            self.output_md.read_text(encoding="utf-8"),
+        )
+
+    def test_semantically_different_manifest_is_blocked(self) -> None:
+        changed_record = {**self.manifest_record, "source_split": "validation"}
+        changed_manifest = json.dumps(changed_record) + "\n"
+        candidate_manifest = self.candidate / "selected-manifest.jsonl"
+        candidate_manifest.write_text(changed_manifest, encoding="utf-8")
+        candidate_metadata_path = self.candidate / "run.json"
+        candidate_metadata = json.loads(candidate_metadata_path.read_text(encoding="utf-8"))
+        candidate_metadata["selectedManifestSha256"] = hashlib.sha256(changed_manifest.encode("utf-8")).hexdigest()
+        candidate_metadata_path.write_text(json.dumps(candidate_metadata), encoding="utf-8")
+
+        comparison = COMPARATOR.compare_pair(
+            "v6-small",
+            COMPARATOR.load_run(self.ref),
+            COMPARATOR.load_run(self.candidate),
+        )
+
+        self.assertFalse(comparison["protocolCompatible"])
+        self.assertIn("selectedManifestSemanticSha256", comparison["blockingProtocolDifferences"])
+
 
 if __name__ == "__main__":
     unittest.main()
