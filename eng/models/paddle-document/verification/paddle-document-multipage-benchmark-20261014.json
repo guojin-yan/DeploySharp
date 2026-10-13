@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "reportDate": "2026-10-14",
+  "sourceRevision": "874482c",
+  "scope": "two-page-paddle-document-orientation-layout-page-concurrency",
+  "applicationsExcluded": true,
+  "environment": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "win-x64",
+    "processorCount": 16,
+    "input": "E:\\Data\\image\\bus.jpg",
+    "inputSha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "protocol": {
+    "pages": 2,
+    "sessionConcurrency": 2,
+    "pageConcurrency": 2,
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "pipeline": ["DocumentOrientation", "LayoutDetection"],
+    "resultContract": "page order 0,1; source SHA preserved; 300 layout candidates per page"
+  },
+  "backends": [
+    {
+      "backend": "onnxruntime-cpu",
+      "rawEvidence": "paddle-document-multipage-benchmark-20261014-onnxruntime.json",
+      "rawEvidenceSha256": "8efc68ce01ba89f89d587d1e306e892f785283c6464397546ce07ce04b583932",
+      "sequential": { "p50Ms": 1139.59675, "p95Ms": 1261.217415, "firstRunMs": 1684.2021 },
+      "concurrent": { "p50Ms": 1018.43175, "p95Ms": 1211.011285, "firstRunMs": 1123.3411 },
+      "pageContract": { "pages": 2, "ordered": true, "regionsPerPage": [300, 300] }
+    },
+    {
+      "backend": "openvino-cpu",
+      "rawEvidence": "paddle-document-multipage-benchmark-20261014-openvino.json",
+      "rawEvidenceSha256": "42f53de2088ee0b55d9bb77135a945dfa4d87b2898e007620e2c1299a689a814",
+      "sequential": { "p50Ms": 1137.5573, "p95Ms": 1280.6547, "firstRunMs": 1839.0927 },
+      "concurrent": { "p50Ms": 915.87405, "p95Ms": 987.933295, "firstRunMs": 1106.5658 },
+      "pageContract": { "pages": 2, "ordered": true, "regionsPerPage": [300, 300] }
+    }
+  ],
+  "result": "passed",
+  "boundary": "Single Windows host, duplicated bus image, page-level concurrency rather than tensor Batch; not a quality, accuracy, TensorRT, soak, cross-device or universal speedup claim."
+}
