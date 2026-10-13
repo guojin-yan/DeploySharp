@@ -449,16 +449,16 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 ## 状态和验证规则
 
-28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归仍未验证，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
+28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归已确认受当前 N-D 辅助输入适配器限制而不支持，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
 
 | 后端/模块 | 当前真实证据 | 边界 |
 | --- | --- | --- |
 | ORT CPU | 22 个非公式工件、6 个公式 token/BPE 解码，方向→版面阶段编排 | 公式结果长度与 tokenizer 无告警不是公式准确率 |
 | OpenVINO CPU | 方向、版面、表格分类、wired/wireless 单元格、UVDoc、mobile/server 印章 | 按精确模型记录；未外推其它工件 |
 | OpenVINO SLANeXt | wired/wireless 派生 ONNX 均通过，与原始 ORT 输出逐元素对比 | 原始 Release ONNX 仍受循环变量同名问题影响，需先执行下方兼容转换 |
-| OpenCV DNN | PP-DocLayout-L、PP-DocLayout-Plus-L、PP-DocBlockLayout、RT-DETR 3/17 类版面、wired/wireless 单元格、两个 PP-LCNet 官方示例以及 PP-OCR v4/v5/v6 七组核心完整流水线 | PP-DocLayout-M/S 与 PicoDet layout 在 OpenCV 5.0 `MatMul` importer 处 `unsupported`；PP-DocLayout-L 不请求被 importer 忽略的常量计数输出；Chart2Table 自回归仍未验证 |
+| OpenCV DNN | PP-DocLayout-L、PP-DocLayout-Plus-L、PP-DocBlockLayout、RT-DETR 3/17 类版面、wired/wireless 单元格、两个 PP-LCNet 官方示例以及 PP-OCR v4/v5/v6 七组核心完整流水线 | PP-DocLayout-M/S 与 PicoDet layout、六个公式模型、四个 SLANeXt 工件及 Chart2Table 自回归均有精确阻断证据；PP-DocLayout-L 不请求被 importer 忽略的常量计数输出 |
 | TensorRT CUDA | PP-LCNet 文档方向、PP-LCNet 表格分类、五个 PP-Structure 版面图、mobile/server 印章概率图；均有 ORT 对照和预热后 P50/P95 | TRT 11 bridge + TRT 11.0.0.114-cu12 + CUDA 12.9 + cuDNN 9.22；版面五模型为单图证据，M 的最低 IoU `0.832389` 采用显式 `0.80` 门槛；server 印章已显式关闭 TF32，不外推其它模型 |
-| Chart2Table 四图 Bundle | ORT CPU/OpenVINO CPU/TensorRT CUDA：官方样例生成完整 2018–2023 表格；4 张 ChartQA human 图在 ORT/OpenVINO/TensorRT 均到 EOS、精确匹配 golden table，关联 QA 8/8 匹配。ORT/OpenVINO 四图机器可读证据见 `chart2table-ort-multi-image-20260929.json` / `chart2table-openvino-multi-image-20260929.json`；TensorRT device path 的官方样例最好 10.12 s，Decode P50/P95 66.47/73.48 ms | 库 Builder 已构建四图并通过完整生成回归；严格 FP32 Builder 四图运行耗时异常且不是性能基准；OpenCV DNN、跨数据集准确率仍未验证 |
+| Chart2Table 四图 Bundle | ORT CPU/OpenVINO CPU/TensorRT CUDA：官方样例生成完整 2018–2023 表格；4 张 ChartQA human 图在 ORT/OpenVINO/TensorRT 均到 EOS、精确匹配 golden table，关联 QA 8/8 匹配。ORT/OpenVINO 四图机器可读证据见 `chart2table-ort-multi-image-20260929.json` / `chart2table-openvino-multi-image-20260929.json`；TensorRT device path 的官方样例最好 10.12 s，Decode P50/P95 66.47/73.48 ms | 库 Builder 已构建四图并通过完整生成回归；严格 FP32 Builder 四图运行耗时异常且不是性能基准；OpenCV DNN 当前适配器明确不支持完整自回归，跨数据集准确率仍未验证 |
 
 完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。UVDoc TensorRT 运行记录见 [`uvdoc-tensorrt11-20260924.json`](../../eng/models/paddle-document/verification/uvdoc-tensorrt11-20260924.json)。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
 
@@ -482,7 +482,7 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
    2023 | 87.99 | 5.96
    ```
 2. **TensorRT 使用边界与优化**：文本 TensorRT plan 保持 FP32 数据类型；FP16 text `lm_head` 图在此 GPU 上返回全零 logits。可选 TF32 tactics 在该官方样例上保持与严格 FP32 完全相同的输出，但尚未进行数据集精度验证。四图 TensorRT plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建；Decode 动态 profile 的空 Engine 问题由测试选择了错误图及 mask 长度不匹配造成，修正后库 Builder 计划通过完整 EOS 回归。`PaddleChart2TableTensorRtDeviceSession` 用两组 CUDA KV 缓冲区轮换，只回读 logits，并减少动态 shape/binding 重复工作。没有锁定 GPU 时钟，计时不是受控基准。
-3. **发布与泛化精度边界**：四个派生 ONNX 和 tokenizer sidecars 已作为 `paddle-chart/pp-chart2table` Bundle 放入 `models-paddleocr` Release；OpenCV DNN 仍未验证。官方样例和 4 个 ChartQA human 样本均在 ORT、OpenVINO 和 TensorRT 完成 EOS 与表格输出校验，TensorRT 还记录了四图逐阶段耗时和结构指标，详见 [`chart2table-tensorrt-multi-image-20260930.md`](../../eng/models/paddle-document/verification/chart2table-tensorrt-multi-image-20260930.md)。这些是定性回归，不是全量数据集精度或受控性能基准。该模型目录项保留上游源包的 `conversion-blocked` 状态，不能表示其派生 ONNX Session 不可用。
+3. **发布与泛化精度边界**：四个派生 ONNX 和 tokenizer sidecars 已作为 `paddle-chart/pp-chart2table` Bundle 放入 `models-paddleocr` Release；OpenCV DNN 当前适配器因 rank-3 Prefill 与 rank-4 KV 输入明确不支持完整生成，见[隔离证据](../../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.md)。官方样例和 4 个 ChartQA human 样本均在 ORT、OpenVINO 和 TensorRT 完成 EOS 与表格输出校验，TensorRT 还记录了四图逐阶段耗时和结构指标，详见 [`chart2table-tensorrt-multi-image-20260930.md`](../../eng/models/paddle-document/verification/chart2table-tensorrt-multi-image-20260930.md)。这些是定性回归，不是全量数据集精度或受控性能基准。该模型目录项保留上游源包的 `conversion-blocked` 状态，不能表示其派生 ONNX Session 不可用。
 
     12 张 `ChartQA/val` 图像的 ORT 和 TensorRT 结果还可以通过 [对齐报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.md) 直接核对。脚本只对已生成的两个 JSON 做同源校验：输入图像 SHA、EOS 原因、结构标志、期望单元格数量均为 `12/12`，两边精确单元格合计均为 `140`；它不重新推理，也不构成全量准确率或受控性能结论。对应的[机器可读 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.json) 可供 CI 或后续设备结果比较使用。
 

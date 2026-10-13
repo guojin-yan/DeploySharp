@@ -179,17 +179,17 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | 文档矫正：`paddle-doc/uvdoc` | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
 | 版面分析：`paddle-doc/pp-doclayout-l` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓† |
 | 版面分析：`paddle-doc/pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s`、`pp-docblocklayout` | ✓ | ✓ | ✓ | ✓ | △ | ✓ |
-| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls` | ✓ | ✓ | ✓ | ✓ | △ | ✓P |
-| 版面分析：`paddle-doc/rt-detr-h-layout-3cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | ✓# |
-| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls` | ✓ | ✓ | ✓ | ✓ | △ | ✓P |
-| 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | △ | ✗² |
-| 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | △ | ✗³ |
+| 版面分析：`paddle-doc/picodet-layout-1x`、`picodet-layout-1x-table`、`picodet-s-layout-3cls`、`picodet-l-layout-3cls` | ✓ | ✓ | ✓ | ✓ | ✗ | ✓P |
+| 版面分析：`paddle-doc/rt-detr-h-layout-3cls`、`rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓# |
+| 版面分析：`paddle-doc/picodet-s-layout-17cls`、`picodet-l-layout-17cls` | ✓ | ✓ | ✓ | ✓ | ✗ | ✓P |
+| 表格结构（原始 Release ONNX）：`paddle-table/slanext-wired`、`paddle-table/slanext-wireless` | ✓ | ✓ | ✓ | ✗ | ✗ | ✗² |
+| 表格结构（本地 alpha-renamed 兼容图）：`slanext-wired`、`slanext-wireless` | ✓ | — | ✓ | ✓** | ✗ | ✗³ |
 | 表格分类：`paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‡ |
 | 表格单元格：`paddle-table/rt-detr-l-wired-cell-det`、`rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓‖ |
-| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | △ | ✗⁴/✗⁵ |
+| 公式：`paddle-formula/pp-formulanet-plus-s/m/l`、`pp-formulanet-s/l`、`unimernet` | ✓ | ✓ | ✓ | ✗¹ | ✗ | ✗⁴/✗⁵ |
 | 印章：`paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
 | 印章：`paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓§ |
-| 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | △ | ✓¶ |
+| 图表（四图生成 Bundle）：`paddle-chart/pp-chart2table` | ✓ | ✓ | ✓ | ✓ | ✗ | ✓¶ |
 
 2026-10-07 补充的印章 batch=2 验证现已覆盖 ORT CPU、OpenVINO CPU 与 OpenCV DNN CPU：PP-OCRv4 mobile/server 的六个精确组合均完成两张不同图像的真实 Batch 绑定、概率图输出与 Decoder 行/来源映射。OpenCV mask SHA 与另外两个后端不同，因此只登记为执行/行隔离通过，不登记数值 parity。相关矩阵中的 OpenCV 状态仅对这两个印章 ONNX 工件成立；其它 PP-Structure 模型的未验证状态不变。详见[三后端印章动态 Batch 报告](../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)。
 
@@ -216,19 +216,19 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | `paddle-doc/picodet-s-layout-17cls` | ✓ | ✓ | ✗ | ✓P |
 | `paddle-doc/picodet-l-layout-17cls` | ✓ | ✓ | ✗ | ✓P |
 | `paddle-doc/rt-detr-h-layout-17cls` | ✓ | ✓ | ✓ | ✓# |
-| `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | △ | ✗² |
-| `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | △ | ✗² |
-| `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | △ | ✗³ |
-| `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | △ | ✗³ |
+| `paddle-table/slanext-wired` (原始图) | ✓ | ✗ | ✗ | ✗² |
+| `paddle-table/slanext-wireless` (原始图) | ✓ | ✗ | ✗ | ✗² |
+| `paddle-table/slanext-wired-openvino-compat` (派生图) | ✓ | ✓ | ✗ | ✗³ |
+| `paddle-table/slanext-wireless-openvino-compat` (派生图) | ✓ | ✓ | ✗ | ✗³ |
 | `paddle-table/pp-lcnet-x1-0-table-cls` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-table/rt-detr-l-wired-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
 | `paddle-table/rt-detr-l-wireless-cell-det` | ✓ | ✓ | ✓ | ✓‖ |
-| `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | △ | ✗⁴ |
-| `paddle-formula/unimernet` | ✓ | ✗¹ | △ | ✗⁵ |
+| `paddle-formula/pp-formulanet-plus-s` | ✓ | ✗¹ | ✗ | ✗⁴ |
+| `paddle-formula/pp-formulanet-plus-m` | ✓ | ✗¹ | ✗ | ✗⁴ |
+| `paddle-formula/pp-formulanet-plus-l` | ✓ | ✗¹ | ✗ | ✗⁴ |
+| `paddle-formula/pp-formulanet-s` | ✓ | ✗¹ | ✗ | ✗⁴ |
+| `paddle-formula/pp-formulanet-l` | ✓ | ✗¹ | ✗ | ✗⁴ |
+| `paddle-formula/unimernet` | ✓ | ✗¹ | ✗ | ✗⁵ |
 | `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | ✗ | ✓ |
@@ -236,6 +236,8 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 ¹ 六个公式工件已经通过隔离进程逐项尝试，当前 OpenVINO 组合全部不支持：历史 alpha-renaming 派生图没有通过 token parity/Loop reshape/native 稳定性；2026-10-08 在当前 OpenVINO `2026.2.1` runtime 上对六个精确导出复核时，五个 FormulaNet 仍在 `Loop-18` canonical-input 校验失败，UniMERNet 使隔离 reader 进程中止。逐项错误摘要见 [`formula-openvino-isolated-20261008.json`](../eng/models/paddle-document/verification/formula-openvino-isolated-20261008.json)，历史派生图实验见 [`formula-openvino-loop-compat-20261004.json`](../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json)。这表示当前精确后端准入失败，不代表公式识别准确率，也不是缺少 DLL 的结论。
 
 Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。2026-10-13 在当前源码、OpenCV 5.0 和四份精确 ONNX 上重新执行后得到相同边界，因此完整 OpenCV 自回归现标记为 `✗`（当前适配器/运行时不支持），而不是 `△` 或部分支持。详细记录见 [`chart2table-opencv-isolated-20261013.md`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.md) 和 [机器可读 JSON](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.json)。
+
+SLANeXt 的两个原始 Release 图和两个 alpha-renamed OpenVINO 兼容图也已逐工件隔离执行。探针将 Batch=1 输出合同专门化为 `[1,sequence,8/50]` 后，四图均到达 OpenCV 5.0 importer，并在 `Loop.0` 的图类型 `body` 属性处以 `-213 / feature not implemented` 失败，未进入推理或 Decoder。因此四个精确 OpenCV 单元均为 `✗`；详见 [`slanext-opencv-isolated-20261013.md`](../eng/models/paddle-document/verification/slanext-opencv-isolated-20261013.md) 和 [JSON](../eng/models/paddle-document/verification/slanext-opencv-isolated-20261013.json)。这不改变原始图 ORT 或派生图 OpenVINO 的通过证据，也不外推未来 OpenCV 版本。
 
 Chart2Table 的统一后端/质量索引见 [`chart2table-backend-quality-status-20261011.md`](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.md) 和 [机器可读 JSON](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.json)。该索引集中记录四图完整生成、ChartQA 有界质量选择和 OpenCV rank-3/rank-4 辅助输入阻断；不改变矩阵语义，也不把小样本质量结果写成 split accuracy。
 
