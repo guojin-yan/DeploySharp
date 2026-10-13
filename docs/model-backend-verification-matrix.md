@@ -231,11 +231,11 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 | `paddle-formula/unimernet` | ✓ | ✗¹ | △ | ✗⁵ |
 | `paddle-seal/ppocrv4-mobile` | ✓ | ✓ | ✓ | ✓ |
 | `paddle-seal/ppocrv4-server` | ✓ | ✓ | ✓ | ✓ |
-| `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | △ | ✓ |
+| `paddle-chart/pp-chart2table` (四图 Bundle) | ✓ | ✓ | ✗ | ✓ |
 
 ¹ 六个公式工件已经通过隔离进程逐项尝试，当前 OpenVINO 组合全部不支持：历史 alpha-renaming 派生图没有通过 token parity/Loop reshape/native 稳定性；2026-10-08 在当前 OpenVINO `2026.2.1` runtime 上对六个精确导出复核时，五个 FormulaNet 仍在 `Loop-18` canonical-input 校验失败，UniMERNet 使隔离 reader 进程中止。逐项错误摘要见 [`formula-openvino-isolated-20261008.json`](../eng/models/paddle-document/verification/formula-openvino-isolated-20261008.json)，历史派生图实验见 [`formula-openvino-loop-compat-20261004.json`](../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json)。这表示当前精确后端准入失败，不代表公式识别准确率，也不是缺少 DLL 的结论。
 
-Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。该边界对应当前 JYPPX OpenCV C# `Mat` bridge 只暴露二维辅助分配/reshape，已由 fail-closed 合同测试固定。因此完整 OpenCV 自回归仍保持 `△`，不是四图 Bundle 的完整支持；详细记录见 [`chart2table-opencv-isolated-20260929.json`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
+Chart2Table 的 OpenCV DNN 隔离探针已加载 Vision/Projector 和 Token Embedding 两张图；Prefill 的三维 `inputs_embeds` 与 Decode 的四维动态 KV 辅助输入被当前 `OpenCvDnnModelContract` 的 rank≤2 辅助输入合同拒绝。2026-10-13 在当前源码、OpenCV 5.0 和四份精确 ONNX 上重新执行后得到相同边界，因此完整 OpenCV 自回归现标记为 `✗`（当前适配器/运行时不支持），而不是 `△` 或部分支持。详细记录见 [`chart2table-opencv-isolated-20261013.md`](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.md) 和 [机器可读 JSON](../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.json)。
 
 Chart2Table 的统一后端/质量索引见 [`chart2table-backend-quality-status-20261011.md`](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.md) 和 [机器可读 JSON](../eng/models/paddle-document/verification/chart2table-backend-quality-status-20261011.json)。该索引集中记录四图完整生成、ChartQA 有界质量选择和 OpenCV rank-3/rank-4 辅助输入阻断；不改变矩阵语义，也不把小样本质量结果写成 split accuracy。
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1",
-  "generatedUtc": "2026-10-13T10:45:00Z",
+  "generatedUtc": "2026-10-13T10:30:12Z",
   "deviceScope": {
     "label": "JYPPX",
     "osBuild": "10.0.26200",
@@ -24,6 +24,7 @@
   "evidence": {
     "matrixDocument": "docs/model-backend-verification-matrix.md",
     "chart2table": "eng/models/paddle-document/verification/chart2table-component-validation.json",
+    "chart2tableOpenCvIsolated": "eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.json",
     "slanextCompatibility": "eng/models/paddle-document/verification/slanext-openvino-compatibility.json",
     "formulaOpenVino": "eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json",
     "openvinoLayoutMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.json",
@@ -217,6 +218,6 @@
     { "modelId": "paddle-formula/unimernet", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "unsupported", "opencvDnnCpu": "unsupported", "opencvDnnEvidence": "batch1-importer-memory-blocked", "tensorRtCuda": "unsupported", "tensorRtEvidence": "trt11-concat-from-sequence-parser-blocked" },
     { "modelId": "paddle-seal/ppocrv4-mobile", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "opencvDnnEvidence": "dynamic-batch2-execution-row-isolation", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
     { "modelId": "paddle-seal/ppocrv4-server", "artifactKind": "release-onnx", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "pass", "opencvDnnEvidence": "dynamic-batch2-execution-row-isolation", "tensorRtCuda": "pass", "tensorRtEvidence": "single-image-bounded-parity" },
-    { "modelId": "paddle-chart/pp-chart2table", "artifactKind": "four-graph-release-bundle", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unverified", "tensorRtCuda": "pass" }
+    { "modelId": "paddle-chart/pp-chart2table", "artifactKind": "four-graph-release-bundle", "onnxruntimeCpu": "pass", "openvinoCpu": "pass", "opencvDnnCpu": "unsupported", "opencvDnnEvidence": "prefill-decode-nd-auxiliary-adapter-blocked", "tensorRtCuda": "pass" }
   ]
 }

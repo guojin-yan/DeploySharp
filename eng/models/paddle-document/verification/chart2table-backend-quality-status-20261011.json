@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-chart2table-backend-quality-status-v1",
-  "generatedUtc": "2026-10-12T00:00:00Z",
+  "generatedUtc": "2026-10-13T10:30:12Z",
   "modelId": "paddle-chart/pp-chart2table",
   "bundle": {
     "releaseRepository": "guojin-yan/DeploySharp",
@@ -104,7 +104,7 @@
         "tokenEmbedding": "loaded",
         "prefill": "blocked before inference: rank-3 inputs_embeds is outside the current auxiliary tensor contract",
         "decode": "blocked before inference: rank-4 dynamic KV inputs are outside the current auxiliary tensor contract",
-        "evidence": "chart2table-opencv-isolated-20260929.json"
+        "evidence": "chart2table-opencv-isolated-20261013.json"
       },
       "boundary": "The current OpenCV C# Mat bridge exposes only rank-2 auxiliary allocation/reshape. This is a precise adapter capability boundary, not evidence that the ONNX graphs are generally invalid."
     }
@@ -115,7 +115,6 @@
     "evidence": "chart2table-extended-quality-backend-alignment-20261012.json"
   },
   "notYetVerified": [
-    "OpenCV DNN full autoregressive generation",
     "ChartQA split-level accuracy or a larger independently labeled chart-to-table benchmark",
     "TensorRT CUDA rerun on the 24-image selection",
     "Clock-locked, repeated cross-device performance ranking",
