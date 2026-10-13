@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-13T18:33:44.7793608+00:00",
+  "backend": "tensorrt-cuda",
+  "models": [
+    {
+      "model": "paddle-table/rt-detr-l-wired-cell-det",
+      "status": "passed",
+      "onnxSha256": "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6",
+      "engineSha256": "c0969f4400edf0414ba356dc712c2fc20826334f5f56a26573f8b4eecde5b6ca",
+      "engineBytes": 165918364,
+      "inputShape": "[2,3,640,640]",
+      "outputRows": 2,
+      "rows": [
+        {
+          "row": 0,
+          "ortDetections": 300,
+          "tensorRtDetections": 300,
+          "ortConfidentDetections": 300,
+          "tensorRtConfidentDetections": 300,
+          "compared": 300,
+          "minimumMatchedIou": 0.99987644
+        },
+        {
+          "row": 1,
+          "ortDetections": 300,
+          "tensorRtDetections": 300,
+          "ortConfidentDetections": 300,
+          "tensorRtConfidentDetections": 300,
+          "compared": 300,
+          "minimumMatchedIou": 0.9998369
+        }
+      ]
+    },
+    {
+      "model": "paddle-table/rt-detr-l-wireless-cell-det",
+      "status": "passed",
+      "onnxSha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+      "engineSha256": "2a6b820b673a4ccba1bea4f7205ce0341a2edeb57d7aa259de1f47d54290744f",
+      "engineBytes": 164212900,
+      "inputShape": "[2,3,640,640]",
+      "outputRows": 2,
+      "rows": [
+        {
+          "row": 0,
+          "ortDetections": 300,
+          "tensorRtDetections": 300,
+          "ortConfidentDetections": 300,
+          "tensorRtConfidentDetections": 300,
+          "compared": 300,
+          "minimumMatchedIou": 0.99983543
+        },
+        {
+          "row": 1,
+          "ortDetections": 300,
+          "tensorRtDetections": 300,
+          "ortConfidentDetections": 300,
+          "tensorRtConfidentDetections": 300,
+          "compared": 300,
+          "minimumMatchedIou": 0.99996006
+        }
+      ]
+    }
+  ],
+  "boundary": "Exact RT-DETR table-cell dynamic Batch=2 profile, two-row geometry binding and bounded ORT parity on one Windows GPU/runtime; not a cell recall, table accuracy or throughput benchmark."
+}

@@ -44,6 +44,7 @@
     "formulaUniMERNetTensorRt11Probe": "eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.json",
     "formulaOpenCvBatch1": "eng/models/paddle-document/verification/paddle-document-formula-batch1-opencv-20261012.json",
     "tensorRtLayoutDynamicBatchTrt11": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md",
+    "tensorRtTableCellDynamicBatchTrt10": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.json",
     "tensorRtBuilder": "tests/DeploySharp.Visual.TensorRT.Tests/PaddleChart2TableTensorRtExternalIntegrationTests.cs",
     "chart2tableExtendedOrt": "eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json",
     "chart2tableExtendedTensorRt": "eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json",
@@ -108,8 +109,11 @@
       "onnxruntimeCpu": "pass",
       "openvinoCpu": "pass",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
-      "tensorRtCuda": "unverified",
-      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
+      "tensorRtCuda": "pass",
+      "tensorRtEvidence": "trt10.11-dynamic-batch2-bounded-parity",
+      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.json",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json",
+      "opencvReport": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
     },
     {
       "modelId": "paddle-table/rt-detr-l-wireless-cell-det",
@@ -118,8 +122,11 @@
       "onnxruntimeCpu": "pass",
       "openvinoCpu": "pass",
       "opencvDnnCpu": "unsupported-exact-dynamic-batch-contract",
-      "tensorRtCuda": "unverified",
-      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
+      "tensorRtCuda": "pass",
+      "tensorRtEvidence": "trt10.11-dynamic-batch2-bounded-parity",
+      "report": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.json",
+      "cpuReport": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json",
+      "opencvReport": "eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json"
     },
     {
       "modelId": "paddle-formula/pp-formulanet-plus-s",

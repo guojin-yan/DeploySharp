@@ -296,6 +296,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 同一流水线在 TensorRT 10.11 `compute_86` Engine 上也完成了[两页正式协议复测](../../eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261014.md)：串行/并发 P50/P95 为 `99.344/128.749` 与 `67.187/72.894 ms`，两页顺序和每页 300 个版面候选保持不变。该结果绑定当前 Engine、GPU 和 bridge/runtime，只是页面并发证据，不是 TensorRT 通用性能、准确率或跨设备承诺。
 
+表格单元格的两个 RT-DETR 工件也完成了[TensorRT 10.11 动态 Batch=2 验证](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.md)：每个输入由 `bus.jpg` 上下两个 ROI 组成，两个行各返回 300 个候选，ORT/TensorRT 最小 IoU 为 `0.99983543–0.99996006`。这是精确工件的辅助输入、行隔离和有界 parity 证据，不代表表格召回率、结构准确率、吞吐或跨设备可移植性。
+
 ### 版面区域 → OCR
 
 版面检测结果可以交给 `PaddleDocumentRegionTextStage`。该适配器要求前序阶段产生 `LayoutDetection` 区域，然后按页面区域顺序调用应用提供的 OCR 委托；委托负责从原图按 `region.Bounds` 裁剪、调用已有 `OcrPipeline`，再返回一条 `PaddleDocumentTextItem`。库会检查区域索引、页码和输入 SHA，并把每条文本与页面坐标绑定。

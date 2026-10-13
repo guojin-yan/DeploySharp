@@ -98,6 +98,8 @@ The [2026-10-14 refresh](verification/paddle-document-multipage-benchmark-202610
 
 The matching [TensorRT CUDA refresh](verification/paddle-document-tensorrt-multipage-benchmark-20261014.md) rebuilt the orientation and layout Engines with the TensorRT 10.11 bridge on the RTX 3060 Laptop host. Sequential/concurrent P50/P95 were `99.344/128.749` and `67.187/72.894 ms`; both pages preserved order and 300 layout candidates. Engine hashes and the full sample distribution are in the machine JSON. This is exact-Engine, single-host page-concurrency evidence; TensorRT portability, accuracy and cross-device performance remain separate gates.
 
+The two RT-DETR table-cell artifacts now also have a [TensorRT 10.11 dynamic Batch=2 record](verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.md): both `[2,3,640,640]` profiles completed with two ROI rows, 300 candidates per row and minimum ORT/TensorRT IoU `0.99983543`. This closes only the exact engine/input/decoder parity contract; it is not cell recall, table accuracy, throughput or cross-device evidence.
+
 For task-specific regression inputs, use `scripts/Acquire-PaddleDocumentValidation.ps1`. It downloads and verifies the SHA-256 of the official direction, table and formula examples. `scripts/Generate-FormulaReference.py` executes only the unchanged preprocessing classes from a pinned PaddleX revision to generate Float32 reference tensors. Requirements: NumPy, Pillow, opencv-python-headless. Use `--processor-source` for a locally downloaded copy if Python's network access is unavailable; the same source hash is required.
 
 ### Chart2Table four-graph bundle and runtime evidence
