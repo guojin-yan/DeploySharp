@@ -136,6 +136,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 EnableCpuMemArena = _options.EnableCpuMemoryArena,
                 LogSeverityLevel = (OrtLoggingLevel)(int)_options.LogSeverity
             };
+            foreach (KeyValuePair<string, string> entry in _options.SessionConfigEntries)
+                value.AddSessionConfigEntry(entry.Key, entry.Value);
             if (_options.LogId != null) value.LogId = _options.LogId;
             if (coreOptions.EnableProfiling)
             {
@@ -149,7 +151,20 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             }
             if (_options.ExecutionProvider == OnnxRuntimeExecutionProvider.Cuda)
             {
-                value.AppendExecutionProvider_CUDA(_options.CudaDeviceId);
+                if (_options.CudaProviderOptions.Count == 0)
+                {
+                    value.AppendExecutionProvider_CUDA(_options.CudaDeviceId);
+                }
+                else
+                {
+                    using var cudaOptions = new OrtCUDAProviderOptions();
+                    var providerOptions = new Dictionary<string, string>(_options.CudaProviderOptions, StringComparer.Ordinal)
+                    {
+                        ["device_id"] = _options.CudaDeviceId.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    };
+                    cudaOptions.UpdateOptions(providerOptions);
+                    value.AppendExecutionProvider_CUDA(cudaOptions);
+                }
             }
             else
             {
@@ -166,7 +181,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             {
                 nativeOptions = CreateNativeOptions(options, artifact);
                 nativeSession = new InferenceSession(modelPath, nativeOptions);
-                var session = new OnnxRuntimeSession(artifact, nativeSession, 1, _options.IntraOpThreads != 1);
+                var session = new OnnxRuntimeSession(artifact, nativeSession, 1, _options.IntraOpThreads != 1, _options.PreferPreallocatedCpuOutputs);
                 nativeSession = null;
                 return session;
             }

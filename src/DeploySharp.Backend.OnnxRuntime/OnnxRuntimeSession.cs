@@ -22,18 +22,20 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         private readonly IReadOnlyList<string> _outputNames;
         private readonly int _maximumConcurrency;
         private readonly bool _nativeAsyncEnabled;
+        private readonly bool _preferPreallocatedCpuOutputs;
         private readonly bool _hasDynamicOutputs;
         private readonly bool _reuseInputCollections;
         private List<string>? _singleInputNames;
         private List<OrtValue>? _singleInputValues;
         private bool _disposed;
 
-        public OnnxRuntimeSession(ModelArtifact artifact, InferenceSession session, int maximumConcurrency, bool nativeAsyncEnabled)
+        public OnnxRuntimeSession(ModelArtifact artifact, InferenceSession session, int maximumConcurrency, bool nativeAsyncEnabled, bool preferPreallocatedCpuOutputs = false)
         {
             _artifact = artifact;
             _session = session;
             _maximumConcurrency = maximumConcurrency;
             _nativeAsyncEnabled = nativeAsyncEnabled;
+            _preferPreallocatedCpuOutputs = preferPreallocatedCpuOutputs;
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
             // BackendRegistry normally supplies one independent channel per pool slot.
             // Reusing the short-lived input collection in that common case avoids two
@@ -160,6 +162,22 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                     {
                         inputNames.Add(input.Name);
                         inputValues.Add(OnnxTensorBridge.CreateInput(_artifact, input.Name, input.Tensor, _inputs[input.Name]));
+                    }
+                    if (_preferPreallocatedCpuOutputs && !_hasDynamicOutputs)
+                    {
+                        var outputs = new List<OrtValue>(_outputNames.Count);
+                        try
+                        {
+                            foreach (TensorDescriptor descriptor in Metadata.Outputs)
+                                outputs.Add(OnnxTensorBridge.AllocateOutput(_artifact, descriptor));
+                            _session.Run(runOptions, inputNames, inputValues, _outputNames, outputs);
+                            cancellationToken.ThrowIfCancellationRequested();
+                            return OnnxTensorBridge.CopyOutputs(_artifact, _outputNames, outputs);
+                        }
+                        finally
+                        {
+                            foreach (OrtValue output in outputs) output.Dispose();
+                        }
                     }
                     using (IDisposableReadOnlyCollection<OrtValue> outputs = _session.Run(runOptions, inputNames, inputValues, _outputNames))
                     {

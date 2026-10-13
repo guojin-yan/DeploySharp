@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace JYPPX.DeploySharp.Backends.OnnxRuntime
 {
@@ -63,7 +65,10 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             string? logId = null,
             string? profilingOutputPathPrefix = null,
             OnnxRuntimeExecutionProvider executionProvider = OnnxRuntimeExecutionProvider.Cpu,
-            int cudaDeviceId = 0)
+            int cudaDeviceId = 0,
+            IReadOnlyDictionary<string, string>? cudaProviderOptions = null,
+            IReadOnlyDictionary<string, string>? sessionConfigEntries = null,
+            bool preferPreallocatedCpuOutputs = false)
         {
             if (intraOpThreads < 0) throw new ArgumentOutOfRangeException(nameof(intraOpThreads));
             if (interOpThreads < 0) throw new ArgumentOutOfRangeException(nameof(interOpThreads));
@@ -72,6 +77,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             if (!Enum.IsDefined(typeof(OnnxRuntimeLogSeverity), logSeverity)) throw new ArgumentOutOfRangeException(nameof(logSeverity));
             if (!Enum.IsDefined(typeof(OnnxRuntimeExecutionProvider), executionProvider)) throw new ArgumentOutOfRangeException(nameof(executionProvider));
             if (cudaDeviceId < 0) throw new ArgumentOutOfRangeException(nameof(cudaDeviceId));
+            CudaProviderOptions = FreezeEntries(cudaProviderOptions, nameof(cudaProviderOptions));
+            SessionConfigEntries = FreezeEntries(sessionConfigEntries, nameof(sessionConfigEntries));
             IntraOpThreads = intraOpThreads;
             InterOpThreads = interOpThreads;
             GraphOptimization = graphOptimization;
@@ -83,6 +90,7 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             ProfilingOutputPathPrefix = string.IsNullOrWhiteSpace(profilingOutputPathPrefix) ? null : profilingOutputPathPrefix;
             ExecutionProvider = executionProvider;
             CudaDeviceId = cudaDeviceId;
+            PreferPreallocatedCpuOutputs = preferPreallocatedCpuOutputs;
         }
 
         /// <summary>Gets the intra-operation thread count, where zero lets ONNX Runtime choose. / 获取算子内线程数；零表示由 ONNX Runtime 选择。</summary>
@@ -110,7 +118,45 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         /// <summary>Gets the CUDA device ordinal used when <see cref="ExecutionProvider"/> is <see cref="OnnxRuntimeExecutionProvider.Cuda"/>. / 获取使用 CUDA 时的设备序号。</summary>
         public int CudaDeviceId { get; }
 
+        /// <summary>
+        /// Gets explicit CUDA execution-provider options. This is intentionally an escape hatch for
+        /// runtime investigations (for example disabling CUDA Graph or the CUDA memory arena); an
+        /// empty dictionary preserves the provider defaults. / 获取显式 CUDA 执行提供程序选项。
+        /// 该属性是用于运行时调查的扩展入口（例如禁用 CUDA Graph 或 CUDA 内存 arena）；空字典保持提供程序默认值。
+        /// </summary>
+        public IReadOnlyDictionary<string, string> CudaProviderOptions { get; }
+
+        /// <summary>
+        /// Gets explicit ONNX Runtime session configuration entries. These entries are applied before
+        /// the execution provider is appended and are intended for narrowly-scoped diagnostics.
+        /// / 获取显式 ONNX Runtime Session 配置项；配置会在追加执行提供程序前应用，仅用于范围明确的诊断。
+        /// </summary>
+        public IReadOnlyDictionary<string, string> SessionConfigEntries { get; }
+
+        /// <summary>
+        /// Gets whether static outputs should be supplied as caller-owned CPU OrtValues.
+        /// This is an opt-in diagnostic/compatibility path for providers whose device output
+        /// materialization is suspect; dynamic outputs still use the normal ORT allocation path.
+        /// / 获取是否将静态输出预分配为调用方拥有的 CPU OrtValue。这是针对设备输出物化异常的可选诊断/兼容路径；动态输出仍使用 ORT 默认分配。
+        /// </summary>
+        public bool PreferPreallocatedCpuOutputs { get; }
+
         /// <summary>Gets default CPU settings. / 获取默认 CPU 设置。</summary>
         public static OnnxRuntimeOptions Default { get; } = new OnnxRuntimeOptions();
+
+        private static IReadOnlyDictionary<string, string> FreezeEntries(IReadOnlyDictionary<string, string>? entries, string parameterName)
+        {
+            if (entries == null || entries.Count == 0)
+                return new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(StringComparer.Ordinal));
+
+            var copy = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, string> entry in entries)
+            {
+                if (string.IsNullOrWhiteSpace(entry.Key)) throw new ArgumentException("Configuration option names cannot be empty.", parameterName);
+                if (entry.Value == null) throw new ArgumentException("Configuration option values cannot be null.", parameterName);
+                copy.Add(entry.Key, entry.Value);
+            }
+            return new ReadOnlyDictionary<string, string>(copy);
+        }
     }
 }

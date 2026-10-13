@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-14T06:08:00Z",
+  "model": "pp-formulanet-plus-l",
+  "backend": "onnxruntime-cuda",
+  "ortPackage": "Microsoft.ML.OnnxRuntime.Gpu.Windows 1.23.2",
+  "sampleCount": 3,
+  "configurations": [
+    {
+      "name": "default",
+      "status": "reproduced-invalid-int64",
+      "detail": "Same-process three-sample run produced illegal Int64 token values and decoder OverflowException."
+    },
+    {
+      "name": "cuda-graph-off-default-stream-heuristic-cudnn",
+      "options": {
+        "enable_cuda_graph": "0",
+        "do_copy_in_default_stream": "1",
+        "cudnn_conv_algo_search": "HEURISTIC"
+      },
+      "status": "reproduced-invalid-int64"
+    },
+    {
+      "name": "static-cpu-output-preallocation",
+      "preferPreallocatedCpuOutputs": true,
+      "status": "reproduced-invalid-int64"
+    },
+    {
+      "name": "unsupported-memory-arena-key",
+      "option": "enable_mem_arena=0",
+      "status": "rejected-by-ort",
+      "detail": "ORT 1.23.2 reports unknown provider option."
+    }
+  ],
+  "boundary": "This is a lifecycle configuration probe only. It is not formula accuracy, semantic equivalence, performance, or ordinary multi-sample CUDA Session support evidence."
+}

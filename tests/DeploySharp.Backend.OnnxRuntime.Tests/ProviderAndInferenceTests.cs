@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -173,6 +174,31 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
             var artifact = OnnxRuntimeTestData.Artifact("classification.onnx");
             Assert.IsTrue(cudaProvider.CanCreate(artifact, new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cuda")));
             Assert.IsFalse(cudaProvider.CanCreate(artifact, new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu")));
+        }
+
+        [TestMethod]
+        public void ExperimentalProviderAndSessionOptionsAreCopiedAndExposedReadOnly()
+        {
+            var providerOptions = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["enable_cuda_graph"] = "0",
+                ["enable_mem_arena"] = "0"
+            };
+            var sessionOptions = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["session.use_cuda_graph"] = "0"
+            };
+            var options = new OnnxRuntimeOptions(
+                executionProvider: OnnxRuntimeExecutionProvider.Cuda,
+                cudaProviderOptions: providerOptions,
+                sessionConfigEntries: sessionOptions);
+
+            providerOptions["enable_cuda_graph"] = "1";
+            sessionOptions["session.use_cuda_graph"] = "1";
+            Assert.AreEqual("0", options.CudaProviderOptions["enable_cuda_graph"]);
+            Assert.AreEqual("0", options.SessionConfigEntries["session.use_cuda_graph"]);
+            Assert.ThrowsExactly<NotSupportedException>(() => ((IDictionary<string, string>)options.CudaProviderOptions).Add("x", "y"));
+            Assert.ThrowsExactly<ArgumentException>(() => new OnnxRuntimeOptions(cudaProviderOptions: new Dictionary<string, string> { [" "] = "1" }));
         }
 
         [TestMethod]

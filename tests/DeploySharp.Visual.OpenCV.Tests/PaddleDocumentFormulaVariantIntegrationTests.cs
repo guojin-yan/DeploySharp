@@ -442,6 +442,17 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
             cases = cases.Where(item => selectedModels.Contains(item.Model)).ToArray();
         Assert.IsTrue(cases.Length > 0, "The CUDA probe model filter did not select a known formula model.");
 
+        IReadOnlyDictionary<string, string> cudaProviderOptions = ParseOptionEntries(
+            Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_OPTIONS"),
+            "DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_OPTIONS");
+        IReadOnlyDictionary<string, string> sessionConfigEntries = ParseOptionEntries(
+            Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_SESSION_CONFIG"),
+            "DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_SESSION_CONFIG");
+        bool preferPreallocatedCpuOutputs = string.Equals(
+            Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_PREALLOCATE_CPU_OUTPUTS"),
+            "1",
+            StringComparison.Ordinal);
+
         string report = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FORMULA_ORT_CUDA_REPORT_PATH")
             ?? Path.Combine(TestContext.TestResultsDirectory!, "formula-ort-cuda-bounded.json"));
         string? reportDirectory = Path.GetDirectoryName(report);
@@ -483,7 +494,11 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
                     // registries and sessions for every sample so a provider-side
                     // state/cache issue cannot contaminate the next comparison row.
                     using var cpuRegistry = new BackendRegistry().UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cpu));
-                    using var cudaRegistry = new BackendRegistry().UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cuda));
+                    using var cudaRegistry = new BackendRegistry().UseOnnxRuntime(new OnnxRuntimeOptions(
+                        executionProvider: OnnxRuntimeExecutionProvider.Cuda,
+                        cudaProviderOptions: cudaProviderOptions,
+                        sessionConfigEntries: sessionConfigEntries,
+                        preferPreallocatedCpuOutputs: preferPreallocatedCpuOutputs));
                     using IInferenceSession cpuSession = cpuRegistry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), cpuRequest);
                     using IInferenceSession cudaSession = cudaRegistry.CreateSession(profile.CreateArtifact(modelPath, OnnxRuntimeBackendProvider.BackendId), cudaRequest);
                     using PreparedVisualInput input = factory.CreateFromFile(imagePath, profile.VisualProfile, inputId: sample.Image);
@@ -551,6 +566,9 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
             os = RuntimeInformation.OSDescription,
             modelCount = cases.Length,
             sampleCountPerModel = samples.Count,
+            cudaProviderOptions,
+            sessionConfigEntries,
+            preferPreallocatedCpuOutputs,
             models = rows,
             boundary = "Bounded ORT CUDA execution and CPU token/LaTeX parity on the selected realFormula samples. This is not a 121-sample CUDA quality score, a mathematical semantic-equivalence result, or evidence for OpenVINO/OpenCV/TensorRT."
         }, new JsonSerializerOptions { WriteIndented = true }));
@@ -561,6 +579,24 @@ public sealed class PaddleDocumentFormulaVariantIntegrationTests
     }
 
     private sealed record RealFormulaRow(string Image, string ImageRelPath, string ImageSha256, string ReferenceLatex);
+
+    private static IReadOnlyDictionary<string, string> ParseOptionEntries(string? value, string variableName)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(value)) return result;
+        foreach (string item in value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            int separator = item.IndexOf('=');
+            if (separator <= 0 || separator == item.Length - 1)
+                throw new AssertFailedException(variableName + " entries must use key=value;key=value syntax.");
+            string key = item.Substring(0, separator).Trim();
+            string entryValue = item.Substring(separator + 1).Trim();
+            if (key.Length == 0 || entryValue.Length == 0)
+                throw new AssertFailedException(variableName + " contains an empty key or value.");
+            result[key] = entryValue;
+        }
+        return result;
+    }
 
     private static int Find(IReadOnlyList<string> values, string value) { for (int i=0;i<values.Count;i++) if (values[i] == value) return i; return -1; }
     private static string FileSha(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
