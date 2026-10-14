@@ -39,6 +39,18 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
         if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
 
         TensorRtApiVersion apiVersion = ResolveApiVersion();
+        bool staticBatchOne = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_SLANEXT_STATIC_BATCH1") == "1";
+        TensorRtOnnxInputProfile inputProfile = staticBatchOne
+            ? new TensorRtOnnxInputProfile(
+                "x",
+                new TensorShape(1, 3, 512, 512),
+                new TensorShape(1, 3, 512, 512),
+                new TensorShape(1, 3, 512, 512))
+            : new TensorRtOnnxInputProfile(
+                "x",
+                new TensorShape(1, 3, 512, 512),
+                new TensorShape(2, 3, 512, 512),
+                new TensorShape(2, 3, 512, 512));
         var records = new List<object>();
         foreach ((string modelId, string fileName) in new[]
         {
@@ -73,11 +85,7 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
                         optimizationLevel: 3,
                         inputProfiles: new[]
                         {
-                            new TensorRtOnnxInputProfile(
-                                "x",
-                                new TensorShape(1, 3, 512, 512),
-                                new TensorShape(2, 3, 512, 512),
-                                new TensorShape(2, 3, 512, 512))
+                            inputProfile
                         },
                         overwrite: true));
                 status = File.Exists(build.EnginePath) && new FileInfo(build.EnginePath).Length > 0
@@ -125,7 +133,9 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
             generatedAtUtc = DateTimeOffset.UtcNow,
             apiVersion = (int)apiVersion,
             runtime = DescribeRuntime(),
-            profile = new { minimum = "[1,3,512,512]", optimum = "[2,3,512,512]", maximum = "[2,3,512,512]" },
+            profile = staticBatchOne
+                ? new { minimum = "[1,3,512,512]", optimum = "[1,3,512,512]", maximum = "[1,3,512,512]" }
+                : new { minimum = "[1,3,512,512]", optimum = "[2,3,512,512]", maximum = "[2,3,512,512]" },
             models = records,
             boundary = "Builder-only probe for the two original recurrent SLANeXt exports. A non-empty Engine is not support evidence until TensorRT execution, Paddle table Decoder output, ORT parity and HTML/quality checks pass."
         }, new JsonSerializerOptions { WriteIndented = true }));
