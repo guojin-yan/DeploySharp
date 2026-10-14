@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -114,7 +117,8 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
                 value.Markup, value.Regions, value.TableType, value.Warnings, value.Tokens, value.AverageScore);
         });
 
-        PaddleDocumentPipelineResult result = await new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { structureStage, cellStage, clsStage }).RunAsync(page, CancellationToken.None).ConfigureAwait(false);
+        var documentPipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { structureStage, cellStage, clsStage });
+        PaddleDocumentPipelineResult result = await documentPipeline.RunAsync(page, CancellationToken.None).ConfigureAwait(false);
         PaddleDocumentClassificationResult classification = result.GetRequired<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification);
         PaddleDocumentRegionResult cells = result.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.TableCellDetection);
         PaddleDocumentTableResult table = result.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition);
@@ -123,7 +127,170 @@ public sealed class PaddleDocumentTablePipelineIntegrationTests
         Assert.IsTrue(table.Tokens.Count > 10);
         Assert.IsTrue(table.Markup.Contains("<td", StringComparison.OrdinalIgnoreCase) || table.Markup.Contains("<table", StringComparison.OrdinalIgnoreCase), "SLANeXt markup did not contain an HTML table/cell tag: " + table.Markup);
         Assert.IsTrue(table.Regions.Count >= 10);
+        TablePipelineBenchmark? benchmark = null;
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TABLE_PIPELINE_BENCHMARK") == "1")
+        {
+            int warmups = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TABLE_PIPELINE_WARMUPS", 5);
+            int measurements = ReadPositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TABLE_PIPELINE_MEASUREMENTS", 50);
+            benchmark = await MeasureRepeatedAsync(() => documentPipeline.RunAsync(page, CancellationToken.None), result, warmups, measurements).ConfigureAwait(false);
+        }
+        WriteEvidenceIfRequested(backend, backendId, device, sourceSha, tableClsPath, cellPath, structurePath, clsDescriptor, cellDescriptor, structureDescriptor, result, classification, cells, table, benchmark);
         Console.WriteLine("PADDLE_DOCUMENT_TABLE_PIPELINE backend=" + backend + "-" + device + ";classification=" + classification.Label + ";cellDetectionCandidates=" + cells.Regions.Count + ";structureCells=" + table.Regions.Count + ";tokens=" + table.Tokens.Count + ";htmlLength=" + table.Markup.Length + ";warnings=" + string.Join(",", table.Warnings) + ";totalMs=" + result.Elapsed.TotalMilliseconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ";inputSha256=" + sourceSha + ";structureGraph=" + Sha256(structurePath));
+    }
+
+    private static void WriteEvidenceIfRequested(
+        string backend,
+        BackendId backendId,
+        string device,
+        string sourceSha,
+        string tableClsPath,
+        string cellPath,
+        string structurePath,
+        PaddleDocumentModelDescriptor clsDescriptor,
+        PaddleDocumentModelDescriptor cellDescriptor,
+        PaddleDocumentModelDescriptor structureDescriptor,
+        PaddleDocumentPipelineResult result,
+        PaddleDocumentClassificationResult classification,
+        PaddleDocumentRegionResult cells,
+        PaddleDocumentTableResult table,
+        TablePipelineBenchmark? benchmark)
+    {
+        string? requested = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TABLE_PIPELINE_EVIDENCE_PATH");
+        if (string.IsNullOrWhiteSpace(requested)) return;
+        string backendName = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "openvino" : "onnxruntime";
+        string resolved = requested.Replace("{backend}", backendName, StringComparison.OrdinalIgnoreCase);
+        if (!resolved.Contains("{backend}", StringComparison.OrdinalIgnoreCase) && backendName != "onnxruntime" && !Path.GetFileNameWithoutExtension(resolved).EndsWith("-openvino", StringComparison.OrdinalIgnoreCase))
+        {
+            string directory = Path.GetDirectoryName(resolved) ?? string.Empty;
+            string stem = Path.GetFileNameWithoutExtension(resolved);
+            string extension = Path.GetExtension(resolved);
+            resolved = Path.Combine(directory, stem + "-" + backendName + extension);
+        }
+        string fullPath = Path.GetFullPath(resolved);
+        string? directoryPath = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directoryPath)) Directory.CreateDirectory(directoryPath);
+        var evidence = new
+        {
+            schemaVersion = 1,
+            generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
+            sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION"),
+            backend = backendName + "-" + device,
+            backendId = backendId.Value,
+            environment = new
+            {
+                machine = Environment.MachineName,
+                operatingSystem = RuntimeInformation.OSDescription,
+                runtime = RuntimeInformation.FrameworkDescription,
+                processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                processorCount = Environment.ProcessorCount
+            },
+            input = new { path = ImagePath, sha256 = sourceSha, sourceSize = new { width = 1654, height = 1300 }, pageIndex = result.Page.PageIndex },
+            models = new
+            {
+                tableClassification = new { modelId = clsDescriptor.ModelId, path = tableClsPath, sha256 = Sha256(tableClsPath) },
+                cellDetection = new { modelId = cellDescriptor.ModelId, path = cellPath, sha256 = Sha256(cellPath) },
+                structureRecognition = new { modelId = structureDescriptor.ModelId, path = structurePath, sha256 = Sha256(structurePath) }
+            },
+            execution = new
+            {
+                pipeline = "table-classification -> table-cell-detection -> SLANeXt-table-structure -> HTML",
+                stages = result.Timings.ToDictionary(item => item.Module.ToString(), item => item.Elapsed.TotalMilliseconds),
+                totalMs = result.Elapsed.TotalMilliseconds,
+                classification = new { label = classification.Label, index = classification.Index, score = classification.Score },
+                cellDetectionCandidates = cells.Regions.Count,
+                structureRegions = table.Regions.Count,
+                tokenCount = table.Tokens.Count,
+                htmlLength = table.Markup.Length,
+                htmlSha256 = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(table.Markup))).ToLowerInvariant(),
+                warnings = table.Warnings.ToArray(),
+                benchmark
+            },
+            boundary = "Real single-page task-chain execution and provenance evidence only. The input has no table/cell ground truth; this does not establish table accuracy, cross-device portability, or a formal 5-warmup/50-measurement performance ranking."
+        };
+        File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+    }
+
+    private static async Task<TablePipelineBenchmark> MeasureRepeatedAsync(
+        Func<Task<PaddleDocumentPipelineResult>> execute,
+        PaddleDocumentPipelineResult baseline,
+        int warmupCount,
+        int measurementCount)
+    {
+        string baselineHtmlSha = HtmlSha256(baseline.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition).Markup);
+        for (int index = 0; index < warmupCount; index++) AssertRepeatContract(await execute().ConfigureAwait(false), baseline, baselineHtmlSha);
+
+        var totalSamples = new List<double>(measurementCount);
+        var stageSamples = baseline.Timings.ToDictionary(item => item.Module.ToString(), _ => new List<double>(measurementCount));
+        for (int index = 0; index < measurementCount; index++)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            PaddleDocumentPipelineResult measured = await execute().ConfigureAwait(false);
+            stopwatch.Stop();
+            AssertRepeatContract(measured, baseline, baselineHtmlSha);
+            totalSamples.Add(stopwatch.Elapsed.TotalMilliseconds);
+            foreach (PaddleDocumentPipelineStageTiming timing in measured.Timings) stageSamples[timing.Module.ToString()].Add(timing.Elapsed.TotalMilliseconds);
+        }
+
+        return new TablePipelineBenchmark
+        {
+            warmupCount = warmupCount,
+            measurementCount = measurementCount,
+            totalMs = Summarize(totalSamples),
+            stageMs = stageSamples.ToDictionary(item => item.Key, item => Summarize(item.Value)),
+            invariantResultContract = true
+        };
+    }
+
+    private static void AssertRepeatContract(PaddleDocumentPipelineResult actual, PaddleDocumentPipelineResult baseline, string expectedHtmlSha)
+    {
+        Assert.AreEqual(baseline.Page.PageIndex, actual.Page.PageIndex);
+        PaddleDocumentClassificationResult expectedClassification = baseline.GetRequired<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification);
+        PaddleDocumentClassificationResult classification = actual.GetRequired<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification);
+        Assert.AreEqual(expectedClassification.Label, classification.Label);
+        Assert.AreEqual(expectedClassification.Index, classification.Index);
+        Assert.AreEqual(baseline.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.TableCellDetection).Regions.Count, actual.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.TableCellDetection).Regions.Count);
+        PaddleDocumentTableResult expectedTable = baseline.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition);
+        PaddleDocumentTableResult table = actual.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition);
+        Assert.AreEqual(expectedTable.Tokens.Count, table.Tokens.Count);
+        Assert.AreEqual(expectedTable.Regions.Count, table.Regions.Count);
+        Assert.AreEqual(expectedHtmlSha, HtmlSha256(table.Markup));
+    }
+
+    private static object Summarize(IReadOnlyList<double> values) => new
+    {
+        minMs = values.Min(),
+        maxMs = values.Max(),
+        p50Ms = Percentile(values, 0.50),
+        p95Ms = Percentile(values, 0.95),
+        samplesMs = values.ToArray()
+    };
+
+    private static double Percentile(IReadOnlyList<double> values, double percentile)
+    {
+        double[] ordered = values.OrderBy(value => value).ToArray();
+        double position = (ordered.Length - 1) * percentile;
+        int lower = (int)Math.Floor(position);
+        int upper = (int)Math.Ceiling(position);
+        return lower == upper ? ordered[lower] : ordered[lower] + ((ordered[upper] - ordered[lower]) * (position - lower));
+    }
+
+    private static string HtmlSha256(string markup) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(markup))).ToLowerInvariant();
+
+    private static int ReadPositiveInt(string name, int fallback)
+    {
+        string? value = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrWhiteSpace(value)) return fallback;
+        if (!int.TryParse(value, out int parsed) || parsed <= 0) throw new InvalidOperationException(name + " must be a positive integer.");
+        return parsed;
+    }
+
+    private sealed class TablePipelineBenchmark
+    {
+        public int warmupCount { get; set; }
+        public int measurementCount { get; set; }
+        public object? totalMs { get; set; }
+        public Dictionary<string, object>? stageMs { get; set; }
+        public bool invariantResultContract { get; set; }
     }
 
     private static VisualPipeline CreatePipeline(BackendRegistry registry, PaddleDocumentProfile profile, string modelPath, BackendRequest request, BackendId backendId, string? artifactSha256 = null)

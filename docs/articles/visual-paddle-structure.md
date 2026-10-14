@@ -401,6 +401,8 @@ SLANeXt Decoder 在结构序列没有选出 `<EOS>` 时会保留已解码的 mar
 
 同一案例现在也有 OpenVINO CPU 的完整记录。ORT CPU 和 OpenVINO CPU 均返回 `wired_table`、300 个阈值为 0 的检测候选、13 个 SLANeXt 结构单元格、24 个结构 token、HTML 长度 165，且没有 Decoder warning；单次总耗时分别为 `2001.241 ms` 和 `2127.139 ms`。OpenVINO 的 SLANeXt 阶段使用独立 SHA-256 的 `slanext-wired-openvino-compat.onnx`，因为原始 Loop 图仍受当前 importer 限制。详细模型/输入哈希、兼容 ID 和边界说明见 [`paddle-document-table-pipeline-ort-openvino-20261011.md`](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.md) 及其 [JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.json)。这些是执行与 Decoder 合同证据，不是单元格召回、表格准确率或 P50/P95 性能结果；OpenCV DNN 与 TensorRT 仍按矩阵单独记录。
 
+2026-10-14 又按统一 **5 次预热 + 50 次测量** 协议对这条完整任务链做了 ORT CPU / OpenVINO CPU 复测。每次都断言分类标签、单元格检测候选数、SLANeXt 结构单元格数、token 数和 HTML SHA 稳定；两后端最终结果完全一致（`wired_table`、300 个候选、13 个结构单元格、24 个 token，HTML SHA-256 `53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557`）。端到端 P50/P95：ORT CPU `1532.50/1618.06 ms`，OpenVINO CPU `1288.99/1558.58 ms`；分阶段耗时、原始 50 次样本、精确模型 SHA 和复现命令见[正式重复性能报告](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json)。OpenVINO 使用另行派生并登记 SHA 的兼容 SLANeXt 图。输入没有单元格/表格真值，检测阈值为 0，因此候选数不代表召回；本结果仅是单设备单图延迟与执行合同，CPU 未锁频，不代表准确率、跨设备排名、其他输入性能或 OpenCV/TensorRT 状态。
+
 ```powershell
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
