@@ -1,7 +1,7 @@
 {
   "schemaVersion": "deploysharp-paddle-document-table-pipeline-benchmark-v1",
-  "generatedUtc": "2026-10-14T06:36:29.2958956+00:00",
-  "sourceRevision": "b38ccec-working-tree",
+  "generatedUtc": "2026-10-14T08:54:49.7226486+00:00",
+  "sourceRevision": "731b483",
   "protocol": {
     "warmupCount": 5,
     "measurementCount": 50,
@@ -13,7 +13,7 @@
     {
       "backend": "onnxruntime-cpu",
       "evidencePath": "eng/models/paddle-document/verification/paddle-document-table-pipeline-20261014-onnxruntime.json",
-      "evidenceSha256": "32bfe939aa1a15d31c8200589d79e110bb641f5e3c006f174afffe0b276fd1c4",
+      "evidenceSha256": "83e94113e9ecdc1a440340f2723462405fd3d6ea86a8095f79f996d36134457d",
       "environment": {
         "machine": "JYPPX",
         "operatingSystem": "Microsoft Windows 10.0.26200",
@@ -301,7 +301,7 @@
     {
       "backend": "openvino-CPU",
       "evidencePath": "eng/models/paddle-document/verification/paddle-document-table-pipeline-20261014-openvino.json",
-      "evidenceSha256": "e9219278698886e49f92f5f28607fac4f5717b4896146a8cad4af2ca5d8f0944",
+      "evidenceSha256": "125c6f3597de17551f4a76b6f76ddf19c1a87ec91d05860ae348663d7e98e8a2",
       "environment": {
         "machine": "JYPPX",
         "operatingSystem": "Microsoft Windows 10.0.26200",

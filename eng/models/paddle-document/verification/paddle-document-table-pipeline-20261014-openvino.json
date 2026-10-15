@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedUtc": "2026-10-14T04:02:23.1268556\u002B00:00",
-  "sourceRevision": "b38ccec-working-tree",
+  "sourceRevision": "731b483",
   "backend": "openvino-CPU",
   "backendId": "openvino",
   "environment": {
