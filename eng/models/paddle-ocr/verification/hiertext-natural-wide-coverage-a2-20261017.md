@@ -2,7 +2,7 @@
 
 This report scans the pinned HierText annotation source using a target recognition height of **48** and keeps every natural line whose projected recognition width is at least **3200**. The projection is a geometry signal, not a claim that the line contains that many characters.
 
-- Annotation source: F:\OCRBenchmarkTesting\artifacts\cache\hiertext\validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz (SHA-256 ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a, revision/info v1.0).
+- Annotation source: F:\OCRBenchmarkTesting\artifacts\cache\hiertext\validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz (SHA-256 ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a, source revision 70b6620b2b112597d8219e11eee9773a1403827c, annotation version v1.0).
 - Candidate lines: **13** across **9** images; local images present: **0**; missing: **9**.
 - Candidate image IDs found in the supplied Open Images metadata CSV: **0**. A missing metadata row is a source/catalog boundary and must be resolved before treating the remote template as downloadable evidence.
 - Maximum projected width: **4725**; maximum annotated text length among candidates: **182** characters.

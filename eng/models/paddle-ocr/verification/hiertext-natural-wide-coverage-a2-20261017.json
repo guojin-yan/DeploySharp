@@ -1,9 +1,11 @@
 {
   "schemaVersion": "deploysharp-paddleocr-hiertext-natural-wide-a2-v1",
-  "generatedUtc": "2026-10-17T07:58:31.3259888+00:00",
+  "generatedUtc": "2026-10-17T08:00:51.7395307+00:00",
   "source": {
     "annotationPath": "F:/OCRBenchmarkTesting/artifacts/cache/hiertext/validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz",
     "annotationSha256": "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a",
+    "sourceRevision": "70b6620b2b112597d8219e11eee9773a1403827c",
+    "annotationVersion": "v1.0",
     "annotationInfo": {
       "date": "2022-03-16",
       "version": "v1.0"

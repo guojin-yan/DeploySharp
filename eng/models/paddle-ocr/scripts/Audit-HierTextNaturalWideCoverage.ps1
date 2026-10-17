@@ -44,8 +44,12 @@ $repositoryRoot = Resolve-RepositoryRoot
 $annotationsFullPath = (Resolve-Path -LiteralPath $AnnotationsPath).Path
 $annotationDocument = Get-GzipJson -Path $annotationsFullPath
 $annotationRevision = 'unknown'
+if ([IO.Path]::GetFileName($annotationsFullPath) -match 'validation-([0-9a-f]{40})\.jsonl\.gz$') {
+    $annotationRevision = $Matches[1]
+}
+$annotationVersion = 'unknown'
 if ($annotationDocument.info -and $annotationDocument.info.version) {
-    $annotationRevision = [string]$annotationDocument.info.version
+    $annotationVersion = [string]$annotationDocument.info.version
 }
 $annotationRelativePath = $annotationsFullPath
 if ($annotationsFullPath.StartsWith($repositoryRoot, [StringComparison]::OrdinalIgnoreCase)) {
@@ -131,6 +135,8 @@ $result = [ordered]@{
     source = [ordered]@{
         annotationPath = $annotationRelativePath.Replace('\', '/')
         annotationSha256 = Get-Sha256 -Path $annotationsFullPath
+        sourceRevision = $annotationRevision
+        annotationVersion = $annotationVersion
         annotationInfo = $annotationDocument.info
         annotationCount = $annotations.Count
         metadataPath = $metadataFullPath
@@ -175,7 +181,7 @@ $sourceImageTemplate = [string]$result['source']['imageSourceTemplate']
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine("This report scans the pinned HierText annotation source using a target recognition height of **$TargetHeight** and keeps every natural line whose projected recognition width is at least **$MinimumProjectedWidth**. The projection is a geometry signal, not a claim that the line contains that many characters.")
 [void]$markdown.AppendLine()
-[void]$markdown.AppendLine("- Annotation source: $annotationRelativePath (SHA-256 $annotationSha, revision/info $annotationRevision).")
+[void]$markdown.AppendLine("- Annotation source: $annotationRelativePath (SHA-256 $annotationSha, source revision $annotationRevision, annotation version $annotationVersion).")
 [void]$markdown.AppendLine("- Candidate lines: **$candidateLineCount** across **$candidateImageCount** images; local images present: **$availableImageCount**; missing: **$missingImageCount**.")
 [void]$markdown.AppendLine("- Candidate image IDs found in the supplied Open Images metadata CSV: **$metadataImageCount**. A missing metadata row is a source/catalog boundary and must be resolved before treating the remote template as downloadable evidence.")
 [void]$markdown.AppendLine("- Maximum projected width: **$maximumProjectedWidth**; maximum annotated text length among candidates: **$maximumTextLength** characters.")
