@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddleocr-hiertext-natural-wide-a2-v1",
-  "generatedUtc": "2026-10-17T08:00:51.7395307+00:00",
+  "generatedUtc": "2026-10-17T09:22:29.0394979+00:00",
   "source": {
     "annotationPath": "F:/OCRBenchmarkTesting/artifacts/cache/hiertext/validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz",
     "annotationSha256": "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a",
@@ -15,7 +15,7 @@
     "metadataSha256": "ed93a0e121fe345effdfc7359b848dbc64a1ff6778c8c73563157cb500b33a17",
     "metadataRowCount": 41620,
     "imageRoot": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation",
-    "imageSourceTemplate": "https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg"
+    "imageSourceTemplate": "https://open-images-dataset.s3.amazonaws.com/ocr/validation/{image_id}.jpg"
   },
   "protocol": {
     "targetHeight": 48,
@@ -25,8 +25,8 @@
   "summary": {
     "candidateLineCount": 13,
     "candidateImageCount": 9,
-    "availableImageCount": 0,
-    "missingImageCount": 9,
+    "availableImageCount": 9,
+    "missingImageCount": 0,
     "metadataImageCount": 0,
     "maximumProjectedWidth": 4725,
     "maximumTextLength": 182
@@ -51,9 +51,9 @@
         914.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 576878,
+      "imageSha256": "aea8b717df3dbaea7d0661ab428334aeee737c9c1a33882267afc4358746996f",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -77,9 +77,9 @@
         942.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 576878,
+      "imageSha256": "aea8b717df3dbaea7d0661ab428334aeee737c9c1a33882267afc4358746996f",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -103,9 +103,9 @@
         970.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 576878,
+      "imageSha256": "aea8b717df3dbaea7d0661ab428334aeee737c9c1a33882267afc4358746996f",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -129,9 +129,9 @@
         727.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\08cc7d6ebd7c4d93.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 94719,
+      "imageSha256": "ebce98d5656e29239262a21b9cb7e282d0922ab401e91f8a2155928a7d4a2c75",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -155,9 +155,9 @@
         481.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\3c027cacb77e35cd.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 544926,
+      "imageSha256": "586358ca3a6cc33aae694a74eb1689d68c7bb71a9d3b5a0149181ebbf6f9d3f4",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -181,9 +181,9 @@
         451.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\584eda70fc6b1a5b.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 464017,
+      "imageSha256": "497842fd6999c1fbd708017a288ee3849adc3f6318c956311693dcf564c01e04",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -207,9 +207,9 @@
         461.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\584eda70fc6b1a5b.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 464017,
+      "imageSha256": "497842fd6999c1fbd708017a288ee3849adc3f6318c956311693dcf564c01e04",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -233,9 +233,9 @@
         784.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\6ce679754fa8bc1c.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 399721,
+      "imageSha256": "53b1fdd6dab541ae8fae4a96ab48480f51f23959d8041705c235864404b84b45",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -259,9 +259,9 @@
         889.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\a4e2a75d729799a9.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 361101,
+      "imageSha256": "9497bbb771f8ca2b790c340ea7c47b1987d8d464040c215c20128c4054c53ee9",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -285,9 +285,9 @@
         373.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\dd838509911a8f86.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 222696,
+      "imageSha256": "a8ea038b1ba003a56ee9575281818e94aa9b96e00053910248d9dab6de026a02",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -311,9 +311,9 @@
         551.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\dd838509911a8f86.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 222696,
+      "imageSha256": "a8ea038b1ba003a56ee9575281818e94aa9b96e00053910248d9dab6de026a02",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -337,9 +337,9 @@
         667.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e04931ec29a0bf9c.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 299909,
+      "imageSha256": "2cc9af4a1e6fae4365e8f31ca0d8ee10c34f4b4dbb7f1556ba73c499288d9635",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
@@ -363,13 +363,13 @@
         879.0
       ],
       "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e1154c00eb8b9e8c.jpg",
-      "imageExists": false,
-      "imageSizeBytes": null,
-      "imageSha256": null,
+      "imageExists": true,
+      "imageSizeBytes": 294327,
+      "imageSha256": "8e6140c192188b0fc0facabc2b7fd92f88e5d461a881f8f1fc8f2ad3d6ee88ac",
       "metadataExists": false,
       "metadataLicense": null,
       "metadataOriginalLandingUrl": null
     }
   ],
-  "boundary": "These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity remain unmeasured until the source images are available locally."
+  "boundary": "These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. Candidate JPEGs may be acquired from the official Open Images CVDF object path for local verification, but the supplied metadata CSV has no matching per-image attribution rows. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity are separate evidence."
 }

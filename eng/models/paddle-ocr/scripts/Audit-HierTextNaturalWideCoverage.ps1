@@ -143,7 +143,7 @@ $result = [ordered]@{
         metadataSha256 = if ($metadataFullPath) { Get-Sha256 -Path $metadataFullPath } else { $null }
         metadataRowCount = $metadataById.Count
         imageRoot = $ImageRoot
-        imageSourceTemplate = 'https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg'
+        imageSourceTemplate = 'https://open-images-dataset.s3.amazonaws.com/ocr/validation/{image_id}.jpg'
     }
     protocol = [ordered]@{
         targetHeight = $TargetHeight
@@ -160,7 +160,7 @@ $result = [ordered]@{
         maximumTextLength = $maximumTextLength
     }
     candidates = @($candidates | Sort-Object projectedWidth -Descending)
-    boundary = 'These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity remain unmeasured until the source images are available locally.'
+    boundary = 'These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. Candidate JPEGs may be acquired from the official Open Images CVDF object path for local verification, but the supplied metadata CSV has no matching per-image attribution rows. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity are separate evidence.'
 }
 
 $jsonFullPath = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $OutputJsonPath))
@@ -183,7 +183,7 @@ $sourceImageTemplate = [string]$result['source']['imageSourceTemplate']
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine("- Annotation source: $annotationRelativePath (SHA-256 $annotationSha, source revision $annotationRevision, annotation version $annotationVersion).")
 [void]$markdown.AppendLine("- Candidate lines: **$candidateLineCount** across **$candidateImageCount** images; local images present: **$availableImageCount**; missing: **$missingImageCount**.")
-[void]$markdown.AppendLine("- Candidate image IDs found in the supplied Open Images metadata CSV: **$metadataImageCount**. A missing metadata row is a source/catalog boundary and must be resolved before treating the remote template as downloadable evidence.")
+[void]$markdown.AppendLine("- Candidate image IDs found in the supplied Open Images metadata CSV: **$metadataImageCount**. The local metadata has no matching per-image license/landing rows; the official CVDF object path is recorded for local acquisition, but attribution and redistribution remain a separate boundary.")
 [void]$markdown.AppendLine("- Maximum projected width: **$maximumProjectedWidth**; maximum annotated text length among candidates: **$maximumTextLength** characters.")
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine('| Image ID | Paragraph/line | Text length | Projected width | Local image | SHA-256 |')
@@ -201,7 +201,7 @@ foreach ($candidate in $result.candidates) {
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine('## Interpretation and next step')
 [void]$markdown.AppendLine()
-[void]$markdown.AppendLine('The candidates are useful for testing geometry-driven SlidingWindow behavior, overlap seam attribution, source-region mapping and memory budgets. They do **not** close the A2 requirement for a naturally occurring continuous line of at least 3,200 characters. This run also does not claim OCR quality: no detector/recognizer invocation, CER/WER, seam merge result or backend parity was measured.')
+[void]$markdown.AppendLine('The candidates are useful for testing geometry-driven SlidingWindow behavior, overlap seam attribution, source-region mapping and memory budgets. They do **not** close the A2 requirement for a naturally occurring continuous line of at least 3,200 characters. This audit does not claim OCR quality: detector/recognizer invocation, CER/WER, seam merge result and backend parity belong to a separate execution report.')
 if ($missingImageCount -gt 0) {
     [void]$markdown.AppendLine()
     [void]$markdown.AppendLine("The local image cache is incomplete. Obtain the missing Open Images JPEGs from the official template $sourceImageTemplate, verify their per-image license/attribution from the pinned metadata, then rerun this script before running OCR. If an ID is absent from the metadata CSV or the official URL returns 404, record that source boundary instead of substituting an unrelated image.")
