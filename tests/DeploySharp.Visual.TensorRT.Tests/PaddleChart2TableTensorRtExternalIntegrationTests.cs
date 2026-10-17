@@ -323,6 +323,137 @@ namespace DeploySharp.Visual.TensorRT.Tests
 
         [TestMethod]
         [TestCategory("ExternalModels")]
+        public void OfficialChartQaFixedSampleRunsSteadyStateTensorRtBenchmark()
+        {
+            if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_BENCHMARK_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal))
+                Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_BENCHMARK_TRT_RUN_EXTERNAL=1 to run the fixed-sample Chart2Table TensorRT 5+50 benchmark.");
+
+            const string sampleFile = "OECD_GROSS_PENSION_REPLACEMENT_RATES_HUN_MEX_000001.png";
+            const string inputSha256Expected = "c2e49c1f2593d65e0c5cce5b573f122f076a0bf0f429121d96e9463c6404a530";
+            const string outputSha256Expected = "ebd99e6bb36ee2bc510932a58c049d0d1c2d765c473ec98d6c3a48529fb2d484";
+            const int warmupCount = 5;
+            const int measurementCount = 50;
+            const int maximumNewTokens = 1024;
+
+            string sampleRoot = Required("DEPLOYSHARP_CHARTQA_EXTENDED_ROOT");
+            string modelRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
+            string engineRoot = Required("DEPLOYSHARP_CHART2TABLE_TRT_ENGINE_ROOT");
+            ExtendedManifest manifest = JsonSerializer.Deserialize<ExtendedManifest>(
+                File.ReadAllText(Path.Combine(sampleRoot, "manifest.json")),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? throw new InvalidDataException("Invalid ChartQA extended manifest.");
+            Assert.AreEqual("044eabfc306abfe9340c5741f0093aefc5973d06", manifest.SourceRevision, "Benchmark source revision changed.");
+            ExtendedSample sample = manifest.Samples.SingleOrDefault(value => string.Equals(value.File, sampleFile, StringComparison.Ordinal))
+                ?? throw new InvalidDataException("Fixed benchmark sample is missing from the ChartQA manifest.");
+            string imagePath = Path.Combine(sampleRoot, "images", sample.File);
+            Assert.IsTrue(File.Exists(imagePath), "Missing ChartQA benchmark image: " + imagePath);
+            string inputSha256 = ComputeSha256(imagePath);
+            Assert.AreEqual(inputSha256Expected, inputSha256, "The fixed benchmark input changed.");
+
+            string[] engineFiles = { "vision-fp16.plan", "token-embedding-fp16.plan", "text-prefill-fp32.plan", "text-decode-fp32.plan" };
+            string[] modelIds = { VisionId, EmbeddingId, PrefillId, DecodeId };
+            var engineArtifacts = new List<ModelArtifact>(engineFiles.Length);
+            for (int index = 0; index < engineFiles.Length; index++)
+            {
+                string path = Path.Combine(engineRoot, engineFiles[index]);
+                if (!File.Exists(path)) Assert.Inconclusive("A library-built Chart2Table engine is missing: " + path);
+                engineArtifacts.Add(new ModelArtifact(new ModelId(modelIds[index]), "tensorrt-engine", path, ComputeSha256(path), TensorRtBackendProvider.BackendId));
+            }
+
+            using var provider = new TensorRtBackendProvider(new TensorRtBackendOptions(TensorRtApiVersion.TensorRt10, cudaTargetArchitecture: "sm_86"));
+            var tokenizer = new PaddleChart2TableTokenizer(modelRoot);
+            var bundle = new PaddleChart2TableOnnxBundle(engineArtifacts[0], engineArtifacts[1], engineArtifacts[2], engineArtifacts[3]);
+            using var session = new PaddleChart2TableTensorRtDeviceSession(
+                provider,
+                bundle,
+                new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"));
+            using PreparedVisualInput input = new OpenCvPaddleChart2TableInputFactory().CreateFromFile(imagePath);
+
+            var totalMs = new List<double>(measurementCount);
+            var visionMs = new List<double>(measurementCount);
+            var embeddingMs = new List<double>(measurementCount);
+            var prefillMs = new List<double>(measurementCount);
+            var decodeP50Ms = new List<double>(measurementCount);
+            var decodeP95Ms = new List<double>(measurementCount);
+            var samples = new List<object>(measurementCount);
+            for (int iteration = 0; iteration < warmupCount + measurementCount; iteration++)
+            {
+                Stopwatch watch = Stopwatch.StartNew();
+                PaddleChart2TableGenerationResult result = session.Generate(input, tokenizer, maximumNewTokens);
+                watch.Stop();
+                string outputSha256 = Sha256Text(result.Text);
+                Assert.AreEqual(JYPPX.DeploySharp.Results.Language.GenerationFinishReason.EndOfSequence, result.FinishReason, "Iteration " + iteration + " did not finish with EOS.");
+                Assert.AreEqual(21, result.TokenIds.Count, "Iteration " + iteration + " changed the generated token count.");
+                Assert.AreEqual(outputSha256Expected, outputSha256, "Iteration " + iteration + " changed the fixed-sample output.");
+                if (iteration < warmupCount) continue;
+
+                double[] perTokenMs = result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray();
+                double total = watch.Elapsed.TotalMilliseconds;
+                totalMs.Add(total);
+                visionMs.Add(result.VisionTime.TotalMilliseconds);
+                embeddingMs.Add(result.EmbeddingTime.TotalMilliseconds);
+                prefillMs.Add(result.PrefillTime.TotalMilliseconds);
+                decodeP50Ms.Add(Percentile(perTokenMs, .50));
+                decodeP95Ms.Add(Percentile(perTokenMs, .95));
+                samples.Add(new
+                {
+                    iteration = iteration - warmupCount,
+                    totalMs = total,
+                    visionMs = result.VisionTime.TotalMilliseconds,
+                    embeddingMs = result.EmbeddingTime.TotalMilliseconds,
+                    prefillMs = result.PrefillTime.TotalMilliseconds,
+                    decodeP50Ms = Percentile(perTokenMs, .50),
+                    decodeP95Ms = Percentile(perTokenMs, .95),
+                    decodeStepCount = perTokenMs.Length,
+                    tokenCountIncludingEos = result.TokenIds.Count,
+                    finishReason = result.FinishReason.ToString(),
+                    generatedTextSha256 = outputSha256
+                });
+            }
+
+            string reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_BENCHMARK_REPORT_PATH")
+                ?? Path.Combine(TestContext.TestResultsDirectory!, "chart2table-benchmark-tensorrt.json");
+            string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(reportPath));
+            if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+            var report = new
+            {
+                schemaVersion = "deploysharp-chart2table-fixed-benchmark-v1",
+                generatedUtc = DateTimeOffset.UtcNow,
+                sourceRevision = manifest.SourceRevision,
+                backend = "tensorrt-cuda",
+                runtime = DescribeRuntime(),
+                device = new
+                {
+                    machine = Environment.MachineName,
+                    operatingSystem = Environment.OSVersion.ToString(),
+                    runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                    architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+                    processorCount = Environment.ProcessorCount
+                },
+                protocol = new { warmupCount, measurementCount, maximumNewTokens, sequentialSingleSession = true },
+                dataset = new { repository = manifest.SourceRepository, split = manifest.Split, revision = manifest.SourceRevision },
+                input = new { sample = sample.File, sha256 = inputSha256 },
+                engines = engineArtifacts.Select(value => new { modelId = value.ModelId.Value, path = value.Location, sha256 = value.Sha256 }).ToArray(),
+                resultContract = new { outputSha256 = outputSha256Expected, tokenCountIncludingEos = 21, finishReason = "EndOfSequence", invariantAcrossAllRuns = true },
+                summary = new
+                {
+                    totalMs = TimingSummary(totalMs),
+                    visionMs = TimingSummary(visionMs),
+                    embeddingMs = TimingSummary(embeddingMs),
+                    prefillMs = TimingSummary(prefillMs),
+                    decodeP50Ms = TimingSummary(decodeP50Ms),
+                    decodeP95Ms = TimingSummary(decodeP95Ms)
+                },
+                samples,
+                boundary = "One fixed ChartQA validation image on one RTX 3060 host, one TensorRT session and one channel. Plans are prebuilt library artifacts; CPU/GPU clocks are not locked. This is not split-level accuracy, a cross-device ranking, or a plan portability guarantee."
+            };
+            File.WriteAllText(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+            TestContext.AddResultFile(reportPath);
+            TestContext.WriteLine("CHART2TABLE_BENCHMARK backend=tensorrt;totalP50Ms=" + Percentile(totalMs, .50) + ";totalP95Ms=" + Percentile(totalMs, .95) + ";report=" + reportPath);
+        }
+
+        [TestMethod]
+        [TestCategory("ExternalModels")]
         public void OfficialChartImageRunsThroughFourTensorRtEnginesAndDynamicKvDecode()
         {
             if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL"), "1", StringComparison.Ordinal)) Assert.Inconclusive("Set DEPLOYSHARP_CHART2TABLE_TRT_RUN_EXTERNAL=1 to build and run the local four-graph PP-Chart2Table bundle on TensorRT.");
@@ -492,6 +623,15 @@ namespace DeploySharp.Visual.TensorRT.Tests
             if (lower == upper) return sorted[lower];
             return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
         }
+
+        private static object TimingSummary(IReadOnlyList<double> values) => new
+        {
+            minMs = values.Min(),
+            maxMs = values.Max(),
+            p50Ms = Percentile(values, .50),
+            p95Ms = Percentile(values, .95),
+            samplesMs = values
+        };
 
         private sealed class ExtendedManifest
         {

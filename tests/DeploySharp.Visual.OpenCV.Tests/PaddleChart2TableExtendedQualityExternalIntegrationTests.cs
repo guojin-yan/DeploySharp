@@ -24,7 +24,155 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 [DoNotParallelize]
 public sealed class PaddleChart2TableExtendedQualityExternalIntegrationTests
 {
+    private const string BenchmarkSampleFile = "OECD_GROSS_PENSION_REPLACEMENT_RATES_HUN_MEX_000001.png";
+    private const string BenchmarkInputSha256 = "c2e49c1f2593d65e0c5cce5b573f122f076a0bf0f429121d96e9463c6404a530";
+    private const string BenchmarkOutputSha256 = "ebd99e6bb36ee2bc510932a58c049d0d1c2d765c473ec98d6c3a48529fb2d484";
+
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    [DataRow("onnxruntime")]
+    [DataRow("openvino")]
+    public async Task OfficialChartQaFixedSampleRunsSteadyStateBenchmark(string backend)
+    {
+        string backendKey = string.Equals(backend, "openvino", StringComparison.OrdinalIgnoreCase) ? "OPENVINO" : "ORT";
+        string gate = "DEPLOYSHARP_CHART2TABLE_BENCHMARK_" + backendKey + "_RUN_EXTERNAL";
+        if (!string.Equals(Environment.GetEnvironmentVariable(gate), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set " + gate + "=1 to run the fixed-sample Chart2Table 5+50 benchmark.");
+
+        string modelRoot = Required("DEPLOYSHARP_CHART2TABLE_MODEL_ROOT");
+        string exportRoot = Required("DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT");
+        string textRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_TEXT_ROOT") ?? Path.Combine(exportRoot, "text-onnx-verify-20260923");
+        string sampleRoot = Required("DEPLOYSHARP_CHARTQA_EXTENDED_ROOT");
+        string manifestPath = Path.Combine(sampleRoot, "manifest.json");
+        Manifest manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(manifestPath), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new InvalidDataException("Invalid ChartQA manifest.");
+        Assert.AreEqual("044eabfc306abfe9340c5741f0093aefc5973d06", manifest.SourceRevision, "Benchmark source revision changed.");
+        Sample sample = manifest.Samples.SingleOrDefault(value => string.Equals(value.File, BenchmarkSampleFile, StringComparison.Ordinal))
+            ?? throw new InvalidDataException("Fixed benchmark sample is missing from the ChartQA manifest.");
+
+        string imagePath = Path.Combine(sampleRoot, "images", sample.File);
+        Assert.IsTrue(File.Exists(imagePath), "Missing ChartQA benchmark image: " + imagePath);
+        string inputSha256 = Sha256File(imagePath);
+        Assert.AreEqual(BenchmarkInputSha256, inputSha256, "The fixed benchmark input changed.");
+        string expectedTextSha256 = Sha256Text(sample.ExpectedText ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(sample.ImageSha256)) Assert.AreEqual(sample.ImageSha256, inputSha256, "Manifest input SHA mismatch.");
+
+        BackendId backendId;
+        using var registry = new BackendRegistry();
+        if (backendKey == "OPENVINO")
+        {
+            registry.Register(new OpenVinoBackendProvider(new OpenVinoOptions(device: "CPU")));
+            backendId = OpenVinoBackendProvider.BackendId;
+        }
+        else
+        {
+            registry.Register(new OnnxRuntimeBackendProvider());
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+        }
+
+        string visionPath = Path.Combine(exportRoot, "chart-vision.onnx");
+        string embeddingPath = GraphPath(textRoot, "chart-token-embedding-dynamic");
+        string prefillPath = GraphPath(textRoot, "chart-text-prefill-full");
+        string decodePath = GraphPath(textRoot, "chart-text-decoder-dynamic-past-full");
+        var bundle = new PaddleChart2TableOnnxBundle(visionPath, embeddingPath, prefillPath, decodePath, backendId);
+        var tokenizer = new PaddleChart2TableTokenizer(modelRoot);
+        using var session = new PaddleChart2TableOnnxSession(registry, bundle,
+            new BackendRequest(BackendCapabilities.TensorInference, backendId, "CPU"));
+        using PreparedVisualInput input = new OpenCvPaddleChart2TableInputFactory().CreateFromFile(imagePath);
+
+        const int warmupCount = 5;
+        const int measurementCount = 50;
+        const int maximumNewTokens = 1024;
+        var samples = new List<object>(measurementCount);
+        var totalMs = new List<double>(measurementCount);
+        var visionMs = new List<double>(measurementCount);
+        var embeddingMs = new List<double>(measurementCount);
+        var prefillMs = new List<double>(measurementCount);
+        var decodeP50Ms = new List<double>(measurementCount);
+        var decodeP95Ms = new List<double>(measurementCount);
+
+        for (int iteration = 0; iteration < warmupCount + measurementCount; iteration++)
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            PaddleChart2TableGenerationResult result = await session.GenerateAsync(input, tokenizer, maximumNewTokens).ConfigureAwait(false);
+            watch.Stop();
+            string outputSha256 = Sha256Text(result.Text);
+            Assert.AreEqual(GenerationFinishReason.EndOfSequence, result.FinishReason, "Iteration " + iteration + " did not finish with EOS.");
+            Assert.AreEqual(21, result.TokenIds.Count, "Iteration " + iteration + " changed the generated token count.");
+            Assert.AreEqual(BenchmarkOutputSha256, outputSha256, "Iteration " + iteration + " changed the fixed-sample output.");
+
+            if (iteration < warmupCount) continue;
+            double[] perTokenMs = result.DecodeSteps.Select(value => value.TotalMilliseconds).ToArray();
+            double total = watch.Elapsed.TotalMilliseconds;
+            totalMs.Add(total);
+            visionMs.Add(result.VisionTime.TotalMilliseconds);
+            embeddingMs.Add(result.EmbeddingTime.TotalMilliseconds);
+            prefillMs.Add(result.PrefillTime.TotalMilliseconds);
+            decodeP50Ms.Add(Percentile(perTokenMs, 0.50));
+            decodeP95Ms.Add(Percentile(perTokenMs, 0.95));
+            samples.Add(new
+            {
+                iteration = iteration - warmupCount,
+                totalMs = total,
+                visionMs = result.VisionTime.TotalMilliseconds,
+                embeddingMs = result.EmbeddingTime.TotalMilliseconds,
+                prefillMs = result.PrefillTime.TotalMilliseconds,
+                decodeP50Ms = Percentile(perTokenMs, 0.50),
+                decodeP95Ms = Percentile(perTokenMs, 0.95),
+                decodeStepCount = perTokenMs.Length,
+                tokenCountIncludingEos = result.TokenIds.Count,
+                finishReason = result.FinishReason.ToString(),
+                generatedTextSha256 = outputSha256
+            });
+        }
+
+        string reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_CHART2TABLE_BENCHMARK_REPORT_PATH")
+            ?? Path.Combine(TestContext.TestResultsDirectory!, "chart2table-benchmark-" + backendKey.ToLowerInvariant() + ".json");
+        string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(reportPath));
+        if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
+        var report = new
+        {
+            schemaVersion = "deploysharp-chart2table-fixed-benchmark-v1",
+            generatedUtc = DateTimeOffset.UtcNow,
+            sourceRevision = manifest.SourceRevision,
+            backend = backendKey == "OPENVINO" ? "openvino-cpu" : "onnxruntime-cpu",
+            device = new
+            {
+                machine = Environment.MachineName,
+                operatingSystem = Environment.OSVersion.ToString(),
+                runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+                processorCount = Environment.ProcessorCount
+            },
+            protocol = new { warmupCount, measurementCount, maximumNewTokens, sequentialSingleSession = true },
+            dataset = new { repository = manifest.SourceRepository, split = manifest.Split, revision = manifest.SourceRevision },
+            input = new { sample = sample.File, sha256 = inputSha256, expectedTextSha256 },
+            models = new
+            {
+                vision = new { path = visionPath, sha256 = Sha256File(visionPath) },
+                embedding = new { path = embeddingPath, sha256 = Sha256File(embeddingPath) },
+                prefill = new { path = prefillPath, sha256 = Sha256File(prefillPath) },
+                decode = new { path = decodePath, sha256 = Sha256File(decodePath) }
+            },
+            resultContract = new { outputSha256 = BenchmarkOutputSha256, tokenCountIncludingEos = 21, finishReason = "EndOfSequence", invariantAcrossAllRuns = true },
+            summary = new
+            {
+                totalMs = TimingSummary(totalMs),
+                visionMs = TimingSummary(visionMs),
+                embeddingMs = TimingSummary(embeddingMs),
+                prefillMs = TimingSummary(prefillMs),
+                decodeP50Ms = TimingSummary(decodeP50Ms),
+                decodeP95Ms = TimingSummary(decodeP95Ms)
+            },
+            samples,
+            boundary = "One fixed ChartQA validation image on one host, one session and one channel. Not split-level accuracy, a cross-device ranking, or a guarantee for other charts. CPU/GPU frequency is not controlled by this test."
+        };
+        File.WriteAllText(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+        TestContext.AddResultFile(reportPath);
+        TestContext.WriteLine("CHART2TABLE_BENCHMARK backend=" + backend + ";totalP50Ms=" + Percentile(totalMs.ToArray(), .50) + ";totalP95Ms=" + Percentile(totalMs.ToArray(), .95) + ";report=" + reportPath);
+    }
 
     [TestMethod]
     [TestCategory("ExternalModels")]
@@ -208,6 +356,15 @@ public sealed class PaddleChart2TableExtendedQualityExternalIntegrationTests
         int upper = (int)Math.Ceiling(position);
         return lower == upper ? values[lower] : values[lower] + (values[upper] - values[lower]) * (position - lower);
     }
+
+    private static object TimingSummary(List<double> values) => new
+    {
+        minMs = values.Min(),
+        maxMs = values.Max(),
+        p50Ms = Percentile(values.ToArray(), .50),
+        p95Ms = Percentile(values.ToArray(), .95),
+        samplesMs = values
+    };
 
     private static string Sha256Text(string value) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     private static string Sha256File(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
