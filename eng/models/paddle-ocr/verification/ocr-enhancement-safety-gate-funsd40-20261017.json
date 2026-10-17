@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-enhancement-safety-gate-v1",
+  "generatedUtc": "2026-10-17T04:57:48.0849206Z",
+  "status": "blocked",
+  "thresholds": {
+    "minimumRecords": 200,
+    "maximumFalseCorrectionRate": 0.0,
+    "maximumP95Milliseconds": 250.0
+  },
+  "backends": [
+    {
+      "backend": "onnxruntime",
+      "evidenceId": "paddleocr-degraded-enhancement-onnxruntime",
+      "source": "E:/GitSpace/DeploySharp-V2.0/DeploySharp/artifacts/paddleocr-funsd-degraded-enhancement-20261012/guoji_JYPPX_2026-10-12_19_48_00/In/16c74bbe-1d81-48c4-9c67-d5e81c8d4fd1/JYPPX/paddleocr-degraded-enhancement-onnxruntime.json",
+      "records": 240,
+      "candidateSelected": 16,
+      "falseCorrectionRateByCer": 0.3125,
+      "falseCorrectionRateByWer": 0.125,
+      "allP95Milliseconds": 177.35917499999996,
+      "checks": {
+        "minimumRecords": true,
+        "cerFalseCorrection": false,
+        "werFalseCorrection": false,
+        "p95Budget": true
+      },
+      "status": "blocked"
+    },
+    {
+      "backend": "openvino",
+      "evidenceId": "paddleocr-degraded-enhancement-openvino",
+      "source": "E:/GitSpace/DeploySharp-V2.0/DeploySharp/artifacts/paddleocr-funsd-degraded-enhancement-20261012/guoji_JYPPX_2026-10-12_19_48_00/In/fbdea4c4-3feb-4e69-bb6b-b62eefc52487/JYPPX/paddleocr-degraded-enhancement-openvino.json",
+      "records": 240,
+      "candidateSelected": 16,
+      "falseCorrectionRateByCer": 0.3125,
+      "falseCorrectionRateByWer": 0.125,
+      "allP95Milliseconds": 110.41349999999997,
+      "checks": {
+        "minimumRecords": true,
+        "cerFalseCorrection": false,
+        "werFalseCorrection": false,
+        "p95Budget": true
+      },
+      "status": "blocked"
+    }
+  ],
+  "boundary": "This is a fail-closed safety and cost gate over controlled parent-linked degraded-crop evidence. It is not page/line accuracy, robustness, or approval of a production enhancement default. A pass still requires an independent natural-quality split and business-field error budget."
+}
