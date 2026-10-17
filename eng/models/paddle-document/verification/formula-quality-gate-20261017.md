@@ -7,14 +7,14 @@ This report is a fail-closed gate over the existing 121-sample MathNet realFormu
 - Diagnostic render thresholds for all models: **FALSE**
 - Mathematical semantic evidence: **NOT ASSESSED**
 
-| Model | EOS | Empty | CER | Render | Comparable | Parse | Syntax | Semantic | Gate |
-|---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| ``paddle-formula/pp-formulanet-plus-s`` | 100.00% | 0 | 57.04% | 90.91% | 88.43% | 74.38% | 85.95% | ``not-assessed`` | ``blocked`` |
-| ``paddle-formula/pp-formulanet-plus-m`` | 100.00% | 0 | 58.34% | 100.00% | 97.52% | 75.21% | 96.69% | ``not-assessed`` | ``blocked`` |
-| ``paddle-formula/pp-formulanet-plus-l`` | 100.00% | 0 | 54.60% | 99.17% | 96.69% | 78.51% | 96.69% | ``not-assessed`` | ``blocked`` |
-| ``paddle-formula/pp-formulanet-s`` | 100.00% | 0 | 61.58% | 91.74% | 89.26% | 73.55% | 82.64% | ``not-assessed`` | ``blocked`` |
-| ``paddle-formula/pp-formulanet-l`` | 99.17% | 0 | 89.86% | 96.69% | 95.04% | 76.86% | 91.74% | ``not-assessed`` | ``blocked`` |
-| ``paddle-formula/unimernet`` | 100.00% | 0 | 51.59% | 99.17% | 96.69% | 74.38% | 95.04% | ``not-assessed`` | ``blocked`` |
+| Model | EOS | Empty | CER | Render | Comparable | MathML structure | Parse | Syntax | Semantic | Gate |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| ``paddle-formula/pp-formulanet-plus-s`` | 100.00% | 0 | 57.04% | 90.91% | 88.43% | 14.95% (16/107) | 74.38% | 85.95% | ``not-assessed`` | ``blocked`` |
+| ``paddle-formula/pp-formulanet-plus-m`` | 100.00% | 0 | 58.34% | 100.00% | 97.52% | 11.86% (14/118) | 75.21% | 96.69% | ``not-assessed`` | ``blocked`` |
+| ``paddle-formula/pp-formulanet-plus-l`` | 100.00% | 0 | 54.60% | 99.17% | 96.69% | 16.24% (19/117) | 78.51% | 96.69% | ``not-assessed`` | ``blocked`` |
+| ``paddle-formula/pp-formulanet-s`` | 100.00% | 0 | 61.58% | 91.74% | 89.26% | 14.81% (16/108) | 73.55% | 82.64% | ``not-assessed`` | ``blocked`` |
+| ``paddle-formula/pp-formulanet-l`` | 99.17% | 0 | 89.86% | 96.69% | 95.04% | 18.26% (21/115) | 76.86% | 91.74% | ``not-assessed`` | ``blocked`` |
+| ``paddle-formula/unimernet`` | 100.00% | 0 | 51.59% | 99.17% | 96.69% | 17.95% (21/117) | 74.38% | 95.04% | ``not-assessed`` | ``blocked`` |
 
 ## Gate policy
 

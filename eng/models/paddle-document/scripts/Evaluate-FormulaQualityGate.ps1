@@ -68,6 +68,9 @@ foreach ($row in @($summary.models)) {
     $eosRate = Get-Rate ([int]$row.reachedEndOfSequenceCount) $sampleCount
     $renderRate = Get-Rate ([int]$renderRow.predictionRenderSucceeded) $sampleCount
     $comparableRate = Get-Rate ([int]$renderRow.comparableRenderPairs) $sampleCount
+    $mathmlComparablePairs = [int]$renderRow.mathmlComparablePairs
+    $mathmlStructuralMatches = [int]$renderRow.mathmlStructuralMatches
+    $mathmlStructuralMatchRate = Get-Rate $mathmlStructuralMatches $mathmlComparablePairs
     $integrityPassed = $sampleCount -eq $ExpectedSampleCount -and [int]$row.emptyPredictionCount -eq 0 -and $eosRate -ge $MinimumEosRate
     $diagnosticEvidencePassed = $renderRate -ge $MinimumPredictionRenderRate -and $comparableRate -ge $MinimumComparableRenderRate
     if (-not $integrityPassed) { $allIntegrityPassed = $false }
@@ -91,6 +94,9 @@ foreach ($row in @($summary.models)) {
         emptyPredictionCount = [int]$row.emptyPredictionCount
         predictionRenderRate = $renderRate
         comparableRenderRate = $comparableRate
+        mathmlComparablePairs = $mathmlComparablePairs
+        mathmlStructuralMatches = $mathmlStructuralMatches
+        mathmlStructuralMatchRate = $mathmlStructuralMatchRate
         parseAcceptanceRate = [double]$parseRow.parseAcceptanceRate
         syntaxValidRate = [double]$syntaxRow.predictionSyntaxValidRate
         structureFingerprintMatchRate = [double]$syntaxRow.pairedStructureFingerprintMatchRate
@@ -146,10 +152,10 @@ $lines.Add("- Execution integrity for all models: **$($allIntegrityPassed.ToStri
 $lines.Add("- Diagnostic render thresholds for all models: **$($allDiagnosticEvidencePassed.ToString().ToUpperInvariant())**")
 $lines.Add('- Mathematical semantic evidence: **NOT ASSESSED**')
 $lines.Add('')
-$lines.Add('| Model | EOS | Empty | CER | Render | Comparable | Parse | Syntax | Semantic | Gate |')
-$lines.Add('|---|---:|---:|---:|---:|---:|---:|---:|---|---|')
+$lines.Add('| Model | EOS | Empty | CER | Render | Comparable | MathML structure | Parse | Syntax | Semantic | Gate |')
+$lines.Add('|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|')
 foreach ($item in $models) {
-    $lines.Add(('| ``' + [string]$item.model + '`` | ' + ('{0:P2}' -f [double]$item.eosRate) + ' | ' + [string]$item.emptyPredictionCount + ' | ' + ('{0:P2}' -f [double]$item.corpusNormalizedCharErrorRate) + ' | ' + ('{0:P2}' -f [double]$item.predictionRenderRate) + ' | ' + ('{0:P2}' -f [double]$item.comparableRenderRate) + ' | ' + ('{0:P2}' -f [double]$item.parseAcceptanceRate) + ' | ' + ('{0:P2}' -f [double]$item.syntaxValidRate) + ' | ``' + [string]$item.semanticEquivalence + '`` | ``' + [string]$item.releaseGate + '`` |'))
+    $lines.Add(('| ``' + [string]$item.model + '`` | ' + ('{0:P2}' -f [double]$item.eosRate) + ' | ' + [string]$item.emptyPredictionCount + ' | ' + ('{0:P2}' -f [double]$item.corpusNormalizedCharErrorRate) + ' | ' + ('{0:P2}' -f [double]$item.predictionRenderRate) + ' | ' + ('{0:P2}' -f [double]$item.comparableRenderRate) + ' | ' + ('{0:P2}' -f [double]$item.mathmlStructuralMatchRate) + ' (' + [string]$item.mathmlStructuralMatches + '/' + [string]$item.mathmlComparablePairs + ') | ' + ('{0:P2}' -f [double]$item.parseAcceptanceRate) + ' | ' + ('{0:P2}' -f [double]$item.syntaxValidRate) + ' | ``' + [string]$item.semanticEquivalence + '`` | ``' + [string]$item.releaseGate + '`` |'))
 }
 $lines.Add('')
 $lines.Add('## Gate policy')
