@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)]
     [string]$AnnotationsPath,
     [string]$ImageRoot = 'F:\OCRBenchmarkTesting\data\images\hiertext\validation',
+    [string]$MetadataPath = 'F:\OCRBenchmarkTesting\artifacts\cache\hiertext\validation-images-with-rotation.csv',
     [int]$TargetHeight = 48,
     [int]$MinimumProjectedWidth = 3200,
     [string]$OutputJsonPath = 'eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json',
@@ -50,6 +51,17 @@ $annotationRelativePath = $annotationsFullPath
 if ($annotationsFullPath.StartsWith($repositoryRoot, [StringComparison]::OrdinalIgnoreCase)) {
     $annotationRelativePath = $annotationsFullPath.Substring($repositoryRoot.Length).TrimStart('\', '/')
 }
+$metadataFullPath = $null
+$metadataById = @{}
+if (Test-Path -LiteralPath $MetadataPath -PathType Leaf) {
+    $metadataFullPath = (Resolve-Path -LiteralPath $MetadataPath).Path
+    foreach ($row in (Import-Csv -LiteralPath $metadataFullPath)) {
+        $id = [string]$row.ImageID
+        if (-not [string]::IsNullOrWhiteSpace($id) -and -not $metadataById.ContainsKey($id)) {
+            $metadataById[$id] = $row
+        }
+    }
+}
 
 $candidates = [System.Collections.Generic.List[object]]::new()
 $annotations = @($annotationDocument.annotations)
@@ -75,6 +87,7 @@ for ($paragraphIndex = 0; $paragraphIndex -lt $annotations.Count; $paragraphInde
             $imageId = [string]$annotation.image_id
             $imagePath = Join-Path $ImageRoot ($imageId + '.jpg')
             $exists = Test-Path -LiteralPath $imagePath -PathType Leaf
+            $metadata = if ($metadataById.ContainsKey($imageId)) { $metadataById[$imageId] } else { $null }
             $imageSha = $null
             $imageSize = $null
             if ($exists) {
@@ -96,6 +109,9 @@ for ($paragraphIndex = 0; $paragraphIndex -lt $annotations.Count; $paragraphInde
                 imageExists = $exists
                 imageSizeBytes = $imageSize
                 imageSha256 = $imageSha
+                metadataExists = ($null -ne $metadata)
+                metadataLicense = if ($metadata) { [string]$metadata.License } else { $null }
+                metadataOriginalLandingUrl = if ($metadata) { [string]$metadata.OriginalLandingURL } else { $null }
             })
         }
     }
@@ -106,6 +122,7 @@ $relativeMarkdownPath = $OutputMarkdownPath.Replace('\', '/')
 $candidateImageIds = @($candidates | ForEach-Object { [string]$_['imageId'] } | Sort-Object -Unique)
 $availableImageIds = @($candidates | Where-Object { $_['imageExists'] } | ForEach-Object { [string]$_['imageId'] } | Sort-Object -Unique)
 $missingImageIds = @($candidates | Where-Object { -not $_['imageExists'] } | ForEach-Object { [string]$_['imageId'] } | Sort-Object -Unique)
+$metadataImageIds = @($candidates | Where-Object { $_['metadataExists'] } | ForEach-Object { [string]$_['imageId'] } | Sort-Object -Unique)
 $maximumProjectedWidth = if ($candidates.Count -gt 0) { [int](($candidates | ForEach-Object { [int]$_['projectedWidth'] } | Measure-Object -Maximum).Maximum) } else { 0 }
 $maximumTextLength = if ($candidates.Count -gt 0) { [int](($candidates | ForEach-Object { [int]$_['textLength'] } | Measure-Object -Maximum).Maximum) } else { 0 }
 $result = [ordered]@{
@@ -116,6 +133,9 @@ $result = [ordered]@{
         annotationSha256 = Get-Sha256 -Path $annotationsFullPath
         annotationInfo = $annotationDocument.info
         annotationCount = $annotations.Count
+        metadataPath = $metadataFullPath
+        metadataSha256 = if ($metadataFullPath) { Get-Sha256 -Path $metadataFullPath } else { $null }
+        metadataRowCount = $metadataById.Count
         imageRoot = $ImageRoot
         imageSourceTemplate = 'https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg'
     }
@@ -129,6 +149,7 @@ $result = [ordered]@{
         candidateImageCount = $candidateImageIds.Count
         availableImageCount = $availableImageIds.Count
         missingImageCount = $missingImageIds.Count
+        metadataImageCount = $metadataImageIds.Count
         maximumProjectedWidth = $maximumProjectedWidth
         maximumTextLength = $maximumTextLength
     }
@@ -148,6 +169,7 @@ $candidateLineCount = [int]$result['summary']['candidateLineCount']
 $candidateImageCount = [int]$result['summary']['candidateImageCount']
 $availableImageCount = [int]$result['summary']['availableImageCount']
 $missingImageCount = [int]$result['summary']['missingImageCount']
+$metadataImageCount = [int]$result['summary']['metadataImageCount']
 $sourceImageTemplate = [string]$result['source']['imageSourceTemplate']
 [void]$markdown.AppendLine('# HierText natural wide-line coverage audit for A2 (2026-10-17)')
 [void]$markdown.AppendLine()
@@ -155,6 +177,7 @@ $sourceImageTemplate = [string]$result['source']['imageSourceTemplate']
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine("- Annotation source: $annotationRelativePath (SHA-256 $annotationSha, revision/info $annotationRevision).")
 [void]$markdown.AppendLine("- Candidate lines: **$candidateLineCount** across **$candidateImageCount** images; local images present: **$availableImageCount**; missing: **$missingImageCount**.")
+[void]$markdown.AppendLine("- Candidate image IDs found in the supplied Open Images metadata CSV: **$metadataImageCount**. A missing metadata row is a source/catalog boundary and must be resolved before treating the remote template as downloadable evidence.")
 [void]$markdown.AppendLine("- Maximum projected width: **$maximumProjectedWidth**; maximum annotated text length among candidates: **$maximumTextLength** characters.")
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine('| Image ID | Paragraph/line | Text length | Projected width | Local image | SHA-256 |')
@@ -175,7 +198,7 @@ foreach ($candidate in $result.candidates) {
 [void]$markdown.AppendLine('The candidates are useful for testing geometry-driven SlidingWindow behavior, overlap seam attribution, source-region mapping and memory budgets. They do **not** close the A2 requirement for a naturally occurring continuous line of at least 3,200 characters. This run also does not claim OCR quality: no detector/recognizer invocation, CER/WER, seam merge result or backend parity was measured.')
 if ($missingImageCount -gt 0) {
     [void]$markdown.AppendLine()
-    [void]$markdown.AppendLine("The local image cache is incomplete. Obtain the missing Open Images JPEGs from the official template $sourceImageTemplate, verify their per-image license/attribution from the pinned metadata, then rerun this script before running OCR.")
+    [void]$markdown.AppendLine("The local image cache is incomplete. Obtain the missing Open Images JPEGs from the official template $sourceImageTemplate, verify their per-image license/attribution from the pinned metadata, then rerun this script before running OCR. If an ID is absent from the metadata CSV or the official URL returns 404, record that source boundary instead of substituting an unrelated image.")
 }
 
 Set-Content -LiteralPath $markdownFullPath -Value $markdown.ToString().TrimEnd() -Encoding utf8

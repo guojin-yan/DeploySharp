@@ -4,6 +4,7 @@ This report scans the pinned HierText annotation source using a target recogniti
 
 - Annotation source: F:\OCRBenchmarkTesting\artifacts\cache\hiertext\validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz (SHA-256 ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a, revision/info v1.0).
 - Candidate lines: **13** across **9** images; local images present: **0**; missing: **9**.
+- Candidate image IDs found in the supplied Open Images metadata CSV: **0**. A missing metadata row is a source/catalog boundary and must be resolved before treating the remote template as downloadable evidence.
 - Maximum projected width: **4725**; maximum annotated text length among candidates: **182** characters.
 
 | Image ID | Paragraph/line | Text length | Projected width | Local image | SHA-256 |
@@ -26,4 +27,4 @@ This report scans the pinned HierText annotation source using a target recogniti
 
 The candidates are useful for testing geometry-driven SlidingWindow behavior, overlap seam attribution, source-region mapping and memory budgets. They do **not** close the A2 requirement for a naturally occurring continuous line of at least 3,200 characters. This run also does not claim OCR quality: no detector/recognizer invocation, CER/WER, seam merge result or backend parity was measured.
 
-The local image cache is incomplete. Obtain the missing Open Images JPEGs from the official template https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg, verify their per-image license/attribution from the pinned metadata, then rerun this script before running OCR.
+The local image cache is incomplete. Obtain the missing Open Images JPEGs from the official template https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg, verify their per-image license/attribution from the pinned metadata, then rerun this script before running OCR. If an ID is absent from the metadata CSV or the official URL returns 404, record that source boundary instead of substituting an unrelated image.
