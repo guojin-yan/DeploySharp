@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T11:02:36Z",
+  "generatedUtc": "2026-10-17T11:24:28Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 20,
+    "bundleCount": 21,
     "bundles": [
       {
         "id": "official-classification",
@@ -147,6 +147,20 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "5786d637a24391e3a7ebd90ba9b33608486df0ff"
+      },
+      {
+        "id": "pp-doclayout-l-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json",
+        "scope": "PP-DocLayout-L single-image OpenCV DNN CPU execution with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-l"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "2f9ded27a1c32c5b60cd095b2bb1018a3c486ec1"
       },
       {
         "id": "document-orientation-tensorrt10-single-image",
@@ -515,6 +529,13 @@
       },
       {
         "modelId": "paddle-doc/pp-doclayout-l",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "pp-doclayout-l-opencv-dnn"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-l",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "multipage-orientation-layout"
@@ -702,10 +723,11 @@
       },
       {
         "backend": "opencv-dnn-cpu",
-        "evidencePairCount": 2,
-        "distinctModelCount": 2,
-        "distinctModelBackendPairCount": 2,
+        "evidencePairCount": 3,
+        "distinctModelCount": 3,
+        "distinctModelBackendPairCount": 3,
         "models": [
+          "paddle-doc/pp-doclayout-l",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-table/pp-lcnet-x1-0-table-cls"
         ]
@@ -755,7 +777,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 34,
+      "validatedPairCount": 35,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

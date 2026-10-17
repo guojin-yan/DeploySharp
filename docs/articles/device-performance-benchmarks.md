@@ -232,6 +232,16 @@
 
 该数据是 CPU 准备输入的 TensorRT NMS 指标，不是 CUDA 端到端预处理结果；Engine 与 GPU 架构及 TensorRT/CUDA/cuDNN 版本绑定，换设备必须重新构建。当前没有把这一个工件的结果外推到其它 PP-Structure 模型。
 
+### PP-Structure 版面分析：OpenCV DNN CPU 稳态口径
+
+2026-10-17 在同一 `JYPPX` Windows 10 主机上，使用 `pp-doclayout-l.onnx` 和 `bus.jpg` 补充了 OpenCV DNN 的正式 `5 warm-up + 50 measured` 单图证据。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与 DeploySharp Paddle NMS Decoder，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT parity 参考。OpenCV 的 CPU 时钟不涉及 GPU 锁频。
+
+| 模型 / 输入 | 后端 | Batch / Session | 高置信度 parity | P50 ms | P95 ms | Mean ms |
+| --- | --- | ---: | --- | ---: | ---: | ---: |
+| `pp-doclayout-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 730.3262 | 796.5752 | 735.6268 |
+
+模型 SHA-256 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，输入 SHA-256 为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json) 和[说明报告](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)。
+
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 
 `pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。

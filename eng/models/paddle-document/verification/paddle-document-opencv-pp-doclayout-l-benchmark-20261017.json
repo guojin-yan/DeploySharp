@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-opencv-layout-benchmark-v1",
+  "generatedUtc": "2026-10-17T11:21:35.7637182+00:00",
+  "sourceRevision": "2f9ded27a1c32c5b60cd095b2bb1018a3c486ec1",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "gpuClockState": "not-applicable-to-cpu-backend"
+  },
+  "model": {
+    "id": "paddle-doc/pp-doclayout-l",
+    "file": "pp-doclayout-l.onnx",
+    "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+    "inputShape": "[1,3,640,640]"
+  },
+  "input": {
+    "file": "bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "inputId": "paddle-document-opencv-layout-benchmark"
+  },
+  "backend": {
+    "id": "opencv-dnn-cpu",
+    "runtimePackage": "JYPPX.OpenCV.runtime.win-x64 5.0.0",
+    "fusion": true,
+    "winograd": true,
+    "specializeDynamicInputShapes": true,
+    "importerNote": "OpenCV logged that unused graph output fetch_name_1 has no imported layer; selected fetch_name_0 execution and the bounded ORT parity contract passed."
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput created before warm-up and reused for all calls.",
+    "timing": "Synchronous VisualPipeline.Run; includes OpenCV DNN execution and DeploySharp decoding; excludes image decode/preprocessing, model load, profile/session creation, hashing and one-time ORT parity reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "onnxruntime-cpu",
+    "matchedDetectionCount": 1,
+    "confidenceThreshold": 0.5,
+    "scoreTolerance": 0.001,
+    "coordinateTolerancePx": 0.5
+  },
+  "result": {
+    "detectionCount": 300,
+    "highConfidenceDetectionCount": 1,
+    "highConfidenceFingerprintSha256": "f0ce64ece1c94946089484af63200f6041ace642fc5cf87fcf509cbcf7b075c3"
+  },
+  "timing": {
+    "p50Ms": 730.3262,
+    "p95Ms": 796.5752,
+    "minMs": 694.7635,
+    "maxMs": 817.9322,
+    "meanMs": 735.6268140000003
+  },
+  "samplesMs": [
+    742.1424,
+    724.6095,
+    717.0985,
+    754.1513,
+    761.4154,
+    712.3683,
+    713.8577,
+    730.3262,
+    704.525,
+    743.3513,
+    717.8812,
+    719.5429,
+    718.5892,
+    707.5309,
+    694.7635,
+    730.1019,
+    717.1239,
+    720.195,
+    729.2677,
+    730.9328,
+    735.7697,
+    740.0018,
+    750.2376,
+    755.63,
+    743.4635,
+    717.743,
+    695.5111,
+    723.2795,
+    739.4948,
+    743.2981,
+    711.1091,
+    728.5035,
+    722.9976,
+    796.5752,
+    748.3378,
+    745.2765,
+    765.0671,
+    724.0278,
+    751.6366,
+    800.6263,
+    769.9806,
+    755.6056,
+    715.3957,
+    702.884,
+    748.8879,
+    817.9322,
+    741.6254,
+    741.322,
+    722.5712,
+    736.7749
+  ]
+}
