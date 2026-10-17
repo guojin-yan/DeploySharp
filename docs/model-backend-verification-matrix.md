@@ -211,7 +211,7 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 
 上面的模型族表用于快速浏览，下面按目录中的每个精确资产列出当前证据。`△` 表示尚未完成该精确组合的真实执行，`✗` 表示已经尝试并确认当前组合阻断；派生 SLANeXt 兼容图使用独立的 compatibility ID，不等同于原始 Release 图。
 
-同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。OpenCV DNN 的 14 个 Paddle NMS 精确组合执行报告见 [`paddle-document-opencv-nms-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md)；TensorRT 两个 RT-DETR 表格单元格工件的正式 5/50 证据见 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md)。
+同一状态的机器可读版本见 [`paddle-document-backend-matrix-20260929.json`](../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)；截至 2026-10-17 的自动复算、证据链接检查和动态 Batch 汇总见[当前矩阵索引](../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)及其[JSON](../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.json)。它固定了本机设备、运行时版本、状态语义和每个精确资产的四个后端状态，新增设备时按相同 schema 追加独立设备记录。OpenCV DNN 的 14 个 Paddle NMS 精确组合执行报告见 [`paddle-document-opencv-nms-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md)；TensorRT 两个 RT-DETR 表格单元格工件的正式 5/50 证据见 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md)。
 
 | 精确资产 | ORT CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
 |---|:---:|:---:|:---:|:---:|

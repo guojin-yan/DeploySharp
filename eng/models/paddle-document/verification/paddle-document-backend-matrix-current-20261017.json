@@ -1,0 +1,395 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
+  "generatedUtc": "2026-10-17T07:28:43Z",
+  "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
+  "sourceMatrix": {
+    "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
+    "generatedUtc": "10/13/2026 22:47:05",
+    "schemaVersion": "deploysharp-paddle-document-backend-matrix-v1"
+  },
+  "deviceScope": {
+    "label": "JYPPX",
+    "osBuild": "10.0.26200",
+    "logicalProcessors": 16,
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "576.02",
+    "scopeNote": "CPU status is independent of the GPU; GPU rows are valid only for the named TensorRT/CUDA installation and rebuilt engines."
+  },
+  "runtimes": {
+    "onnxruntimeCpu": "Microsoft.ML.OnnxRuntime 1.28.0",
+    "openvinoCpu": "OpenVINO runtime 2026.2.1 / OpenVINO C# API 3.3.1",
+    "opencvDnnCpu": "OpenCV 5.0.0",
+    "tensorRtCuda": "TensorRT 10.11.0.33-cu12 / API 10 bridge for legacy records; TensorRT 11.0.0.114-cu12 / API 11 bridge for the 2026-10-11 layout record"
+  },
+  "artifactCount": 31,
+  "statusSemantics": {
+    "pass": "The exact artifact/backend has real execution evidence for the declared scope.",
+    "unsupported": "The exact artifact/backend was attempted and failed at the current importer/runtime.",
+    "unverified": "A code or artifact contract exists but no exact real execution evidence is registered.",
+    "dynamicBatchEvidence": "The assets array preserves each artifact's existing general/single-image evidence; dynamicBatchEvidence records narrower batch-specific outcomes separately."
+  },
+  "statusCounts": {
+    "onnxruntimeCpu": {
+      "pass": 31,
+      "unsupported": 0,
+      "unverified": 0
+    },
+    "openvinoCpu": {
+      "pass": 23,
+      "unsupported": 8,
+      "unverified": 0
+    },
+    "opencvDnnCpu": {
+      "pass": 11,
+      "unsupported": 20,
+      "unverified": 0
+    },
+    "tensorRtCuda": {
+      "pass": 21,
+      "unsupported": 10,
+      "unverified": 0
+    }
+  },
+  "unsupportedByBackend": {
+    "onnxruntimeCpu": [],
+    "openvinoCpu": [
+      "paddle-table/slanext-wired",
+      "paddle-table/slanext-wireless",
+      "paddle-formula/pp-formulanet-plus-s",
+      "paddle-formula/pp-formulanet-plus-m",
+      "paddle-formula/pp-formulanet-plus-l",
+      "paddle-formula/pp-formulanet-s",
+      "paddle-formula/pp-formulanet-l",
+      "paddle-formula/unimernet"
+    ],
+    "opencvDnnCpu": [
+      "paddle-doc/uvdoc",
+      "paddle-doc/pp-doclayout-m",
+      "paddle-doc/pp-doclayout-s",
+      "paddle-doc/picodet-layout-1x",
+      "paddle-doc/picodet-layout-1x-table",
+      "paddle-doc/picodet-s-layout-3cls",
+      "paddle-doc/picodet-l-layout-3cls",
+      "paddle-doc/picodet-s-layout-17cls",
+      "paddle-doc/picodet-l-layout-17cls",
+      "paddle-table/slanext-wired",
+      "paddle-table/slanext-wireless",
+      "paddle-table/slanext-wired-openvino-compat",
+      "paddle-table/slanext-wireless-openvino-compat",
+      "paddle-formula/pp-formulanet-plus-s",
+      "paddle-formula/pp-formulanet-plus-m",
+      "paddle-formula/pp-formulanet-plus-l",
+      "paddle-formula/pp-formulanet-s",
+      "paddle-formula/pp-formulanet-l",
+      "paddle-formula/unimernet",
+      "paddle-chart/pp-chart2table"
+    ],
+    "tensorRtCuda": [
+      "paddle-table/slanext-wired",
+      "paddle-table/slanext-wireless",
+      "paddle-table/slanext-wired-openvino-compat",
+      "paddle-table/slanext-wireless-openvino-compat",
+      "paddle-formula/pp-formulanet-plus-s",
+      "paddle-formula/pp-formulanet-plus-m",
+      "paddle-formula/pp-formulanet-plus-l",
+      "paddle-formula/pp-formulanet-s",
+      "paddle-formula/pp-formulanet-l",
+      "paddle-formula/unimernet"
+    ]
+  },
+  "dynamicBatch": {
+    "artifactCount": 12,
+    "statusCounts": {
+      "onnxruntimeCpu": {
+        "pass": 12,
+        "unsupported": 0,
+        "unverified": 0
+      },
+      "openvinoCpu": {
+        "pass": 6,
+        "unsupported": 0,
+        "unverified": 6
+      },
+      "opencvDnnCpu": {
+        "pass": 2,
+        "unsupported": 10,
+        "unverified": 0
+      },
+      "tensorRtCuda": {
+        "pass": 6,
+        "unsupported": 6,
+        "unverified": 0
+      }
+    }
+  },
+  "evidenceAudit": {
+    "referenceCount": 31,
+    "missingCount": 0,
+    "missing": []
+  },
+  "boundary": {
+    "statement": "This index records exact artifact/backend execution evidence only. It does not establish dataset accuracy, CER/WER, formal P50/P95 ranking, engine portability, long-duration stability, or support for unlisted artifacts.",
+    "qualityGates": [
+      "A2 natural continuous >=3200-character ground truth",
+      "A3 natural rotation/inversion labels",
+      "B1b/B2/B3 natural degradation and enhancement cost",
+      "formula semantic quality",
+      "ChartQA split accuracy"
+    ],
+    "performanceGates": [
+      "unified formal 5 warm-up + 50 measured PP-Structure protocol",
+      "second-device matrix",
+      "long-duration soak and cross-page throughput"
+    ]
+  },
+  "assets": [
+    {
+      "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/uvdoc",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/pp-doclayout-plus-l",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/pp-doclayout-l",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/pp-doclayout-m",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/pp-doclayout-s",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/pp-docblocklayout",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-layout-1x",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-layout-1x-table",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-s-layout-3cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-l-layout-3cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/rt-detr-h-layout-3cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-s-layout-17cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/picodet-l-layout-17cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-doc/rt-detr-h-layout-17cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-table/slanext-wired",
+      "artifactKind": "original-release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-table/slanext-wireless",
+      "artifactKind": "original-release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-table/slanext-wired-openvino-compat",
+      "artifactKind": "derived-compat-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-table/slanext-wireless-openvino-compat",
+      "artifactKind": "derived-compat-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-table/rt-detr-l-wired-cell-det",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-table/rt-detr-l-wireless-cell-det",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-s",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-m",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-plus-l",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-s",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-formula/pp-formulanet-l",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-formula/unimernet",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "unsupported",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "unsupported"
+    },
+    {
+      "modelId": "paddle-seal/ppocrv4-mobile",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-seal/ppocrv4-server",
+      "artifactKind": "release-onnx",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "pass",
+      "tensorRtCuda": "pass"
+    },
+    {
+      "modelId": "paddle-chart/pp-chart2table",
+      "artifactKind": "four-graph-release-bundle",
+      "onnxruntimeCpu": "pass",
+      "openvinoCpu": "pass",
+      "opencvDnnCpu": "unsupported",
+      "tensorRtCuda": "pass"
+    }
+  ]
+}
