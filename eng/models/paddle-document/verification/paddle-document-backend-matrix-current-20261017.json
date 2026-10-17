@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T08:34:41Z",
+  "generatedUtc": "2026-10-17T09:50:33Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 7,
+    "bundleCount": 9,
     "bundles": [
       {
         "id": "official-classification",
@@ -178,6 +178,34 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "4d9bb25"
+      },
+      {
+        "id": "rtdetr-h-layout-3cls-tensorrt-dynamic-batch",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-rt-detr-h-3cls-tensorrt10.11-dynamic-batch-20261017.json",
+        "scope": "RT-DETR-H 3-class layout dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-3cls"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "rtdetr-h-layout-17cls-tensorrt-dynamic-batch",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-rt-detr-h-17cls-tensorrt10.11-dynamic-batch-20261017.json",
+        "scope": "RT-DETR-H 17-class layout dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-17cls"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
       },
       {
         "id": "table-task-chain-ort",
@@ -317,6 +345,20 @@
         ]
       },
       {
+        "modelId": "paddle-doc/rt-detr-h-layout-17cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "rtdetr-h-layout-17cls-tensorrt-dynamic-batch"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/rt-detr-h-layout-3cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "rtdetr-h-layout-3cls-tensorrt-dynamic-batch"
+        ]
+      },
+      {
         "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
@@ -423,13 +465,15 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 5,
-        "distinctModelCount": 5,
-        "distinctModelBackendPairCount": 5,
+        "evidencePairCount": 7,
+        "distinctModelCount": 7,
+        "distinctModelBackendPairCount": 7,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/pp-doclayout-l",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
+          "paddle-doc/rt-detr-h-layout-17cls",
+          "paddle-doc/rt-detr-h-layout-3cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det"
         ]
@@ -437,7 +481,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 19,
+      "validatedPairCount": 21,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
