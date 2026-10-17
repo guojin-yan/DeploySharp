@@ -9,6 +9,7 @@ $documents = @(
     'docs/articles/visual-paddle-structure.md',
     'eng/models/paddle-ocr/README.md',
     'eng/models/paddle-document/README.md',
+    'eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md',
     'eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-error-patterns-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-structural-quality-20261011.md',

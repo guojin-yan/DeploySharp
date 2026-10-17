@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index (2026-10-17)
 
-Generated 2026-10-17T07:28:43Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-17T07:36:45Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 

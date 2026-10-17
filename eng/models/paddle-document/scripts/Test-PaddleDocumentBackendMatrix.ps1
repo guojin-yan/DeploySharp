@@ -153,7 +153,9 @@ $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $jsonFullPath -Enc
 $builder = [Text.StringBuilder]::new()
 [void]$builder.AppendLine('# PP-Structure backend status — current index (2026-10-17)')
 [void]$builder.AppendLine()
-[void]$builder.AppendLine("Generated $generatedUtc from source revision $sourceRevision. The authoritative matrix is [$relativeMatrixPath]($relativeMatrixPath), whose artifact rows are intentionally preserved as the source of truth.")
+$markdownDirectory = Split-Path -Parent $markdownFullPath
+$relativeMatrixLink = [IO.Path]::GetRelativePath($markdownDirectory, (Join-Path $repositoryRoot $relativeMatrixPath)).Replace('\', '/')
+[void]$builder.AppendLine("Generated $generatedUtc from source revision $sourceRevision. The authoritative matrix is [$relativeMatrixPath]($relativeMatrixLink), whose artifact rows are intentionally preserved as the source of truth.")
 [void]$builder.AppendLine()
 [void]$builder.AppendLine("This index covers **$($assets.Count) exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.")
 [void]$builder.AppendLine()
