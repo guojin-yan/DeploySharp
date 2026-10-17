@@ -171,6 +171,8 @@ PP-LCNet 表格分类的 TensorRT batch=2 已完成一条精确 DeploySharp 证�
 
 2026-10-13 新增[锁定 MathJax 的渲染/视觉结构诊断](../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md)：同一 121 条参考中 118 条可渲染，六模型预测可渲染数为 `110–121/121`，可比较配对的前景 IoU P50 为 `0.2253–0.2434`。这关闭了本机无渲染器的工具缺口，但仍是 ORT CPU 输出的排版/字形诊断，不是数学语义等价、完整 TeX 兼容或发布质量通过。
 
+2026-10-17 新增[公式质量门汇总](../eng/models/paddle-document/verification/formula-quality-gate-20261017.md)（[JSON](../eng/models/paddle-document/verification/formula-quality-gate-20261017.json)）：六模型均通过 121 行/空输出/EOS 执行完整性，但 Plus-S 与 FormulaNet-S 的可比较渲染比例低于 90% 诊断阈值，且当前没有独立数学语义等价评测，因此总门禁保持 `blocked`。该汇总只覆盖 ORT CPU 源报告，不改变其它后端的精确状态，也不把字符串、解析或像素指标升级为准确率。
+
 随后对同一 Plus-S 图进行了独立派生兼容性探针：Polygraphy 清理仍在 `BitwiseAnd` 处被 TensorRT 解析器阻断；将掩码改为布尔逻辑后虽能完成解析，Builder 又因 Loop recurrence 的形状变化返回空 Engine。四个派生图均只通过 `onnx.checker`，未进入 Decoder；这些历史派生图探针不替代对官方图的逐项 Builder 结果。详见[派生图探针](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.md)及[JSON](../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.json)。
 
 六个公式图的[静态 TensorRT 兼容性审计](../eng/models/paddle-document/verification/formula-tensorrt-static-compatibility-20261011.md)显示它们都包含动态输入/输出和自回归 `Loop`，循环体还包含 `If`、动态 shape 与 bitwise 算子。当前六条 TensorRT 状态是针对记录的 TRT11 精确运行时的 importer 阻断，不表示未来固定状态导出或 plugin 也无法支持。

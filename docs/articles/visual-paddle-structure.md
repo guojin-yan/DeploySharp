@@ -471,6 +471,8 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 2026-10-13 又补充了锁定 MathJax 4.1.3 和 sharp 0.35.5 的[渲染/视觉结构诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json)）。121 条参考中 118 条可渲染；六模型预测分别有 110–121 条可渲染，可比较配对的前景 IoU P50 为 `0.2253–0.2434`。工具位于 `eng/models/paddle-document/tools/formula-render-quality`，报告只保存图片/公式哈希、渲染错误和像素指标，不复制原始 LaTeX。该结果关闭了“缺少可复现渲染器”的工具阻断，但像素相似度受排版和字形影响，不能证明数学语义等价、完整 TeX 兼容或发布精度。
 
+2026-10-17 新增[公式质量门汇总](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.md)及[机器可读报告](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.json)。它把 121 条样本的执行完整性、EOS/空输出、语法、SymPy/ANTLR 解析和 MathJax 渲染证据按模型对齐，并采用 fail-closed 规则：六模型的行数、空输出和 EOS 完整性通过，但 Plus-S 与 FormulaNet-S 的可比较渲染比例低于诊断阈值，而且当前没有独立、可复现的数学语义等价评测，因此总门禁明确保持 **blocked**。这不是推理失败，而是防止把 CER、字符串 exact、解析接受或像素相似度误称为公式准确率；OpenVINO、OpenCV DNN、TensorRT 的后端质量状态也不会由该 ORT CPU 汇总推断。可用 `eng/models/paddle-document/scripts/Evaluate-FormulaQualityGate.ps1` 重算。
+
 ## 状态和验证规则
 
 28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归已确认受当前 N-D 辅助输入适配器限制而不支持，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。

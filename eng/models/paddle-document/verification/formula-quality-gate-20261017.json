@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "deploysharp-formula-quality-gate-v1",
+  "generatedUtc": "2026-10-17T03:10:03.9984808+00:00",
+  "dataset": {
+    "name": "MathNet realFormula",
+    "version": "Zenodo 11296815 v1",
+    "sampleCount": 121,
+    "sourceSummary": "formula-realformula-six-models-ort-20261007-summary.json",
+    "sourceParseability": "formula-realformula-latex-parseability-20261012.json",
+    "sourceRender": "formula-realformula-render-quality-20261013.json",
+    "sourceSyntax": "formula-realformula-syntax-quality-20261012.json"
+  },
+  "policy": {
+    "expectedSampleCountPerModel": 121,
+    "minimumEosRate": 0.99,
+    "minimumPredictionRenderRate": 0.9,
+    "minimumComparableRenderRate": 0.9,
+    "semanticRule": "No release pass is possible without an independent, reproducible mathematical-semantic evaluator; lexical, parser and raster diagnostics are not substitutes."
+  },
+  "models": [
+    {
+      "model": "paddle-formula/pp-formulanet-plus-s",
+      "modelSha256": "e048777cc76258f2f2daa3cd7a54043f2265173fde357a9e9ad34665003a465d",
+      "sampleCount": 121,
+      "exactMatchRate": 0.11570247933884298,
+      "corpusNormalizedCharErrorRate": 0.5704094292803971,
+      "eosRate": 1.0,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 0.9090909090909091,
+      "comparableRenderRate": 0.8842975206611571,
+      "parseAcceptanceRate": 0.743801652892562,
+      "syntaxValidRate": 0.859504132231405,
+      "structureFingerprintMatchRate": 0.11570247933884298,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": false,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "comparable render rate 88.43% < 90.00%",
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-m",
+      "modelSha256": "10d5b4645ec75b441e83e0a543c07e80d3d1704e66eeba9cb605374828465a19",
+      "sampleCount": 121,
+      "exactMatchRate": 0.09090909090909091,
+      "corpusNormalizedCharErrorRate": 0.5834367245657568,
+      "eosRate": 1.0,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 1.0,
+      "comparableRenderRate": 0.9752066115702479,
+      "parseAcceptanceRate": 0.7520661157024794,
+      "syntaxValidRate": 0.9669421487603306,
+      "structureFingerprintMatchRate": 0.09090909090909091,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": true,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-plus-l",
+      "modelSha256": "ba9ee741c8e95b1f9a026494a2bec9185a710e10298efb857fae6d375c2da2e6",
+      "sampleCount": 121,
+      "exactMatchRate": 0.1322314049586777,
+      "corpusNormalizedCharErrorRate": 0.5460090984284532,
+      "eosRate": 1.0,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 0.9917355371900827,
+      "comparableRenderRate": 0.9669421487603306,
+      "parseAcceptanceRate": 0.7851239669421488,
+      "syntaxValidRate": 0.9669421487603306,
+      "structureFingerprintMatchRate": 0.1322314049586777,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": true,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-s",
+      "modelSha256": "9fbcf2d7b5d7534e4c596e241f5c60be482a4d24d6a9625f2e79e140c7522877",
+      "sampleCount": 121,
+      "exactMatchRate": 0.09917355371900827,
+      "corpusNormalizedCharErrorRate": 0.6157981803143093,
+      "eosRate": 1.0,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 0.9173553719008265,
+      "comparableRenderRate": 0.8925619834710744,
+      "parseAcceptanceRate": 0.7355371900826446,
+      "syntaxValidRate": 0.8264462809917356,
+      "structureFingerprintMatchRate": 0.09917355371900827,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": false,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "comparable render rate 89.26% < 90.00%",
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    },
+    {
+      "model": "paddle-formula/pp-formulanet-l",
+      "modelSha256": "acf3ddbecee98ab1dbecef2339e1c0b8dd22bce3ebf8dfce59b8928e88e0bce3",
+      "sampleCount": 121,
+      "exactMatchRate": 0.14049586776859505,
+      "corpusNormalizedCharErrorRate": 0.8985732009925558,
+      "eosRate": 0.9917355371900827,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 0.9669421487603306,
+      "comparableRenderRate": 0.9504132231404959,
+      "parseAcceptanceRate": 0.768595041322314,
+      "syntaxValidRate": 0.9173553719008265,
+      "structureFingerprintMatchRate": 0.14049586776859505,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": true,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    },
+    {
+      "model": "paddle-formula/unimernet",
+      "modelSha256": "1d64fafa0161f153dafe40823e97c4b05103030509dd6b286d7c8d4a11b068ab",
+      "sampleCount": 121,
+      "exactMatchRate": 0.1487603305785124,
+      "corpusNormalizedCharErrorRate": 0.5159222497932175,
+      "eosRate": 1.0,
+      "emptyPredictionCount": 0,
+      "predictionRenderRate": 0.9917355371900827,
+      "comparableRenderRate": 0.9669421487603306,
+      "parseAcceptanceRate": 0.743801652892562,
+      "syntaxValidRate": 0.9504132231404959,
+      "structureFingerprintMatchRate": 0.1487603305785124,
+      "integrityPassed": true,
+      "diagnosticEvidencePassed": true,
+      "semanticEquivalence": "not-assessed",
+      "releaseGate": "blocked",
+      "blockingReasons": [
+        "mathematical semantic equivalence has no independent evaluator/evidence"
+      ]
+    }
+  ],
+  "integrity": {
+    "allModelsPassedExecutionIntegrity": true,
+    "allModelsPassedDiagnosticEvidenceThresholds": false,
+    "semanticEvidencePresent": false,
+    "releaseGate": "blocked"
+  },
+  "boundary": "This is a fail-closed evidence gate. It records execution integrity and diagnostic thresholds but deliberately cannot claim formula accuracy or mathematical semantic equivalence. ORT CPU is the source quality set; ORT CUDA, OpenVINO, OpenCV DNN and TensorRT backend status remain separate."
+}
