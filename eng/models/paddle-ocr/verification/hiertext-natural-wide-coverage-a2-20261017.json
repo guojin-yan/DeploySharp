@@ -1,0 +1,330 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-hiertext-natural-wide-a2-v1",
+  "generatedUtc": "2026-10-17T07:49:23.120788+00:00",
+  "source": {
+    "annotationPath": "F:/OCRBenchmarkTesting/artifacts/cache/hiertext/validation-70b6620b2b112597d8219e11eee9773a1403827c.jsonl.gz",
+    "annotationSha256": "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a",
+    "annotationInfo": {
+      "date": "2022-03-16",
+      "version": "v1.0"
+    },
+    "annotationCount": 1724,
+    "imageRoot": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation",
+    "imageSourceTemplate": "https://open-images-dataset.s3.amazonaws.com/validation/{image_id}.jpg"
+  },
+  "protocol": {
+    "targetHeight": 48,
+    "minimumProjectedWidth": 3200,
+    "projection": "bbox_width * targetHeight / bbox_height; this is a geometry/recognition-width audit, not a character-count claim."
+  },
+  "summary": {
+    "candidateLineCount": 13,
+    "candidateImageCount": 9,
+    "availableImageCount": 0,
+    "missingImageCount": 9,
+    "maximumProjectedWidth": 4725,
+    "maximumTextLength": 182
+  },
+  "candidates": [
+    {
+      "imageId": "0532d7adab8961c4",
+      "paragraphIndex": 39,
+      "lineIndex": 0,
+      "textLength": 161,
+      "projectedWidth": 3596,
+      "bboxWidth": 899.0,
+      "bboxHeight": 12.0,
+      "vertices": [
+        60.0,
+        902.0,
+        959.0,
+        902.0,
+        959.0,
+        914.0,
+        60.0,
+        914.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "0532d7adab8961c4",
+      "paragraphIndex": 40,
+      "lineIndex": 0,
+      "textLength": 172,
+      "projectedWidth": 3592,
+      "bboxWidth": 898.0,
+      "bboxHeight": 12.0,
+      "vertices": [
+        59.0,
+        930.0,
+        957.0,
+        930.0,
+        957.0,
+        942.0,
+        59.0,
+        942.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "0532d7adab8961c4",
+      "paragraphIndex": 41,
+      "lineIndex": 0,
+      "textLength": 149,
+      "projectedWidth": 3256,
+      "bboxWidth": 814.0,
+      "bboxHeight": 12.0,
+      "vertices": [
+        68.0,
+        958.0,
+        882.0,
+        958.0,
+        882.0,
+        970.0,
+        68.0,
+        970.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\0532d7adab8961c4.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "08cc7d6ebd7c4d93",
+      "paragraphIndex": 34,
+      "lineIndex": 0,
+      "textLength": 155,
+      "projectedWidth": 3509,
+      "bboxWidth": 731.0,
+      "bboxHeight": 10.0,
+      "vertices": [
+        258.0,
+        717.0,
+        989.0,
+        717.0,
+        989.0,
+        727.0,
+        258.0,
+        727.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\08cc7d6ebd7c4d93.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "3c027cacb77e35cd",
+      "paragraphIndex": 50,
+      "lineIndex": 0,
+      "textLength": 2,
+      "projectedWidth": 4464,
+      "bboxWidth": 93.0,
+      "bboxHeight": 1.0,
+      "vertices": [
+        498.0,
+        480.0,
+        591.0,
+        480.0,
+        591.0,
+        481.0,
+        498.0,
+        481.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\3c027cacb77e35cd.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "584eda70fc6b1a5b",
+      "paragraphIndex": 11,
+      "lineIndex": 0,
+      "textLength": 47,
+      "projectedWidth": 3439,
+      "bboxWidth": 788.0,
+      "bboxHeight": 11.0,
+      "vertices": [
+        379.0,
+        440.0,
+        1167.0,
+        440.0,
+        1167.0,
+        451.0,
+        379.0,
+        451.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\584eda70fc6b1a5b.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "584eda70fc6b1a5b",
+      "paragraphIndex": 11,
+      "lineIndex": 1,
+      "textLength": 45,
+      "projectedWidth": 3587,
+      "bboxWidth": 822.0,
+      "bboxHeight": 11.0,
+      "vertices": [
+        361.0,
+        450.0,
+        1183.0,
+        450.0,
+        1183.0,
+        461.0,
+        361.0,
+        461.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\584eda70fc6b1a5b.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "6ce679754fa8bc1c",
+      "paragraphIndex": 0,
+      "lineIndex": 0,
+      "textLength": 132,
+      "projectedWidth": 4725,
+      "bboxWidth": 689.0,
+      "bboxHeight": 7.0,
+      "vertices": [
+        66.0,
+        777.0,
+        755.0,
+        777.0,
+        755.0,
+        784.0,
+        66.0,
+        784.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\6ce679754fa8bc1c.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "a4e2a75d729799a9",
+      "paragraphIndex": 15,
+      "lineIndex": 0,
+      "textLength": 182,
+      "projectedWidth": 3652,
+      "bboxWidth": 989.0,
+      "bboxHeight": 13.0,
+      "vertices": [
+        20.0,
+        876.0,
+        1009.0,
+        876.0,
+        1009.0,
+        889.0,
+        20.0,
+        889.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\a4e2a75d729799a9.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "dd838509911a8f86",
+      "paragraphIndex": 0,
+      "lineIndex": 0,
+      "textLength": 121,
+      "projectedWidth": 3306,
+      "bboxWidth": 964.0,
+      "bboxHeight": 14.0,
+      "vertices": [
+        79.0,
+        359.0,
+        1043.0,
+        359.0,
+        1043.0,
+        373.0,
+        79.0,
+        373.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\dd838509911a8f86.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "dd838509911a8f86",
+      "paragraphIndex": 9,
+      "lineIndex": 0,
+      "textLength": 114,
+      "projectedWidth": 3357,
+      "bboxWidth": 909.0,
+      "bboxHeight": 13.0,
+      "vertices": [
+        79.0,
+        538.0,
+        988.0,
+        538.0,
+        988.0,
+        551.0,
+        79.0,
+        551.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\dd838509911a8f86.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "e04931ec29a0bf9c",
+      "paragraphIndex": 19,
+      "lineIndex": 0,
+      "textLength": 138,
+      "projectedWidth": 3236,
+      "bboxWidth": 809.0,
+      "bboxHeight": 12.0,
+      "vertices": [
+        419.0,
+        655.0,
+        1228.0,
+        655.0,
+        1228.0,
+        667.0,
+        419.0,
+        667.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e04931ec29a0bf9c.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    },
+    {
+      "imageId": "e1154c00eb8b9e8c",
+      "paragraphIndex": 30,
+      "lineIndex": 0,
+      "textLength": 164,
+      "projectedWidth": 4032,
+      "bboxWidth": 924.0,
+      "bboxHeight": 11.0,
+      "vertices": [
+        270.0,
+        868.0,
+        1194.0,
+        868.0,
+        1194.0,
+        879.0,
+        270.0,
+        879.0
+      ],
+      "imagePath": "F:\\OCRBenchmarkTesting\\data\\images\\hiertext\\validation\\e1154c00eb8b9e8c.jpg",
+      "imageExists": false,
+      "imageSizeBytes": null,
+      "imageSha256": null
+    }
+  ],
+  "boundary": "These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity remain unmeasured until the source images are available locally."
+}

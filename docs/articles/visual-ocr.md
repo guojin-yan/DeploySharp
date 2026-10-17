@@ -841,6 +841,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 A2 又增加了[当前 OCR benchmark manifest 全量盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)：扫描 `F:\OCRBenchmarkTesting\data\annotations\manifests` 下 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行只有 132 字符、最长单页累计 2,348 字符，`>=3,200` 的自然连续行仍为 `0`。这是数据可用性审计，不是 OCR 准确率结果；页面累计、拼接 crop 和合成文本不能关闭 A2。
 
+进一步的[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)直接扫描官方 validation 标注，以目标识别高度 48 投影出 13 条宽度至少 3,200 像素的自然文本行，分布于 9 张图，最大投影宽度 4,725、最大标注文本长度 182。当前本机没有这 9 张源 JPEG，因此尚未执行真实图像裁剪、SlidingWindow、接缝映射或 CER/WER；该结果不能被写成自然 3,200 字符长文本证据。待图像缓存补齐后，按报告中的 manifest/哈希继续执行 ORT/OpenVINO，并在条件满足时补做 TensorRT/OpenCV。
+
 为避免把单张演示图当成完整覆盖，固定使用 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg`，对 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 共 7 组 DET+CLS+REC 流水线分别运行 ONNX Runtime CPU 与 OpenVINO CPU。21 个组合在两个后端都完成检测、裁剪、方向、识别和合并；区域数与已识别数逐组合一致，按区域文本序列的 SHA-256 也为 `21/21` 一致。v6 没有独立版本化 CLS 归档，明确复用 PP-OCRv5 mobile CLS。
 
 该轮只使用演示图，没有逐字人工真值，因此不能从它计算 CER/WER、召回率或准确率；每组仅一次端到端调用，耗时不替代 5 次预热 + 50 次正式性能协议。模型、输入、结果摘要和可复现命令见[三图跨后端机器可读记录](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-openvino-ort-20260930.md)，复现脚本为 `eng/models/paddle-ocr/scripts/Invoke-PaddleOcrCoreThreeImageEvidence.ps1`。
