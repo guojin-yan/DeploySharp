@@ -103,6 +103,97 @@ foreach ($backend in $backendNames) {
     $unsupportedByBackend[$backend] = @($assets | Where-Object { [string]$_.$backend -eq 'unsupported' } | ForEach-Object { [string]$_.modelId })
 }
 
+function Read-FormalPerformanceEvidence {
+    param(
+        [Parameter(Mandatory)]
+        [string]$RepositoryRoot,
+        [Parameter(Mandatory)]
+        [string]$RelativePath,
+        [Parameter(Mandatory)]
+        [string]$Id,
+        [Parameter(Mandatory)]
+        [string]$Scope,
+        [Parameter(Mandatory)]
+        [string[]]$ModelIds,
+        [Parameter(Mandatory)]
+        [string[]]$Backends
+    )
+
+    $fullPath = Join-Path $RepositoryRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $fullPath)) {
+        throw "Formal performance evidence '$Id' is missing: $RelativePath"
+    }
+
+    $document = Get-Content -LiteralPath $fullPath -Raw | ConvertFrom-Json
+    $protocolCandidates = @()
+    if ($null -ne $document.protocol) {
+        $protocolCandidates += $document.protocol
+    }
+    if ($null -ne $document.execution -and $null -ne $document.execution.benchmark) {
+        $protocolCandidates += $document.execution.benchmark
+    }
+    $protocol = $protocolCandidates | Where-Object {
+        $warmup = if ($null -ne $_.warmupCount) { [int]$_.warmupCount } elseif ($null -ne $_.warmup) { [int]$_.warmup } else { 0 }
+        $measurements = if ($null -ne $_.measurementCount) { [int]$_.measurementCount } elseif ($null -ne $_.iterations) { [int]$_.iterations } else { 0 }
+        $warmup -ge 5 -and $measurements -ge 50
+    } | Select-Object -First 1
+    if ($null -eq $protocol) {
+        throw "Evidence '$RelativePath' does not declare a 5-warm-up/50-measured protocol."
+    }
+
+    $warmupCount = if ($null -ne $protocol.warmupCount) { [int]$protocol.warmupCount } else { [int]$protocol.warmup }
+    $measurementCount = if ($null -ne $protocol.measurementCount) { [int]$protocol.measurementCount } else { [int]$protocol.iterations }
+    [ordered]@{
+        id = $Id
+        path = $RelativePath.Replace('\', '/')
+        scope = $Scope
+        modelIds = @($ModelIds)
+        backends = @($Backends)
+        warmupCount = $warmupCount
+        measurementCount = $measurementCount
+        sourceRevision = if ($null -ne $document.sourceRevision) { [string]$document.sourceRevision } else { $null }
+    }
+}
+
+# These are deliberately explicit, small evidence bundles.  They are not inferred
+# from filenames: each entry names the exact models/backends that the report covers.
+# Keeping this list in the matrix audit prevents a single 5/50 report from being
+# misread as a full PP-Structure performance matrix.
+$formalPerformanceEvidence = @(
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.json' -Id 'official-classification' -Scope 'Official document-orientation and table-classification examples' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-table/pp-lcnet-x1-0-table-cls') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'opencv-dnn-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-multipage-benchmark-20261014.json' -Id 'multipage-orientation-layout' -Scope 'Two-page orientation to layout task chain' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-doc/pp-doclayout-l') -Backends @('onnxruntime-cpu', 'openvino-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261014.json' -Id 'multipage-orientation-layout-tensorrt' -Scope 'Two-page orientation to layout task chain with TensorRT CUDA' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-doc/pp-doclayout-l') -Backends @('tensorrt-cuda')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json' -Id 'table-task-chain' -Scope 'Table classification, cell detection and SLANeXt HTML task chain' -ModelIds @('paddle-table/pp-lcnet-x1-0-table-cls', 'paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/slanext-wired') -Backends @('onnxruntime-cpu', 'openvino-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.json' -Id 'table-cell-tensorrt' -Scope 'Wired and wireless table-cell detector parity' -ModelIds @('paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/rt-detr-l-wireless-cell-det') -Backends @('tensorrt-cuda')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json' -Id 'chart2table-fixed-sample' -Scope 'Fixed ChartQA Chart2Table single-sample generation' -ModelIds @('paddle-chart/pp-chart2table') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'tensorrt-cuda'))
+)
+
+$performancePairRows = [System.Collections.Generic.List[object]]::new()
+foreach ($bundle in $formalPerformanceEvidence) {
+    foreach ($modelId in $bundle.modelIds) {
+        foreach ($backend in $bundle.backends) {
+            $performancePairRows.Add([pscustomobject]@{ modelId = $modelId; backend = $backend; evidenceId = $bundle.id })
+        }
+    }
+}
+$performancePairSummary = @($performancePairRows | Group-Object backend | ForEach-Object {
+    [ordered]@{
+        backend = $_.Name
+        evidencePairCount = $_.Count
+        distinctModelCount = @($_.Group | ForEach-Object { $_.modelId } | Sort-Object -Unique).Count
+        distinctModelBackendPairCount = @($_.Group | ForEach-Object { "$($_.modelId)|$($_.backend)" } | Sort-Object -Unique).Count
+        models = @($_.Group | ForEach-Object { $_.modelId } | Sort-Object -Unique)
+    }
+})
+$distinctPerformancePairs = @($performancePairRows | Group-Object { "$($_.modelId)|$($_.backend)" } | ForEach-Object {
+    $first = $_.Group | Select-Object -First 1
+    [ordered]@{
+        modelId = [string]$first.modelId
+        backend = [string]$first.backend
+        evidenceIds = @($_.Group | ForEach-Object { $_.evidenceId } | Sort-Object -Unique)
+    }
+})
+
 $result = [ordered]@{
     schemaVersion = 'deploysharp-paddle-document-backend-matrix-summary-v1'
     generatedUtc = $generatedUtc
@@ -126,6 +217,14 @@ $result = [ordered]@{
         referenceCount = $evidencePaths.Count
         missingCount = $missingEvidence.Count
         missing = @($missingEvidence)
+    }
+    formalPerformanceEvidence = [ordered]@{
+        protocol = '5 warm-ups + 50 measured calls (or a stricter declared count)'
+        bundleCount = $formalPerformanceEvidence.Count
+        bundles = @($formalPerformanceEvidence)
+        distinctModelBackendPairs = $distinctPerformancePairs
+        byBackend = $performancePairSummary
+        boundary = 'These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend.'
     }
     boundary = [ordered]@{
         statement = 'This index records exact artifact/backend execution evidence only. It does not establish dataset accuracy, CER/WER, formal P50/P95 ranking, engine portability, long-duration stability, or support for unlisted artifacts.'
@@ -206,6 +305,27 @@ if ($missingEvidence.Count -eq 0) {
     [void]$builder.AppendLine("**Missing references: $($missingEvidence.Count)**")
     foreach ($item in $missingEvidence) { [void]$builder.AppendLine("- $item") }
 }
+
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('## Formal performance evidence coverage')
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.')
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('| Evidence bundle | Scope | Backends | Models | Protocol |')
+[void]$builder.AppendLine('| --- | --- | --- | --- | --- |')
+foreach ($bundle in $formalPerformanceEvidence) {
+    $models = (@($bundle.modelIds) -join '<br>')
+    $backends = (@($bundle.backends) -join ', ')
+    [void]$builder.AppendLine("| $($bundle.id) | $($bundle.scope) | $backends | $models | $($bundle.warmupCount) warm-up + $($bundle.measurementCount) measured |" )
+}
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('| Backend | Evidence rows | Distinct model/backend pairs | Distinct models |')
+[void]$builder.AppendLine('| --- | ---: | ---: | ---: |')
+foreach ($summary in $performancePairSummary) {
+    [void]$builder.AppendLine("| $($summary.backend) | $($summary.evidencePairCount) | $($summary.distinctModelBackendPairCount) | $($summary.distinctModelCount) |" )
+}
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('Formal coverage is still incomplete for the remaining layout variants, seal/UVDoc/SLANeXt/FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. Those rows remain governed by the exact backend matrix above.')
 
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('## Boundaries still open')

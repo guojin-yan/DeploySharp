@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index (2026-10-17)
 
-Generated 2026-10-17T07:36:45Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-17T08:30:52Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -38,6 +38,28 @@ The matrix carries 12 exact dynamic-Batch artifact rows. These are narrower bind
 ## Evidence audit
 
 All 31 matrix-level evidence references resolve locally. The audit does not validate external URLs or the semantic correctness of a report.
+
+## Formal performance evidence coverage
+
+The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.
+
+| Evidence bundle | Scope | Backends | Models | Protocol |
+| --- | --- | --- | --- | --- |
+| official-classification | Official document-orientation and table-classification examples | onnxruntime-cpu, openvino-cpu, opencv-dnn-cpu | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-table/pp-lcnet-x1-0-table-cls | 5 warm-up + 50 measured |
+| multipage-orientation-layout | Two-page orientation to layout task chain | onnxruntime-cpu, openvino-cpu | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
+| multipage-orientation-layout-tensorrt | Two-page orientation to layout task chain with TensorRT CUDA | tensorrt-cuda | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
+| table-task-chain | Table classification, cell detection and SLANeXt HTML task chain | onnxruntime-cpu, openvino-cpu | paddle-table/pp-lcnet-x1-0-table-cls<br>paddle-table/rt-detr-l-wired-cell-det<br>paddle-table/slanext-wired | 5 warm-up + 50 measured |
+| table-cell-tensorrt | Wired and wireless table-cell detector parity | tensorrt-cuda | paddle-table/rt-detr-l-wired-cell-det<br>paddle-table/rt-detr-l-wireless-cell-det | 5 warm-up + 50 measured |
+| chart2table-fixed-sample | Fixed ChartQA Chart2Table single-sample generation | onnxruntime-cpu, openvino-cpu, tensorrt-cuda | paddle-chart/pp-chart2table | 5 warm-up + 50 measured |
+
+| Backend | Evidence rows | Distinct model/backend pairs | Distinct models |
+| --- | ---: | ---: | ---: |
+| onnxruntime-cpu | 8 | 6 | 6 |
+| opencv-dnn-cpu | 2 | 2 | 2 |
+| openvino-cpu | 8 | 6 | 6 |
+| tensorrt-cuda | 5 | 5 | 5 |
+
+Formal coverage is still incomplete for the remaining layout variants, seal/UVDoc/SLANeXt/FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. Those rows remain governed by the exact backend matrix above.
 
 ## Boundaries still open
 
