@@ -62,6 +62,23 @@ internal static partial class Program
             Console.Error.WriteLine("PADDLEOCR_BENCHMARK_ERROR no-onnx-models-found=" + root);
             return 2;
         }
+        // Apply the requested version/variant filter before TensorRT engine
+        // binding or rebuilding.  Previously a focused run such as
+        // `v6-tiny` still rebuilt every v4/v5/v6 asset first, which made
+        // targeted validation unnecessarily expensive and could consume
+        // significant temporary GPU/host resources.  The filter is purely a
+        // harness selection; it does not alter model discovery or decoder
+        // behavior for selected entries.
+        HashSet<string> selectedVersions = ParseSelectedVersions();
+        models = models
+            .Where(model => selectedVersions.Contains(model.Version)
+                || selectedVersions.Contains(model.Version + "-" + model.Variant))
+            .ToList();
+        if (models.Count == 0)
+        {
+            Console.Error.WriteLine("PADDLEOCR_BENCHMARK_ERROR no-selected-models-found versions=" + string.Join(',', selectedVersions));
+            return 2;
+        }
         string? tensorRtEngineRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_TENSORRT_ENGINE_ROOT");
         if (!string.IsNullOrWhiteSpace(tensorRtEngineRoot))
             models = BindTensorRtEngineRoot(root, models, tensorRtEngineRoot);
@@ -77,6 +94,19 @@ internal static partial class Program
         int auditExit = RunStartupCharacterAudit(models, output);
         if (auditExit != 0) return auditExit;
         return RunFullPipeline(root, models, output, warmup, iterations, tensorRtApiVersion, reusePreparedInput, stageConcurrency, batchSize, tensorRtBatchSize, intraOpThreads, detectionIntraOpThreads, maximumPaddingRatio, interTestDelayMs, autoTune);
+    }
+
+    private static HashSet<string> ParseSelectedVersions()
+    {
+        HashSet<string> selected = new HashSet<string>(
+            (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VERSIONS") ?? "v4,v5,v6")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            StringComparer.OrdinalIgnoreCase);
+        if (selected.Count == 0)
+        {
+            selected.UnionWith(new[] { "v4", "v5", "v6" });
+        }
+        return selected;
     }
 
     private static int RunFullPipeline(string root, IReadOnlyList<ModelCase> models, string output, int warmup, int iterations, TensorRtApiVersion tensorRtApiVersion, bool reusePreparedInput, int stageConcurrency, int batchSize, int tensorRtBatchSize, int intraOpThreads, int detectionIntraOpThreads, double maximumPaddingRatio, int interTestDelayMs, bool autoTune)
