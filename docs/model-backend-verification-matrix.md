@@ -74,7 +74,7 @@
 
 2026-10-11 补充了 `paddleocr/ppocrv4/legacy-cls` 的独立 OpenCV DNN provider 证据：精确工件以真实输入 `[1,3,48,192]` 绑定并返回 `[1,2]` 非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-legacy-cls-opencv-provider-20261011.md)。因此矩阵中的 OpenCV `✓` 仅表示该分类工件在单台 Windows CPU 主机上完成加载、绑定和推理，不代表整条 OCR 质量、TensorRT 或性能通过。
 
-同日补充了 PP-OCRv4 Server DET/REC 与 legacy CLS 的 TensorRT 11 精确 Engine 证据：匹配 bridge/runtime 注入后 `3/3` Engine 均加载并返回非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-server-tensorrt11-engine-provider-20261011.md)。因此该行 TensorRT `✓` 仅表示已有序列化 Engine 在单台 Windows GPU 主机上可执行，不代表 ONNX 重建、整条 OCR 质量、5/50 性能或跨设备可移植性。
+同日补充了 PP-OCRv4 Server DET/REC 与 legacy CLS 的 TensorRT 11 精确 Engine 证据：匹配 bridge/runtime 注入后 `3/3` Engine 均加载并返回非空输出，详见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v4-server-tensorrt11-engine-provider-20261011.md)。2026-10-17 又在 Release 配置、显式注入同一 bridge/runtime 的进程中复核 `1/1` 测试通过，详见[bridge 复核报告](../eng/models/paddle-ocr/verification/paddleocr-v4-server-tensorrt11-bridge-recheck-20261017.md)。因此该行 TensorRT `✓` 仅表示已有序列化 Engine 在单台 Windows GPU 主机上可执行，不代表 ONNX 重建、整条 OCR 质量、5/50 性能或跨设备可移植性。
 
 同日又完成 PP-OCRv5/v6 核心模型的 TensorRT 11 ONNX→Engine 重建：v5 六个 DET/REC/CLS 和 v6 六个 DET/REC 工件共 `12/12` 通过，精确 ONNX/Engine SHA、输入形状和输出元素见[机器报告](../eng/models/paddle-ocr/verification/paddleocr-v5-v6-core-tensorrt11-build-20261011.md)及[JSON](../eng/models/paddle-ocr/verification/paddleocr-v5-v6-core-tensorrt11-build-20261011.json)。这只补齐当前 Windows RTX 3060 主机的图级重建/执行证据，不代表完整 OCR 质量、5/50 性能、跨设备 Engine 可移植性或发布准确率。
 
