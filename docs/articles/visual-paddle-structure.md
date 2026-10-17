@@ -555,6 +555,8 @@ Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用�
 
 官方示例使用固定 SHA-256 校验：[方向分类](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/doc_img_orientation_classification.en.md)、[表格分类](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/table_classification.en.md)、[公式识别](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/formula_recognition.en.md)。回归结论如下：
 
+2026-10-17 又按统一的 `5 warm-up + 50 measured` 协议复跑了方向分类和表格分类的官方示例，覆盖 ORT CPU、OpenVINO CPU、OpenCV DNN CPU，六个精确模型/后端组合全部通过类别与分数合同。总耗时 P50/P95：方向分类 ORT `6.414/9.094 ms`、OpenVINO `2.317/3.290 ms`、OpenCV `5.567/6.377 ms`；表格分类 ORT `4.198/5.058 ms`、OpenVINO `2.554/3.589 ms`、OpenCV `6.034/7.614 ms`。完整阶段拆分、模型/图片 SHA 和 50 次样本见[官方分类重复性能报告](../../eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.json)。这是固定官方示例的执行/延迟证据，不是数据集准确率或 PP-Structure 全模型性能排名。
+
 | 输入 | 模型和验证范围 | 结果 |
 | --- | --- | --- |
 | `img_rot180_demo.jpg` | PP-LCNet 方向；ORT/OpenVINO/OpenCV CPU、TensorRT CUDA | 类别 180°；CPU 三后端分数约 0.89236；CUDA 预处理允许 0.005 分数差异 |

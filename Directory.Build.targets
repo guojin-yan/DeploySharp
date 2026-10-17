@@ -3,4 +3,14 @@
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)nuget\logo.jpg" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
+
+  <!-- Benchmark and packaging helpers write generated projects and
+       AssemblyInfo files under project-local artifacts directories. This
+       import runs after SDK default items, so the generated files are removed
+       before compilation and cannot create duplicate assembly attributes. -->
+  <ItemGroup>
+    <Compile Remove="**\artifacts\**" />
+    <EmbeddedResource Remove="**\artifacts\**" />
+    <None Remove="**\artifacts\**" />
+  </ItemGroup>
 </Project>

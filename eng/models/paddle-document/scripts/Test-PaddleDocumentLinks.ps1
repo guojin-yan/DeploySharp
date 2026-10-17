@@ -18,6 +18,7 @@ $documents = @(
     'eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.md',
     'eng/models/paddle-document/verification/formula-quality-gate-20261017.md',
     'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md',
+    'eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.md',
     'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-cuda-lifecycle-20261014.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md',
