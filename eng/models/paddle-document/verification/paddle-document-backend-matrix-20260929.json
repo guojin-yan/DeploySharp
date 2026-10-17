@@ -28,6 +28,7 @@
     "slanextCompatibility": "eng/models/paddle-document/verification/slanext-openvino-compatibility.json",
     "slanextOpenCvIsolated": "eng/models/paddle-document/verification/slanext-opencv-isolated-20261013.json",
     "formulaOpenVino": "eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json",
+    "formulaQualityGate": "eng/models/paddle-document/verification/formula-quality-gate-20261017.json",
     "openvinoLayoutMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.json",
     "openvinoTableCellMatrix": "eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.json",
     "opencvNmsMatrix": "eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.json",
