@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T10:10:52Z",
+  "generatedUtc": "2026-10-17T10:55:52Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -19,7 +19,7 @@
     "onnxruntimeCpu": "Microsoft.ML.OnnxRuntime 1.28.0",
     "openvinoCpu": "OpenVINO runtime 2026.2.1 / OpenVINO C# API 3.3.1",
     "opencvDnnCpu": "OpenCV 5.0.0",
-    "tensorRtCuda": "TensorRT 10.11.0.33-cu12 / API 10 bridge for legacy records; TensorRT 11.0.0.114-cu12 / API 11 bridge for the 2026-10-11 layout record"
+    "tensorRtCuda": "TensorRT 10.11.0.33-cu12 / API 10 bridge for legacy records; TensorRT 11.0.0.114-cu12 / API 11 bridge for the 2026-10-11 layout and 2026-10-17 PP-OCRv4 seal records"
   },
   "artifactCount": 31,
   "statusSemantics": {
@@ -123,13 +123,13 @@
     }
   },
   "evidenceAudit": {
-    "referenceCount": 31,
+    "referenceCount": 33,
     "missingCount": 0,
     "missing": []
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 18,
+    "bundleCount": 20,
     "bundles": [
       {
         "id": "official-classification",
@@ -390,6 +390,34 @@
         "sourceRevision": null
       },
       {
+        "id": "seal-mobile-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-seal-paddle-seal-ppocrv4-mobile-dynamic-batch-tensorrt11-20261017.json",
+        "scope": "PP-OCRv4 mobile seal detector dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-seal/ppocrv4-mobile"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "seal-server-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-seal-paddle-seal-ppocrv4-server-dynamic-batch-tensorrt11-20261017.json",
+        "scope": "PP-OCRv4 server seal detector dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-seal/ppocrv4-server"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -571,6 +599,20 @@
         ]
       },
       {
+        "modelId": "paddle-seal/ppocrv4-mobile",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "seal-mobile-tensorrt11-dynamic-batch2"
+        ]
+      },
+      {
+        "modelId": "paddle-seal/ppocrv4-server",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "seal-server-tensorrt11-dynamic-batch2"
+        ]
+      },
+      {
         "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
@@ -684,9 +726,9 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 25,
-        "distinctModelCount": 18,
-        "distinctModelBackendPairCount": 18,
+        "evidencePairCount": 27,
+        "distinctModelCount": 20,
+        "distinctModelBackendPairCount": 20,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -703,6 +745,8 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-seal/ppocrv4-mobile",
+          "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det"
@@ -711,7 +755,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 32,
+      "validatedPairCount": 34,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
