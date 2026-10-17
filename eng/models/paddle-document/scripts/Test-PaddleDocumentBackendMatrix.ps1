@@ -163,7 +163,8 @@ $formalPerformanceEvidence = @(
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.json' -Id 'official-classification' -Scope 'Official document-orientation and table-classification examples' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-table/pp-lcnet-x1-0-table-cls') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'opencv-dnn-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-multipage-benchmark-20261014.json' -Id 'multipage-orientation-layout' -Scope 'Two-page orientation to layout task chain' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-doc/pp-doclayout-l') -Backends @('onnxruntime-cpu', 'openvino-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261014.json' -Id 'multipage-orientation-layout-tensorrt' -Scope 'Two-page orientation to layout task chain with TensorRT CUDA' -ModelIds @('paddle-doc/pp-lcnet-x1-0-doc-ori', 'paddle-doc/pp-doclayout-l') -Backends @('tensorrt-cuda')),
-    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json' -Id 'table-task-chain' -Scope 'Table classification, cell detection and SLANeXt HTML task chain' -ModelIds @('paddle-table/pp-lcnet-x1-0-table-cls', 'paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/slanext-wired') -Backends @('onnxruntime-cpu', 'openvino-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json' -Id 'table-task-chain-ort' -Scope 'Table classification, cell detection and original SLANeXt HTML task chain' -ModelIds @('paddle-table/pp-lcnet-x1-0-table-cls', 'paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/slanext-wired') -Backends @('onnxruntime-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json' -Id 'table-task-chain-openvino' -Scope 'Table classification, cell detection and OpenVINO-compatible SLANeXt HTML task chain' -ModelIds @('paddle-table/pp-lcnet-x1-0-table-cls', 'paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/slanext-wired-openvino-compat') -Backends @('openvino-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.json' -Id 'table-cell-tensorrt' -Scope 'Wired and wireless table-cell detector parity' -ModelIds @('paddle-table/rt-detr-l-wired-cell-det', 'paddle-table/rt-detr-l-wireless-cell-det') -Backends @('tensorrt-cuda')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json' -Id 'chart2table-fixed-sample' -Scope 'Fixed ChartQA Chart2Table single-sample generation' -ModelIds @('paddle-chart/pp-chart2table') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'tensorrt-cuda'))
 )
@@ -193,6 +194,31 @@ $distinctPerformancePairs = @($performancePairRows | Group-Object { "$($_.modelI
         evidenceIds = @($_.Group | ForEach-Object { $_.evidenceId } | Sort-Object -Unique)
     }
 })
+$performanceBackendProperties = @{
+    'onnxruntime-cpu' = 'onnxruntimeCpu'
+    'openvino-cpu' = 'openvinoCpu'
+    'opencv-dnn-cpu' = 'opencvDnnCpu'
+    'tensorrt-cuda' = 'tensorRtCuda'
+}
+$performanceCoverageErrors = [System.Collections.Generic.List[string]]::new()
+foreach ($pair in $distinctPerformancePairs) {
+    if (-not $performanceBackendProperties.ContainsKey($pair.backend)) {
+        $performanceCoverageErrors.Add("Unknown performance backend '$($pair.backend)' for '$($pair.modelId)'.")
+        continue
+    }
+    $asset = $assets | Where-Object { [string]$_.modelId -eq $pair.modelId } | Select-Object -First 1
+    if ($null -eq $asset) {
+        $performanceCoverageErrors.Add("Performance evidence model '$($pair.modelId)' is not present in the authoritative matrix.")
+        continue
+    }
+    $statusProperty = $performanceBackendProperties[$pair.backend]
+    if ([string]$asset.$statusProperty -ne 'pass') {
+        $performanceCoverageErrors.Add("Performance evidence '$($pair.modelId)' / '$($pair.backend)' is registered as '$($asset.$statusProperty)' in the authoritative matrix, not 'pass'.")
+    }
+}
+if ($performanceCoverageErrors.Count -gt 0) {
+    throw "Formal performance coverage audit failed: $($performanceCoverageErrors -join ' | ')"
+}
 
 $result = [ordered]@{
     schemaVersion = 'deploysharp-paddle-document-backend-matrix-summary-v1'
@@ -224,6 +250,11 @@ $result = [ordered]@{
         bundles = @($formalPerformanceEvidence)
         distinctModelBackendPairs = $distinctPerformancePairs
         byBackend = $performancePairSummary
+        coverageAudit = [ordered]@{
+            status = 'pass'
+            validatedPairCount = $distinctPerformancePairs.Count
+            errors = @()
+        }
         boundary = 'These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend.'
     }
     boundary = [ordered]@{

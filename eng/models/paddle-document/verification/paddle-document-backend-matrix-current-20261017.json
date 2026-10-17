@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T08:30:52Z",
+  "generatedUtc": "2026-10-17T08:34:41Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 6,
+    "bundleCount": 7,
     "bundles": [
       {
         "id": "official-classification",
@@ -180,16 +180,31 @@
         "sourceRevision": "4d9bb25"
       },
       {
-        "id": "table-task-chain",
+        "id": "table-task-chain-ort",
         "path": "eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json",
-        "scope": "Table classification, cell detection and SLANeXt HTML task chain",
+        "scope": "Table classification, cell detection and original SLANeXt HTML task chain",
         "modelIds": [
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/slanext-wired"
         ],
         "backends": [
-          "onnxruntime-cpu",
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "731b483"
+      },
+      {
+        "id": "table-task-chain-openvino",
+        "path": "eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json",
+        "scope": "Table classification, cell detection and OpenVINO-compatible SLANeXt HTML task chain",
+        "modelIds": [
+          "paddle-table/pp-lcnet-x1-0-table-cls",
+          "paddle-table/rt-detr-l-wired-cell-det",
+          "paddle-table/slanext-wired-openvino-compat"
+        ],
+        "backends": [
           "openvino-cpu"
         ],
         "warmupCount": 5,
@@ -306,7 +321,7 @@
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
           "official-classification",
-          "table-task-chain"
+          "table-task-chain-ort"
         ]
       },
       {
@@ -321,21 +336,21 @@
         "backend": "openvino-cpu",
         "evidenceIds": [
           "official-classification",
-          "table-task-chain"
+          "table-task-chain-openvino"
         ]
       },
       {
         "modelId": "paddle-table/rt-detr-l-wired-cell-det",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
-          "table-task-chain"
+          "table-task-chain-ort"
         ]
       },
       {
         "modelId": "paddle-table/rt-detr-l-wired-cell-det",
         "backend": "openvino-cpu",
         "evidenceIds": [
-          "table-task-chain"
+          "table-task-chain-openvino"
         ]
       },
       {
@@ -353,17 +368,17 @@
         ]
       },
       {
-        "modelId": "paddle-table/slanext-wired",
-        "backend": "onnxruntime-cpu",
+        "modelId": "paddle-table/slanext-wired-openvino-compat",
+        "backend": "openvino-cpu",
         "evidenceIds": [
-          "table-task-chain"
+          "table-task-chain-openvino"
         ]
       },
       {
         "modelId": "paddle-table/slanext-wired",
-        "backend": "openvino-cpu",
+        "backend": "onnxruntime-cpu",
         "evidenceIds": [
-          "table-task-chain"
+          "table-task-chain-ort"
         ]
       }
     ],
@@ -403,7 +418,7 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
-          "paddle-table/slanext-wired"
+          "paddle-table/slanext-wired-openvino-compat"
         ]
       },
       {
@@ -420,6 +435,11 @@
         ]
       }
     ],
+    "coverageAudit": {
+      "status": "pass",
+      "validatedPairCount": 19,
+      "errors": []
+    },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
   },
   "boundary": {
