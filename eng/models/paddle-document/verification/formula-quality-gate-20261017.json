@@ -1,13 +1,13 @@
 {
   "schemaVersion": "deploysharp-formula-quality-gate-v1",
-  "generatedUtc": "2026-10-17T03:10:03.9984808+00:00",
+  "generatedUtc": "2026-10-17T03:20:13.6498686+00:00",
   "dataset": {
     "name": "MathNet realFormula",
     "version": "Zenodo 11296815 v1",
     "sampleCount": 121,
     "sourceSummary": "formula-realformula-six-models-ort-20261007-summary.json",
     "sourceParseability": "formula-realformula-latex-parseability-20261012.json",
-    "sourceRender": "formula-realformula-render-quality-20261013.json",
+    "sourceRender": "formula-realformula-render-quality-20261017.json",
     "sourceSyntax": "formula-realformula-syntax-quality-20261012.json"
   },
   "policy": {

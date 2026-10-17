@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v2",
-  "generatedUtc": "2026-10-17T03:11:43.3144122+00:00",
+  "generatedUtc": "2026-10-17T03:21:19.8965218+00:00",
   "documents": [
     "docs/articles/visual-ocr.md",
     "docs/articles/visual-paddle-structure.md",
@@ -11,6 +11,7 @@
     "eng/models/paddle-document/verification/formula-realformula-structural-quality-20261011.md",
     "eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md",
     "eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md",
+    "eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.md",
     "eng/models/paddle-document/verification/formula-quality-gate-20261017.md",
     "eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md",
     "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.md",
@@ -37,7 +38,7 @@
     "eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md",
     "eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md"
   ],
-  "localMarkdownLinksChecked": 775,
+  "localMarkdownLinksChecked": 781,
   "brokenLocalMarkdownLinks": 0,
   "broken": [],
   "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."

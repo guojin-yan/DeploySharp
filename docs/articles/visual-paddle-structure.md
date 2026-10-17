@@ -471,6 +471,8 @@ Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, 
 
 2026-10-13 又补充了锁定 MathJax 4.1.3 和 sharp 0.35.5 的[渲染/视觉结构诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json)）。121 条参考中 118 条可渲染；六模型预测分别有 110–121 条可渲染，可比较配对的前景 IoU P50 为 `0.2253–0.2434`。工具位于 `eng/models/paddle-document/tools/formula-render-quality`，报告只保存图片/公式哈希、渲染错误和像素指标，不复制原始 LaTeX。该结果关闭了“缺少可复现渲染器”的工具阻断，但像素相似度受排版和字形影响，不能证明数学语义等价、完整 TeX 兼容或发布精度。
 
+2026-10-17 同一工具增加了 [MathML 结构指纹诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.json)）。每条参考/预测先由同一 MathJax `tex2mml` 生成 MathML，再去除渲染器元数据和标签间空白计算结构 SHA；六模型与参考的匹配为 `14–21/107–118` 个可比较对。该指标比像素比较更少受字形影响，但仍是渲染器结构诊断，不是数学语义等价；质量门仍按 fail-closed 规则保持 blocked。
+
 2026-10-17 新增[公式质量门汇总](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.md)及[机器可读报告](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.json)。它把 121 条样本的执行完整性、EOS/空输出、语法、SymPy/ANTLR 解析和 MathJax 渲染证据按模型对齐，并采用 fail-closed 规则：六模型的行数、空输出和 EOS 完整性通过，但 Plus-S 与 FormulaNet-S 的可比较渲染比例低于诊断阈值，而且当前没有独立、可复现的数学语义等价评测，因此总门禁明确保持 **blocked**。这不是推理失败，而是防止把 CER、字符串 exact、解析接受或像素相似度误称为公式准确率；OpenVINO、OpenCV DNN、TensorRT 的后端质量状态也不会由该 ORT CPU 汇总推断。可用 `eng/models/paddle-document/scripts/Evaluate-FormulaQualityGate.ps1` 重算。
 
 ## 状态和验证规则

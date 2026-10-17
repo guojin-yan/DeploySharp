@@ -38,7 +38,7 @@ function Get-Rate([int]$Numerator, [int]$Denominator) {
 
 $summaryPath = Join-Path $VerificationRoot 'formula-realformula-six-models-ort-20261007-summary.json'
 $parseabilityPath = Join-Path $VerificationRoot 'formula-realformula-latex-parseability-20261012.json'
-$renderPath = Join-Path $VerificationRoot 'formula-realformula-render-quality-20261013.json'
+$renderPath = Join-Path $VerificationRoot 'formula-realformula-render-quality-20261017.json'
 $syntaxPath = Join-Path $VerificationRoot 'formula-realformula-syntax-quality-20261012.json'
 $summary = Read-Json $summaryPath
 $parseability = Read-Json $parseabilityPath

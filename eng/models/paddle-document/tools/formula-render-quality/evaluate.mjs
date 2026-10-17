@@ -76,6 +76,9 @@ try {
         predictionRenderSucceeded: actual.succeeded,
         referenceRenderError: expected.error,
         predictionRenderError: actual.error,
+        referenceMathmlStructuralSha256: expected.mathmlStructuralSha256,
+        predictionMathmlStructuralSha256: actual.mathmlStructuralSha256,
+        mathmlStructuralMatch: expected.mathmlStructuralSha256 !== null && expected.mathmlStructuralSha256 === actual.mathmlStructuralSha256,
         visualForegroundIou: visual?.foregroundIou ?? null,
         visualPixelSimilarity: visual?.pixelSimilarity ?? null
       });
@@ -91,6 +94,9 @@ try {
       referenceRenderSucceeded: rows.filter((row) => row.referenceRenderSucceeded).length,
       predictionRenderSucceeded: rows.filter((row) => row.predictionRenderSucceeded).length,
       comparableRenderPairs: comparable.length,
+      mathmlComparablePairs: rows.filter((row) => row.referenceMathmlStructuralSha256 !== null && row.predictionMathmlStructuralSha256 !== null).length,
+      mathmlStructuralMatches: rows.filter((row) => row.mathmlStructuralMatch).length,
+      mathmlStructuralMatchRate: rows.filter((row) => row.referenceMathmlStructuralSha256 !== null && row.predictionMathmlStructuralSha256 !== null).length === 0 ? null : rows.filter((row) => row.mathmlStructuralMatch).length / rows.filter((row) => row.referenceMathmlStructuralSha256 !== null && row.predictionMathmlStructuralSha256 !== null).length,
       exactPredictionMatches: rows.filter((row) => row.referenceSha256 === row.predictionSha256).length,
       foregroundIouP05: percentile(comparable.map((row) => row.visualForegroundIou), 0.05),
       foregroundIouP50: percentile(comparable.map((row) => row.visualForegroundIou), 0.50),
@@ -102,14 +108,15 @@ try {
   }
 
   const report = {
-    schemaVersion: 'deploysharp-realformula-render-quality-v1',
+    schemaVersion: 'deploysharp-realformula-render-quality-v2',
     generatedUtc: new Date().toISOString(),
     runtime: {
       node: process.version,
       mathJax: '4.1.3',
       sharp: '0.35.5',
       renderer: 'MathJax tex-svg with local font cache',
-      rasterComparison: `grayscale foreground IoU and pixel similarity after aspect-preserving fit into ${options.rasterWidth}x${options.rasterHeight}`
+      rasterComparison: `grayscale foreground IoU and pixel similarity after aspect-preserving fit into ${options.rasterWidth}x${options.rasterHeight}`,
+      mathmlComparison: 'MathJax tex2mml output after removing renderer metadata attributes and inter-tag whitespace; structural diagnostic only.'
     },
     dataset: {
       name: 'MathNet realFormula',
@@ -139,8 +146,14 @@ async function renderFormula(formula) {
 }
 
 async function renderFormulaUncached(formula) {
-  if (!formula.trim()) return {succeeded: false, error: 'empty formula', raster: null};
+  if (!formula.trim()) return {succeeded: false, error: 'empty formula', raster: null, mathmlStructuralSha256: null};
   try {
+    const mathml = await MathJax.tex2mmlPromise(formula, {display: true});
+    if (!mathml || /data-mml-node=["']merror["']|data-mjx-error/i.test(mathml)) {
+      const detail = extractMathJaxError(mathml);
+      return {succeeded: false, error: detail ? `MathJax: ${detail}` : 'MathJax emitted an merror node', raster: null, mathmlStructuralSha256: null};
+    }
+    const mathmlStructuralSha256 = sha256Text(canonicalMathml(mathml));
     const node = await MathJax.tex2svgPromise(formula, {
       display: true,
       em: 16,
@@ -149,11 +162,11 @@ async function renderFormulaUncached(formula) {
     });
     const adaptor = MathJax.startup.adaptor;
     const svgNode = adaptor.tags(node, 'svg')[0];
-    if (!svgNode) return {succeeded: false, error: 'renderer returned no SVG', raster: null};
+    if (!svgNode) return {succeeded: false, error: 'renderer returned no SVG', raster: null, mathmlStructuralSha256};
     const svg = adaptor.serializeXML(svgNode);
     if (/data-mml-node=["']merror["']|data-mjx-error/i.test(svg)) {
       const detail = extractMathJaxError(svg);
-      return {succeeded: false, error: detail ? `MathJax: ${detail}` : 'MathJax emitted an merror node', raster: null};
+      return {succeeded: false, error: detail ? `MathJax: ${detail}` : 'MathJax emitted an merror node', raster: null, mathmlStructuralSha256};
     }
     const raster = await sharp(Buffer.from(svg), {density: 192})
       .flatten({background: '#ffffff'})
@@ -163,12 +176,19 @@ async function renderFormulaUncached(formula) {
       .raw()
       .toBuffer({resolveWithObject: true});
     if (raster.info.width < 1 || raster.info.height < 1) {
-      return {succeeded: false, error: 'renderer returned an empty raster', raster: null};
+      return {succeeded: false, error: 'renderer returned an empty raster', raster: null, mathmlStructuralSha256};
     }
-    return {succeeded: true, error: null, raster};
+    return {succeeded: true, error: null, raster, mathmlStructuralSha256};
   } catch (error) {
-    return {succeeded: false, error: truncateError(error), raster: null};
+    return {succeeded: false, error: truncateError(error), raster: null, mathmlStructuralSha256: null};
   }
+}
+
+function canonicalMathml(value) {
+  return String(value)
+    .replace(/\s(?:data-(?:latex|semantic-[^=\s]+)|id|class)=("[^"]*"|'[^']*')/gi, '')
+    .replace(/>\s+</g, '><')
+    .trim();
 }
 
 function compareRaster(expected, actual) {
@@ -214,29 +234,30 @@ function percentile(values, probability) {
 
 function markdown(report) {
   const lines = [
-    '# Formula realFormula MathJax render diagnostics (2026-10-13)',
+    '# Formula realFormula MathJax render and MathML diagnostics (2026-10-17)',
     '',
-    'This report renders the 121 MathNet references and six checked-in ONNX Runtime CPU prediction sets with the locked MathJax SVG renderer, then compares paired grayscale rasters. It is a renderability and visual-structure diagnostic, not a mathematical-semantic score.',
+    'This report renders the 121 MathNet references and six checked-in ONNX Runtime CPU prediction sets with the locked MathJax renderer, compares paired grayscale rasters, and records normalized MathML structural fingerprints. It is a renderability/structure diagnostic, not a mathematical-semantic score.',
     '',
-    '| Model | Samples | Reference rendered | Prediction rendered | Comparable pairs | Exact text | Foreground IoU P05 / P50 | Pixel similarity P05 / P50 |',
-    '|---|---:|---:|---:|---:|---:|---:|---:|'
+    '| Model | Samples | Reference rendered | Prediction rendered | Comparable pairs | MathML structural match | Exact text | Foreground IoU P05 / P50 | Pixel similarity P05 / P50 |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---:|'
   ];
   for (const row of report.modelResults) {
-    lines.push(`| \`${row.model}\` | ${row.sampleCount} | ${row.referenceRenderSucceeded}/${row.sampleCount} | ${row.predictionRenderSucceeded}/${row.sampleCount} | ${row.comparableRenderPairs}/${row.sampleCount} | ${row.exactPredictionMatches}/${row.sampleCount} | ${format(row.foregroundIouP05)} / ${format(row.foregroundIouP50)} | ${format(row.pixelSimilarityP05)} / ${format(row.pixelSimilarityP50)} |`);
+    lines.push(`| \`${row.model}\` | ${row.sampleCount} | ${row.referenceRenderSucceeded}/${row.sampleCount} | ${row.predictionRenderSucceeded}/${row.sampleCount} | ${row.comparableRenderPairs}/${row.sampleCount} | ${row.mathmlStructuralMatches}/${row.mathmlComparablePairs} | ${row.exactPredictionMatches}/${row.sampleCount} | ${format(row.foregroundIouP05)} / ${format(row.foregroundIouP50)} | ${format(row.pixelSimilarityP05)} / ${format(row.pixelSimilarityP50)} |`);
   }
   lines.push(
     '',
     '## Protocol',
     '',
-    `- Renderer: MathJax ${report.runtime.mathJax} \`tex-svg\`, local SVG font cache; Node ${report.runtime.node}.`,
+    `- Renderer: MathJax ${report.runtime.mathJax} \`tex-svg\` plus \`tex2mml\`, local SVG font cache; Node ${report.runtime.node}.`,
     `- Rasterizer: sharp ${report.runtime.sharp}; each formula is fitted without distortion into ${options.rasterWidth}x${options.rasterHeight}, centered on a shared white canvas, and compared as grayscale pixels.`,
     `- Dataset: ${report.dataset.name}, ${report.dataset.version}, ${report.dataset.sampleCount} references; manifest SHA-256 \`${report.dataset.manifestSha256}\`.`,
-    '- The machine report retains per-image hashes, render outcomes, foreground IoU and pixel similarity without copying reference or prediction text.',
+    '- The machine report retains per-image hashes, MathML structural hashes, render outcomes, foreground IoU and pixel similarity without copying reference or prediction text.',
+    '- MathML structural matches are normalized renderer-structure matches only; they are not mathematical-semantic equivalence.',
     '',
     '## Boundary',
     '',
     '- A successful MathJax render only proves compatibility with this locked renderer and configuration. It does not prove compatibility with a full TeX distribution.',
-    '- Pixel similarity and foreground IoU are sensitive to layout and glyph shape, but cannot establish mathematical equivalence or semantic correctness.',
+    '- Pixel similarity, foreground IoU and normalized MathML structure are diagnostics; they cannot establish mathematical equivalence or semantic correctness.',
     '- The predictions come from the checked-in ONNX Runtime CPU reports. OpenVINO, OpenCV DNN and TensorRT quality are not represented.',
     '- No release-quality threshold is inferred from these exploratory distributions.'
   );
