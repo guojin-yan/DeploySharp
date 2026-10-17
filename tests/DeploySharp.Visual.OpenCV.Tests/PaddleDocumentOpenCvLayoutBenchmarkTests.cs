@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,33 +21,35 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploySharp.Visual.OpenCV.Tests;
 
-/// <summary>Records an opt-in PP-DocLayout-L OpenCV DNN latency sample. / 记录显式启用的 PP-DocLayout-L OpenCV DNN 延迟样本。</summary>
+/// <summary>Records opt-in PP-Structure layout OpenCV DNN latency samples. / 记录显式启用的 PP-Structure 版面 OpenCV DNN 延迟样本。</summary>
 [TestClass]
 [DoNotParallelize]
 public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
 {
     private const string ModelRoot = @"E:\Model\PaddleDocument\onnx";
-    private const string ModelFile = "pp-doclayout-l.onnx";
     private const string ImagePath = @"E:\Data\image\bus.jpg";
 
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", 640)]
+    [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", 640)]
     [TestCategory("ExternalModels")]
     [TestCategory("Performance")]
-    public void PpDocLayoutL_OpenCvDnn_RecordsPreparedInputLatency()
+    public void PpDocLayout_OpenCvDnn_RecordsPreparedInputLatency(string modelId, string modelFile, int canvasSize)
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK=1 to run the opt-in 5+50 OpenCV DNN benchmark.");
 
-        string modelPath = Path.Combine(ModelRoot, ModelFile);
-        Assert.IsTrue(File.Exists(modelPath), "Missing local PP-DocLayout-L ONNX: " + modelPath);
+        string modelPath = Path.Combine(ModelRoot, modelFile);
+        Assert.IsTrue(File.Exists(modelPath), "Missing local PP-Structure layout ONNX: " + modelPath);
         Assert.IsTrue(File.Exists(ImagePath), "Missing benchmark input image: " + ImagePath);
 
+        IReadOnlyList<string> labels = modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
         PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
-            PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"),
-            PaddleDocumentProfiles.Layout23Labels,
-            new VisualSize(640, 640),
+            PaddleDocumentModelCatalog.Get(modelId),
+            labels,
+            new VisualSize(canvasSize, canvasSize),
             includeGeometryInputs: true,
             countOutputName: null,
             scoreThreshold: 0);
@@ -54,7 +57,7 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
             profile.VisualProfile.ModelId,
             new[]
             {
-                new TensorDescriptor("image", TensorElementType.Float32, new TensorShape(-1, 3, 640, 640)),
+                new TensorDescriptor("image", TensorElementType.Float32, new TensorShape(-1, 3, canvasSize, canvasSize)),
                 new TensorDescriptor("im_shape", TensorElementType.Float32, new TensorShape(-1, 2)),
                 new TensorDescriptor("scale_factor", TensorElementType.Float32, new TensorShape(-1, 2))
             },
@@ -75,7 +78,7 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
 
         using var pipeline = new VisualPipeline(registry, selection, request);
         using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromFile(
-            new OpenCvVisualInputFactory(), ImagePath, profile, inputId: "paddle-document-opencv-layout-benchmark");
+            new OpenCvVisualInputFactory(), ImagePath, profile, inputId: "paddle-document-opencv-layout-benchmark-" + modelId.Replace('/', '-'));
 
         // Run a one-time ORT reference before timing to keep this performance row
         // attached to the existing bounded semantic contract for the exact input.
@@ -124,8 +127,10 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
             Assert.AreEqual(expected[index].Box.Height, actual[index].Box.Height, coordinateTolerancePx, "Backend box height exceeds tolerance.");
         }
 
-        string reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK_REPORT_PATH")
-            ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-opencv-pp-doclayout-l-benchmark.json");
+        string? configuredReportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK_REPORT_PATH");
+        string reportPath = !string.IsNullOrWhiteSpace(configuredReportPath) && modelId == "paddle-doc/pp-doclayout-l"
+            ? configuredReportPath
+            : Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-opencv-" + modelFile.Replace(".onnx", "-benchmark.json", StringComparison.Ordinal));
         string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(reportPath));
         if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
         string report = JsonSerializer.Serialize(new
@@ -145,8 +150,8 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
             },
             model = new
             {
-                id = "paddle-doc/pp-doclayout-l",
-                file = ModelFile,
+                id = modelId,
+                file = modelFile,
                 sha256 = Sha256(modelPath),
                 inputShape = "[1,3,640,640]"
             },

@@ -239,8 +239,9 @@
 | 模型 / 输入 | 后端 | Batch / Session | 高置信度 parity | P50 ms | P95 ms | Mean ms |
 | --- | --- | ---: | --- | ---: | ---: | ---: |
 | `pp-doclayout-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 730.3262 | 796.5752 | 735.6268 |
+| `pp-docblocklayout` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 765.6829 | 1132.6003 | 805.6070 |
 
-模型 SHA-256 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，输入 SHA-256 为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json) 和[说明报告](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)。
+`pp-doclayout-l` 的模型 SHA-256 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，`pp-docblocklayout` 为 `abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218`；输入 SHA-256 均为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`pp-doclayout-l JSON`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json)、[`pp-doclayout-l 说明`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)、[`pp-docblocklayout JSON`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.json) 和 [`pp-docblocklayout 说明`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.md)。
 
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 
