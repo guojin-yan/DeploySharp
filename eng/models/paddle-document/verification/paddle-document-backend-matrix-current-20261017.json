@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T09:59:16Z",
+  "generatedUtc": "2026-10-17T10:10:52Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 16,
+    "bundleCount": 18,
     "bundles": [
       {
         "id": "official-classification",
@@ -147,6 +147,34 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "5786d637a24391e3a7ebd90ba9b33608486df0ff"
+      },
+      {
+        "id": "document-orientation-tensorrt10-single-image",
+        "path": "eng/models/paddle-document/verification/paddle-document-tensorrt-orientation-20261004.json",
+        "scope": "PP-LCNet document orientation single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison",
+        "modelIds": [
+          "paddle-doc/pp-lcnet-x1-0-doc-ori"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "table-classification-tensorrt10-single-image",
+        "path": "eng/models/paddle-document/verification/paddle-document-tensorrt-table-classification-20261004.json",
+        "scope": "PP-LCNet table classification single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison",
+        "modelIds": [
+          "paddle-table/pp-lcnet-x1-0-table-cls"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
       },
       {
         "id": "multipage-orientation-layout",
@@ -522,6 +550,7 @@
         "modelId": "paddle-doc/pp-lcnet-x1-0-doc-ori",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
+          "document-orientation-tensorrt10-single-image",
           "multipage-orientation-layout-tensorrt"
         ]
       },
@@ -562,6 +591,13 @@
         "evidenceIds": [
           "official-classification",
           "table-task-chain-openvino"
+        ]
+      },
+      {
+        "modelId": "paddle-table/pp-lcnet-x1-0-table-cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "table-classification-tensorrt10-single-image"
         ]
       },
       {
@@ -648,9 +684,9 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 23,
-        "distinctModelCount": 17,
-        "distinctModelBackendPairCount": 17,
+        "evidencePairCount": 25,
+        "distinctModelCount": 18,
+        "distinctModelBackendPairCount": 18,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -667,6 +703,7 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det"
         ]
@@ -674,7 +711,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 31,
+      "validatedPairCount": 32,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

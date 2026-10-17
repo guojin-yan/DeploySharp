@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index (2026-10-17)
 
-Generated 2026-10-17T09:59:16Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-17T10:10:52Z from source revision 7b58886344a0d8059f72c519a31081ede9ec407a. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -46,6 +46,8 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | Evidence bundle | Scope | Backends | Models | Protocol |
 | --- | --- | --- | --- | --- |
 | official-classification | Official document-orientation and table-classification examples | onnxruntime-cpu, openvino-cpu, opencv-dnn-cpu | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-table/pp-lcnet-x1-0-table-cls | 5 warm-up + 50 measured |
+| document-orientation-tensorrt10-single-image | PP-LCNet document orientation single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison | tensorrt-cuda | paddle-doc/pp-lcnet-x1-0-doc-ori | 5 warm-up + 50 measured |
+| table-classification-tensorrt10-single-image | PP-LCNet table classification single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison | tensorrt-cuda | paddle-table/pp-lcnet-x1-0-table-cls | 5 warm-up + 50 measured |
 | multipage-orientation-layout | Two-page orientation to layout task chain | onnxruntime-cpu, openvino-cpu | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
 | multipage-orientation-layout-tensorrt | Two-page orientation to layout task chain with TensorRT CUDA | tensorrt-cuda | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
 | static-layout-tensorrt11 | Five PP-DocLayout and PP-DocBlockLayout static Batch=1 models with bounded ORT parity | tensorrt-cuda | paddle-doc/pp-doclayout-l<br>paddle-doc/pp-doclayout-plus-l<br>paddle-doc/pp-doclayout-m<br>paddle-doc/pp-doclayout-s<br>paddle-doc/pp-docblocklayout | 5 warm-up + 50 measured |
@@ -67,7 +69,7 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | onnxruntime-cpu | 8 | 6 | 6 |
 | opencv-dnn-cpu | 2 | 2 | 2 |
 | openvino-cpu | 8 | 6 | 6 |
-| tensorrt-cuda | 23 | 17 | 17 |
+| tensorrt-cuda | 25 | 18 | 18 |
 
 Formal coverage is still incomplete for the remaining layout variants, seal/UVDoc/SLANeXt/FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. Those rows remain governed by the exact backend matrix above.
 
