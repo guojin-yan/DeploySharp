@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T09:53:09Z",
+  "generatedUtc": "2026-10-17T09:59:16Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 11,
+    "bundleCount": 16,
     "bundles": [
       {
         "id": "official-classification",
@@ -189,6 +189,76 @@
           "paddle-doc/pp-doclayout-m",
           "paddle-doc/pp-doclayout-s",
           "paddle-doc/pp-docblocklayout"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "pp-docblocklayout-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-docblocklayout-tensorrt11-dynamic-batch-20261011.json",
+        "scope": "PP-DocBlockLayout dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-docblocklayout"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "pp-doclayout-l-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-l-tensorrt11-dynamic-batch-20261011.json",
+        "scope": "PP-DocLayout-L dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-l"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "pp-doclayout-plus-l-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-plus-l-tensorrt11-dynamic-batch-20261011.json",
+        "scope": "PP-DocLayout-Plus-L dynamic Batch=2 with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-plus-l"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "rtdetr-h-17cls-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-rt-detr-h-layout-17cls-tensorrt11-dynamic-batch-20261011.json",
+        "scope": "RT-DETR-H 17-class layout dynamic Batch=2 with bounded ORT parity on TensorRT 11",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-17cls"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "rtdetr-h-3cls-tensorrt11-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-rt-detr-h-layout-3cls-tensorrt11-dynamic-batch-20261011.json",
+        "scope": "RT-DETR-H 3-class layout dynamic Batch=2 with bounded ORT parity on TensorRT 11",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-3cls"
         ],
         "backends": [
           "tensorrt-cuda"
@@ -376,6 +446,7 @@
         "modelId": "paddle-doc/pp-docblocklayout",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
+          "pp-docblocklayout-tensorrt11-dynamic-batch2",
           "static-layout-tensorrt11"
         ]
       },
@@ -398,6 +469,7 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "multipage-orientation-layout-tensorrt",
+          "pp-doclayout-l-tensorrt11-dynamic-batch2",
           "static-layout-tensorrt11"
         ]
       },
@@ -412,6 +484,7 @@
         "modelId": "paddle-doc/pp-doclayout-plus-l",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
+          "pp-doclayout-plus-l-tensorrt11-dynamic-batch2",
           "static-layout-tensorrt11"
         ]
       },
@@ -456,6 +529,7 @@
         "modelId": "paddle-doc/rt-detr-h-layout-17cls",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
+          "rtdetr-h-17cls-tensorrt11-dynamic-batch2",
           "rtdetr-h-layout-17cls-tensorrt-dynamic-batch"
         ]
       },
@@ -463,6 +537,7 @@
         "modelId": "paddle-doc/rt-detr-h-layout-3cls",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
+          "rtdetr-h-3cls-tensorrt11-dynamic-batch2",
           "rtdetr-h-layout-3cls-tensorrt-dynamic-batch"
         ]
       },
@@ -573,7 +648,7 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 18,
+        "evidencePairCount": 23,
         "distinctModelCount": 17,
         "distinctModelBackendPairCount": 17,
         "models": [
