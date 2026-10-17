@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-17T06:28:54.3534343Z",
+  "protocol": {
+    "name": "deploysharp-paddleocr-full-5-50-v1",
+    "warmup": 5,
+    "iterations": 50,
+    "inputMode": "steady-prepared-input",
+    "batchSize": 8,
+    "inferenceChannels": 2,
+    "tensorRtApi": "10.11.0.33-cu12",
+    "cuda": "12.9",
+    "cudnn": "9.22",
+    "cudaArchitecture": "compute_86"
+  },
+  "device": {
+    "os": "Windows 10.0.26200 x64",
+    "framework": ".NET 10.0.12",
+    "machine": "JYPPX",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "576.02",
+    "clockPolicy": "not locked; telemetry observed P0 during the run",
+    "sourceRevision": "93771bcbed4354ce7d7b9f34cf0060cd8b06b8bc+working-tree"
+  },
+  "input": {
+    "path": "E:/Data/ocr/demo_1.jpg",
+    "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c"
+  },
+  "results": [
+    { "version": "v4", "variant": "mobile", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "40e95c43b844e7857c0fd2c0db3514dbe73541094e764b0f0471080e5ce69085", "p50Ms": 153.249, "p95Ms": 167.140, "minMs": 142.099, "maxMs": 180.715, "preprocessMs": 0.000, "detectionMs": 45.862, "recognitionMs": 86.835 },
+    { "version": "v4", "variant": "server", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "8f5eafe1fb1fa34c18532cdfd6d561aedf55424e8d361da236c8a337d45507ab", "p50Ms": 199.291, "p95Ms": 230.132, "minMs": 184.568, "maxMs": 250.029, "preprocessMs": 0.000, "detectionMs": 91.397, "recognitionMs": 86.417 },
+    { "version": "v5", "variant": "mobile", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "e3417390c9655809b11035a288c284199bca3266cd344668a073c755065326d0", "p50Ms": 173.940, "p95Ms": 191.950, "minMs": 160.517, "maxMs": 211.105, "preprocessMs": 0.000, "detectionMs": 52.719, "recognitionMs": 102.763 },
+    { "version": "v5", "variant": "server", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "0b35311a5e715eddd6ccdb652076df95267a22a8146aa6744292952c14b70fb2", "p50Ms": 427.819, "p95Ms": 533.568, "minMs": 368.915, "maxMs": 578.751, "preprocessMs": 0.000, "detectionMs": 154.919, "recognitionMs": 215.413 },
+    { "version": "v6", "variant": "tiny", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "3f48285f745f812c3fe01fb177ff1f5df592440fe418e7af0e5715db6477", "p50Ms": 68.461, "p95Ms": 79.338, "minMs": 58.711, "maxMs": 83.031, "preprocessMs": 0.000, "detectionMs": 35.391, "recognitionMs": 33.924 },
+    { "version": "v6", "variant": "small", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "538ee815a79b62453d828c1488f1a7b9c36d2477e4c6a1e5c7f5d77892c41675", "p50Ms": 130.262, "p95Ms": 156.516, "minMs": 109.326, "maxMs": 168.143, "preprocessMs": 0.000, "detectionMs": 52.816, "recognitionMs": 80.132 },
+    { "version": "v6", "variant": "medium", "status": "pass", "regions": 16, "resultContractVariants": 1, "textSha256": "8f2f65aa4a1eb2445b3bec80af32fea1ab8d57da130b3b59a39b35489c86044f", "p50Ms": 276.124, "p95Ms": 293.220, "minMs": 255.090, "maxMs": 300.721, "preprocessMs": 0.000, "detectionMs": 106.398, "recognitionMs": 171.317 }
+  ],
+  "summary": { "total": 7, "passed": 7, "blocked": 0, "textParity": "each row returned the same ordered-text SHA across the measured run's contract checks" },
+  "artifacts": {
+    "csv": "artifacts/local-model-benchmarks/paddleocr-core-tensorrt10.11-current-5-50-20261017.csv",
+    "environment": "artifacts/local-model-benchmarks/paddleocr-core-tensorrt10.11-current-5-50-20261017.csv.environment.json",
+    "modelAndEngineSha256": "See the environment sidecar; every selected ONNX and Engine path is recorded there."
+  },
+  "boundary": "One Windows RTX 3060 Laptop host, one image and one exact TRT 10.11/CUDA 12.9 profile. This is a steady-state latency observation, not a locked-clock ranking, cold-start result, CER/WER score, throughput result, cross-device portability claim or all PP-OCR/PP-Structure support claim."
+}
