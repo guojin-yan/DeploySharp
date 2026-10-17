@@ -314,7 +314,7 @@ ORT 的 PP-Structure 语义 smoke 由 `tests/DeploySharp.Visual.OpenCV.Tests/Pad
 
 ## 阅读规则
 
-补充说明：上一版记录中的 OpenCV/TensorRT 阻断描述已经过复核。当前 OpenCV DNN 的 `pp-doclayout-l` 单 batch 测试已通过（不请求被 importer 裁掉的整型 `bbox_num` 输出）；TensorRT 已在本机 TRT 11 + CUDA 12.9 + cuDNN 9.22 组合下完成 PP-LCNet 文档方向、PP-LCNet 表格分类、`pp-doclayout-l` 和 mobile/server 印章的 ONNX→Engine→推理 smoke。其余工件仍按表格中的精确证据状态处理。
+补充说明：上一版 OpenCV/TensorRT 阻断描述已逐项复核。OpenCV DNN 的 `pp-doclayout-l` 单 Batch 测试已通过（不请求被 importer 裁掉的整型 `bbox_num` 输出）；TensorRT 当前已覆盖方向分类、表格分类、版面图、UVDoc、表格单元格、印章、Chart2Table 等多个精确组合，正式性能证据的范围与尚未覆盖项见上方当前索引。此处不再用早期少量 ONNX→Engine smoke 概括当前覆盖；所有支持状态仍以精确工件矩阵为准。
 
 - 通过只对表中精确工件成立；更换导出文件、输入尺寸、引擎或运行时版本后需要重新验证。
 - TensorRT 列仅表示 CUDA 引擎路径通过；引擎必须与本机 TensorRT/CUDA 版本和输入 profile 匹配。
