@@ -181,8 +181,9 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 double[] sorted = samples.OrderBy(value => value).ToArray();
                 double p50 = sorted[Math.Max(0, (int)Math.Ceiling(sorted.Length * .50) - 1)];
                 double p95 = sorted[Math.Max(0, (int)Math.Ceiling(sorted.Length * .95) - 1)];
-                string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_SEAL_DYNAMIC_BATCH_REPORT_PATH")
+                string reportTemplate = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_SEAL_DYNAMIC_BATCH_REPORT_PATH")
                     ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-seal-" + modelId.Replace('/', '-') + "-dynamic-batch-tensorrt11.json");
+                string report = reportTemplate.Replace("{model}", modelId.Replace('/', '-'), StringComparison.OrdinalIgnoreCase);
                 string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
                 if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
                 File.WriteAllText(report, JsonSerializer.Serialize(new
