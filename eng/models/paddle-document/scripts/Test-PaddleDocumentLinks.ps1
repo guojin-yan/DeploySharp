@@ -15,6 +15,7 @@ $documents = @(
     'eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md',
     'eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md',
     'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md',
+    'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-cuda-lifecycle-20261014.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md',
     'eng/models/paddle-document/verification/formula-formulanet-l-generation-limit-20261007.md',

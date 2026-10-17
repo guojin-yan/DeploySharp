@@ -403,6 +403,8 @@ SLANeXt Decoder 在结构序列没有选出 `<EOS>` 时会保留已解码的 mar
 
 2026-10-14 又按统一 **5 次预热 + 50 次测量** 协议对这条完整任务链做了 ORT CPU / OpenVINO CPU 复测。每次都断言分类标签、单元格检测候选数、SLANeXt 结构单元格数、token 数和 HTML SHA 稳定；两后端最终结果完全一致（`wired_table`、300 个候选、13 个结构单元格、24 个 token，HTML SHA-256 `53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557`）。端到端 P50/P95：ORT CPU `1532.50/1618.06 ms`，OpenVINO CPU `1288.99/1558.58 ms`；分阶段耗时、原始 50 次样本、精确模型 SHA 和复现命令见[正式重复性能报告](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json)。OpenVINO 使用另行派生并登记 SHA 的兼容 SLANeXt 图。输入没有单元格/表格真值，检测阈值为 0，因此候选数不代表召回；本结果仅是单设备单图延迟与执行合同，CPU 未锁频，不代表准确率、跨设备排名、其他输入性能或 OpenCV/TensorRT 状态。
 
+Chart2Table 另有独立的三后端固定样本性能协议：同一 ChartQA `val` 图像、同一四图 Bundle、每个后端单 Session/单通道，5 次预热后 50 次测量，并在每次检查 EOS、21 token 和输出 SHA。ORT CPU、OpenVINO CPU、TensorRT CUDA 的总耗时 P50/P95 分别为 `8526.26/9042.12`、`7962.20/12161.73`、`2884.91/3456.44 ms`；三者 55 次运行的文本结果完全一致。完整阶段数据、Engine/模型 SHA 和复现入口见[三后端固定样本报告](../../eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.md)及其[机器 JSON](../../eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json)。这是未锁频的单机重复延迟记录，不是 ChartQA split accuracy、跨设备排名或 TensorRT plan 可移植性结论。
+
 ```powershell
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
