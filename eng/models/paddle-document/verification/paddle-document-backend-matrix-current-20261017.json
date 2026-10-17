@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T09:50:33Z",
+  "generatedUtc": "2026-10-17T09:53:09Z",
   "sourceRevision": "7b58886344a0d8059f72c519a31081ede9ec407a",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 9,
+    "bundleCount": 11,
     "bundles": [
       {
         "id": "official-classification",
@@ -178,6 +178,43 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "4d9bb25"
+      },
+      {
+        "id": "static-layout-tensorrt11",
+        "path": "eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.json",
+        "scope": "Five PP-DocLayout and PP-DocBlockLayout static Batch=1 models with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-l",
+          "paddle-doc/pp-doclayout-plus-l",
+          "paddle-doc/pp-doclayout-m",
+          "paddle-doc/pp-doclayout-s",
+          "paddle-doc/pp-docblocklayout"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
+      },
+      {
+        "id": "picodet-static-layout-tensorrt11",
+        "path": "eng/models/paddle-document/verification/paddle-document-picodet-static-tensorrt11-20261012.json",
+        "scope": "Six static PicoDet layout models with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/picodet-layout-1x",
+          "paddle-doc/picodet-layout-1x-table",
+          "paddle-doc/picodet-s-layout-3cls",
+          "paddle-doc/picodet-l-layout-3cls",
+          "paddle-doc/picodet-s-layout-17cls",
+          "paddle-doc/picodet-l-layout-17cls"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
       },
       {
         "id": "rtdetr-h-layout-3cls-tensorrt-dynamic-batch",
@@ -294,6 +331,55 @@
         ]
       },
       {
+        "modelId": "paddle-doc/picodet-l-layout-17cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-l-layout-3cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-layout-1x-table",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-layout-1x",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-s-layout-17cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-s-layout-3cls",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-docblocklayout",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "static-layout-tensorrt11"
+        ]
+      },
+      {
         "modelId": "paddle-doc/pp-doclayout-l",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
@@ -311,7 +397,29 @@
         "modelId": "paddle-doc/pp-doclayout-l",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
-          "multipage-orientation-layout-tensorrt"
+          "multipage-orientation-layout-tensorrt",
+          "static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-m",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-plus-l",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-s",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "static-layout-tensorrt11"
         ]
       },
       {
@@ -465,12 +573,22 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 7,
-        "distinctModelCount": 7,
-        "distinctModelBackendPairCount": 7,
+        "evidencePairCount": 18,
+        "distinctModelCount": 17,
+        "distinctModelBackendPairCount": 17,
         "models": [
           "paddle-chart/pp-chart2table",
+          "paddle-doc/picodet-l-layout-17cls",
+          "paddle-doc/picodet-l-layout-3cls",
+          "paddle-doc/picodet-layout-1x",
+          "paddle-doc/picodet-layout-1x-table",
+          "paddle-doc/picodet-s-layout-17cls",
+          "paddle-doc/picodet-s-layout-3cls",
+          "paddle-doc/pp-docblocklayout",
           "paddle-doc/pp-doclayout-l",
+          "paddle-doc/pp-doclayout-m",
+          "paddle-doc/pp-doclayout-plus-l",
+          "paddle-doc/pp-doclayout-s",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
@@ -481,7 +599,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 21,
+      "validatedPairCount": 31,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
