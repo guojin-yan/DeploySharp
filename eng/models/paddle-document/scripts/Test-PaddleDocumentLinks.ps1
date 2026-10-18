@@ -15,6 +15,7 @@ $documents = @(
     'eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.md',
     'eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md',
     'eng/models/paddle-document/verification/slanext-tensorrt10.11-builder-probe-20261018.md',
+    'eng/models/paddle-document/verification/slanext-tensorrt11-rtx2060-builder-probe-20261018.md',
     'docs/articles/device-performance-benchmarks.md',
     'eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md',
     'eng/models/paddle-document/verification/formula-realformula-error-patterns-20261007.md',

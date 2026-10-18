@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "deploysharp-paddle-slanext-tensorrt-builder-cross-device-probe-v1",
+  "generatedAtUtc": "2026-10-18T04:47:47Z",
+  "scope": "native TensorRT Builder-only cross-device probe; no inference or DeploySharp Session",
+  "runtime": {
+    "host": "ygj-NUC11PHi7",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "Linux 6.8.0-138-generic",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "gpuMemoryMiB": 6144,
+    "driver": "580.178.04",
+    "tensorRt": "11.0.0.114",
+    "tool": "trtexec",
+    "api": "native CLI; no DeploySharp API/bridge",
+    "optimizationProfile": {
+      "x": {
+        "minimum": [1, 3, 512, 512],
+        "optimum": [2, 3, 512, 512],
+        "maximum": [2, 3, 512, 512]
+      }
+    },
+    "commandTemplate": "trtexec --onnx=<model> --minShapes=x:1x3x512x512 --optShapes=x:2x3x512x512 --maxShapes=x:2x3x512x512 --skipInference --verbose --saveEngine=<engine>",
+    "clockSnapshots": [
+      {
+        "phase": "before-builder",
+        "pstate": "P8",
+        "graphicsMHz": 300,
+        "memoryMHz": 405,
+        "memoryUsedMiB": 209
+      },
+      {
+        "phase": "after-builder",
+        "pstate": "P0",
+        "graphicsMHz": 1005,
+        "memoryMHz": 5500,
+        "memoryUsedMiB": 209,
+        "gpuUtilizationPercentRange": [0, 1]
+      }
+    ],
+    "clockLockStatus": "not configured or verified; snapshots are not performance evidence"
+  },
+  "models": [
+    {
+      "modelId": "paddle-table/slanext-wired",
+      "fileName": "slanext-wired.onnx",
+      "artifactKind": "official",
+      "sha256": "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f",
+      "bytes": 367743373,
+      "builderReached": true,
+      "build": "failed",
+      "exitCode": 1,
+      "buildAttemptElapsedSeconds": 0.261927,
+      "serializedEngineBytes": 0,
+      "error": "IRecurrenceLayer requires equal input shapes: first input p2o.pd_op.full.641.0_output has shape [] and recurrence-body input p2o.sub_block.pd_op.sigmoid.2.0 has shape [-1,8]",
+      "remoteLog": "slanext-wired-tensorrt11-rtx2060.log"
+    },
+    {
+      "modelId": "paddle-table/slanext-wireless",
+      "fileName": "slanext-wireless.onnx",
+      "artifactKind": "official",
+      "sha256": "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97",
+      "bytes": 367743373,
+      "builderReached": true,
+      "build": "failed",
+      "exitCode": 1,
+      "buildAttemptElapsedSeconds": 0.227525,
+      "serializedEngineBytes": 0,
+      "error": "IRecurrenceLayer requires equal input shapes: first input p2o.pd_op.full.641.0_output has shape [] and recurrence-body input p2o.sub_block.pd_op.sigmoid.2.0 has shape [-1,8]",
+      "remoteLog": "slanext-wireless-tensorrt11-rtx2060.log"
+    },
+    {
+      "modelId": "paddle-table/slanext-wired-openvino-compat",
+      "fileName": "slanext-wired-openvino-compat.onnx",
+      "artifactKind": "openvino-compatibility",
+      "sha256": "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0",
+      "bytes": 367743498,
+      "builderReached": true,
+      "build": "failed",
+      "exitCode": 1,
+      "buildAttemptElapsedSeconds": 0.230747,
+      "serializedEngineBytes": 0,
+      "error": "IRecurrenceLayer requires equal input shapes: first input p2o.pd_op.full.641.0_output has shape [] and recurrence-body input p2o.sub_block.pd_op.sigmoid.2.0 has shape [-1,8]",
+      "remoteLog": "slanext-wired-openvino-compat-tensorrt11-rtx2060.log"
+    },
+    {
+      "modelId": "paddle-table/slanext-wireless-openvino-compat",
+      "fileName": "slanext-wireless-openvino-compat.onnx",
+      "artifactKind": "openvino-compatibility",
+      "sha256": "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6",
+      "bytes": 367743498,
+      "builderReached": true,
+      "build": "failed",
+      "exitCode": 1,
+      "buildAttemptElapsedSeconds": 0.227991,
+      "serializedEngineBytes": 0,
+      "error": "IRecurrenceLayer requires equal input shapes: first input p2o.pd_op.full.641.0_output has shape [] and recurrence-body input p2o.sub_block.pd_op.sigmoid.2.0 has shape [-1,8]",
+      "remoteLog": "slanext-wireless-openvino-compat-tensorrt11-rtx2060.log"
+    }
+  ],
+  "boundary": "All four model SHAs were verified on the remote host before building. This independently reproduces the recurrence shape blocker on Ubuntu 22.04.5 / RTX 2060 / TensorRT 11.0.0.114 using native trtexec. Zero-byte --saveEngine placeholders were produced, not usable engines. No DeploySharp Builder, Session, Decoder, HTML parity, quality, or latency evidence was collected. Keep only these exact artifact/runtime combinations unsupported; do not generalize to every TensorRT release."
+}
