@@ -34,6 +34,7 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
     [TestMethod]
     [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", 640)]
     [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", 640)]
+    [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", 800)]
     [TestCategory("ExternalModels")]
     [TestCategory("Performance")]
     public void PpDocLayout_OpenCvDnn_RecordsPreparedInputLatency(string modelId, string modelFile, int canvasSize)
@@ -45,7 +46,9 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
         Assert.IsTrue(File.Exists(modelPath), "Missing local PP-Structure layout ONNX: " + modelPath);
         Assert.IsTrue(File.Exists(ImagePath), "Missing benchmark input image: " + ImagePath);
 
-        IReadOnlyList<string> labels = modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
+        IReadOnlyList<string> labels = modelId == "paddle-doc/pp-doclayout-plus-l"
+            ? PaddleDocumentProfiles.LayoutPlusLabels
+            : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
         PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
             PaddleDocumentModelCatalog.Get(modelId),
             labels,
