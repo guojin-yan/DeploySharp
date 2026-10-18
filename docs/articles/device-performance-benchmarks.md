@@ -293,6 +293,8 @@
 
 UVDoc 的独立正式 `5 warm-up + 50 measured` 基准使用同一主机、`bus.jpg`、单 Session 和 `PaddleDocumentUnwarpingDecoder`。输出为有限 `640×640×3` 张量；与 ORT 的 raw-output 最大/平均绝对差为 `0.0730591/0.00176066`，满足本次声明的 `0.2/0.01` 有界比较门槛。OpenVINO CPU P50/P95 为 `102.5192/128.0841 ms`。计时排除输入准备、模型/Session 创建和一次性 ORT 参考；有界数值差不等同像素等价或视觉质量通过。完整模型/输入 SHA 和 50 个样本见 [`UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 与 [JSON](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json)。
 
+SLANeXt wireless 的 OpenVINO 正式性能记录使用派生的 `slanext-wireless-openvino-compat.onnx`，并逐轮校验官方源图 ORT 参考的 token/cell 数和 HTML SHA。该单图任务返回 24 个结构 token、13 个 cell，HTML 哈希一致；P50/P95 为 `794.1322/962.2685 ms`。计时包含 OpenVINO 与表格结构 Decoder，排除输入准备、模型/Session 创建和一次性 ORT 参考。此结果只适用于兼容图和当前主机，不意味着原始 SLANeXt Loop 图可被当前 OpenVINO importer 直接加载，也不是表格准确率或 cell recall 结论。详见 [逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json)。
+
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 
 `pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T02:06:30Z",
+  "generatedUtc": "2026-10-18T02:09:45Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 47,
+    "bundleCount": 48,
     "bundles": [
       {
         "id": "official-classification",
@@ -796,6 +796,20 @@
         "sourceRevision": "unrecorded"
       },
       {
+        "id": "slanext-wireless-openvino-compat",
+        "path": "eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json",
+        "scope": "Wireless SLANeXt derived OpenVINO compatibility graph with table decoder and exact source-graph ORT markup parity",
+        "modelIds": [
+          "paddle-table/slanext-wireless-openvino-compat"
+        ],
+        "backends": [
+          "openvino-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "unrecorded"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -1238,6 +1252,13 @@
         "evidenceIds": [
           "table-task-chain-ort"
         ]
+      },
+      {
+        "modelId": "paddle-table/slanext-wireless-openvino-compat",
+        "backend": "openvino-cpu",
+        "evidenceIds": [
+          "slanext-wireless-openvino-compat"
+        ]
       }
     ],
     "byBackend": [
@@ -1276,9 +1297,9 @@
       },
       {
         "backend": "openvino-cpu",
-        "evidencePairCount": 26,
-        "distinctModelCount": 22,
-        "distinctModelBackendPairCount": 22,
+        "evidencePairCount": 27,
+        "distinctModelCount": 23,
+        "distinctModelBackendPairCount": 23,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -1301,7 +1322,8 @@
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det",
-          "paddle-table/slanext-wired-openvino-compat"
+          "paddle-table/slanext-wired-openvino-compat",
+          "paddle-table/slanext-wireless-openvino-compat"
         ]
       },
       {
@@ -1335,7 +1357,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 59,
+      "validatedPairCount": 60,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

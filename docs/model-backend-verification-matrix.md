@@ -4,7 +4,7 @@
 
 模型目录中的 `External` 条目不纳入本表的通过统计。SAM2/SAM3 视频、Whisper 完整发布 Bundle、Donut 原生多页/TensorRT、BLIP VQA/BLIP-2/InstructBLIP、Qwen2.5-VL、Phi Vision、SigLIP 2，以及部分 LayoutLMv3/Pix2Struct 任务头仍处于合同或局部实验阶段，不能宣称全部后端可用。模型目录、下载边界和状态语义见[模型支持指南](articles/model-support.md)；可复现性能结果见[设备性能实测](articles/device-performance-benchmarks.md)。
 
-截至 2026-10-18，PP-Structure 性能索引已登记 47 个正式证据包、59 个去重模型×后端组合；其中 OpenVINO CPU 有 26 条证据行、22 个去重组合。新增的 8 个静态版面模型（PP-DocLayout-M/S 与 6 个 PicoDet 变体）及 UVDoc 均有 OpenVINO CPU `5 warm-up + 50 measured` 报告，详见[设备性能实测](articles/device-performance-benchmarks.md)、[`PP-DocLayout-M 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md)和 [`UVDoc 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md)；其余逐模型报告位于同一 verification 目录。该索引仍是精确工件执行/性能证据，不等于数据集精度、第二设备矩阵或所有 PP-Structure 工件的统一多后端性能承诺。
+截至 2026-10-18，PP-Structure 性能索引已登记 48 个正式证据包、60 个去重模型×后端组合；其中 OpenVINO CPU 有 27 条证据行、23 个去重组合。新增的 8 个静态版面模型（PP-DocLayout-M/S 与 6 个 PicoDet 变体）、UVDoc 和 SLANeXt wireless OpenVINO 兼容图均有正式 `5 warm-up + 50 measured` 报告，详见[设备性能实测](articles/device-performance-benchmarks.md)、[`PP-DocLayout-M 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md)、[`UVDoc 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md)和 [`SLANeXt wireless 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md)。该索引仍是精确工件执行/性能证据，不等于数据集精度、第二设备矩阵或所有 PP-Structure 工件的统一多后端性能承诺。
 
 ## 当前工件矩阵
 
