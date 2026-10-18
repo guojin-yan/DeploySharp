@@ -10,7 +10,7 @@ Formal `5 warm-up + 50 measured` evidence for the exact `paddle-doc/uvdoc` ONNX 
 | Backend | ONNX Runtime CPU (`Microsoft.ML.OnnxRuntime 1.28.0`) |
 | Contract | Input `[1,3,640,640]`; decoded output `640×640×3`, all values finite |
 | OpenVINO parity | Max absolute difference `0.0730591`; mean absolute difference `0.00176066`; within declared `0.2/0.01` diagnostic bounds |
-| Timing | P50 **147.8045 ms**, P95 **156.4142 ms**, mean 148.1594 ms, min/max 138.8546/157.6856 ms |
+| Timing | P50 **148.5798 ms**, P95 **157.3663 ms**, mean 149.8649 ms, min/max 141.5687/174.3995 ms |
 
 Timing includes ONNX Runtime CPU execution and `PaddleDocumentUnwarpingDecoder`, excluding image preparation, model/session creation and the one-time OpenVINO reference. The raw-output comparison is bounded numeric parity only: it does not establish pixel equivalence, visual quality or cross-device ranking.
 

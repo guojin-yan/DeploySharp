@@ -10,7 +10,7 @@ Formal `5 warm-up + 50 measured` evidence for the official `paddle-table/slanext
 | Backend | ONNX Runtime CPU (`Microsoft.ML.OnnxRuntime 1.28.0`) |
 | Contract | Input `[1,3,512,512]`; 24 structure tokens, 13 decoded cells, finite scores |
 | OpenVINO parity | Official ORT HTML SHA equals the OpenVINO-compatible graph HTML SHA (`53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557`) |
-| Timing | P50 **937.5171 ms**, P95 **1024.2289 ms**, mean 944.0354 ms, min/max 890.4338/1137.1277 ms |
+| Timing | P50 **966.4126 ms**, P95 **1402.3464 ms**, mean 1052.6026 ms, min/max 930.0526/1488.0807 ms |
 
 The measured path uses the official source graph and includes ONNX Runtime CPU execution plus `PaddleDocumentTableStructureDecoder`. It excludes image preparation, model/session creation and the one-time OpenVINO execution of the derived compatibility graph. The OpenVINO graph is used only as a bounded structure/markup reference because the original Loop graph remains importer-blocked in the current OpenVINO runtime.
 

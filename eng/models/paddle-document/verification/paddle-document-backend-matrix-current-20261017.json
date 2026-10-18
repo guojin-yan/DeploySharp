@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T03:05:42Z",
+  "generatedUtc": "2026-10-18T03:10:43Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -1059,7 +1059,7 @@
         ],
         "warmupCount": 5,
         "measurementCount": 50,
-        "sourceRevision": "ea941f4f7a408a9cffa79c85c0b045d0dade88ce"
+        "sourceRevision": "a84dc8d452cfb8da58b27095e5c11bb90faac6ee"
       },
       {
         "id": "slanext-wireless-ort-cpu",
@@ -1073,7 +1073,7 @@
         ],
         "warmupCount": 5,
         "measurementCount": 50,
-        "sourceRevision": "ea941f4f7a408a9cffa79c85c0b045d0dade88ce"
+        "sourceRevision": "a84dc8d452cfb8da58b27095e5c11bb90faac6ee"
       },
       {
         "id": "chart2table-fixed-sample",
