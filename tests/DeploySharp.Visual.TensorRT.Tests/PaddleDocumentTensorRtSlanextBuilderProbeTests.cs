@@ -14,9 +14,9 @@ namespace DeploySharp.Visual.TensorRT.Tests;
 
 /// <summary>
 /// Records the exact TensorRT Builder boundary for the original SLANeXt
-/// recurrent exports. This is intentionally a builder-only probe: an Engine
-/// is never treated as usable until the table decoder and an ORT parity run
-/// also pass.
+/// recurrent exports and, optionally, their OpenVINO compatibility graphs.
+/// This is intentionally a builder-only probe: an Engine is never treated as
+/// usable until the table decoder and an ORT parity run also pass.
 /// </summary>
 [TestClass]
 public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
@@ -51,21 +51,36 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
                 new TensorShape(1, 3, 512, 512),
                 new TensorShape(2, 3, 512, 512),
                 new TensorShape(2, 3, 512, 512));
+        var models = new List<(string ModelId, string FileName, string Root, string ArtifactKind, string ExpectedSha256)>
+        {
+            ("paddle-table/slanext-wired", "slanext-wired.onnx", modelRoot, "official", "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f"),
+            ("paddle-table/slanext-wireless", "slanext-wireless.onnx", modelRoot, "official", "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97")
+        };
+        if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_SLANEXT_INCLUDE_OPENVINO_COMPAT") == "1")
+        {
+            string compatibilityRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_SLANEXT_COMPAT_MODEL_ROOT")
+                ?? Path.Combine(modelRoot, "..", "onnx-normalized-rerun-20260929"));
+            models.Add(("paddle-table/slanext-wired-openvino-compat", "slanext-wired-openvino-compat.onnx", compatibilityRoot, "openvino-compatibility", "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0"));
+            models.Add(("paddle-table/slanext-wireless-openvino-compat", "slanext-wireless-openvino-compat.onnx", compatibilityRoot, "openvino-compatibility", "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6"));
+        }
+
         var records = new List<object>();
-        foreach ((string modelId, string fileName) in new[]
+        foreach ((string modelId, string fileName, string modelDirectory, string artifactKind, string expectedSha256) in models)
         {
-            ("paddle-table/slanext-wired", "slanext-wired.onnx"),
-            ("paddle-table/slanext-wireless", "slanext-wireless.onnx")
-        })
-        {
-            string modelPath = Path.Combine(modelRoot, fileName);
+            string modelPath = Path.Combine(modelDirectory, fileName);
             if (!File.Exists(modelPath))
             {
-                records.Add(new { modelId, fileName, status = "missing-model" });
+                records.Add(new { modelId, fileName, artifactKind, status = "missing-model" });
                 continue;
             }
 
             string sha256 = FileSha(modelPath);
+            if (!string.Equals(expectedSha256, sha256, StringComparison.OrdinalIgnoreCase))
+            {
+                records.Add(new { modelId, fileName, artifactKind, expectedSha256, modelSha256 = sha256, status = "sha-mismatch" });
+                continue;
+            }
+
             string enginePath = Path.Combine(Path.GetTempPath(), "deploysharp-slanext-trt-" + Guid.NewGuid().ToString("N") + ".engine");
             string status = "unknown";
             string? errorCode = null;
@@ -117,6 +132,8 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
             {
                 modelId,
                 fileName,
+                artifactKind,
+                expectedSha256,
                 modelSha256 = sha256,
                 status,
                 errorCode,
@@ -137,11 +154,11 @@ public sealed class PaddleDocumentTensorRtSlanextBuilderProbeTests
                 ? new { minimum = "[1,3,512,512]", optimum = "[1,3,512,512]", maximum = "[1,3,512,512]" }
                 : new { minimum = "[1,3,512,512]", optimum = "[2,3,512,512]", maximum = "[2,3,512,512]" },
             models = records,
-            boundary = "Builder-only probe for the two original recurrent SLANeXt exports. A non-empty Engine is not support evidence until TensorRT execution, Paddle table Decoder output, ORT parity and HTML/quality checks pass."
+            boundary = "Builder-only probe for the selected original and optional OpenVINO-compatibility recurrent SLANeXt exports. A non-empty Engine is not support evidence until TensorRT execution, Paddle table Decoder output, ORT parity and HTML/quality checks pass."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(reportPath);
 
-        Assert.IsTrue(records.Count == 2, "The probe must record both wired and wireless exports.");
+        Assert.AreEqual(models.Count, records.Count, "The probe must record every selected SLANeXt artifact.");
     }
 
     private static TensorRtApiVersion ResolveApiVersion()
