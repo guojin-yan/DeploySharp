@@ -249,6 +249,17 @@
 `pp-doclayout-l`、`pp-docblocklayout`、`pp-doclayout-plus-l`、RT-DETR-H 3 类、RT-DETR-H 17 类的模型 SHA-256 分别为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`、`abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218`、`d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048`、`e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b`、`556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a`；输入 SHA-256 均为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`pp-doclayout-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)、[`pp-docblocklayout`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.md)、[`pp-doclayout-plus-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-plus-l-benchmark-20261017.md)、[`RT-DETR 3 类`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-h-layout-3cls-benchmark-20261017.md) 和 [`RT-DETR 17 类`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-h-layout-17cls-benchmark-20261017.md) 报告及对应 JSON。
 两个 RT-DETR-L 表格单元检测器的模型 SHA-256 分别为 `c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6` 和 `e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf`；详细报告见 [`wired-cell`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wired-cell-det-benchmark-20261018.md) 与 [`wireless-cell`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wireless-cell-det-benchmark-20261018.md)。
 
+### PP-Structure 印章检测：OpenCV DNN CPU 稳态口径
+
+2026-10-18 在同一 `JYPPX` Windows 10 主机上，使用 `E:\Data\ocr\demo_1.jpg` 对 PP-OCRv4 mobile/server 印章概率图模型执行正式 `5 warm-up + 50 measured` 单图测试。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与专用 `PaddleDocumentSealDecoder`，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT 参考。该图片没有人工印章标注；区域数仅作为运行诊断。
+
+| 模型 / 输入 | 后端 | Batch / Session | 输出与 ORT 参考 | P50 ms | P95 ms | Mean ms |
+| --- | --- | ---: | --- | ---: | ---: | ---: |
+| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | OpenCV DNN CPU | 1 / 1 | 224×224 mask；OpenCV 0 区域、ORT 0 区域；不声明 raw-map 数值 parity | 52.8776 | 59.4496 | 53.3504 |
+| `ppocrv4-server-seal-det` / `demo_1.jpg` | OpenCV DNN CPU | 1 / 1 | 224×224 mask；OpenCV 1 区域、ORT 1 区域；不声明 raw-map 数值 parity | 298.2772 | 329.3094 | 299.3065 |
+
+模型 SHA-256 分别为 `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199` 和 `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`；完整样本见 [`mobile 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-mobile-seal-det-benchmark-20261018.md)、[`server 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-server-seal-det-benchmark-20261018.md) 及对应 JSON。该证据只覆盖这两个精确 ONNX 工件和当前 OpenCV runtime，不外推为印章数据集准确率或跨设备性能。
+
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 
 `pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。

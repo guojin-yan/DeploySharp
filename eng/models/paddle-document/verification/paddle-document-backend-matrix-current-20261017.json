@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T01:09:23Z",
+  "generatedUtc": "2026-10-18T01:22:41Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 27,
+    "bundleCount": 29,
     "bundles": [
       {
         "id": "official-classification",
@@ -516,6 +516,34 @@
         "sourceRevision": null
       },
       {
+        "id": "seal-mobile-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-mobile-seal-det-benchmark-20261018.json",
+        "scope": "PP-OCRv4 mobile seal detector single-image OpenCV DNN CPU execution with shape/decoder contract reference",
+        "modelIds": [
+          "paddle-seal/ppocrv4-mobile"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "unrecorded"
+      },
+      {
+        "id": "seal-server-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-server-seal-det-benchmark-20261018.json",
+        "scope": "PP-OCRv4 server seal detector single-image OpenCV DNN CPU execution with shape/decoder contract reference",
+        "modelIds": [
+          "paddle-seal/ppocrv4-server"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "unrecorded"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -733,9 +761,23 @@
       },
       {
         "modelId": "paddle-seal/ppocrv4-mobile",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "seal-mobile-opencv-dnn"
+        ]
+      },
+      {
+        "modelId": "paddle-seal/ppocrv4-mobile",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "seal-mobile-tensorrt11-dynamic-batch2"
+        ]
+      },
+      {
+        "modelId": "paddle-seal/ppocrv4-server",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "seal-server-opencv-dnn"
         ]
       },
       {
@@ -849,9 +891,9 @@
       },
       {
         "backend": "opencv-dnn-cpu",
-        "evidencePairCount": 9,
-        "distinctModelCount": 9,
-        "distinctModelBackendPairCount": 9,
+        "evidencePairCount": 11,
+        "distinctModelCount": 11,
+        "distinctModelBackendPairCount": 11,
         "models": [
           "paddle-doc/pp-docblocklayout",
           "paddle-doc/pp-doclayout-l",
@@ -859,6 +901,8 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-seal/ppocrv4-mobile",
+          "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det"
@@ -909,7 +953,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 41,
+      "validatedPairCount": 43,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

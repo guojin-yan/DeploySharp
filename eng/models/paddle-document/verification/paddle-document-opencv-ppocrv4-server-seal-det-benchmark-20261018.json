@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-opencv-seal-benchmark-v1",
+  "generatedUtc": "2026-10-18T01:20:44.7898383+00:00",
+  "sourceRevision": "unrecorded",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "gpuClockState": "not-applicable-to-cpu-backend"
+  },
+  "model": {
+    "id": "paddle-seal/ppocrv4-server",
+    "file": "ppocrv4-server-seal-det.onnx",
+    "sha256": "f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7",
+    "inputShape": "[1,3,224,224]"
+  },
+  "input": {
+    "file": "demo_1.jpg",
+    "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+    "inputId": "paddle-document-opencv-seal-benchmark-paddle-seal-ppocrv4-server"
+  },
+  "backend": {
+    "id": "opencv-dnn-cpu",
+    "runtimePackage": "JYPPX.OpenCV.runtime.win-x64 5.0.0",
+    "fusion": true,
+    "winograd": true,
+    "specializeDynamicInputShapes": true,
+    "importerNote": "Dedicated seal probability-map contract; no generic NMS decoder is used."
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput created before warm-up and reused for all calls.",
+    "timing": "Synchronous VisualPipeline.Run; includes OpenCV DNN execution and PaddleDocumentSealDecoder; excludes image decode/preprocessing, model load, profile/session creation, hashing and one-time ORT reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "onnxruntime-cpu",
+    "referenceMask": {
+      "width": 224,
+      "height": 224
+    },
+    "referenceRegionCount": 1,
+    "comparison": "Shape and decoder contract only; raw probability-map numerical parity is not claimed for OpenCV DNN."
+  },
+  "result": {
+    "mask": {
+      "width": 224,
+      "height": 224
+    },
+    "regionCount": 1,
+    "regionFingerprintSha256": "8e330519f6eae4a1917bd073bd69acab800b3be9c0e5c68a3ed60176746c5ddb"
+  },
+  "timing": {
+    "p50Ms": 298.2772,
+    "p95Ms": 329.3094,
+    "minMs": 272.577,
+    "maxMs": 353.9986,
+    "meanMs": 299.306486
+  },
+  "samplesMs": [
+    303.7982,
+    291.8834,
+    319.9242,
+    298.2772,
+    295.3139,
+    323.1582,
+    284.1969,
+    285.5925,
+    299.6644,
+    301.0228,
+    340.9604,
+    295.1461,
+    306.3672,
+    312.2181,
+    299.0794,
+    284.3304,
+    285.2242,
+    293.0147,
+    272.577,
+    282.673,
+    283.2083,
+    301.2836,
+    329.3094,
+    300.9172,
+    315.2167,
+    319.4658,
+    326.28,
+    304.1975,
+    353.9986,
+    307.0707,
+    293.4526,
+    304.0369,
+    314.638,
+    273.5108,
+    281.7722,
+    309.0771,
+    274.1303,
+    283.7205,
+    284.1437,
+    313.8462,
+    280.0646,
+    294.1507,
+    313.8349,
+    313.2508,
+    273.4222,
+    282.5266,
+    288.3893,
+    282.7816,
+    280.1994,
+    309.0059
+  ]
+}
