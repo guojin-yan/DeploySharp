@@ -262,7 +262,7 @@
 
 ### PP-Structure 版面/表格/印章：OpenVINO CPU 稳态口径
 
-2026-10-18 在同一 `JYPPX` Windows 10 主机上补齐了当前矩阵标记为 `pass` 的 17 个精确工件的 OpenVINO CPU 正式 `5 warm-up + 50 measured` 证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。
+截至 2026-10-18，当前矩阵标记为 `openvinoCpu=pass` 的 23 个精确模型/后端组合均已登记正式性能证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。本节列出已完成的一组版面/单元/印章单图记录；表格流水线、分类、UVDoc、SLANeXt compatibility 和 Chart2Table 另见本页其它小节及当前矩阵索引。
 
 | 模型 / 输入 | Batch / Session | 输出合同与 ORT 边界 | P50 ms | P95 ms |
 | --- | ---: | --- | ---: | ---: |
@@ -290,6 +290,23 @@
 | `picodet-l-layout-17cls` / `bus.jpg` | 1 / 1 | 63 候选，11 个高置信度；ORT/OpenVINO 高置信度集合 11/11 有界匹配 | 57.4080 | 125.1531 |
 
 上述数据是指定 Windows 主机与 OpenVINO `2026.2.1` 的精确工件观测值，不是跨设备排名、数据集精度或所有 PP-Structure 模型的性能承诺。印章样本没有人工真值；OpenVINO 与 ORT 不做原始概率图数值 parity 宣称。逐模型的输入/模型 SHA、逐次样本和边界说明见本节已列出的 9 个既有报告，以及新增的 [`PP-DocLayout-M`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md)、[`PP-DocLayout-S`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-s-benchmark-20261018.md)、[`PicoDet layout-1x`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-benchmark-20261018.md)、[`PicoDet layout-1x-table`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-table-benchmark-20261018.md)、[`PicoDet-S 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-3cls-benchmark-20261018.md)、[`PicoDet-L 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-3cls-benchmark-20261018.md)、[`PicoDet-S 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-17cls-benchmark-20261018.md) 和 [`PicoDet-L 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-17cls-benchmark-20261018.md)。
+
+### PP-Structure 静态版面：ONNX Runtime CPU 对照基线
+
+2026-10-18 在同一 `JYPPX` Windows 10 主机上，以 ONNX Runtime CPU 对八个 PP-DocLayout/PicoDet 静态版面工件执行正式 `5 warm-up + 50 measured`。测试复用与 OpenVINO 静态版面基线相同的 `bus.jpg`、尺寸/标签/scale-factor profile、PreparedVisualInput 和 Paddle NMS decoder；分别使用一个 Session，计时包含 ORT 执行与 decoder，排除预处理、模型/Session 创建和一次性 OpenVINO 参考。
+
+| 模型 | 输入 | 候选数 | ORT/OpenVINO 高置信度匹配 | P50 ms | P95 ms |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `pp-doclayout-m` | `[1,3,640,640]` | 100 | 28/28 | 159.81 | 189.70 |
+| `pp-doclayout-s` | `[1,3,480,480]` | 100 | 48/48 | 22.75 | 26.66 |
+| `picodet-layout-1x` | `[1,3,800,608]` | 18 | 5/5 | 72.59 | 96.87 |
+| `picodet-layout-1x-table` | `[1,3,800,608]` | 3 | 0/0 | 73.93 | 84.24 |
+| `picodet-s-layout-3cls` | `[1,3,480,480]` | 66 | 25/25 | 20.57 | 22.44 |
+| `picodet-l-layout-3cls` | `[1,3,640,640]` | 76 | 22/22 | 144.83 | 220.83 |
+| `picodet-s-layout-17cls` | `[1,3,480,480]` | 77 | 4/4 | 20.56 | 22.58 |
+| `picodet-l-layout-17cls` | `[1,3,640,640]` | 63 | 11/11 | 155.52 | 173.58 |
+
+八项的执行合同和有界 parity 均通过；table-only PicoDet 在本次图像上两边都没有 `score ≥ 0.05` 的候选，`0/0` 不构成准确率结论。此轮 Windows 使用 Balanced 电源计划，CPU 未锁频。P95 中有调度抖动，因此不要将结果解读为锁频极限值；机器报告保留了全部原始样本，详见[汇总报告](../../eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md)与八个 JSON。该结果是当前主机的精确工件延迟/Decoder 合同证据，不代表数据集精度、跨设备排名或其它导出图。
 
 UVDoc 的独立正式 `5 warm-up + 50 measured` 基准使用同一主机、`bus.jpg`、单 Session 和 `PaddleDocumentUnwarpingDecoder`。输出为有限 `640×640×3` 张量；与 ORT 的 raw-output 最大/平均绝对差为 `0.0730591/0.00176066`，满足本次声明的 `0.2/0.01` 有界比较门槛。OpenVINO CPU P50/P95 为 `102.5192/128.0841 ms`。计时排除输入准备、模型/Session 创建和一次性 ORT 参考；有界数值差不等同像素等价或视觉质量通过。完整模型/输入 SHA 和 50 个样本见 [`UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 与 [JSON](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json)。
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T02:09:45Z",
+  "generatedUtc": "2026-10-18T02:30:34Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 48,
+    "bundleCount": 56,
     "bundles": [
       {
         "id": "official-classification",
@@ -810,6 +810,118 @@
         "sourceRevision": "unrecorded"
       },
       {
+        "id": "pp-doclayout-m-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-pp-doclayout-m-benchmark-20261018.json",
+        "scope": "PP-DocLayout-M single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-m"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "pp-doclayout-s-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-pp-doclayout-s-benchmark-20261018.json",
+        "scope": "PP-DocLayout-S single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-s"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-layout-1x-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-layout-1x-benchmark-20261018.json",
+        "scope": "PicoDet layout-1x single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-layout-1x"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-layout-1x-table-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-layout-1x-table-benchmark-20261018.json",
+        "scope": "PicoDet layout-1x-table single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-layout-1x-table"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-s-layout-3cls-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-s-layout-3cls-benchmark-20261018.json",
+        "scope": "PicoDet-S 3-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-s-layout-3cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-l-layout-3cls-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-l-layout-3cls-benchmark-20261018.json",
+        "scope": "PicoDet-L 3-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-l-layout-3cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-s-layout-17cls-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-s-layout-17cls-benchmark-20261018.json",
+        "scope": "PicoDet-S 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-s-layout-17cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
+        "id": "picodet-l-layout-17cls-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-picodet-l-layout-17cls-benchmark-20261018.json",
+        "scope": "PicoDet-L 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/picodet-l-layout-17cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "0d2bc03"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -850,6 +962,13 @@
       },
       {
         "modelId": "paddle-doc/picodet-l-layout-17cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-l-layout-17cls-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-l-layout-17cls",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "picodet-l-layout-17cls-openvino"
@@ -860,6 +979,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-l-layout-3cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-l-layout-3cls-ort-cpu"
         ]
       },
       {
@@ -878,6 +1004,13 @@
       },
       {
         "modelId": "paddle-doc/picodet-layout-1x-table",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-layout-1x-table-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-layout-1x-table",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "picodet-layout-1x-table-openvino"
@@ -888,6 +1021,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-layout-1x",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-layout-1x-ort-cpu"
         ]
       },
       {
@@ -906,6 +1046,13 @@
       },
       {
         "modelId": "paddle-doc/picodet-s-layout-17cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-s-layout-17cls-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-s-layout-17cls",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "picodet-s-layout-17cls-openvino"
@@ -916,6 +1063,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "picodet-static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/picodet-s-layout-3cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "picodet-s-layout-3cls-ort-cpu"
         ]
       },
       {
@@ -987,6 +1141,13 @@
       },
       {
         "modelId": "paddle-doc/pp-doclayout-m",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "pp-doclayout-m-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-m",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "pp-doclayout-m-openvino"
@@ -1019,6 +1180,13 @@
         "evidenceIds": [
           "pp-doclayout-plus-l-tensorrt11-dynamic-batch2",
           "static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-s",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "pp-doclayout-s-ort-cpu"
         ]
       },
       {
@@ -1264,12 +1432,20 @@
     "byBackend": [
       {
         "backend": "onnxruntime-cpu",
-        "evidencePairCount": 8,
-        "distinctModelCount": 6,
-        "distinctModelBackendPairCount": 6,
+        "evidencePairCount": 16,
+        "distinctModelCount": 14,
+        "distinctModelBackendPairCount": 14,
         "models": [
           "paddle-chart/pp-chart2table",
+          "paddle-doc/picodet-l-layout-17cls",
+          "paddle-doc/picodet-l-layout-3cls",
+          "paddle-doc/picodet-layout-1x",
+          "paddle-doc/picodet-layout-1x-table",
+          "paddle-doc/picodet-s-layout-17cls",
+          "paddle-doc/picodet-s-layout-3cls",
           "paddle-doc/pp-doclayout-l",
+          "paddle-doc/pp-doclayout-m",
+          "paddle-doc/pp-doclayout-s",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
@@ -1357,7 +1533,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 60,
+      "validatedPairCount": 68,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

@@ -79,9 +79,8 @@ public sealed class PaddleDocumentOrtStaticLayoutBenchmarkTests
             profiles.Select(profile.CreateArtifact(modelPath, OpenVinoBackendProvider.BackendId), openVinoRegistry, openVinoRequest, profile.VisualProfile.Task),
             openVinoRequest);
 
-        using PreparedVisualInput input = profile.VisualProfile.AuxiliaryInputs.Count == 0
-            ? new OpenCvVisualInputFactory().CreateFromFile(ImagePath, profile.VisualProfile, inputId: "paddle-document-ort-static-layout-" + modelId.Replace('/', '-'))
-            : OpenCvPaddleDocumentPreprocessing.CreateFromFile(new OpenCvVisualInputFactory(), ImagePath, profile, inputId: "paddle-document-ort-static-layout-" + modelId.Replace('/', '-'));
+        using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromFile(
+            new OpenCvVisualInputFactory(), ImagePath, profile, inputId: "paddle-document-ort-static-layout-" + modelId.Replace('/', '-'));
 
         DetectionResult expected = openVinoPipeline.Run(input).GetValue<DetectionResult>();
         ValidateResult(expected);
