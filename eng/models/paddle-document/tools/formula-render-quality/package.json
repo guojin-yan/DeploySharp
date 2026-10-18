@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "evaluate": "node ./evaluate.mjs"
+    "evaluate": "node ./evaluate.mjs",
+    "evaluate-semantic": "node ./evaluate-semantic.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "@mathjax/src": "4.1.3",

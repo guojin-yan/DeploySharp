@@ -40,10 +40,44 @@ $summaryPath = Join-Path $VerificationRoot 'formula-realformula-six-models-ort-2
 $parseabilityPath = Join-Path $VerificationRoot 'formula-realformula-latex-parseability-20261012.json'
 $renderPath = Join-Path $VerificationRoot 'formula-realformula-render-quality-20261017.json'
 $syntaxPath = Join-Path $VerificationRoot 'formula-realformula-syntax-quality-20261012.json'
+$numericDiagnosticPath = Join-Path $VerificationRoot 'formula-realformula-numeric-equivalence-20261018.json'
 $summary = Read-Json $summaryPath
 $parseability = Read-Json $parseabilityPath
 $render = Read-Json $renderPath
 $syntax = Read-Json $syntaxPath
+$numericDiagnostic = $null
+if (Test-Path -LiteralPath $numericDiagnosticPath -PathType Leaf) {
+    $numericSource = Read-Json $numericDiagnosticPath
+    $numericCounts = [ordered]@{
+        sampledEquivalent = 0
+        sampledDifferent = 0
+        notAssessable = 0
+        samplePairCount = 0
+    }
+    foreach ($numericModel in @($numericSource.modelResults)) {
+        if ([int]$numericModel.sampleCount -ne $ExpectedSampleCount) {
+            throw "Numeric diagnostic sample count mismatch for $($numericModel.model): $($numericModel.sampleCount)."
+        }
+        $numericCounts.samplePairCount += [int]$numericModel.sampleCount
+        $numericCounts.sampledEquivalent += [int]$numericModel.statusCounts.'sampled-equivalent'
+        $numericCounts.sampledDifferent += [int]$numericModel.statusCounts.'sampled-different'
+        $numericCounts.notAssessable += [int]$numericModel.statusCounts.'not-assessable'
+    }
+    $assessedNumericPairs = $numericCounts.sampledEquivalent + $numericCounts.sampledDifferent
+    $numericDiagnostic = [ordered]@{
+        report = Split-Path -Leaf $numericDiagnosticPath
+        reportMarkdown = [IO.Path]::ChangeExtension((Split-Path -Leaf $numericDiagnosticPath), '.md')
+        evaluatorVersion = [string]$numericSource.evaluatorVersion
+        samplePairCount = $numericCounts.samplePairCount
+        assessedPairCount = $assessedNumericPairs
+        notAssessablePairCount = $numericCounts.notAssessable
+        sampledEquivalentPairCount = $numericCounts.sampledEquivalent
+        sampledDifferentPairCount = $numericCounts.sampledDifferent
+        assessedCoverage = Get-Rate $assessedNumericPairs $numericCounts.samplePairCount
+        releaseQualityEvidence = $false
+        boundary = 'Sparse deterministic real-valued substitution is exploratory only; it is neither a proof nor independent semantic-quality evidence.'
+    }
+}
 
 $parseByModel = @{}
 foreach ($row in @($parseability.models)) { $parseByModel[[string]$row.model] = $row }
@@ -82,7 +116,7 @@ foreach ($row in @($summary.models)) {
     if ($eosRate -lt $MinimumEosRate) { $reasons.Add(('EOS rate {0:P2} < {1:P2}' -f $eosRate, $MinimumEosRate)) }
     if ($renderRate -lt $MinimumPredictionRenderRate) { $reasons.Add(('prediction render rate {0:P2} < {1:P2}' -f $renderRate, $MinimumPredictionRenderRate)) }
     if ($comparableRate -lt $MinimumComparableRenderRate) { $reasons.Add(('comparable render rate {0:P2} < {1:P2}' -f $comparableRate, $MinimumComparableRenderRate)) }
-    $reasons.Add('mathematical semantic equivalence has no independent evaluator/evidence')
+    $reasons.Add('mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient')
 
     $models.Add([ordered]@{
         model = $model
@@ -125,8 +159,9 @@ $report = [ordered]@{
         minimumEosRate = $MinimumEosRate
         minimumPredictionRenderRate = $MinimumPredictionRenderRate
         minimumComparableRenderRate = $MinimumComparableRenderRate
-        semanticRule = 'No release pass is possible without an independent, reproducible mathematical-semantic evaluator; lexical, parser and raster diagnostics are not substitutes.'
+        semanticRule = 'No release pass is possible without an independently reviewed, reproducible mathematical-semantic evaluator and independent validation; sparse numeric, lexical, parser and raster diagnostics are not substitutes.'
     }
+    exploratoryNumericDiagnostic = $numericDiagnostic
     models = @($models)
     integrity = [ordered]@{
         allModelsPassedExecutionIntegrity = $allIntegrityPassed
@@ -162,8 +197,16 @@ $lines.Add('## Gate policy')
 $lines.Add('')
 $lines.Add("- Each model must have exactly $ExpectedSampleCount joined image rows, no empty predictions, and EOS rate at least $([math]::Round(100 * $MinimumEosRate, 2))% for execution integrity.")
 $lines.Add("- Prediction render rate and comparable reference/prediction pairs are diagnostic thresholds ($([math]::Round(100 * $MinimumPredictionRenderRate, 2))% and $([math]::Round(100 * $MinimumComparableRenderRate, 2))%); they do not establish semantic correctness.")
-$lines.Add('- A release-quality pass requires a separately versioned semantic evaluator and an independent, legally attributable validation set. Exact string/CER, SymPy/ANTLR acceptance, structure fingerprints and MathJax raster similarity remain diagnostics only.')
+$lines.Add('- A release-quality pass requires a separately versioned, independently reviewed semantic evaluator and an independent, legally attributable validation set. Exact string/CER, SymPy/ANTLR acceptance, structure fingerprints and MathJax raster similarity remain diagnostics only.')
 $lines.Add('- Backend quality is not inferred from this ORT CPU report. OpenVINO, OpenCV DNN and TensorRT retain their precise matrix states.')
+if ($null -ne $numericDiagnostic) {
+    $lines.Add('')
+    $lines.Add('## Exploratory numeric diagnostic')
+    $lines.Add('')
+    $lines.Add(("The linked restricted numeric-substitution report assessed {0}/{1} pairs ({2:P2} coverage); {3} pairs were not assessable. Of assessed pairs, {4} had no sampled mismatch and {5} differed. This sparse, unreviewed diagnostic is not a proof or release-quality evidence; mathematical semantic status remains **NOT ASSESSED**." -f $numericDiagnostic.assessedPairCount, $numericDiagnostic.samplePairCount, $numericDiagnostic.assessedCoverage, $numericDiagnostic.notAssessablePairCount, $numericDiagnostic.sampledEquivalentPairCount, $numericDiagnostic.sampledDifferentPairCount))
+    $lines.Add('')
+    $lines.Add(("See [{0}]({1}) and the [machine-readable report]({2}) for hashes, protocol and fail-closed boundaries." -f $numericDiagnostic.reportMarkdown, $numericDiagnostic.reportMarkdown, $numericDiagnostic.report))
+}
 $lines.Add('')
 $lines.Add('## Reproduction')
 $lines.Add('')

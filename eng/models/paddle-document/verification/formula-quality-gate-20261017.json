@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-formula-quality-gate-v1",
-  "generatedUtc": "2026-10-17T03:22:40.8147782+00:00",
+  "generatedUtc": "2026-10-18T05:18:51.4775259+00:00",
   "dataset": {
     "name": "MathNet realFormula",
     "version": "Zenodo 11296815 v1",
@@ -15,7 +15,20 @@
     "minimumEosRate": 0.99,
     "minimumPredictionRenderRate": 0.9,
     "minimumComparableRenderRate": 0.9,
-    "semanticRule": "No release pass is possible without an independent, reproducible mathematical-semantic evaluator; lexical, parser and raster diagnostics are not substitutes."
+    "semanticRule": "No release pass is possible without an independently reviewed, reproducible mathematical-semantic evaluator and independent validation; sparse numeric, lexical, parser and raster diagnostics are not substitutes."
+  },
+  "exploratoryNumericDiagnostic": {
+    "report": "formula-realformula-numeric-equivalence-20261018.json",
+    "reportMarkdown": "formula-realformula-numeric-equivalence-20261018.md",
+    "evaluatorVersion": "0.2.0",
+    "samplePairCount": 726,
+    "assessedPairCount": 17,
+    "notAssessablePairCount": 709,
+    "sampledEquivalentPairCount": 17,
+    "sampledDifferentPairCount": 0,
+    "assessedCoverage": 0.023415977961432508,
+    "releaseQualityEvidence": false,
+    "boundary": "Sparse deterministic real-valued substitution is exploratory only; it is neither a proof nor independent semantic-quality evidence."
   },
   "models": [
     {
@@ -40,7 +53,7 @@
       "releaseGate": "blocked",
       "blockingReasons": [
         "comparable render rate 88.43% < 90.00%",
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     },
     {
@@ -64,7 +77,7 @@
       "semanticEquivalence": "not-assessed",
       "releaseGate": "blocked",
       "blockingReasons": [
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     },
     {
@@ -88,7 +101,7 @@
       "semanticEquivalence": "not-assessed",
       "releaseGate": "blocked",
       "blockingReasons": [
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     },
     {
@@ -113,7 +126,7 @@
       "releaseGate": "blocked",
       "blockingReasons": [
         "comparable render rate 89.26% < 90.00%",
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     },
     {
@@ -137,7 +150,7 @@
       "semanticEquivalence": "not-assessed",
       "releaseGate": "blocked",
       "blockingReasons": [
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     },
     {
@@ -161,7 +174,7 @@
       "semanticEquivalence": "not-assessed",
       "releaseGate": "blocked",
       "blockingReasons": [
-        "mathematical semantic equivalence has no independent evaluator/evidence"
+        "mathematical semantic evidence is not independently reviewed; exploratory numeric coverage is insufficient"
       ]
     }
   ],

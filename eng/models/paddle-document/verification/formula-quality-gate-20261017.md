@@ -20,8 +20,14 @@ This report is a fail-closed gate over the existing 121-sample MathNet realFormu
 
 - Each model must have exactly 121 joined image rows, no empty predictions, and EOS rate at least 99% for execution integrity.
 - Prediction render rate and comparable reference/prediction pairs are diagnostic thresholds (90% and 90%); they do not establish semantic correctness.
-- A release-quality pass requires a separately versioned semantic evaluator and an independent, legally attributable validation set. Exact string/CER, SymPy/ANTLR acceptance, structure fingerprints and MathJax raster similarity remain diagnostics only.
+- A release-quality pass requires a separately versioned, independently reviewed semantic evaluator and an independent, legally attributable validation set. Exact string/CER, SymPy/ANTLR acceptance, structure fingerprints and MathJax raster similarity remain diagnostics only.
 - Backend quality is not inferred from this ORT CPU report. OpenVINO, OpenCV DNN and TensorRT retain their precise matrix states.
+
+## Exploratory numeric diagnostic
+
+The linked restricted numeric-substitution report assessed 17/726 pairs (2.34% coverage); 709 pairs were not assessable. Of assessed pairs, 17 had no sampled mismatch and 0 differed. This sparse, unreviewed diagnostic is not a proof or release-quality evidence; mathematical semantic status remains **NOT ASSESSED**.
+
+See [formula-realformula-numeric-equivalence-20261018.md](formula-realformula-numeric-equivalence-20261018.md) and the [machine-readable report](formula-realformula-numeric-equivalence-20261018.json) for hashes, protocol and fail-closed boundaries.
 
 ## Reproduction
 
