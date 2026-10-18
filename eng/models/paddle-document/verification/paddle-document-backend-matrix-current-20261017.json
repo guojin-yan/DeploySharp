@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T01:55:20Z",
+  "generatedUtc": "2026-10-18T02:06:30Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 46,
+    "bundleCount": 47,
     "bundles": [
       {
         "id": "official-classification",
@@ -782,6 +782,20 @@
         "sourceRevision": "unrecorded"
       },
       {
+        "id": "uvdoc-openvino",
+        "path": "eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json",
+        "scope": "UVDoc single-image OpenVINO CPU unwarping execution, decoder contract and bounded raw-output parity with ORT",
+        "modelIds": [
+          "paddle-doc/uvdoc"
+        ],
+        "backends": [
+          "openvino-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "unrecorded"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -1083,6 +1097,13 @@
         ]
       },
       {
+        "modelId": "paddle-doc/uvdoc",
+        "backend": "openvino-cpu",
+        "evidenceIds": [
+          "uvdoc-openvino"
+        ]
+      },
+      {
         "modelId": "paddle-seal/ppocrv4-mobile",
         "backend": "opencv-dnn-cpu",
         "evidenceIds": [
@@ -1255,9 +1276,9 @@
       },
       {
         "backend": "openvino-cpu",
-        "evidencePairCount": 25,
-        "distinctModelCount": 21,
-        "distinctModelBackendPairCount": 21,
+        "evidencePairCount": 26,
+        "distinctModelCount": 22,
+        "distinctModelBackendPairCount": 22,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -1274,6 +1295,7 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-doc/uvdoc",
           "paddle-seal/ppocrv4-mobile",
           "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
@@ -1313,7 +1335,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 58,
+      "validatedPairCount": 59,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

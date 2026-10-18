@@ -757,3 +757,5 @@ server 印章也已在同一入口完成 TRT 11 真实运行：ONNX SHA `f9448c3
 | `picodet-l-layout-17cls` | 57.4080 / 125.1531 | 11/11 |
 
 逐模型输入/模型 SHA、输入合同和 50 个原始样本见 [`PP-DocLayout-M 报告`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md) 以及同目录下的其它 2026-10-18 报告；PP-DocLayout-M/S 与 PicoDet 报告特别记录了 `scale_factor` 辅助输入合同，避免误绑定不存在的 `im_shape`。
+
+UVDoc 另有专用的 OpenVINO CPU 正式 5+50 基准，使用 unwarping 结果合同。`bus.jpg` 上输出为有限 `640×640×3`，与 ORT raw tensor 最大/平均绝对差 `0.0730591/0.00176066`；P50/P95 为 `102.5192/128.0841 ms`。这只是有界数值对照，不表示像素等价或视觉质量通过。详见 [逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json)。

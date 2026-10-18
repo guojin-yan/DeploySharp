@@ -208,6 +208,7 @@ $formalPerformanceEvidence = @(
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-3cls-benchmark-20261018.json' -Id 'picodet-l-layout-3cls-openvino' -Scope 'PicoDet-L 3-class layout single-image OpenVINO CPU execution with bounded ORT parity' -ModelIds @('paddle-doc/picodet-l-layout-3cls') -Backends @('openvino-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-17cls-benchmark-20261018.json' -Id 'picodet-s-layout-17cls-openvino' -Scope 'PicoDet-S 17-class layout single-image OpenVINO CPU execution with bounded ORT parity' -ModelIds @('paddle-doc/picodet-s-layout-17cls') -Backends @('openvino-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-17cls-benchmark-20261018.json' -Id 'picodet-l-layout-17cls-openvino' -Scope 'PicoDet-L 17-class layout single-image OpenVINO CPU execution with bounded ORT parity' -ModelIds @('paddle-doc/picodet-l-layout-17cls') -Backends @('openvino-cpu')),
+    (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json' -Id 'uvdoc-openvino' -Scope 'UVDoc single-image OpenVINO CPU unwarping execution, decoder contract and bounded raw-output parity with ORT' -ModelIds @('paddle-doc/uvdoc') -Backends @('openvino-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json' -Id 'chart2table-fixed-sample' -Scope 'Fixed ChartQA Chart2Table single-sample generation' -ModelIds @('paddle-chart/pp-chart2table') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'tensorrt-cuda'))
 )
 
@@ -398,7 +399,7 @@ foreach ($summary in $performancePairSummary) {
     [void]$builder.AppendLine("| $($summary.backend) | $($summary.evidencePairCount) | $($summary.distinctModelBackendPairCount) | $($summary.distinctModelCount) |" )
 }
 [void]$builder.AppendLine()
-[void]$builder.AppendLine('Formal coverage is still incomplete for the remaining layout variants, UVDoc/SLANeXt/FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. Seal coverage here is limited to the two exact PP-OCRv4 TensorRT 11 dynamic-Batch reports listed above; it is not a claim for every seal export or backend.')
+[void]$builder.AppendLine('Formal coverage is still incomplete for the remaining layout variants, the SLANeXt compatibility and FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. UVDoc and the listed seal rows have exact formal bundles, but these do not establish visual quality or dataset accuracy.')
 
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('## Boundaries still open')
