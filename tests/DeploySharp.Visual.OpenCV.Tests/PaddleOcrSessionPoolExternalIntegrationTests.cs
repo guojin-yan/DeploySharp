@@ -86,26 +86,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
             var preparationGate = new PreparationTracker();
             VisualSize[] expectedSizes = images.Select(ProbeSourceSize).ToArray();
+            var sourceSizes = new Dictionary<string, VisualSize>(StringComparer.Ordinal);
+            for (int index = 0; index < images.Length; index++) sourceSizes.Add(images[index], expectedSizes[index]);
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            IReadOnlyList<OcrResult> results = await pipeline.RunPrefetchedAsync(
-                images,
-                (image, cancellationToken) =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    preparationGate.Enter();
-                    try
-                    {
-                        VisualSize sourceSize = ProbeSourceSize(image);
-                        return new OpenCvOcrImageInputFactory().CreateFromFile(
-                            image,
-                            detector.VisualProfile.Input.Name,
-                            OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize));
-                    }
-                    finally { preparationGate.Exit(); }
-                },
-                prefetch: 2,
-                options: new OcrExecutionOptions(disposeInputOnCompletion: true, correlationId: "external-session-pool"),
-                cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            IReadOnlyList<OcrResult> results = await RunPrefetchedAsync(pipeline, images, sourceSizes, detector.VisualProfile.Input.Name, preparationGate).ConfigureAwait(false);
             watch.Stop();
 
             Assert.AreEqual(images.Length, results.Count, "Prefetched results must preserve one result per input.");
@@ -120,7 +104,77 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string[] resultHashes = results.Select(result => result.ComputeSha256()).ToArray();
             Assert.AreEqual(resultHashes.Length, resultHashes.Distinct(StringComparer.Ordinal).Count(), "Distinct source images should not collapse to one result contract.");
             Console.WriteLine("PADDLEOCR_SESSION_POOL_CONTRACT backend=onnxruntime-cpu;model=ppocrv6-small;inputs=" + images.Length.ToString(CultureInfo.InvariantCulture) + ";pipelineConcurrency=2;sessionConcurrency=2;prefetch=2;maxPreparationConcurrency=" + preparationGate.MaximumActive.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + Sha256(string.Join("\n", resultHashes)));
-            WriteExternalReportIfRequested(images, detectorPath, classifierPath, recognizerPath, dictionaryPath, preparationGate.MaximumActive, watch.Elapsed.TotalMilliseconds, resultHashes);
+
+            double[]? benchmarkSamplesMs = null;
+            if (string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SESSION_POOL_BENCHMARK"), "1", StringComparison.Ordinal))
+            {
+                for (int warmup = 0; warmup < 5; warmup++)
+                {
+                    IReadOnlyList<OcrResult> warmupResults = await RunPrefetchedAsync(pipeline, images, sourceSizes, detector.VisualProfile.Input.Name, null).ConfigureAwait(false);
+                    AssertResultHashes(resultHashes, warmupResults, "warmup " + warmup.ToString(CultureInfo.InvariantCulture));
+                }
+
+                benchmarkSamplesMs = new double[50];
+                for (int iteration = 0; iteration < benchmarkSamplesMs.Length; iteration++)
+                {
+                    var sampleWatch = System.Diagnostics.Stopwatch.StartNew();
+                    IReadOnlyList<OcrResult> measuredResults = await RunPrefetchedAsync(pipeline, images, sourceSizes, detector.VisualProfile.Input.Name, null).ConfigureAwait(false);
+                    sampleWatch.Stop();
+                    AssertResultHashes(resultHashes, measuredResults, "measurement " + iteration.ToString(CultureInfo.InvariantCulture));
+                    benchmarkSamplesMs[iteration] = sampleWatch.Elapsed.TotalMilliseconds;
+                }
+
+                Console.WriteLine("PADDLEOCR_SESSION_POOL_BENCHMARK backend=onnxruntime-cpu;model=ppocrv6-small;warmup=5;iterations=50;unit=three-image-prefetched-pipeline;p50Ms=" + Percentile(benchmarkSamplesMs, 0.50).ToString("F3", CultureInfo.InvariantCulture) + ";p95Ms=" + Percentile(benchmarkSamplesMs, 0.95).ToString("F3", CultureInfo.InvariantCulture));
+            }
+
+            WriteExternalReportIfRequested(images, detectorPath, classifierPath, recognizerPath, dictionaryPath, preparationGate.MaximumActive, watch.Elapsed.TotalMilliseconds, resultHashes, benchmarkSamplesMs);
+        }
+
+        private static async Task<IReadOnlyList<OcrResult>> RunPrefetchedAsync(
+            OcrPipeline pipeline,
+            string[] images,
+            IReadOnlyDictionary<string, VisualSize> sourceSizes,
+            string inputName,
+            PreparationTracker? preparationTracker)
+        {
+            var factory = new OpenCvOcrImageInputFactory();
+            return await pipeline.RunPrefetchedAsync(
+                images,
+                (image, cancellationToken) =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    preparationTracker?.Enter();
+                    try
+                    {
+                        return factory.CreateFromFile(
+                            image,
+                            inputName,
+                            OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSizes[image]));
+                    }
+                    finally { preparationTracker?.Exit(); }
+                },
+                prefetch: 2,
+                options: new OcrExecutionOptions(disposeInputOnCompletion: true, correlationId: "external-session-pool"),
+                cancellationToken: CancellationToken.None).ConfigureAwait(false);
+        }
+
+        private static void AssertResultHashes(string[] expectedHashes, IReadOnlyList<OcrResult> results, string phase)
+        {
+            Assert.AreEqual(expectedHashes.Length, results.Count, "Input count changed during " + phase + ".");
+            for (int index = 0; index < expectedHashes.Length; index++)
+                Assert.AreEqual(expectedHashes[index], results[index].ComputeSha256(), "Result contract changed during " + phase + " at input " + index.ToString(CultureInfo.InvariantCulture) + ".");
+        }
+
+        private static double Percentile(double[] samples, double percentile)
+        {
+            double[] sorted = (double[])samples.Clone();
+            Array.Sort(sorted);
+            double position = (sorted.Length - 1) * percentile;
+            int lower = (int)Math.Floor(position);
+            int upper = (int)Math.Ceiling(position);
+            if (lower == upper) return sorted[lower];
+            double fraction = position - lower;
+            return sorted[lower] + (sorted[upper] - sorted[lower]) * fraction;
         }
 
         private static void WriteExternalReportIfRequested(
@@ -131,7 +185,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string dictionaryPath,
             int maximumPreparationConcurrency,
             double elapsedMilliseconds,
-            string[] resultHashes)
+            string[] resultHashes,
+            double[]? benchmarkSamplesMs)
         {
             string? reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SESSION_POOL_REPORT");
             if (string.IsNullOrWhiteSpace(reportPath)) return;
@@ -151,6 +206,10 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     operatingSystem = RuntimeInformation.OSDescription,
                     architecture = RuntimeInformation.OSArchitecture.ToString(),
                     runtime = RuntimeInformation.FrameworkDescription,
+                    cpuModel = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_CPU"),
+                    cpuGovernor = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_CPU_GOVERNOR"),
+                    cpuMinMHz = ParseNullableDouble(Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_CPU_MIN_MHZ")),
+                    cpuMaxMHz = ParseNullableDouble(Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_CPU_MAX_MHZ")),
                     gpu = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_GPU"),
                     gpuDriver = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_GPU_DRIVER"),
                     backend = "onnxruntime-cpu",
@@ -190,7 +249,19 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     distinctResultContracts = resultHashes.Distinct(StringComparer.Ordinal).Count() == resultHashes.Length,
                     inputsDisposedByPipeline = true
                 },
-                boundary = "This is a three-image execution, ordering, overlap and ownership contract on one host. It is not a 5+50 performance benchmark, throughput ranking, long-running soak, accuracy score, GPU result or evidence for other models/backends. Session-pool size must still be tuned for the target backend and device."
+                timing = benchmarkSamplesMs == null ? null : new
+                {
+                    protocol = "5 warm-up + 50 measured",
+                    unit = "three-image RunPrefetchedAsync pipeline invocation",
+                    p50Ms = Math.Round(Percentile(benchmarkSamplesMs, 0.50), 3),
+                    p95Ms = Math.Round(Percentile(benchmarkSamplesMs, 0.95), 3),
+                    samplesMs = benchmarkSamplesMs,
+                    includes = "image file decode, preprocessing, asynchronous input preparation, DET/CLS/REC execution, and result decoding/merge",
+                    excludes = "model loading, session construction, initial size probing, and the five warm-up invocations"
+                },
+                boundary = benchmarkSamplesMs == null
+                    ? "This is a three-image execution, ordering, overlap and ownership contract on one host. It is not a formal performance benchmark, throughput ranking, long-running soak, accuracy score, GPU result or evidence for other models/backends. Session-pool size must still be tuned for the target backend and device."
+                    : "This is a one-host, three-image, 5+50 prefetched pipeline latency observation for the exact ORT CPU model/runtime and session-pool configuration. It is not single-image latency, GPU performance, accuracy, a long-running soak, a cross-device ranking or evidence for other models/backends. No CPU frequency lock was configured or independently measured; consult the recorded CPU governor/frequency limits."
             };
 
             string? directory = Path.GetDirectoryName(Path.GetFullPath(reportPath));
@@ -234,6 +305,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
         private static bool? ParseNullableBoolean(string? value)
         {
             return bool.TryParse(value, out bool parsed) ? parsed : null;
+        }
+
+        private static double? ParseNullableDouble(string? value)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed) ? parsed : null;
         }
 
         private static PaddleOcrArtifactContract Artifact(PaddleOcrModelDescriptor descriptor, string? dictionarySha = null)

@@ -398,6 +398,14 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 结果目录包含六份带原始样本的 JSON。TensorRT 先按教程配置 DLL 路径，再以 `-c Release` 执行 `PaddleDocumentTensorRtExternalIntegrationTests`，本轮原始文件为 `paddle-tensorrt-release-50.trx`；构建结果、图片哈希和全部计时样本保存在输出中。复现时请按实际工作树状态记录源码标识。
 
+## Ubuntu 22.04 / RTX 2060：PP-OCRv6 Small 三图异步预取流水线
+
+远端 `ygj-NUC11PHi7` 上使用 PP-OCRv6 Small DET/REC、PP-OCRv5 Mobile CLS 和 ONNX Runtime CPU，按 `5 warm-up + 50 measured` 运行 `OcrPipeline.RunPrefetchedAsync(prefetch:2)`。每个计时样本处理三张 SHA 不同的 HierText JPEG；Pipeline 最大并发为 2，DET/CLS/REC 各配置两路独立 Session。计时包含图片读取/解码、预处理、异步准备、完整 OCR 和结果合并，排除模型/Session 创建与预热。
+
+每组三图 P50/P95 为 `2513.460/2857.975 ms`，均值 `2568.837 ms`，范围 `2319.842–3087.415 ms`。这是完整多图预取流水线的批次墙钟，不是单图延迟，也不能与本节复用 PreparedInput 的 `steady` 数据直接排名。CPU 为 i7-1165G7，governor `powersave`、scaling range `400–4700 MHz`，未锁频且没有运行期间时钟/功耗遥测；RTX 2060 只作为主机信息，实际后端是 ORT CPU。
+
+运行状态与边界、模型和输入 SHA、全部 50 个样本见[逐设备报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.md)及[机器报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.json)。该结果只覆盖这一精确 PP-OCRv6 Small 配置，不代表 GPU/TensorRT 速度、准确率或全模型×后端性能矩阵。
+
 ## 复现
 
 设备测试包中的 `Run-DeviceBenchmark.ps1` 会记录系统、运行时和结果文件。运行前应先准备与目标设备匹配的模型、ONNX Runtime、OpenVINO、OpenCV、CUDA、TensorRT 和 cuDNN；TensorRT 测试还需要匹配版本的 bridge。每次在新的设备、模型制品、运行时版本、输入图片或 batch/Session 配置上运行后，都应新增独立设备小节，而不是替换其他设备的结果。

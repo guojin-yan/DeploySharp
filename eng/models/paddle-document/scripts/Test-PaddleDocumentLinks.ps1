@@ -50,6 +50,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md',
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md',
     'eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-20261018.md',
+    'eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.md',
     'eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md',
     'eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md',
     'eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md',
