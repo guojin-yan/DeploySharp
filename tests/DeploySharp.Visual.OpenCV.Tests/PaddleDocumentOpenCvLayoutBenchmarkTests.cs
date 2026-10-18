@@ -35,6 +35,8 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
     [DataRow("paddle-doc/pp-doclayout-l", "pp-doclayout-l.onnx", 640)]
     [DataRow("paddle-doc/pp-docblocklayout", "pp-docblocklayout.onnx", 640)]
     [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", 800)]
+    [DataRow("paddle-doc/rt-detr-h-layout-3cls", "rt-detr-h-layout-3cls.onnx", 640)]
+    [DataRow("paddle-doc/rt-detr-h-layout-17cls", "rt-detr-h-layout-17cls.onnx", 640)]
     [TestCategory("ExternalModels")]
     [TestCategory("Performance")]
     public void PpDocLayout_OpenCvDnn_RecordsPreparedInputLatency(string modelId, string modelFile, int canvasSize)
@@ -48,7 +50,11 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
 
         IReadOnlyList<string> labels = modelId == "paddle-doc/pp-doclayout-plus-l"
             ? PaddleDocumentProfiles.LayoutPlusLabels
-            : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
+            : modelId == "paddle-doc/rt-detr-h-layout-3cls"
+                ? PaddleDocumentProfiles.Layout3Labels
+                : modelId == "paddle-doc/rt-detr-h-layout-17cls"
+                    ? PaddleDocumentProfiles.Layout17Labels
+                    : modelId == "paddle-doc/pp-docblocklayout" ? PaddleDocumentProfiles.RegionLabels : PaddleDocumentProfiles.Layout23Labels;
         PaddleDocumentProfile profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
             PaddleDocumentModelCatalog.Get(modelId),
             labels,
