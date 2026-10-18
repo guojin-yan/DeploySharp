@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-formula-quality-gate-v1",
-  "generatedUtc": "2026-10-18T05:26:09.501354+00:00",
+  "generatedUtc": "2026-10-18T05:29:02.7146841+00:00",
   "dataset": {
     "name": "MathNet realFormula",
     "version": "Zenodo 11296815 v1",
@@ -20,7 +20,7 @@
   "exploratoryNumericDiagnostic": {
     "report": "formula-realformula-numeric-equivalence-20261018.json",
     "reportMarkdown": "formula-realformula-numeric-equivalence-20261018.md",
-    "evaluatorVersion": "0.2.0",
+    "evaluatorVersion": "0.3.0",
     "samplePairCount": 726,
     "assessedPairCount": 36,
     "notAssessablePairCount": 690,

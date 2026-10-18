@@ -21,6 +21,8 @@ test('MathJax function-application markers are handled for supported functions',
   const result = await compare(String.raw`\sin(x)`, String.raw`\sin x`);
   assert.equal(result.status, 'sampled-equivalent');
   assert.equal(result.validSubstitutionCount, 24);
+  const operatorName = await compare(String.raw`\operatorname { s i n } x`, String.raw`\sin x`);
+  assert.equal(operatorName.status, 'sampled-equivalent');
 });
 
 test('presentation punctuation and square-bracket grouping do not create operands', async () => {

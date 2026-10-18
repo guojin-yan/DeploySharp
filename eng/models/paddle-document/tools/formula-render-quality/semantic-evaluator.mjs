@@ -124,7 +124,15 @@ function parseNode(node) {
   switch (node.kind) {
     case 'math':
     case 'semantics':
-    case 'mrow':
+    case 'mrow': {
+      const semanticType = node.attributes?.['data-semantic-type'];
+      const texClass = node.attributes?.['data-mjx-texclass'];
+      if (semanticType === 'function' || texClass === 'OP') {
+        const operatorName = textContent(node).replace(/\s+/g, '');
+        if (SUPPORTED_FUNCTIONS.has(operatorName)) return symbol(operatorName);
+      }
+      return parseSequence(children.map(parseNode).filter((item) => item !== null));
+    }
     case 'mstyle':
     case 'mpadded':
       return parseSequence(children.map(parseNode).filter((item) => item !== null));

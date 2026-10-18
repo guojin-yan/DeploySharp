@@ -13,7 +13,7 @@ This is an exploratory, fail-closed diagnostic over the existing 121 MathNet rea
 
 ## Protocol
 
-- MathJax 4.1.3 converts both strings to presentation MathML; evaluator version 0.2.0 supports a restricted real-arithmetic AST (identifiers, numeric literals, arithmetic, fractions, powers, square roots, selected elementary functions, simple relations and comma-delimited numeric tuples).
+- MathJax 4.1.3 converts both strings to presentation MathML; evaluator version 0.3.0 supports a restricted real-arithmetic AST (identifiers, numeric literals, arithmetic, fractions, powers, square roots, selected elementary functions, simple relations and comma-delimited numeric tuples).
 - Each pair is checked on 24 deterministic substitutions with relative tolerance 1e-9; the image hash, model ID and sample ordinal seed the assignments. At least 12 valid points are required.
 - The JSON stores hashes and outcomes only; source formula text is not copied into this report.
 
