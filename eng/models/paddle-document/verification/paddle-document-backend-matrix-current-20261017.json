@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-17T11:38:51Z",
+  "generatedUtc": "2026-10-18T00:49:34Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 22,
+    "bundleCount": 23,
     "bundles": [
       {
         "id": "official-classification",
@@ -160,7 +160,7 @@
         ],
         "warmupCount": 5,
         "measurementCount": 50,
-        "sourceRevision": "2f9ded27a1c32c5b60cd095b2bb1018a3c486ec1"
+        "sourceRevision": "c0983459b772b932acaef690f27e6bc852fa499b"
       },
       {
         "id": "pp-docblocklayout-opencv-dnn",
@@ -174,7 +174,21 @@
         ],
         "warmupCount": 5,
         "measurementCount": 50,
-        "sourceRevision": "8795baa1efa512b387f464b9d9aa57700fc452b4"
+        "sourceRevision": "c0983459b772b932acaef690f27e6bc852fa499b"
+      },
+      {
+        "id": "pp-doclayout-plus-l-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-plus-l-benchmark-20261017.json",
+        "scope": "PP-DocLayout-Plus-L single-image OpenCV DNN CPU execution with bounded ORT parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-plus-l"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "c0983459b772b932acaef690f27e6bc852fa499b"
       },
       {
         "id": "document-orientation-tensorrt10-single-image",
@@ -580,6 +594,13 @@
       },
       {
         "modelId": "paddle-doc/pp-doclayout-plus-l",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "pp-doclayout-plus-l-opencv-dnn"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-plus-l",
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "pp-doclayout-plus-l-tensorrt11-dynamic-batch2",
@@ -744,12 +765,13 @@
       },
       {
         "backend": "opencv-dnn-cpu",
-        "evidencePairCount": 4,
-        "distinctModelCount": 4,
-        "distinctModelBackendPairCount": 4,
+        "evidencePairCount": 5,
+        "distinctModelCount": 5,
+        "distinctModelBackendPairCount": 5,
         "models": [
           "paddle-doc/pp-docblocklayout",
           "paddle-doc/pp-doclayout-l",
+          "paddle-doc/pp-doclayout-plus-l",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-table/pp-lcnet-x1-0-table-cls"
         ]
@@ -799,7 +821,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 36,
+      "validatedPairCount": 37,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

@@ -234,14 +234,15 @@
 
 ### PP-Structure 版面分析：OpenCV DNN CPU 稳态口径
 
-2026-10-17 在同一 `JYPPX` Windows 10 主机上，使用 `pp-doclayout-l.onnx` 和 `bus.jpg` 补充了 OpenCV DNN 的正式 `5 warm-up + 50 measured` 单图证据。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与 DeploySharp Paddle NMS Decoder，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT parity 参考。OpenCV 的 CPU 时钟不涉及 GPU 锁频。
+2026-10-17 在同一 `JYPPX` Windows 10 主机上，使用 `pp-doclayout-l.onnx`、`pp-docblocklayout.onnx`、`pp-doclayout-plus-l.onnx` 和 `bus.jpg` 补充了 OpenCV DNN 的正式 `5 warm-up + 50 measured` 单图证据。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与 DeploySharp Paddle NMS Decoder，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT parity 参考。OpenCV 的 CPU 时钟不涉及 GPU 锁频。
 
 | 模型 / 输入 | 后端 | Batch / Session | 高置信度 parity | P50 ms | P95 ms | Mean ms |
 | --- | --- | ---: | --- | ---: | ---: | ---: |
-| `pp-doclayout-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 730.3262 | 796.5752 | 735.6268 |
-| `pp-docblocklayout` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 765.6829 | 1132.6003 | 805.6070 |
+| `pp-doclayout-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 682.4541 | 750.4633 | 693.4330 |
+| `pp-docblocklayout` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 725.7605 | 859.4460 | 729.7552 |
+| `pp-doclayout-plus-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 1043.8911 | 1167.5941 | 1066.9535 |
 
-`pp-doclayout-l` 的模型 SHA-256 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，`pp-docblocklayout` 为 `abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218`；输入 SHA-256 均为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`pp-doclayout-l JSON`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.json)、[`pp-doclayout-l 说明`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)、[`pp-docblocklayout JSON`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.json) 和 [`pp-docblocklayout 说明`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.md)。
+`pp-doclayout-l`、`pp-docblocklayout`、`pp-doclayout-plus-l` 的模型 SHA-256 分别为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`、`abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218`、`d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048`；输入 SHA-256 均为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`pp-doclayout-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)、[`pp-docblocklayout`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.md) 和 [`pp-doclayout-plus-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-plus-l-benchmark-20261017.md) 报告及对应 JSON。
 
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 

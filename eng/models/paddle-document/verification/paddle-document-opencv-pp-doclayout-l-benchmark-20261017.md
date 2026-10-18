@@ -6,7 +6,7 @@ This report records one exact `paddle-doc/pp-doclayout-l` ONNX artifact on the n
 | --- | --- |
 | Device | `JYPPX`, Windows 10 build `10.0.26200`, 16 logical processors |
 | Runtime | .NET `10.0.12`, `JYPPX.OpenCV.runtime.win-x64` `5.0.0` |
-| Source revision | `2f9ded27a1c32c5b60cd095b2bb1018a3c486ec1` |
+| Source revision | `c0983459b772b932acaef690f27e6bc852fa499b` |
 | Model | `E:\Model\PaddleDocument\onnx\pp-doclayout-l.onnx` |
 | Model SHA-256 | `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9` |
 | Input | `E:\Data\image\bus.jpg` |
@@ -18,7 +18,7 @@ The test creates one `PreparedVisualInput` before timing and reuses it for one O
 
 | Backend | Batch / sessions | High-confidence parity | P50 (ms) | P95 (ms) | Mean (ms) | Min / max (ms) |
 | --- | ---: | --- | ---: | ---: | ---: | ---: |
-| OpenCV DNN CPU | 1 / 1 | 1 region; score ≤ `0.001`, coordinates ≤ `0.5 px` vs ORT CPU | 730.3262 | 796.5752 | 735.6268 | 694.7635 / 817.9322 |
+| OpenCV DNN CPU | 1 / 1 | 1 region; score ≤ `0.001`, coordinates ≤ `0.5 px` vs ORT CPU | 682.4541 | 750.4633 | 693.4330 | 634.5525 / 870.6822 |
 
 The decoded output contains 300 candidates, of which one has score ≥ `0.5`. The high-confidence result fingerprint is `f0ce64ece1c94946089484af63200f6041ace642fc5cf87fcf509cbcf7b075c3`.
 
