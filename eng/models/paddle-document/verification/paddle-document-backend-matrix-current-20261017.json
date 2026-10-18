@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T02:45:05Z",
+  "generatedUtc": "2026-10-18T03:05:42Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 65,
+    "bundleCount": 67,
     "bundles": [
       {
         "id": "official-classification",
@@ -1048,6 +1048,34 @@
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
+        "id": "uvdoc-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.json",
+        "scope": "UVDoc single-image ONNX Runtime CPU unwarping execution, decoder contract and bounded raw-output parity with OpenVINO",
+        "modelIds": [
+          "paddle-doc/uvdoc"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "ea941f4f7a408a9cffa79c85c0b045d0dade88ce"
+      },
+      {
+        "id": "slanext-wireless-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.json",
+        "scope": "Official wireless SLANeXt single-image ONNX Runtime CPU execution with table decoder and derived OpenVINO compatibility-graph markup parity",
+        "modelIds": [
+          "paddle-table/slanext-wireless"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "ea941f4f7a408a9cffa79c85c0b045d0dade88ce"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -1435,6 +1463,13 @@
       },
       {
         "modelId": "paddle-doc/uvdoc",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "uvdoc-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/uvdoc",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "uvdoc-openvino"
@@ -1604,14 +1639,21 @@
         "evidenceIds": [
           "slanext-wireless-openvino-compat"
         ]
+      },
+      {
+        "modelId": "paddle-table/slanext-wireless",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "slanext-wireless-ort-cpu"
+        ]
       }
     ],
     "byBackend": [
       {
         "backend": "onnxruntime-cpu",
-        "evidencePairCount": 25,
-        "distinctModelCount": 21,
-        "distinctModelBackendPairCount": 21,
+        "evidencePairCount": 27,
+        "distinctModelCount": 23,
+        "distinctModelBackendPairCount": 23,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -1628,12 +1670,14 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-doc/uvdoc",
           "paddle-seal/ppocrv4-mobile",
           "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
           "paddle-table/rt-detr-l-wireless-cell-det",
-          "paddle-table/slanext-wired"
+          "paddle-table/slanext-wired",
+          "paddle-table/slanext-wireless"
         ]
       },
       {
@@ -1717,7 +1761,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 75,
+      "validatedPairCount": 77,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

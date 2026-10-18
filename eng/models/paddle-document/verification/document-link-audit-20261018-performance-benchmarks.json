@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v2",
-  "generatedUtc": "2026-10-18T02:45:07.2102704+00:00",
+  "generatedUtc": "2026-10-18T03:05:44.2653474+00:00",
   "documents": [
     "docs/articles/visual-ocr.md",
     "docs/articles/visual-paddle-structure.md",
@@ -8,6 +8,8 @@
     "eng/models/paddle-document/README.md",
     "eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md",
     "eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md",
+    "eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md",
+    "eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md",
     "docs/articles/device-performance-benchmarks.md",
     "eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md",
     "eng/models/paddle-document/verification/formula-realformula-error-patterns-20261007.md",
@@ -44,7 +46,7 @@
     "eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md",
     "eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md"
   ],
-  "localMarkdownLinksChecked": 895,
+  "localMarkdownLinksChecked": 903,
   "brokenLocalMarkdownLinks": 0,
   "broken": [],
   "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."

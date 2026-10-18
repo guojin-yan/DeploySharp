@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-ort-uvdoc-benchmark-v1",
+  "generatedUtc": "2026-10-18T03:02:59.2782942+00:00",
+  "sourceRevision": "ea941f4f7a408a9cffa79c85c0b045d0dade88ce",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-doc/uvdoc",
+    "file": "uvdoc.onnx",
+    "sha256": "10a66fe2e2a5e9fdf5f697385ddb38d26a58dca73fec539b45b4783d2e18e338",
+    "inputShape": "[1,3,640,640]"
+  },
+  "input": {
+    "file": "bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "inputId": "paddle-document-ort-uvdoc-benchmark"
+  },
+  "backend": {
+    "id": "onnxruntime-cpu",
+    "runtimePackage": "Microsoft.ML.OnnxRuntime 1.28.0"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including ONNX Runtime CPU execution and PaddleDocumentUnwarpingDecoder; excludes image decode/preprocessing, model/session creation and one-time OpenVINO reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "openvino-cpu",
+    "outputShape": [
+      640,
+      640,
+      3
+    ],
+    "maxAbsoluteDifference": 0.07305908203125,
+    "meanAbsoluteDifference": 0.001760658342064782,
+    "maxTolerance": 0.2,
+    "meanTolerance": 0.01,
+    "acceptance": "Bounded raw-output comparison only; not pixel equivalence or visual-quality evidence."
+  },
+  "result": {
+    "width": 640,
+    "height": 640,
+    "channels": 3,
+    "finite": true,
+    "pixelFingerprintSha256": "7ee6bd5f7bed6f06f94b7fb3bc08c09d11cb2e868651433450488e82ef605ba8"
+  },
+  "timing": {
+    "p50Ms": 147.8045,
+    "p95Ms": 156.4142,
+    "minMs": 138.8546,
+    "maxMs": 157.6856,
+    "meanMs": 148.15938800000006
+  },
+  "samplesMs": [
+    152.0336,
+    143.4152,
+    147.9807,
+    157.2268,
+    156.1755,
+    151.2559,
+    156.0849,
+    147.3625,
+    156.2068,
+    153.0269,
+    156.0031,
+    152.1378,
+    153.9613,
+    149.7169,
+    153.0972,
+    148.3114,
+    145.003,
+    142.2932,
+    143.8737,
+    140.1852,
+    144.145,
+    142.1534,
+    147.9903,
+    140.9813,
+    147.8045,
+    146.5754,
+    146.5985,
+    147.1224,
+    148.3253,
+    157.6856,
+    156.4142,
+    145.4244,
+    153.4813,
+    151.3948,
+    141.9321,
+    150.4164,
+    144.626,
+    140.9357,
+    140.8413,
+    150.5541,
+    148.6814,
+    143.1364,
+    151.0979,
+    146.2114,
+    138.8546,
+    139.5505,
+    153.1762,
+    145.7251,
+    144.4784,
+    146.3039
+  ]
+}
