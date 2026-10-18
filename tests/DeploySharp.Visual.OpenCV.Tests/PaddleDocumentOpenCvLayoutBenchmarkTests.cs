@@ -37,18 +37,25 @@ public sealed class PaddleDocumentOpenCvLayoutBenchmarkTests
     [DataRow("paddle-doc/pp-doclayout-plus-l", "pp-doclayout-plus-l.onnx", 800)]
     [DataRow("paddle-doc/rt-detr-h-layout-3cls", "rt-detr-h-layout-3cls.onnx", 640)]
     [DataRow("paddle-doc/rt-detr-h-layout-17cls", "rt-detr-h-layout-17cls.onnx", 640)]
+    [DataRow("paddle-table/rt-detr-l-wired-cell-det", "rt-detr-l-wired-cell-det.onnx", 640)]
+    [DataRow("paddle-table/rt-detr-l-wireless-cell-det", "rt-detr-l-wireless-cell-det.onnx", 640)]
     [TestCategory("ExternalModels")]
     [TestCategory("Performance")]
     public void PpDocLayout_OpenCvDnn_RecordsPreparedInputLatency(string modelId, string modelFile, int canvasSize)
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK=1 to run the opt-in 5+50 OpenCV DNN benchmark.");
+        string? selectedModels = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK_MODELS");
+        if (!string.IsNullOrWhiteSpace(selectedModels) && !selectedModels.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Contains(modelId, StringComparer.Ordinal))
+            Assert.Inconclusive("This benchmark row was not selected by DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_LAYOUT_BENCHMARK_MODELS.");
 
         string modelPath = Path.Combine(ModelRoot, modelFile);
         Assert.IsTrue(File.Exists(modelPath), "Missing local PP-Structure layout ONNX: " + modelPath);
         Assert.IsTrue(File.Exists(ImagePath), "Missing benchmark input image: " + ImagePath);
 
-        IReadOnlyList<string> labels = modelId == "paddle-doc/pp-doclayout-plus-l"
+        IReadOnlyList<string> labels = modelId.StartsWith("paddle-table/rt-detr-l-", StringComparison.Ordinal)
+            ? new[] { "table-cell" }
+            : modelId == "paddle-doc/pp-doclayout-plus-l"
             ? PaddleDocumentProfiles.LayoutPlusLabels
             : modelId == "paddle-doc/rt-detr-h-layout-3cls"
                 ? PaddleDocumentProfiles.Layout3Labels
