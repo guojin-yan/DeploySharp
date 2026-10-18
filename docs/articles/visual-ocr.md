@@ -841,6 +841,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。自然连续 `>=3,200` 字符（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。
 
+新增的[核心识别器 HierText 行级质量证据](../../eng/models/paddle-ocr/verification/paddleocr-core-recognizer-quality-hiertext-20261018.md)把 v4/v5/v6 的七个 REC 工件放在同一批 256 个 source-linked 文本行 crop 上，显式跳过 DET，因此可单独观察识别器 CER/WER。ORT CPU 与 OpenVINO CPU 均完成 `14/14` 组合，v6 Small/Medium 在这批选择上的 CER/WER 为 `25.00%/48.17%` 与 `23.07%/45.23%`，两后端的逐行文本 SHA 完全一致。该结果是可复现的识别器诊断，不是完整页面准确率、检测召回率、自然长文本、鲁棒性或发布质量结论；机器 JSON 同时记录模型、字典、输入 crop 和逐行结果合同 SHA。
+
 A2 又增加了[当前 OCR benchmark manifest 全量盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)：扫描 `F:\OCRBenchmarkTesting\data\annotations\manifests` 下 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行只有 132 字符、最长单页累计 2,348 字符，`>=3,200` 的自然连续行仍为 `0`。这是数据可用性审计，不是 OCR 准确率结果；页面累计、拼接 crop 和合成文本不能关闭 A2。
 
 进一步的[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)直接扫描官方 validation 标注，以目标识别高度 48 投影出 13 条宽度至少 3,200 像素的自然文本行，分布于 9 张图，最大投影宽度 4,725、最大标注文本长度 182。当前本机没有这 9 张源 JPEG，且所用 Open Images metadata CSV 中没有这些候选 ID，因此尚未执行真实图像裁剪、SlidingWindow、接缝映射或 CER/WER；该结果不能被写成自然 3,200 字符长文本证据。待源图像与合法归因元数据补齐后，按报告中的 manifest/哈希继续执行 ORT/OpenVINO，并在条件满足时补做 TensorRT/OpenCV。
