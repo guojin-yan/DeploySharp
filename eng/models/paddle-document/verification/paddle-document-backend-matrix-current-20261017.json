@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T04:06:31Z",
+  "generatedUtc": "2026-10-18T04:30:39Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -807,7 +807,7 @@
         ],
         "warmupCount": 5,
         "measurementCount": 50,
-        "sourceRevision": null
+        "sourceRevision": "eff037ea95d573db2c5924718fd907f366d1fa38"
       },
       {
         "id": "slanext-wireless-openvino-compat",
