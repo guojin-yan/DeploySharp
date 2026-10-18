@@ -91,6 +91,8 @@ P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle
 
 补充的[PP-OCRv6 Small 真实 Session 池/预取合同](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-20261018.md)在三张本地图像上实际创建 DET/CLS/REC 各两路独立 ORT Session，并以 `OcrPipeline.RunPrefetchedAsync(prefetch: 2)` 同时准备后续输入。测试验证三项结果按输入顺序返回、均有识别区域、结果合同互不塌缩，并验证成功路径由 Pipeline 释放回调创建的输入；峰值准备并发为 3。这是单主机的执行/所有权证据，不是吞吐排名、精度、5+50 性能、soak、GPU 或其它后端结论。
 
+同一合同随后在远端 Ubuntu 22.04.5 / RTX 2060 主机上复跑；先补齐与项目匹配的 Ubuntu `JYPPX.OpenCV.Native` 原生运行时，再使用三张不同的公开 JPEG。详见 [Linux RTX 2060 证据](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-20261018.md)。该次执行仍使用 ORT CPU，显卡只作为设备元数据，不是 CUDA/TensorRT 性能证据；它关闭的是远端真实 DeploySharp 执行、顺序、预取和输入所有权切片，不关闭第二设备正式性能、锁频、soak 或全模型后端矩阵。
+
 当前 revision 的[P7 非外部回归记录](../../eng/models/paddle-ocr/verification/paddleocr-ppstructure-non-external-regression-20261013.md)覆盖 Core、Extensibility、ModelFactory、ModelPack.Json、Visual、Visual.OpenCV、ONNX Runtime、OpenVINO、OpenCV 和 TensorRT，共 `912 passed / 14 skipped / 0 failed`；同时 `14/14` 源码项目和 `10/10` 示例项目构建通过，维护范围 `671/671` 个本地 Markdown 链接有效。该记录来自 dirty working tree，14 个跳过项仍是明确的外部模型、native runtime、网络或平台门控，不能换算成支持结论，也不替代 clean-checkout、质量、性能、打包或 soak 门禁。
 
 随后在提交 `d02638e` 的 detached clean checkout 中完成了[完整解决方案构建](../../eng/models/paddle-ocr/verification/paddleocr-ppstructure-clean-checkout-build-20261014.md)：`DeploySharp.sln` 的 `37` 个项目还原和 Release 构建均通过，编译错误为 `0`。该门禁排除 `applications`，并只说明源码可复现构建，不代表 native runtime、外部模型、准确率或性能支持。

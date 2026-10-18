@@ -15,6 +15,17 @@
       "report": "paddleocr-core-recognizer-quality-hiertext-20261018.json",
       "status": "diagnostic-pass",
       "boundary": "Recognizer-only evidence on a bounded source-linked selection; not detector, page, natural-long-text, robustness, GPU, OpenCV DNN, TensorRT or release-accuracy evidence."
+    },
+    {
+      "scope": "PP-OCRv6 Small real session pool and asynchronous prefetch contract",
+      "dataset": "Three distinct HierText public JPEGs",
+      "inputs": 3,
+      "backends": ["onnxruntime-cpu"],
+      "host": "Ubuntu 22.04.5 / RTX 2060 6 GB / .NET 10.0.9",
+      "protocol": "DET/CLS/REC two independent sessions per stage; pipeline concurrency 2; RunPrefetchedAsync(prefetch:2)",
+      "report": "paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-20261018.json",
+      "status": "contract-pass",
+      "boundary": "Three-image execution, ordering, preparation overlap and input ownership only; ORT CPU rather than GPU, not a 5+50 benchmark, accuracy, throughput, soak or evidence for other models/backends."
     }
   ],
   "openGates": [

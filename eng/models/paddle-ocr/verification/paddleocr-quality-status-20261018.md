@@ -9,12 +9,13 @@
 | 范围 | 数据/协议 | 后端与结果 | 状态 | 不能推出的结论 |
 |---|---|---|---|---|
 | PP-OCR v4/v5/v6 七个核心识别器 | HierText validation `sample-002`/`sample-003`；256 个 source-linked、非空、非 ignore 文本行 crop；显式跳过 DET，调用 `RecognizeOnlyAsync` | ORT CPU、OpenVINO CPU：`14/14` 组合完成，每组合 256 行；v6 Small CER/WER `25.0000%/48.1663%`，v6 Medium `23.0658%/45.2323%`；逐行文本 SHA `3584/3584` 一致 | 诊断通过 | 不代表检测召回、页面阅读顺序、自然连续 `>=3,200` 字符、自然角度、退化鲁棒性、TensorRT/OpenCV DNN/GPU 质量或发布准确率 |
+| PP-OCRv6 Small 真实 Session 池/异步预取合同 | 三张 SHA 不同的 HierText JPEG；DET/CLS/REC 各两路 Session，pipeline concurrency 2、`RunPrefetchedAsync(prefetch:2)` | Ubuntu 22.04.5 / RTX 2060 6 GB 主机，ORT CPU：测试通过，输入顺序与结果互异，峰值准备并发 3；[远端报告](paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-20261018.md) | 合同通过 | 不是 GPU/TensorRT 推理、5+50 性能、准确率、soak 或其它模型/后端证据 |
 
 证据详情：
 
 - [Markdown 报告](paddleocr-core-recognizer-quality-hiertext-20261018.md)
 - [机器可读 JSON](paddleocr-core-recognizer-quality-hiertext-20261018.json)
-- [测试入口](../../../tests/DeploySharp.Visual.OpenCV.Tests/PaddleOcrCoreRecognizerQualityExternalIntegrationTests.cs)
+- [测试入口](../../../../tests/DeploySharp.Visual.OpenCV.Tests/PaddleOcrCoreRecognizerQualityExternalIntegrationTests.cs)
 
 ## 当前状态快照
 
@@ -29,6 +30,6 @@
 3. B1b/B2/B3：独立自然低质量 split、增强误纠率和延迟预算；默认增强继续关闭。
 4. 公式：数学语义/渲染质量门；现有 ORT CPU/CUDA 和 MathJax/数值诊断均不构成语义等价证明。
 5. Chart2Table：更大规模或官方 split accuracy；24 图 bundle 证据仍是有界任务诊断。
-6. 全矩阵与第二设备：其余精确模型×后端、Linux/RTX 2060 的 DeploySharp 运行证据、锁频对照和长时间 soak。
+6. 全矩阵与第二设备：其余精确模型×后端和第二设备正式性能覆盖；Linux/RTX 2060 的三图 DeploySharp 执行合同已通过，但锁频对照和长时间 soak 仍开放。
 
 该增量索引只改变文档导航，不改变任何 `pass`、`unsupported` 或 `unverified` 状态。新增证据必须继续绑定模型/字典 SHA、输入选择、runtime、协议、结果和明确边界。

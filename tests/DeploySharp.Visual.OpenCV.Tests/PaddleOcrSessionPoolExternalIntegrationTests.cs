@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -118,6 +120,120 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string[] resultHashes = results.Select(result => result.ComputeSha256()).ToArray();
             Assert.AreEqual(resultHashes.Length, resultHashes.Distinct(StringComparer.Ordinal).Count(), "Distinct source images should not collapse to one result contract.");
             Console.WriteLine("PADDLEOCR_SESSION_POOL_CONTRACT backend=onnxruntime-cpu;model=ppocrv6-small;inputs=" + images.Length.ToString(CultureInfo.InvariantCulture) + ";pipelineConcurrency=2;sessionConcurrency=2;prefetch=2;maxPreparationConcurrency=" + preparationGate.MaximumActive.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + Sha256(string.Join("\n", resultHashes)));
+            WriteExternalReportIfRequested(images, detectorPath, classifierPath, recognizerPath, dictionaryPath, preparationGate.MaximumActive, watch.Elapsed.TotalMilliseconds, resultHashes);
+        }
+
+        private static void WriteExternalReportIfRequested(
+            string[] images,
+            string detectorPath,
+            string classifierPath,
+            string recognizerPath,
+            string dictionaryPath,
+            int maximumPreparationConcurrency,
+            double elapsedMilliseconds,
+            string[] resultHashes)
+        {
+            string? reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SESSION_POOL_REPORT");
+            if (string.IsNullOrWhiteSpace(reportPath)) return;
+
+            var report = new
+            {
+                schemaVersion = 2,
+                generatedUtc = DateTimeOffset.UtcNow,
+                scope = "Real PP-OCRv6 Small ORT CPU session-pool and asynchronous prefetch contract",
+                sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_REVISION") ?? "unknown",
+                sourceWorkingTreeDirty = ParseNullableBoolean(Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_WORKTREE_DIRTY")),
+                testSourceSha256 = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_SOURCE_SHA256"),
+                test = nameof(PpOcrV6SmallUsesIndependentSessionsAndPrefetchedConcurrentFrames),
+                host = new
+                {
+                    machine = Environment.MachineName,
+                    operatingSystem = RuntimeInformation.OSDescription,
+                    architecture = RuntimeInformation.OSArchitecture.ToString(),
+                    runtime = RuntimeInformation.FrameworkDescription,
+                    gpu = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_GPU"),
+                    gpuDriver = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_HOST_GPU_DRIVER"),
+                    backend = "onnxruntime-cpu",
+                    onnxRuntimePackage = "Microsoft.ML.OnnxRuntime 1.28.0",
+                    onnxRuntimeAssembly = typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly.GetName().Version?.ToString() ?? "unknown"
+                },
+                models = new
+                {
+                    detector = ModelFile(detectorPath, "paddleocr/ppocrv6/small-det"),
+                    orientation = ModelFile(classifierPath, "paddleocr/ppocrv5/mobile-cls"),
+                    recognizer = ModelFile(recognizerPath, "paddleocr/ppocrv6/small-rec"),
+                    dictionary = ModelFile(dictionaryPath, null)
+                },
+                protocol = new
+                {
+                    inputs = images.Length,
+                    pipelineMaximumConcurrency = 2,
+                    detectorSessionMaximumConcurrency = 2,
+                    orientationSessionMaximumConcurrency = 2,
+                    recognizerSessionMaximumConcurrency = 2,
+                    prefetch = 2,
+                    disposeInputOnCompletion = true,
+                    resultOrder = "input-order",
+                    preparationOverlap = "at-least-two-active-preparations"
+                },
+                inputs = images.Select(ImageFile).ToArray(),
+                observed = new
+                {
+                    testStatus = "passed",
+                    maxPreparationConcurrency = maximumPreparationConcurrency,
+                    elapsedMs = Math.Round(elapsedMilliseconds, 3),
+                    resultContractSha256 = Sha256(string.Join("\n", resultHashes)),
+                    allInputsReturned = true,
+                    sourceOrderPreserved = true,
+                    allInputsProducedRegions = true,
+                    allInputsProducedRecognition = true,
+                    distinctResultContracts = resultHashes.Distinct(StringComparer.Ordinal).Count() == resultHashes.Length,
+                    inputsDisposedByPipeline = true
+                },
+                boundary = "This is a three-image execution, ordering, overlap and ownership contract on one host. It is not a 5+50 performance benchmark, throughput ranking, long-running soak, accuracy score, GPU result or evidence for other models/backends. Session-pool size must still be tuned for the target backend and device."
+            };
+
+            string? directory = Path.GetDirectoryName(Path.GetFullPath(reportPath));
+            if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+            File.WriteAllText(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, Encoding.UTF8);
+            Console.WriteLine("PADDLEOCR_SESSION_POOL_REPORT=" + Path.GetFullPath(reportPath));
+        }
+
+        private static object ModelFile(string path, string? modelId)
+        {
+            var info = new FileInfo(path);
+            return new
+            {
+                modelId,
+                path = Path.GetFullPath(path),
+                sha256 = Sha256File(path),
+                bytes = info.Length
+            };
+        }
+
+        private static object ImageFile(string path)
+        {
+            var info = new FileInfo(path);
+            VisualSize size = ProbeSourceSize(path);
+            return new
+            {
+                path = Path.GetFullPath(path),
+                sha256 = Sha256File(path),
+                bytes = info.Length,
+                sourceSize = size.Width.ToString(CultureInfo.InvariantCulture) + "x" + size.Height.ToString(CultureInfo.InvariantCulture)
+            };
+        }
+
+        private static string Sha256File(string path)
+        {
+            using FileStream stream = File.OpenRead(path);
+            using SHA256 sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+        }
+
+        private static bool? ParseNullableBoolean(string? value)
+        {
+            return bool.TryParse(value, out bool parsed) ? parsed : null;
         }
 
         private static PaddleOcrArtifactContract Artifact(PaddleOcrModelDescriptor descriptor, string? dictionarySha = null)
