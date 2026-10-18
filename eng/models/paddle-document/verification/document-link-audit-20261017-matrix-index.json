@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-doc-link-audit-v2",
-  "generatedUtc": "2026-10-18T00:49:36.0338015+00:00",
+  "generatedUtc": "2026-10-18T01:03:16.8920671+00:00",
   "documents": [
     "docs/articles/visual-ocr.md",
     "docs/articles/visual-paddle-structure.md",
@@ -42,7 +42,7 @@
     "eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md",
     "eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md"
   ],
-  "localMarkdownLinksChecked": 836,
+  "localMarkdownLinksChecked": 838,
   "brokenLocalMarkdownLinks": 0,
   "broken": [],
   "scope": "Relative local Markdown links only; external URLs and generated runtime paths are not network-validated."
