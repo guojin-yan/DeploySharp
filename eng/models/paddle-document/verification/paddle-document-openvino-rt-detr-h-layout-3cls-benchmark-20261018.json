@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-openvino-region-benchmark-v1",
+  "generatedUtc": "2026-10-18T01:35:38.0075146+00:00",
+  "sourceRevision": "unrecorded",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-doc/rt-detr-h-layout-3cls",
+    "file": "rt-detr-h-layout-3cls.onnx",
+    "sha256": "e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b",
+    "inputShape": "[1,3,640,640]"
+  },
+  "input": {
+    "file": "bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "profileId": "paddle-doc/rt-detr-h-layout-3cls"
+  },
+  "backend": {
+    "id": "openvino-cpu",
+    "runtimePackage": "OpenVINO C# API 3.3.1 / runtime 2026.2.1"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including OpenVINO execution and Paddle NMS Decoder; excludes image decode/preprocessing, model/session creation and one-time ORT reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "onnxruntime-cpu",
+    "matchedHighConfidenceDetectionCount": 1,
+    "expectedHighConfidenceDetectionCount": 1,
+    "confidenceThreshold": 0.5,
+    "scoreTolerance": 0.01,
+    "coordinateTolerancePx": 1.5
+  },
+  "result": {
+    "detectionCount": 300,
+    "highConfidenceDetectionCount": 1,
+    "highConfidenceFingerprintSha256": "95a9247b765097527e13424028ac5fb24f42d5baaac328bcac708d047768d446"
+  },
+  "timing": {
+    "p50Ms": 1489.2549,
+    "p95Ms": 2120.9085,
+    "minMs": 1267.338,
+    "maxMs": 2426.7075,
+    "meanMs": 1590.8417180000004
+  },
+  "samplesMs": [
+    1489.2549,
+    1267.338,
+    1442.5178,
+    1770.0709,
+    1434.2234,
+    1481.0497,
+    1406.6351,
+    1433.6972,
+    1568.7061,
+    1332.1218,
+    1427.2437,
+    1491.0095,
+    1431.3191,
+    1636.7923,
+    1385.3418,
+    1492.855,
+    1836.8391,
+    1556.591,
+    1380.4127,
+    2120.9085,
+    1638.3215,
+    1352.2974,
+    2426.7075,
+    1656.6025,
+    1579.6972,
+    2193.8227,
+    1539.2075,
+    1445.0639,
+    1930.1806,
+    1596.1967,
+    1410.5892,
+    1876.2272,
+    1353.2132,
+    1393.1771,
+    1311.0252,
+    2029.0889,
+    1391.2222,
+    1415.705,
+    2105.3103,
+    1460.3347,
+    1315.7149,
+    1681.4088,
+    1708.1022,
+    1389.6895,
+    1425.7763,
+    1948.8588,
+    1614.556,
+    1505.2892,
+    1387.7827,
+    2075.9894
+  ]
+}

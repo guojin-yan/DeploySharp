@@ -260,6 +260,24 @@
 
 模型 SHA-256 分别为 `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199` 和 `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`；完整样本见 [`mobile 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-mobile-seal-det-benchmark-20261018.md)、[`server 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-server-seal-det-benchmark-20261018.md) 及对应 JSON。该证据只覆盖这两个精确 ONNX 工件和当前 OpenCV runtime，不外推为印章数据集准确率或跨设备性能。
 
+### PP-Structure 版面/表格/印章：OpenVINO CPU 稳态口径
+
+2026-10-18 在同一 `JYPPX` Windows 10 主机上补齐了当前矩阵标记为 `pass` 的 9 个精确工件的 OpenVINO CPU 正式 `5 warm-up + 50 measured` 证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。
+
+| 模型 / 输入 | Batch / Session | 输出合同与 ORT 边界 | P50 ms | P95 ms |
+| --- | ---: | --- | ---: | ---: |
+| `pp-doclayout-l` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT count/score/坐标合同通过 | 348.3297 | 772.7077 |
+| `pp-docblocklayout` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT count/score/坐标合同通过 | 388.4808 | 1184.8846 |
+| `pp-doclayout-plus-l` / `bus.jpg` | 1 / 1 | 800×800，300 候选，1 个高置信度；ORT 合同通过 | 516.4424 | 670.7747 |
+| `rt-detr-h-layout-3cls` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT 合同通过 | 1489.2549 | 2120.9085 |
+| `rt-detr-h-layout-17cls` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT 合同通过 | 1434.2061 | 1974.4991 |
+| `rt-detr-l-wired-cell-det` / `table_recognition.jpg` | 1 / 1 | 300 候选，13 个高置信度；ORT 合同通过 | 370.1529 | 483.6616 |
+| `rt-detr-l-wireless-cell-det` / `table_recognition.jpg` | 1 / 1 | 300 候选，13 个高置信度；ORT 合同通过 | 369.8421 | 460.1698 |
+| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，0 区域；只声明形状/Decoder 合同 | 5.8319 | 9.7357 |
+| `ppocrv4-server-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，1 区域；只声明形状/Decoder 合同 | 126.2519 | 170.5854 |
+
+上述数据是指定 Windows 主机与 OpenVINO `2026.2.1` 的精确工件观测值，不是跨设备排名、数据集精度或所有 PP-Structure 模型的性能承诺。印章样本没有人工真值；OpenVINO 与 ORT 不做原始概率图数值 parity 宣称。逐模型的输入/模型 SHA、逐次样本和边界说明见 [`paddle-document-openvino-pp-doclayout-l`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-l-benchmark-20261018.md)、[`pp-docblocklayout`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-docblocklayout-benchmark-20261018.md)、[`pp-doclayout-plus-l`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-plus-l-benchmark-20261018.md)、[`RT-DETR 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-h-layout-3cls-benchmark-20261018.md)、[`RT-DETR 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-h-layout-17cls-benchmark-20261018.md)、[`wired-cell`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-l-wired-cell-det-benchmark-20261018.md)、[`wireless-cell`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-l-wireless-cell-det-benchmark-20261018.md)、[`seal mobile`](../../eng/models/paddle-document/verification/paddle-document-openvino-ppocrv4-mobile-seal-det-benchmark-20261018.md) 和 [`seal server`](../../eng/models/paddle-document/verification/paddle-document-openvino-ppocrv4-server-seal-det-benchmark-20261018.md)。
+
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 
 `pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。

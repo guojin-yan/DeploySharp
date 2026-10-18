@@ -1,6 +1,6 @@
-# PP-Structure backend status — current index (2026-10-17)
+# PP-Structure backend status — current index
 
-Generated 2026-10-18T01:22:41Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-18T01:45:24Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -73,13 +73,22 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | seal-server-tensorrt11-dynamic-batch2 | PP-OCRv4 server seal detector dynamic Batch=2 with bounded ORT parity | tensorrt-cuda | paddle-seal/ppocrv4-server | 5 warm-up + 50 measured |
 | seal-mobile-opencv-dnn | PP-OCRv4 mobile seal detector single-image OpenCV DNN CPU execution with shape/decoder contract reference | opencv-dnn-cpu | paddle-seal/ppocrv4-mobile | 5 warm-up + 50 measured |
 | seal-server-opencv-dnn | PP-OCRv4 server seal detector single-image OpenCV DNN CPU execution with shape/decoder contract reference | opencv-dnn-cpu | paddle-seal/ppocrv4-server | 5 warm-up + 50 measured |
+| pp-doclayout-l-openvino-dnn | PP-DocLayout-L single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
+| pp-docblocklayout-openvino-dnn | PP-DocBlockLayout single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/pp-docblocklayout | 5 warm-up + 50 measured |
+| pp-doclayout-plus-l-openvino-dnn | PP-DocLayout-Plus-L single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/pp-doclayout-plus-l | 5 warm-up + 50 measured |
+| rt-detr-h-layout-3cls-openvino-dnn | RT-DETR-H 3-class layout single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/rt-detr-h-layout-3cls | 5 warm-up + 50 measured |
+| rt-detr-h-layout-17cls-openvino-dnn | RT-DETR-H 17-class layout single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/rt-detr-h-layout-17cls | 5 warm-up + 50 measured |
+| rt-detr-l-wired-cell-openvino-dnn | RT-DETR-L wired-cell detector single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-table/rt-detr-l-wired-cell-det | 5 warm-up + 50 measured |
+| rt-detr-l-wireless-cell-openvino-dnn | RT-DETR-L wireless-cell detector single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-table/rt-detr-l-wireless-cell-det | 5 warm-up + 50 measured |
+| seal-mobile-openvino-dnn | PP-OCRv4 mobile seal detector single-image OpenVINO CPU execution with shape/decoder contract reference | openvino-cpu | paddle-seal/ppocrv4-mobile | 5 warm-up + 50 measured |
+| seal-server-openvino-dnn | PP-OCRv4 server seal detector single-image OpenVINO CPU execution with shape/decoder contract reference | openvino-cpu | paddle-seal/ppocrv4-server | 5 warm-up + 50 measured |
 | chart2table-fixed-sample | Fixed ChartQA Chart2Table single-sample generation | onnxruntime-cpu, openvino-cpu, tensorrt-cuda | paddle-chart/pp-chart2table | 5 warm-up + 50 measured |
 
 | Backend | Evidence rows | Distinct model/backend pairs | Distinct models |
 | --- | ---: | ---: | ---: |
 | onnxruntime-cpu | 8 | 6 | 6 |
 | opencv-dnn-cpu | 11 | 11 | 11 |
-| openvino-cpu | 8 | 6 | 6 |
+| openvino-cpu | 17 | 13 | 13 |
 | tensorrt-cuda | 27 | 20 | 20 |
 
 Formal coverage is still incomplete for the remaining layout variants, UVDoc/SLANeXt/FormulaNet families, OpenCV DNN where the matrix says unsupported, second-device reproducibility, locked-clock comparison, and long-duration throughput. Seal coverage here is limited to the two exact PP-OCRv4 TensorRT 11 dynamic-Batch reports listed above; it is not a claim for every seal export or backend.
