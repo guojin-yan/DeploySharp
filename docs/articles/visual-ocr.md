@@ -839,6 +839,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 为避免把大量分散的质量报告误读成“所有模型、所有后端都已通过”，新增了[PaddleOCR 质量证据状态索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.json)。索引把当前证据分成“诊断通过、受控诊断、部分通过、未完成”四类：核心 v4/v5/v6 七模型的 SROIE 十页、HierText v6 Small 的 1,557 条真实行级 crop、HierText v6 Medium 三后端 34 页、FUNSD v4/v6 40 页、v6 Small 三后端十页，以及本轮 A3 已知角度 retry 均有明确报告链接。
 
+随着核心识别器行级证据补入，另有[2026-10-18 状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.json)。它只补充 v4/v5/v6 七个 REC 工件的 14 组 ORT/OpenVINO 诊断和当前开放门禁，基线索引与增量索引都不改变后端支持状态。
+
 该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。自然连续 `>=3,200` 字符（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。
 
 新增的[核心识别器 HierText 行级质量证据](../../eng/models/paddle-ocr/verification/paddleocr-core-recognizer-quality-hiertext-20261018.md)把 v4/v5/v6 的七个 REC 工件放在同一批 256 个 source-linked 文本行 crop 上，显式跳过 DET，因此可单独观察识别器 CER/WER。ORT CPU 与 OpenVINO CPU 均完成 `14/14` 组合，v6 Small/Medium 在这批选择上的 CER/WER 为 `25.00%/48.17%` 与 `23.07%/45.23%`，两后端的逐行文本 SHA 完全一致。该结果是可复现的识别器诊断，不是完整页面准确率、检测召回率、自然长文本、鲁棒性或发布质量结论；机器 JSON 同时记录模型、字典、输入 crop 和逐行结果合同 SHA。
