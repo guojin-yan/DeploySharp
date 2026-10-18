@@ -326,6 +326,21 @@
 
 九项均通过执行和声明的结果合同。印章图片没有人工真值，区域数不是召回率；Windows 使用 Balanced 电源计划且 CPU 未锁频。完整设备信息、模型/输入 SHA 和 50 个原始样本见[区域/印章 ORT 汇总](../../eng/models/paddle-document/verification/paddle-document-ort-region-benchmark-20261018.md)及其逐模型 JSON。结果不代表数据集准确率、锁频极限、跨设备排名或相邻导出图。
 
+### PP-Structure 公式识别：六模型 ONNX Runtime CPU 正式基线
+
+2026-10-18 使用同一个官方 `general_formula_rec_001.png`，对六个公式 ONNX 工件分别复用一份准备好的输入和一个 ORT CPU Session，执行 `5 warm-up + 50 measured`。计时包含自回归 `session.Run` 与公式 Decoder，不包含图像加载/预处理、Session 创建和报告写入；每次调用都校验 token 数、token ID SHA、EOS 状态、LaTeX 长度与 LaTeX SHA 保持稳定。
+
+| 模型 | 输入 | token 数 | P50 ms | P95 ms | mean ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| PP-FormulaNet Plus-S | 384×384 | 197 | 390.54 | 617.81 | 426.55 |
+| PP-FormulaNet Plus-M | 384×384 | 197 | 2,421.44 | 2,728.27 | 2,445.04 |
+| PP-FormulaNet Plus-L | 768×768 | 197 | 4,686.38 | 5,013.51 | 4,716.15 |
+| PP-FormulaNet-S | 384×384 | 213 | 425.34 | 462.82 | 429.87 |
+| PP-FormulaNet-L | 768×768 | 197 | 4,644.89 | 5,421.60 | 4,751.15 |
+| UniMERNet | 672×192 | 208 | 11,796.76 | 12,938.26 | 11,918.61 |
+
+环境为 JYPPX、Windows 10.0.26200、Ryzen 7 5800H、.NET 10.0.12、ORT 1.28.0；电源计划为 Balanced，CPU 未锁频，未采集时钟遥测。UniMERNet 和两个大尺寸 FormulaNet 的自回归延迟明显较高，但不是异常就能单凭本基准下定论；逐次 50 样本、模型/Tokenizer/输入 SHA 见[机器报告](../../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.json)。本基准使用单张图，只表示精确工件上的稳定执行和单图延迟，**不表示公式准确率或数学语义等价**；六模型的 121 样本 realFormula 质量门仍 blocked，OpenVINO、OpenCV DNN 和 TensorRT 支持状态也未改变。完整方法与复现入口见[公式基准报告](../../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.md)。
+
 UVDoc 的独立正式 `5 warm-up + 50 measured` 基准使用同一主机、`bus.jpg`、单 Session 和 `PaddleDocumentUnwarpingDecoder`。ORT CPU 与 OpenVINO CPU 均输出有限 `640×640×3` 张量，raw-output 最大/平均绝对差为 `0.0730591/0.00176066`，满足本次声明的 `0.2/0.01` 有界比较门槛。ORT CPU P50/P95 为 `148.5798/157.3663 ms`，OpenVINO CPU P50/P95 为 `102.5192/128.0841 ms`。计时排除输入准备、模型/Session 创建和一次性参考后端；有界数值差不等同像素等价或视觉质量通过。完整模型/输入 SHA 和 50 个样本见 [`ORT UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md)、[`OpenVINO UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 及对应 JSON。
 
 SLANeXt wireless 的 OpenVINO 正式性能记录使用派生的 `slanext-wireless-openvino-compat.onnx`，并逐轮校验官方源图 ORT 参考的 token/cell 数和 HTML SHA。该单图任务返回 24 个结构 token、13 个 cell，HTML 哈希一致；P50/P95 为 `794.1322/962.2685 ms`。计时包含 OpenVINO 与表格结构 Decoder，排除输入准备、模型/Session 创建和一次性 ORT 参考。此结果只适用于兼容图和当前主机，不意味着原始 SLANeXt Loop 图可被当前 OpenVINO importer 直接加载，也不是表格准确率或 cell recall 结论。详见 [逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json)。

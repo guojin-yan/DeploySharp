@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index
 
-Generated 2026-10-18T03:10:43Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-18T03:47:58Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -111,16 +111,17 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | seal-server-ort-cpu | PP-OCRv4 server seal detector single-image ONNX Runtime CPU execution with shape and decoder region-count contract | onnxruntime-cpu | paddle-seal/ppocrv4-server | 5 warm-up + 50 measured |
 | uvdoc-ort-cpu | UVDoc single-image ONNX Runtime CPU unwarping execution, decoder contract and bounded raw-output parity with OpenVINO | onnxruntime-cpu | paddle-doc/uvdoc | 5 warm-up + 50 measured |
 | slanext-wireless-ort-cpu | Official wireless SLANeXt single-image ONNX Runtime CPU execution with table decoder and derived OpenVINO compatibility-graph markup parity | onnxruntime-cpu | paddle-table/slanext-wireless | 5 warm-up + 50 measured |
+| formula-six-models-ort-cpu | Six official Paddle formula exports with stable token/EOS/LaTeX contracts on ONNX Runtime CPU | onnxruntime-cpu | paddle-formula/pp-formulanet-plus-s<br>paddle-formula/pp-formulanet-plus-m<br>paddle-formula/pp-formulanet-plus-l<br>paddle-formula/pp-formulanet-s<br>paddle-formula/pp-formulanet-l<br>paddle-formula/unimernet | 5 warm-up + 50 measured |
 | chart2table-fixed-sample | Fixed ChartQA Chart2Table single-sample generation | onnxruntime-cpu, openvino-cpu, tensorrt-cuda | paddle-chart/pp-chart2table | 5 warm-up + 50 measured |
 
 | Backend | Evidence rows | Distinct model/backend pairs | Distinct models |
 | --- | ---: | ---: | ---: |
-| onnxruntime-cpu | 27 | 23 | 23 |
+| onnxruntime-cpu | 33 | 29 | 29 |
 | opencv-dnn-cpu | 11 | 11 | 11 |
 | openvino-cpu | 27 | 23 | 23 |
 | tensorrt-cuda | 27 | 20 | 20 |
 
-Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. ONNX Runtime CPU still lacks formal 5/50 records for the six FormulaNet-family exports, while TensorRT CUDA lacks one for UVDoc and wireless SLANeXt. These are performance-evidence gaps only; backend pass/unsupported state is unchanged. The original SLANeXt graphs and FormulaNet/OpenCV importer boundaries remain as recorded in the artifact matrix. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
+Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. The six FormulaNet-family exports now also have ORT CPU formal 5/50 records; TensorRT CUDA still lacks formal records for UVDoc and wireless SLANeXt. These are performance-evidence gaps only; backend pass/unsupported state is unchanged. The original SLANeXt graphs and FormulaNet/OpenCV importer boundaries remain as recorded in the artifact matrix. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
 
 ## Boundaries still open
 
