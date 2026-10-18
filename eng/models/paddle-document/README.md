@@ -356,3 +356,20 @@ The wrapper checks the resulting graphs with `onnx.checker`, never overwrites th
 The external `PaddleDocumentDynamicBatchIntegrationTests` run completed **23/23 passed, 0 failed, 0 skipped** on Windows NT `10.0.26200.0` with .NET SDK `10.0.401` (`Release/net10.0`, `--no-restore`). The run covers PP-LCNet document/table classification, PP-DocLayout/PP-DocBlockLayout and RT-DETR layout, PP-OCRv4 seal mobile/server, RT-DETR table-cell detection, six FormulaNet/UniMERNet graphs, SLANeXt wired/wireless and UVDoc. ORT CPU and OpenVINO CPU completed the registered dynamic-batch/decoder row-isolation contracts; OpenCV DNN completed the two classifier and seal contracts, while its exact layout/table-cell dynamic-forward combinations remain explicitly unsupported with `DS-OCV-8004`, and all six formula graphs remain blocked before inference with `DS-OCV-8002` (including the batch-one follow-up). SLANeXt OpenVINO rows use the separately generated compatibility graphs. This is execution and row-isolation evidence, not accuracy, CER/WER, throughput, formal P50/P95, TensorRT or cross-device evidence. See the [aggregate report](verification/paddle-document-dynamic-batch-current-20261014.md), [machine-readable summary](verification/paddle-document-dynamic-batch-current-20261014.json), and the [23 raw JSON records](verification/dynamic-batch-20261014/).
 
 The two PP-OCRv4 seal exports now also have separate formal TensorRT 11 dynamic-Batch=2 reports. With 5 warm-ups and 50 measured calls, the mobile engine recorded P50/P95 `7.9329/10.5334 ms`, and the server engine `18.0625/22.4997 ms`; both passed raw probability-mask parity and per-row Decoder checks against ORT CPU on the recorded RTX 3060 Laptop host. See [mobile](verification/paddle-document-seal-paddle-seal-ppocrv4-mobile-dynamic-batch-tensorrt11-20261017.json) and [server](verification/paddle-document-seal-paddle-seal-ppocrv4-server-dynamic-batch-tensorrt11-20261017.json). This closes only these exact ONNX/Engine/runtime/profile observations; it is not a seal accuracy score, cross-device result or all-seal-model claim.
+
+## OpenVINO CPU static layout performance (2026-10-18)
+
+On the same `JYPPX` Windows 10 host with OpenVINO runtime `2026.2.1`, eight previously uncovered static layout artifacts now have formal `5 warm-up + 50 measured` evidence. Each run uses one Session and `bus.jpg`; timing includes OpenVINO execution and the Paddle NMS Decoder, excluding image preparation, model loading, Session creation and the one-time ORT reference. The PicoDet and PP-DocLayout-M/S reports use their declared `scale_factor` auxiliary-input contract rather than forcing an `im_shape` binding.
+
+| Model | P50 / P95 (ms) | ORT high-confidence match |
+| --- | ---: | ---: |
+| `pp-doclayout-m` | 57.0756 / 82.5714 | 28/28 |
+| `pp-doclayout-s` | 9.7144 / 12.9484 | 48/48 |
+| `picodet-layout-1x` | 26.1031 / 69.0613 | 5/5 |
+| `picodet-layout-1x-table` | 23.1889 / 26.3338 | 0/0 (neither backend had a score ≥0.05 candidate) |
+| `picodet-s-layout-3cls` | 9.4186 / 12.3624 | 25/25 |
+| `picodet-l-layout-3cls` | 53.0734 / 62.0237 | 22/22 |
+| `picodet-s-layout-17cls` | 10.0184 / 12.7814 | 4/4 |
+| `picodet-l-layout-17cls` | 57.4080 / 125.1531 | 11/11 |
+
+The per-model Markdown and JSON reports are maintained next to the model evidence, for example [`PP-DocLayout-M`](verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md) and [`PicoDet-L 17-class`](verification/paddle-document-openvino-picodet-l-layout-17cls-benchmark-20261018.md). These are exact-artifact execution, decoder and bounded ORT-comparison records—not layout-dataset accuracy, cross-device ranking or a claim that every PP-Structure artifact has a unified multi-backend benchmark.

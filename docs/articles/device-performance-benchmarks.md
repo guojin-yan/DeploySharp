@@ -262,7 +262,7 @@
 
 ### PP-Structure 版面/表格/印章：OpenVINO CPU 稳态口径
 
-2026-10-18 在同一 `JYPPX` Windows 10 主机上补齐了当前矩阵标记为 `pass` 的 9 个精确工件的 OpenVINO CPU 正式 `5 warm-up + 50 measured` 证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。
+2026-10-18 在同一 `JYPPX` Windows 10 主机上补齐了当前矩阵标记为 `pass` 的 17 个精确工件的 OpenVINO CPU 正式 `5 warm-up + 50 measured` 证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。
 
 | 模型 / 输入 | Batch / Session | 输出合同与 ORT 边界 | P50 ms | P95 ms |
 | --- | ---: | --- | ---: | ---: |
@@ -276,7 +276,20 @@
 | `ppocrv4-mobile-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，0 区域；只声明形状/Decoder 合同 | 5.8319 | 9.7357 |
 | `ppocrv4-server-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，1 区域；只声明形状/Decoder 合同 | 126.2519 | 170.5854 |
 
-上述数据是指定 Windows 主机与 OpenVINO `2026.2.1` 的精确工件观测值，不是跨设备排名、数据集精度或所有 PP-Structure 模型的性能承诺。印章样本没有人工真值；OpenVINO 与 ORT 不做原始概率图数值 parity 宣称。逐模型的输入/模型 SHA、逐次样本和边界说明见 [`paddle-document-openvino-pp-doclayout-l`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-l-benchmark-20261018.md)、[`pp-docblocklayout`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-docblocklayout-benchmark-20261018.md)、[`pp-doclayout-plus-l`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-plus-l-benchmark-20261018.md)、[`RT-DETR 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-h-layout-3cls-benchmark-20261018.md)、[`RT-DETR 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-h-layout-17cls-benchmark-20261018.md)、[`wired-cell`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-l-wired-cell-det-benchmark-20261018.md)、[`wireless-cell`](../../eng/models/paddle-document/verification/paddle-document-openvino-rt-detr-l-wireless-cell-det-benchmark-20261018.md)、[`seal mobile`](../../eng/models/paddle-document/verification/paddle-document-openvino-ppocrv4-mobile-seal-det-benchmark-20261018.md) 和 [`seal server`](../../eng/models/paddle-document/verification/paddle-document-openvino-ppocrv4-server-seal-det-benchmark-20261018.md)。
+本轮新增的 8 个静态版面工件如下；PicoDet/PP-DocLayout-M/S 的输入合同使用各自导出声明的 `scale_factor`，不强行绑定不存在的 `im_shape`：
+
+| 模型 / 输入 | Batch / Session | 输出与 ORT 边界 | P50 ms | P95 ms |
+| --- | ---: | --- | ---: | ---: |
+| `pp-doclayout-m` / `bus.jpg` | 1 / 1 | 100 候选，28 个高置信度；ORT/OpenVINO 高置信度集合 28/28 有界匹配 | 57.0756 | 82.5714 |
+| `pp-doclayout-s` / `bus.jpg` | 1 / 1 | 100 候选，48 个高置信度；ORT/OpenVINO 高置信度集合 48/48 有界匹配 | 9.7144 | 12.9484 |
+| `picodet-layout-1x` / `bus.jpg` | 1 / 1 | 18 候选，5 个高置信度；ORT/OpenVINO 高置信度集合 5/5 有界匹配 | 26.1031 | 69.0613 |
+| `picodet-layout-1x-table` / `bus.jpg` | 1 / 1 | 3 候选；两边均无 ≥0.05 候选 | 23.1889 | 26.3338 |
+| `picodet-s-layout-3cls` / `bus.jpg` | 1 / 1 | 66 候选，25 个高置信度；ORT/OpenVINO 高置信度集合 25/25 有界匹配 | 9.4186 | 12.3624 |
+| `picodet-l-layout-3cls` / `bus.jpg` | 1 / 1 | 76 候选，22 个高置信度；ORT/OpenVINO 高置信度集合 22/22 有界匹配 | 53.0734 | 62.0237 |
+| `picodet-s-layout-17cls` / `bus.jpg` | 1 / 1 | 77 候选，4 个高置信度；ORT/OpenVINO 高置信度集合 4/4 有界匹配 | 10.0184 | 12.7814 |
+| `picodet-l-layout-17cls` / `bus.jpg` | 1 / 1 | 63 候选，11 个高置信度；ORT/OpenVINO 高置信度集合 11/11 有界匹配 | 57.4080 | 125.1531 |
+
+上述数据是指定 Windows 主机与 OpenVINO `2026.2.1` 的精确工件观测值，不是跨设备排名、数据集精度或所有 PP-Structure 模型的性能承诺。印章样本没有人工真值；OpenVINO 与 ORT 不做原始概率图数值 parity 宣称。逐模型的输入/模型 SHA、逐次样本和边界说明见本节已列出的 9 个既有报告，以及新增的 [`PP-DocLayout-M`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md)、[`PP-DocLayout-S`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-s-benchmark-20261018.md)、[`PicoDet layout-1x`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-benchmark-20261018.md)、[`PicoDet layout-1x-table`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-table-benchmark-20261018.md)、[`PicoDet-S 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-3cls-benchmark-20261018.md)、[`PicoDet-L 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-3cls-benchmark-20261018.md)、[`PicoDet-S 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-17cls-benchmark-20261018.md) 和 [`PicoDet-L 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-17cls-benchmark-20261018.md)。
 
 ### PP-Structure 表格分类：TensorRT CUDA 稳态口径
 

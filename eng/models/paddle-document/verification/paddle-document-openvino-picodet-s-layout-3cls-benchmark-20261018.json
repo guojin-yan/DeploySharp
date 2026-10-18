@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-openvino-static-layout-benchmark-v1",
+  "generatedUtc": "2026-10-18T01:52:22.3795322+00:00",
+  "sourceRevision": "unrecorded",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-doc/picodet-s-layout-3cls",
+    "file": "picodet-s-layout-3cls.onnx",
+    "sha256": "f2b2c55af08bad9dab4030f86d34336f99bc7e39df9999676ce29db7e60b2fb1",
+    "inputShape": "[1,3,480,480]",
+    "labels": [
+      "image",
+      "table",
+      "seal"
+    ]
+  },
+  "input": {
+    "file": "bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "inputId": "paddle-document-openvino-static-layout-paddle-doc-picodet-s-layout-3cls"
+  },
+  "backend": {
+    "id": "openvino-cpu",
+    "runtimePackage": "OpenVINO C# API 3.3.1 / runtime 2026.2.1"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including OpenVINO execution and Paddle NMS Decoder; excludes image decode/preprocessing, model/session creation and one-time ORT reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "onnxruntime-cpu",
+    "confidenceThreshold": 0.05,
+    "scoreTolerance": 0.05,
+    "iouTolerance": 0.8,
+    "expectedHighConfidence": 25,
+    "actualHighConfidence": 25,
+    "matchedHighConfidence": 25,
+    "acceptance": "At least 95% of the smaller high-confidence candidate set is matched by label, score and IoU."
+  },
+  "result": {
+    "detectionCount": 66,
+    "highConfidenceDetectionCount": 25,
+    "highConfidenceFingerprintSha256": "04981d482cb8616ac7ebb5a3a972da13fbdf85b92ed686ac1c4bda51d02fa752"
+  },
+  "timing": {
+    "p50Ms": 9.4186,
+    "p95Ms": 12.3624,
+    "minMs": 7.8912,
+    "maxMs": 14.1658,
+    "meanMs": 9.751234
+  },
+  "samplesMs": [
+    8.3836,
+    8.9511,
+    8.2185,
+    7.8912,
+    10.2437,
+    9.3609,
+    9.3319,
+    9.3235,
+    9.982,
+    10.921,
+    9.5401,
+    10.0321,
+    10.3081,
+    9.8114,
+    9.3966,
+    10.537,
+    8.7228,
+    10.399,
+    10.1917,
+    14.1658,
+    12.3624,
+    10.72,
+    9.1242,
+    9.3368,
+    9.9074,
+    10.3467,
+    8.4342,
+    9.0467,
+    9.005,
+    9.6971,
+    9.1089,
+    10.207,
+    9.9879,
+    9.5843,
+    11.3648,
+    12.918,
+    8.8711,
+    8.5509,
+    10.3673,
+    9.6957,
+    8.9647,
+    9.2296,
+    9.4186,
+    9.4171,
+    9.2735,
+    9.3183,
+    9.3419,
+    9.1677,
+    9.6019,
+    9.48
+  ]
+}

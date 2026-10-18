@@ -740,3 +740,20 @@ server 印章也已在同一入口完成 TRT 11 真实运行：ONNX SHA `f9448c3
 同一测试入口还对 `pp-doclayout-l` 完成了真正的 TensorRT Paddle NMS 版面推理。输入为 `E:\Data\image\bus.jpg`，使用动态 `image`、`im_shape`、`scale_factor` 三输入 profile 和 TensorRT 11 API；输入张量由 OpenCV 准备，TensorRT 负责模型推理与图内 NMS，ORT CPU 结果用于确定性比较。ONNX SHA 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，Engine SHA 为 `c6acaedc9f3ed2996e012d1fd6b45c5eb061877d2ac3aa0f77bde34f65e9a0ba`（155,392,076 bytes）；5 次预热、50 次测量得到 300 个候选，其中 9 个置信度不低于 0.05，TensorRT 与 ORT 的高置信度结果满足 score 误差 ≤`0.01`、源坐标误差 ≤`1.5 px`，P50 `19.414 ms`、P95 `25.876 ms`。这是 CPU 准备输入的 TensorRT NMS 证据，不是尚未接入辅助输入的 CUDA 端到端预处理指标。
 
 同一入口新增两个 RT-DETR 表格单元格工件的 TensorRT 11 证据：wired Engine SHA `71fb2ee40a53b66c5e61d8bf2679235f5eb53fc2f01dc335dc3bb828b0a2132b`，P50/P95 `21.605/24.613 ms`；wireless Engine SHA `cb7df85c136e0b45e673a37995ed5c58f2a587f385cca15f674a6cf8f29c6c2a`，P50/P95 `21.689/25.661 ms`。两者均为 300 个 Paddle NMS 候选；以 score `>=0.05` 统计时 wireless 为 ORT/TensorRT `294/295`，共同比较候选的最大 score 差 `0.00701`、最小 IoU `0.9179`。完整 Engine/ONNX SHA 和复现命令见 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md)。这仍是精确工件的执行/数值合同证据，不代表表格单元格召回率或表格结构准确率。
+
+## 2026-10-18：静态版面 OpenVINO CPU 正式性能证据
+
+新增 8 个静态版面模型的 OpenVINO CPU `5 warm-up + 50 measured` 记录，统一使用 `JYPPX` Windows 10、`bus.jpg`、单 Session 和 Paddle NMS Decoder。计时不包含图片解码/准备、模型加载、Session 创建和一次性 ORT 参考；结果是固定主机的执行/有界 parity 证据，不是版面数据集准确率或跨设备排名。
+
+| 模型 | P50 / P95 ms | ORT 高置信度匹配 |
+| --- | ---: | ---: |
+| `pp-doclayout-m` | 57.0756 / 82.5714 | 28/28 |
+| `pp-doclayout-s` | 9.7144 / 12.9484 | 48/48 |
+| `picodet-layout-1x` | 26.1031 / 69.0613 | 5/5 |
+| `picodet-layout-1x-table` | 23.1889 / 26.3338 | 0/0（均无 ≥0.05 候选） |
+| `picodet-s-layout-3cls` | 9.4186 / 12.3624 | 25/25 |
+| `picodet-l-layout-3cls` | 53.0734 / 62.0237 | 22/22 |
+| `picodet-s-layout-17cls` | 10.0184 / 12.7814 | 4/4 |
+| `picodet-l-layout-17cls` | 57.4080 / 125.1531 | 11/11 |
+
+逐模型输入/模型 SHA、输入合同和 50 个原始样本见 [`PP-DocLayout-M 报告`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md) 以及同目录下的其它 2026-10-18 报告；PP-DocLayout-M/S 与 PicoDet 报告特别记录了 `scale_factor` 辅助输入合同，避免误绑定不存在的 `im_shape`。
