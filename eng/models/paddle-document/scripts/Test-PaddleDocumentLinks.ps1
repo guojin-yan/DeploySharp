@@ -12,6 +12,7 @@ $documents = @(
     'eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md',
     'eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md',
     'eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md',
+    'eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.md',
     'eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md',
     'docs/articles/device-performance-benchmarks.md',
     'eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md',

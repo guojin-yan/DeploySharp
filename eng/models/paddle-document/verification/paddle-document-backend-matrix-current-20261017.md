@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index
 
-Generated 2026-10-18T03:47:58Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-18T04:06:31Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -91,6 +91,7 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | picodet-s-layout-17cls-openvino | PicoDet-S 17-class layout single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/picodet-s-layout-17cls | 5 warm-up + 50 measured |
 | picodet-l-layout-17cls-openvino | PicoDet-L 17-class layout single-image OpenVINO CPU execution with bounded ORT parity | openvino-cpu | paddle-doc/picodet-l-layout-17cls | 5 warm-up + 50 measured |
 | uvdoc-openvino | UVDoc single-image OpenVINO CPU unwarping execution, decoder contract and bounded raw-output parity with ORT | openvino-cpu | paddle-doc/uvdoc | 5 warm-up + 50 measured |
+| uvdoc-tensorrt-dynamic-batch2 | UVDoc TensorRT dynamic Batch=2 repeated inference and Decoder latency with bounded ORT raw-output parity | tensorrt-cuda | paddle-doc/uvdoc | 5 warm-up + 50 measured |
 | slanext-wireless-openvino-compat | Wireless SLANeXt derived OpenVINO compatibility graph with table decoder and exact source-graph ORT markup parity | openvino-cpu | paddle-table/slanext-wireless-openvino-compat | 5 warm-up + 50 measured |
 | pp-doclayout-m-ort-cpu | PP-DocLayout-M single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/pp-doclayout-m | 5 warm-up + 50 measured |
 | pp-doclayout-s-ort-cpu | PP-DocLayout-S single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/pp-doclayout-s | 5 warm-up + 50 measured |
@@ -119,9 +120,9 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | onnxruntime-cpu | 33 | 29 | 29 |
 | opencv-dnn-cpu | 11 | 11 | 11 |
 | openvino-cpu | 27 | 23 | 23 |
-| tensorrt-cuda | 27 | 20 | 20 |
+| tensorrt-cuda | 28 | 21 | 21 |
 
-Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. The six FormulaNet-family exports now also have ORT CPU formal 5/50 records; TensorRT CUDA still lacks formal records for UVDoc and wireless SLANeXt. These are performance-evidence gaps only; backend pass/unsupported state is unchanged. The original SLANeXt graphs and FormulaNet/OpenCV importer boundaries remain as recorded in the artifact matrix. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
+Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. The six FormulaNet-family exports have ORT CPU formal 5/50 records, and UVDoc has a TensorRT dynamic Batch=2 formal benchmark. Wireless SLANeXt remains blocked before TensorRT Engine creation by the exact current importer/Builder boundary, so its missing timing is a support blocker rather than a runnable benchmark gap. These records do not change backend pass/unsupported state. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
 
 ## Boundaries still open
 

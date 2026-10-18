@@ -1226,7 +1226,36 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     Assert.AreEqual(ortResult[row].Pixels.Count, trtResult[row].Pixels.Count);
                 }
 
+                int warmupCount = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_BENCHMARK_WARMUP", 5);
+                int measurementCount = ResolvePositiveInt("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_BENCHMARK_ITERATIONS", 50);
+                string baselineSignature = UnwarpingBatchSignature(trtResult);
+                var samplesMs = new double[measurementCount];
+                using (var benchmarkProvider = new TensorRtBackendProvider(backendOptions))
+                using (IInferenceSession benchmarkSession = benchmarkProvider.CreateSession(
+                    new ModelArtifact(new ModelId(modelId), "tensorrt-engine", effectiveEnginePath, effectiveEngineSha256, TensorRtBackendProvider.BackendId),
+                    new BackendRequest(BackendCapabilities.TensorInference, TensorRtBackendProvider.BackendId, "cuda"),
+                    SessionOptions.Default))
+                {
+                    for (int index = -warmupCount; index < measurementCount; index++)
+                    {
+                        Stopwatch stopwatch = Stopwatch.StartNew();
+                        InferenceOutputs outputs = benchmarkSession.Run(inferenceInputs, CancellationToken.None);
+                        var result = document.VisualProfile.Decoder.Decode(
+                            new VisualDecodeContext(input, document.VisualProfile, outputs, CancellationToken.None)) as PaddleDocumentUnwarpingBatchResult
+                            ?? throw new AssertFailedException("TensorRT decoder did not produce a UVDoc batch result during benchmark.");
+                        stopwatch.Stop();
+                        Assert.AreEqual(baselineSignature, UnwarpingBatchSignature(result), "UVDoc TensorRT output changed during repeated inference.");
+                        if (index >= 0) samplesMs[index] = stopwatch.Elapsed.TotalMilliseconds;
+                    }
+                }
+
+                double[] sortedSamples = samplesMs.OrderBy(value => value).ToArray();
+                double p50Ms = sortedSamples[(int)Math.Ceiling(sortedSamples.Length * .50) - 1];
+                double p95Ms = sortedSamples[(int)Math.Ceiling(sortedSamples.Length * .95) - 1];
+                double meanMs = samplesMs.Average();
+
                 string report = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_DYNAMIC_BATCH_REPORT_PATH")
+                    ?? Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_UVDOC_BENCHMARK_REPORT_PATH")
                     ?? Path.Combine(TestContext.TestResultsDirectory!, "paddle-document-uvdoc-dynamic-batch-tensorrt-ort.json");
                 string? reportDirectory = Path.GetDirectoryName(Path.GetFullPath(report));
                 if (!string.IsNullOrWhiteSpace(reportDirectory)) Directory.CreateDirectory(reportDirectory);
@@ -1234,16 +1263,41 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 {
                     schemaVersion = 1,
                     generatedAtUtc = DateTimeOffset.UtcNow,
-                    execution = new { os = Environment.OSVersion.ToString(), architecture = Environment.Is64BitProcess ? "x64" : "x86", framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+                    execution = new
+                    {
+                        machine = Environment.MachineName,
+                        os = Environment.OSVersion.ToString(),
+                        architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+                        framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                        processorIdentifier = Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER") ?? "not-recorded",
+                        logicalProcessorCount = Environment.ProcessorCount,
+                        gpu = DescribeGpuRuntime()
+                    },
                     backend = new { tensorRtApi = (int)resolvedApi, runtime = DescribeNativeRuntime(), architecture = backendOptions.CudaTargetArchitecture },
                     model = new { id = modelId, onnxSha256, engineSha256 = effectiveEngineSha256, engineBytes = effectiveEngineBytes, engineSource = string.IsNullOrWhiteSpace(prebuiltEnginePath) ? "deploysharp-builder" : "external-prebuilt" },
                     image = new { path = imagePath, sha256 = ComputeSha256(imagePath), regions = regions.Select(region => region.Bounds).ToArray() },
                     batch = new { size = 2, inputShape = input.Tensor.Shape.ToString(), ortOutputShape = ortOutput.Shape.ToString(), tensorRtOutputShape = trtOutput.Shape.ToString(), inputRowSha256 = Enumerable.Range(0, 2).Select(row => TensorRowSha256(input.Tensor, row)).ToArray() },
                     rows = Enumerable.Range(0, 2).Select(row => new { row, width = trtResult[row].Width, height = trtResult[row].Height, channels = trtResult[row].Channels, rawOutputMaxAbsoluteDifference = maxAbsByRow[row], rawOutputMeanAbsoluteDifference = meanAbsByRow[row], tolerance = new { max = .2, mean = .01 }, ortRawOutputSha256 = TensorRowSha256(ortOutput, row), tensorRtRawOutputSha256 = TensorRowSha256(trtOutput, row) }).ToArray(),
-                    boundary = "Exact dynamic batch profile, row mapping and bounded TensorRT-to-ORT raw-output parity for this UVDoc artifact on one Windows GPU/runtime. The top/bottom image regions are execution probes without unwarping ground truth; no visual-quality or throughput claim is made."
+                    timing = new
+                    {
+                        warmupCount,
+                        measurementCount,
+                        batch = 2,
+                        sessions = 1,
+                        p50Ms,
+                        p95Ms,
+                        minMs = sortedSamples[0],
+                        maxMs = sortedSamples[^1],
+                        meanMs,
+                        percentile = "Nearest-rank",
+                        measuredScope = "Synchronous TensorRT session.Run plus PaddleDocumentUnwarpingDecoder; reuses one PreparedVisualInput and one Session. Excludes image decode, preprocessing, engine build, session creation and ORT reference."
+                    },
+                    samplesMs,
+                    outputBatchSha256 = baselineSignature,
+                    boundary = "Exact dynamic Batch=2 profile, row mapping, repeated output stability and bounded TensorRT-to-ORT raw-output parity for this UVDoc artifact on one Windows GPU/runtime. P50/P95 cover synchronous Session.Run plus Decoder with a reused PreparedVisualInput; they exclude preprocessing and engine/session creation. The top/bottom image regions are execution probes without unwarping ground truth, so no visual-quality or end-to-end full-image throughput claim is made."
                 }, new JsonSerializerOptions { WriteIndented = true }));
                 TestContext.AddResultFile(report);
-                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_UVDOC_DYNAMIC_BATCH " + JsonSerializer.Serialize(new { modelId, onnxSha256, engineSha256 = effectiveEngineSha256, engineSource = string.IsNullOrWhiteSpace(prebuiltEnginePath) ? "deploysharp-builder" : "external-prebuilt", inputShape = input.Tensor.Shape.ToString(), maxAbsByRow, meanAbsByRow, report }));
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_UVDOC_DYNAMIC_BATCH " + JsonSerializer.Serialize(new { modelId, onnxSha256, engineSha256 = effectiveEngineSha256, engineSource = string.IsNullOrWhiteSpace(prebuiltEnginePath) ? "deploysharp-builder" : "external-prebuilt", inputShape = input.Tensor.Shape.ToString(), maxAbsByRow, meanAbsByRow, warmupCount, measurementCount, p50Ms, p95Ms, report }));
             }
             catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.NativeRuntimeUnavailable)
             {
@@ -1633,6 +1687,41 @@ namespace DeploySharp.Visual.TensorRT.Tests
             if (row < 0 || row >= batch || values.Length % batch != 0) throw new ArgumentOutOfRangeException(nameof(row));
             int rowLength = values.Length / batch;
             return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Runtime.InteropServices.MemoryMarshal.AsBytes(values.AsSpan(row * rowLength, rowLength)))).ToLowerInvariant();
+        }
+
+        private static string UnwarpingBatchSignature(PaddleDocumentUnwarpingBatchResult result)
+        {
+            var rows = new string[result.Count];
+            for (int row = 0; row < result.Count; row++)
+            {
+                PaddleDocumentUnwarpingResult item = result[row];
+                if (!(item.Pixels is float[] pixels)) throw new AssertFailedException("UVDoc result pixels must be backed by Float32 values.");
+                string pixelsSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                    System.Runtime.InteropServices.MemoryMarshal.AsBytes(pixels.AsSpan()))).ToLowerInvariant();
+                rows[row] = item.Width + "x" + item.Height + "x" + item.Channels + ":" + pixelsSha256;
+            }
+            return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(string.Join("|", rows)))).ToLowerInvariant();
+        }
+
+        private static string DescribeGpuRuntime()
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo("nvidia-smi", "--query-gpu=name,driver_version --format=csv,noheader")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                };
+                using Process? process = Process.Start(startInfo);
+                if (process == null || !process.WaitForExit(3000)) return "unavailable";
+                string output = process.StandardOutput.ReadToEnd().Trim();
+                return process.ExitCode == 0 && output.Length > 0 ? output : "unavailable";
+            }
+            catch
+            {
+                return "unavailable";
+            }
         }
 
         private static string ComputeSha256(string path)

@@ -401,3 +401,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 ## 复现
 
 设备测试包中的 `Run-DeviceBenchmark.ps1` 会记录系统、运行时和结果文件。运行前应先准备与目标设备匹配的模型、ONNX Runtime、OpenVINO、OpenCV、CUDA、TensorRT 和 cuDNN；TensorRT 测试还需要匹配版本的 bridge。每次在新的设备、模型制品、运行时版本、输入图片或 batch/Session 配置上运行后，都应新增独立设备小节，而不是替换其他设备的结果。
+# UVDoc TensorRT dynamic Batch=2 — 2026-10-18
+
+On the same JYPPX Windows host (Ryzen 7 5800H, RTX 3060 Laptop, TensorRT 11.0.0.114, CUDA 12.9, cuDNN 9.22), the official UVDoc ONNX was rebuilt into a dynamic Batch=2 engine and run on two distinct `bus.jpg` regions. With one prepared `[2,3,640,640]` input and one reused TensorRT session, synchronous `Session.Run + PaddleDocumentUnwarpingDecoder` measured P50/P95 `28.3687/32.0690 ms` over 50 calls after 5 warm-ups. Image decoding, crop/preprocessing, Engine building, Session creation and ORT reference are excluded. The two decoded rows were stable across all measured calls and their raw outputs remained within the bounded ORT comparison (`max/mean` per row `0.1154633/0.00175354` and `0.0770721/0.00180646`).
+
+The host used Windows Balanced power policy; the GPU was not clock-locked. A single post-run sample showed P0, 1425 MHz graphics / 7000 MHz memory clocks and 1% utilization; this was not sampled during the measurement loop. Treat the numbers as a single-device repeated-latency observation, not a clock-controlled hardware limit, full-image end-to-end latency, image-unwarping quality score or cross-device promise. See the [full report](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.md) and [machine-readable samples](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.json).

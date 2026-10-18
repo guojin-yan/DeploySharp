@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T03:47:58Z",
+  "generatedUtc": "2026-10-18T04:06:31Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 68,
+    "bundleCount": 69,
     "bundles": [
       {
         "id": "official-classification",
@@ -794,6 +794,20 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "unrecorded"
+      },
+      {
+        "id": "uvdoc-tensorrt-dynamic-batch2",
+        "path": "eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.json",
+        "scope": "UVDoc TensorRT dynamic Batch=2 repeated inference and Decoder latency with bounded ORT raw-output parity",
+        "modelIds": [
+          "paddle-doc/uvdoc"
+        ],
+        "backends": [
+          "tensorrt-cuda"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": null
       },
       {
         "id": "slanext-wireless-openvino-compat",
@@ -1495,6 +1509,13 @@
         ]
       },
       {
+        "modelId": "paddle-doc/uvdoc",
+        "backend": "tensorrt-cuda",
+        "evidenceIds": [
+          "uvdoc-tensorrt-dynamic-batch2"
+        ]
+      },
+      {
         "modelId": "paddle-formula/pp-formulanet-l",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
@@ -1799,9 +1820,9 @@
       },
       {
         "backend": "tensorrt-cuda",
-        "evidencePairCount": 27,
-        "distinctModelCount": 20,
-        "distinctModelBackendPairCount": 20,
+        "evidencePairCount": 28,
+        "distinctModelCount": 21,
+        "distinctModelBackendPairCount": 21,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -1818,6 +1839,7 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-doc/uvdoc",
           "paddle-seal/ppocrv4-mobile",
           "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
@@ -1828,7 +1850,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 83,
+      "validatedPairCount": 84,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
