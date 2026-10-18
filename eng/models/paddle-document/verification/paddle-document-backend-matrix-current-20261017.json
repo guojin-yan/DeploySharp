@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T02:30:34Z",
+  "generatedUtc": "2026-10-18T02:45:05Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 56,
+    "bundleCount": 65,
     "bundles": [
       {
         "id": "official-classification",
@@ -922,6 +922,132 @@
         "sourceRevision": "0d2bc03"
       },
       {
+        "id": "pp-doclayout-l-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-pp-doclayout-l-benchmark-20261018.json",
+        "scope": "PP-DocLayout-L single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-l"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "pp-docblocklayout-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-pp-docblocklayout-benchmark-20261018.json",
+        "scope": "PP-DocBlockLayout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/pp-docblocklayout"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "pp-doclayout-plus-l-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-pp-doclayout-plus-l-benchmark-20261018.json",
+        "scope": "PP-DocLayout-Plus-L single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/pp-doclayout-plus-l"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "rt-detr-h-layout-3cls-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-rt-detr-h-layout-3cls-benchmark-20261018.json",
+        "scope": "RT-DETR-H 3-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-3cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "rt-detr-h-layout-17cls-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-rt-detr-h-layout-17cls-benchmark-20261018.json",
+        "scope": "RT-DETR-H 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-doc/rt-detr-h-layout-17cls"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "rt-detr-l-wired-cell-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-rt-detr-l-wired-cell-det-benchmark-20261018.json",
+        "scope": "RT-DETR-L wired-cell detector single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-table/rt-detr-l-wired-cell-det"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "rt-detr-l-wireless-cell-ort-region-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-rt-detr-l-wireless-cell-det-benchmark-20261018.json",
+        "scope": "RT-DETR-L wireless-cell detector single-image ONNX Runtime CPU execution with bounded OpenVINO parity",
+        "modelIds": [
+          "paddle-table/rt-detr-l-wireless-cell-det"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "seal-mobile-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-ppocrv4-mobile-seal-det-benchmark-20261018.json",
+        "scope": "PP-OCRv4 mobile seal detector single-image ONNX Runtime CPU execution with shape and decoder region-count contract",
+        "modelIds": [
+          "paddle-seal/ppocrv4-mobile"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
+        "id": "seal-server-ort-cpu",
+        "path": "eng/models/paddle-document/verification/paddle-document-ort-ppocrv4-server-seal-det-benchmark-20261018.json",
+        "scope": "PP-OCRv4 server seal detector single-image ONNX Runtime CPU execution with shape and decoder region-count contract",
+        "modelIds": [
+          "paddle-seal/ppocrv4-server"
+        ],
+        "backends": [
+          "onnxruntime-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
+      },
+      {
         "id": "chart2table-fixed-sample",
         "path": "eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json",
         "scope": "Fixed ChartQA Chart2Table single-sample generation",
@@ -1088,6 +1214,13 @@
       },
       {
         "modelId": "paddle-doc/pp-docblocklayout",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "pp-docblocklayout-ort-region-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-docblocklayout",
         "backend": "opencv-dnn-cpu",
         "evidenceIds": [
           "pp-docblocklayout-opencv-dnn"
@@ -1112,7 +1245,8 @@
         "modelId": "paddle-doc/pp-doclayout-l",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
-          "multipage-orientation-layout"
+          "multipage-orientation-layout",
+          "pp-doclayout-l-ort-region-cpu"
         ]
       },
       {
@@ -1158,6 +1292,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "static-layout-tensorrt11"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/pp-doclayout-plus-l",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "pp-doclayout-plus-l-ort-region-cpu"
         ]
       },
       {
@@ -1236,6 +1377,13 @@
       },
       {
         "modelId": "paddle-doc/rt-detr-h-layout-17cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "rt-detr-h-layout-17cls-ort-region-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/rt-detr-h-layout-17cls",
         "backend": "opencv-dnn-cpu",
         "evidenceIds": [
           "rt-detr-h-layout-17cls-opencv-dnn"
@@ -1254,6 +1402,13 @@
         "evidenceIds": [
           "rtdetr-h-17cls-tensorrt11-dynamic-batch2",
           "rtdetr-h-layout-17cls-tensorrt-dynamic-batch"
+        ]
+      },
+      {
+        "modelId": "paddle-doc/rt-detr-h-layout-3cls",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "rt-detr-h-layout-3cls-ort-region-cpu"
         ]
       },
       {
@@ -1287,6 +1442,13 @@
       },
       {
         "modelId": "paddle-seal/ppocrv4-mobile",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "seal-mobile-ort-cpu"
+        ]
+      },
+      {
+        "modelId": "paddle-seal/ppocrv4-mobile",
         "backend": "opencv-dnn-cpu",
         "evidenceIds": [
           "seal-mobile-opencv-dnn"
@@ -1304,6 +1466,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "seal-mobile-tensorrt11-dynamic-batch2"
+        ]
+      },
+      {
+        "modelId": "paddle-seal/ppocrv4-server",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "seal-server-ort-cpu"
         ]
       },
       {
@@ -1361,6 +1530,7 @@
         "modelId": "paddle-table/rt-detr-l-wired-cell-det",
         "backend": "onnxruntime-cpu",
         "evidenceIds": [
+          "rt-detr-l-wired-cell-ort-region-cpu",
           "table-task-chain-ort"
         ]
       },
@@ -1384,6 +1554,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "table-cell-tensorrt"
+        ]
+      },
+      {
+        "modelId": "paddle-table/rt-detr-l-wireless-cell-det",
+        "backend": "onnxruntime-cpu",
+        "evidenceIds": [
+          "rt-detr-l-wireless-cell-ort-region-cpu"
         ]
       },
       {
@@ -1432,9 +1609,9 @@
     "byBackend": [
       {
         "backend": "onnxruntime-cpu",
-        "evidencePairCount": 16,
-        "distinctModelCount": 14,
-        "distinctModelBackendPairCount": 14,
+        "evidencePairCount": 25,
+        "distinctModelCount": 21,
+        "distinctModelBackendPairCount": 21,
         "models": [
           "paddle-chart/pp-chart2table",
           "paddle-doc/picodet-l-layout-17cls",
@@ -1443,12 +1620,19 @@
           "paddle-doc/picodet-layout-1x-table",
           "paddle-doc/picodet-s-layout-17cls",
           "paddle-doc/picodet-s-layout-3cls",
+          "paddle-doc/pp-docblocklayout",
           "paddle-doc/pp-doclayout-l",
           "paddle-doc/pp-doclayout-m",
+          "paddle-doc/pp-doclayout-plus-l",
           "paddle-doc/pp-doclayout-s",
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
+          "paddle-doc/rt-detr-h-layout-17cls",
+          "paddle-doc/rt-detr-h-layout-3cls",
+          "paddle-seal/ppocrv4-mobile",
+          "paddle-seal/ppocrv4-server",
           "paddle-table/pp-lcnet-x1-0-table-cls",
           "paddle-table/rt-detr-l-wired-cell-det",
+          "paddle-table/rt-detr-l-wireless-cell-det",
           "paddle-table/slanext-wired"
         ]
       },
@@ -1533,7 +1717,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 68,
+      "validatedPairCount": 75,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

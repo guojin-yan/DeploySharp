@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-ort-region-benchmark-v1",
+  "generatedUtc": "2026-10-18T02:34:29.9555237+00:00",
+  "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-doc/pp-docblocklayout",
+    "file": "pp-docblocklayout.onnx",
+    "sha256": "abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218",
+    "inputShape": "[1,3,640,640]",
+    "labels": [
+      "Region"
+    ]
+  },
+  "input": {
+    "file": "bus.jpg",
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c",
+    "inputId": "paddle-document-ort-region-paddle-doc-pp-docblocklayout"
+  },
+  "backend": {
+    "id": "onnxruntime-cpu",
+    "runtimePackage": "Microsoft.ML.OnnxRuntime 1.28.0"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including ONNX Runtime CPU execution and Paddle NMS Decoder; excludes image decode/preprocessing, model/session creation and one-time OpenVINO reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "openvino-cpu",
+    "confidenceThreshold": 0.5,
+    "scoreTolerance": 0.01,
+    "coordinateTolerancePx": 1.5,
+    "expectedHighConfidence": 1,
+    "actualHighConfidence": 1,
+    "matchedHighConfidence": 1,
+    "acceptance": "At least 95% of the smaller high-confidence candidate set is matched by label, score and IoU."
+  },
+  "result": {
+    "detectionCount": 300,
+    "highConfidenceDetectionCount": 1,
+    "highConfidenceFingerprintSha256": "273c32b23d6c0298ed16c033f0683ecdd9493ff0459d833138b65b632e83bd35"
+  },
+  "timing": {
+    "p50Ms": 471.9727,
+    "p95Ms": 525.2597,
+    "minMs": 445.8785,
+    "maxMs": 1026.4421,
+    "meanMs": 489.119052
+  },
+  "samplesMs": [
+    471.7653,
+    445.8785,
+    1026.4421,
+    487.9351,
+    500.3623,
+    466.8074,
+    493.1432,
+    508.1231,
+    471.1571,
+    469.7707,
+    480.0338,
+    471.9727,
+    461.6659,
+    470.5131,
+    464.3833,
+    485.0129,
+    474.2646,
+    471.1673,
+    526.3196,
+    475.0115,
+    468.9392,
+    466.5721,
+    459.5707,
+    472.2247,
+    470.8606,
+    510.5482,
+    525.2597,
+    469.5813,
+    476.6988,
+    487.1646,
+    503.5081,
+    469.7267,
+    466.1748,
+    474.527,
+    505.8414,
+    484.1464,
+    483.6562,
+    474.3018,
+    486.3808,
+    465.4879,
+    477.6829,
+    464.6533,
+    469.5536,
+    481.3984,
+    460.9556,
+    461.3693,
+    470.5671,
+    492.8324,
+    462.776,
+    471.2635
+  ]
+}

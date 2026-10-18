@@ -308,6 +308,24 @@
 
 八项的执行合同和有界 parity 均通过；table-only PicoDet 在本次图像上两边都没有 `score ≥ 0.05` 的候选，`0/0` 不构成准确率结论。此轮 Windows 使用 Balanced 电源计划，CPU 未锁频。P95 中有调度抖动，因此不要将结果解读为锁频极限值；机器报告保留了全部原始样本，详见[汇总报告](../../eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md)与八个 JSON。该结果是当前主机的精确工件延迟/Decoder 合同证据，不代表数据集精度、跨设备排名或其它导出图。
 
+### PP-Structure 区域/表格单元/印章：ONNX Runtime CPU 对照基线
+
+2026-10-18 对七个区域/单元检测工件和两个 PP-OCRv4 印章工件完成正式 `5 warm-up + 50 measured` ORT CPU 基线。版面使用 `bus.jpg`，表格单元使用 `table_recognition.jpg`，印章使用 `demo_1.jpg`；每次复用一个已准备输入和一个 ORT Session。区域模型与 OpenVINO 的高置信度结果按类别、分数和坐标容差匹配；印章只比较 mask 形状和 Decoder 区域数。
+
+| 模型 | 输入 | 合同对照 | P50 ms | P95 ms |
+| --- | --- | --- | ---: | ---: |
+| `pp-doclayout-l` | `bus.jpg` | 1/1 高置信度区域 | 476.69 | 555.68 |
+| `pp-docblocklayout` | `bus.jpg` | 1/1 高置信度区域 | 471.97 | 525.26 |
+| `pp-doclayout-plus-l` | `bus.jpg` | 1/1 高置信度区域 | 727.38 | 1115.24 |
+| `rt-detr-h-layout-3cls` | `bus.jpg` | 1/1 高置信度区域 | 1612.83 | 1856.54 |
+| `rt-detr-h-layout-17cls` | `bus.jpg` | 1/1 高置信度区域 | 1612.95 | 2255.31 |
+| `rt-detr-l-wired-cell-det` | `table_recognition.jpg` | 13/13 高置信度单元 | 451.93 | 481.81 |
+| `rt-detr-l-wireless-cell-det` | `table_recognition.jpg` | 13/13 高置信度单元 | 481.58 | 565.51 |
+| `ppocrv4-mobile-seal-det` | `demo_1.jpg` | `224×224` mask，区域 0/0 | 9.43 | 10.98 |
+| `ppocrv4-server-seal-det` | `demo_1.jpg` | `224×224` mask，区域 1/1 | 124.62 | 134.89 |
+
+九项均通过执行和声明的结果合同。印章图片没有人工真值，区域数不是召回率；Windows 使用 Balanced 电源计划且 CPU 未锁频。完整设备信息、模型/输入 SHA 和 50 个原始样本见[区域/印章 ORT 汇总](../../eng/models/paddle-document/verification/paddle-document-ort-region-benchmark-20261018.md)及其逐模型 JSON。结果不代表数据集准确率、锁频极限、跨设备排名或相邻导出图。
+
 UVDoc 的独立正式 `5 warm-up + 50 measured` 基准使用同一主机、`bus.jpg`、单 Session 和 `PaddleDocumentUnwarpingDecoder`。输出为有限 `640×640×3` 张量；与 ORT 的 raw-output 最大/平均绝对差为 `0.0730591/0.00176066`，满足本次声明的 `0.2/0.01` 有界比较门槛。OpenVINO CPU P50/P95 为 `102.5192/128.0841 ms`。计时排除输入准备、模型/Session 创建和一次性 ORT 参考；有界数值差不等同像素等价或视觉质量通过。完整模型/输入 SHA 和 50 个样本见 [`UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 与 [JSON](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.json)。
 
 SLANeXt wireless 的 OpenVINO 正式性能记录使用派生的 `slanext-wireless-openvino-compat.onnx`，并逐轮校验官方源图 ORT 参考的 token/cell 数和 HTML SHA。该单图任务返回 24 个结构 token、13 个 cell，HTML 哈希一致；P50/P95 为 `794.1322/962.2685 ms`。计时包含 OpenVINO 与表格结构 Decoder，排除输入准备、模型/Session 创建和一次性 ORT 参考。此结果只适用于兼容图和当前主机，不意味着原始 SLANeXt Loop 图可被当前 OpenVINO importer 直接加载，也不是表格准确率或 cell recall 结论。详见 [逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json)。

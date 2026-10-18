@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index
 
-Generated 2026-10-18T02:30:34Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-18T02:45:05Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -100,16 +100,25 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | picodet-l-layout-3cls-ort-cpu | PicoDet-L 3-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/picodet-l-layout-3cls | 5 warm-up + 50 measured |
 | picodet-s-layout-17cls-ort-cpu | PicoDet-S 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/picodet-s-layout-17cls | 5 warm-up + 50 measured |
 | picodet-l-layout-17cls-ort-cpu | PicoDet-L 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/picodet-l-layout-17cls | 5 warm-up + 50 measured |
+| pp-doclayout-l-ort-region-cpu | PP-DocLayout-L single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
+| pp-docblocklayout-ort-region-cpu | PP-DocBlockLayout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/pp-docblocklayout | 5 warm-up + 50 measured |
+| pp-doclayout-plus-l-ort-region-cpu | PP-DocLayout-Plus-L single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/pp-doclayout-plus-l | 5 warm-up + 50 measured |
+| rt-detr-h-layout-3cls-ort-region-cpu | RT-DETR-H 3-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/rt-detr-h-layout-3cls | 5 warm-up + 50 measured |
+| rt-detr-h-layout-17cls-ort-region-cpu | RT-DETR-H 17-class layout single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-doc/rt-detr-h-layout-17cls | 5 warm-up + 50 measured |
+| rt-detr-l-wired-cell-ort-region-cpu | RT-DETR-L wired-cell detector single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-table/rt-detr-l-wired-cell-det | 5 warm-up + 50 measured |
+| rt-detr-l-wireless-cell-ort-region-cpu | RT-DETR-L wireless-cell detector single-image ONNX Runtime CPU execution with bounded OpenVINO parity | onnxruntime-cpu | paddle-table/rt-detr-l-wireless-cell-det | 5 warm-up + 50 measured |
+| seal-mobile-ort-cpu | PP-OCRv4 mobile seal detector single-image ONNX Runtime CPU execution with shape and decoder region-count contract | onnxruntime-cpu | paddle-seal/ppocrv4-mobile | 5 warm-up + 50 measured |
+| seal-server-ort-cpu | PP-OCRv4 server seal detector single-image ONNX Runtime CPU execution with shape and decoder region-count contract | onnxruntime-cpu | paddle-seal/ppocrv4-server | 5 warm-up + 50 measured |
 | chart2table-fixed-sample | Fixed ChartQA Chart2Table single-sample generation | onnxruntime-cpu, openvino-cpu, tensorrt-cuda | paddle-chart/pp-chart2table | 5 warm-up + 50 measured |
 
 | Backend | Evidence rows | Distinct model/backend pairs | Distinct models |
 | --- | ---: | ---: | ---: |
-| onnxruntime-cpu | 16 | 14 | 14 |
+| onnxruntime-cpu | 25 | 21 | 21 |
 | opencv-dnn-cpu | 11 | 11 | 11 |
 | openvino-cpu | 27 | 23 | 23 |
 | tensorrt-cuda | 27 | 20 | 20 |
 
-Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. ONNX Runtime CPU still lacks formal 5/50 records for 17 passing artifacts, and TensorRT CUDA lacks one for UVDoc. These are performance-evidence gaps only; backend pass/unsupported state is unchanged. The original SLANeXt graphs and FormulaNet/OpenCV importer boundaries remain as recorded in the artifact matrix. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
+Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. ONNX Runtime CPU still lacks formal 5/50 records for UVDoc, wireless SLANeXt and the six FormulaNet-family exports, while TensorRT CUDA lacks one for UVDoc. These are performance-evidence gaps only; backend pass/unsupported state is unchanged. The original SLANeXt graphs and FormulaNet/OpenCV importer boundaries remain as recorded in the artifact matrix. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
 
 ## Boundaries still open
 

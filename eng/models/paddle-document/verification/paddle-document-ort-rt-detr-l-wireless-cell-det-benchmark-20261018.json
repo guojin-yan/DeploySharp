@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-ort-region-benchmark-v1",
+  "generatedUtc": "2026-10-18T02:39:47.9870409+00:00",
+  "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-table/rt-detr-l-wireless-cell-det",
+    "file": "rt-detr-l-wireless-cell-det.onnx",
+    "sha256": "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf",
+    "inputShape": "[1,3,640,640]",
+    "labels": [
+      "table-cell"
+    ]
+  },
+  "input": {
+    "file": "table_recognition.jpg",
+    "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+    "inputId": "paddle-document-ort-region-paddle-table-rt-detr-l-wireless-cell-det"
+  },
+  "backend": {
+    "id": "onnxruntime-cpu",
+    "runtimePackage": "Microsoft.ML.OnnxRuntime 1.28.0"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including ONNX Runtime CPU execution and Paddle NMS Decoder; excludes image decode/preprocessing, model/session creation and one-time OpenVINO reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "openvino-cpu",
+    "confidenceThreshold": 0.5,
+    "scoreTolerance": 0.01,
+    "coordinateTolerancePx": 1.5,
+    "expectedHighConfidence": 13,
+    "actualHighConfidence": 13,
+    "matchedHighConfidence": 13,
+    "acceptance": "At least 95% of the smaller high-confidence candidate set is matched by label, score and IoU."
+  },
+  "result": {
+    "detectionCount": 300,
+    "highConfidenceDetectionCount": 13,
+    "highConfidenceFingerprintSha256": "35e886679388f853c1cb6ebec9ad738319adb081f69dd3443e14bd0d3dfa9943"
+  },
+  "timing": {
+    "p50Ms": 481.5776,
+    "p95Ms": 565.5072,
+    "minMs": 454.1691,
+    "maxMs": 639.0679,
+    "meanMs": 494.02711999999997
+  },
+  "samplesMs": [
+    462.0787,
+    488.6419,
+    513.2926,
+    565.5072,
+    639.0679,
+    533.8699,
+    529.4017,
+    541.7157,
+    558.1533,
+    478.0527,
+    539.8646,
+    479.2316,
+    503.529,
+    477.1869,
+    507.0324,
+    477.2034,
+    532.8609,
+    485.0137,
+    493.9224,
+    478.426,
+    480.984,
+    474.6301,
+    507.7982,
+    490.9163,
+    578.2415,
+    472.9018,
+    479.5712,
+    492.5501,
+    497.6671,
+    481.5776,
+    483.0165,
+    507.2601,
+    482.9736,
+    489.3378,
+    481.0133,
+    454.1691,
+    473.3967,
+    481.7774,
+    459.2371,
+    469.6634,
+    470.8764,
+    464.8116,
+    488.6573,
+    480.7288,
+    457.0368,
+    463.3532,
+    471.9657,
+    463.3146,
+    461.6581,
+    456.2181
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "deploysharp-paddle-document-ort-seal-benchmark-v1",
+  "generatedUtc": "2026-10-18T02:39:49.412939+00:00",
+  "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef",
+  "device": {
+    "machine": "JYPPX",
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.12",
+    "architecture": "X64",
+    "logicalProcessorCount": 16,
+    "processorIdentifier": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "model": {
+    "id": "paddle-seal/ppocrv4-mobile",
+    "file": "ppocrv4-mobile-seal-det.onnx",
+    "sha256": "e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199",
+    "inputShape": "[1,3,224,224]"
+  },
+  "input": {
+    "file": "demo_1.jpg",
+    "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+    "inputId": "paddle-document-ort-seal-paddle-seal-ppocrv4-mobile"
+  },
+  "backend": {
+    "id": "onnxruntime-cpu",
+    "runtimePackage": "Microsoft.ML.OnnxRuntime 1.28.0"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "batch": 1,
+    "sessions": 1,
+    "inputReuse": "One PreparedVisualInput reused for every call.",
+    "timing": "Synchronous VisualPipeline.Run including ONNX Runtime CPU execution and PaddleDocumentSealDecoder; excludes image decode/preprocessing, model/session creation and one-time OpenVINO reference.",
+    "percentile": "Nearest-rank"
+  },
+  "parity": {
+    "referenceBackend": "openvino-cpu",
+    "referenceMask": {
+      "width": 224,
+      "height": 224
+    },
+    "referenceRegionCount": 0,
+    "comparison": "Mask shape and decoder region-count contract only; no raw probability-map numerical parity claim."
+  },
+  "result": {
+    "mask": {
+      "width": 224,
+      "height": 224
+    },
+    "regionCount": 0,
+    "regionFingerprintSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "timing": {
+    "p50Ms": 9.4304,
+    "p95Ms": 10.976,
+    "minMs": 7.8801,
+    "maxMs": 31.6314,
+    "meanMs": 9.887121999999998
+  },
+  "samplesMs": [
+    9.8169,
+    9.4608,
+    9.2706,
+    9.228,
+    7.8801,
+    10.9196,
+    11.2182,
+    9.2434,
+    9.5219,
+    9.1515,
+    9.4204,
+    8.833,
+    9.0188,
+    8.4535,
+    8.4539,
+    9.1483,
+    9.6571,
+    9.4443,
+    9.1461,
+    9.2905,
+    9.1162,
+    9.4304,
+    9.6943,
+    9.5507,
+    9.8411,
+    10.0824,
+    9.8323,
+    10.1256,
+    9.2652,
+    9.5549,
+    9.6416,
+    10.976,
+    9.8896,
+    9.6249,
+    9.7125,
+    9.1836,
+    9.8007,
+    9.2691,
+    9.6788,
+    9.0818,
+    9.3534,
+    9.8302,
+    8.8998,
+    8.8329,
+    8.3766,
+    8.9963,
+    9.6624,
+    9.5834,
+    9.2611,
+    31.6314
+  ]
+}
