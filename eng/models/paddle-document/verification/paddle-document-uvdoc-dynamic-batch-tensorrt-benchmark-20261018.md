@@ -7,6 +7,7 @@ This report adds a formal repeated-latency result to the existing UVDoc TensorRT
 | Item | Value |
 | --- | --- |
 | Host | `JYPPX`, Windows NT `10.0.26200.0`, x64, .NET `10.0.12` |
+| DeploySharp source | `eff037ea95d573db2c5924718fd907f366d1fa38` |
 | CPU | AMD Ryzen 7 5800H, 8 cores / 16 logical processors |
 | GPU | NVIDIA GeForce RTX 3060 Laptop GPU, 6 GiB, driver `576.02` |
 | TensorRT | `11.0.0.114-cu12`, DeploySharp TensorRT API 11 bridge |

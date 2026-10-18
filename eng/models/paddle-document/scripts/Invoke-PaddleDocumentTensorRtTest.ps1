@@ -93,6 +93,7 @@ $env:JYPPX_TENSORRT_ROOT = (Resolve-Path $resolvedTensorRtRoot).Path
 $env:JYPPX_CUDA_ROOT = (Resolve-Path $CudaRoot).Path
 $env:JYPPX_CUDNN_ROOT = (Resolve-Path $resolvedCudnnRoot).Path
 $env:JYPPX_NATIVE_BRIDGE_PATH = (Resolve-Path $BridgePath).Path
+$env:DEPLOYSHARP_SOURCE_REVISION = (& git -C $repoRoot rev-parse HEAD).Trim()
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_API = $TensorRtApi
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL = '1'
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_LAYOUT_WARMUP = $LayoutWarmup.ToString([Globalization.CultureInfo]::InvariantCulture)

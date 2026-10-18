@@ -1263,6 +1263,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                 {
                     schemaVersion = 1,
                     generatedAtUtc = DateTimeOffset.UtcNow,
+                    sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_REVISION") ?? "unrecorded",
                     execution = new
                     {
                         machine = Environment.MachineName,
