@@ -23,6 +23,12 @@ test('MathJax function-application markers are handled for supported functions',
   assert.equal(result.validSubstitutionCount, 24);
 });
 
+test('presentation punctuation and square-bracket grouping do not create operands', async () => {
+  const result = await compare('[x+1]^2.', '(x+1)^2');
+  assert.equal(result.status, 'sampled-equivalent');
+  assert.equal(result.validSubstitutionCount, 24);
+});
+
 test('comma-delimited tuples and min/max arguments are evaluated componentwise', async () => {
   const tuple = await compare('(x, x^2)', '(x, x*x)');
   const differentTuple = await compare('(x, x^2)', '(x^2, x)');

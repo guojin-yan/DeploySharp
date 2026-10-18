@@ -83,7 +83,7 @@ try {
 
   const report = {
     schemaVersion: 'deploysharp-realformula-numeric-equivalence-diagnostic-v1',
-    evaluatorVersion: '0.2.0',
+    evaluatorVersion: '0.3.0',
     generatedUtc: new Date().toISOString(),
     runtime: {
       node: process.version,

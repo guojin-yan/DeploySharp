@@ -172,6 +172,12 @@ function parseNode(node) {
 }
 
 function parseSequence(items) {
+  // MathJax keeps sentence punctuation outside the semantic expression. A
+  // terminal full stop/semicolon is presentation punctuation, not an operand;
+  // strip only terminal punctuation so commas inside tuples remain meaningful.
+  while (items.length > 0 && items.at(-1)?.type === 'operator-token' && ['.', ';'].includes(items.at(-1).value)) {
+    items = items.slice(0, -1);
+  }
   const parser = new SequenceParser(items);
   return parser.parse();
 }
@@ -248,14 +254,15 @@ class SequenceParser {
     const item = this.items[this.index];
     if (!item) throw new UnsupportedMathError('missing-operand');
     if (item.type === 'operator-token') {
-      if (item.value === '(') {
+      if (['(', '[', '{'].includes(item.value)) {
+        const closing = item.value === '(' ? ')' : item.value === '[' ? ']' : '}';
         this.index++;
         const values = [this.parseRelation()];
         while (this.operatorAt(this.index) === ',') {
           this.index++;
           values.push(this.parseRelation());
         }
-        if (this.operatorAt(this.index) !== ')') throw new UnsupportedMathError('unclosed-parenthesis');
+        if (this.operatorAt(this.index) !== closing) throw new UnsupportedMathError(`unclosed-${closing === ')' ? 'parenthesis' : 'group'}`);
         this.index++;
         return values.length === 1 ? values[0] : {type: 'tuple', items: values};
       }

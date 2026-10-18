@@ -1,7 +1,7 @@
 {
   "schemaVersion": "deploysharp-realformula-numeric-equivalence-diagnostic-v1",
   "evaluatorVersion": "0.2.0",
-  "generatedUtc": "2026-10-18T05:18:30.636Z",
+  "generatedUtc": "2026-10-18T05:24:43.625Z",
   "runtime": {
     "node": "v24.19.0",
     "mathJax": "4.1.3",
@@ -26,11 +26,11 @@
       "sourceReportSha256": "5c5e3dfb7124cc70303ac1a5747db038190808390cbe4c227352b7a31cc39c23",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 3,
+        "sampled-equivalent": 6,
         "sampled-different": 0,
-        "not-assessable": 118
+        "not-assessable": 115
       },
-      "assessedCoverage": 0.024793388429752067,
+      "assessedCoverage": 0.049586776859504134,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -114,29 +114,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "e528299a298aa5453c12b3553a690aaa595492100b703013a835d1f5cc8c806c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -144,14 +144,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "d1e59f12d329e69cfb3e100d68faf50e2516546fa4307708a19c0343d859704a",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "211104335-3.png",
@@ -203,15 +203,15 @@
           "imageSha256": "99b70564d83f193c61e9af523883320ad02f7f3958cbe10492f2c3c7df5eb5f1",
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 14,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 10,
+          "variableCount": 2,
+          "referenceAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "predictionAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "detail": null
         },
         {
           "image": "230107755-41.png",
@@ -234,14 +234,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "adf1d3eac7a6ab1e5a7ea36dd9694f49a9fe0a4748c9d94c171b1ac48d9c42fa",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -399,14 +399,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "2d92a7d87c340b06b0363a07410a7ac4aa1294fda5a586b6c969be204993549a",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -534,14 +534,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "a655c1418dbf8c239d946e76dfde1ee10fda60f4e5f399d00f8ebac1ca560b8c",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "211101678-155.png",
@@ -549,14 +549,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "2d7b631fa26a61daacbf70607f976a66c515b70a7b00ccaa88311f798b8e03b2",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -564,14 +564,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "059a33e1b7d4b10cd63f05b42dcf4b20caa95eb6fb9a44e6bdfb1b4108ebb9ec",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "220206411-86.png",
@@ -744,14 +744,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "fdb82b815f9ffdaa54804b2473ee3b2d795165d25ef2bbde2a2031baa0f2860e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -804,14 +804,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "2296bec7ac36b0fc9e6fb8fe1d7931608ded74d9fa457378833571e95f57dbc4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221105431-282.png",
@@ -819,14 +819,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "2e3f507c274f5358d1e701954f01a5cab8489d413aaca5706e3b4e096c089ba5",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -909,14 +909,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "7050199758ac77a3e3a06529026f2ea896c450efc3247b300b1cdceb586b0b5e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -939,14 +939,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "92285b13123f1a43fb8352e0022b3e794ac1dda75850ac39aea2529ecd026f69",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -984,14 +984,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "60184380887917b44d86c09704aea09cef4c999bae5728f7d10c406c2059d834",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "211103142-26.png",
@@ -1044,14 +1044,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "a1635691d1a5505a38233f36cada9b4ae95d6d9e450c2e0af2ccd8dc4d397c78",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -1284,14 +1284,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "d7d470aae5af5bd9913ad7486e08cc2c0540f524faa719cdad48732c54e2c852",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -1314,14 +1314,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -1449,14 +1449,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -1553,15 +1553,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -1764,14 +1764,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -1794,14 +1794,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2ad49400e5caf6e3f5d2b3a7a9fbfc303037f9828b2d2b7e39660c79b6be1885",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",
@@ -1857,11 +1857,11 @@
       "sourceReportSha256": "b0c5e69dde615f5e42d6278d9843c92c255c221344c2f4e2d68b9b982c2fa7cd",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 2,
+        "sampled-equivalent": 6,
         "sampled-different": 0,
-        "not-assessable": 119
+        "not-assessable": 115
       },
-      "assessedCoverage": 0.01652892561983471,
+      "assessedCoverage": 0.049586776859504134,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -1884,15 +1884,15 @@
           "imageSha256": "2cbedc4f376fce7acd9daf2e737db4b85fb57f95f3ba92b35f84293860aea3a4",
           "referenceSha256": "4f1621c899f75a17b514931a1fd901b7c8ef31eedb61f2d36e147edaec3bf616",
           "predictionSha256": "130cacc44f7c96954707601994c32284320b2c125f9c469d5616724b55f1b657",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 2,
+          "referenceAstSha256": "35934384e7272dcc3c90cd384b3f4b642043bfe2b00c4151302f9c6310810404",
+          "predictionAstSha256": "35934384e7272dcc3c90cd384b3f4b642043bfe2b00c4151302f9c6310810404",
+          "detail": null
         },
         {
           "image": "230110053-1.png",
@@ -1945,29 +1945,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "044c3e88364670ed2f1c8d4f4cccad60cac554ad5c9da90742de1ec8d2e72a60",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -1975,14 +1975,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "e5331790a51349beeada7f0943b6fdc562ac538ddc2f630ff994c5bf5c807823",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 19,
+          "referenceAstSha256": "5d617cd1af68e3b25bc02cec2f6a025d38b304e68de6955ae447af76e6ed2452",
+          "predictionAstSha256": "fd7f265b697391c8b5093b05f4e8abc1ad25f035607deecf572c2b90b4233798",
+          "detail": null
         },
         {
           "image": "211104335-3.png",
@@ -2034,15 +2034,15 @@
           "imageSha256": "99b70564d83f193c61e9af523883320ad02f7f3958cbe10492f2c3c7df5eb5f1",
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 13,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 11,
+          "variableCount": 2,
+          "referenceAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "predictionAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "detail": null
         },
         {
           "image": "230107755-41.png",
@@ -2065,14 +2065,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "750c950d2ae9a7c1a468d460a234f50d51d49675eefa1273fcc859096f3b327d",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -2230,14 +2230,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "f2f827a03868221c6486e525a737ed8d0d336af94a87d2cdb09e4d700856244c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -2365,14 +2365,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "9ada2b7e93286d6c26a5d490cbcc730215f57f974209ec09780f55560698e6c7",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "211101678-155.png",
@@ -2380,14 +2380,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "6e566103e6c06cc0506246201337f11292e1008983f1c8d078775c5e4caa56e7",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -2395,14 +2395,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "ce062a566f96720f1c777ba751b2af449cc482d3dc37be6e07f7b3f4fcf50eca",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "predictionAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "detail": null
         },
         {
           "image": "220206411-86.png",
@@ -2575,14 +2575,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "fdb82b815f9ffdaa54804b2473ee3b2d795165d25ef2bbde2a2031baa0f2860e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -2635,14 +2635,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "predictionAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "detail": null
         },
         {
           "image": "221105431-282.png",
@@ -2650,14 +2650,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "9fec233014c9857d4121b846eede4b45d8a6d3eef513714b5bf92f600e0d0d5c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -2740,14 +2740,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "45eee050e1951d0c8fbe08ccc8e8dedbe32bc108f7992be024d0d07aa13ac06b",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -2770,14 +2770,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "2048a959542cb8233bdcddc8cb25aa9d6f24be74d8aeb5baab6a44aa9d0d99c7",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -2815,14 +2815,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "60184380887917b44d86c09704aea09cef4c999bae5728f7d10c406c2059d834",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "211103142-26.png",
@@ -2875,14 +2875,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "9239091a8500c26929aaf8e73c0a83e69bf21582d3ba6dcafedb1f9c7e2a8900",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -3115,14 +3115,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "fa5e89f4230a63e0b0530c553115e5ff67c8135f416b5da0f365073522bfd696",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -3145,14 +3145,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -3280,14 +3280,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -3384,15 +3384,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -3595,14 +3595,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -3625,14 +3625,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2ad49400e5caf6e3f5d2b3a7a9fbfc303037f9828b2d2b7e39660c79b6be1885",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",
@@ -3688,11 +3688,11 @@
       "sourceReportSha256": "538aa93648af71d950d9567557de3beebd4bf320bd5547b64ab982c79cb11d14",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 2,
+        "sampled-equivalent": 6,
         "sampled-different": 0,
-        "not-assessable": 119
+        "not-assessable": 115
       },
-      "assessedCoverage": 0.01652892561983471,
+      "assessedCoverage": 0.049586776859504134,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -3715,15 +3715,15 @@
           "imageSha256": "2cbedc4f376fce7acd9daf2e737db4b85fb57f95f3ba92b35f84293860aea3a4",
           "referenceSha256": "4f1621c899f75a17b514931a1fd901b7c8ef31eedb61f2d36e147edaec3bf616",
           "predictionSha256": "130cacc44f7c96954707601994c32284320b2c125f9c469d5616724b55f1b657",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 2,
+          "referenceAstSha256": "35934384e7272dcc3c90cd384b3f4b642043bfe2b00c4151302f9c6310810404",
+          "predictionAstSha256": "35934384e7272dcc3c90cd384b3f4b642043bfe2b00c4151302f9c6310810404",
+          "detail": null
         },
         {
           "image": "230110053-1.png",
@@ -3776,29 +3776,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "044c3e88364670ed2f1c8d4f4cccad60cac554ad5c9da90742de1ec8d2e72a60",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -3806,14 +3806,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "e5331790a51349beeada7f0943b6fdc562ac538ddc2f630ff994c5bf5c807823",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 19,
+          "referenceAstSha256": "5d617cd1af68e3b25bc02cec2f6a025d38b304e68de6955ae447af76e6ed2452",
+          "predictionAstSha256": "fd7f265b697391c8b5093b05f4e8abc1ad25f035607deecf572c2b90b4233798",
+          "detail": null
         },
         {
           "image": "211104335-3.png",
@@ -3865,15 +3865,15 @@
           "imageSha256": "99b70564d83f193c61e9af523883320ad02f7f3958cbe10492f2c3c7df5eb5f1",
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "4596a361abd760ef128138266e80e76e9977454723d94bece0a6c9b95dc6c9e8",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 13,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 11,
+          "variableCount": 2,
+          "referenceAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "predictionAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "detail": null
         },
         {
           "image": "230107755-41.png",
@@ -3896,14 +3896,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "ea6b5cb2a7f2ecdfb6c204ce37049e9f5f09f4a0e4cdf080460a3a0748e6081d",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -4061,14 +4061,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "f2f827a03868221c6486e525a737ed8d0d336af94a87d2cdb09e4d700856244c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -4196,14 +4196,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 6,
+          "referenceAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "predictionAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "detail": null
         },
         {
           "image": "211101678-155.png",
@@ -4211,14 +4211,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "2d7b631fa26a61daacbf70607f976a66c515b70a7b00ccaa88311f798b8e03b2",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -4226,14 +4226,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "b182c61218dab841be183ed12e44419e041595335d75ba3a9d64ed02b3f3a1d1",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "predictionAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "detail": null
         },
         {
           "image": "220206411-86.png",
@@ -4406,14 +4406,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "fdb82b815f9ffdaa54804b2473ee3b2d795165d25ef2bbde2a2031baa0f2860e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -4466,14 +4466,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "predictionAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "detail": null
         },
         {
           "image": "221105431-282.png",
@@ -4481,14 +4481,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "6465e800cd5a001fc8522c184802e555f26ca9f6e4e1788adc87c34e8b3fede4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -4571,14 +4571,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "4c6b630973483199df7f96b15f2b56fb1753446e00c93b0c43a33b5688ba6cdd",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -4601,14 +4601,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "4c5e7134e3e1a61bcfdf8cf419921865dac5b2e40ffcb3f7a230cf4053efb9cc",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -4646,14 +4646,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 5,
+          "referenceAstSha256": "09f6e26a42618b90e3d4b7338862a664c8342dd982c2071b52504f71530615d7",
+          "predictionAstSha256": "09f6e26a42618b90e3d4b7338862a664c8342dd982c2071b52504f71530615d7",
+          "detail": null
         },
         {
           "image": "211103142-26.png",
@@ -4706,14 +4706,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "a1635691d1a5505a38233f36cada9b4ae95d6d9e450c2e0af2ccd8dc4d397c78",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -4946,14 +4946,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "3377ad3e6c9f090a7ab27107cf8e94a1c836ab46fae58c3e510532d08a9de647",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -4976,14 +4976,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -5111,14 +5111,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -5215,15 +5215,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -5426,14 +5426,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -5456,14 +5456,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2ad49400e5caf6e3f5d2b3a7a9fbfc303037f9828b2d2b7e39660c79b6be1885",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",
@@ -5519,11 +5519,11 @@
       "sourceReportSha256": "738c2eddd6273fcdb79702d04ea4d8591f9513897a89c82c17c086d7f2bfea8f",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 3,
+        "sampled-equivalent": 5,
         "sampled-different": 0,
-        "not-assessable": 118
+        "not-assessable": 116
       },
-      "assessedCoverage": 0.024793388429752067,
+      "assessedCoverage": 0.04132231404958678,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -5607,29 +5607,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "044c3e88364670ed2f1c8d4f4cccad60cac554ad5c9da90742de1ec8d2e72a60",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -5637,14 +5637,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "b232590ee2665d3eaa4620697731e62b5a2d6fd0d6e11a74da6d5934f009cd42",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 17,
+          "referenceAstSha256": "5d617cd1af68e3b25bc02cec2f6a025d38b304e68de6955ae447af76e6ed2452",
+          "predictionAstSha256": "6aad7b348f00569fdcf35157986f2e246c5e850bd9eaa3c59c70691ce99d5d81",
+          "detail": null
         },
         {
           "image": "211104335-3.png",
@@ -5697,14 +5697,14 @@
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "312963d998ac9954944b5473eea9683d70e6701fed21171502e81a6b6d35e8d6",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-mathml-merror",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-mathml-merror"
         },
         {
           "image": "230107755-41.png",
@@ -5727,14 +5727,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "d4910bd715bb9757acb3b09b6e643338af3f75e2e921755d20fd939784d0cc6d",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -5892,14 +5892,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "f2f827a03868221c6486e525a737ed8d0d336af94a87d2cdb09e4d700856244c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -6027,14 +6027,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 6,
+          "referenceAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "predictionAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "detail": null
         },
         {
           "image": "211101678-155.png",
@@ -6042,14 +6042,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "5cf623d8c3121a900c686e38949f1153197979f4130ce8c1ebb2754849263083",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -6057,14 +6057,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "6543e3c4f6fc4826f4bb9bfdf772d644ec8ed2598dfb6a4f30ced8a5c1b25a71",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "predictionAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "detail": null
         },
         {
           "image": "220206411-86.png",
@@ -6237,14 +6237,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "f7f9232ae327869cb35e62d603fafac2bba66c5057c6da2505c10af129e30ef6",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -6297,14 +6297,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "predictionAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "detail": null
         },
         {
           "image": "221105431-282.png",
@@ -6312,14 +6312,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "5fe606eef3015b74b1556534845ad9ceeaccf10d9f180efdba1761928c425c57",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -6402,14 +6402,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "96e12ec4a73f39b469f2111fcfdabcd2678a51e03f398a4c7921773e457dc254",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -6432,14 +6432,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "9bf0da0207e26ec8dc08e3ed9c1a2a310394e2169e1d75bbcd948b01a7da5e11",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -6477,14 +6477,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "d5fa68176a459f613147f0e633110bcf70f44f7376a4512c4820b0fa6d145ccd",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 5,
+          "referenceAstSha256": "09f6e26a42618b90e3d4b7338862a664c8342dd982c2071b52504f71530615d7",
+          "predictionAstSha256": "5946ecc0dabc31acc4cf74d3e3ac7706acc68850ac611126124a33e09a03d155",
+          "detail": null
         },
         {
           "image": "211103142-26.png",
@@ -6537,14 +6537,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "6648bfc61fc73adb4280d21c939e2f3f020fe3d92d801be47de953b601c1876c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -6777,14 +6777,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "070a5d8ea6eda026d928e1793af00c1d396734345dac26a234c10268b70d9347",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -6807,14 +6807,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -6942,14 +6942,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -7046,15 +7046,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -7257,14 +7257,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -7287,14 +7287,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2ad49400e5caf6e3f5d2b3a7a9fbfc303037f9828b2d2b7e39660c79b6be1885",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",
@@ -7350,11 +7350,11 @@
       "sourceReportSha256": "c64a05a4f2b87bd071bfa3227f12c5b09ecb2864b80bd59ec0bd7269ed38f6d0",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 4,
+        "sampled-equivalent": 7,
         "sampled-different": 0,
-        "not-assessable": 117
+        "not-assessable": 114
       },
-      "assessedCoverage": 0.03305785123966942,
+      "assessedCoverage": 0.05785123966942149,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -7438,29 +7438,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "044c3e88364670ed2f1c8d4f4cccad60cac554ad5c9da90742de1ec8d2e72a60",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -7468,14 +7468,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "e5331790a51349beeada7f0943b6fdc562ac538ddc2f630ff994c5bf5c807823",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 19,
+          "referenceAstSha256": "5d617cd1af68e3b25bc02cec2f6a025d38b304e68de6955ae447af76e6ed2452",
+          "predictionAstSha256": "fd7f265b697391c8b5093b05f4e8abc1ad25f035607deecf572c2b90b4233798",
+          "detail": null
         },
         {
           "image": "211104335-3.png",
@@ -7527,15 +7527,15 @@
           "imageSha256": "99b70564d83f193c61e9af523883320ad02f7f3958cbe10492f2c3c7df5eb5f1",
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "4596a361abd760ef128138266e80e76e9977454723d94bece0a6c9b95dc6c9e8",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 12,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 12,
+          "variableCount": 2,
+          "referenceAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "predictionAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "detail": null
         },
         {
           "image": "230107755-41.png",
@@ -7558,14 +7558,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "bf33dd77d8d02ce78e45b483bcdc3fe2cdbb3169de541f7386d8bf02b6f8b405",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -7723,14 +7723,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "2d92a7d87c340b06b0363a07410a7ac4aa1294fda5a586b6c969be204993549a",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -7858,14 +7858,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 6,
+          "referenceAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "predictionAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "detail": null
         },
         {
           "image": "211101678-155.png",
@@ -7873,14 +7873,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "6e566103e6c06cc0506246201337f11292e1008983f1c8d078775c5e4caa56e7",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -7888,14 +7888,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "af4fbcca8a14afa622d6141485ba21330463ff461d96d192a6588c2a2a2b637c",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "predictionAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "detail": null
         },
         {
           "image": "220206411-86.png",
@@ -8068,14 +8068,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "fdb82b815f9ffdaa54804b2473ee3b2d795165d25ef2bbde2a2031baa0f2860e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -8128,14 +8128,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "predictionAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "detail": null
         },
         {
           "image": "221105431-282.png",
@@ -8143,14 +8143,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "5fe606eef3015b74b1556534845ad9ceeaccf10d9f180efdba1761928c425c57",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -8233,14 +8233,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "b2ad490239c06208b62d1788edd2f73833cbee859180dcdbb350c03ee2ba8fa2",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -8263,14 +8263,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "5e61cf50389ef8dcdc73c4b2a80d38f9d1e69d783c1f963a9d409f90bded511f",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -8308,14 +8308,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "b83f98be5a8b4add31216da489cba050c5856c81a6abff050b30ec4305098057",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "211103142-26.png",
@@ -8368,14 +8368,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "a1635691d1a5505a38233f36cada9b4ae95d6d9e450c2e0af2ccd8dc4d397c78",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -8608,14 +8608,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "07a351896ba2114bdf1e02134abf23be50f62b1d465b5c7635c8b696e8ec7396",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -8638,14 +8638,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -8773,14 +8773,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -8877,15 +8877,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -9088,14 +9088,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -9118,14 +9118,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2ad49400e5caf6e3f5d2b3a7a9fbfc303037f9828b2d2b7e39660c79b6be1885",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",
@@ -9181,11 +9181,11 @@
       "sourceReportSha256": "4e0a78f3eaf54e954dd7657bd03bb7d0245fc9d2593f571b6fc5717d79d03850",
       "sampleCount": 121,
       "statusCounts": {
-        "sampled-equivalent": 3,
+        "sampled-equivalent": 6,
         "sampled-different": 0,
-        "not-assessable": 118
+        "not-assessable": 115
       },
-      "assessedCoverage": 0.024793388429752067,
+      "assessedCoverage": 0.049586776859504134,
       "sampledAgreementRate": 1,
       "results": [
         {
@@ -9269,29 +9269,29 @@
           "referenceSha256": "887cadca6cd27cf2288e38afe78a13c1dd66953fda9c1fbaa9358c6cc1820fb1",
           "predictionSha256": "59bc194240a8072356b99781ab1dfb945ca87ecb5c5442f2404aaaf4a23d2f03",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "empty-expression"
         },
         {
           "image": "220110173-30.png",
           "imageSha256": "4af982e0930c54f851e68122f53a98aae234e49214f9367853999b40a3903df4",
           "referenceSha256": "83cd4096ac97ab0500530ada3a689de78f6071c20888e4d807a56675fbccdab6",
           "predictionSha256": "130a800fea76d1937aa13c66ed29635a96dcd88d989d670517ce182d45ae3e9f",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 6,
+          "referenceAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "predictionAstSha256": "6b8cdac667ca434935d50c7df54cd9df5e044aaa6511825748edc93f7ef432ce",
+          "detail": null
         },
         {
           "image": "211013262-9.png",
@@ -9299,14 +9299,14 @@
           "referenceSha256": "ec72f86762d46adf273a4c314505518b092750d7bec72756e85ac0daef33ef47",
           "predictionSha256": "e5331790a51349beeada7f0943b6fdc562ac538ddc2f630ff994c5bf5c807823",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 19,
+          "referenceAstSha256": "5d617cd1af68e3b25bc02cec2f6a025d38b304e68de6955ae447af76e6ed2452",
+          "predictionAstSha256": "fd7f265b697391c8b5093b05f4e8abc1ad25f035607deecf572c2b90b4233798",
+          "detail": null
         },
         {
           "image": "211104335-3.png",
@@ -9358,15 +9358,15 @@
           "imageSha256": "99b70564d83f193c61e9af523883320ad02f7f3958cbe10492f2c3c7df5eb5f1",
           "referenceSha256": "1add8cd0da7506db6cbed1c54d316148e670fd23b26c6dbc14efcd79a9d65d73",
           "predictionSha256": "4596a361abd760ef128138266e80e76e9977454723d94bece0a6c9b95dc6c9e8",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 13,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 11,
+          "variableCount": 2,
+          "referenceAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "predictionAstSha256": "3bcbb2135c6a72ec6de732d8d3ab0c0851c7db8b2ad91831f38833b73e76395f",
+          "detail": null
         },
         {
           "image": "230107755-41.png",
@@ -9389,14 +9389,14 @@
           "referenceSha256": "3ef8f403e70262d6f0823b69247c07bf33a11c2b066a6283d70824db8512dd5e",
           "predictionSha256": "82c3ab859bd9339f152fd32df6bc6345525490dc10c31049d9cab89a9cd1f138",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221200157-0.png",
@@ -9554,14 +9554,14 @@
           "referenceSha256": "e3e8ddd0daca7eb87badec244ed43247e7ae9b6875dd4bc1a0d9e1e6fdf8f93e",
           "predictionSha256": "2d92a7d87c340b06b0363a07410a7ac4aa1294fda5a586b6c969be204993549a",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-↦",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-↦"
         },
         {
           "image": "211105960-60.png",
@@ -9689,14 +9689,14 @@
           "referenceSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "predictionSha256": "ca3e5b2e65e2c39443ba2bffb471a30e01c6e3592d682227a4122c00af5e36ec",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 6,
+          "referenceAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "predictionAstSha256": "98f67af37b6a7f8f1f543a4c70d53da1f893558b6c98b8e911ea51d4ab61ca36",
+          "detail": null
         },
         {
           "image": "211101678-155.png",
@@ -9704,14 +9704,14 @@
           "referenceSha256": "f59878b4f20e707239f80ce3866c6aecf7948ce1b24723164a1046a0097357b1",
           "predictionSha256": "0d834c240292cc8be32c1f98de4b27c6206ec6e8a6bd66bf3d6d47001321066a",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-prefix-=",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-prefix-="
         },
         {
           "image": "230103329-3.png",
@@ -9719,14 +9719,14 @@
           "referenceSha256": "4728bcf133551d055b810ade2957d507ff545ed4e96a996dd842e9fae6ba88f0",
           "predictionSha256": "af4fbcca8a14afa622d6141485ba21330463ff461d96d192a6588c2a2a2b637c",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "predictionAstSha256": "dd2bc9e7496e83eaef9fc60a919f8f8b256dd73e2b5ee1c528b998ab9d091b98",
+          "detail": null
         },
         {
           "image": "220206411-86.png",
@@ -9899,14 +9899,14 @@
           "referenceSha256": "d8ec94a887176c5e9878e19474c5e0282e2bc3b8bc253b46fa0c6ce18d3011eb",
           "predictionSha256": "fdb82b815f9ffdaa54804b2473ee3b2d795165d25ef2bbde2a2031baa0f2860e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "230107078-37.png",
@@ -9959,14 +9959,14 @@
           "referenceSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "predictionSha256": "32abdc80a87c6630f9d3200ca2b58bbf231c633b8e55031ab9e8ed2312bf1670",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "domainSkipCount": 24,
+          "variableCount": 3,
+          "referenceAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "predictionAstSha256": "749d74e570649993d6aefd1a4b0956260b2effb684785a6cdf0fa49a160bcbe5",
+          "detail": null
         },
         {
           "image": "221105431-282.png",
@@ -9974,14 +9974,14 @@
           "referenceSha256": "fb71a4f2fa13d8e77da60a6872f35e41ee94115a839b57fa89d76f886f8b9a53",
           "predictionSha256": "5fe606eef3015b74b1556534845ad9ceeaccf10d9f180efdba1761928c425c57",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-∈",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-∈"
         },
         {
           "image": "220107791-90.png",
@@ -10064,14 +10064,14 @@
           "referenceSha256": "b516826b2071b6b2974ba470e045de8b6b5ac76cbb23f77d6660ae259ef21a51",
           "predictionSha256": "749e5a6261d3c232412017fc1d275e17a9d1f09eec75f0d3de15733a3884f94e",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-⁡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-⁡"
         },
         {
           "image": "221107691-22.png",
@@ -10094,14 +10094,14 @@
           "referenceSha256": "bb0cea79b478c9067a3224d27570a2d8f89214c44e841be694a587b5e2c98734",
           "predictionSha256": "d5f244c1d8f0008d7f40d5b2255bd2d729f693137cf44821a5198e896c223f6b",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "210807632-266.png",
@@ -10139,14 +10139,14 @@
           "referenceSha256": "16b79b5ec46701b8699ce818075f7d64be227e21df0c9f3a4a286470d0e1487d",
           "predictionSha256": "d94f1e7f8563d49592c04c42fb57e895ebdc53e492d31923e765ef06a35eb4d9",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "unsupported-mathml-mtable",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "detail": "unsupported-mathml-mtable"
         },
         {
           "image": "211103142-26.png",
@@ -10199,14 +10199,14 @@
           "referenceSha256": "cd111531883650664676d58e54de52079d09ab956b9edd938c7798c6dcb58018",
           "predictionSha256": "a1635691d1a5505a38233f36cada9b4ae95d6d9e450c2e0af2ccd8dc4d397c78",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "unsupported-token-≡",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "unsupported-token-≡"
         },
         {
           "image": "211008612-3.png",
@@ -10439,14 +10439,14 @@
           "referenceSha256": "8f3c3fdd34bad521f492e93c62875095441a0e72c0d28b103110f59f81fbea75",
           "predictionSha256": "7ee62dc5654c5c1ba4d4135758d2a8508ead98e25af93cc8560f1c57a2f7117c",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-prefix-∗",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-prefix-∗"
         },
         {
           "image": "221106142-32.png",
@@ -10469,14 +10469,14 @@
           "referenceSha256": "6922cc922dc8681dd7dfcfc192251ae8f1fe4c28ea513a358d2231fa97b94aef",
           "predictionSha256": "8153077a84ba34ea7326b6d6e1a4b90da9a0297acac00a13d399d24bbfa3fe0d",
           "status": "not-assessable",
-          "reason": "unsupported-token-.",
+          "reason": "insufficient-valid-substitutions",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
-          "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "domainSkipCount": 24,
+          "variableCount": 4,
+          "referenceAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "predictionAstSha256": "2e6aae817a8052ffc025628b57ad4159444aabc2b9ba2d4e0c2656e4a860ff49",
+          "detail": null
         },
         {
           "image": "221009155-114.png",
@@ -10604,14 +10604,14 @@
           "referenceSha256": "e4e0bbac603b4d9f01817a922645a00927e5200ed514000551168dda1cef29c3",
           "predictionSha256": "2374bb77f4220a3580ddcaf3f799fac8d6fa304ab0d7c7a1c0027b564d766eb4",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-{",
+          "reason": "unsupported-token-∪",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-{"
+          "detail": "unsupported-token-∪"
         },
         {
           "image": "211102999-146.png",
@@ -10708,15 +10708,15 @@
           "imageSha256": "dd9af024afbd165ebaf04e11d04be0c06f51bc036dd2615b107c17c830665a99",
           "referenceSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
           "predictionSha256": "0786fd964473a270b507762ae66f42b6ef81fe6151b613c0f2e7abd27799c7e6",
-          "status": "not-assessable",
-          "reason": "unsupported-token-.",
-          "validSubstitutionCount": 0,
+          "status": "sampled-equivalent",
+          "reason": null,
+          "validSubstitutionCount": 24,
           "mismatchCount": 0,
           "domainSkipCount": 0,
-          "variableCount": 0,
-          "referenceAstSha256": null,
-          "predictionAstSha256": null,
-          "detail": "unsupported-token-."
+          "variableCount": 4,
+          "referenceAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "predictionAstSha256": "94232e5d5eb2472808a33b1b2a8692dc8178bf1130a42d24e462abca2de8fefc",
+          "detail": null
         },
         {
           "image": "211205994-13.png",
@@ -10919,14 +10919,14 @@
           "referenceSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "predictionSha256": "dca7024725e0755a5232c36215db72937c0e3dce1683654fc73f1becd6f07393",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-.",
+          "reason": "empty-expression",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-."
+          "detail": "empty-expression"
         },
         {
           "image": "220903259-20.png",
@@ -10949,14 +10949,14 @@
           "referenceSha256": "42881bb8b239b0320c719dc917127e5bd595debef1b8dab42d51ccd1518ae8f3",
           "predictionSha256": "2dc82a1540e01fffffd146e44bae2ddd4e35efa8006aea1c455d16edccade0d7",
           "status": "not-assessable",
-          "reason": "unsupported-prefix-[",
+          "reason": "missing-operand",
           "validSubstitutionCount": 0,
           "mismatchCount": 0,
           "domainSkipCount": 0,
           "variableCount": 0,
           "referenceAstSha256": null,
           "predictionAstSha256": null,
-          "detail": "unsupported-prefix-["
+          "detail": "missing-operand"
         },
         {
           "image": "221107903-61.png",

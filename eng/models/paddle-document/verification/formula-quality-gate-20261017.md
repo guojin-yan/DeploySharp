@@ -25,7 +25,7 @@ This report is a fail-closed gate over the existing 121-sample MathNet realFormu
 
 ## Exploratory numeric diagnostic
 
-The linked restricted numeric-substitution report assessed 17/726 pairs (2.34% coverage); 709 pairs were not assessable. Of assessed pairs, 17 had no sampled mismatch and 0 differed. This sparse, unreviewed diagnostic is not a proof or release-quality evidence; mathematical semantic status remains **NOT ASSESSED**.
+The linked restricted numeric-substitution report assessed 36/726 pairs (4.96% coverage); 690 pairs were not assessable. Of assessed pairs, 36 had no sampled mismatch and 0 differed. This sparse, unreviewed diagnostic is not a proof or release-quality evidence; mathematical semantic status remains **NOT ASSESSED**.
 
 See [formula-realformula-numeric-equivalence-20261018.md](formula-realformula-numeric-equivalence-20261018.md) and the [machine-readable report](formula-realformula-numeric-equivalence-20261018.json) for hashes, protocol and fail-closed boundaries.
 

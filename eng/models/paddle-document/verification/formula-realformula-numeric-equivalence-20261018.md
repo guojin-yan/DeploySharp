@@ -4,12 +4,12 @@ This is an exploratory, fail-closed diagnostic over the existing 121 MathNet rea
 
 | Model | Samples | Sampled-equivalent | Sampled-different | Not assessable | Assessed coverage | Numeric agreement among assessed |
 |---|---:|---:|---:|---:|---:|---:|
-| `paddle-formula/pp-formulanet-plus-s` | 121 | 3 | 0 | 118 | 2.48% | 100.00% |
-| `paddle-formula/pp-formulanet-plus-m` | 121 | 2 | 0 | 119 | 1.65% | 100.00% |
-| `paddle-formula/pp-formulanet-plus-l` | 121 | 2 | 0 | 119 | 1.65% | 100.00% |
-| `paddle-formula/pp-formulanet-s` | 121 | 3 | 0 | 118 | 2.48% | 100.00% |
-| `paddle-formula/pp-formulanet-l` | 121 | 4 | 0 | 117 | 3.31% | 100.00% |
-| `paddle-formula/unimernet` | 121 | 3 | 0 | 118 | 2.48% | 100.00% |
+| `paddle-formula/pp-formulanet-plus-s` | 121 | 6 | 0 | 115 | 4.96% | 100.00% |
+| `paddle-formula/pp-formulanet-plus-m` | 121 | 6 | 0 | 115 | 4.96% | 100.00% |
+| `paddle-formula/pp-formulanet-plus-l` | 121 | 6 | 0 | 115 | 4.96% | 100.00% |
+| `paddle-formula/pp-formulanet-s` | 121 | 5 | 0 | 116 | 4.13% | 100.00% |
+| `paddle-formula/pp-formulanet-l` | 121 | 7 | 0 | 114 | 5.79% | 100.00% |
+| `paddle-formula/unimernet` | 121 | 6 | 0 | 115 | 4.96% | 100.00% |
 
 ## Protocol
 
