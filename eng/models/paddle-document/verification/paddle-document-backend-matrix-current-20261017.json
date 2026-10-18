@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T01:03:15Z",
+  "generatedUtc": "2026-10-18T01:09:23Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -129,7 +129,7 @@
   },
   "formalPerformanceEvidence": {
     "protocol": "5 warm-ups + 50 measured calls (or a stricter declared count)",
-    "bundleCount": 25,
+    "bundleCount": 27,
     "bundles": [
       {
         "id": "official-classification",
@@ -217,6 +217,34 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "sourceRevision": "68d2c8559cac893aa04b4322e2ec00bc2ca05780"
+      },
+      {
+        "id": "rt-detr-l-wired-cell-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wired-cell-det-benchmark-20261018.json",
+        "scope": "RT-DETR-L wired-cell detector single-image OpenCV DNN CPU execution with bounded ORT parity",
+        "modelIds": [
+          "paddle-table/rt-detr-l-wired-cell-det"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "f0c2717d0433bd4a0d4a347faa3ce62c893fb8cb"
+      },
+      {
+        "id": "rt-detr-l-wireless-cell-opencv-dnn",
+        "path": "eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wireless-cell-det-benchmark-20261018.json",
+        "scope": "RT-DETR-L wireless-cell detector single-image OpenCV DNN CPU execution with bounded ORT parity",
+        "modelIds": [
+          "paddle-table/rt-detr-l-wireless-cell-det"
+        ],
+        "backends": [
+          "opencv-dnn-cpu"
+        ],
+        "warmupCount": 5,
+        "measurementCount": 50,
+        "sourceRevision": "f0c2717d0433bd4a0d4a347faa3ce62c893fb8cb"
       },
       {
         "id": "document-orientation-tensorrt10-single-image",
@@ -756,6 +784,13 @@
       },
       {
         "modelId": "paddle-table/rt-detr-l-wired-cell-det",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "rt-detr-l-wired-cell-opencv-dnn"
+        ]
+      },
+      {
+        "modelId": "paddle-table/rt-detr-l-wired-cell-det",
         "backend": "openvino-cpu",
         "evidenceIds": [
           "table-task-chain-openvino"
@@ -766,6 +801,13 @@
         "backend": "tensorrt-cuda",
         "evidenceIds": [
           "table-cell-tensorrt"
+        ]
+      },
+      {
+        "modelId": "paddle-table/rt-detr-l-wireless-cell-det",
+        "backend": "opencv-dnn-cpu",
+        "evidenceIds": [
+          "rt-detr-l-wireless-cell-opencv-dnn"
         ]
       },
       {
@@ -807,9 +849,9 @@
       },
       {
         "backend": "opencv-dnn-cpu",
-        "evidencePairCount": 7,
-        "distinctModelCount": 7,
-        "distinctModelBackendPairCount": 7,
+        "evidencePairCount": 9,
+        "distinctModelCount": 9,
+        "distinctModelBackendPairCount": 9,
         "models": [
           "paddle-doc/pp-docblocklayout",
           "paddle-doc/pp-doclayout-l",
@@ -817,7 +859,9 @@
           "paddle-doc/pp-lcnet-x1-0-doc-ori",
           "paddle-doc/rt-detr-h-layout-17cls",
           "paddle-doc/rt-detr-h-layout-3cls",
-          "paddle-table/pp-lcnet-x1-0-table-cls"
+          "paddle-table/pp-lcnet-x1-0-table-cls",
+          "paddle-table/rt-detr-l-wired-cell-det",
+          "paddle-table/rt-detr-l-wireless-cell-det"
         ]
       },
       {
@@ -865,7 +909,7 @@
     ],
     "coverageAudit": {
       "status": "pass",
-      "validatedPairCount": 39,
+      "validatedPairCount": 41,
       "errors": []
     },
     "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."

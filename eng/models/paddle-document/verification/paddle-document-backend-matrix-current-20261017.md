@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index (2026-10-17)
 
-Generated 2026-10-18T01:03:15Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-18T01:09:23Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -51,6 +51,8 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | pp-doclayout-plus-l-opencv-dnn | PP-DocLayout-Plus-L single-image OpenCV DNN CPU execution with bounded ORT parity | opencv-dnn-cpu | paddle-doc/pp-doclayout-plus-l | 5 warm-up + 50 measured |
 | rt-detr-h-layout-3cls-opencv-dnn | RT-DETR-H 3-class layout single-image OpenCV DNN CPU execution with bounded ORT parity | opencv-dnn-cpu | paddle-doc/rt-detr-h-layout-3cls | 5 warm-up + 50 measured |
 | rt-detr-h-layout-17cls-opencv-dnn | RT-DETR-H 17-class layout single-image OpenCV DNN CPU execution with bounded ORT parity | opencv-dnn-cpu | paddle-doc/rt-detr-h-layout-17cls | 5 warm-up + 50 measured |
+| rt-detr-l-wired-cell-opencv-dnn | RT-DETR-L wired-cell detector single-image OpenCV DNN CPU execution with bounded ORT parity | opencv-dnn-cpu | paddle-table/rt-detr-l-wired-cell-det | 5 warm-up + 50 measured |
+| rt-detr-l-wireless-cell-opencv-dnn | RT-DETR-L wireless-cell detector single-image OpenCV DNN CPU execution with bounded ORT parity | opencv-dnn-cpu | paddle-table/rt-detr-l-wireless-cell-det | 5 warm-up + 50 measured |
 | document-orientation-tensorrt10-single-image | PP-LCNet document orientation single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison | tensorrt-cuda | paddle-doc/pp-lcnet-x1-0-doc-ori | 5 warm-up + 50 measured |
 | table-classification-tensorrt10-single-image | PP-LCNet table classification single-image TensorRT 10.11/API 10 execution and bounded CPU score comparison | tensorrt-cuda | paddle-table/pp-lcnet-x1-0-table-cls | 5 warm-up + 50 measured |
 | multipage-orientation-layout | Two-page orientation to layout task chain | onnxruntime-cpu, openvino-cpu | paddle-doc/pp-lcnet-x1-0-doc-ori<br>paddle-doc/pp-doclayout-l | 5 warm-up + 50 measured |
@@ -74,7 +76,7 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | Backend | Evidence rows | Distinct model/backend pairs | Distinct models |
 | --- | ---: | ---: | ---: |
 | onnxruntime-cpu | 8 | 6 | 6 |
-| opencv-dnn-cpu | 7 | 7 | 7 |
+| opencv-dnn-cpu | 9 | 9 | 9 |
 | openvino-cpu | 8 | 6 | 6 |
 | tensorrt-cuda | 27 | 20 | 20 |
 
