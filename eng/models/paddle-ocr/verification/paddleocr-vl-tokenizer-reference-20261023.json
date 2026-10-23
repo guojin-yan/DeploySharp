@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-10-23T10:18:41.703741+00:00",
+  "generatedUtc": "2026-10-23T11:00:38.373515+00:00",
   "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
   "source": "PaddlePaddle/PaddleOCR-VL-1.6",
   "tokenizersVersion": "0.23.2",
@@ -10,7 +10,7 @@
     "tokenizer_config.json": "1f979337347cc0cb72a6282d8a23ed183539aa81a87a906f022aee2bab83c7c5",
     "chat_template.jinja": "2f27812dab7f333e471884e0c803d807f11953d5453140dfb1aaba234f872bc8"
   },
-  "scriptSha256": "334d07795c9c2c70baf81643b6ec884bb5b5951975d065aa686c51910cf80bc2",
+  "scriptSha256": "0f9849bce0e1e33a77d22224308562e09369e093ade49e29382bad7ed60d5831",
   "textVectors": [
     {
       "text": "OCR:",

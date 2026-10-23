@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T10:35:04.284407+00:00",
+  "pinnedSourceSha256": "a4fa521b9cb16e207f94b7f2d16427771776dfc634420d319fc4916ee58049ec",
+  "scriptSha256": "9e6d7c2083be283f4526eb350c188aebae8273c3272d9f5b4c8fa4d6340d2835",
+  "referenceClass": "PaddleOCRVLImageProcessorPil",
+  "referenceModuleSha256": "cc2d4cb0669ed657fb305e4c5ff42327219b2b4db17d896253ff326e6784195f",
+  "manifestSha256": "f1182e0bd9740d64f2f9541ea833423dd74b5c3da2c4eafe0afb5cabd7a9fb93",
+  "cases": [
+    {
+      "id": "ocr-demo-1",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "pinnedShape": [
+        1296,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        1296,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          36,
+          36
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          36,
+          36
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "b4e4d8db74e1d1d6188dec09c84827ad42db6b420a10217ad62e21c2af9d31ae",
+      "currentPixelSha256": "b4e4d8db74e1d1d6188dec09c84827ad42db6b420a10217ad62e21c2af9d31ae",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    },
+    {
+      "id": "table-official-example",
+      "inputSha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+      "pinnedShape": [
+        600,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        600,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          12,
+          50
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          12,
+          50
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "c66c539dd3c39ceab0c5eea3613091c099853d3396a689227e13a6e5e94dbcbb",
+      "currentPixelSha256": "c66c539dd3c39ceab0c5eea3613091c099853d3396a689227e13a6e5e94dbcbb",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    },
+    {
+      "id": "formula-official-example",
+      "inputSha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+      "pinnedShape": [
+        640,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        640,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          10,
+          64
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          10,
+          64
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "c2a436b2841bda2c6fa805de1f8e23fa83af836149cde83e0989b2a2517ee838",
+      "currentPixelSha256": "c2a436b2841bda2c6fa805de1f8e23fa83af836149cde83e0989b2a2517ee838",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    },
+    {
+      "id": "chart-official-example",
+      "inputSha256": "d29ea952a5a182c18416dcf2bf17b606ead7ebf20100618ece87f6f288f856c3",
+      "pinnedShape": [
+        1760,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        1760,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          40,
+          44
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          40,
+          44
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "b6ad13d3a05602cf0787653c38506b71049215990fe71830f0baf1bae7097a8b",
+      "currentPixelSha256": "b6ad13d3a05602cf0787653c38506b71049215990fe71830f0baf1bae7097a8b",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    },
+    {
+      "id": "spotting-demo-1",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "pinnedShape": [
+        5184,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        5184,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          72,
+          72
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          72,
+          72
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "7e2c1e21f40f59c5b06ecc79cffd08da912ef8c5253559de9fc040877dd7fce4",
+      "currentPixelSha256": "7e2c1e21f40f59c5b06ecc79cffd08da912ef8c5253559de9fc040877dd7fce4",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    },
+    {
+      "id": "seal-official-example",
+      "inputSha256": "be29cb91999450742958c62ead08f93825b92e5fa4290c063cc7991259da6c24",
+      "pinnedShape": [
+        2116,
+        3,
+        14,
+        14
+      ],
+      "currentShape": [
+        2116,
+        3,
+        14,
+        14
+      ],
+      "pinnedGridThw": [
+        [
+          1,
+          46,
+          46
+        ]
+      ],
+      "currentGridThw": [
+        [
+          1,
+          46,
+          46
+        ]
+      ],
+      "gridEqual": true,
+      "pinnedPixelSha256": "ab8873bb1087e6affe7595feb691501ca6c616659cd3a284e63997ae6ec841ad",
+      "currentPixelSha256": "ab8873bb1087e6affe7595feb691501ca6c616659cd3a284e63997ae6ec841ad",
+      "pixelExact": true,
+      "maximumAbsoluteDifference": 0.0
+    }
+  ],
+  "boundary": "Actual image grid and normalized patch-pixel comparison only. Does not prove language positions, model-generation parity or a C# image resizer.",
+  "status": "all-exact"
+}

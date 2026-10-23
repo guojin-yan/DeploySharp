@@ -101,7 +101,7 @@ def main() -> None:
         "boundary": "Actual tokenizer.json output only. Not full AutoProcessor, image pixels, positions or model generation parity.",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, ensure_ascii=True, indent=2) + "\n", encoding="utf-8")
+    args.output.write_text(json.dumps(report, ensure_ascii=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"Recorded {len(vectors)} text, {len(tasks)} task and {len(decoded_vectors)} decode vectors; {len(added)} added tokens passed.")
 
 

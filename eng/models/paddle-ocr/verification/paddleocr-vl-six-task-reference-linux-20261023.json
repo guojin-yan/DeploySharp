@@ -1,0 +1,8953 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T10:27:50.832505+00:00",
+  "checkpoint": {
+    "repository": "PaddlePaddle/PaddleOCR-VL-1.6",
+    "revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+    "configSha256": "ce7f4565f8b1db78532ad5d1b9ebe55c2139d49bd4cb04778b580a08a598f171",
+    "weightSha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+    "weightVerified": true
+  },
+  "environment": {
+    "os": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "machine": "x86_64",
+    "python": "3.10.12",
+    "packages": {
+      "torch": "2.10.0+cpu",
+      "torchvision": "0.25.0+cpu",
+      "transformers": "5.20.2",
+      "tokenizers": "0.23.2",
+      "safetensors": "0.8.0",
+      "numpy": "2.2.6",
+      "Pillow": "12.3.0"
+    },
+    "device": "cpu",
+    "dtype": "float32",
+    "threads": 4,
+    "cudaAvailable": false
+  },
+  "protocol": {
+    "processorOnly": false,
+    "processorBackend": "pil",
+    "attention": "sdpa",
+    "maximumNewTokens": 512,
+    "requestedUseCache": true,
+    "checkpointUseCache": false,
+    "compareUncachedTokens": 8,
+    "doSample": false,
+    "warmup": 0,
+    "measured": 1,
+    "performanceBoundary": "Correctness smoke timing only; not a formal 5+50 benchmark."
+  },
+  "implementation": {
+    "processorClass": "PaddleOCRVLProcessor",
+    "imageProcessorClass": "PaddleOCRVLImageProcessorPil",
+    "processorModuleSha256": "73075d47b8c80840a1c1beb884975d5113503ac1ceb6947d8f74303f747ea815",
+    "imageProcessorModuleSha256": "cc2d4cb0669ed657fb305e4c5ff42327219b2b4db17d896253ff326e6784195f",
+    "transformersVersion": "5.20.2",
+    "modelClass": "PaddleOCRVLForConditionalGeneration",
+    "modelModuleSha256": "9471f809b2c3c4dcb722e578b6f91d33af08abd8b0c4047bad067c011f499d32"
+  },
+  "scriptSha256": "160ebec6e6d9c60e1c23bfd7ad7abbb72671e6931328df3eeb29332ce5a67ad6",
+  "manifestSha256": "f1182e0bd9740d64f2f9541ea833423dd74b5c3da2c4eafe0afb5cabd7a9fb93",
+  "cases": [
+    {
+      "id": "ocr-demo-1",
+      "task": "ocr",
+      "inputFile": "inputs/demo_1.jpg",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "source": "User-designated E:/Data/ocr/demo_1.jpg",
+      "scope": "Single supplied image; no layout detection or multi-page parsing",
+      "status": "generated",
+      "sourceSize": [
+        500,
+        500
+      ],
+      "preparedSize": [
+        500,
+        500
+      ],
+      "prepareMilliseconds": 23.90536619350314,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            337
+          ],
+          "dtype": "int64",
+          "bytes": 2696,
+          "sha256": "3370db8460f337d6e06c92f080ad486fdceecf1be08299c4755444da6d4dc1ae",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            100295,
+            101306,
+            93972,
+            2497,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            337
+          ],
+          "dtype": "int64",
+          "bytes": 2696,
+          "sha256": "3893896ef9babeab3dccc2a87f08e459cec58b7f66947a1f3ecd054ae5bd65e4",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            337
+          ],
+          "dtype": "int64",
+          "bytes": 2696,
+          "sha256": "aaf34fbf9e9d06516cf98450cfd367cba39d5830e061a11c51c4cd7a52364c64",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            1296,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 3048192,
+          "sha256": "b4e4d8db74e1d1d6188dec09c84827ad42db6b420a10217ad62e21c2af9d31ae",
+          "firstValues": [
+            0.20784318447113037,
+            0.20000004768371582,
+            0.20784318447113037,
+            0.19215691089630127,
+            0.21568632125854492,
+            0.19215691089630127,
+            0.20000004768371582,
+            0.19215691089630127,
+            0.18431377410888672,
+            0.19215691089630127,
+            0.17647063732147217,
+            0.18431377410888672
+          ],
+          "lastValues": [
+            0.019607901573181152,
+            0.043137311935424805,
+            0.043137311935424805,
+            0.019607901573181152,
+            0.019607901573181152,
+            0.043137311935424805,
+            0.050980448722839355,
+            0.035294175148010254,
+            0.019607901573181152,
+            0.027451038360595703,
+            0.043137311935424805,
+            0.058823585510253906
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "195be4ff81bf435d29b7d17bbcd9e444e3d8ead3d20570a7c92db0411d2a8892",
+          "firstValues": [
+            1,
+            36,
+            36
+          ],
+          "lastValues": [
+            1,
+            36,
+            36
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        93972,
+        2497,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          36,
+          36
+        ]
+      ],
+      "imageTokenCount": 324,
+      "generationMilliseconds": 16437.626296188682,
+      "generatedTokenIds": [
+        95439,
+        99657,
+        8093,
+        94610,
+        94053,
+        94461,
+        23,
+        23,
+        1909,
+        1555,
+        93945,
+        8813,
+        23,
+        23,
+        94110,
+        7,
+        8,
+        94323,
+        93945,
+        94405,
+        22993,
+        93956,
+        4,
+        3,
+        3,
+        22993,
+        94183,
+        95461,
+        94098,
+        23,
+        94405,
+        95916,
+        5,
+        5,
+        94323,
+        93956,
+        4,
+        3,
+        3,
+        3,
+        95916,
+        94183,
+        95461,
+        94098,
+        23,
+        23,
+        94956,
+        4124,
+        39579,
+        94274,
+        9456,
+        2295,
+        93945,
+        84615,
+        491,
+        10496,
+        23,
+        94956,
+        94203,
+        94312,
+        39579,
+        95439,
+        99657,
+        8093,
+        94610,
+        94053,
+        94461,
+        23,
+        94956,
+        1909,
+        15101,
+        39579,
+        63638,
+        93942,
+        94026,
+        93942,
+        6,
+        3,
+        4,
+        4,
+        23,
+        94956,
+        95162,
+        14761,
+        39579,
+        5,
+        5,
+        3,
+        522,
+        23,
+        94956,
+        15479,
+        17213,
+        39579,
+        6495,
+        4162,
+        95375,
+        94311,
+        23,
+        94956,
+        1730,
+        13120,
+        39579,
+        99178,
+        97657,
+        95218,
+        95810,
+        96841,
+        93995,
+        96608,
+        96038,
+        95316,
+        93942,
+        96818,
+        95391,
+        95268,
+        93995,
+        98970,
+        94746,
+        70104,
+        97198,
+        94281,
+        95912,
+        95016,
+        97267,
+        93995,
+        95785,
+        246,
+        147,
+        153,
+        94110,
+        35772,
+        94458,
+        94706,
+        94098,
+        23,
+        94956,
+        1730,
+        2803,
+        39579,
+        94034,
+        94952,
+        94630,
+        14309,
+        97149,
+        94738,
+        93956,
+        62470,
+        51537,
+        45303,
+        7025,
+        14309,
+        57468,
+        15730,
+        93956,
+        94285,
+        19323,
+        93964,
+        14309,
+        28132,
+        76152,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 337,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 337,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 338,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 339,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 340,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 341,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 342,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 343,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 344,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 345,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 346,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 347,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 348,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 349,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 350,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 351,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 352,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 353,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 354,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 355,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 356,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 357,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 358,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 359,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 360,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 361,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 362,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 363,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 364,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 365,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 366,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 367,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 368,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 369,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 370,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 371,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 372,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 373,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 374,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 375,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 376,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 377,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 378,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 379,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 380,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 381,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 382,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 383,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 384,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 385,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 386,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 387,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 388,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 389,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 390,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 391,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 392,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 393,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 394,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 395,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 396,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 397,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 398,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 399,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 400,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 401,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 402,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 403,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 404,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 405,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 406,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 407,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 408,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 409,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 410,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 411,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 412,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 413,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 414,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 415,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 416,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 417,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 418,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 419,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 420,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 421,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 422,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 423,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 424,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 425,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 426,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 427,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 428,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 429,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 430,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 431,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 432,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 433,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 434,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 435,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 436,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 437,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 438,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 439,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 440,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 441,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 442,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 443,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 444,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 445,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 446,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 447,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 448,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 449,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 450,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 451,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 452,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 453,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 454,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 455,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 456,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 457,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 458,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 459,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 460,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 461,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 462,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 463,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 464,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 465,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 466,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 467,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 468,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 469,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 470,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 471,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 472,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 473,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 474,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 475,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 476,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 477,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 478,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 479,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 480,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 481,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 482,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 483,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 484,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 485,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 486,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 487,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 488,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 489,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 490,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 491,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 492,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 493,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 494,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 495,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 496,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 497,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570\n\n\uff0845\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2\uff09\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09\n\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220ml\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\u03b2-\u8461\u805a\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c\uff08\u6210\u54c1\u5305\u6750\uff09\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934\u53d1\u8db3\u591f\u7684\u6ecb\u517b</s>",
+      "decoded": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570\n\n\uff0845\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2\uff09\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09\n\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220ml\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\u03b2-\u8461\u805a\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c\uff08\u6210\u54c1\u5305\u6750\uff09\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934\u53d1\u8db3\u591f\u7684\u6ecb\u517b",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          95439,
+          99657,
+          8093,
+          94610,
+          94053,
+          94461,
+          23,
+          23
+        ],
+        "equal": true
+      }
+    },
+    {
+      "id": "table-official-example",
+      "task": "table",
+      "inputFile": "inputs/table_recognition.jpg",
+      "inputSha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+      "source": "Existing PP-Structure validation/table_recognition.jpg asset",
+      "scope": "Single supplied table region",
+      "status": "generated",
+      "sourceSize": [
+        551,
+        132
+      ],
+      "preparedSize": [
+        551,
+        132
+      ],
+      "prepareMilliseconds": 5.385716911405325,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            163
+          ],
+          "dtype": "int64",
+          "bytes": 1304,
+          "sha256": "83edcb17e76b0ab87c2589dc846c3d88d094c99663b617eb8ff2591be1dc3e56",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            100295,
+            101306,
+            2567,
+            93514,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            163
+          ],
+          "dtype": "int64",
+          "bytes": 1304,
+          "sha256": "f0550a23778b4b8049820a19e17f1dfa3601935a574a5c645fd8e2a56a395c6f",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            163
+          ],
+          "dtype": "int64",
+          "bytes": 1304,
+          "sha256": "e3cc514191c1b6ba78b5eadad955a1e7923f4dda06eed70c8c1645a825ad49b5",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            600,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 1411200,
+          "sha256": "c66c539dd3c39ceab0c5eea3613091c099853d3396a689227e13a6e5e94dbcbb",
+          "firstValues": [
+            0.9921568632125854,
+            1.0,
+            1.0,
+            0.5764706134796143,
+            -1.0,
+            -0.9843137264251709,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          "lastValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "d29883de4e94806e3d42b3219d49ca0d6e6a90ee13a2489c7d2c5358758a0ba9",
+          "firstValues": [
+            1,
+            12,
+            50
+          ],
+          "lastValues": [
+            1,
+            12,
+            50
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        2567,
+        93514,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          12,
+          50
+        ]
+      ],
+      "imageTokenCount": 150,
+      "generationMilliseconds": 7277.567580807954,
+      "generatedTokenIds": [
+        101309,
+        2497,
+        1433,
+        945,
+        101311,
+        101311,
+        101311,
+        101313,
+        101309,
+        93970,
+        420,
+        101309,
+        9924,
+        1002,
+        6,
+        101309,
+        94512,
+        2518,
+        8352,
+        10460,
+        93956,
+        94094,
+        94168,
+        101309,
+        94744,
+        93995,
+        246,
+        192,
+        153,
+        94744,
+        94123,
+        81133,
+        101313,
+        101309,
+        4342,
+        472,
+        101308,
+        101309,
+        93926,
+        57504,
+        12747,
+        101309,
+        93983,
+        10,
+        3,
+        12,
+        93937,
+        101313,
+        101309,
+        12060,
+        93982,
+        343,
+        101309,
+        5,
+        93937,
+        10,
+        5,
+        101309,
+        58598,
+        41977,
+        304,
+        101309,
+        93983,
+        10,
+        7,
+        7,
+        93937,
+        10,
+        11,
+        101313,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 163,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 163,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 164,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 165,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 166,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 167,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 168,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 169,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 170,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 171,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 172,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 173,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 174,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 175,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 176,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 177,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 178,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 179,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 180,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 181,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 182,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 183,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 184,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 185,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 186,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 187,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 188,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 189,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 190,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 191,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 192,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 193,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 194,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 195,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 196,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 197,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 198,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 199,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 200,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 201,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 202,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 203,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 204,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 205,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 206,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 207,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 208,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 209,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 210,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 211,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 212,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 213,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 214,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 215,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 216,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 217,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 218,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 219,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 220,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 221,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 222,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 223,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 224,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 225,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 226,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 227,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 228,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 229,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 230,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 231,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 232,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "<fcel>CRuncover<lcel><lcel><lcel><nl><fcel>Dres<fcel>\u8fde\u7eed\u5de5\u4f5c3<fcel>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3<fcel>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927<nl><fcel>Abstr<ecel><fcel>rSrivi<fcel>$709.<nl><fcel>cludingGiv<fcel>2.72<fcel>Ingcubic<fcel>$744.78<nl></s>",
+      "decoded": "<fcel>CRuncover<lcel><lcel><lcel><nl><fcel>Dres<fcel>\u8fde\u7eed\u5de5\u4f5c3<fcel>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3<fcel>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927<nl><fcel>Abstr<ecel><fcel>rSrivi<fcel>$709.<nl><fcel>cludingGiv<fcel>2.72<fcel>Ingcubic<fcel>$744.78<nl>",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          101309,
+          2497,
+          1433,
+          945,
+          101311,
+          101311,
+          101311,
+          101313
+        ],
+        "equal": true
+      }
+    },
+    {
+      "id": "formula-official-example",
+      "task": "formula",
+      "inputFile": "inputs/general_formula_rec_001.png",
+      "inputSha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+      "source": "Existing PP-Structure validation/general_formula_rec_001.png asset",
+      "scope": "Single supplied formula region",
+      "status": "generated",
+      "sourceSize": [
+        448,
+        64
+      ],
+      "preparedSize": [
+        448,
+        64
+      ],
+      "prepareMilliseconds": 5.299180280417204,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            173
+          ],
+          "dtype": "int64",
+          "bytes": 1384,
+          "sha256": "8cf17e0a780e2e14e78e70ea4c8025a96991253a355c8cb62534c60ca62f2880",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            100295,
+            101306,
+            59352,
+            93514,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            173
+          ],
+          "dtype": "int64",
+          "bytes": 1384,
+          "sha256": "62dce6d37a5e296644b255be5b7c3db73f79213c6f243e2bbfd8d28b10c9f03b",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            173
+          ],
+          "dtype": "int64",
+          "bytes": 1384,
+          "sha256": "b5271dc0985145525bf306803ad86afaaba57f11601886971e823165b971a99e",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            640,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 1505280,
+          "sha256": "c2a436b2841bda2c6fa805de1f8e23fa83af836149cde83e0989b2a2517ee838",
+          "firstValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "lastValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "4f9f39b94bc731e5007a7f374cac6a86211fbb66bf3311426e1f1015686aad0a",
+          "firstValues": [
+            1,
+            10,
+            64
+          ],
+          "lastValues": [
+            1,
+            10,
+            64
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        59352,
+        93514,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          10,
+          64
+        ]
+      ],
+      "imageTokenCount": 160,
+      "generationMilliseconds": 8056.455806829035,
+      "generatedTokenIds": [
+        2812,
+        93980,
+        15565,
+        890,
+        3,
+        7943,
+        3072,
+        6837,
+        4360,
+        2087,
+        712,
+        3072,
+        93980,
+        55041,
+        5176,
+        5,
+        93980,
+        3072,
+        16467,
+        1779,
+        1498,
+        446,
+        2055,
+        2527,
+        10599,
+        6582,
+        93973,
+        93929,
+        93980,
+        6210,
+        93980,
+        446,
+        890,
+        93961,
+        62081,
+        1000,
+        93929,
+        616,
+        93980,
+        2087,
+        93974,
+        5,
+        93979,
+        1305,
+        5,
+        14447,
+        93949,
+        93979,
+        1305,
+        5,
+        21082,
+        6210,
+        1305,
+        5,
+        2231,
+        3530,
+        3072,
+        93996,
+        4,
+        6651,
+        9912,
+        698,
+        712,
+        15612,
+        7943,
+        6210,
+        93959,
+        93979,
+        93948,
+        93920,
+        1305,
+        93923,
+        93980,
+        8557,
+        616,
+        1498,
+        5918,
+        93938,
+        2594,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 173,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 173,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 174,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 175,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 176,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 177,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 178,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 179,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 180,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 181,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 182,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 183,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 184,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 185,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 186,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 187,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 188,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 189,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 190,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 191,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 192,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 193,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 194,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 195,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 196,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 197,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 198,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 199,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 200,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 201,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 202,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 203,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 204,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 205,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 206,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 207,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 208,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 209,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 210,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 211,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 212,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 213,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 214,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 215,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 216,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 217,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 218,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 219,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 220,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 221,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 222,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 223,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 224,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 225,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 226,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 227,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 228,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 229,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 230,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 231,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 232,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 233,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 234,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 235,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 236,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 237,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 238,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 239,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 240,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 241,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 242,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 243,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 244,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 245,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 246,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 247,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 248,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 249,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 250,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 251,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "\\[\\zeta_{0}(\\nu)=-\\frac{\\nu\\varrho^{-2\\nu}}{\\pi}\\int_{\\mu}^{\\infty}d\\omega\\int_{C_{+}}d z\\frac{2z^{2}}{(z^{2}+\\omega^{2})^{\\nu+1}}\\breve{\\Psi}(\\omega;z)e^{i\\epsilon z}\\quad,\\]</s>",
+      "decoded": "\\[\\zeta_{0}(\\nu)=-\\frac{\\nu\\varrho^{-2\\nu}}{\\pi}\\int_{\\mu}^{\\infty}d\\omega\\int_{C_{+}}d z\\frac{2z^{2}}{(z^{2}+\\omega^{2})^{\\nu+1}}\\breve{\\Psi}(\\omega;z)e^{i\\epsilon z}\\quad,\\]",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          2812,
+          93980,
+          15565,
+          890,
+          3,
+          7943,
+          3072,
+          6837
+        ],
+        "equal": true
+      }
+    },
+    {
+      "id": "chart-official-example",
+      "task": "chart",
+      "inputFile": "inputs/chart_parsing_02.png",
+      "inputSha256": "d29ea952a5a182c18416dcf2bf17b606ead7ebf20100618ece87f6f288f856c3",
+      "source": "Existing PP-Structure validation/chart_parsing_02.png asset",
+      "scope": "Single supplied chart region",
+      "status": "generated",
+      "sourceSize": [
+        625,
+        570
+      ],
+      "preparedSize": [
+        625,
+        570
+      ],
+      "prepareMilliseconds": 15.033790841698647,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            453
+          ],
+          "dtype": "int64",
+          "bytes": 3624,
+          "sha256": "bd829752908bd4a1a92f8b53934676234d61ba7b7cd74f22238142de718d7064",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            100295,
+            101306,
+            17720,
+            93514,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            453
+          ],
+          "dtype": "int64",
+          "bytes": 3624,
+          "sha256": "7bea85e274dfd254e9904bb1d1a9b309c120af1ddae890417f932c17afe75133",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            453
+          ],
+          "dtype": "int64",
+          "bytes": 3624,
+          "sha256": "78c2d2adee7d6b19871340471855d7cf498dcad112a5b6eb7220683c0f48eb1b",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            1760,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 4139520,
+          "sha256": "b6ad13d3a05602cf0787653c38506b71049215990fe71830f0baf1bae7097a8b",
+          "firstValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.9921568632125854,
+            1.0,
+            0.9921568632125854,
+            0.9921568632125854,
+            0.9921568632125854,
+            0.9843137264251709,
+            0.9686274528503418,
+            0.9764705896377563
+          ],
+          "lastValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "9ec74a5b134939da9d4ba9539de4ec23b5b13f5fca182b012fd239d4abeb9fd2",
+          "firstValues": [
+            1,
+            40,
+            44
+          ],
+          "lastValues": [
+            1,
+            40,
+            44
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        17720,
+        93514,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          40,
+          44
+        ]
+      ],
+      "imageTokenCount": 440,
+      "generationMilliseconds": 17356.931164860725,
+      "generatedTokenIds": [
+        53021,
+        697,
+        48101,
+        94099,
+        94492,
+        19161,
+        5166,
+        29240,
+        64209,
+        18402,
+        322,
+        94717,
+        6920,
+        93948,
+        697,
+        48101,
+        94099,
+        94492,
+        19161,
+        5166,
+        29240,
+        64209,
+        7010,
+        322,
+        94717,
+        6920,
+        93948,
+        23,
+        5,
+        3,
+        4,
+        11,
+        697,
+        93919,
+        4,
+        3,
+        7,
+        93937,
+        5,
+        5,
+        697,
+        93919,
+        12,
+        93937,
+        11,
+        10,
+        23,
+        5,
+        3,
+        4,
+        12,
+        697,
+        93919,
+        12,
+        12,
+        93937,
+        4,
+        4,
+        697,
+        93919,
+        10,
+        93937,
+        7,
+        10,
+        23,
+        5,
+        3,
+        5,
+        3,
+        697,
+        93919,
+        8,
+        10,
+        93937,
+        11,
+        10,
+        697,
+        369,
+        6,
+        93937,
+        11,
+        10,
+        23,
+        5,
+        3,
+        5,
+        4,
+        697,
+        93919,
+        9,
+        11,
+        93937,
+        12,
+        12,
+        697,
+        369,
+        5,
+        93937,
+        12,
+        3,
+        23,
+        5,
+        3,
+        5,
+        5,
+        697,
+        93919,
+        8,
+        9,
+        93937,
+        5,
+        12,
+        697,
+        369,
+        12,
+        93937,
+        7,
+        11,
+        23,
+        5,
+        3,
+        5,
+        6,
+        697,
+        93919,
+        11,
+        10,
+        93937,
+        12,
+        12,
+        697,
+        93919,
+        8,
+        93937,
+        12,
+        9,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 453,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 453,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 454,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 455,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 456,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 457,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 458,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 459,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 460,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 461,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 462,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 463,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 464,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 465,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 466,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 467,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 468,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 469,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 470,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 471,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 472,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 473,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 474,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 475,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 476,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 477,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 478,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 479,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 480,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 481,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 482,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 483,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 484,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 485,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 486,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 487,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 488,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 489,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 490,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 491,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 492,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 493,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 494,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 495,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 496,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 497,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 498,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 499,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 500,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 501,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 502,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 503,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 504,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 505,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 506,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 507,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 508,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 509,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 510,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 511,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 512,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 513,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 514,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 515,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 516,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 517,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 518,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 519,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 520,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 521,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 522,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 523,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 524,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 525,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 526,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 527,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 528,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 529,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 530,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 531,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 532,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 533,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 534,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 535,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 536,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 537,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 538,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 539,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 540,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 541,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 542,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 543,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 544,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 545,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 546,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 547,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 548,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 549,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 550,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 551,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 552,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 553,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 554,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 555,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 556,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 557,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 558,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 559,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 560,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 561,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 562,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 563,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 564,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 565,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 566,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 567,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 568,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 569,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 570,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 571,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 572,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 573,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 574,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 575,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 576,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 577,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 578,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 579,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 580,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 581,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 582,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 583,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 584,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 585,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 586,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 587,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 588,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "\u5e74\u4efd | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u8425\u6536 (\u767e\u4e07\u5143) | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u5229\u6da6 (\u767e\u4e07\u5143)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96</s>",
+      "decoded": "\u5e74\u4efd | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u8425\u6536 (\u767e\u4e07\u5143) | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u5229\u6da6 (\u767e\u4e07\u5143)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          53021,
+          697,
+          48101,
+          94099,
+          94492,
+          19161,
+          5166,
+          29240
+        ],
+        "equal": true
+      }
+    },
+    {
+      "id": "spotting-demo-1",
+      "task": "spotting",
+      "inputFile": "inputs/demo_1.jpg",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "source": "User-designated E:/Data/ocr/demo_1.jpg",
+      "scope": "Single image text spotting with official optional 2x Lanczos preparation",
+      "status": "generated",
+      "sourceSize": [
+        500,
+        500
+      ],
+      "preparedSize": [
+        1000,
+        1000
+      ],
+      "prepareMilliseconds": 44.43489108234644,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            1309
+          ],
+          "dtype": "int64",
+          "bytes": 10472,
+          "sha256": "5f364dc2dbeee9bf9060334a2bf3af7565f845f37742f62d75ae39ec1d9873b3",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            100295,
+            101306,
+            4844,
+            31422,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            1309
+          ],
+          "dtype": "int64",
+          "bytes": 10472,
+          "sha256": "47d1215bfb5109bca883111f62dae35e123f2993b65dcb037d75cd5478750e77",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            1309
+          ],
+          "dtype": "int64",
+          "bytes": 10472,
+          "sha256": "2d7fa8fe5f6ccdf0b7880586aebcc806f1b83e7859c50adab3095dfd834633fb",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            5184,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 12192768,
+          "sha256": "7e2c1e21f40f59c5b06ecc79cffd08da912ef8c5253559de9fc040877dd7fce4",
+          "firstValues": [
+            0.20784318447113037,
+            0.20784318447113037,
+            0.20000004768371582,
+            0.20000004768371582,
+            0.21568632125854492,
+            0.21568632125854492,
+            0.20000004768371582,
+            0.20000004768371582,
+            0.22352945804595947,
+            0.22352945804595947,
+            0.20000004768371582,
+            0.19215691089630127
+          ],
+          "lastValues": [
+            0.050980448722839355,
+            0.050980448722839355,
+            0.043137311935424805,
+            0.027451038360595703,
+            0.019607901573181152,
+            0.019607901573181152,
+            0.027451038360595703,
+            0.027451038360595703,
+            0.035294175148010254,
+            0.050980448722839355,
+            0.058823585510253906,
+            0.058823585510253906
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "554d3e36ffd8fe4bcac73a28f36207087a50e7dc792de8170f46b22102365ef9",
+          "firstValues": [
+            1,
+            72,
+            72
+          ],
+          "lastValues": [
+            1,
+            72,
+            72
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        4844,
+        31422,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          72,
+          72
+        ]
+      ],
+      "imageTokenCount": 1296,
+      "generationMilliseconds": 52425.9719918482,
+      "generatedTokenIds": [
+        95439,
+        99657,
+        8093,
+        94610,
+        94053,
+        94461,
+        101245,
+        101226,
+        100687,
+        101226,
+        100687,
+        101143,
+        101245,
+        101143,
+        23,
+        1909,
+        1555,
+        93945,
+        8813,
+        101245,
+        101131,
+        100947,
+        101131,
+        100947,
+        101083,
+        101245,
+        101083,
+        23,
+        93949,
+        7,
+        8,
+        94323,
+        93945,
+        94405,
+        22993,
+        93956,
+        4,
+        3,
+        3,
+        22993,
+        94183,
+        95461,
+        93948,
+        101242,
+        101071,
+        100634,
+        101071,
+        100634,
+        101022,
+        101242,
+        101022,
+        23,
+        94405,
+        95916,
+        5,
+        5,
+        94323,
+        93956,
+        4,
+        3,
+        3,
+        3,
+        95916,
+        94183,
+        95461,
+        94098,
+        101245,
+        101011,
+        100734,
+        101011,
+        100734,
+        100962,
+        101245,
+        100962,
+        23,
+        94956,
+        4124,
+        39579,
+        94274,
+        9456,
+        2295,
+        93945,
+        84615,
+        491,
+        10496,
+        101245,
+        100943,
+        100698,
+        100943,
+        100698,
+        100902,
+        101245,
+        100902,
+        23,
+        94956,
+        94203,
+        94312,
+        39579,
+        95439,
+        99657,
+        8093,
+        94610,
+        94053,
+        94461,
+        101245,
+        100882,
+        100826,
+        100882,
+        100826,
+        100839,
+        101245,
+        100839,
+        23,
+        94956,
+        1909,
+        15101,
+        39579,
+        63638,
+        93942,
+        94026,
+        93942,
+        6,
+        3,
+        4,
+        4,
+        101245,
+        100820,
+        100812,
+        100820,
+        100812,
+        100779,
+        101245,
+        100779,
+        23,
+        94956,
+        95162,
+        14761,
+        39579,
+        5,
+        5,
+        3,
+        16406,
+        101245,
+        100758,
+        100935,
+        100758,
+        100935,
+        100718,
+        101245,
+        100718,
+        23,
+        94956,
+        15479,
+        17213,
+        39579,
+        6495,
+        4162,
+        95375,
+        94311,
+        101245,
+        100697,
+        100791,
+        100697,
+        100791,
+        100656,
+        101245,
+        100656,
+        23,
+        94956,
+        1730,
+        13120,
+        39579,
+        99178,
+        97657,
+        95218,
+        95810,
+        96841,
+        93995,
+        96608,
+        96038,
+        93980,
+        1747,
+        4094,
+        93980,
+        7480,
+        96818,
+        95391,
+        101245,
+        100636,
+        100609,
+        100635,
+        100609,
+        100593,
+        101245,
+        100593,
+        23,
+        95268,
+        93995,
+        98970,
+        94746,
+        70104,
+        97198,
+        94281,
+        95912,
+        95016,
+        97267,
+        93995,
+        95785,
+        246,
+        147,
+        153,
+        101244,
+        100573,
+        100732,
+        100573,
+        100732,
+        100531,
+        101244,
+        100531,
+        23,
+        93949,
+        35772,
+        94458,
+        94706,
+        93948,
+        100567,
+        100568,
+        100352,
+        100568,
+        100352,
+        100524,
+        100567,
+        100524,
+        23,
+        94956,
+        1730,
+        2803,
+        39579,
+        94034,
+        94952,
+        94630,
+        14309,
+        97149,
+        94738,
+        93956,
+        62470,
+        101245,
+        100512,
+        100574,
+        100511,
+        100574,
+        100469,
+        101245,
+        100469,
+        23,
+        51537,
+        45303,
+        7025,
+        14309,
+        57468,
+        15730,
+        93956,
+        94285,
+        19323,
+        60696,
+        101244,
+        100449,
+        100553,
+        100449,
+        100553,
+        100406,
+        101244,
+        100407,
+        23,
+        94053,
+        28132,
+        76152,
+        101241,
+        100387,
+        101019,
+        100387,
+        101019,
+        100345,
+        101241,
+        100345,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 1309,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1309,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1310,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1311,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1312,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1313,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1314,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1315,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1316,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1317,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1318,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1319,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1320,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1321,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1322,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1323,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1324,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1325,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1326,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1327,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1328,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1329,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1330,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1331,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1332,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1333,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1334,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1335,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1336,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1337,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1338,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1339,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1340,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1341,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1342,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1343,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1344,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1345,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1346,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1347,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1348,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1349,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1350,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1351,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1352,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1353,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1354,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1355,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1356,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1357,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1358,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1359,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1360,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1361,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1362,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1363,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1364,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1365,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1366,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1367,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1368,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1369,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1370,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1371,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1372,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1373,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1374,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1375,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1376,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1377,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1378,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1379,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1380,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1381,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1382,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1383,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1384,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1385,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1386,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1387,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1388,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1389,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1390,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1391,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1392,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1393,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1394,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1395,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1396,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1397,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1398,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1399,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1400,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1401,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1402,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1403,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1404,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1405,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1406,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1407,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1408,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1409,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1410,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1411,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1412,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1413,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1414,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1415,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1416,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1417,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1418,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1419,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1420,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1421,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1422,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1423,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1424,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1425,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1426,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1427,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1428,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1429,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1430,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1431,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1432,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1433,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1434,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1435,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1436,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1437,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1438,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1439,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1440,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1441,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1442,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1443,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1444,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1445,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1446,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1447,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1448,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1449,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1450,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1451,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1452,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1453,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1454,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1455,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1456,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1457,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1458,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1459,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1460,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1461,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1462,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1463,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1464,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1465,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1466,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1467,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1468,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1469,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1470,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1471,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1472,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1473,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1474,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1475,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1476,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1477,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1478,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1479,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1480,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1481,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1482,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1483,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1484,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1485,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1486,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1487,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1488,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1489,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1490,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1491,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1492,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1493,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1494,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1495,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1496,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1497,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1498,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1499,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1500,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1501,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1502,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1503,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1504,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1505,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1506,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1507,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1508,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1509,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1510,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1511,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1512,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1513,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1514,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1515,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1516,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1517,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1518,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1519,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1520,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1521,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1522,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1523,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1524,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1525,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1526,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1527,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1528,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1529,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1530,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1531,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1532,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1533,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1534,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1535,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1536,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1537,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1538,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1539,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1540,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1541,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1542,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1543,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1544,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1545,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1546,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1547,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1548,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1549,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1550,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1551,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1552,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1553,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1554,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1555,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1556,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1557,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1558,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1559,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1560,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1561,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1562,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1563,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1564,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1565,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1566,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1567,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1568,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1569,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1570,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1571,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1572,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1573,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1574,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1575,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1576,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1577,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1578,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1579,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1580,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1581,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1582,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1583,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1584,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1585,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1586,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1587,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1588,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1589,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1590,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1591,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1592,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 1593,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_929|><|LOC_390|><|LOC_929|><|LOC_390|><|LOC_846|><|LOC_948|><|LOC_846|>\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570<|LOC_948|><|LOC_834|><|LOC_650|><|LOC_834|><|LOC_650|><|LOC_786|><|LOC_948|><|LOC_786|>\n(45\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2)<|LOC_945|><|LOC_774|><|LOC_337|><|LOC_774|><|LOC_337|><|LOC_725|><|LOC_945|><|LOC_725|>\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09<|LOC_948|><|LOC_714|><|LOC_437|><|LOC_714|><|LOC_437|><|LOC_665|><|LOC_948|><|LOC_665|>\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM<|LOC_948|><|LOC_646|><|LOC_401|><|LOC_646|><|LOC_401|><|LOC_605|><|LOC_948|><|LOC_605|>\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_585|><|LOC_529|><|LOC_585|><|LOC_529|><|LOC_542|><|LOC_948|><|LOC_542|>\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011<|LOC_948|><|LOC_523|><|LOC_515|><|LOC_523|><|LOC_515|><|LOC_482|><|LOC_948|><|LOC_482|>\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220 ml<|LOC_948|><|LOC_461|><|LOC_638|><|LOC_461|><|LOC_638|><|LOC_421|><|LOC_948|><|LOC_421|>\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28<|LOC_948|><|LOC_400|><|LOC_494|><|LOC_400|><|LOC_494|><|LOC_359|><|LOC_948|><|LOC_359|>\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\\(\\beta\\)-\u8461\u805a<|LOC_948|><|LOC_339|><|LOC_312|><|LOC_338|><|LOC_312|><|LOC_296|><|LOC_948|><|LOC_296|>\n\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c<|LOC_947|><|LOC_276|><|LOC_435|><|LOC_276|><|LOC_435|><|LOC_234|><|LOC_947|><|LOC_234|>\n(\u6210\u54c1\u5305\u6750)<|LOC_270|><|LOC_271|><|LOC_55|><|LOC_271|><|LOC_55|><|LOC_227|><|LOC_270|><|LOC_227|>\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230<|LOC_948|><|LOC_215|><|LOC_277|><|LOC_214|><|LOC_277|><|LOC_172|><|LOC_948|><|LOC_172|>\n\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934<|LOC_947|><|LOC_152|><|LOC_256|><|LOC_152|><|LOC_256|><|LOC_109|><|LOC_947|><|LOC_110|>\n\u53d1\u8db3\u591f\u7684\u6ecb\u517b<|LOC_944|><|LOC_90|><|LOC_722|><|LOC_90|><|LOC_722|><|LOC_48|><|LOC_944|><|LOC_48|></s>",
+      "decoded": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_929|><|LOC_390|><|LOC_929|><|LOC_390|><|LOC_846|><|LOC_948|><|LOC_846|>\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570<|LOC_948|><|LOC_834|><|LOC_650|><|LOC_834|><|LOC_650|><|LOC_786|><|LOC_948|><|LOC_786|>\n(45\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2)<|LOC_945|><|LOC_774|><|LOC_337|><|LOC_774|><|LOC_337|><|LOC_725|><|LOC_945|><|LOC_725|>\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09<|LOC_948|><|LOC_714|><|LOC_437|><|LOC_714|><|LOC_437|><|LOC_665|><|LOC_948|><|LOC_665|>\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM<|LOC_948|><|LOC_646|><|LOC_401|><|LOC_646|><|LOC_401|><|LOC_605|><|LOC_948|><|LOC_605|>\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_585|><|LOC_529|><|LOC_585|><|LOC_529|><|LOC_542|><|LOC_948|><|LOC_542|>\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011<|LOC_948|><|LOC_523|><|LOC_515|><|LOC_523|><|LOC_515|><|LOC_482|><|LOC_948|><|LOC_482|>\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220 ml<|LOC_948|><|LOC_461|><|LOC_638|><|LOC_461|><|LOC_638|><|LOC_421|><|LOC_948|><|LOC_421|>\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28<|LOC_948|><|LOC_400|><|LOC_494|><|LOC_400|><|LOC_494|><|LOC_359|><|LOC_948|><|LOC_359|>\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\\(\\beta\\)-\u8461\u805a<|LOC_948|><|LOC_339|><|LOC_312|><|LOC_338|><|LOC_312|><|LOC_296|><|LOC_948|><|LOC_296|>\n\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c<|LOC_947|><|LOC_276|><|LOC_435|><|LOC_276|><|LOC_435|><|LOC_234|><|LOC_947|><|LOC_234|>\n(\u6210\u54c1\u5305\u6750)<|LOC_270|><|LOC_271|><|LOC_55|><|LOC_271|><|LOC_55|><|LOC_227|><|LOC_270|><|LOC_227|>\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230<|LOC_948|><|LOC_215|><|LOC_277|><|LOC_214|><|LOC_277|><|LOC_172|><|LOC_948|><|LOC_172|>\n\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934<|LOC_947|><|LOC_152|><|LOC_256|><|LOC_152|><|LOC_256|><|LOC_109|><|LOC_947|><|LOC_110|>\n\u53d1\u8db3\u591f\u7684\u6ecb\u517b<|LOC_944|><|LOC_90|><|LOC_722|><|LOC_90|><|LOC_722|><|LOC_48|><|LOC_944|><|LOC_48|>",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          95439,
+          99657,
+          8093,
+          94610,
+          94053,
+          94461,
+          101245,
+          101226
+        ],
+        "equal": true
+      }
+    },
+    {
+      "id": "seal-official-example",
+      "task": "seal",
+      "inputFile": "inputs/seal_text_det.png",
+      "inputSha256": "be29cb91999450742958c62ead08f93825b92e5fa4290c063cc7991259da6c24",
+      "source": "https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/seal_text_det.png",
+      "scope": "Single supplied seal image; no detector crop or coordinate quality claim",
+      "status": "generated",
+      "sourceSize": [
+        640,
+        640
+      ],
+      "preparedSize": [
+        640,
+        640
+      ],
+      "prepareMilliseconds": 19.510366953909397,
+      "tensors": {
+        "input_ids": {
+          "shape": [
+            1,
+            543
+          ],
+          "dtype": "int64",
+          "bytes": 4344,
+          "sha256": "054d75e2326f150ed75e0c661b39d1086182ae5b5fa0c852fd3e1aef0e358484",
+          "firstValues": [
+            100273,
+            2969,
+            93963,
+            93919,
+            101305,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295,
+            100295
+          ],
+          "lastValues": [
+            100295,
+            100295,
+            100295,
+            101306,
+            1244,
+            286,
+            93514,
+            93963,
+            23,
+            92267,
+            93963,
+            23
+          ]
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            543
+          ],
+          "dtype": "int64",
+          "bytes": 4344,
+          "sha256": "ebc380a10475a4a1987cff6637600595773ccd94ba5f5eb170417697bc74c89b",
+          "firstValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "mm_token_type_ids": {
+          "shape": [
+            1,
+            543
+          ],
+          "dtype": "int64",
+          "bytes": 4344,
+          "sha256": "42f0e3fb740a1f0d3313690703af830223b3e5f8feee5e619b9dcb933b2beab8",
+          "firstValues": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lastValues": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "pixel_values": {
+          "shape": [
+            2116,
+            3,
+            14,
+            14
+          ],
+          "dtype": "float32",
+          "bytes": 4976832,
+          "sha256": "ab8873bb1087e6affe7595feb691501ca6c616659cd3a284e63997ae6ec841ad",
+          "firstValues": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "lastValues": [
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8352941274642944,
+            0.8745098114013672,
+            1.0,
+            1.0
+          ]
+        },
+        "image_grid_thw": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "int64",
+          "bytes": 24,
+          "sha256": "1086ccf8db6abf56d2409e9d7a53954ca440d954dfa7e270e40caf1becf9a289",
+          "firstValues": [
+            1,
+            46,
+            46
+          ],
+          "lastValues": [
+            1,
+            46,
+            46
+          ]
+        }
+      },
+      "inputTokenIds": [
+        100273,
+        2969,
+        93963,
+        93919,
+        101305,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        100295,
+        101306,
+        1244,
+        286,
+        93514,
+        93963,
+        23,
+        92267,
+        93963,
+        23
+      ],
+      "imageGridThw": [
+        [
+          1,
+          46,
+          46
+        ]
+      ],
+      "imageTokenCount": 529,
+      "generationMilliseconds": 11131.846576929092,
+      "generatedTokenIds": [
+        14967,
+        95750,
+        94029,
+        95599,
+        46938,
+        4849,
+        23,
+        8,
+        5,
+        9,
+        6,
+        9,
+        7,
+        10,
+        6,
+        9,
+        11,
+        10,
+        3,
+        9,
+        23,
+        24604,
+        23303,
+        94625,
+        23,
+        94310,
+        95747,
+        94201,
+        2
+      ],
+      "forwardCalls": [
+        {
+          "tokens": 543,
+          "pastLength": 0,
+          "pixelValuesPresent": true
+        },
+        {
+          "tokens": 1,
+          "pastLength": 543,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 544,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 545,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 546,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 547,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 548,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 549,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 550,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 551,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 552,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 553,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 554,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 555,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 556,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 557,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 558,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 559,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 560,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 561,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 562,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 563,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 564,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 565,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 566,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 567,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 568,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 569,
+          "pixelValuesPresent": false
+        },
+        {
+          "tokens": 1,
+          "pastLength": 570,
+          "pixelValuesPresent": false
+        }
+      ],
+      "stopReason": "eos",
+      "decodedWithSpecialTokens": "\u5929\u6d25\u541b\u548c\u7f18\u5546\u8d38\u6709\u9650\u516c\u53f8\n5263647368706\n\u53d1\u7968\u4e13\u7528\u7ae0\n\u5417\u7e41\u7269</s>",
+      "decoded": "\u5929\u6d25\u541b\u548c\u7f18\u5546\u8d38\u6709\u9650\u516c\u53f8\n5263647368706\n\u53d1\u7968\u4e13\u7528\u7ae0\n\u5417\u7e41\u7269",
+      "uncachedComparison": {
+        "maximumNewTokens": 8,
+        "tokenIds": [
+          14967,
+          95750,
+          94029,
+          95599,
+          46938,
+          4849,
+          23,
+          8
+        ],
+        "equal": true
+      }
+    }
+  ],
+  "status": "reference-generation-complete",
+  "boundary": "Pinned official weights with the recorded Transformers built-in implementation; not an ONNX export, C# inference, quality benchmark or multi-backend support claim.",
+  "modelLoadMilliseconds": 534.8321348428726,
+  "completedUtc": "2026-10-23T10:36:55.840184+00:00"
+}

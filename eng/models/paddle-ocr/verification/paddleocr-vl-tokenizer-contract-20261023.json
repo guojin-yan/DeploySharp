@@ -1,11 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-10-23T10:25:00.1033498Z",
+  "generatedUtc": "2026-10-23T11:07:32.1319693Z",
   "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
   "reference": "paddleocr-vl-tokenizer-reference-20261023.json",
-  "referenceSha256": "5663c49a69c4e2dfd2179a8c407145654b0264ad6fdaa16c08e85cfaea87963e",
-  "focusedTests": { "total": 30, "passed": 30, "failed": 0, "skipped": 0 },
-  "regression": { "total": 567, "passed": 561, "failed": 0, "skipped": 6 },
+  "referenceSha256": "40f6087704fa750d98a5d61d68467ac1365319e9dae874e1b9e2663024655771",
+  "focusedTests": { "total": 36, "passed": 36, "failed": 0, "skipped": 0 },
+  "regression": { "total": 573, "passed": 567, "failed": 0, "skipped": 6 },
+  "realImagePromptCompletionCases": 6,
+  "realImageGeneratedTokens": 765,
   "skippedTests": [
     "RealNaturalWindowTracesMeasureSeamQualityAndMergeOnlyCost",
     "WhisperTokenizerMatchesPinnedPromptAndRoundTripsEnglishTextWhenCheckpointIsPresent",
@@ -62,21 +64,21 @@
     },
     {
       "path": "tests/DeploySharp.Visual.Tests/PaddleOcrVlTokenizerTests.cs",
-      "sha256": "22dd2072adb18a111d1e33ad50bf76d3af7e8abbf6ebd7b86ae15573399fe189"
+      "sha256": "7e371c7231d40efdda77fdaae17bb0cbfedcd2c04f67f96d1360c1103659acac"
     },
     {
       "path": "eng/models/paddle-ocr/scripts/Get-PaddleOcrVlTokenizerReference.py",
-      "sha256": "334d07795c9c2c70baf81643b6ec884bb5b5951975d065aa686c51910cf80bc2"
+      "sha256": "0f9849bce0e1e33a77d22224308562e09369e093ade49e29382bad7ed60d5831"
     }
   ],
   "evidenceSha256": [
     {
       "file": "paddleocr-vl-tokenizer-20261023.trx",
-      "sha256": "2a28b45aaf4c9a2ecf9cae5227cb9946adc8b2baa001152b8a39c56a85bcb436"
+      "sha256": "46570d47153a3c5249f6524b1172ab5802efe17d89e8d9ad9585669ba54e02d5"
     },
     {
       "file": "visual-vl-tokenizer-regression-20261023.trx",
-      "sha256": "4e3857bc244e59a86cbf78a7275f5692d1845e9b61e9a21d979fef885e49f06c"
+      "sha256": "8d268f29dcbd4748651ec660c8b55bc4e90c62a0a47953d91f05d7bf04fcdcad"
     }
   ],
   "boundary": "Token preparation and decoding parity only. No model inference, ONNX, GPU, generation quality or backend availability claim."

@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T11:01:10.120392+00:00",
+  "status": "validated",
+  "checkpoint": {
+    "repository": "PaddlePaddle/PaddleOCR-VL-1.6",
+    "revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+    "configSha256": "ce7f4565f8b1db78532ad5d1b9ebe55c2139d49bd4cb04778b580a08a598f171",
+    "weightSha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+    "weightVerified": true
+  },
+  "environment": {
+    "os": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "machine": "x86_64",
+    "python": "3.10.12",
+    "packages": {
+      "torch": "2.10.0+cpu",
+      "torchvision": "0.25.0+cpu",
+      "transformers": "5.20.2",
+      "tokenizers": "0.23.2",
+      "safetensors": "0.8.0",
+      "numpy": "2.2.6",
+      "Pillow": "12.3.0"
+    },
+    "device": "cpu",
+    "dtype": "float32",
+    "threads": 4,
+    "cudaAvailable": false
+  },
+  "device": {
+    "schemaVersion": 1,
+    "generatedUtc": "2026-10-23T10:40:46.872126+00:00",
+    "host": "Linux RTX2060 reference device",
+    "os": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "cpu": {
+      "Architecture": "x86_64",
+      "CPU(s)": "8",
+      "Model name": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+      "Thread(s) per core": "2",
+      "Core(s) per socket": "4",
+      "Socket(s)": "1",
+      "CPU max MHz": "4700.0000",
+      "CPU min MHz": "400.0000"
+    },
+    "physicalMemoryBytes": 16449581056,
+    "gpuSnapshot": "NVIDIA GeForce RTX 2060, 580.178.04, 6144 MiB, 0 %, 300 MHz, 2100 MHz, [N/A]",
+    "boundary": "Device identity snapshot only. Generation reference runs used CPU FP32; no GPU performance or continuous clock/power telemetry is established."
+  },
+  "protocol": {
+    "processorOnly": false,
+    "processorBackend": "pil",
+    "attention": "sdpa",
+    "maximumNewTokens": 512,
+    "requestedUseCache": true,
+    "checkpointUseCache": false,
+    "compareUncachedTokens": 8,
+    "doSample": false,
+    "warmup": 0,
+    "measured": 1,
+    "performanceBoundary": "Correctness smoke timing only; not a formal 5+50 benchmark."
+  },
+  "implementation": {
+    "processorClass": "PaddleOCRVLProcessor",
+    "imageProcessorClass": "PaddleOCRVLImageProcessorPil",
+    "processorModuleSha256": "73075d47b8c80840a1c1beb884975d5113503ac1ceb6947d8f74303f747ea815",
+    "imageProcessorModuleSha256": "cc2d4cb0669ed657fb305e4c5ff42327219b2b4db17d896253ff326e6784195f",
+    "transformersVersion": "5.20.2",
+    "modelClass": "PaddleOCRVLForConditionalGeneration",
+    "modelModuleSha256": "9471f809b2c3c4dcb722e578b6f91d33af08abd8b0c4047bad067c011f499d32"
+  },
+  "cases": [
+    {
+      "id": "ocr-demo-1",
+      "task": "ocr",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "sourceSize": [
+        500,
+        500
+      ],
+      "preparedSize": [
+        500,
+        500
+      ],
+      "imageGridThw": [
+        [
+          1,
+          36,
+          36
+        ]
+      ],
+      "imageTokenCount": 324,
+      "promptTokenCount": 337,
+      "generatedTokenCount": 162,
+      "generatedTokenCsvSha256": "339d579620cc8c44eaa06f40b438fab73c8b5cdf35176e6ddd3f2456f087e314",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 23.90536619350314,
+      "generationMilliseconds": 16437.626296188682,
+      "decoded": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570\n\n\uff0845\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2\uff09\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09\n\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220ml\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\u03b2-\u8461\u805a\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c\uff08\u6210\u54c1\u5305\u6750\uff09\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934\u53d1\u8db3\u591f\u7684\u6ecb\u517b"
+    },
+    {
+      "id": "table-official-example",
+      "task": "table",
+      "inputSha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+      "sourceSize": [
+        551,
+        132
+      ],
+      "preparedSize": [
+        551,
+        132
+      ],
+      "imageGridThw": [
+        [
+          1,
+          12,
+          50
+        ]
+      ],
+      "imageTokenCount": 150,
+      "promptTokenCount": 163,
+      "generatedTokenCount": 71,
+      "generatedTokenCsvSha256": "c5ef471eb05d82cc2e4238fa11dee3ca47405c1654b580b1c6855c1e1198aeed",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 5.385716911405325,
+      "generationMilliseconds": 7277.567580807954,
+      "decoded": "<fcel>CRuncover<lcel><lcel><lcel><nl><fcel>Dres<fcel>\u8fde\u7eed\u5de5\u4f5c3<fcel>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3<fcel>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927<nl><fcel>Abstr<ecel><fcel>rSrivi<fcel>$709.<nl><fcel>cludingGiv<fcel>2.72<fcel>Ingcubic<fcel>$744.78<nl>"
+    },
+    {
+      "id": "formula-official-example",
+      "task": "formula",
+      "inputSha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+      "sourceSize": [
+        448,
+        64
+      ],
+      "preparedSize": [
+        448,
+        64
+      ],
+      "imageGridThw": [
+        [
+          1,
+          10,
+          64
+        ]
+      ],
+      "imageTokenCount": 160,
+      "promptTokenCount": 173,
+      "generatedTokenCount": 80,
+      "generatedTokenCsvSha256": "318aebd0e501691c0ef2ce6afca34de5659908a76f7779b368a9e354d1122f77",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 5.299180280417204,
+      "generationMilliseconds": 8056.455806829035,
+      "decoded": "\\[\\zeta_{0}(\\nu)=-\\frac{\\nu\\varrho^{-2\\nu}}{\\pi}\\int_{\\mu}^{\\infty}d\\omega\\int_{C_{+}}d z\\frac{2z^{2}}{(z^{2}+\\omega^{2})^{\\nu+1}}\\breve{\\Psi}(\\omega;z)e^{i\\epsilon z}\\quad,\\]"
+    },
+    {
+      "id": "chart-official-example",
+      "task": "chart",
+      "inputSha256": "d29ea952a5a182c18416dcf2bf17b606ead7ebf20100618ece87f6f288f856c3",
+      "sourceSize": [
+        625,
+        570
+      ],
+      "preparedSize": [
+        625,
+        570
+      ],
+      "imageGridThw": [
+        [
+          1,
+          40,
+          44
+        ]
+      ],
+      "imageTokenCount": 440,
+      "promptTokenCount": 453,
+      "generatedTokenCount": 137,
+      "generatedTokenCsvSha256": "63c8f37f309360f55ec2ca96d908ced4f3cb092ddb7c645b98ad84d552cef152",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 15.033790841698647,
+      "generationMilliseconds": 17356.931164860725,
+      "decoded": "\u5e74\u4efd | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u8425\u6536 (\u767e\u4e07\u5143) | \u5355\u5bb6\u4e94\u661f\u7ea7\u65c5\u6e38\u996d\u5e97\u5e74\u5e73\u5747\u5229\u6da6 (\u767e\u4e07\u5143)\n2018 | 104.22 | 9.87\n2019 | 99.11 | 7.47\n2020 | 57.87 | -3.87\n2021 | 68.99 | -2.90\n2022 | 56.29 | -9.48\n2023 | 87.99 | 5.96"
+    },
+    {
+      "id": "spotting-demo-1",
+      "task": "spotting",
+      "inputSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "sourceSize": [
+        500,
+        500
+      ],
+      "preparedSize": [
+        1000,
+        1000
+      ],
+      "imageGridThw": [
+        [
+          1,
+          72,
+          72
+        ]
+      ],
+      "imageTokenCount": 1296,
+      "promptTokenCount": 1309,
+      "generatedTokenCount": 286,
+      "generatedTokenCsvSha256": "d390d6b35d9c0f5adbbad910b86e1cf608a6200dc420829537ebb7a7b64076e1",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 44.43489108234644,
+      "generationMilliseconds": 52425.9719918482,
+      "decoded": "\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_929|><|LOC_390|><|LOC_929|><|LOC_390|><|LOC_846|><|LOC_948|><|LOC_846|>\n\u4ea7\u54c1\u4fe1\u606f/\u53c2\u6570<|LOC_948|><|LOC_834|><|LOC_650|><|LOC_834|><|LOC_650|><|LOC_786|><|LOC_948|><|LOC_786|>\n(45\u5143/\u6bcf\u516c\u65a4\uff0c100\u516c\u65a4\u8d77\u8ba2)<|LOC_945|><|LOC_774|><|LOC_337|><|LOC_774|><|LOC_337|><|LOC_725|><|LOC_945|><|LOC_725|>\n\u6bcf\u74f622\u5143\uff0c1000\u74f6\u8d77\u8ba2\uff09<|LOC_948|><|LOC_714|><|LOC_437|><|LOC_714|><|LOC_437|><|LOC_665|><|LOC_948|><|LOC_665|>\n\u3010\u54c1\u724c\u3011\uff1a\u4ee3\u52a0\u5de5\u65b9\u5f0f/OEM ODM<|LOC_948|><|LOC_646|><|LOC_401|><|LOC_646|><|LOC_401|><|LOC_605|><|LOC_948|><|LOC_605|>\n\u3010\u54c1\u540d\u3011\uff1a\u7eaf\u81fb\u8425\u517b\u62a4\u53d1\u7d20<|LOC_948|><|LOC_585|><|LOC_529|><|LOC_585|><|LOC_529|><|LOC_542|><|LOC_948|><|LOC_542|>\n\u3010\u4ea7\u54c1\u7f16\u53f7\u3011\uff1aYM-X-3011<|LOC_948|><|LOC_523|><|LOC_515|><|LOC_523|><|LOC_515|><|LOC_482|><|LOC_948|><|LOC_482|>\n\u3010\u51c0\u542b\u91cf\u3011\uff1a220 ml<|LOC_948|><|LOC_461|><|LOC_638|><|LOC_461|><|LOC_638|><|LOC_421|><|LOC_948|><|LOC_421|>\n\u3010\u9002\u7528\u4eba\u7fa4\u3011\uff1a\u9002\u5408\u6240\u6709\u80a4\u8d28<|LOC_948|><|LOC_400|><|LOC_494|><|LOC_400|><|LOC_494|><|LOC_359|><|LOC_948|><|LOC_359|>\n\u3010\u4e3b\u8981\u6210\u5206\u3011\uff1a\u9cb8\u8721\u786c\u8102\u9187\u3001\u71d5\u9ea6\\(\\beta\\)-\u8461\u805a<|LOC_948|><|LOC_339|><|LOC_312|><|LOC_338|><|LOC_312|><|LOC_296|><|LOC_948|><|LOC_296|>\n\u7cd6\u3001\u6930\u6cb9\u9170\u80fa\u4e19\u57fa\u751c\u83dc\u78b1\u3001\u6cdb\u918c<|LOC_947|><|LOC_276|><|LOC_435|><|LOC_276|><|LOC_435|><|LOC_234|><|LOC_947|><|LOC_234|>\n(\u6210\u54c1\u5305\u6750)<|LOC_270|><|LOC_271|><|LOC_55|><|LOC_271|><|LOC_55|><|LOC_227|><|LOC_270|><|LOC_227|>\n\u3010\u4e3b\u8981\u529f\u80fd\u3011\uff1a\u53ef\u7d27\u81f4\u5934\u53d1\u78f7\u5c42\uff0c\u4ece\u800c\u8fbe\u5230<|LOC_948|><|LOC_215|><|LOC_277|><|LOC_214|><|LOC_277|><|LOC_172|><|LOC_948|><|LOC_172|>\n\u5373\u65f6\u6301\u4e45\u6539\u5584\u5934\u53d1\u5149\u6cfd\u7684\u6548\u679c\uff0c\u7ed9\u5e72\u71e5\u7684\u5934<|LOC_947|><|LOC_152|><|LOC_256|><|LOC_152|><|LOC_256|><|LOC_109|><|LOC_947|><|LOC_110|>\n\u53d1\u8db3\u591f\u7684\u6ecb\u517b<|LOC_944|><|LOC_90|><|LOC_722|><|LOC_90|><|LOC_722|><|LOC_48|><|LOC_944|><|LOC_48|>"
+    },
+    {
+      "id": "seal-official-example",
+      "task": "seal",
+      "inputSha256": "be29cb91999450742958c62ead08f93825b92e5fa4290c063cc7991259da6c24",
+      "sourceSize": [
+        640,
+        640
+      ],
+      "preparedSize": [
+        640,
+        640
+      ],
+      "imageGridThw": [
+        [
+          1,
+          46,
+          46
+        ]
+      ],
+      "imageTokenCount": 529,
+      "promptTokenCount": 543,
+      "generatedTokenCount": 29,
+      "generatedTokenCsvSha256": "d849e04b70bd2aa56f61870f5cec39373326f802c6e371b50d9c7a466547a873",
+      "stopReason": "eos",
+      "cachedUncachedFirst8Equal": true,
+      "singleImagePrefillThenOneTokenKvDecode": true,
+      "prepareMilliseconds": 19.510366953909397,
+      "generationMilliseconds": 11131.846576929092,
+      "decoded": "\u5929\u6d25\u541b\u548c\u7f18\u5546\u8d38\u6709\u9650\u516c\u53f8\n5263647368706\n\u53d1\u7968\u4e13\u7528\u7ae0\n\u5417\u7e41\u7269"
+    }
+  ],
+  "pixelParity": {
+    "cases": 6,
+    "exact": 6,
+    "maximumAbsoluteDifference": 0
+  },
+  "uncachedFormula": {
+    "tokenCount": 80,
+    "fullTokenAndTextEqual": true,
+    "stopReason": "eos",
+    "generationMilliseconds": 191973.59774122015
+  },
+  "scriptSha256": "8f9d004d3ab3cbe38f54dd50c63414e343df5be6c3215b72690b68388fbc4807",
+  "evidence": [
+    {
+      "file": "paddleocr-vl-six-task-reference-linux-20261023.json",
+      "sha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79"
+    },
+    {
+      "file": "paddleocr-vl-formula-uncached-reference-linux-20261023.json",
+      "sha256": "309720492414894732e5bf1c7c49c75dbfaf6ff9715e9dee1ad9d0d3adc9280d"
+    },
+    {
+      "file": "paddleocr-vl-image-processor-parity-20261023.json",
+      "sha256": "a21a4daa2e0adbca6bc306263760ffc07dba201efc6b74af0821720e5c44e73c"
+    },
+    {
+      "file": "paddleocr-vl-reference-cases-20261023.json",
+      "sha256": "f1182e0bd9740d64f2f9541ea833423dd74b5c3da2c4eafe0afb5cabd7a9fb93"
+    },
+    {
+      "file": "paddleocr-vl-reference-device-linux-20261023.json",
+      "sha256": "3af4b9ffa396f0fce9baa86c00c87a54e08cbe7ac4682075b79b0edc00e89692"
+    }
+  ],
+  "openItems": [
+    "Pinned original-model versus integrated-model generation parity",
+    "Multimodal position reference",
+    "ONNX dynamic KV graphs",
+    "C# pixels/patches and complete inference",
+    "Backend validation",
+    "Labeled quality and formal performance",
+    "ROI/layout/multi-page pipeline",
+    "Runtime catalog/release assets"
+  ],
+  "boundary": "Six real single-image tasks on the recorded Python implementation and CPU FP32 only. Pixel parity compares unmodified pinned upstream image source. No labeled accuracy, formal timing, GPU, C# or ONNX backend support claim."
+}

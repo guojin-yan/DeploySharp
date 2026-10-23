@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "boundary": "Fixed smoke inputs for task generation and processor parity; no ground-truth quality claim. Image paths are relative to the manifest directory; image assets remain outside Git.",
+  "cases": [
+    {
+      "id": "ocr-demo-1",
+      "task": "ocr",
+      "image": "inputs/demo_1.jpg",
+      "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "source": "User-designated E:/Data/ocr/demo_1.jpg",
+      "scope": "Single supplied image; no layout detection or multi-page parsing"
+    },
+    {
+      "id": "table-official-example",
+      "task": "table",
+      "image": "inputs/table_recognition.jpg",
+      "sha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+      "source": "Existing PP-Structure validation/table_recognition.jpg asset",
+      "scope": "Single supplied table region"
+    },
+    {
+      "id": "formula-official-example",
+      "task": "formula",
+      "image": "inputs/general_formula_rec_001.png",
+      "sha256": "7885d4a349edcdfbfbc439305b8b554c2500f095949bc53d14835656b902dbcc",
+      "source": "Existing PP-Structure validation/general_formula_rec_001.png asset",
+      "scope": "Single supplied formula region"
+    },
+    {
+      "id": "chart-official-example",
+      "task": "chart",
+      "image": "inputs/chart_parsing_02.png",
+      "sha256": "d29ea952a5a182c18416dcf2bf17b606ead7ebf20100618ece87f6f288f856c3",
+      "source": "Existing PP-Structure validation/chart_parsing_02.png asset",
+      "scope": "Single supplied chart region"
+    },
+    {
+      "id": "spotting-demo-1",
+      "task": "spotting",
+      "image": "inputs/demo_1.jpg",
+      "sha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+      "source": "User-designated E:/Data/ocr/demo_1.jpg",
+      "scope": "Single image text spotting with official optional 2x Lanczos preparation"
+    },
+    {
+      "id": "seal-official-example",
+      "task": "seal",
+      "image": "inputs/seal_text_det.png",
+      "sha256": "be29cb91999450742958c62ead08f93825b92e5fa4290c063cc7991259da6c24",
+      "source": "https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/seal_text_det.png",
+      "scope": "Single supplied seal image; no detector crop or coordinate quality claim"
+    }
+  ]
+}

@@ -27,10 +27,9 @@ public sealed class PaddleOcrVlTokenizerTests
         return root!;
     }
 
-    private static JsonDocument Reference()
+    private static JsonDocument Reference(string name = "eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-reference-20261023.json")
     {
         DirectoryInfo? current = new(AppContext.BaseDirectory);
-        const string name = "eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-reference-20261023.json";
         while (current != null)
         {
             string path = Path.Combine(current.FullName, name);
@@ -38,6 +37,34 @@ public sealed class PaddleOcrVlTokenizerTests
             current = current.Parent;
         }
         throw new FileNotFoundException("The independent official tokenizer reference is missing.", name);
+    }
+
+    [TestMethod]
+    [DataRow("ocr-demo-1", PaddleOcrVlTask.TextRecognition)]
+    [DataRow("table-official-example", PaddleOcrVlTask.TableRecognition)]
+    [DataRow("formula-official-example", PaddleOcrVlTask.FormulaRecognition)]
+    [DataRow("chart-official-example", PaddleOcrVlTask.ChartRecognition)]
+    [DataRow("spotting-demo-1", PaddleOcrVlTask.TextSpotting)]
+    [DataRow("seal-official-example", PaddleOcrVlTask.SealRecognition)]
+    public void RealImagePromptsAndGeneratedCompletionsMatchThePythonReference(string id, PaddleOcrVlTask task)
+    {
+        PaddleOcrVlTokenizer tokenizer = Tokenizer.Value;
+        using JsonDocument reference = Reference("eng/models/paddle-ocr/verification/paddleocr-vl-six-task-reference-linux-20261023.json");
+        Assert.AreEqual("reference-generation-complete", reference.RootElement.GetProperty("status").GetString());
+        JsonElement row = reference.RootElement.GetProperty("cases").EnumerateArray().Single(value => value.GetProperty("id").GetString() == id);
+        JsonElement sourceSize = row.GetProperty("sourceSize");
+        PaddleOcrVlImagePlan image = PaddleOcrVlInputPlanning.PlanOfficialV16(new VisualSize(sourceSize[0].GetInt32(), sourceSize[1].GetInt32()), task);
+        PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(image);
+        CollectionAssert.AreEqual(row.GetProperty("inputTokenIds").EnumerateArray().Select(value => value.GetInt64()).ToArray(), prompt.CopyTokenIds());
+        JsonElement grid = row.GetProperty("imageGridThw")[0];
+        Assert.AreEqual(1, grid[0].GetInt32());
+        Assert.AreEqual(image.GridHeight, grid[1].GetInt32());
+        Assert.AreEqual(image.GridWidth, grid[2].GetInt32());
+        int[] completion = row.GetProperty("generatedTokenIds").EnumerateArray().Select(value => value.GetInt32()).ToArray();
+        Assert.AreEqual("eos", row.GetProperty("stopReason").GetString());
+        Assert.AreEqual(2, completion[^1]);
+        Assert.AreEqual(row.GetProperty("decoded").GetString(), tokenizer.DecodeCompletion(completion));
+        Assert.AreEqual(row.GetProperty("decodedWithSpecialTokens").GetString(), tokenizer.DecodeCompletion(completion, false));
     }
 
     [TestMethod]

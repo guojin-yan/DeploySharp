@@ -958,7 +958,9 @@ PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(imagePlan,
 long[] inputIds = prompt.CopyTokenIds(); // 仅准备输入；尚未调用模型。
 ```
 
-普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。图像像素/位置、ONNX Bundle、C# 完整生成、页面/多页编排和跨后端验收仍在开发；完成实际生成接入后才会加入可下载模型 catalog 与对应后端验证状态。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，不能由输入准备测试推导完整模型可用。
+官方权重已取得并校验，远端 CPU FP32 的 [Python 六任务真实图像基线](../../eng/models/paddle-ocr/verification/paddleocr-vl-reference-summary-linux-20261023.md)已生成到 EOS；六图的上游/Transformers PIL 像素和 Patch 逐值一致，公式完整 80 Token 的缓存/非缓存输出一致。该结果属于对照工具，尚未提供本库 C# 模型推理，不能当作正式准确率或速度成绩。
+
+普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。C# 图像像素/位置、ONNX Bundle、完整生成、页面/多页编排和跨后端验收仍在开发；完成实际生成接入后才会加入可下载模型 catalog 与对应后端验证状态。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，不能由输入准备或 Python 对照测试推导完整模型可用。
 
 ### 自然宽行有哪些真实后端证据
 

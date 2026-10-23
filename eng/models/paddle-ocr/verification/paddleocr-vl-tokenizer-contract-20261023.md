@@ -19,11 +19,13 @@ The managed tokenizer matches the pinned upstream `tokenizer.json` reference for
 | Added tokens | All 1,041 exact IDs and encode/decode results agree; 22 special and 1,019 ordinary markers |
 | Vocabulary decode | All 103,424 slots, both including and excluding special tokens; independent framed UTF-8 SHA256 agrees |
 | Byte-fallback decode vectors | 71, including incomplete/invalid UTF-8, complete emoji and markers inserted inside byte runs |
-| Focused managed tests | 30 passed / 0 failed / 0 skipped: 14 image-planning cases plus 16 tokenizer cases |
-| Full Visual regression | 561 passed / 0 failed / 6 skipped; the six optional external-asset cases are listed in the JSON report |
+| Focused managed tests | 36 passed / 0 failed / 0 skipped: 14 image-planning cases plus 22 tokenizer cases, including six real-image prompt/completion records |
+| Full Visual regression | 567 passed / 0 failed / 6 skipped; the six optional external-asset cases are listed in the JSON report |
 | Visual Release compilation | All 16 declared TFMs succeed, 0 warnings / 0 errors with existing TFM-support notices suppressed |
 
 The tests also check exact context-plus-output budgets, image-placeholder counts, CLS `100273` rather than BOS `1`, null/invalid IDs, missing or mismatched assets, 24 concurrent callers and independent read-only prompt ownership.
+
+The [six-task real-image reference](paddleocr-vl-reference-summary-linux-20261023.md) is additionally consumed by C# tests: actual source dimensions/Spotting preparation, image grids, expanded input IDs and all 765 generated token decode results match the recorded Python output. This remains token handling evidence, not C# image processing or inference.
 
 Two compatibility details are handled explicitly: Microsoft treats all registered added tokens as special, while the official assets distinguish digits and structural markers from control tokens; the upstream byte-fallback decoder also replaces every byte in an invalid byte run, which differs from the normal .NET UTF-8 replacement rule. The production decoder preserves both upstream behaviors. It does not trim whitespace or discard a final non-EOS token.
 
