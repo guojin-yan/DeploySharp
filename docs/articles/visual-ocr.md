@@ -944,7 +944,21 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 的接入已开始，目前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划；它还不是可直接推理的 Session。官方资产格式和 tokenizer 参考向量已[实际核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，但尚未完成权重推理、ONNX Bundle、C# 生成和跨后端验证。现有 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。完整生成接入后才会加入可下载模型 catalog 与对应后端验证状态。
+PaddleOCR-VL-1.6 的接入已开始，目前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划，以及 `PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开；它们还不是可直接推理的 Session。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[实际合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+
+```csharp
+using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
+
+var tokenizer = new PaddleOcrVlTokenizer(modelDirectory);
+var imagePlan = PaddleOcrVlInputPlanning.PlanOfficialV16(
+    new VisualSize(imageWidth, imageHeight), PaddleOcrVlTask.TableRecognition);
+PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(imagePlan,
+    maximumNewTokens: 512, maximumContextTokens: 8192);
+long[] inputIds = prompt.CopyTokenIds(); // 仅准备输入；尚未调用模型。
+```
+
+普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。图像像素/位置、ONNX Bundle、C# 完整生成、页面/多页编排和跨后端验收仍在开发；完成实际生成接入后才会加入可下载模型 catalog 与对应后端验证状态。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，不能由输入准备测试推导完整模型可用。
 
 ### 自然宽行有哪些真实后端证据
 

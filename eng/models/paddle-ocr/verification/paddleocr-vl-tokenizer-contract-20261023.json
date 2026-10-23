@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T10:25:00.1033498Z",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "reference": "paddleocr-vl-tokenizer-reference-20261023.json",
+  "referenceSha256": "5663c49a69c4e2dfd2179a8c407145654b0264ad6fdaa16c08e85cfaea87963e",
+  "focusedTests": { "total": 30, "passed": 30, "failed": 0, "skipped": 0 },
+  "regression": { "total": 567, "passed": 561, "failed": 0, "skipped": 6 },
+  "skippedTests": [
+    "RealNaturalWindowTracesMeasureSeamQualityAndMergeOnlyCost",
+    "WhisperTokenizerMatchesPinnedPromptAndRoundTripsEnglishTextWhenCheckpointIsPresent",
+    "WhisperLogMelExtractorIsDeterministicAcrossConcurrentCallsWhenCheckpointIsPresent",
+    "OfficialQwenTiktokenPreservesPaddleChartPromptBoundaries",
+    "WhisperLogMelExtractorProducesDeterministicFixedShapeFeaturesWhenCheckpointIsPresent",
+    "FourGraphBundleRunsPromptPrefillAndDynamicKvDecode"
+  ],
+  "addedTokens": {
+    "count": 1041,
+    "special": 22,
+    "ordinary": 1019,
+    "tokenIdCsvSha256": "c40d9e6a5ba9d583a7cf7745de52fb89594005845221b78556baaf04b8d43cec",
+    "status": "all-passed"
+  },
+  "allVocabularyDecode": {
+    "count": 103424,
+    "framing": "per ID: uint32 little-endian UTF-8 byte length, then UTF-8 bytes",
+    "sha256": {
+      "skipSpecialTokens": "55322fc04d94c500bc191e5a53d94bcb371d8fb4309007b46d6be55e2622ebaf",
+      "includeSpecialTokens": "8c8d643c1d15c81e85a194c6e90777b62992e019a198575484e87d7581e938f2"
+    }
+  },
+  "textVectorCount": 18,
+  "taskVectorCount": 6,
+  "decodeVectorCount": 71,
+  "compiledFrameworks": [
+    "net46",
+    "net461",
+    "net462",
+    "net47",
+    "net471",
+    "net472",
+    "net48",
+    "net481",
+    "netstandard2.0",
+    "netcoreapp3.1",
+    "net5.0",
+    "net6.0",
+    "net7.0",
+    "net8.0",
+    "net9.0",
+    "net10.0"
+  ],
+  "compileResult": "16 TFM Release build succeeded: 0 warnings, 0 errors (SuppressTfmSupportBuildWarnings=true)",
+  "sourceSha256": [
+    {
+      "path": "src/DeploySharp.Visual/Models/PaddleOcr/VisionLanguage/PaddleOcrVlTokenizer.cs",
+      "sha256": "bbeec0bbb503455d9f82c39c2e9b9eb0bbbdd2cb87c98329f347edf955976e55"
+    },
+    {
+      "path": "src/DeploySharp.Visual/Models/PaddleOcr/VisionLanguage/PaddleOcrVlTokenSequence.cs",
+      "sha256": "c212d0cec267b98810347d03a0cb82139364146c5460f0088c074917c2c51a58"
+    },
+    {
+      "path": "tests/DeploySharp.Visual.Tests/PaddleOcrVlTokenizerTests.cs",
+      "sha256": "22dd2072adb18a111d1e33ad50bf76d3af7e8abbf6ebd7b86ae15573399fe189"
+    },
+    {
+      "path": "eng/models/paddle-ocr/scripts/Get-PaddleOcrVlTokenizerReference.py",
+      "sha256": "334d07795c9c2c70baf81643b6ec884bb5b5951975d065aa686c51910cf80bc2"
+    }
+  ],
+  "evidenceSha256": [
+    {
+      "file": "paddleocr-vl-tokenizer-20261023.trx",
+      "sha256": "2a28b45aaf4c9a2ecf9cae5227cb9946adc8b2baa001152b8a39c56a85bcb436"
+    },
+    {
+      "file": "visual-vl-tokenizer-regression-20261023.trx",
+      "sha256": "4e3857bc244e59a86cbf78a7275f5692d1845e9b61e9a21d979fef885e49f06c"
+    }
+  ],
+  "boundary": "Token preparation and decoding parity only. No model inference, ONNX, GPU, generation quality or backend availability claim."
+}

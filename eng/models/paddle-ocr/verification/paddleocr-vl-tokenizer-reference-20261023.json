@@ -1,0 +1,1369 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T10:18:41.703741+00:00",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "source": "PaddlePaddle/PaddleOCR-VL-1.6",
+  "tokenizersVersion": "0.23.2",
+  "assetSha256": {
+    "tokenizer.model": "34ef7db83df785924fb83d7b887b6e822a031c56e15cff40aaf9b982988180df",
+    "tokenizer.json": "c8a215a59183d0d0781adc33bacd3ce6162716f7fd568fb30234a74d69803a7d",
+    "tokenizer_config.json": "1f979337347cc0cb72a6282d8a23ed183539aa81a87a906f022aee2bab83c7c5",
+    "chat_template.jinja": "2f27812dab7f333e471884e0c803d807f11953d5453140dfb1aaba234f872bc8"
+  },
+  "scriptSha256": "334d07795c9c2c70baf81643b6ec884bb5b5951975d065aa686c51910cf80bc2",
+  "textVectors": [
+    {
+      "text": "OCR:",
+      "tokenIds": [
+        93972,
+        2497,
+        93963
+      ],
+      "decoded": "OCR:",
+      "decodedWithSpecialTokens": "OCR:"
+    },
+    {
+      "text": "Table Recognition:",
+      "tokenIds": [
+        2567,
+        93514,
+        93963
+      ],
+      "decoded": "Table Recognition:",
+      "decodedWithSpecialTokens": "Table Recognition:"
+    },
+    {
+      "text": "hello world",
+      "tokenIds": [
+        18830,
+        3135
+      ],
+      "decoded": "hello world",
+      "decodedWithSpecialTokens": "hello world"
+    },
+    {
+      "text": "hello  world",
+      "tokenIds": [
+        18830,
+        269,
+        10834
+      ],
+      "decoded": "hello  world",
+      "decodedWithSpecialTokens": "hello  world"
+    },
+    {
+      "text": " leading\ntext",
+      "tokenIds": [
+        8143,
+        23,
+        679
+      ],
+      "decoded": " leading\ntext",
+      "decodedWithSpecialTokens": " leading\ntext"
+    },
+    {
+      "text": "\u4f60\u597d\uff0c\u4e16\u754c\uff01",
+      "tokenIds": [
+        5300,
+        93956,
+        2502,
+        94179
+      ],
+      "decoded": "\u4f60\u597d\uff0c\u4e16\u754c\uff01",
+      "decodedWithSpecialTokens": "\u4f60\u597d\uff0c\u4e16\u754c\uff01"
+    },
+    {
+      "text": "\u516c\u5f0f x^2 + y^2 = z^2",
+      "tokenIds": [
+        21088,
+        843,
+        94082,
+        5,
+        443,
+        398,
+        94082,
+        5,
+        320,
+        616,
+        94082,
+        5
+      ],
+      "decoded": "\u516c\u5f0f x^2 + y^2 = z^2",
+      "decodedWithSpecialTokens": "\u516c\u5f0f x^2 + y^2 = z^2"
+    },
+    {
+      "text": "A\tB\nC",
+      "tokenIds": [
+        93957,
+        22,
+        93978,
+        23,
+        93961
+      ],
+      "decoded": "A\tB\nC",
+      "decodedWithSpecialTokens": "A\tB\nC"
+    },
+    {
+      "text": "\ud83e\uddea",
+      "tokenIds": [
+        253,
+        172,
+        180,
+        183
+      ],
+      "decoded": "\ud83e\uddea",
+      "decodedWithSpecialTokens": "\ud83e\uddea"
+    },
+    {
+      "text": "",
+      "tokenIds": [],
+      "decoded": "",
+      "decodedWithSpecialTokens": ""
+    },
+    {
+      "text": " ",
+      "tokenIds": [
+        93919
+      ],
+      "decoded": " ",
+      "decodedWithSpecialTokens": " "
+    },
+    {
+      "text": "   ",
+      "tokenIds": [
+        1111
+      ],
+      "decoded": "   ",
+      "decodedWithSpecialTokens": "   "
+    },
+    {
+      "text": "\r\n\t ",
+      "tokenIds": [
+        94002,
+        23,
+        22,
+        93919
+      ],
+      "decoded": "\r\n\t ",
+      "decodedWithSpecialTokens": "\r\n\t "
+    },
+    {
+      "text": "e\u0301\u00e9\u200b",
+      "tokenIds": [
+        93920,
+        95421,
+        94039,
+        95772
+      ],
+      "decoded": "e\u0301\u00e9\u200b",
+      "decodedWithSpecialTokens": "e\u0301\u00e9\u200b"
+    },
+    {
+      "text": "<ecel> A<|TEXT_START|>B</s>",
+      "tokenIds": [
+        101308,
+        355,
+        101314,
+        93978,
+        2
+      ],
+      "decoded": "<ecel> A<|TEXT_START|>B",
+      "decodedWithSpecialTokens": "<ecel> A<|TEXT_START|>B</s>"
+    },
+    {
+      "text": "<s>1 2 3</s><|begin_of_sentence|><|IMAGE_PLACEHOLDER|>",
+      "tokenIds": [
+        1,
+        4,
+        93919,
+        5,
+        93919,
+        6,
+        2,
+        100273,
+        100295
+      ],
+      "decoded": "1 2 3",
+      "decodedWithSpecialTokens": "<s>1 2 3</s><|begin_of_sentence|><|IMAGE_PLACEHOLDER|>"
+    },
+    {
+      "text": "<|TEXT_START|>\u4f60\u597d<|TEXT_END|><x_17><y_29>",
+      "tokenIds": [
+        101314,
+        5300,
+        101315,
+        93953,
+        93960,
+        93944,
+        4,
+        10,
+        595,
+        93940,
+        93944,
+        5,
+        12,
+        93951
+      ],
+      "decoded": "<|TEXT_START|>\u4f60\u597d<|TEXT_END|><x_17><y_29>",
+      "decodedWithSpecialTokens": "<|TEXT_START|>\u4f60\u597d<|TEXT_END|><x_17><y_29>"
+    },
+    {
+      "text": "0 1 2 3 4 5 6 7 8 9",
+      "tokenIds": [
+        3,
+        93919,
+        4,
+        93919,
+        5,
+        93919,
+        6,
+        93919,
+        7,
+        93919,
+        8,
+        93919,
+        9,
+        93919,
+        10,
+        93919,
+        11,
+        93919,
+        12
+      ],
+      "decoded": "0 1 2 3 4 5 6 7 8 9",
+      "decodedWithSpecialTokens": "0 1 2 3 4 5 6 7 8 9"
+    }
+  ],
+  "taskVectors": [
+    {
+      "task": "TextRecognition",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>OCR:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 157,
+      "imageOffset": 5,
+      "tokenCsvSha256": "092ce0e351a50b0d889c849c6197813fd05f49c0b102044e4f08e5c1cedeb7b9"
+    },
+    {
+      "task": "TableRecognition",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Table Recognition:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 157,
+      "imageOffset": 5,
+      "tokenCsvSha256": "3e457def05be10080deb833c5606f696ad14f72d17c5c7b3a54a022810402872"
+    },
+    {
+      "task": "FormulaRecognition",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Formula Recognition:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 157,
+      "imageOffset": 5,
+      "tokenCsvSha256": "81fe00f64b54b3ebfde95378405a6207e56e680d6c0eb773aa4b6f262a1e594e"
+    },
+    {
+      "task": "ChartRecognition",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Chart Recognition:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 157,
+      "imageOffset": 5,
+      "tokenCsvSha256": "83a95b417ca1ce2b57f5546458c8a72987fbafa3454c0bb1f59f5269e85691e3"
+    },
+    {
+      "task": "TextSpotting",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Spotting:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 157,
+      "imageOffset": 5,
+      "tokenCsvSha256": "f3fb43150ea24e17078526f453c256dd69c3f27f192d2eb58acaef9c760889dd"
+    },
+    {
+      "task": "SealRecognition",
+      "promptTemplate": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Seal Recognition:\nAssistant:\n",
+      "imageTokens": 144,
+      "expandedTokenCount": 158,
+      "imageOffset": 5,
+      "tokenCsvSha256": "2ecfd70000285ec03b85ec06a941d4b50772e35fcf1b1567cf132f3792a150cd"
+    }
+  ],
+  "decodeVectors": [
+    {
+      "tokenIds": [
+        253
+      ],
+      "decoded": "\ufffd",
+      "decodedWithSpecialTokens": "\ufffd"
+    },
+    {
+      "tokenIds": [
+        253,
+        172
+      ],
+      "decoded": "\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        253,
+        22,
+        172
+      ],
+      "decoded": "\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        253,
+        172,
+        180,
+        183
+      ],
+      "decoded": "\ud83e\uddea",
+      "decodedWithSpecialTokens": "\ud83e\uddea"
+    },
+    {
+      "tokenIds": [
+        2
+      ],
+      "decoded": "",
+      "decodedWithSpecialTokens": "</s>"
+    },
+    {
+      "tokenIds": [
+        100273,
+        3,
+        93919,
+        5,
+        101308,
+        2
+      ],
+      "decoded": "0 2<ecel>",
+      "decodedWithSpecialTokens": "<|begin_of_sentence|>0 2<ecel></s>"
+    },
+    {
+      "tokenIds": [
+        253,
+        100273,
+        172,
+        103423,
+        180,
+        183
+      ],
+      "decoded": "\ud83e\uddea",
+      "decodedWithSpecialTokens": "\ufffd<|begin_of_sentence|>\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        126,
+        146,
+        89,
+        64,
+        51,
+        36,
+        88,
+        226,
+        174,
+        142,
+        137,
+        185,
+        133,
+        45
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        25,
+        65,
+        177,
+        80,
+        139
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        253,
+        192
+      ],
+      "decoded": "\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        238,
+        218,
+        106,
+        219,
+        178,
+        63,
+        174,
+        249,
+        121,
+        25,
+        54,
+        267
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        211,
+        56,
+        48,
+        242,
+        51,
+        38,
+        234,
+        137,
+        20
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        182,
+        163,
+        145,
+        36,
+        85,
+        206,
+        242,
+        190,
+        165,
+        139,
+        91,
+        219,
+        147,
+        54,
+        264,
+        122
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        43,
+        188,
+        49,
+        36,
+        242,
+        167,
+        103,
+        137,
+        126,
+        20,
+        51,
+        40,
+        209,
+        143,
+        192
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        23
+      ],
+      "decoded": "\n",
+      "decodedWithSpecialTokens": "\n"
+    },
+    {
+      "tokenIds": [
+        99,
+        83,
+        187,
+        238,
+        200,
+        94,
+        240,
+        247,
+        104,
+        126,
+        197,
+        144,
+        232,
+        232,
+        29,
+        196
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        61,
+        255,
+        48,
+        188,
+        17,
+        55,
+        121,
+        125,
+        69,
+        202,
+        28,
+        163,
+        234
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        87,
+        227,
+        212,
+        17,
+        246,
+        172,
+        42,
+        54,
+        97
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        234,
+        63,
+        122,
+        86,
+        119,
+        78,
+        179,
+        182,
+        268,
+        34,
+        263,
+        255,
+        86,
+        95,
+        239,
+        171
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        140,
+        227,
+        146,
+        133,
+        134,
+        124,
+        67
+      ],
+      "decoded": "\u007f\u0585xyo6",
+      "decodedWithSpecialTokens": "\u007f\u0585xyo6"
+    },
+    {
+      "tokenIds": [
+        60,
+        191,
+        80,
+        131,
+        115,
+        233,
+        211,
+        221,
+        218,
+        137,
+        99,
+        249,
+        156,
+        190,
+        82
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        250,
+        151,
+        137,
+        133,
+        141,
+        230,
+        161,
+        257,
+        264,
+        17,
+        124,
+        22
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        246
+      ],
+      "decoded": "\ufffd",
+      "decodedWithSpecialTokens": "\ufffd"
+    },
+    {
+      "tokenIds": [
+        132,
+        100,
+        193,
+        240,
+        224,
+        261,
+        262,
+        180,
+        97,
+        253,
+        91,
+        242,
+        38,
+        116,
+        253,
+        133,
+        153
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        132,
+        241,
+        134,
+        201,
+        259,
+        64,
+        264,
+        223,
+        25,
+        73,
+        100,
+        227,
+        20,
+        55,
+        162
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        235,
+        165,
+        93,
+        139,
+        217,
+        256,
+        21,
+        183,
+        176,
+        127,
+        165
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        207,
+        55,
+        127
+      ],
+      "decoded": "\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        206,
+        136,
+        82,
+        31,
+        224,
+        209,
+        13,
+        70,
+        170,
+        164,
+        79,
+        154,
+        41,
+        118
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        102
+      ],
+      "decoded": "Y",
+      "decodedWithSpecialTokens": "Y"
+    },
+    {
+      "tokenIds": [
+        53,
+        219,
+        225,
+        137,
+        45,
+        171,
+        135,
+        118,
+        153,
+        226,
+        267,
+        35,
+        104,
+        266,
+        149,
+        168
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        218,
+        211,
+        144,
+        47,
+        55,
+        149,
+        246,
+        155,
+        183,
+        206,
+        227
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        100,
+        57
+      ],
+      "decoded": "W,",
+      "decodedWithSpecialTokens": "W,"
+    },
+    {
+      "tokenIds": [
+        45,
+        147,
+        47,
+        102
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        119,
+        38,
+        245,
+        251,
+        233,
+        149,
+        226,
+        28,
+        163,
+        96,
+        89,
+        162,
+        22,
+        172,
+        118
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        187,
+        240,
+        27,
+        56,
+        57,
+        144,
+        189,
+        78,
+        141
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        206,
+        203,
+        201,
+        100,
+        51,
+        145,
+        227,
+        26,
+        248,
+        158,
+        59
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        230,
+        169,
+        229,
+        267,
+        30,
+        161,
+        253,
+        204
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        139,
+        77,
+        90,
+        157,
+        113,
+        197,
+        67,
+        260,
+        257
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        143,
+        40,
+        119,
+        268,
+        159,
+        27,
+        108,
+        198
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        200,
+        252,
+        221,
+        236,
+        118,
+        151,
+        209,
+        205,
+        268,
+        179,
+        165,
+        31,
+        54,
+        124
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        155,
+        247,
+        87,
+        69,
+        165,
+        162,
+        33,
+        50,
+        32,
+        100,
+        200,
+        174,
+        104,
+        168,
+        14
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        93,
+        180,
+        264
+      ],
+      "decoded": "\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        135,
+        73,
+        178,
+        176,
+        34,
+        77,
+        132,
+        235,
+        204,
+        40,
+        82
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        72
+      ],
+      "decoded": ";",
+      "decodedWithSpecialTokens": ";"
+    },
+    {
+      "tokenIds": [
+        92,
+        233,
+        226,
+        92,
+        71
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        222,
+        77
+      ],
+      "decoded": "\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        33,
+        246,
+        101,
+        82,
+        69,
+        90,
+        137,
+        229,
+        118,
+        160,
+        127,
+        233,
+        212,
+        201,
+        128
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        22,
+        152,
+        91,
+        224,
+        137,
+        216,
+        132,
+        103,
+        58
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        172,
+        252,
+        215,
+        248,
+        117,
+        59,
+        130,
+        59
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        133,
+        242,
+        13,
+        224,
+        41,
+        225,
+        234,
+        143,
+        262,
+        62,
+        126,
+        236,
+        105,
+        96,
+        40
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        214,
+        115,
+        80,
+        172,
+        145,
+        267,
+        39,
+        110,
+        263,
+        158,
+        236,
+        246,
+        253,
+        267
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        267,
+        42,
+        148,
+        46,
+        126,
+        92,
+        230,
+        199,
+        260,
+        238,
+        23,
+        55,
+        241
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        36,
+        167,
+        116,
+        110,
+        65,
+        227,
+        99,
+        254,
+        33,
+        107,
+        217,
+        62,
+        193,
+        140
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        26,
+        185,
+        127,
+        18,
+        113,
+        148,
+        34,
+        32,
+        181,
+        145,
+        243,
+        63
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        225,
+        62,
+        226,
+        106,
+        60,
+        140,
+        93,
+        102,
+        229,
+        60,
+        165,
+        199,
+        97,
+        202,
+        89,
+        151,
+        189
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        195,
+        121,
+        101,
+        134
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        133,
+        215,
+        252,
+        26,
+        32,
+        57,
+        229,
+        238,
+        97,
+        150,
+        231
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        82,
+        86
+      ],
+      "decoded": "EI",
+      "decodedWithSpecialTokens": "EI"
+    },
+    {
+      "tokenIds": [
+        28,
+        221,
+        74,
+        84,
+        112
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        50,
+        82,
+        239,
+        162,
+        168,
+        99,
+        126,
+        141,
+        119,
+        120,
+        18
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        220,
+        241,
+        249,
+        63,
+        144
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        208,
+        172,
+        54,
+        96,
+        52,
+        46,
+        132,
+        229,
+        183
+      ],
+      "decoded": "\u00df)S'!w\u062a",
+      "decodedWithSpecialTokens": "\u00df)S'!w\u062a"
+    },
+    {
+      "tokenIds": [
+        197,
+        235,
+        102,
+        28,
+        259,
+        257,
+        262,
+        82
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        216,
+        152,
+        66,
+        147,
+        82,
+        132,
+        89,
+        268,
+        15,
+        118,
+        109,
+        213,
+        90,
+        68,
+        55
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        230,
+        186,
+        226,
+        194,
+        173,
+        167,
+        249,
+        232
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        76,
+        114,
+        197,
+        54,
+        191
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        117
+      ],
+      "decoded": "h",
+      "decodedWithSpecialTokens": "h"
+    },
+    {
+      "tokenIds": [
+        44,
+        227,
+        244,
+        204,
+        100,
+        246,
+        105,
+        210,
+        54,
+        15,
+        119,
+        44,
+        172,
+        119,
+        241,
+        110,
+        259
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        150,
+        194,
+        80,
+        101,
+        20,
+        85,
+        90,
+        69,
+        212,
+        86,
+        24,
+        149,
+        261,
+        23
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    },
+    {
+      "tokenIds": [
+        147
+      ],
+      "decoded": "\ufffd",
+      "decodedWithSpecialTokens": "\ufffd"
+    },
+    {
+      "tokenIds": [
+        168,
+        56,
+        148,
+        266,
+        181,
+        56,
+        254,
+        134,
+        111,
+        135,
+        159,
+        57,
+        249,
+        31
+      ],
+      "decoded": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd",
+      "decodedWithSpecialTokens": "\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"
+    }
+  ],
+  "allVocabularyDecode": {
+    "count": 103424,
+    "framing": "per ID: uint32 little-endian UTF-8 byte length, then UTF-8 bytes",
+    "sha256": {
+      "skipSpecialTokens": "55322fc04d94c500bc191e5a53d94bcb371d8fb4309007b46d6be55e2622ebaf",
+      "includeSpecialTokens": "8c8d643c1d15c81e85a194c6e90777b62992e019a198575484e87d7581e938f2"
+    }
+  },
+  "addedTokenVerification": {
+    "count": 1041,
+    "special": 22,
+    "ordinary": 1019,
+    "tokenIdCsvSha256": "c40d9e6a5ba9d583a7cf7745de52fb89594005845221b78556baaf04b8d43cec",
+    "status": "all-passed"
+  },
+  "boundary": "Actual tokenizer.json output only. Not full AutoProcessor, image pixels, positions or model generation parity."
+}
