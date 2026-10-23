@@ -48,7 +48,7 @@ namespace JYPPX.DeploySharp.Visual
         public int MinimumOverlapTokens { get; }
         /// <summary>Gets the total raw timestep limit per merged line, including blank and suppressed tokens. / 获取每个合并行包括 blank 与被抑制 token 的原始时间步总数限制。</summary>
         public int MaximumMergedTimesteps { get; }
-        /// <summary>Gets the maximum token edits accepted by the bounded geometric seam fallback. / 获取有界几何接缝回退可接受的最大 token 编辑数。</summary>
+        /// <summary>Gets the edit budget for geometric substitution or unique right-prefix subsequence alignment; unmatched left tokens remain in the output. / 获取几何替换或唯一右前缀子序列对齐的编辑预算；未匹配的左侧 token 仍保留在输出中。</summary>
         public int MaximumOverlapEditDistance { get; }
 
         /// <summary>Returns a copy with a bounded fuzzy-seam edit distance. / 返回设置了有界模糊接缝编辑距离的新配置。</summary>
@@ -320,21 +320,92 @@ namespace JYPPX.DeploySharp.Visual
             int rightCount = rightEnd;
 
             int minimumFuzzyTokens = Math.Max(8, Math.Max(minimum, profile.RecognitionWindows.MaximumOverlapEditDistance * 2 + 1));
-            // Only equal-length overlap slices are eligible for fuzzy suppression. If
-            // recognition inserted or dropped a token at the seam, retaining the right
-            // prefix is safer than accidentally deleting newly recognized text.
-            if (leftCount < minimumFuzzyTokens || rightCount < minimumFuzzyTokens || leftCount > maximum || rightCount > maximum
-                || leftCount != rightCount)
+            if (leftCount < minimumFuzzyTokens || rightCount < minimumFuzzyTokens || leftCount > maximum || rightCount > maximum)
                 return 0;
 
             for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
             for (int index = 0; index < rightEnd; index++) if (prefix[index].IsUnknown || prefix[index].IsBlank) return 0;
 
-            int distance = SubstitutionDistance(left, right, suffix, leftStart, prefix, rightCount, profile,
-                profile.RecognitionWindows.MaximumOverlapEditDistance);
-            if (distance > profile.RecognitionWindows.MaximumOverlapEditDistance) return 0;
-            editDistance = distance;
-            return rightCount;
+            int budget = profile.RecognitionWindows.MaximumOverlapEditDistance;
+            int leading = leftCount - rightCount;
+            bool whitespaceBoundary = leading >= 0 && leading <= budget;
+            // Geometry can include an extra leading space on the left. Charge it to
+            // the same budget; arbitrary dropped letters/digits cannot enable fuzzy
+            // substitutions on a shorter right prefix.
+            // 几何边界可能多含左侧空格，须计入同一预算；不忽略字母/编号来放宽替换。
+            for (int index = 0; whitespaceBoundary && index < leading; index++)
+                whitespaceBoundary = IsWhitespace(suffix[leftStart + index]);
+            if (whitespaceBoundary)
+            {
+                int distance = SubstitutionDistance(left, right, suffix, leftStart + leading, prefix, rightCount, profile, budget - leading);
+                if (distance <= budget - leading)
+                {
+                    editDistance = distance + leading;
+                    return rightCount;
+                }
+            }
+
+            return MatchKnownSubsequence(left, right, suffix, leftStart, prefix, rightCount, leftStep, rightStep,
+                minimumFuzzyTokens, budget, out editDistance);
+        }
+
+        private static int MatchKnownSubsequence(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,
+            List<OcrToken> suffix, int leftStart, List<OcrToken> prefix, int rightCount, double leftStep, double rightStep,
+            int minimum, int budget, out int editDistance)
+        {
+            editDistance = 0;
+            if (budget == 0) return 0;
+            // Only the left sequence can have gaps: every suppressed right token
+            // must already occur, in order and in the shared geometry, on the left.
+            // Count all alignments within budget (saturated at two), not just the
+            // cheapest path, so repeated-number ambiguity retains the right text.
+            // 仅允许左序列间隙；所有被抑制的右 token 必须已在左侧几何区间中有序出现。
+            // 统计预算内所有路径（最多记二），而非只取最小编辑路径；编号歧义时保留原文。
+            int stride = budget + 1;
+            var previous = new byte[(rightCount + 1) * stride];
+            var current = new byte[previous.Length];
+            previous[0] = 1;
+            double positionLimit = (left.End - right.Start) * .5;
+            for (int row = leftStart; row < suffix.Count; row++)
+            {
+                Array.Clear(current, 0, current.Length);
+                current[0] = 1; // A left prefix before the first matched token is retained unchanged.
+                OcrToken a = suffix[row];
+                double x = Position(left, a, leftStep);
+                for (int column = 1; column <= rightCount; column++)
+                {
+                    OcrToken b = prefix[column - 1];
+                    bool same = TokenEquals(a, b) && Math.Abs(x - Position(right, b, rightStep)) <= positionLimit;
+                    int cell = column * stride, diagonal = cell - stride;
+                    for (int cost = 0; cost <= budget; cost++)
+                    {
+                        int ways = same ? previous[diagonal + cost] : 0;
+                        if (cost > 0) ways += previous[cell + cost - 1];
+                        current[cell + cost] = (byte)Math.Min(2, ways);
+                    }
+                }
+                byte[] swap = previous; previous = current; current = swap;
+            }
+            for (int count = rightCount; count >= minimum; count--)
+            {
+                int paths = 0, acceptedCost = 0;
+                for (int cost = 0; cost <= budget; cost++)
+                {
+                    int ways = previous[count * stride + cost];
+                    if (ways > 0) acceptedCost = cost;
+                    paths += ways;
+                    if (paths > 1) break;
+                }
+                if (paths == 1) { editDistance = acceptedCost; return count; }
+            }
+            return 0;
+        }
+
+        private static bool IsWhitespace(OcrToken token)
+        {
+            if (token.IsUnknown || token.IsBlank || string.IsNullOrEmpty(token.Text)) return false;
+            for (int index = 0; index < token.Text!.Length; index++) if (!char.IsWhiteSpace(token.Text[index])) return false;
+            return true;
         }
 
         private static int SubstitutionDistance(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,

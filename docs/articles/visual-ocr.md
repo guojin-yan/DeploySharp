@@ -652,7 +652,9 @@ foreach (OcrRegionResult line in result.Regions)
 
 `OcrRecognitionWindowMerger` 先尝试在相邻窗口之间匹配完全相同的 token 后缀/前缀；失败后才会启用有界模糊匹配。模糊回退只比较各自估算位置落在共享几何区间内的 token，并使用有上限的 token 编辑距离；位置映射会扣除输入 padding，容纳半个时间步的离散定位误差。token 可能是中文字符、emoji 或含多个 Unicode 标量的字典项，比较/编辑距离/删除均以完整 token 为单位，不拆 Unicode 字符。
 
-默认至少要求 2 个重叠 token，模糊回退最多允许 2 个 token 替换编辑（`maximumOverlapEditDistance`，可设为 0 关闭；上限为 8），并且左右重叠片段必须等长；若模型在接缝处插入或漏掉 token，则不抑制后一窗口前缀，避免静默丢字。`minimumOverlapTokens: 1` 可匹配只包含一个 token 的短接缝，但重复编号场景更需要验证；增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置并不是精确字符框，模糊匹配属于保守启发式，必须结合应用样本评估。
+精确匹配默认至少要求 2 个重叠 token。模糊回退至少要求 8 个 token，并受 `maximumOverlapTokens`、共享几何和编辑预算共同限制；默认 `maximumOverlapEditDistance=2`，可设为 0 关闭，上限为 8。先比较位置对齐片段的替换距离；几何边界若多包含左侧空白 token，空白也消耗同一预算，不能免费放宽替换。仍不匹配时，只允许后一窗口前缀成为前一窗口共享几何区间内的**唯一、有序、精确 token 子序列**：允许预算内的左侧间隙，全部左侧文字仍保留；后一窗口独有的 token 不会被此子序列规则跳过，预算内存在多条对齐路径也不接受。规则无法确认时保留后一窗口文本，可能留下重复前缀。
+
+`minimumOverlapTokens: 1` 可让精确匹配处理单 token 短接缝，但不会降低模糊回退的 8-token 下限；重复编号场景更需要验证。增大 `overlapRatio`（最多 0.5）可提供更多上下文，同时增加推理量。CTC 时间位置不是精确字符框；包括原有替换在内的回退都是启发式，并不保证被保留的一侧文字一定正确。请用业务真值评估误删、重复和字符替换风险。
 
 完全匹配时 `OverlapEditDistance=0` 且接缝不标记 uncertain；通过模糊回退时 `OverlapEditDistance` 记录编辑距离并设置 `SeamUncertain=true`，合并优先保留前一窗口的重叠文本，同时抑制后一窗口对应的前缀；无法通过门限时不删除后一窗口文本，也设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用应复核所有 uncertain 接缝；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被抑制前缀在合并 trace 中标记为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
 
@@ -863,7 +865,9 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 [历史文本长度盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)扫描 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行 132 字符、最长单页累计 2,348 字符。这些统计只描述字符数覆盖，不能用来判断是否达到 A2 的像素宽度要求；页面累计、拼接 crop 和合成文本也不能替代自然宽行准确率。
 
-[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)以目标高度 48 找到 13 条宽度超过 3,200 像素的自然行，分布于 9 张已缓存并校验 SHA 的图像，最大投影宽度 4,725。[2026-10-23 真值四边形对照](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.md)直接调用 `RecognizeOnlyAsync`，绕过 DET/CLS，以主库 `MaximumWidth=3200` 对照 Clamp 和 SlidingWindow。v6 Small/Medium × ORT/OpenVINO CPU 共 104 次行级调用均通过执行、源坐标、窗口和 CTC 重建合同；52 对文本、发射类别和窗口决策一致。主质量层为官方可读且源图框高至少 2px 的 11 行；1 条官方不可读行与 1 条 1px 高行单独保留。Small 的 CER 为 `1.498%→4.430%`，Medium 为 `1.759%→6.450%`，滑窗的部分未匹配接缝保留了重复前缀，未显示收益。默认继续使用 Clamp，A2 的重复编号/单字符接缝质量、其余后端及更广自然数据验证仍开放；图像与原文仅保留在本机。
+[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)以目标高度 48 找到 13 条宽度超过 3,200 像素的自然行，分布于 9 张已缓存并校验 SHA 的图像，最大投影宽度 4,725。[修复前真值四边形基线](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.md)直接调用 `RecognizeOnlyAsync`，绕过 DET/CLS，以主库 `MaximumWidth=3200` 对照 Clamp 和 SlidingWindow。v6 Small/Medium × ORT/OpenVINO CPU 共 104 次行级调用通过执行、源坐标、窗口和 CTC 重建合同；52 对文本、发射类别和窗口决策一致。主质量层为官方可读且源图框高至少 2px 的 11 行；1 条官方不可读行与 1 条 1px 高行单独保留。修复前 Small 的 Clamp/滑窗 CER 为 `1.498%/4.430%`，Medium 为 `1.759%/6.450%`，部分未匹配接缝保留了重复前缀。
+
+[接缝修复后复测](../../eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-comparison-20261023.md)在同组数据上重跑了 104 次真实识别，并用原始 CTC token 回放隔离合并逻辑。52 组滑窗的文字、指标和窗口决策与回放一致，原始窗口的几何/文字/发射类别摘要及 52 组 Clamp 结果不变。两后端 Small 的滑窗字符编辑数 `68→31`（CER `4.430%→2.020%`），Medium `99→29`（`6.450%→1.889%`）；主质量层没有行级 CER 恶化。这组诊断数据也用于定位修复，**不是独立验证**；Clamp 仍分别只有 23/27 个字符编辑，优于滑窗，因此默认继续使用 Clamp。A2 的自然重复编号/单字符接缝、其余后端及更广数据验证仍开放。合并阶段的 5+50 成本另行记录，不能解读为完整 OCR 提速；图像与原文仅保留在本机。[真实复测摘要](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-seam-followup-20261023.md)保留各模式和诊断层结果。
 
 [旧 DET 关联报告](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md)使用的窗口上限实际是 **320px**，两后端各关联 8/13 候选。2026-10-23 从原始预测修正其 WER 算法后，匹配候选的宏平均 WER 为 `44.36%`，原 `291.20%` 无效；跨后端文本应记为 `8/8` 已关联对一致，5 对未关联的空占位不计作文本通过。旧时延未复测，不能将该 320px / DET 关联协议与新 3,200px / 真值裁剪的语料级 CER/WER 混用。
 

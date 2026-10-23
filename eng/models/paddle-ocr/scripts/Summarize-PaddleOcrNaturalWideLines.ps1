@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory)][string]$ReportPath,
     [string]$OutputJsonPath = (Join-Path $PSScriptRoot '..\verification\paddleocr-hiertext-natural-wide-gt-20261023.json'),
-    [string]$OutputMarkdownPath = (Join-Path $PSScriptRoot '..\verification\paddleocr-hiertext-natural-wide-gt-20261023.md')
+    [string]$OutputMarkdownPath = (Join-Path $PSScriptRoot '..\verification\paddleocr-hiertext-natural-wide-gt-20261023.md'),
+    [string]$Title = 'HierText natural wide-line GT recognition — PP-OCRv6 Small / Medium (2026-10-23)'
 )
 $ErrorActionPreference = 'Stop'
 $resolved = (Resolve-Path -LiteralPath $ReportPath).Path
@@ -44,7 +45,7 @@ $summary = [ordered]@{
     pairedMainQuality = $pairedSummary
     rows = $compactRows
     detailedEvidence = [ordered]@{ fileName = [IO.Path]::GetFileName($resolved); sha256 = (Get-FileHash -LiteralPath $resolved -Algorithm SHA256).Hash.ToLowerInvariant(); localTraceEvidence = $data.localTraceEvidence;
-        location = 'Ignored artifacts/paddleocr-natural-wide-gt-20261023-final; source images, labels and raw text/token traces are not distributed in this summary.' }
+        location = 'Local ignored artifacts; exact report/trace filename and SHA are recorded here. Source images, labels and raw text/token traces are not distributed in this summary.' }
     result = 'Execution/source/window contracts pass. Paired quality deltas are recorded per backend/model; positive edit deltas mean worse SlidingWindow quality. No default-policy or seam-threshold change.'
     boundary = $data.boundary
 }
@@ -54,11 +55,11 @@ $null = New-Item -ItemType Directory -Force -Path (Split-Path $jsonFull)
 $null = New-Item -ItemType Directory -Force -Path (Split-Path $markdownFull)
 $summary | ConvertTo-Json -Depth 35 | Set-Content -LiteralPath $jsonFull -Encoding utf8
 $md = [Text.StringBuilder]::new()
-[void]$md.AppendLine('# HierText natural wide-line GT recognition — PP-OCRv6 Small / Medium (2026-10-23)')
+[void]$md.AppendLine('# ' + $Title)
 [void]$md.AppendLine()
 [void]$md.AppendLine('The original A2 requirement concerns **normalized recognition width >3,200 pixels**, not 3,200 characters. This experiment uses original labelled quadrilaterals directly with `RecognizeOnlyAsync`, bypassing DET/CLS and detector-association misses. All source JPEGs were already cached; none was downloaded again or added to the repository.')
 [void]$md.AppendLine()
-[void]$md.AppendLine('Pinned HierText validation revision: `70b6620b2b112597d8219e11eee9773a1403827c`; annotation SHA-256: `ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a`. The fixed geometry audit contains 13 lines in 9 images. Main quality uses 11 officially legible lines with source bbox height >=2px (1,535 reference Unicode scalars / 207 whitespace words). One officially illegible line and one officially legible but 1px-high line are retained as separate diagnostic strata. No prediction-based exclusion is applied. Image/model/dictionary identities are recorded in the [JSON summary](paddleocr-hiertext-natural-wide-gt-20261023.json).')
+[void]$md.AppendLine('Pinned HierText validation revision: `70b6620b2b112597d8219e11eee9773a1403827c`; annotation SHA-256: `ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a`. The fixed geometry audit contains 13 lines in 9 images. Main quality uses 11 officially legible lines with source bbox height >=2px (1,535 reference Unicode scalars / 207 whitespace words). One officially illegible line and one officially legible but 1px-high line are retained as separate diagnostic strata. No prediction-based exclusion is applied. Image/model/dictionary identities are recorded in the [JSON summary](' + [IO.Path]::GetFileName($jsonFull) + ').')
 [void]$md.AppendLine()
 [void]$md.AppendLine('Protocol: target height 48; maximum width **3,200**; Clamp versus SlidingWindow with overlap 0.2 and maximum 32 windows; batch 1; one independently created Session per stage; one untimed execution per line/mode/backend. ORT CPU 1.28.0 and OpenVINO CPU 2026.2.1. The 32x32 prepared DET tensor is unused: recognition crop sampling always reads the original image. This is neither a latency benchmark nor a claim of statistical significance.')
 [void]$md.AppendLine()
@@ -73,7 +74,7 @@ foreach ($quality in ($data.quality | Where-Object key -CLike '*/legible-height-
 [void]$md.AppendLine()
 [void]$md.AppendLine("All **104/104** calls pass width/source/CTC contracts: original source region and coordinates survive, each raw window is <=3,200 pixels, coverage is ordered and overlapping from 0 to 1, and retained emitted tokens reconstruct the final text. Cross-backend text, emitted-class and window-decision matches are **$($summary.crossBackend.textMatched)/52**, **$($summary.crossBackend.emittedClassesMatched)/52**, **$($summary.crossBackend.windowDecisionsMatched)/52**; raw output tensors/confidences were not compared for bitwise equality.")
 [void]$md.AppendLine()
-[void]$md.AppendLine('| Backend / model | CER better / worse / equal lines | Character edits delta | Word edits delta |')
+[void]$md.AppendLine('| Backend / model | Sliding vs Clamp: CER better / worse / equal lines | Sliding minus Clamp: character edits | Sliding minus Clamp: word edits |')
 [void]$md.AppendLine('| --- | ---: | ---: | ---: |')
 foreach ($paired in $pairedSummary) {
     [void]$md.AppendLine("| $($paired.backendModel) | $($paired.cerBetterWorseEqual -join ' / ') | $($paired.totalCharacterEditsDelta) | $($paired.totalWordEditsDelta) |")

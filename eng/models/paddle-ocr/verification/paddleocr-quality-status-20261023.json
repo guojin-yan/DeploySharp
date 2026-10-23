@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-23T06:15:32Z",
+  "generatedAtUtc": "2026-10-23T08:15:09Z",
   "kind": "incremental-quality-status-index",
   "baseline": "paddleocr-quality-status-20261018",
   "newEvidence": [
@@ -90,7 +90,7 @@
       "boundary": "Timing includes crop/REC/CTC/retry on preloaded input, excludes page preparation/file I/O/DET/CLS/model/session setup. One subset/device, no clock control or business latency budget; not full-page performance or a backend leaderboard."
     },
     {
-      "scope": "PP-OCRv6 Small/Medium natural-wide GT quadrilateral Clamp versus SlidingWindow",
+      "scope": "Pre-repair baseline: PP-OCRv6 Small/Medium natural-wide GT quadrilateral Clamp versus SlidingWindow",
       "dataset": "Pinned HierText validation 13 geometry-selected lines / 9 cached images; 11 main quality lines, 1 official-illegible and 1 one-pixel-height diagnostic",
       "backends": ["onnxruntime-cpu-1.28.0", "openvino-cpu-2026.2.1"],
       "maximumRecognitionWidthPixels": 3200,
@@ -116,6 +116,47 @@
         "brokenLinks": 0
       },
       "boundary": "GT recognizer-only one-shot quality diagnostic, not detector/page accuracy, seam ground truth, performance or release acceptance. Unmatched seam prefixes can duplicate text. Default Clamp remains unchanged."
+    },
+    {
+      "scope": "Natural-wide seam repair: pinned raw-token replay and 104-call native rerun",
+      "dataset": "Same 13 development diagnostic lines / 9 cached HierText images; 11 main lines (1535 Unicode scalars, 207 whitespace words), not independent validation",
+      "backends": ["onnxruntime-cpu-1.28.0", "openvino-cpu-2026.2.1"],
+      "smallSlidingCharacterEditsBeforeAfter": [68, 31],
+      "mediumSlidingCharacterEditsBeforeAfter": [99, 29],
+      "smallSlidingWordEditsBeforeAfter": [19, 19],
+      "mediumSlidingWordEditsBeforeAfter": [23, 18],
+      "smallCerBetterWorseEqualPerBackend": [2, 0, 9],
+      "mediumCerBetterWorseEqualPerBackend": [3, 0, 8],
+      "unchangedClampCharacterEditsSmallMedium": [23, 27],
+      "validation": {
+        "nativeCallsPassed": 104,
+        "replayNativeTextMetricAndSeamDecisionsMatched": 52,
+        "unchangedClampRows": 52,
+        "unchangedRawWindows": 104,
+        "nativeCrossBackendTextEmissionsAndWindowDecisionsMatched": [52, 52, 52],
+        "visualUnitTestsPassed": 531,
+        "unrelatedOptionalAssetTestsSkipped": 5,
+        "replayTestsPassed": 1,
+        "newControlledSeamContractTests": 6,
+        "visualTargetFrameworkBuildsPassed": 16,
+        "powerShellMetricContractCasesPassed": 11,
+        "realPowerShellCSharpMetricPairsMatched": 104,
+        "realMetricFieldsMatched": 832,
+        "localMarkdownLinksChecked": 1024,
+        "brokenLinks": 0
+      },
+      "mergeOnlyCost": {
+        "linesPerSweep": 52,
+        "warmupSweeps": 5,
+        "measuredSweeps": 50,
+        "baselineP50P95Ms": [6.54025, 14.22976],
+        "candidateP50P95Ms": [5.33815, 9.08756],
+        "boundary": "Baseline then candidate, uncontrolled CPU clocks; no randomized paired trials, speedup claim or full OCR latency."
+      },
+      "report": "paddleocr-natural-wide-seam-comparison-20261023.json",
+      "nativeReport": "paddleocr-hiertext-natural-wide-seam-followup-20261023.json",
+      "status": "bounded-seam-quality-improved; native-replay-matched; A2-open",
+      "boundary": "Clamp still better on this development selection. Subsequence matching retains all left text, suppresses only uniquely matched right tokens, and marks fallback uncertain; approximate CTC geometry remains heuristic. No default/threshold/backend-support change."
     },
     {
       "scope": "Legacy 2026-10-17 detector-association metric correction",

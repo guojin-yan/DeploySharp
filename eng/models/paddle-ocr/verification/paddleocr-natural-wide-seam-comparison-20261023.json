@@ -1,0 +1,665 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-natural-wide-seam-comparison-v1",
+  "generatedUtc": "2026-10-23T08:26:29.2213801+00:00",
+  "sourceRevision": "4a87de3b9227608558fbe3472772e6c105d61741+worktree-unique-subsequence-seam",
+  "implementation": "Exact matching and bounded substitutions retained; charge leading left whitespace to the edit budget; unique ordered exact right-prefix subsequence allows bounded left gaps and retains all left text. Ambiguous alignments are not accepted.",
+  "baselineVisualAssemblySha256": "9a8d065904da506c787f9a4d9285e374408ce443e6179a275d7ab4f7c02621f0",
+  "candidateVisualAssemblySha256": "0382d65ca7cda7fdd0ce68c609d69e208f89a142ee40e7ca331e8e9864417ea2",
+  "evidence": {
+    "baselineNative": {
+      "fileName": "paddleocr-hiertext-natural-wide-gt-20261023072131.json",
+      "sha256": "a9edc722967c7e0f631ce1775661075c993f0b0a055978cc0fa91de43af75688"
+    },
+    "nativeRerun": {
+      "fileName": "paddleocr-hiertext-natural-wide-gt-20261023080221.json",
+      "sha256": "89abb3827534f588f113f20e477b323dd395a7911239bc02470bd14e2d956a49"
+    },
+    "baselineReplay": {
+      "fileName": "paddleocr-window-seam-replay-baseline-20261023075145.json",
+      "sha256": "1796089a368584527badd079efb96000ca3e32d55a5bbf8d913238c4142201c0"
+    },
+    "candidateReplay": {
+      "fileName": "paddleocr-window-seam-replay-candidate-20261023080939.json",
+      "sha256": "7a85941087698937edd1547f5a796f149e55273077e2afafadd030028c7f82fb"
+    },
+    "committedBaseline": {
+      "fileName": "paddleocr-hiertext-natural-wide-gt-20261023.json",
+      "sha256": "91b1427f9d92bca0bca1dc988482996c10bf70384379531eed271d2c63795f03"
+    },
+    "rawInputTraceSha256": "12742dac110f98831fefbda2ade8751e3cd37cb1b4ba6fcc4a98c0a3bea882b4",
+    "geometryCandidateSha256": "80e9fb310b775644b0e9022e19b99608afce26acf97c160aa441175bb131f50d"
+  },
+  "validation": {
+    "originalAndRerunRecognitionCalls": [
+      104,
+      104
+    ],
+    "unchangedClampRows": 52,
+    "unchangedRawWindows": 104,
+    "replayNativeTextMetricAndWindowDecisionsMatched": 52,
+    "nativeCrossBackendTextEmissionsAndWindowDecisionsMatched": [
+      52,
+      52,
+      52
+    ]
+  },
+  "mainQuality": [
+    {
+      "backendModel": "onnxruntime/medium",
+      "lines": 11,
+      "referenceCharacters": 1535.0,
+      "referenceWords": 207.0,
+      "beforeCharacterEdits": 99.0,
+      "afterCharacterEdits": 29.0,
+      "beforeCer": 0.06449511400651466,
+      "afterCer": 0.018892508143322474,
+      "beforeWordEdits": 23.0,
+      "afterWordEdits": 18.0,
+      "beforeWer": 0.1111111111111111,
+      "afterWer": 0.08695652173913043,
+      "cerBetterWorseEqual": [
+        3,
+        0,
+        8
+      ]
+    },
+    {
+      "backendModel": "onnxruntime/small",
+      "lines": 11,
+      "referenceCharacters": 1535.0,
+      "referenceWords": 207.0,
+      "beforeCharacterEdits": 68.0,
+      "afterCharacterEdits": 31.0,
+      "beforeCer": 0.04429967426710098,
+      "afterCer": 0.020195439739413682,
+      "beforeWordEdits": 19.0,
+      "afterWordEdits": 19.0,
+      "beforeWer": 0.09178743961352658,
+      "afterWer": 0.09178743961352658,
+      "cerBetterWorseEqual": [
+        2,
+        0,
+        9
+      ]
+    },
+    {
+      "backendModel": "openvino/medium",
+      "lines": 11,
+      "referenceCharacters": 1535.0,
+      "referenceWords": 207.0,
+      "beforeCharacterEdits": 99.0,
+      "afterCharacterEdits": 29.0,
+      "beforeCer": 0.06449511400651466,
+      "afterCer": 0.018892508143322474,
+      "beforeWordEdits": 23.0,
+      "afterWordEdits": 18.0,
+      "beforeWer": 0.1111111111111111,
+      "afterWer": 0.08695652173913043,
+      "cerBetterWorseEqual": [
+        3,
+        0,
+        8
+      ]
+    },
+    {
+      "backendModel": "openvino/small",
+      "lines": 11,
+      "referenceCharacters": 1535.0,
+      "referenceWords": 207.0,
+      "beforeCharacterEdits": 68.0,
+      "afterCharacterEdits": 31.0,
+      "beforeCer": 0.04429967426710098,
+      "afterCer": 0.020195439739413682,
+      "beforeWordEdits": 19.0,
+      "afterWordEdits": 19.0,
+      "beforeWer": 0.09178743961352658,
+      "afterWer": 0.09178743961352658,
+      "cerBetterWorseEqual": [
+        2,
+        0,
+        9
+      ]
+    }
+  ],
+  "mergeOnlyCost": {
+    "protocol": {
+      "path": "OcrRecognitionWindowMerger.Merge only; preloaded real raw CTC windows",
+      "maximumWidth": 3200,
+      "targetHeight": 48,
+      "overlap": 0.2,
+      "maximumOverlapTokens": 64,
+      "maximumOverlapEditDistance": 2,
+      "warmupSweeps": 5,
+      "measuredSweeps": 50,
+      "linesPerSweep": 52,
+      "metrics": "OcrTextAccuracy.Compare: ordinal Unicode-scalar CER and whitespace-token WER, no implicit normalization",
+      "allocations": "GC.GetAllocatedBytesForCurrentThread during Sweep; includes result array and merge results; excludes fingerprint, metrics and JSON",
+      "timing": "Sequential merge-only sweeps; no inference/preprocessing/CTC decode/native GPU work. CPU frequency not controlled; phase order is baseline then candidate, not randomized paired trials."
+    },
+    "environment": {
+      "os": "Microsoft Windows 10.0.26200",
+      "framework": ".NET 10.0.12",
+      "logicalProcessors": 16
+    },
+    "baseline": {
+      "p50Ms": 6.54025,
+      "p95Ms": 14.229759999999997,
+      "meanMs": 7.572788000000002,
+      "minAllocatedBytes": 2169848,
+      "maxAllocatedBytes": 2175624
+    },
+    "candidate": {
+      "p50Ms": 5.338150000000001,
+      "p95Ms": 9.087559999999998,
+      "meanMs": 5.953031999999999,
+      "minAllocatedBytes": 2168232,
+      "maxAllocatedBytes": 2171784
+    },
+    "baselineSamples": [
+      {
+        "index": 0,
+        "milliseconds": 7.5606,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 1,
+        "milliseconds": 4.883,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 2,
+        "milliseconds": 4.6526,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 3,
+        "milliseconds": 4.654,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 4,
+        "milliseconds": 6.3893,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 5,
+        "milliseconds": 4.826,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 6,
+        "milliseconds": 5.1102,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 7,
+        "milliseconds": 7.2472,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 8,
+        "milliseconds": 10.5203,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 9,
+        "milliseconds": 6.5658,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 10,
+        "milliseconds": 8.5749,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 11,
+        "milliseconds": 13.6505,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 12,
+        "milliseconds": 7.4789,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 13,
+        "milliseconds": 7.9497,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 14,
+        "milliseconds": 7.4931,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 15,
+        "milliseconds": 11.1567,
+        "allocatedBytes": 2175624
+      },
+      {
+        "index": 16,
+        "milliseconds": 11.2785,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 17,
+        "milliseconds": 5.8043,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 18,
+        "milliseconds": 6.6729,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 19,
+        "milliseconds": 7.7622,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 20,
+        "milliseconds": 9.4815,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 21,
+        "milliseconds": 6.5006,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 22,
+        "milliseconds": 6.1598,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 23,
+        "milliseconds": 6.7332,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 24,
+        "milliseconds": 5.7039,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 25,
+        "milliseconds": 5.5383,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 26,
+        "milliseconds": 13.3281,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 27,
+        "milliseconds": 9.8526,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 28,
+        "milliseconds": 7.251,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 29,
+        "milliseconds": 6.7644,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 30,
+        "milliseconds": 10.8777,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 31,
+        "milliseconds": 6.5147,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 32,
+        "milliseconds": 7.0079,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 33,
+        "milliseconds": 6.733,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 34,
+        "milliseconds": 14.7037,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 35,
+        "milliseconds": 6.4243,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 36,
+        "milliseconds": 5.9793,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 37,
+        "milliseconds": 5.1081,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 38,
+        "milliseconds": 6.1548,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 39,
+        "milliseconds": 4.9013,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 40,
+        "milliseconds": 4.6018,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 41,
+        "milliseconds": 23.8932,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 42,
+        "milliseconds": 17.2263,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 43,
+        "milliseconds": 4.3328,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 44,
+        "milliseconds": 4.0309,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 45,
+        "milliseconds": 6.0119,
+        "allocatedBytes": 2170512
+      },
+      {
+        "index": 46,
+        "milliseconds": 4.0105,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 47,
+        "milliseconds": 4.2409,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 48,
+        "milliseconds": 3.8777,
+        "allocatedBytes": 2169848
+      },
+      {
+        "index": 49,
+        "milliseconds": 4.4645,
+        "allocatedBytes": 2170512
+      }
+    ],
+    "candidateSamples": [
+      {
+        "index": 0,
+        "milliseconds": 7.8007,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 1,
+        "milliseconds": 5.1945,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 2,
+        "milliseconds": 5.3715,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 3,
+        "milliseconds": 5.7189,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 4,
+        "milliseconds": 7.3234,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 5,
+        "milliseconds": 5.4364,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 6,
+        "milliseconds": 4.9865,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 7,
+        "milliseconds": 4.921,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 8,
+        "milliseconds": 6.6142,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 9,
+        "milliseconds": 4.7061,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 10,
+        "milliseconds": 5.2508,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 11,
+        "milliseconds": 8.7811,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 12,
+        "milliseconds": 4.5299,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 13,
+        "milliseconds": 4.7107,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 14,
+        "milliseconds": 4.6126,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 15,
+        "milliseconds": 7.7893,
+        "allocatedBytes": 2171784
+      },
+      {
+        "index": 16,
+        "milliseconds": 4.5072,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 17,
+        "milliseconds": 4.4233,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 18,
+        "milliseconds": 4.2686,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 19,
+        "milliseconds": 5.0435,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 20,
+        "milliseconds": 3.9143,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 21,
+        "milliseconds": 3.8958,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 22,
+        "milliseconds": 3.8595,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 23,
+        "milliseconds": 4.9286,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 24,
+        "milliseconds": 4.4033,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 25,
+        "milliseconds": 4.2365,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 26,
+        "milliseconds": 7.6862,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 27,
+        "milliseconds": 5.6514,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 28,
+        "milliseconds": 4.5579,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 29,
+        "milliseconds": 5.2335,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 30,
+        "milliseconds": 6.0873,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 31,
+        "milliseconds": 4.9722,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 32,
+        "milliseconds": 4.9043,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 33,
+        "milliseconds": 4.8013,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 34,
+        "milliseconds": 6.9728,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 35,
+        "milliseconds": 5.317,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 36,
+        "milliseconds": 6.3967,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 37,
+        "milliseconds": 5.7301,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 38,
+        "milliseconds": 6.1816,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 39,
+        "milliseconds": 5.7842,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 40,
+        "milliseconds": 4.946,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 41,
+        "milliseconds": 9.3383,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 42,
+        "milliseconds": 7.1697,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 43,
+        "milliseconds": 6.1188,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 44,
+        "milliseconds": 5.3593,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 45,
+        "milliseconds": 8.0023,
+        "allocatedBytes": 2168896
+      },
+      {
+        "index": 46,
+        "milliseconds": 7.6842,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 47,
+        "milliseconds": 6.0989,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 48,
+        "milliseconds": 13.5718,
+        "allocatedBytes": 2168232
+      },
+      {
+        "index": 49,
+        "milliseconds": 11.8576,
+        "allocatedBytes": 2168896
+      }
+    ],
+    "boundary": "52 sequential line merges per sample, including diagnostics. Baseline then candidate; CPU clock not controlled, no randomized paired trials. Excludes native inference, preprocessing, CTC decode, fingerprinting, metrics and JSON. No speedup/full-pipeline latency claim."
+  },
+  "boundary": "Same 13-line corpus as development diagnostics, not independent validation. Small/Medium Clamp remain better at 23/27 character edits versus candidate sliding 31/29. A2, other exact backends, natural repeat-number/single-character safety and broader quality acceptance stay open. Local reports/traces retain raw text; this summary does not."
+}

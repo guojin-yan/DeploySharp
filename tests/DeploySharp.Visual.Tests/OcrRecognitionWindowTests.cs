@@ -268,6 +268,139 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void LeftOnlyPunctuationIsRetainedWhileTheKnownRightSubsequenceIsDeduplicated()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+            int after = raw[0].Recognition.Tokens.ToList().FindIndex(token => token.Emitted && token.ClassIndex == 30);
+            raw[0] = AtBlank(plans[0], raw[0], after + 1, "'", 991);
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(string.Concat(expected.Take(30)) + "'" + string.Concat(expected.Skip(30)), merged.Recognition.Text);
+            Assert.AreEqual(1, merged.RecognitionWindows[1].OverlapEditDistance);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+            Assert.IsTrue(merged.RecognitionWindows[1].RemovedPrefixTokens >= 8);
+            Assert.IsTrue(merged.Recognition.Tokens.Single(token => token.ClassIndex == 991).Emitted, "Left-only punctuation must survive.");
+            Assert.AreEqual(merged.Recognition.Text, string.Concat(merged.Recognition.Tokens.Where(token => token.Emitted).Select(token => token.Text)));
+        }
+
+        [TestMethod]
+        public void LeadingWhitespaceAndOneSubstitutionShareTheConfiguredEditBudget()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5).WithMaximumOverlapEditDistance(2));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+            // Keep the preceding letter outside the half-timestep geometry margin;
+            // this case isolates one leading space plus one substitution.
+            List<OcrToken> left = raw[0].Recognition.Tokens.ToList();
+            int priorIndex = left.FindIndex(token => token.Emitted && token.ClassIndex == 24);
+            Assert.IsTrue(left[priorIndex - 1].IsBlank);
+            OcrToken prior = left[priorIndex];
+            left[priorIndex - 1] = new OcrToken(priorIndex - 1, prior.ClassIndex, prior.Confidence, prior.Text, false, false, false, true);
+            left[priorIndex] = new OcrToken(priorIndex, 0, 1, null, true, false, false, false);
+            raw[0] = WithTrace(plans[0], raw[0], left);
+            int before = raw[0].Recognition.Tokens.ToList().FindIndex(token => token.Emitted && token.ClassIndex == 25) - 1;
+            raw[0] = AtBlank(plans[0], raw[0], before, " ", 991);
+            List<OcrToken> tokens = raw[1].Recognition.Tokens.ToList();
+            int first = tokens.FindIndex(token => token.Emitted);
+            OcrToken original = tokens[first];
+            tokens[first] = new OcrToken(original.Timestep, 999, .9f, "X", false, false, false, true);
+            raw[1] = WithTrace(plans[1], raw[1], tokens);
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(string.Concat(expected.Take(24)) + " " + string.Concat(expected.Skip(24)), merged.Recognition.Text);
+            Assert.AreEqual(2, merged.RecognitionWindows[1].OverlapEditDistance);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+
+            OcrRegionResult limited = OcrRecognitionWindowMerger.Merge(region,
+                profile.WithRecognitionWindows(new OcrRecognitionWindowOptions(.5).WithMaximumOverlapEditDistance(1)), raw);
+            Assert.AreEqual(0, limited.RecognitionWindows[1].RemovedPrefixTokens, "Whitespace must not be a free extra edit.");
+        }
+
+        [TestMethod]
+        public void ARightOnlyTokenInsideTheOverlapIsNeverSuppressedBySubsequenceMatching()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+            int after = raw[1].Recognition.Tokens.ToList().FindIndex(token => token.Emitted && token.ClassIndex == 30);
+            raw[1] = AtBlank(plans[1], raw[1], after + 1, "!", 999);
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.IsTrue(merged.Recognition.Text.Contains('!'));
+            Assert.IsTrue(merged.Recognition.Tokens.Single(token => token.ClassIndex == 999).Emitted);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+        }
+
+        [TestMethod]
+        public void AmbiguousRepeatedNumberAlignmentsKeepTheRightPrefix()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            Assert.AreEqual(2, plans.Count);
+            double start = plans[1].Start, end = plans[0].End;
+            var left = new List<(double, string, int)> { (.1 / end, "START", 10) };
+            var right = new List<(double, string, int)>();
+            for (int index = 0; index < 22; index++)
+                left.Add(((start + (end - start) * (index + .5) / 22) / end, index == 21 ? "#" : "0", index == 21 ? 2 : 1));
+            for (int index = 0; index < 20; index++)
+                right.Add(((end - start) * (index + .5) / 20 / (1 - start), "0", 1));
+            right.Add(((.9 - start) / (1 - start), "NEXT", 11));
+            var raw = new[] { new OcrRecognitionWindowResult(plans[0], Trace(plans[0], profile, left), plans[0].Crop.WidthInfo),
+                new OcrRecognitionWindowResult(plans[1], Trace(plans[1], profile, right), plans[1].Crop.WidthInfo) };
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(raw[0].Recognition.Text + raw[1].Recognition.Text, merged.Recognition.Text);
+            Assert.AreEqual(0, merged.RecognitionWindows[1].RemovedPrefixTokens);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain, "Repeated-number ambiguity cannot be used to choose a deletion.");
+        }
+
+        [TestMethod]
+        public void SubsequenceMatchingRespectsTheBudgetAndCanBeDisabled()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            string[] expected = Enumerable.Range(0, 60).Select(index => ((char)('A' + index % 26)).ToString()).ToArray();
+            OcrRecognitionWindowResult[] raw = Results(plans, profile, expected);
+            for (int index = 0; index < 3; index++)
+            {
+                int after = raw[0].Recognition.Tokens.ToList().FindIndex(token => token.Emitted && token.ClassIndex == 28 + index * 2);
+                raw[0] = AtBlank(plans[0], raw[0], after + 1, "'", 991 + index);
+            }
+            OcrRegionResult overBudget = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(0, overBudget.RecognitionWindows[1].RemovedPrefixTokens);
+            OcrRegionResult disabled = OcrRecognitionWindowMerger.Merge(region,
+                profile.WithRecognitionWindows(new OcrRecognitionWindowOptions(.5).WithMaximumOverlapEditDistance(0)), raw);
+            Assert.AreEqual(raw[0].Recognition.Text + raw[1].Recognition.Text, disabled.Recognition.Text);
+        }
+
+        [TestMethod]
+        public void ALongMatchingSequenceOutsideTheSharedGeometryIsNotSuppressed()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            var left = new List<(double, string, int)>();
+            var right = new List<(double, string, int)>();
+            for (int index = 0; index < 12; index++)
+            {
+                string text = ((char)('A' + index)).ToString();
+                left.Add(((.1 + index * .015) / plans[0].End, text, index + 1));
+                right.Add(((.84 + index * .012 - plans[1].Start) / (1 - plans[1].Start), text, index + 1));
+            }
+            var raw = new[] { new OcrRecognitionWindowResult(plans[0], Trace(plans[0], profile, left), plans[0].Crop.WidthInfo),
+                new OcrRecognitionWindowResult(plans[1], Trace(plans[1], profile, right), plans[1].Crop.WidthInfo) };
+            OcrRegionResult result = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual("ABCDEFGHIJKLABCDEFGHIJKL", result.Recognition.Text);
+            Assert.AreEqual(0, result.RecognitionWindows[1].RemovedPrefixTokens);
+        }
+
+        [TestMethod]
         public void FixedTensorPaddingIsRemovedBeforeEstimatingTokenPositions()
         {
             TextRegion region = Region(610, 48);
@@ -356,6 +489,19 @@ namespace DeploySharp.Visual.Tests
             }
             return new RecognizedText(7, string.Concat(tokens.Where(token => token.Emitted).Select(token => token.Text)), .9f, tokens, "tests.windows", "1", new string('a', 64));
         }
+
+        private static OcrRecognitionWindowResult AtBlank(OcrRecognitionWindow plan, OcrRecognitionWindowResult original, int index, string text, int classIndex)
+        {
+            List<OcrToken> tokens = original.Recognition.Tokens.ToList();
+            Assert.IsTrue(index >= 0 && index < tokens.Count && tokens[index].IsBlank, "The controlled insertion must occupy a blank timestep.");
+            tokens[index] = new OcrToken(index, classIndex, .9f, text, false, false, false, true);
+            return WithTrace(plan, original, tokens);
+        }
+
+        private static OcrRecognitionWindowResult WithTrace(OcrRecognitionWindow plan, OcrRecognitionWindowResult original, IReadOnlyList<OcrToken> tokens)
+            => new OcrRecognitionWindowResult(plan, new RecognizedText(original.Recognition.SourceRegionIndex,
+                string.Concat(tokens.Where(token => token.Emitted).Select(token => token.Text)), original.Recognition.Confidence,
+                tokens, original.Recognition.CharacterSetId, original.Recognition.CharacterSetVersion, original.Recognition.CharacterSetSha256), original.Width);
 
         private static TextCropProfile Profile(OcrRecognitionWindowOptions? options = null)
             => new TextCropProfile("tests/windows", 48, OcrRecognitionWidthMode.Dynamic, 320, 320, minimumWidth: 48).WithRecognitionWindows(options ?? new OcrRecognitionWindowOptions());
