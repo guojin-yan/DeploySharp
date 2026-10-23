@@ -64,7 +64,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
             foreach (CoreCase testCase in cases)
             {
-                string folder = Path.Combine(root, testCase.Folder);
+                string folder = ResolveCaseFolder(root, testCase);
                 string detectorPath = RequireFile(Path.Combine(folder, testCase.DetectorFile));
                 string classifierFolder = testCase.ClassifierModelId.StartsWith("paddleocr/ppocrv4/", StringComparison.OrdinalIgnoreCase) ? Path.Combine(root, "PP-OCRv4") : Path.Combine(root, "PP-OCRv5");
                 string classifierPath = RequireFile(Path.Combine(classifierFolder, testCase.ClassifierFile));
@@ -74,7 +74,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 PaddleOcrModelDescriptor detectorDescriptor = PaddleOcrModelCatalog.Find(new ModelId(testCase.DetectorModelId));
                 PaddleOcrModelDescriptor classifierDescriptor = PaddleOcrModelCatalog.Find(new ModelId(testCase.ClassifierModelId));
                 PaddleOcrModelDescriptor recognizerDescriptor = PaddleOcrModelCatalog.Find(new ModelId(testCase.RecognizerModelId));
-                OcrCharacterSet characterSet = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "external.openvino." + testCase.Name, testCase.Name, true, testCase.DictionarySha);
+                OcrCharacterSet characterSet = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, GetCharacterSetId(testCase), testCase.Name, true, testCase.DictionarySha);
                 PaddleOcrProfile detector = PaddleOcrModelCatalog.CreateProfile(detectorDescriptor, Artifact(detectorDescriptor), maximumBatch: 1);
                 PaddleOcrProfile classifier = PaddleOcrModelCatalog.CreateProfile(classifierDescriptor, Artifact(classifierDescriptor), maximumBatch: 2);
                 PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerDescriptor, Artifact(recognizerDescriptor, characterSet.Sha256), characterSet, maximumBatch: 16);
@@ -110,18 +110,21 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 int recognized = result.Regions.Count(region => region.Recognition != null);
                 string resultSha = result.ComputeSha256();
                 string textSha = ComputeTextSha(result);
+                string geometrySha = ComputeGeometrySha(result);
+                string recognitionSha = ComputeRecognitionSha(result);
+                List<RegionParityEvidence> regionEvidence = CaptureRegionEvidence(result);
                 string detectorSha = ComputeFileSha(detectorPath);
                 string classifierSha = ComputeFileSha(classifierPath);
                 string recognizerSha = ComputeFileSha(recognizerPath);
                 string dictionarySha = ComputeFileSha(dictionaryPath);
-                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE image=" + Path.GetFileName(imagePath) + ";imageSha=" + imageSha + ";variant=" + testCase.Name + ";detSha=" + detectorSha + ";clsSha=" + classifierSha + ";recSha=" + recognizerSha + ";dictionarySha=" + dictionarySha + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + recognized.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + resultSha + ";textSha=" + textSha);
+                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE image=" + Path.GetFileName(imagePath) + ";imageSha=" + imageSha + ";variant=" + testCase.Name + ";detSha=" + detectorSha + ";clsSha=" + classifierSha + ";recSha=" + recognizerSha + ";dictionarySha=" + dictionarySha + ";characterSetId=" + characterSet.Id + ";characterSetVersion=" + characterSet.Version + ";characterSetSha=" + characterSet.Sha256 + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + recognized.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + resultSha + ";geometrySha=" + geometrySha + ";recognitionSha=" + recognitionSha + ";textSha=" + textSha);
                 runs.Add(new PipelineRunEvidence(
                     Path.GetFileName(imagePath), imageSha, testCase.Name,
                     detectorDescriptor.ModelId.Value, detectorSha,
                     classifierDescriptor.ModelId.Value, classifierSha,
                     recognizerDescriptor.ModelId.Value, recognizerSha,
-                    dictionarySha, result.Regions.Count, recognized,
-                    watch.Elapsed.TotalMilliseconds, resultSha, textSha));
+                    dictionarySha, characterSet.Id, characterSet.Version, characterSet.Sha256, result.Regions.Count, recognized,
+                    watch.Elapsed.TotalMilliseconds, resultSha, geometrySha, recognitionSha, textSha, regionEvidence));
             }
 
             return runs;
@@ -189,6 +192,90 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
         }
 
+        private static string ComputeGeometrySha(OcrResult result)
+        {
+            using var stream = new MemoryStream();
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                writer.Write(result.SourceSize.Width);
+                writer.Write(result.SourceSize.Height);
+                writer.Write(result.Regions.Count);
+                foreach (OcrRegionResult item in result.Regions)
+                {
+                    writer.Write(item.Region.SourceIndex);
+                    writer.Write(item.Region.Score);
+                    writer.Write(item.Region.Polygon.Vertices.Count);
+                    foreach (var point in item.Region.Polygon.Vertices) { writer.Write(point.X); writer.Write(point.Y); }
+                    writer.Write((int)item.Region.Orientation);
+                }
+            }
+            using SHA256 sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(stream.ToArray())).ToLowerInvariant();
+        }
+
+        private static string ComputeRecognitionSha(OcrResult result)
+        {
+            using var stream = new MemoryStream();
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                writer.Write(result.Regions.Count);
+                foreach (OcrRegionResult item in result.Regions)
+                {
+                    RecognizedText recognition = item.Recognition;
+                    writer.Write(item.Region.SourceIndex);
+                    writer.Write(recognition.Text);
+                    writer.Write(recognition.Confidence);
+                    writer.Write(recognition.CharacterSetId);
+                    writer.Write(recognition.CharacterSetVersion);
+                    writer.Write(recognition.CharacterSetSha256);
+                    writer.Write(recognition.Tokens.Count);
+                    foreach (OcrToken token in recognition.Tokens)
+                    {
+                        writer.Write(token.Timestep); writer.Write(token.ClassIndex); writer.Write(token.Confidence);
+                        writer.Write(token.Text ?? string.Empty); writer.Write(token.IsBlank); writer.Write(token.IsCollapsedRepeat);
+                        writer.Write(token.IsUnknown); writer.Write(token.Emitted);
+                    }
+                }
+            }
+            using SHA256 sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(stream.ToArray())).ToLowerInvariant();
+        }
+
+        private static List<RegionParityEvidence> CaptureRegionEvidence(OcrResult result)
+        {
+            var evidence = new List<RegionParityEvidence>(result.Regions.Count);
+            foreach (OcrRegionResult item in result.Regions)
+            {
+                var vertices = item.Region.Polygon.Vertices
+                    .Select(static point => new VertexParityEvidence(point.X, point.Y))
+                    .ToList();
+                var tokens = item.Recognition.Tokens
+                    .Select(static token => new TokenParityEvidence(token.Timestep, token.ClassIndex, token.Confidence, token.Text, token.IsBlank, token.IsCollapsedRepeat, token.IsUnknown, token.Emitted))
+                    .ToList();
+                evidence.Add(new RegionParityEvidence(item.Region.SourceIndex, item.Region.Score, vertices, (int)item.Region.Orientation,
+                    item.Recognition.Text, item.Recognition.Confidence, item.Recognition.CharacterSetId,
+                    item.Recognition.CharacterSetVersion, item.Recognition.CharacterSetSha256, tokens));
+            }
+            return evidence;
+        }
+
+        private static string GetCharacterSetId(CoreCase testCase) => "external." + testCase.Name;
+
+        private static string ResolveCaseFolder(string root, CoreCase testCase)
+        {
+            var candidates = new List<string> { Path.Combine(root, testCase.Folder) };
+            if (testCase.Name.StartsWith("v4-", StringComparison.Ordinal)) candidates.Add(Path.Combine(root, "PP-OCRv4"));
+            if (testCase.Name.StartsWith("v5-", StringComparison.Ordinal)) candidates.Add(Path.Combine(root, "PP-OCRv5"));
+            foreach (string candidate in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (File.Exists(Path.Combine(candidate, testCase.DetectorFile))
+                    && File.Exists(Path.Combine(candidate, testCase.RecognizerFile))
+                    && File.Exists(Path.Combine(candidate, testCase.DictionaryFile))) return candidate;
+            }
+
+            throw new FileNotFoundException("Could not locate the complete model/dictionary files for " + testCase.Name + " under " + root + ". Searched: " + string.Join("; ", candidates));
+        }
+
         private static string ComputeFileSha(string path)
         {
             using SHA256 sha = SHA256.Create();
@@ -208,9 +295,11 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 SourceTreeDirty = Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_TREE_DIRTY"),
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                CpuModel = (Environment.GetEnvironmentVariable("DEPLOYSHARP_CPU_MODEL") ?? "unspecified").Trim(),
+                LogicalProcessorCount = Environment.ProcessorCount,
                 DotNetRuntime = Environment.Version.ToString(),
                 OpenVinoProviderAssemblyVersion = typeof(OpenVinoBackendProvider).Assembly.GetName().Version?.ToString() ?? "unknown",
-                OpenVinoRuntimeVersion = Environment.GetEnvironmentVariable("DEPLOYSHARP_OPENVINO_RUNTIME_VERSION") ?? "unspecified",
+                OpenVinoRuntimeVersion = GetOpenVinoRuntimeVersion(),
                 Backend = "OpenVINO CPU",
                 WarmupRuns = 0,
                 MeasuredRunsPerModelImage = 1,
@@ -221,6 +310,25 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string? directory = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
             File.WriteAllText(fullPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        private static string GetOpenVinoRuntimeVersion()
+        {
+            string? nativeRuntimePath = Directory
+                .EnumerateFiles(AppContext.BaseDirectory, "openvino_c.dll", SearchOption.AllDirectories)
+                .FirstOrDefault();
+            if (nativeRuntimePath is null)
+            {
+                string? configuredVersion = Environment.GetEnvironmentVariable("DEPLOYSHARP_OPENVINO_RUNTIME_VERSION");
+                return !string.IsNullOrWhiteSpace(configuredVersion) ? configuredVersion.Trim() : "unavailable";
+            }
+
+            FileVersionInfo version = FileVersionInfo.GetVersionInfo(nativeRuntimePath);
+            return !string.IsNullOrWhiteSpace(version.ProductVersion)
+                ? version.ProductVersion.Trim()
+                : !string.IsNullOrWhiteSpace(version.FileVersion)
+                    ? version.FileVersion.Trim()
+                    : "unknown";
         }
 
         private static string RequireFile(string path)
@@ -261,6 +369,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
             public string? SourceTreeDirty { get; set; }
             public string OperatingSystem { get; set; } = string.Empty;
             public string ProcessArchitecture { get; set; } = string.Empty;
+            public string CpuModel { get; set; } = string.Empty;
+            public int LogicalProcessorCount { get; set; }
             public string DotNetRuntime { get; set; } = string.Empty;
             public string OpenVinoProviderAssemblyVersion { get; set; } = string.Empty;
             public string OpenVinoRuntimeVersion { get; set; } = string.Empty;
@@ -273,7 +383,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
         private sealed class PipelineRunEvidence
         {
-            public PipelineRunEvidence(string imageFileName, string imageSha256, string variant, string detectorModelId, string detectorSha256, string classifierModelId, string classifierSha256, string recognizerModelId, string recognizerSha256, string dictionarySha256, int regionCount, int recognizedRegionCount, double elapsedMilliseconds, string resultSha256, string textSha256)
+            public PipelineRunEvidence(string imageFileName, string imageSha256, string variant, string detectorModelId, string detectorSha256, string classifierModelId, string classifierSha256, string recognizerModelId, string recognizerSha256, string dictionarySha256, string characterSetId, string characterSetVersion, string characterSetSha256, int regionCount, int recognizedRegionCount, double elapsedMilliseconds, string resultSha256, string geometrySha256, string recognitionSha256, string textSha256, List<RegionParityEvidence> regionEvidence)
             {
                 ImageFileName = imageFileName;
                 ImageSha256 = imageSha256;
@@ -285,11 +395,17 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 RecognizerModelId = recognizerModelId;
                 RecognizerSha256 = recognizerSha256;
                 DictionarySha256 = dictionarySha256;
+                CharacterSetId = characterSetId;
+                CharacterSetVersion = characterSetVersion;
+                CharacterSetSha256 = characterSetSha256;
                 RegionCount = regionCount;
                 RecognizedRegionCount = recognizedRegionCount;
                 ElapsedMilliseconds = elapsedMilliseconds;
                 ResultSha256 = resultSha256;
+                GeometrySha256 = geometrySha256;
+                RecognitionSha256 = recognitionSha256;
                 TextSha256 = textSha256;
+                Regions = regionEvidence;
             }
 
             public string ImageFileName { get; }
@@ -302,11 +418,61 @@ namespace DeploySharp.Visual.OpenCV.Tests
             public string RecognizerModelId { get; }
             public string RecognizerSha256 { get; }
             public string DictionarySha256 { get; }
+            public string CharacterSetId { get; }
+            public string CharacterSetVersion { get; }
+            public string CharacterSetSha256 { get; }
             public int RegionCount { get; }
             public int RecognizedRegionCount { get; }
             public double ElapsedMilliseconds { get; }
             public string ResultSha256 { get; }
+            public string GeometrySha256 { get; }
+            public string RecognitionSha256 { get; }
             public string TextSha256 { get; }
+            public List<RegionParityEvidence> Regions { get; }
+        }
+
+        private sealed class RegionParityEvidence
+        {
+            public RegionParityEvidence(int sourceIndex, float detectorScore, List<VertexParityEvidence> vertices, int orientation, string text, float recognitionConfidence, string characterSetId, string characterSetVersion, string characterSetSha256, List<TokenParityEvidence> tokens)
+            {
+                SourceIndex = sourceIndex; DetectorScore = detectorScore; Vertices = vertices; Orientation = orientation; Text = text;
+                RecognitionConfidence = recognitionConfidence; CharacterSetId = characterSetId; CharacterSetVersion = characterSetVersion;
+                CharacterSetSha256 = characterSetSha256; Tokens = tokens;
+            }
+            public int SourceIndex { get; }
+            public float DetectorScore { get; }
+            public List<VertexParityEvidence> Vertices { get; }
+            public int Orientation { get; }
+            public string Text { get; }
+            public float RecognitionConfidence { get; }
+            public string CharacterSetId { get; }
+            public string CharacterSetVersion { get; }
+            public string CharacterSetSha256 { get; }
+            public List<TokenParityEvidence> Tokens { get; }
+        }
+
+        private sealed class VertexParityEvidence
+        {
+            public VertexParityEvidence(float x, float y) { X = x; Y = y; }
+            public float X { get; }
+            public float Y { get; }
+        }
+
+        private sealed class TokenParityEvidence
+        {
+            public TokenParityEvidence(int timestep, int classIndex, float confidence, string? text, bool isBlank, bool isCollapsedRepeat, bool isUnknown, bool emitted)
+            {
+                Timestep = timestep; ClassIndex = classIndex; Confidence = confidence; Text = text;
+                IsBlank = isBlank; IsCollapsedRepeat = isCollapsedRepeat; IsUnknown = isUnknown; Emitted = emitted;
+            }
+            public int Timestep { get; }
+            public int ClassIndex { get; }
+            public float Confidence { get; }
+            public string? Text { get; }
+            public bool IsBlank { get; }
+            public bool IsCollapsedRepeat { get; }
+            public bool IsUnknown { get; }
+            public bool Emitted { get; }
         }
     }
 }
