@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
@@ -38,7 +41,15 @@ namespace DeploySharp.Visual.OpenCV.Tests
             RequireExternal();
             string imagePath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGE") ?? ImageDefault);
             string root = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? ModelRootDefault;
+            IReadOnlyList<PipelineRunEvidence> runs = RunCoreVariants(imagePath, root);
+            WriteReportIfConfigured(runs);
+        }
+
+        private static IReadOnlyList<PipelineRunEvidence> RunCoreVariants(string imagePath, string root)
+        {
             VisualSize sourceSize = ProbeSourceSize(imagePath);
+            string imageSha = ComputeFileSha(imagePath);
+            var runs = new List<PipelineRunEvidence>();
 
             var cases = new[]
             {
@@ -83,7 +94,7 @@ namespace DeploySharp.Visual.OpenCV.Tests
                     classifier.CropProfile!,
                     profiles.Select(recognizer.CreateArtifact(recognizerPath, OpenVinoBackendProvider.BackendId), registry, request, VisualTaskId.TextRecognition), request,
                     recognizer.CropProfile!,
-                    new OcrPipelineOptions(maximumRegions: 64, maximumRecognitionBatch: 16, maximumConcurrency: 1),
+                    new OcrPipelineOptions(maximumRegions: 512, maximumRecognitionBatch: 16, maximumConcurrency: 1),
                     orientationRejectionPolicy: OcrOrientationRejectionPolicy.UseZeroDegrees);
 
                 using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(
@@ -96,8 +107,24 @@ namespace DeploySharp.Visual.OpenCV.Tests
 
                 Assert.IsTrue(result.Regions.Count > 0, testCase.Name + " returned no text regions.");
                 Assert.IsTrue(result.Regions.Any(region => region.Recognition != null), testCase.Name + " did not produce recognized text.");
-                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE variant=" + testCase.Name + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + result.Regions.Count(region => region.Recognition != null).ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + result.ComputeSha256() + ";textSha=" + ComputeTextSha(result));
+                int recognized = result.Regions.Count(region => region.Recognition != null);
+                string resultSha = result.ComputeSha256();
+                string textSha = ComputeTextSha(result);
+                string detectorSha = ComputeFileSha(detectorPath);
+                string classifierSha = ComputeFileSha(classifierPath);
+                string recognizerSha = ComputeFileSha(recognizerPath);
+                string dictionarySha = ComputeFileSha(dictionaryPath);
+                Console.WriteLine("PADDLEOCR_OPENVINO_FULL_PIPELINE image=" + Path.GetFileName(imagePath) + ";imageSha=" + imageSha + ";variant=" + testCase.Name + ";detSha=" + detectorSha + ";clsSha=" + classifierSha + ";recSha=" + recognizerSha + ";dictionarySha=" + dictionarySha + ";regions=" + result.Regions.Count.ToString(CultureInfo.InvariantCulture) + ";recognized=" + recognized.ToString(CultureInfo.InvariantCulture) + ";elapsedMs=" + watch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + ";resultSha=" + resultSha + ";textSha=" + textSha);
+                runs.Add(new PipelineRunEvidence(
+                    Path.GetFileName(imagePath), imageSha, testCase.Name,
+                    detectorDescriptor.ModelId.Value, detectorSha,
+                    classifierDescriptor.ModelId.Value, classifierSha,
+                    recognizerDescriptor.ModelId.Value, recognizerSha,
+                    dictionarySha, result.Regions.Count, recognized,
+                    watch.Elapsed.TotalMilliseconds, resultSha, textSha));
             }
+
+            return runs;
         }
 
         [TestMethod]
@@ -105,17 +132,42 @@ namespace DeploySharp.Visual.OpenCV.Tests
         public void EveryCorePpOcrVariantRunsOpenVinoAcrossThreeLocalImages()
         {
             RequireExternal();
-            string? previous = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGE");
-            try
+            string root = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_ROOT") ?? ModelRootDefault;
+            string[] images = GetConfiguredImages();
+            var runs = new List<PipelineRunEvidence>();
+            foreach (string image in images)
             {
-                foreach (string image in new[] { @"E:\Data\ocr\demo_1.jpg", @"E:\Data\ocr\demo_2.jpg", @"E:\Data\ocr\demo_3.jpg" })
-                {
-                    if (!File.Exists(image)) Assert.Inconclusive("Missing multi-image OCR input: " + image);
-                    Environment.SetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGE", image);
-                    EveryCorePpOcrVariantRunsCompleteDetClsRecMergeOnRealOpenVinoCpu();
-                }
+                if (!File.Exists(image)) Assert.Inconclusive("Missing multi-image OCR input: " + image);
+                runs.AddRange(RunCoreVariants(image, root));
             }
-            finally { Environment.SetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGE", previous); }
+            WriteReportIfConfigured(runs);
+        }
+
+        private static string[] GetConfiguredImages()
+        {
+            string? configured = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGES");
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                return new[] { @"E:\Data\ocr\demo_1.jpg", @"E:\Data\ocr\demo_2.jpg", @"E:\Data\ocr\demo_3.jpg" };
+            }
+
+            string[] images = configured
+                .Split(new[] { ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .ToArray();
+            if (images.Length == 1 && !File.Exists(images[0]) && configured.Contains(':', StringComparison.Ordinal))
+            {
+                images = configured
+                    .Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(static path => !string.IsNullOrWhiteSpace(path))
+                    .ToArray();
+            }
+            if (images.Length == 0)
+            {
+                Assert.Inconclusive("DEPLOYSHARP_PADDLEOCR_OPENVINO_IMAGES did not contain any image paths.");
+            }
+
+            return images;
         }
 
         private static PaddleOcrArtifactContract Artifact(PaddleOcrModelDescriptor descriptor, string? dictionarySha = null)
@@ -135,6 +187,40 @@ namespace DeploySharp.Visual.OpenCV.Tests
             string text = string.Join("\n", result.Regions.Select(region => region.Recognition?.Text ?? string.Empty));
             using SHA256 sha = SHA256.Create();
             return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+        }
+
+        private static string ComputeFileSha(string path)
+        {
+            using SHA256 sha = SHA256.Create();
+            using FileStream stream = File.OpenRead(path);
+            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+        }
+
+        private static void WriteReportIfConfigured(IReadOnlyList<PipelineRunEvidence> runs)
+        {
+            string? reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_OPENVINO_REPORT");
+            if (string.IsNullOrWhiteSpace(reportPath)) return;
+            var report = new PipelineReport
+            {
+                GeneratedAtUtc = DateTimeOffset.UtcNow,
+                SourceCommit = Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_COMMIT"),
+                TestSourceSha256 = Environment.GetEnvironmentVariable("DEPLOYSHARP_TEST_SOURCE_SHA256"),
+                SourceTreeDirty = Environment.GetEnvironmentVariable("DEPLOYSHARP_SOURCE_TREE_DIRTY"),
+                OperatingSystem = RuntimeInformation.OSDescription,
+                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                DotNetRuntime = Environment.Version.ToString(),
+                OpenVinoProviderAssemblyVersion = typeof(OpenVinoBackendProvider).Assembly.GetName().Version?.ToString() ?? "unknown",
+                OpenVinoRuntimeVersion = Environment.GetEnvironmentVariable("DEPLOYSHARP_OPENVINO_RUNTIME_VERSION") ?? "unspecified",
+                Backend = "OpenVINO CPU",
+                WarmupRuns = 0,
+                MeasuredRunsPerModelImage = 1,
+                Boundary = "Single-run functional integration evidence only; elapsed time covers OcrPipeline.Run after image loading/preprocessing and Session construction, is not steady-state latency or a performance ranking, and does not establish recognition accuracy.",
+                Runs = runs.ToList()
+            };
+            string fullPath = Path.GetFullPath(reportPath);
+            string? directory = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+            File.WriteAllText(fullPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
         }
 
         private static string RequireFile(string path)
@@ -165,6 +251,62 @@ namespace DeploySharp.Visual.OpenCV.Tests
             public string RecognizerFile { get; }
             public string DictionaryFile { get; }
             public string? DictionarySha { get; }
+        }
+
+        private sealed class PipelineReport
+        {
+            public DateTimeOffset GeneratedAtUtc { get; set; }
+            public string? SourceCommit { get; set; }
+            public string? TestSourceSha256 { get; set; }
+            public string? SourceTreeDirty { get; set; }
+            public string OperatingSystem { get; set; } = string.Empty;
+            public string ProcessArchitecture { get; set; } = string.Empty;
+            public string DotNetRuntime { get; set; } = string.Empty;
+            public string OpenVinoProviderAssemblyVersion { get; set; } = string.Empty;
+            public string OpenVinoRuntimeVersion { get; set; } = string.Empty;
+            public string Backend { get; set; } = string.Empty;
+            public int WarmupRuns { get; set; }
+            public int MeasuredRunsPerModelImage { get; set; }
+            public string Boundary { get; set; } = string.Empty;
+            public List<PipelineRunEvidence> Runs { get; set; } = new List<PipelineRunEvidence>();
+        }
+
+        private sealed class PipelineRunEvidence
+        {
+            public PipelineRunEvidence(string imageFileName, string imageSha256, string variant, string detectorModelId, string detectorSha256, string classifierModelId, string classifierSha256, string recognizerModelId, string recognizerSha256, string dictionarySha256, int regionCount, int recognizedRegionCount, double elapsedMilliseconds, string resultSha256, string textSha256)
+            {
+                ImageFileName = imageFileName;
+                ImageSha256 = imageSha256;
+                Variant = variant;
+                DetectorModelId = detectorModelId;
+                DetectorSha256 = detectorSha256;
+                ClassifierModelId = classifierModelId;
+                ClassifierSha256 = classifierSha256;
+                RecognizerModelId = recognizerModelId;
+                RecognizerSha256 = recognizerSha256;
+                DictionarySha256 = dictionarySha256;
+                RegionCount = regionCount;
+                RecognizedRegionCount = recognizedRegionCount;
+                ElapsedMilliseconds = elapsedMilliseconds;
+                ResultSha256 = resultSha256;
+                TextSha256 = textSha256;
+            }
+
+            public string ImageFileName { get; }
+            public string ImageSha256 { get; }
+            public string Variant { get; }
+            public string DetectorModelId { get; }
+            public string DetectorSha256 { get; }
+            public string ClassifierModelId { get; }
+            public string ClassifierSha256 { get; }
+            public string RecognizerModelId { get; }
+            public string RecognizerSha256 { get; }
+            public string DictionarySha256 { get; }
+            public int RegionCount { get; }
+            public int RecognizedRegionCount { get; }
+            public double ElapsedMilliseconds { get; }
+            public string ResultSha256 { get; }
+            public string TextSha256 { get; }
         }
     }
 }

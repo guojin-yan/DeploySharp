@@ -839,6 +839,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 ### PP-OCR 核心三图跨后端证据（2026-09-30）
 
+2026-10-23 在 Ubuntu 22.04.5 / RTX 2060 主机上用当前测试源复跑七组核心流水线，形成[三图 ORT/OpenVINO 对照报告](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md)。21/21 对的输入与模型文件 SHA、检测区域数、识别区域数及有序文本 SHA 一致；但完整 `OcrResult` 指纹是 0/21 一致，因此只可称文本和计数一致，不能称完整结果 parity。两后端均为 CPU，RTX 2060 只是主机配置；每对单次执行没有人工逐字真值，不提供 CER/WER，也不构成性能基准。原始 ORT/OpenVINO JSON 和可重跑比较脚本均已链接在报告中。
+
 ### PaddleOCR 质量证据状态索引（2026-10-14）
 
 为避免把大量分散的质量报告误读成“所有模型、所有后端都已通过”，新增了[PaddleOCR 质量证据状态索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.json)。索引把当前证据分成“诊断通过、受控诊断、部分通过、未完成”四类：核心 v4/v5/v6 七模型的 SROIE 十页、HierText v6 Small 的 1,557 条真实行级 crop、HierText v6 Medium 三后端 34 页、FUNSD v4/v6 40 页、v6 Small 三后端十页，以及本轮 A3 已知角度 retry 均有明确报告链接。

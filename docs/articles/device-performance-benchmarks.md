@@ -406,6 +406,8 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 运行状态与边界、模型和输入 SHA、全部 50 个样本见[逐设备报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.md)及[机器报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.json)。该结果只覆盖这一精确 PP-OCRv6 Small 配置，不代表 GPU/TensorRT 速度、准确率或全模型×后端性能矩阵。
 
+同一远端主机另有[七组 PP-OCR 核心模型的三图 ORT/OpenVINO 功能复跑](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md)：21/21 对的文本和区域计数一致，但完整结果指纹 0/21 一致。它是单次执行且没有逐字真值，不纳入本页性能数字或设备间速度对比；两种后端均运行在 CPU。
+
 ## 复现
 
 设备测试包中的 `Run-DeviceBenchmark.ps1` 会记录系统、运行时和结果文件。运行前应先准备与目标设备匹配的模型、ONNX Runtime、OpenVINO、OpenCV、CUDA、TensorRT 和 cuDNN；TensorRT 测试还需要匹配版本的 bridge。每次在新的设备、模型制品、运行时版本、输入图片或 batch/Session 配置上运行后，都应新增独立设备小节，而不是替换其他设备的结果。
