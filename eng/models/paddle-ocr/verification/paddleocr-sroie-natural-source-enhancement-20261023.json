@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-10-23T05:45:41.4490441+00:00",
-  "sourceRevision": "e033e4c\u002Bworking-tree",
+  "generatedUtc": "2026-10-23T06:15:32.3433662+00:00",
+  "sourceRevision": "7bc781e\u002Bthreshold-sweep-working-tree",
   "model": {
     "detectorId": "paddleocr/ppocrv6/small-det",
     "detectorSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
@@ -156,6 +156,279 @@
           "equalWer": 528
         }
       ],
+      "consensusThresholdAnalysis": {
+        "mode": "post-hoc exhaustive sweep over every distinct positive runtime-selected candidate confidence gain; reported cut points retain at least one candidate, thresholding only removes selections and never reselects a different candidate",
+        "exactPositiveGainThresholdsTested": 348,
+        "zeroCerWorseThresholdCount": 2,
+        "zeroCerWorseWithCerBenefitThresholdCount": 0,
+        "minimumZeroCerWorseThreshold": 0.23063883185386658,
+        "minimumZeroCerWorseWithCerBenefitThreshold": null,
+        "zeroCerWorseNonEmptyPoints": [
+          {
+            "minimumConfidenceGain": 0.23063883185386658,
+            "selectedRegions": 2,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          },
+          {
+            "minimumConfidenceGain": 0.29873770475387573,
+            "selectedRegions": 1,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              1
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              1
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          }
+        ],
+        "bestZeroCerWorsePoint": {
+          "minimumConfidenceGain": 0.23063883185386658,
+          "selectedRegions": 2,
+          "selectedCerBetterWorseEqual": [
+            0,
+            0,
+            2
+          ],
+          "selectedWerBetterWorseEqual": [
+            0,
+            0,
+            2
+          ],
+          "aggregateCharacterEdits": 513,
+          "referenceCharacters": 5857,
+          "aggregateCer": 0.0875875021341984,
+          "aggregateWordEdits": 232,
+          "referenceWords": 1089,
+          "aggregateWer": 0.2130394857667585
+        },
+        "standardPoints": [
+          {
+            "minimumConfidenceGain": 0,
+            "selectedRegions": 353,
+            "selectedCerBetterWorseEqual": [
+              4,
+              5,
+              344
+            ],
+            "selectedWerBetterWorseEqual": [
+              3,
+              4,
+              346
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.005,
+            "selectedRegions": 106,
+            "selectedCerBetterWorseEqual": [
+              2,
+              4,
+              100
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              4,
+              100
+            ],
+            "aggregateCharacterEdits": 515,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08792897387741165,
+            "aggregateWordEdits": 234,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21487603305785125
+          },
+          {
+            "minimumConfidenceGain": 0.01,
+            "selectedRegions": 77,
+            "selectedCerBetterWorseEqual": [
+              2,
+              4,
+              71
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              4,
+              71
+            ],
+            "aggregateCharacterEdits": 515,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08792897387741165,
+            "aggregateWordEdits": 234,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21487603305785125
+          },
+          {
+            "minimumConfidenceGain": 0.02,
+            "selectedRegions": 46,
+            "selectedCerBetterWorseEqual": [
+              2,
+              3,
+              41
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              3,
+              41
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.03,
+            "selectedRegions": 29,
+            "selectedCerBetterWorseEqual": [
+              2,
+              2,
+              25
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              2,
+              25
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          },
+          {
+            "minimumConfidenceGain": 0.05,
+            "selectedRegions": 19,
+            "selectedCerBetterWorseEqual": [
+              1,
+              2,
+              16
+            ],
+            "selectedWerBetterWorseEqual": [
+              1,
+              2,
+              16
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.075,
+            "selectedRegions": 11,
+            "selectedCerBetterWorseEqual": [
+              1,
+              1,
+              9
+            ],
+            "selectedWerBetterWorseEqual": [
+              1,
+              1,
+              9
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 231,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21212121212121213
+          },
+          {
+            "minimumConfidenceGain": 0.1,
+            "selectedRegions": 5,
+            "selectedCerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.15,
+            "selectedRegions": 5,
+            "selectedCerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.2,
+            "selectedRegions": 2,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          }
+        ],
+        "boundary": "Post-hoc scan on this same fixed labelled sample; it is not an independent validation split and must not be used to select a production threshold."
+      },
       "pageLatencyMs": {
         "p50": 2414.12135,
         "p95": 3595.905994999999,
@@ -33059,6 +33332,279 @@
           "equalWer": 528
         }
       ],
+      "consensusThresholdAnalysis": {
+        "mode": "post-hoc exhaustive sweep over every distinct positive runtime-selected candidate confidence gain; reported cut points retain at least one candidate, thresholding only removes selections and never reselects a different candidate",
+        "exactPositiveGainThresholdsTested": 350,
+        "zeroCerWorseThresholdCount": 2,
+        "zeroCerWorseWithCerBenefitThresholdCount": 0,
+        "minimumZeroCerWorseThreshold": 0.23063254356384277,
+        "minimumZeroCerWorseWithCerBenefitThreshold": null,
+        "zeroCerWorseNonEmptyPoints": [
+          {
+            "minimumConfidenceGain": 0.23063254356384277,
+            "selectedRegions": 2,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          },
+          {
+            "minimumConfidenceGain": 0.2987403869628906,
+            "selectedRegions": 1,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              1
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              1
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          }
+        ],
+        "bestZeroCerWorsePoint": {
+          "minimumConfidenceGain": 0.23063254356384277,
+          "selectedRegions": 2,
+          "selectedCerBetterWorseEqual": [
+            0,
+            0,
+            2
+          ],
+          "selectedWerBetterWorseEqual": [
+            0,
+            0,
+            2
+          ],
+          "aggregateCharacterEdits": 513,
+          "referenceCharacters": 5857,
+          "aggregateCer": 0.0875875021341984,
+          "aggregateWordEdits": 232,
+          "referenceWords": 1089,
+          "aggregateWer": 0.2130394857667585
+        },
+        "standardPoints": [
+          {
+            "minimumConfidenceGain": 0,
+            "selectedRegions": 353,
+            "selectedCerBetterWorseEqual": [
+              4,
+              5,
+              344
+            ],
+            "selectedWerBetterWorseEqual": [
+              3,
+              4,
+              346
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.005,
+            "selectedRegions": 106,
+            "selectedCerBetterWorseEqual": [
+              2,
+              4,
+              100
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              4,
+              100
+            ],
+            "aggregateCharacterEdits": 515,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08792897387741165,
+            "aggregateWordEdits": 234,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21487603305785125
+          },
+          {
+            "minimumConfidenceGain": 0.01,
+            "selectedRegions": 77,
+            "selectedCerBetterWorseEqual": [
+              2,
+              4,
+              71
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              4,
+              71
+            ],
+            "aggregateCharacterEdits": 515,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08792897387741165,
+            "aggregateWordEdits": 234,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21487603305785125
+          },
+          {
+            "minimumConfidenceGain": 0.02,
+            "selectedRegions": 46,
+            "selectedCerBetterWorseEqual": [
+              2,
+              3,
+              41
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              3,
+              41
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.03,
+            "selectedRegions": 29,
+            "selectedCerBetterWorseEqual": [
+              2,
+              2,
+              25
+            ],
+            "selectedWerBetterWorseEqual": [
+              2,
+              2,
+              25
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          },
+          {
+            "minimumConfidenceGain": 0.05,
+            "selectedRegions": 19,
+            "selectedCerBetterWorseEqual": [
+              1,
+              2,
+              16
+            ],
+            "selectedWerBetterWorseEqual": [
+              1,
+              2,
+              16
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.075,
+            "selectedRegions": 11,
+            "selectedCerBetterWorseEqual": [
+              1,
+              1,
+              9
+            ],
+            "selectedWerBetterWorseEqual": [
+              1,
+              1,
+              9
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 231,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21212121212121213
+          },
+          {
+            "minimumConfidenceGain": 0.1,
+            "selectedRegions": 5,
+            "selectedCerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.15,
+            "selectedRegions": 5,
+            "selectedCerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              1,
+              4
+            ],
+            "aggregateCharacterEdits": 514,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.08775823800580503,
+            "aggregateWordEdits": 233,
+            "referenceWords": 1089,
+            "aggregateWer": 0.21395775941230485
+          },
+          {
+            "minimumConfidenceGain": 0.2,
+            "selectedRegions": 2,
+            "selectedCerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "selectedWerBetterWorseEqual": [
+              0,
+              0,
+              2
+            ],
+            "aggregateCharacterEdits": 513,
+            "referenceCharacters": 5857,
+            "aggregateCer": 0.0875875021341984,
+            "aggregateWordEdits": 232,
+            "referenceWords": 1089,
+            "aggregateWer": 0.2130394857667585
+          }
+        ],
+        "boundary": "Post-hoc scan on this same fixed labelled sample; it is not an independent validation split and must not be used to select a production threshold."
+      },
       "pageLatencyMs": {
         "p50": 3485.9322,
         "p95": 4296.278319999999,

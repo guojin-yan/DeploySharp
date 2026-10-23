@@ -44,9 +44,14 @@ Candidate-level comparisons against the original recognition (each recipe is att
 
 These per-recipe counts overlap by region and are not additive. Confidence consensus can still select a text with worse labelled CER/WER; confidence is not a correctness oracle.
 
+## Post-hoc confidence-gain threshold scan
+
+The test also exhaustively re-evaluates every distinct positive confidence gain among candidates already selected by the runtime policy: 348 cut points for ORT and 350 for OpenVINO. This is a post-hoc filter only; it removes selected candidates and does not choose a different recipe. Considering non-empty selections, both backends have just two points with zero selected CER-worse regions: retain two regions at a gain near `0.23064` or one region near `0.29874`. All retained regions have CER equal to the original, so aggregate edits remain `513/5,857` and there is no CER-improving region. No scanned point has both zero selected CER-worse regions and a CER benefit. These backend-specific cut points come from this same sample and are not production thresholds or independent validation.
+
 ## Conclusion and limits
 
 - Do not enable enhancement by default and do not infer that consensus is safe from backend parity.
+- Do not adopt a confidence-gain threshold from this sample: the exhaustive post-hoc scan found no threshold with zero selected CER-worse regions and at least one CER improvement.
 - Keep B1b/B2/B3 open: image quality has no source labels, this is only a ten-page word-crop selection, and there is no independent natural-low-quality split, business-field false-correction budget, or paired formal latency/cost gate.
 - The page P50/P95 values include sequential candidate execution and must not be compared as backend performance rankings; this was a diagnostic quality run, not a benchmark.
 - SROIE annotations are word-level. These values are crop-level diagnostics, not official SROIE metrics, line-level/page-level accuracy, detection recall, or a release quality claim.

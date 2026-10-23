@@ -164,6 +164,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 selectedWorseWerRegions = item.SelectedWorseWerRegions,
                 selectedEqualWerRegions = item.SelectedEqualWerRegions,
                 candidateRecipes = SummarizeCandidates(item.Regions),
+                consensusThresholdAnalysis = SummarizeConsensusThresholds(item.Regions),
                 pageLatencyMs = new { p50 = Percentile(item.Pages.Select(page => page.ElapsedMs), .50), p95 = Percentile(item.Pages.Select(page => page.ElapsedMs), .95), samples = item.Pages.Select(page => new { page.ImageId, page.ElapsedMs }).ToArray() },
                 pages = item.Pages,
                 regions = item.Regions
@@ -275,7 +276,8 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                             metrics.CharacterErrorRate < originalMetrics.CharacterErrorRate,
                             metrics.CharacterErrorRate > originalMetrics.CharacterErrorRate,
                             metrics.WordErrorRate < originalMetrics.WordErrorRate,
-                            metrics.WordErrorRate > originalMetrics.WordErrorRate));
+                            metrics.WordErrorRate > originalMetrics.WordErrorRate,
+                            metrics.CharacterEditDistance, metrics.WordEditDistance));
                     }
                 }
 
@@ -404,6 +406,92 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 equalWer = group.Count(item => !item.WerBetterThanOriginal && !item.WerWorseThanOriginal)
             }).ToArray();
 
+    private static object SummarizeConsensusThresholds(IReadOnlyList<RegionReport> rows)
+    {
+        var selectedCandidates = new Dictionary<string, (CandidateReport Candidate, double Gain)>(StringComparer.Ordinal);
+        foreach (RegionReport row in rows)
+        {
+            if (!row.CandidateSelected || !row.SelectedCandidateIndex.HasValue) continue;
+            CandidateReport candidate = row.Candidates[row.SelectedCandidateIndex.Value];
+            double gain = candidate.Confidence - row.OriginalConfidence;
+            if (gain > 0) selectedCandidates.Add(row.RegionId, (candidate, gain));
+        }
+
+        double[] exactThresholds = new[] { 0d }
+            .Concat(selectedCandidates.Values.Select(item => item.Gain).Distinct())
+            .OrderBy(value => value)
+            .ToArray();
+        var evaluatedPoints = exactThresholds.Select(threshold => EvaluateConsensusThresholdMetrics(rows, selectedCandidates, threshold)).ToArray();
+        ThresholdMetrics[] zeroCerWorse = evaluatedPoints.Where(item => item.WorseCerRegions == 0).ToArray();
+        ThresholdMetrics[] zeroCerWorseWithBenefit = zeroCerWorse.Where(item => item.BetterCerRegions > 0).ToArray();
+        ThresholdMetrics? bestZeroCerWorsePoint = zeroCerWorse
+            .OrderByDescending(item => item.SelectedRegions)
+            .ThenBy(item => item.MinimumConfidenceGain)
+            .FirstOrDefault();
+        double[] standardThresholds = { 0, .005, .01, .02, .03, .05, .075, .10, .15, .20 };
+
+        return new
+        {
+            mode = "post-hoc exhaustive sweep over every distinct positive runtime-selected candidate confidence gain; reported cut points retain at least one candidate, thresholding only removes selections and never reselects a different candidate",
+            exactPositiveGainThresholdsTested = Math.Max(0, exactThresholds.Length - 1),
+            zeroCerWorseThresholdCount = zeroCerWorse.Length,
+            zeroCerWorseWithCerBenefitThresholdCount = zeroCerWorseWithBenefit.Length,
+            minimumZeroCerWorseThreshold = zeroCerWorse.Length == 0 ? (double?)null : zeroCerWorse[0].MinimumConfidenceGain,
+            minimumZeroCerWorseWithCerBenefitThreshold = zeroCerWorseWithBenefit.Length == 0 ? (double?)null : zeroCerWorseWithBenefit.Min(item => item.MinimumConfidenceGain),
+            zeroCerWorseNonEmptyPoints = zeroCerWorse.Where(item => item.SelectedRegions > 0).Select(ToThresholdPoint).ToArray(),
+            bestZeroCerWorsePoint = bestZeroCerWorsePoint == null ? null : ToThresholdPoint(bestZeroCerWorsePoint),
+            standardPoints = standardThresholds.Select(threshold => ToThresholdPoint(EvaluateConsensusThresholdMetrics(rows, selectedCandidates, threshold))).ToArray(),
+            boundary = "Post-hoc scan on this same fixed labelled sample; it is not an independent validation split and must not be used to select a production threshold."
+        };
+    }
+
+    private static ThresholdMetrics EvaluateConsensusThresholdMetrics(IReadOnlyList<RegionReport> rows,
+        IReadOnlyDictionary<string, (CandidateReport Candidate, double Gain)> candidates, double threshold)
+    {
+        int selected = 0, betterCer = 0, worseCer = 0, equalCer = 0, betterWer = 0, worseWer = 0, equalWer = 0;
+        int referenceCharacters = 0, characterEdits = 0, referenceWords = 0, wordEdits = 0;
+        foreach (RegionReport row in rows)
+        {
+            referenceCharacters += row.ReferenceCharacters;
+            referenceWords += row.ReferenceWords;
+            if (candidates.TryGetValue(row.RegionId, out var entry) && entry.Gain >= threshold)
+            {
+                selected++;
+                characterEdits += entry.Candidate.CharacterEditDistance;
+                wordEdits += entry.Candidate.WordEditDistance;
+                if (entry.Candidate.CaseFoldedCer < row.OriginalCaseFoldedCer) betterCer++;
+                else if (entry.Candidate.CaseFoldedCer > row.OriginalCaseFoldedCer) worseCer++;
+                else equalCer++;
+                if (entry.Candidate.CaseFoldedWer < row.OriginalCaseFoldedWer) betterWer++;
+                else if (entry.Candidate.CaseFoldedWer > row.OriginalCaseFoldedWer) worseWer++;
+                else equalWer++;
+            }
+            else
+            {
+                characterEdits += row.OriginalCharacterEditDistance;
+                wordEdits += row.OriginalWordEditDistance;
+            }
+        }
+
+        return new ThresholdMetrics(threshold, selected, betterCer, worseCer, equalCer, betterWer, worseWer, equalWer,
+            referenceCharacters, characterEdits, referenceWords, wordEdits);
+    }
+
+    private static object ToThresholdPoint(ThresholdMetrics item)
+        => new
+        {
+            minimumConfidenceGain = item.MinimumConfidenceGain,
+            selectedRegions = item.SelectedRegions,
+            selectedCerBetterWorseEqual = new[] { item.BetterCerRegions, item.WorseCerRegions, item.EqualCerRegions },
+            selectedWerBetterWorseEqual = new[] { item.BetterWerRegions, item.WorseWerRegions, item.EqualWerRegions },
+            aggregateCharacterEdits = item.CharacterEdits,
+            referenceCharacters = item.ReferenceCharacters,
+            aggregateCer = item.ReferenceCharacters == 0 ? 0d : (double)item.CharacterEdits / item.ReferenceCharacters,
+            aggregateWordEdits = item.WordEdits,
+            referenceWords = item.ReferenceWords,
+            aggregateWer = item.ReferenceWords == 0 ? 0d : (double)item.WordEdits / item.ReferenceWords
+        };
+
     private static OcrTextAccuracyMetrics Compare(string reference, string hypothesis)
         => OcrTextAccuracy.Compare(reference.ToLowerInvariant(), hypothesis.ToLowerInvariant());
 
@@ -437,7 +525,13 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
     private sealed record SroiePage(string ImageId, string ImagePath, string Sha256, IReadOnlyList<LabeledRegion> Regions);
     private sealed record AggregateMetrics(int Regions, int ReferenceCharacters, int CharacterEdits, double CharacterErrorRate, int ReferenceWords, int WordEdits, double WordErrorRate);
     private sealed record CandidateReport(string Recipe, float Confidence, double CaseFoldedCer, double CaseFoldedWer, string TextSha256,
-        bool CerBetterThanOriginal, bool CerWorseThanOriginal, bool WerBetterThanOriginal, bool WerWorseThanOriginal);
+        bool CerBetterThanOriginal, bool CerWorseThanOriginal, bool WerBetterThanOriginal, bool WerWorseThanOriginal,
+        [property: System.Text.Json.Serialization.JsonIgnore] int CharacterEditDistance,
+        [property: System.Text.Json.Serialization.JsonIgnore] int WordEditDistance);
+    private sealed record ThresholdMetrics(double MinimumConfidenceGain, int SelectedRegions,
+        int BetterCerRegions, int WorseCerRegions, int EqualCerRegions,
+        int BetterWerRegions, int WorseWerRegions, int EqualWerRegions,
+        int ReferenceCharacters, int CharacterEdits, int ReferenceWords, int WordEdits);
     private sealed record RegionReport(string RegionId, string ImageId, string InstanceId,
         float OriginalConfidence, float? CandidateConfidence, float FinalConfidence,
         double OriginalCaseFoldedCer, double OriginalCaseFoldedWer, double? CandidateCaseFoldedCer, double? CandidateCaseFoldedWer,

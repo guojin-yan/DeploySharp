@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-23T05:41:00Z",
+  "generatedAtUtc": "2026-10-23T06:15:32Z",
   "kind": "incremental-quality-status-index",
   "baseline": "paddleocr-quality-status-20261018",
   "newEvidence": [
@@ -34,6 +34,14 @@
         232,
         233
       ],
+      "confidenceGainThresholdSweep": {
+        "onnxRuntimeDistinctPositiveGainCutPoints": 348,
+        "openVinoDistinctPositiveGainCutPoints": 350,
+        "zeroCerWorseCutPoints": 2,
+        "zeroCerWorseWithCerBenefitCutPoints": 0,
+        "zeroWorsePointsKeepOnlyCerEqualRegions": true,
+        "boundary": "Post-hoc sweep on the same sample; no production threshold or independent validation claim."
+      },
       "crossBackendExactRegions": 542,
       "report": "paddleocr-sroie-natural-source-enhancement-20261023.json",
       "status": "diagnostic-no-quality-gain",

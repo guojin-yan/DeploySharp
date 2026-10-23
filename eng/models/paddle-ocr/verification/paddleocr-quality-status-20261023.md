@@ -8,7 +8,7 @@
 
 | 范围 | 数据/协议 | 后端与结果 | 状态 | 不能推出的结论 |
 |---|---|---|---|---|
-| PP-OCRv6 Small SROIE crop 增强共识 | 固定 SROIE revision；10 页、542 个词级真值区域；DET bypass；batch 16；三种顺序增强候选 | ORT CPU 1.28.0、OpenVINO CPU 2026.2.1；542/542 原文、候选、最终文本与决策完全一致；选中 353 行，CER 改善/恶化/相同 `4/5/344`，WER `3/4/346`；聚合 CER 编辑 `513→514`、WER 编辑 `232→233` | 诊断完成，无总体收益 | 图像成像质量未标注，非自然低质量 split；word crop 指标不是页面/行级准确率；不批准默认增强或业务阈值 |
+| PP-OCRv6 Small SROIE crop 增强共识 | 固定 SROIE revision；10 页、542 个词级真值区域；DET bypass；batch 16；三种顺序增强候选 | ORT CPU 1.28.0、OpenVINO CPU 2026.2.1；542/542 原文、候选、最终文本与决策完全一致；选中 353 行，CER 改善/恶化/相同 `4/5/344`，WER `3/4/346`；聚合 CER 编辑 `513→514`、WER 编辑 `232→233`。另穷举 ORT `348` / OpenVINO `350` 个非空候选增益切点，均无“零 CER 误纠且至少一项 CER 改善”的阈值；零误纠点仅留下 2 或 1 个 CER 持平区域 | 诊断完成，无总体收益 | 图像成像质量未标注，非自然低质量 split；事后同样本阈值扫描不能作为生产阈值；word crop 指标不是页面/行级准确率；不批准默认增强或业务阈值 |
 
 详见[实验报告](paddleocr-sroie-natural-source-enhancement-20261023.md)、[逐区域机器 JSON](paddleocr-sroie-natural-source-enhancement-20261023.json) 和[外部测试入口](../../../../tests/DeploySharp.Visual.OpenCV.Tests/PaddleOcrSroieNaturalEnhancementIntegrationTests.cs)。
 
