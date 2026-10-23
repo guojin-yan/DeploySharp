@@ -88,10 +88,54 @@
       "report": "paddleocr-funsd-paired-enhancement-cost-20261023.json",
       "status": "bounded-paired-cost-measured; no-quality-benefit-on-subset",
       "boundary": "Timing includes crop/REC/CTC/retry on preloaded input, excludes page preparation/file I/O/DET/CLS/model/session setup. One subset/device, no clock control or business latency budget; not full-page performance or a backend leaderboard."
+    },
+    {
+      "scope": "PP-OCRv6 Small/Medium natural-wide GT quadrilateral Clamp versus SlidingWindow",
+      "dataset": "Pinned HierText validation 13 geometry-selected lines / 9 cached images; 11 main quality lines, 1 official-illegible and 1 one-pixel-height diagnostic",
+      "backends": ["onnxruntime-cpu-1.28.0", "openvino-cpu-2026.2.1"],
+      "maximumRecognitionWidthPixels": 3200,
+      "recognitionCalls": 104,
+      "executionContractsPassed": 104,
+      "crossBackendTextEmissionsAndWindowDecisionsMatched": [52, 52, 52],
+      "mainReferenceCharacters": 1535,
+      "mainReferenceWords": 207,
+      "smallClampSlidingCharacterEdits": [23, 68],
+      "smallClampSlidingWordEdits": [17, 19],
+      "mediumClampSlidingCharacterEdits": [27, 99],
+      "mediumClampSlidingWordEdits": [15, 23],
+      "report": "paddleocr-hiertext-natural-wide-gt-20261023.json",
+      "status": "bounded-execution-and-decision-parity-pass; sliding-quality-worse-than-clamp",
+      "validation": {
+        "externalTestsPassed": 1,
+        "windowAndAccuracyUnitTestsPassed": 16,
+        "powerShellMetricContractCasesPassed": 11,
+        "realPowerShellCSharpMetricPairsMatched": 104,
+        "realMetricFieldsMatched": 832,
+        "qualityAggregatesRecomputed": 24,
+        "localMarkdownLinksChecked": 1012,
+        "brokenLinks": 0
+      },
+      "boundary": "GT recognizer-only one-shot quality diagnostic, not detector/page accuracy, seam ground truth, performance or release acceptance. Unmatched seam prefixes can duplicate text. Default Clamp remains unchanged."
+    },
+    {
+      "scope": "Legacy 2026-10-17 detector-association metric correction",
+      "maximumRecognitionWidthPixels": 320,
+      "previousInvalidMacroWerPercent": 291.20,
+      "correctedMacroWerPercentRounded": 44.36,
+      "previousTextMatchedIncludingEmptyUnmatchedPairs": 13,
+      "validTextMatchedPairs": 8,
+      "unmatchedPairsExcluded": 5,
+      "measurementsRerun": false,
+      "report": "hiertext-natural-wide-a2-v6-small-20261017.json",
+      "status": "word-token-edit-distance-and-parity-accounting-corrected",
+      "boundary": "Recomputed from unchanged original predictions; macro means over associated candidates, not the new 3200px GT-only corpus protocol."
     }
   ],
+  "gateCorrections": {
+    "A2": "Original acceptance uses normalized recognition width >3200 pixels, not 3200 characters. Character-count availability audits remain historical data descriptions; the former character-count gate is superseded."
+  },
   "openGates": [
-    "A2-natural-continuous-long-text",
+    "A2-natural-width-over-3200px-seam-quality-and-backend-matrix",
     "A3-natural-angle-ground-truth",
     "B1b-B2-B3-natural-degradation-and-enhancement-cost",
     "formula-semantic-quality",

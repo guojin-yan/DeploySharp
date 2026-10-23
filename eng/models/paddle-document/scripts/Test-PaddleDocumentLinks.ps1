@@ -53,6 +53,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-funsd-natural-low-quality-enhancement-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-funsd-paired-enhancement-cost-20261023.md',
+    'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-linux-rtx2060-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md',
