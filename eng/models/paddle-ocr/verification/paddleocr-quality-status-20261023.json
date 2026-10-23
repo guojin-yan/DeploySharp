@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-23T05:41:00Z",
+  "kind": "incremental-quality-status-index",
+  "baseline": "paddleocr-quality-status-20261018",
+  "newEvidence": [
+    {
+      "scope": "PP-OCRv6 Small natural-source SROIE crop enhancement consensus diagnostic",
+      "dataset": "jsdnrs/ICDAR2019-SROIE pinned revision bffe40c26759f3376ec2b3ae9031dbba54cd587c; 10 pages, 542 word regions; imaging quality unlabelled",
+      "models": [
+        "paddleocr/ppocrv6/small-det",
+        "paddleocr/ppocrv6/small-rec"
+      ],
+      "backends": [
+        "onnxruntime-cpu-1.28.0",
+        "openvino-cpu-2026.2.1"
+      ],
+      "selectedRegions": 353,
+      "selectedCerBetterWorseEqual": [
+        4,
+        5,
+        344
+      ],
+      "selectedWerBetterWorseEqual": [
+        3,
+        4,
+        346
+      ],
+      "aggregateCerEdits": [
+        513,
+        514
+      ],
+      "aggregateWerEdits": [
+        232,
+        233
+      ],
+      "crossBackendExactRegions": 542,
+      "report": "paddleocr-sroie-natural-source-enhancement-20261023.json",
+      "status": "diagnostic-no-quality-gain",
+      "boundary": "Source imaging quality is unlabelled; ten-page word-crop diagnostic only, not an independent natural-low-quality split, page accuracy, formal latency/cost gate, or default enhancement approval."
+    }
+  ],
+  "openGates": [
+    "A2-natural-continuous-long-text",
+    "A3-natural-angle-ground-truth",
+    "B1b-B2-B3-natural-degradation-and-enhancement-cost",
+    "formula-semantic-quality",
+    "chart2table-split-accuracy",
+    "remaining-model-backend-matrix",
+    "second-device-deploysharp-performance",
+    "locked-frequency-and-long-running-stability"
+  ],
+  "boundary": "This is a dated evidence-navigation increment and does not change backend support states or approve default OCR enhancement."
+}

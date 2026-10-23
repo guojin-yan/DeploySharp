@@ -321,6 +321,8 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 ### B2/B3 安全与成本证据
 
 增强策略不能只看置信度提升。仓库脚本 `eng/models/paddle-ocr/scripts/Summarize-OcrEnhancementEvidence.py` 可对集成测试输出的逐行 JSON 计算：候选被选中的数量、候选 CER/WER 高于原文的误纠率、全部记录和已选候选的 P50/P95 额外耗时、多后端决策/最终文本一致性，以及共识策略的置信度增益阈值曲线。例如 [2026-10-11 汇总](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-cost-20261011.md) 中，SROIE parent-linked crop 的已选子集没有 CER 变差行，而 FUNSD word-crop 子集有 `5/14` 行 CER 变差（`35.71%`）。这正是保持 `ConfidenceGain` 和 `ConsensusConfidenceGain` 显式 opt-in 的依据；该报告是有标签 crop 的边界诊断，不是页/行级鲁棒性、准确率或默认阈值批准。新增退化数据后应重新生成机器 JSON 与 Markdown，并把最大允许误纠率、延迟预算和有效样本量作为业务决策门，而不是只比较平均置信度。
+
+2026-10-23 又使用 PP-OCRv6 Small，在 SROIE 十页的 542 个带词级真值 crop 上比较 `ContrastNormalize`、`GrayClahe`、`UnsharpMask` 三候选共识；ORT CPU 与 OpenVINO CPU 的原文、候选文本、最终选择和候选索引 `542/542` 一致，但被选择的区域 CER 改善/恶化/相同为 `4/5/344`，WER 为 `3/4/346`，整体 CER/WER 编辑数都各增加 1。此样本是自然来源收据，但数据没有成像质量标签，所以不能称为自然低质量验证；它进一步说明后端一致和置信度共识不等于正确。详见[报告](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.md)和[逐区域 JSON](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.json)。默认增强保持关闭，B1b/B2/B3 门禁未关闭。
 当前还提供独立的 `eng/models/paddle-ocr/scripts/Evaluate-PaddleOcrEnhancementSafetyGate.ps1`，可对汇总报告执行 fail-closed 门禁。以 FUNSD 40 页、240 条 parent-linked 记录为例，[2026-10-17 门禁报告](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-gate-funsd40-20261017.md) 在 ORT/OpenVINO 均为 `blocked`：样本量和 P95 成本满足示例阈值，但 CER/WER 误纠率分别为 `31.25%/12.50%`。这不是自然质量或业务准确率结论，而是明确阻止把受控退化数据当作默认增强批准的安全边界。
 
 [2026-10-13 FUNSD 40-crop 共识报告](../../eng/models/paddle-ocr/verification/paddleocr-funsd40-consensus-safety-cost-20261013.md) 改用真值完整 crop 的 `RecognizeOnlyAsync`，避免检测失败掩盖增强候选。修复识别-only 原先不执行重试的接口缺口后，ORT CPU/OpenVINO CPU 在 240 条记录上的决策、选择标记、最终文本、候选索引和共识计数全部一致。`ContrastNormalize + GrayClahe + UnsharpMask` 在 `minimumGain=0` 时形成 177 条候选共识并选择 115 条，其中 2 条 CER 改善、4 条恶化、109 条不变，平均 CER `0.3060 → 0.3067`；P50/P95 候选墙钟观察分别为 ORT `76.21/144.57 ms`、OpenVINO `34.87/51.64 ms`。全量事后阈值扫描没有找到“零 CER 恶化且仍有至少一条 CER 改善”的档位；进一步按父 crop 做确定性 5 折验证，保证同一原图的六种条件不跨校准/验证集，五折都因校准集不存在安全且有收益的阈值而弃权。该结果只关闭接口和受控数据的分组验证缺口，不批准默认配方或阈值；自然低质量独立数据集、业务字段误纠门和正式 5+50 成本协议仍未完成。当前耗时来自顺序质量运行，不是正式性能排名。
@@ -848,6 +850,8 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 为避免把大量分散的质量报告误读成“所有模型、所有后端都已通过”，新增了[PaddleOCR 质量证据状态索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.json)。索引把当前证据分成“诊断通过、受控诊断、部分通过、未完成”四类：核心 v4/v5/v6 七模型的 SROIE 十页、HierText v6 Small 的 1,557 条真实行级 crop、HierText v6 Medium 三后端 34 页、FUNSD v4/v6 40 页、v6 Small 三后端十页，以及本轮 A3 已知角度 retry 均有明确报告链接。
 
 随着核心识别器行级证据补入，另有[2026-10-18 状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.json)。它只补充 v4/v5/v6 七个 REC 工件的 14 组 ORT/OpenVINO 诊断和当前开放门禁，基线索引与增量索引都不改变后端支持状态。
+
+本轮新增的[2026-10-23 质量状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.json)记录了 SROIE 自然来源收据 crop 的三配方增强共识诊断；增强后的 CER/WER 编辑数各增加 1，因此默认增强仍关闭。
 
 该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。自然连续 `>=3,200` 字符（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。
 
