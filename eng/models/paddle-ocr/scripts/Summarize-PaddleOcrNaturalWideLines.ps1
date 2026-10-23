@@ -8,7 +8,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $resolved = (Resolve-Path -LiteralPath $ReportPath).Path
 $data = Get-Content -LiteralPath $resolved -Raw | ConvertFrom-Json -Depth 60
-if (@($data.rows).Count -ne 104 -or @($data.parity).Count -ne 52 -or @($data.paired).Count -ne 52) { throw 'Expected the full two-model/two-mode/two-backend/13-line evidence.' }
+$engines = @($data.engines | Where-Object { $null -ne $_ })
+$backendCount = @($data.runtimes).Count
+$callCount = 52 * $backendCount
+if ($backendCount -lt 1 -or @($data.rows).Count -ne $callCount -or @($data.parity).Count -ne 52 -or @($data.paired).Count -ne 26 * $backendCount -or
+    @($data.parity | Where-Object rows -NE $backendCount).Count -gt 0) { throw 'Expected two models/two modes/13 lines for every configured backend, with complete comparison groups.' }
+if (@($data.rows | Group-Object { "$($_.Backend)/$($_.Model)/$($_.Mode)/$($_.Key)" }).Count -ne $callCount) { throw 'Duplicate or missing backend/model/mode/line keys.' }
 if ($data.protocol.maximumWidthPixels -ne 3200 -or $data.protocol.targetHeight -ne 48 -or $data.protocol.batchSize -ne 1) { throw 'Unexpected width or batch protocol.' }
 $pairedSummary = @(foreach ($group in ($data.paired | Where-Object stratum -CEQ 'legible-height-at-least-2px' | Group-Object { ($_.key -split '/')[0..1] -join '/' })) {
     [pscustomobject]@{
@@ -35,11 +40,15 @@ $summary = [ordered]@{
     dataset = $data.dataset
     models = $data.models
     runtimes = $data.runtimes
+    engines = $engines
+    gpuObservation = $data.gpuObservation
     protocol = $data.protocol
     executionSummary = [ordered]@{ sourceImages = @($data.dataset.lines.ImageId | Sort-Object -Unique).Count; sourceLines = 13; mainQualityLines = 11;
-        officialIllegibleDiagnostics = 1; onePixelHeightDiagnostics = 1; modelCount = 2; backendCount = 2; modeCount = 2; recognitionCalls = 104; executionContractsPassed = 104 }
-    crossBackend = [ordered]@{ pairCount = 52; textMatched = @($data.parity | Where-Object textEqual -EQ $true).Count;
-        emittedClassesMatched = @($data.parity | Where-Object emittedClassEqual -EQ $true).Count; windowDecisionsMatched = @($data.parity | Where-Object windowsEqual -EQ $true).Count;
+        officialIllegibleDiagnostics = 1; onePixelHeightDiagnostics = 1; modelCount = 2; backendCount = $backendCount; modeCount = 2; recognitionCalls = $callCount; executionContractsPassed = $callCount }
+    crossBackend = [ordered]@{ compared = $backendCount -gt 1; pairCount = $(if ($backendCount -gt 1) { 52 } else { 0 });
+        textMatched = $(if ($backendCount -gt 1) { @($data.parity | Where-Object textEqual -EQ $true).Count } else { $null });
+        emittedClassesMatched = $(if ($backendCount -gt 1) { @($data.parity | Where-Object emittedClassEqual -EQ $true).Count } else { $null });
+        windowDecisionsMatched = $(if ($backendCount -gt 1) { @($data.parity | Where-Object windowsEqual -EQ $true).Count } else { $null });
         boundary = 'Text, emitted classes and window decisions only; native output tensors and confidence values are not claimed bitwise equal.' }
     quality = $data.quality
     pairedMainQuality = $pairedSummary
@@ -61,9 +70,11 @@ $md = [Text.StringBuilder]::new()
 [void]$md.AppendLine()
 [void]$md.AppendLine('Pinned HierText validation revision: `70b6620b2b112597d8219e11eee9773a1403827c`; annotation SHA-256: `ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a`. The fixed geometry audit contains 13 lines in 9 images. Main quality uses 11 officially legible lines with source bbox height >=2px (1,535 reference Unicode scalars / 207 whitespace words). One officially illegible line and one officially legible but 1px-high line are retained as separate diagnostic strata. No prediction-based exclusion is applied. Image/model/dictionary identities are recorded in the [JSON summary](' + [IO.Path]::GetFileName($jsonFull) + ').')
 [void]$md.AppendLine()
-[void]$md.AppendLine('Protocol: target height 48; maximum width **3,200**; Clamp versus SlidingWindow with overlap 0.2 and maximum 32 windows; batch 1; one independently created Session per stage; one untimed execution per line/mode/backend. ORT CPU 1.28.0 and OpenVINO CPU 2026.2.1. The 32x32 prepared DET tensor is unused: recognition crop sampling always reads the original image. This is neither a latency benchmark nor a claim of statistical significance.')
+$runtimeDescription = ($data.runtimes | ForEach-Object { "$($_.backend) $($_.nativeVersion)" }) -join '; '
+[void]$md.AppendLine('Protocol: target height 48; maximum width **3,200**; Clamp versus SlidingWindow with overlap 0.2 and maximum 32 windows; batch 1; one independently created Session per stage; one untimed execution per line/mode/backend. Runtime(s): ' + $runtimeDescription + '. The 32x32 prepared DET tensor is unused: recognition crop sampling always reads the original image. This is neither a latency benchmark nor a claim of statistical significance.')
+if ($engines.Count -gt 0) { [void]$md.AppendLine('TensorRT uses freshly built library engines, runtime-default graph precision, optimization level 0 and 256 MiB workspace; dynamic profiles are [1,3,48,minimumWidth] / [1,3,48,320] / [1,3,48,3200]. Engine/source/build-input SHA values and bytes are retained in JSON. This path executes CPU crop/CTC/merge and TensorRT REC; it is not a device-resident OCR pipeline. GPU snapshots only describe load at two instants, not controlled clocks or a benchmark.') }
 [void]$md.AppendLine()
-[void]$md.AppendLine('| CPU backend | v6 recognizer | Mode | Main lines | Character edits / reference | CER | Word edits / reference | WER | Windows | Uncertain seams |')
+[void]$md.AppendLine('| Recognition backend | v6 recognizer | Mode | Main lines | Character edits / reference | CER | Word edits / reference | WER | Windows | Uncertain seams |')
 [void]$md.AppendLine('| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
 foreach ($quality in ($data.quality | Where-Object key -CLike '*/legible-height-at-least-2px')) {
     $keyParts = $quality.key -split '/'
@@ -72,7 +83,9 @@ foreach ($quality in ($data.quality | Where-Object key -CLike '*/legible-height-
 [void]$md.AppendLine()
 [void]$md.AppendLine('CER uses ordinal Unicode scalars and WER uses whitespace-token edit distance, aggregated as total edits / total reference units. Explicit invariant-lowercase results are also recorded and happen to equal the raw metrics on this selection; spaces and punctuation are not removed. These corpus/micro rates differ from the historical detector-association report''s macro means and should not be compared as if they used the same input or protocol.')
 [void]$md.AppendLine()
-[void]$md.AppendLine("All **104/104** calls pass width/source/CTC contracts: original source region and coordinates survive, each raw window is <=3,200 pixels, coverage is ordered and overlapping from 0 to 1, and retained emitted tokens reconstruct the final text. Cross-backend text, emitted-class and window-decision matches are **$($summary.crossBackend.textMatched)/52**, **$($summary.crossBackend.emittedClassesMatched)/52**, **$($summary.crossBackend.windowDecisionsMatched)/52**; raw output tensors/confidences were not compared for bitwise equality.")
+[void]$md.AppendLine("All **$callCount/$callCount** calls pass width/source/CTC contracts: original source region and coordinates survive, each raw window is <=3,200 pixels, coverage is ordered and overlapping from 0 to 1, and retained emitted tokens reconstruct the final text.")
+if ($backendCount -gt 1) { [void]$md.AppendLine("Across all configured backends, text, emitted-class and window-decision matches are **$($summary.crossBackend.textMatched)/52**, **$($summary.crossBackend.emittedClassesMatched)/52**, **$($summary.crossBackend.windowDecisionsMatched)/52**; raw output tensors/confidences were not compared for bitwise equality.") }
+else { [void]$md.AppendLine('Only one backend was run in this report: cross-backend parity is **not assessed**. Single-row groups do not count as matched backend pairs; use a separately validated reference comparison.') }
 [void]$md.AppendLine()
 [void]$md.AppendLine('| Backend / model | Sliding vs Clamp: CER better / worse / equal lines | Sliding minus Clamp: character edits | Sliding minus Clamp: word edits |')
 [void]$md.AppendLine('| --- | ---: | ---: | ---: |')
@@ -84,7 +97,7 @@ foreach ($paired in $pairedSummary) {
 [void]$md.AppendLine()
 [void]$md.AppendLine('A2 remains open for repeat-number/single-character seam quality, remaining exact backend/model combinations and broader independent natural-width evidence. The 13-line geometry selection is not official HierText scoring, detector/page accuracy or a release accuracy gate. Source-model training overlap is unknown. Local optional traces provide seam diagnostics; raw text, labels and images are excluded from committed reports.')
 [void]$md.AppendLine()
-[void]$md.AppendLine('Reproduce with `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_RUN=1`, the optional dataset/model/candidate/output variables documented by `PaddleOcrNaturalWideLineExternalIntegrationTests`, and the test filter `FullyQualifiedName~PaddleOcrNaturalWideLineExternalIntegrationTests`. Set `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_TRACE=1` only for local raw seam traces. Summarize its report with `eng/models/paddle-ocr/scripts/Summarize-PaddleOcrNaturalWideLines.ps1 -ReportPath <local-test-json>`. Full per-line text hashes, counts and aggregate recomputation inputs are retained in the committed JSON; detailed local report and trace SHA-256 values identify the ignored artifacts.')
+[void]$md.AppendLine('Reproduce with `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_RUN=1`, optional `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_BACKENDS=onnxruntime,openvino,opencv-dnn,tensorrt` (default: the two CPU reference backends), the dataset/model/candidate/output variables documented by `PaddleOcrNaturalWideLineExternalIntegrationTests`, and test filter `FullyQualifiedName~PaddleOcrNaturalWideLineExternalIntegrationTests`. TensorRT additionally needs the matching JYPPX native bridge, TensorRT/CUDA/cuDNN roots and `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_TRT_API=11` (or 10); engines are built into a unique local artifacts directory. The required but unused detector Session stays on ORT CPU for OpenCV/TensorRT REC-only runs; no DET/CLS inference is performed. Set `DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_TRACE=1` only for local raw seam traces. Summarize with `eng/models/paddle-ocr/scripts/Summarize-PaddleOcrNaturalWideLines.ps1 -ReportPath <local-test-json>` and explicit output filenames to preserve earlier reports. Text hashes/counts and recomputation inputs stay in committed JSON; detailed local report/trace SHA values identify ignored artifacts.')
 Set-Content -LiteralPath $markdownFull -Value $md.ToString().TrimEnd() -Encoding utf8
 Write-Output "NATURAL_WIDE_SUMMARY_JSON=$jsonFull"
 Write-Output "NATURAL_WIDE_SUMMARY_MARKDOWN=$markdownFull"

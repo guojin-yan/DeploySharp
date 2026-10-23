@@ -159,6 +159,25 @@
       "boundary": "Clamp still better on this development selection. Subsequence matching retains all left text, suppresses only uniquely matched right tokens, and marks fallback uncertain; approximate CTC geometry remains heuristic. No default/threshold/backend-support change."
     },
     {
+      "scope": "PP-OCRv6 Small/Medium natural wide-line OpenCV DNN and refreshed CPU reference",
+      "recognitionCalls": {"opencv-dnn": 52, "onnxruntime": 52, "openvino": 52},
+      "visualAssemblySha256": "18a48803ddca78476ca213d8d09a63835909b6d8da65dbc1f73d15ce68d2790a",
+      "crossReportOpenCvOrtMatched": {"rows": 52, "text": 52, "emittedClasses": 52, "metrics": 52, "seamDecisions": 52, "rawWindows": 52},
+      "independentMetricRecomputation": {"pairs": 312, "fields": 2496, "fixedMetricContracts": 11, "comparisonContracts": 7},
+      "reports": ["paddleocr-hiertext-natural-wide-opencv-20261023.json", "paddleocr-hiertext-natural-wide-cpu-reference-20261023.json", "paddleocr-hiertext-natural-wide-opencv-parity-20261023.json"],
+      "status": "decision-parity; A2-open",
+      "boundary": "Same 13-line development diagnostics, no independent quality/latency claim. CPU crop/CTC/merge; DET/CLS bypassed. Other models and exact backends remain separate."
+    },
+    {
+      "scope": "PP-OCRv6 Small/Medium TensorRT 11 dynamic-width natural-line attempt",
+      "nonemptyEnginesBuilt": 2,
+      "completedQualityReport": false,
+      "completedRows": null,
+      "report": "paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.json",
+      "status": "interrupted-native-enqueue; quality-unverified",
+      "boundary": "Task-owned testhost stopped after stack capture. Concurrent GPU load observed but not established as cause. No TensorRT parity, performance, or model-family unsupported conclusion; earlier exact TensorRT evidence unchanged."
+    },
+    {
       "scope": "Legacy 2026-10-17 detector-association metric correction",
       "maximumRecognitionWidthPixels": 320,
       "previousInvalidMacroWerPercent": 291.20,

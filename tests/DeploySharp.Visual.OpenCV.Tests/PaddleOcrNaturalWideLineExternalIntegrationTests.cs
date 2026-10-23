@@ -11,10 +11,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
+using JYPPX.DeploySharp.Backends.TensorRT;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
+using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 using JYPPX.DeploySharp.Visual.OpenCV;
@@ -38,7 +41,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
-    public async Task NaturalWideGroundTruthLinesCompareClampAndSlidingWindowAcrossCpuBackends()
+    public async Task NaturalWideGroundTruthLinesCompareClampAndSlidingWindowAcrossConfiguredBackends()
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_RUN") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_RUN=1 to run source-linked natural wide-line quality evidence.");
@@ -60,13 +63,30 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         bool collectTrace = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_TRACE") == "1";
         var models = new List<object>();
         var runtimes = new List<object>();
-        foreach (string backend in new[] { "onnxruntime", "openvino" })
+        var engines = new List<object>();
+        string outputRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_OUTPUT") ?? TestContext.TestResultsDirectory!;
+        Directory.CreateDirectory(outputRoot);
+        string progressPath = Path.Combine(outputRoot, "natural-wide-progress-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".json");
+        void Checkpoint(string backend, string model, string phase, string? lineKey = null, string? mode = null)
+            => File.WriteAllText(progressPath, JsonSerializer.Serialize(new { generatedUtc = DateTimeOffset.UtcNow, backend, model, phase, lineKey, mode,
+                completedCalls = rows.Count, engines, boundary = "Progress only; an interrupted run has no completed quality/parity result." }, new JsonSerializerOptions { WriteIndented = true }));
+        string[] backends = (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_BACKENDS") ?? "onnxruntime,openvino")
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (backends.Length == 0 || backends.Distinct(StringComparer.Ordinal).Count() != backends.Length
+            || backends.Any(backend => backend is not ("onnxruntime" or "openvino" or "opencv-dnn" or "tensorrt")))
+            throw new ArgumentException("Choose unique natural-wide backends: onnxruntime,openvino,opencv-dnn,tensorrt.");
+        string engineRoot = Path.Combine(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_ENGINE_ROOT")
+            ?? Path.Combine(FindRepoRoot(), "artifacts/paddleocr-natural-wide-engines"), Guid.NewGuid().ToString("N"));
+        string? gpuBefore = backends.Contains("tensorrt") ? ReadGpuTelemetry() : null;
+        foreach (string backend in backends)
         {
-            using var registry = new BackendRegistry();
+            using var detectorRegistry = new BackendRegistry();
             bool useOpenVino = backend == "openvino";
-            if (useOpenVino) registry.UseOpenVino(); else registry.UseOnnxRuntime();
-            BackendId backendId = useOpenVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
-            var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, useOpenVino ? "CPU" : "cpu");
+            // OcrPipeline owns an unused detector Session even in RecognizeOnlyAsync.
+            // New REC-only backends use ORT for that dormant Session; no DET is executed.
+            if (useOpenVino) detectorRegistry.UseOpenVino(); else detectorRegistry.UseOnnxRuntime();
+            BackendId detectorBackendId = useOpenVino ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
+            var detectorRequest = new BackendRequest(BackendCapabilities.TensorInference, detectorBackendId, useOpenVino ? "CPU" : "cpu");
 
             foreach (string size in new[] { "small", "medium" })
             {
@@ -86,21 +106,68 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                 PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerId, Artifact(recRelease, DictionarySha), characters, maximumBatch: 1);
                 Assert.AreEqual(3200, recognizer.CropProfile!.MaximumWidth);
                 Assert.AreEqual(48, recognizer.CropProfile.TargetHeight);
-                if (!useOpenVino) models.Add(new { model = size, detectorId = detectorId.Value, recognizerId = recognizerId.Value,
+                if (backend == backends[0]) models.Add(new { model = size, detectorId = detectorId.Value, recognizerId = recognizerId.Value,
                     detectorSha256 = detRelease.Sha256, recognizerSha256 = recRelease.Sha256, dictionarySha256 = DictionarySha });
 
+                using var recognizerRegistry = new BackendRegistry();
+                BackendId backendId;
+                string selectedRecognizerPath = recognizerPath;
+                switch (backend)
+                {
+                    case "onnxruntime": recognizerRegistry.UseOnnxRuntime(); backendId = OnnxRuntimeBackendProvider.BackendId; break;
+                    case "openvino": recognizerRegistry.UseOpenVino(); backendId = OpenVinoBackendProvider.BackendId; break;
+                    case "opencv-dnn":
+                        var contract = new OpenCvDnnModelContract(recognizerId,
+                            new[] { new TensorDescriptor(recognizer.VisualProfile.Input.Name, TensorElementType.Float32, new TensorShape(1, 3, 48, -1)) },
+                            new[] { new TensorDescriptor(recognizer.VisualProfile.Outputs[0].Name, TensorElementType.Float32,
+                                new TensorShape(1, -1, ((GreedyCtcDecoder)recognizer.VisualProfile.Decoder).ExpectedClassCount)) });
+                        recognizerRegistry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+                        backendId = OpenCvDnnBackendProvider.BackendId;
+                        break;
+                    case "tensorrt":
+                        Checkpoint(backend, size, "building-engine");
+                        TensorRtApiVersion api = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_TRT_API") switch
+                        {
+                            null or "11" => TensorRtApiVersion.TensorRt11,
+                            "10" => TensorRtApiVersion.TensorRt10,
+                            _ => throw new ArgumentException("Natural-wide TRT API must be 10 or 11.")
+                        };
+                        var min = new TensorShape(1, 3, 48, recognizer.CropProfile.MinimumWidth);
+                        var opt = new TensorShape(1, 3, 48, 320);
+                        var max = new TensorShape(1, 3, 48, 3200);
+                        Directory.CreateDirectory(engineRoot);
+                        TensorRtOnnxEngineBuildResult engine = new TensorRtOnnxEngineBuilder().Build(recognizer.CreateArtifact(recognizerPath),
+                            Path.Combine(engineRoot, "v6-" + size + "-rec.engine"), new TensorRtOnnxEngineBuildOptions(apiVersion: api,
+                                precision: TensorRtOnnxEnginePrecision.RuntimeDefault, workspaceBytes: 268435456UL, optimizationLevel: 0,
+                                inputProfiles: new[] { new TensorRtOnnxInputProfile(recognizer.VisualProfile.Input.Name, min, opt, max) }));
+                        Assert.IsTrue(engine.EngineBytes > 0);
+                        engines.Add(new { model = size, engine.EngineSha256, engine.EngineBytes, engine.BuildInputsSha256, engine.OnnxSha256,
+                            api = (int)api, precision = engine.Precision.ToString(), optimizationLevel = 0, workspaceBytes = 268435456,
+                            minimumShape = min.ToArray(), optimumShape = opt.ToArray(), maximumShape = max.ToArray() });
+                        selectedRecognizerPath = engine.EnginePath;
+                        Checkpoint(backend, size, "engine-built");
+                        recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerId, Artifact(recRelease, DictionarySha, engine.EngineSha256), characters, maximumBatch: 1);
+                        recognizerRegistry.UseTensorRT(new TensorRtBackendOptions(api));
+                        backendId = TensorRtBackendProvider.BackendId;
+                        break;
+                    default: throw new InvalidOperationException("Unexpected backend.");
+                }
+                var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, backend == "tensorrt" ? "cuda" : useOpenVino ? "CPU" : "cpu");
                 var profiles = new VisualProfileRegistry();
                 profiles.Register(detector.VisualProfile); profiles.Register(recognizer.VisualProfile); profiles.Freeze();
-                VisualProfileSelection detSelection = profiles.Select(detector.CreateArtifact(detectorPath, backendId), registry, request, VisualTaskId.TextDetection);
-                VisualProfileSelection recSelection = profiles.Select(recognizer.CreateArtifact(recognizerPath, backendId), registry, request, VisualTaskId.TextRecognition);
+                VisualProfileSelection detSelection = profiles.Select(detector.CreateArtifact(detectorPath, detectorBackendId), detectorRegistry, detectorRequest, VisualTaskId.TextDetection);
+                VisualProfileSelection recSelection = profiles.Select(recognizer.CreateArtifact(selectedRecognizerPath, backendId), recognizerRegistry, request, VisualTaskId.TextRecognition);
+                TextCropProfile recognizerCrop = recognizer.CropProfile ?? throw new InvalidOperationException("Recognition profile requires crop options.");
                 foreach (bool sliding in new[] { false, true })
                 {
-                    TextCropProfile crop = sliding ? recognizer.CropProfile.WithRecognitionWindows(new OcrRecognitionWindowOptions(.2, 32)) : recognizer.CropProfile;
-                    using var pipeline = new OcrPipeline(registry, detSelection, request, recSelection, request, crop,
+                    Checkpoint(backend, size, "creating-pipeline", mode: sliding ? "SlidingWindow" : "Clamp");
+                    TextCropProfile crop = sliding ? recognizerCrop.WithRecognitionWindows(new OcrRecognitionWindowOptions(.2, 32)) : recognizerCrop;
+                    using var pipeline = new OcrPipeline(detectorRegistry, detSelection, detectorRequest, recognizerRegistry, recSelection, request, crop,
                         new OcrPipelineOptions(maximumRegions: 1, maximumRecognitionBatch: 1, maximumSourcePixels: 128L * 1024L * 1024L),
                         new SessionOptions(1), new SessionOptions(1));
                     foreach (WideLine line in lines)
                     {
+                        Checkpoint(backend, size, "recognizing", line.Key, sliding ? "SlidingWindow" : "Clamp");
                         var region = new TextRegion(line.Index, 1, line.Quadrilateral.Polygon, line.Quadrilateral);
                         long naturalWidth = crop.DescribeWidth(line.Quadrilateral, TextOrientation.Degrees0).NaturalWidth;
                         Assert.IsTrue(naturalWidth > 3200, line.Key);
@@ -167,7 +234,15 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                     TestContext.WriteLine(backend + "/" + size + "/" + crop.OverflowMode + ": " + lines.Count + " original quadrilaterals completed.");
                 }
             }
-            string nativeVersion = useOpenVino ? OpenVinoVersion() : Microsoft.ML.OnnxRuntime.OrtEnv.Instance().GetVersionString();
+            Checkpoint(backend, "all", "backend-completed");
+            string nativeVersion = backend switch
+            {
+                "onnxruntime" => Microsoft.ML.OnnxRuntime.OrtEnv.Instance().GetVersionString(),
+                "openvino" => OpenVinoVersion(),
+                "opencv-dnn" => OpenCvRuntimePreflight.Check().NativeVersion,
+                "tensorrt" => LoadedTensorRtVersion(),
+                _ => throw new InvalidOperationException()
+            };
             runtimes.Add(new { backend, nativeVersion });
         }
 
@@ -188,8 +263,6 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                 lowercaseCerEditsDelta = sliding.Lowercase.CharacterEditDistance - clamp.Lowercase.CharacterEditDistance,
                 lowercaseWerEditsDelta = sliding.Lowercase.WordEditDistance - clamp.Lowercase.WordEditDistance };
         }).ToArray();
-        string outputRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_OUTPUT") ?? TestContext.TestResultsDirectory!;
-        Directory.CreateDirectory(outputRoot);
         string report = Path.GetFullPath(Path.Combine(outputRoot, "paddleocr-hiertext-natural-wide-gt-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".json"));
         object? localTraceEvidence = null;
         if (collectTrace)
@@ -201,7 +274,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         }
         File.WriteAllText(report, JsonSerializer.Serialize(new
         {
-            schemaVersion = 1, generatedUtc = DateTimeOffset.UtcNow,
+            schemaVersion = 2, generatedUtc = DateTimeOffset.UtcNow,
             sourceRevision = Environment.GetEnvironmentVariable("DEPLOYSHARP_BENCHMARK_SOURCE_REVISION") ?? "unknown",
             testAssemblySha256 = ShaFile(GetType().Assembly.Location), visualAssemblySha256 = ShaFile(typeof(OcrPipeline).Assembly.Location),
             environment = new { os = RuntimeInformation.OSDescription, framework = RuntimeInformation.FrameworkDescription,
@@ -213,15 +286,19 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                 overlapRatio = .2, batchSize = 1, sessions = 1, order = "backend -> model -> Clamp then SlidingWindow -> pinned candidate order",
                 metrics = "Unicode-scalar CER and whitespace-token WER; raw ordinal and explicit invariant-lowercase views; no punctuation/space removal",
                 qualityStrata = "Main quality: legible=true and source bbox height>=2px (11); official illegible (1) and 1px-height geometry (1) retained separately.",
-                measurements = "One untimed execution per line/mode/backend; no speed or statistical significance claim" },
-            models, runtimes, quality, paired, parity, rows, localTraceEvidence,
+                measurements = "One untimed execution per line/mode/backend; no speed or statistical significance claim",
+                detectorSession = "Required by OcrPipeline construction but never executed; OpenCV/TensorRT recognizer-only paths keep this dormant Session on ORT CPU. All crop/window/CTC/merge code is shared.",
+                crossBackend = backends.Length > 1 ? "All configured backends compared by the same model/mode/line keys; differences recorded, not assumed absent" : "Not compared within a single-backend run; use the source-linked comparison against a separate reference report" },
+            models, runtimes, engines, quality, paired, parity, rows, localTraceEvidence,
+            gpuObservation = new { before = gpuBefore, after = backends.Contains("tensorrt") ? ReadGpuTelemetry() : null,
+                scope = "Snapshots only, no clock control or during-run utilization/power sampling; quality execution, not a performance benchmark" },
             boundary = "A2 is a >3200 normalized-pixel-width gate, not a 3200-character gate. This bounded geometry-selected slice is recognizer-only, not detector/page accuracy, official HierText scoring, seam ground truth or release acceptance. Repeated-number/single-character seam sets, further backends and wider independent validation remain open."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
         TestContext.WriteLine("NATURAL_WIDE_GT_REPORT=" + report);
-        Assert.AreEqual(104, rows.Count);
+        Assert.AreEqual(52 * backends.Length, rows.Count);
         Assert.AreEqual(52, parity.Length);
-        Assert.IsTrue(parity.All(pair => pair.rows == 2));
+        Assert.IsTrue(parity.All(pair => pair.rows == backends.Length));
     }
 
     private static object Aggregate(IEnumerable<OcrTextAccuracyMetrics> metrics)
@@ -285,11 +362,42 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         throw new DirectoryNotFoundException("Set DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES to the pinned candidate JSON.");
     }
 
-    private static PaddleOcrArtifactContract Artifact(PaddleOcrReleaseArtifact release, string? dictionarySha = null)
-        => new PaddleOcrArtifactContract(release.Opset, release.Sha256, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+    private static PaddleOcrArtifactContract Artifact(PaddleOcrReleaseArtifact release, string? dictionarySha = null, string? engineSha = null)
+        => new PaddleOcrArtifactContract(release.Opset, engineSha ?? release.Sha256, "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
             "paddle2onnx-2.0.2rc3+paddlepaddle-3.0.0.dev20250613-byte-identical",
             "Apache-2.0;external-artifact-redistribution-unverified", "official-inference-v1", "deploysharp-ocr-ctc-v2",
+            modelFormat: engineSha == null ? "onnx" : "tensorrt-engine",
             dictionarySha256: dictionarySha, dictionaryLicense: dictionarySha == null ? string.Empty : "official-repository-file-separate-review-required");
+
+    private static string LoadedTensorRtVersion()
+    {
+        using Process process = Process.GetCurrentProcess();
+        ProcessModule module = process.Modules.Cast<ProcessModule>().Single(module =>
+            System.Text.RegularExpressions.Regex.IsMatch(module.ModuleName, @"^nvinfer_(8|10|11)\.dll$", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+        // Vendor DLLs may have no FileVersionInfo resource. Query the loaded core
+        // library; NvInferRuntimeBase.h defines (MAJOR * 100 + MINOR) * 100 + PATCH.
+        IntPtr address = NativeLibrary.GetExport(module.BaseAddress, "getInferLibVersion");
+        int version = Marshal.GetDelegateForFunctionPointer<InferLibraryVersion>(address)();
+        if (version <= 0) throw new InvalidOperationException("TensorRT returned an invalid native library version.");
+        return module.ModuleName + ":" + (version / 10000) + "." + (version / 100 % 100) + "." + (version % 100)
+            + " (getInferLibVersion=" + version + ")";
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int InferLibraryVersion();
+
+    private static string ReadGpuTelemetry()
+    {
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo("nvidia-smi", "--query-gpu=name,driver_version,pstate,clocks.gr,clocks.mem,memory.used,memory.total --format=csv,noheader")
+                { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true });
+            if (process == null) return "unavailable";
+            if (!process.WaitForExit(5000)) { process.Kill(); return "timeout"; }
+            return process.ExitCode == 0 ? process.StandardOutput.ReadToEnd().Trim() : "nvidia-smi exit=" + process.ExitCode;
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException) { return exception.GetType().Name; }
+    }
 
     private static string RequireFile(string path) => File.Exists(path) ? path : throw new FileNotFoundException("Required external wide-line asset is missing.", path);
     private static string ShaFile(string path) { using FileStream file = File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(file)).ToLowerInvariant(); }

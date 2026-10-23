@@ -39,9 +39,13 @@
 
 ## 当前开放门禁
 
+本日后续补齐了 [OpenCV DNN 的 52 次自然宽行调用](paddleocr-hiertext-natural-wide-opencv-20261023.md)，并以[同生产 DLL 的 ORT/OpenVINO 新参考](paddleocr-hiertext-natural-wide-cpu-reference-20261023.md)进行[独立跨报告比较](paddleocr-hiertext-natural-wide-opencv-parity-20261023.md)。52 对文本、类别、raw/lowercase 指标与接缝决策，以及 52 个原始窗口的文字/类别摘要均一致。Small Clamp/滑窗字符编辑仍 `23/31`，Medium `27/29`；没有新提速或独立精度结论。原图/原文保留本机，PowerShell 对这两份报告的 312 个 raw/lowercase 指标对、2,496 字段独立复算一致，比较器 7 个正负合同通过。
+
+[TensorRT 11 运行](paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.md)已由本库 Builder 生成两个非空 Engine，但停在原生 `EnqueueAsync`，在抓栈后结束本任务 testhost。无最终逐行报告，不记录质量/性能通过；当时 GPU 有其它负载，但不能归因于负载。保留精确未验证状态及 Engine/栈/TRX 身份。后续入口增加阶段/行 checkpoint，下一次需进程 watchdog 和空闲设备隔离复测。此项没有取消其它精确 TensorRT 证据。
+
 下列项目承接 2026-10-18 索引，未被本轮关闭：
 
-1. **A2 自然宽行与接缝质量**：归一化识别宽度 `>3,200 px` 的真实标注数据已执行并改善部分重复前缀；未匹配接缝仍可能重复，重复编号/单字符只有受控合同，仍需自然样本验收。补齐 TensorRT/OpenCV DNN 等精确组合与更广独立数据；不能以局部开发集改善或执行/后端 parity 通过代替完整质量门。
+1. **A2 自然宽行与接缝质量**：归一化识别宽度 `>3,200 px` 的真实标注数据已执行并改善部分重复前缀；未匹配接缝仍可能重复，重复编号/单字符只有受控合同，仍需自然样本验收。OpenCV Small/Medium 同范围证据已补；TensorRT 中断组合、其它精确模型和更广独立数据继续开放。不能以局部开发集改善或后端 parity 通过代替完整质量门。
 2. **A3 自然方向**：自然角度/倒置真值、repair/rejection/CER/WER 门。
 3. **B1b/B2/B3 鲁棒性与增强成本**：已补原始噪声扫描的页面隔离诊断与单一 16 词 CPU 配对成本；仍缺更细的自然质量分层、独立数据集/业务字段误纠预算和代表性成本门，默认增强仍关闭。
 4. **公式质量**：数学语义/渲染质量门。

@@ -942,6 +942,8 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ## 常见问题
 
+自然宽行的后端结果可查阅 [OpenCV DNN 真实记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-20261023.md)与 [ORT/OpenVINO 同 DLL 参考](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-cpu-reference-20261023.md)：Small/Medium × Clamp/SlidingWindow × 13 个真值四边形，OpenCV/ORT 的 52 对文本、CTC 发射类别、CER/WER 与接缝决策全部一致，52 个原始窗口文字/类别摘要也一致，详见[跨报告比较](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-parity-20261023.md)。这是绕过 DET/CLS 的识别质量诊断，仍不代表独立准确率或速度排名。[TensorRT 11 同范围尝试](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.md)虽已生成两个 Engine，但原生 enqueue 未完成，结束测试后没有有效结果报告；该精确组合保留未验证，不扩展成整个模型或后端不支持。
+
 | 现象 | 处理 |
 | --- | --- |
 | 找不到输入或输出 | 用 Netron 检查名称、布局、dtype 和动态维度，并同步修改 Profile |
