@@ -29,6 +29,11 @@ function Get-Key($Run) {
     return '{0}|{1}' -f $Run.Variant, $Run.ImageFileName
 }
 
+function Format-DriftNumber($Value) {
+    if ($null -eq $Value) { return 'n/a' }
+    return ([double]$Value).ToString('G9', [Globalization.CultureInfo]::InvariantCulture)
+}
+
 function Assert-UniqueCompleteRuns($Report, [string]$Backend) {
     if (@($Report.Runs).Count -ne 21) {
         throw "$Backend report must contain exactly 21 model/image runs; found $(@($Report.Runs).Count)."
@@ -106,6 +111,18 @@ foreach ($ovRun in $openVino.Runs) {
     $tokenIdentityMismatchCount = 0
     $tokenCountMismatchCount = 0
     $tokenDecisionMismatchCount = 0
+    $coordinateScalarCount = 0
+    $coordinateChangedScalarCount = 0
+    $detectorScoreComparedCount = 0
+    $detectorScoreChangedCount = 0
+    $recognitionConfidenceComparedCount = 0
+    $recognitionConfidenceChangedCount = 0
+    $tokenConfidenceComparedCount = 0
+    $tokenConfidenceChangedCount = 0
+    $coordinateDrift = $null
+    $detectorScoreDrift = $null
+    $recognitionConfidenceDrift = $null
+    $tokenConfidenceDrift = $null
     for ($regionIndex = 0; $regionIndex -lt [Math]::Min($ovRegions.Count, $ortRegions.Count); $regionIndex++) {
         $ovRegion = $ovRegions[$regionIndex]
         $ortRegion = $ortRegions[$regionIndex]
@@ -113,18 +130,65 @@ foreach ($ovRun in $openVino.Runs) {
         if ($ovRegion.Orientation -ne $ortRegion.Orientation) { $orientationMismatchCount++ }
         if ($ovRegion.Vertices.Count -ne $ortRegion.Vertices.Count) {
             $geometryShapeCompatible = $false
-        } else {
+        } elseif ($ovRegion.SourceIndex -eq $ortRegion.SourceIndex) {
             for ($vertexIndex = 0; $vertexIndex -lt $ovRegion.Vertices.Count; $vertexIndex++) {
                 $ovVertex = $ovRegion.Vertices[$vertexIndex]
                 $ortVertex = $ortRegion.Vertices[$vertexIndex]
-                $maxCoordinateAbsDelta = [Math]::Max($maxCoordinateAbsDelta, [Math]::Abs([double]$ovVertex.X - [double]$ortVertex.X))
-                $maxCoordinateAbsDelta = [Math]::Max($maxCoordinateAbsDelta, [Math]::Abs([double]$ovVertex.Y - [double]$ortVertex.Y))
+                foreach ($axis in @('X', 'Y')) {
+                    $openVinoValue = [double]$ovVertex.$axis
+                    $ortValue = [double]$ortVertex.$axis
+                    $delta = [Math]::Abs($openVinoValue - $ortValue)
+                    $coordinateScalarCount++
+                    if ($delta -gt 0) { $coordinateChangedScalarCount++ }
+                    if ($delta -gt $maxCoordinateAbsDelta) { $maxCoordinateAbsDelta = $delta }
+                    if ($delta -gt 0 -and ($null -eq $coordinateDrift -or $delta -gt $coordinateDrift.AbsoluteDelta)) {
+                        $coordinateDrift = [pscustomobject]@{
+                            SourceIndex = $ovRegion.SourceIndex
+                            VertexIndex = $vertexIndex
+                            Axis = $axis
+                            OpenVinoValue = $openVinoValue
+                            OrtValue = $ortValue
+                            AbsoluteDelta = $delta
+                        }
+                    }
+                }
             }
         }
-        $maxDetectorScoreAbsDelta = [Math]::Max($maxDetectorScoreAbsDelta, [Math]::Abs([double]$ovRegion.DetectorScore - [double]$ortRegion.DetectorScore))
+        if ($ovRegion.SourceIndex -eq $ortRegion.SourceIndex) {
+            $openVinoScore = [double]$ovRegion.DetectorScore
+            $ortScore = [double]$ortRegion.DetectorScore
+            $scoreDelta = [Math]::Abs($openVinoScore - $ortScore)
+            $detectorScoreComparedCount++
+            if ($scoreDelta -gt 0) { $detectorScoreChangedCount++ }
+            if ($scoreDelta -gt $maxDetectorScoreAbsDelta) { $maxDetectorScoreAbsDelta = $scoreDelta }
+            if ($scoreDelta -gt 0 -and ($null -eq $detectorScoreDrift -or $scoreDelta -gt $detectorScoreDrift.AbsoluteDelta)) {
+                $detectorScoreDrift = [pscustomobject]@{
+                    SourceIndex = $ovRegion.SourceIndex
+                    OpenVinoValue = $openVinoScore
+                    OrtValue = $ortScore
+                    AbsoluteDelta = $scoreDelta
+                }
+            }
+        }
 
         if ($ovRegion.Text -cne $ortRegion.Text) { $recognitionStructureCompatible = $false }
-        $maxRecognitionConfidenceAbsDelta = [Math]::Max($maxRecognitionConfidenceAbsDelta, [Math]::Abs([double]$ovRegion.RecognitionConfidence - [double]$ortRegion.RecognitionConfidence))
+        if ($ovRegion.SourceIndex -eq $ortRegion.SourceIndex -and $ovRegion.Text -ceq $ortRegion.Text) {
+            $openVinoRecognitionConfidence = [double]$ovRegion.RecognitionConfidence
+            $ortRecognitionConfidence = [double]$ortRegion.RecognitionConfidence
+            $recognitionConfidenceDelta = [Math]::Abs($openVinoRecognitionConfidence - $ortRecognitionConfidence)
+            $recognitionConfidenceComparedCount++
+            if ($recognitionConfidenceDelta -gt 0) { $recognitionConfidenceChangedCount++ }
+            if ($recognitionConfidenceDelta -gt $maxRecognitionConfidenceAbsDelta) { $maxRecognitionConfidenceAbsDelta = $recognitionConfidenceDelta }
+            if ($recognitionConfidenceDelta -gt 0 -and ($null -eq $recognitionConfidenceDrift -or $recognitionConfidenceDelta -gt $recognitionConfidenceDrift.AbsoluteDelta)) {
+                $recognitionConfidenceDrift = [pscustomobject]@{
+                    SourceIndex = $ovRegion.SourceIndex
+                    CharacterCount = $ovRegion.Text.Length
+                    OpenVinoValue = $openVinoRecognitionConfidence
+                    OrtValue = $ortRecognitionConfidence
+                    AbsoluteDelta = $recognitionConfidenceDelta
+                }
+            }
+        }
         if ($ovRegion.Tokens.Count -ne $ortRegion.Tokens.Count) {
             $tokenCountMismatchCount++
             $recognitionStructureCompatible = $false
@@ -137,7 +201,27 @@ foreach ($ovRun in $openVino.Runs) {
                 $ovToken.Text -cne $ortToken.Text -or $ovToken.IsBlank -ne $ortToken.IsBlank -or
                 $ovToken.IsCollapsedRepeat -ne $ortToken.IsCollapsedRepeat -or $ovToken.IsUnknown -ne $ortToken.IsUnknown -or
                 $ovToken.Emitted -ne $ortToken.Emitted) { $tokenIdentityMismatchCount++; $tokenDecisionMismatchCount++ }
-            $maxTokenConfidenceAbsDelta = [Math]::Max($maxTokenConfidenceAbsDelta, [Math]::Abs([double]$ovToken.Confidence - [double]$ortToken.Confidence))
+            $tokenConfidenceDelta = [Math]::Abs([double]$ovToken.Confidence - [double]$ortToken.Confidence)
+            $maxTokenConfidenceAbsDelta = [Math]::Max($maxTokenConfidenceAbsDelta, $tokenConfidenceDelta)
+            $tokensAligned = $ovToken.Timestep -eq $ortToken.Timestep -and $ovToken.ClassIndex -eq $ortToken.ClassIndex -and
+                $ovToken.Text -ceq $ortToken.Text -and $ovToken.IsBlank -eq $ortToken.IsBlank -and
+                $ovToken.IsCollapsedRepeat -eq $ortToken.IsCollapsedRepeat -and $ovToken.IsUnknown -eq $ortToken.IsUnknown -and
+                $ovToken.Emitted -eq $ortToken.Emitted
+            if ($tokensAligned -and $ovRegion.SourceIndex -eq $ortRegion.SourceIndex -and $ovRegion.Text -ceq $ortRegion.Text) {
+                $tokenConfidenceComparedCount++
+                if ($tokenConfidenceDelta -gt 0) { $tokenConfidenceChangedCount++ }
+                if ($tokenConfidenceDelta -gt 0 -and ($null -eq $tokenConfidenceDrift -or $tokenConfidenceDelta -gt $tokenConfidenceDrift.AbsoluteDelta)) {
+                    $tokenConfidenceDrift = [pscustomobject]@{
+                        SourceIndex = $ovRegion.SourceIndex
+                        Timestep = $ovToken.Timestep
+                        ClassIndex = $ovToken.ClassIndex
+                        IsBlank = $ovToken.IsBlank
+                        OpenVinoValue = [double]$ovToken.Confidence
+                        OrtValue = [double]$ortToken.Confidence
+                        AbsoluteDelta = $tokenConfidenceDelta
+                    }
+                }
+            }
         }
     }
     $geometryWithinTolerance = if ($geometryShapeCompatible) {
@@ -186,17 +270,29 @@ foreach ($ovRun in $openVino.Runs) {
         GeometryShapeCompatible = $geometryShapeCompatible
         GeometryDetailsComparable = $geometryDetailsComparable
         MaxCoordinateAbsoluteDelta = if ($geometryShapeCompatible) { $maxCoordinateAbsDelta } else { $null }
+        CoordinateScalarCount = $coordinateScalarCount
+        CoordinateChangedScalarCount = $coordinateChangedScalarCount
+        MaximumCoordinateDrift = $coordinateDrift
         MaxDetectorScoreAbsoluteDelta = if ($geometryShapeCompatible) { $maxDetectorScoreAbsDelta } else { $null }
+        DetectorScoreComparedCount = $detectorScoreComparedCount
+        DetectorScoreChangedCount = $detectorScoreChangedCount
+        MaximumDetectorScoreDrift = $detectorScoreDrift
         OrientationMismatchCount = $orientationMismatchCount
         SourceIndexMismatchCount = $sourceIndexMismatchCount
         GeometryWithinTolerance = $geometryWithinTolerance
         RecognitionStructureCompatible = $recognitionStructureCompatible
         RecognitionDetailsComparable = $recognitionDetailsComparable
         MaxRecognitionConfidenceAbsoluteDelta = if ($recognitionStructureCompatible) { $maxRecognitionConfidenceAbsDelta } else { $null }
+        RecognitionConfidenceComparedCount = $recognitionConfidenceComparedCount
+        RecognitionConfidenceChangedCount = $recognitionConfidenceChangedCount
+        MaximumRecognitionConfidenceDrift = $recognitionConfidenceDrift
         TokenIdentityMismatchCount = $tokenIdentityMismatchCount
         TokenDecisionMismatchCount = $tokenDecisionMismatchCount
         TokenCountMismatchCount = $tokenCountMismatchCount
         MaxTokenConfidenceAbsoluteDelta = if ($recognitionStructureCompatible) { $maxTokenConfidenceAbsDelta } else { $null }
+        TokenConfidenceComparedCount = $tokenConfidenceComparedCount
+        TokenConfidenceChangedCount = $tokenConfidenceChangedCount
+        MaximumTokenConfidenceDrift = $tokenConfidenceDrift
         RecognitionWithinTolerance = $recognitionWithinTolerance
         TokenDecisionComparable = $tokenDecisionComparable
         TokenDecisionsMatch = $tokenDecisionsMatch
@@ -212,6 +308,34 @@ foreach ($ovRun in $openVino.Runs) {
 if ($identityMismatches.Count -gt 0) { throw "Image/model identity mismatch: $($identityMismatches -join ', ')." }
 if ($regionMismatches.Count -gt 0) { throw "Region/recognized count mismatch: $($regionMismatches -join ', ')." }
 if ($textMismatches.Count -gt 0) { throw "Ordered text fingerprint mismatch: $($textMismatches -join ', ')." }
+
+function Get-LargestDrift($Items, [string]$PropertyName) {
+    $largest = $Items |
+        Where-Object { $null -ne $_.$PropertyName } |
+        Sort-Object { $_.$PropertyName.AbsoluteDelta } -Descending |
+        Select-Object -First 1
+    if ($null -eq $largest) { return $null }
+    return [pscustomobject]@{
+        Variant = $largest.Variant
+        ImageFileName = $largest.ImageFileName
+        Location = $largest.$PropertyName
+    }
+}
+
+$numericDrift = [pscustomobject]@{
+    CoordinateComponentsCompared = ($pairs | Measure-Object CoordinateScalarCount -Sum).Sum
+    CoordinateComponentsChangedExactly = ($pairs | Measure-Object CoordinateChangedScalarCount -Sum).Sum
+    DetectorScoresCompared = ($pairs | Measure-Object DetectorScoreComparedCount -Sum).Sum
+    DetectorScoresChangedExactly = ($pairs | Measure-Object DetectorScoreChangedCount -Sum).Sum
+    RecognitionConfidencesCompared = ($pairs | Measure-Object RecognitionConfidenceComparedCount -Sum).Sum
+    RecognitionConfidencesChangedExactly = ($pairs | Measure-Object RecognitionConfidenceChangedCount -Sum).Sum
+    CtcTokenConfidencesCompared = ($pairs | Measure-Object TokenConfidenceComparedCount -Sum).Sum
+    CtcTokenConfidencesChangedExactly = ($pairs | Measure-Object TokenConfidenceChangedCount -Sum).Sum
+    LargestCoordinateDrift = Get-LargestDrift $pairs 'MaximumCoordinateDrift'
+    LargestDetectorScoreDrift = Get-LargestDrift $pairs 'MaximumDetectorScoreDrift'
+    LargestRecognitionConfidenceDrift = Get-LargestDrift $pairs 'MaximumRecognitionConfidenceDrift'
+    LargestCtcTokenConfidenceDrift = Get-LargestDrift $pairs 'MaximumTokenConfidenceDrift'
+}
 
 $models = [System.Collections.Generic.List[object]]::new()
 foreach ($group in $pairs | Group-Object Variant | Sort-Object Name) {
@@ -283,6 +407,7 @@ $summary = [pscustomobject]@{
     CanonicalResultFingerprintMatches = $canonicalMatchCount
     CanonicalResultFingerprintDifferences = $canonicalDifferenceCount
     CanonicalResultFingerprintNotComparable = $pairs.Count - $canonicalComparableCount
+    NumericDriftAttribution = $numericDrift
     Inputs = @($pairs | Group-Object ImageFileName | Sort-Object Name | ForEach-Object {
         [pscustomobject]@{ ImageFileName = $_.Name; Sha256 = $_.Group[0].ImageSha256 }
     })
@@ -333,6 +458,20 @@ $maximumDetectorScoreDelta = if ($geometryToleranceComparableCount -eq 0) { 'n/a
 $maximumRecognitionConfidenceDelta = if ($recognitionToleranceComparableCount -eq 0) { 'n/a' } else { $summary.MaximumRecognitionConfidenceAbsoluteDelta }
 $maximumTokenConfidenceDelta = if ($recognitionToleranceComparableCount -eq 0) { 'n/a' } else { $summary.MaximumTokenConfidenceAbsoluteDelta }
 
+function Format-PairDrift($Pair, [string]$ComparedCountProperty, [string]$ChangedCountProperty, [string]$DriftProperty, [string]$Kind) {
+    $compared = [int]$Pair.$ComparedCountProperty
+    if ($compared -eq 0) { return 'n/a' }
+    $changed = [int]$Pair.$ChangedCountProperty
+    $drift = $Pair.$DriftProperty
+    if ($null -eq $drift) { return "$changed/$compared; 0" }
+    $location = switch ($Kind) {
+        'coordinate' { "s$($drift.SourceIndex)/v$($drift.VertexIndex)$($drift.Axis)"; break }
+        'region' { "s$($drift.SourceIndex)"; break }
+        'token' { "s$($drift.SourceIndex)/t$($drift.Timestep)"; break }
+    }
+    return "$changed/$compared; $(Format-DriftNumber $drift.AbsoluteDelta)@$location"
+}
+
 $jsonPath = [IO.Path]::GetFullPath($OutputJsonPath)
 $markdownPath = [IO.Path]::GetFullPath($OutputMarkdownPath)
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $jsonPath) | Out-Null
@@ -356,6 +495,20 @@ if ($canonicalComparableCount -eq 0) {
 }
 [void]$builder.AppendLine()
 [void]$builder.AppendLine("Exact component fingerprints: geometry ``$geometryFingerprintSummary`` match; recognition (confidence, character-set provenance and CTC token trace) ``$recognitionFingerprintSummary`` match. Exact CTC token decisions: ``$tokenDecisionParitySummary``. Numeric tolerances are ``$CoordinateTolerancePixels`` source pixels for coordinates, ``$DetectorScoreTolerance`` for detector scores and ``$ConfidenceTolerance`` for recognition/token confidence; geometry is within tolerance for ``$geometryWithinToleranceSummary`` and recognition for ``$recognitionWithinToleranceSummary``. Maximum absolute deltas: coordinates ``$maximumCoordinateDelta``, detector score ``$maximumDetectorScoreDelta``, recognition confidence ``$maximumRecognitionConfidenceDelta``, token confidence ``$maximumTokenConfidenceDelta``.")
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('## Numeric drift attribution')
+[void]$builder.AppendLine()
+[void]$builder.AppendLine("Across comparable matched records, exact numeric changes were coordinates ``$($numericDrift.CoordinateComponentsChangedExactly)/$($numericDrift.CoordinateComponentsCompared)`` scalar components, detector scores ``$($numericDrift.DetectorScoresChangedExactly)/$($numericDrift.DetectorScoresCompared)`` regions, recognition confidences ``$($numericDrift.RecognitionConfidencesChangedExactly)/$($numericDrift.RecognitionConfidencesCompared)`` regions, and CTC token confidences ``$($numericDrift.CtcTokenConfidencesChangedExactly)/$($numericDrift.CtcTokenConfidencesCompared)`` tokens. Each cell below is ``changed/comparable; largest absolute delta@location`` (zero means compared values were bit-equal; n/a means not comparable). Location indexes are zero-based source-region, vertex, or CTC timestep. JSON records the two backend values for each maximum. This attributes output fields only; it does not prove the internal runtime cause of the small numeric differences.")
+[void]$builder.AppendLine()
+[void]$builder.AppendLine('| Model | Image | Coordinates (changed/comp; max@loc) | Detector score | Recognition confidence | CTC token confidence |')
+[void]$builder.AppendLine('| --- | --- | --- | --- | --- | --- |')
+foreach ($pair in @($pairs | Sort-Object Variant, ImageFileName)) {
+    $coordinateCell = Format-PairDrift $pair 'CoordinateScalarCount' 'CoordinateChangedScalarCount' 'MaximumCoordinateDrift' 'coordinate'
+    $scoreCell = Format-PairDrift $pair 'DetectorScoreComparedCount' 'DetectorScoreChangedCount' 'MaximumDetectorScoreDrift' 'region'
+    $recognitionCell = Format-PairDrift $pair 'RecognitionConfidenceComparedCount' 'RecognitionConfidenceChangedCount' 'MaximumRecognitionConfidenceDrift' 'region'
+    $tokenCell = Format-PairDrift $pair 'TokenConfidenceComparedCount' 'TokenConfidenceChangedCount' 'MaximumTokenConfidenceDrift' 'token'
+    [void]$builder.AppendLine("| $($pair.Variant) | $($pair.ImageFileName) | $coordinateCell | $scoreCell | $recognitionCell | $tokenCell |")
+}
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('| Model | demo_1 regions | demo_2 regions | demo_3 regions | Total per backend | Text | Geometry tolerance | Token decisions | Recognition tolerance | Canonical SHA |')
 [void]$builder.AppendLine('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')

@@ -7,6 +7,34 @@ The canonical `OcrResult` SHA-256 comparison is **not valid for these reports**:
 
 Exact component fingerprints: geometry `n/a (0 comparable)` match; recognition (confidence, character-set provenance and CTC token trace) `n/a (0 comparable)` match. Exact CTC token decisions: `n/a (0 comparable)`. Numeric tolerances are `0.01` source pixels for coordinates, `0.001` for detector scores and `0.001` for recognition/token confidence; geometry is within tolerance for `n/a (0 comparable)` and recognition for `n/a (0 comparable)`. Maximum absolute deltas: coordinates `n/a`, detector score `n/a`, recognition confidence `n/a`, token confidence `n/a`.
 
+## Numeric drift attribution
+
+Across comparable matched records, exact numeric changes were coordinates `0/0` scalar components, detector scores `0/0` regions, recognition confidences `0/0` regions, and CTC token confidences `0/0` tokens. Each cell below is `changed/comparable; largest absolute delta@location` (zero means compared values were bit-equal; n/a means not comparable). Location indexes are zero-based source-region, vertex, or CTC timestep. JSON records the two backend values for each maximum. This attributes output fields only; it does not prove the internal runtime cause of the small numeric differences.
+
+| Model | Image | Coordinates (changed/comp; max@loc) | Detector score | Recognition confidence | CTC token confidence |
+| --- | --- | --- | --- | --- | --- |
+| v4-mobile | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v4-mobile | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v4-mobile | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v4-server | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v4-server | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v4-server | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v5-mobile | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v5-mobile | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v5-mobile | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v5-server | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v5-server | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v5-server | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v6-medium | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v6-medium | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v6-medium | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v6-small | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v6-small | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v6-small | demo_3.jpg | n/a | n/a | n/a | n/a |
+| v6-tiny | demo_1.jpg | n/a | n/a | n/a | n/a |
+| v6-tiny | demo_2.jpg | n/a | n/a | n/a | n/a |
+| v6-tiny | demo_3.jpg | n/a | n/a | n/a | n/a |
+
 | Model | demo_1 regions | demo_2 regions | demo_3 regions | Total per backend | Text | Geometry tolerance | Token decisions | Recognition tolerance | Canonical SHA |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | v4-mobile | 23 | 57 | 26 | 106 | 3/3 | n/a | n/a | n/a | n/a |

@@ -837,9 +837,11 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 上表是繁忙开发设备上的短测，含构建与其他负载干扰，**不是最优性能记录**。SlidingWindow 增加了识别工作量；支持更大动态宽度的模型应同时对照 Reject/3200。当前验证覆盖 v4 mobile、v5 mobile、v6 tiny 的 CPU/CUDA；v6 small/medium、TensorRT/OpenVINO/OpenCV DNN 的滑窗矩阵和标注长文本 CER/WER 仍待补齐。
 
-### PP-OCR 核心三图跨后端证据（2026-09-30）
+### PP-OCR 核心七模型跨后端证据（更新于 2026-10-23）
 
 2026-10-23 在 Ubuntu 22.04.5 / RTX 2060 主机上用当前测试源复跑七组核心流水线，形成[三图 ORT/OpenVINO 对照报告](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md)。21/21 对的输入与模型文件 SHA、检测区域数、识别区域数及有序文本 SHA 一致；但完整 `OcrResult` 指纹是 0/21 一致，因此只可称文本和计数一致，不能称完整结果 parity。两后端均为 CPU，RTX 2060 只是主机配置；每对单次执行没有人工逐字真值，不提供 CER/WER，也不构成性能基准。原始 ORT/OpenVINO JSON 和可重跑比较脚本均已链接在报告中。
+
+另在 Windows Ryzen 7 5800H 上将同一组三图、七个模型对 ONNX Runtime CPU 与 OpenVINO CPU 做了逐区域组件审计，见[组件与数值漂移报告](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md)。文本、区域数及 CTC token 决策 `21/21` 一致，几何、检测分数和识别置信度均在声明容差内。逐字段归因显示坐标 `8/2,216` 个标量有位级差异，检测分数 `248/277`、识别置信度 `245/277`、对齐 token 置信度 `12,366/15,937` 有位级差异；最大坐标差 `0.00385 px`（门槛 `0.01 px`），最大 token 置信度差 `0.0003796`（门槛 `0.001`）。因此 `OcrResult` 的严格 SHA 不同代表浮点值并非位级相同，不表示文本/token 决策不同。该归因只定位输出字段与样本，不证明运行时内部数值差异的根因；这些无真值、单次运行的演示图仍不能用于准确率或性能结论。
 
 ### PaddleOCR 质量证据状态索引（2026-10-14）
 
