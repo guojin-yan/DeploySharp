@@ -24,9 +24,9 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 
 /// <summary>
 /// Measures whether the opt-in PP-OCR crop-enhancement consensus policy changes
-/// source-labelled SROIE receipt words for the better or worse. This is a
-/// natural-source crop diagnostic, not a low-quality dataset or release gate.
-/// / 评估可选 PP-OCR 裁剪增强共识策略对 SROIE 原始收据词区的影响；这是自然图像裁剪诊断，不是低质量数据集或发布门禁。
+/// source-labelled SROIE receipts and FUNSD scans for the better or worse.
+/// These are word-crop diagnostics, not page accuracy or release gates.
+/// / 评估可选裁剪增强共识策略对 SROIE 收据和 FUNSD 原始扫描词区的影响，不代表页面准确率或发布门禁。
 /// </summary>
 [TestClass]
 [DoNotParallelize]
@@ -34,7 +34,8 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
 {
     private const string DefaultDatasetRoot = @"F:\OCRBenchmarkTesting";
     private const string DefaultModelRoot = @"E:\Model\paddleocr";
-    private const string DatasetRevision = "bffe40c26759f3376ec2b3ae9031dbba54cd587c";
+    private const string SroieRevision = "bffe40c26759f3376ec2b3ae9031dbba54cd587c";
+    private const string FunsdRevision = "c31735649e4f441bcbb4fd0f379574f7520b42286e80b01d80b445649d54761f";
     private const string DictionarySha = "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6";
     private const string DetectorModelId = "paddleocr/ppocrv6/small-det";
     private const string RecognizerModelId = "paddleocr/ppocrv6/small-rec";
@@ -48,15 +49,66 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
         if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_RUN"), "1", StringComparison.Ordinal))
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_RUN=1 to run the source-labelled SROIE enhancement diagnostic.");
 
-        string datasetRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_DATASET_ROOT") ?? DefaultDatasetRoot);
-        string modelRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_MODEL_ROOT") ?? DefaultModelRoot);
-        string[] manifestPaths =
-        {
+        await RunSourceDiagnosticAsync(useFunsd: false).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public async Task NaturalFunsdWordsMeasureEnhancementOnDisjointPagesOnOrtAndOpenVino()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_FUNSD_ENHANCEMENT_RUN"), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_FUNSD_ENHANCEMENT_RUN=1 to run the original FUNSD scan enhancement diagnostic.");
+
+        await RunSourceDiagnosticAsync(useFunsd: true).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public async Task NaturalFunsdWordsMeasurePairedFormalEnhancementCostOnOrtAndOpenVino()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_FUNSD_ENHANCEMENT_BENCHMARK_RUN"), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_FUNSD_ENHANCEMENT_BENCHMARK_RUN=1 to run the paired 5+50 crop-enhancement cost benchmark.");
+
+        await RunSourceDiagnosticAsync(useFunsd: true, measurePairedCost: true).ConfigureAwait(false);
+    }
+
+    private async Task RunSourceDiagnosticAsync(bool useFunsd, bool measurePairedCost = false)
+    {
+        string prefix = useFunsd ? "DEPLOYSHARP_PADDLEOCR_FUNSD_ENHANCEMENT_" : "DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_";
+        string datasetRoot = Path.GetFullPath(Environment.GetEnvironmentVariable(prefix + "DATASET_ROOT") ?? DefaultDatasetRoot);
+        string modelRoot = Path.GetFullPath(Environment.GetEnvironmentVariable(prefix + "MODEL_ROOT") ?? DefaultModelRoot);
+        string datasetName = useFunsd ? "FUNSD" : "jsdnrs/ICDAR2019-SROIE";
+        string datasetRevision = useFunsd ? FunsdRevision : SroieRevision;
+        string sampleName = useFunsd ? "paddleocr-funsd-natural-low-quality-enhancement-20261023" : "paddleocr-sroie-natural-source-enhancement-20261023";
+        if (measurePairedCost) sampleName = "paddleocr-funsd-paired-enhancement-cost-20261023";
+        string[] manifestPaths = useFunsd
+            ? new[] { Path.Combine(datasetRoot, "data", "annotations", "manifests", "funsd-test-smoke-001.jsonl") }
+            : new[] {
             Path.Combine(datasetRoot, "data", "annotations", "manifests", "sroie-train-20260923T072455614249Z.jsonl"),
             Path.Combine(datasetRoot, "data", "annotations", "manifests", "sroie-train-20260923T072550009854Z.jsonl")
         };
-        IReadOnlyList<SroiePage> pages = LoadPages(datasetRoot, manifestPaths);
-        Assert.AreEqual(10, pages.Count, "The pinned diagnostic selection must contain ten SROIE receipt pages.");
+        object? disjointParentEvidence = null;
+        if (useFunsd)
+        {
+            Assert.AreEqual("a5e30927be9695d05e103aef98ab8b6db636070c57ea4c55acb0200bebfddefa", Sha256File(RequireFile(manifestPaths[0])),
+                "Do not change the predeclared FUNSD page selection based on recognition results.");
+            string priorManifest = RequireFile(Path.Combine(datasetRoot, "data", "annotations", "manifests", "funsd-test-full-001.jsonl"));
+            Assert.AreEqual("5d58429c21d4df671654b8016a58d47d758ff69b7e3378c6e42b571cb360cab3", Sha256File(priorManifest));
+            var currentIds = ReadImageIds(manifestPaths[0]);
+            var priorIds = ReadImageIds(priorManifest);
+            Assert.AreEqual(10, currentIds.Count);
+            Assert.AreEqual(40, priorIds.Count);
+            Assert.IsFalse(currentIds.Overlaps(priorIds), "Natural scan holdout pages must be disjoint from the earlier 40-page controlled enhancement parents.");
+            disjointParentEvidence = new { priorManifest = Path.GetFileName(priorManifest), priorManifestSha256 = Sha256File(priorManifest), priorPages = priorIds.Count, overlappingImageIds = 0,
+                boundary = "Page-disjoint from the prior controlled enhancement experiment; not a guarantee of absence from pretraining or unrelated OCR tests. No threshold is calibrated on these pages." };
+        }
+        IReadOnlyList<SroiePage> pages = LoadPages(datasetRoot, manifestPaths, datasetName, datasetRevision, useFunsd ? "test" : "train");
+        Assert.AreEqual(10, pages.Count, "The pinned diagnostic selection must contain ten source pages.");
+        Assert.AreEqual(useFunsd ? 1769 : 542, pages.Sum(page => page.Regions.Count), "The pinned labelled-region inventory changed.");
+        int sourcePageCount = pages.Count;
+        int sourceRegionCount = pages.Sum(page => page.Regions.Count);
+        if (measurePairedCost)
+            pages = new[] { pages[0] with { Regions = pages[0].Regions.Take(16).ToArray() } };
 
         string modelDirectory = Path.Combine(modelRoot, "PP-OCRv6", "small");
         string detectorPath = RequireFile(Path.Combine(modelDirectory, "PP-OCRv6_small_det_inference.onnx"));
@@ -64,6 +116,8 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
         string dictionaryPath = RequireFile(Path.Combine(modelDirectory, "PP-OCRv6_small_rec_dict.txt"));
         string actualDictionarySha = Sha256File(dictionaryPath);
         Assert.AreEqual(DictionarySha, actualDictionarySha, "The character dictionary must match the pinned PP-OCRv6 Small revision.");
+        Assert.AreEqual(PaddleOcrModelCatalog.GetReleaseArtifact(new ModelId(DetectorModelId)).Sha256, Sha256File(detectorPath));
+        Assert.AreEqual(PaddleOcrModelCatalog.GetReleaseArtifact(new ModelId(RecognizerModelId)).Sha256, Sha256File(recognizerPath));
 
         var recipes = new OcrCropEnhancementOptions[]
         {
@@ -79,7 +133,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
         var backendReports = new List<BackendReport>();
         foreach (bool useOpenVino in new[] { false, true })
         {
-            backendReports.Add(await RunBackendAsync(pages, detectorPath, recognizerPath, dictionaryPath, recipes, useOpenVino).ConfigureAwait(false));
+            backendReports.Add(await RunBackendAsync(pages, detectorPath, recognizerPath, dictionaryPath, recipes, useOpenVino, measurePairedCost).ConfigureAwait(false));
         }
 
         BackendReport ort = backendReports.Single(item => item.Backend == "onnxruntime");
@@ -92,6 +146,9 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
         int finalTextMatched = 0;
         int decisionMatched = 0;
         int candidateTextsMatched = 0;
+        double maximumConfidenceDrift = 0;
+        int unexplainedSelectionDifferences = 0;
+        var selectionDifferences = new List<object>();
         for (int index = 0; index < ort.Regions.Count; index++)
         {
             RegionReport left = ort.Regions[index];
@@ -100,11 +157,34 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
             if (left.FinalTextSha256 == right.FinalTextSha256) finalTextMatched++;
             if (left.Decision == right.Decision && left.SelectedCandidateIndex == right.SelectedCandidateIndex) decisionMatched++;
             if (left.Candidates.Count == right.Candidates.Count && left.Candidates.Select(item => item.TextSha256).SequenceEqual(right.Candidates.Select(item => item.TextSha256))) candidateTextsMatched++;
+            double originalConfidenceDrift = Math.Abs((double)left.OriginalConfidence - right.OriginalConfidence);
+            double candidateConfidenceDrift = left.Candidates.Count != right.Candidates.Count ? 1d
+                : left.Candidates.Zip(right.Candidates, (a, b) => Math.Abs((double)a.Confidence - b.Confidence)).DefaultIfEmpty(0).Max();
+            double confidenceDrift = Math.Max(originalConfidenceDrift, candidateConfidenceDrift);
+            maximumConfidenceDrift = Math.Max(maximumConfidenceDrift, confidenceDrift);
+            if (left.Decision != right.Decision || left.SelectedCandidateIndex != right.SelectedCandidateIndex)
+            {
+                selectionDifferences.Add(new { left.RegionId, originalConfidenceDrift, candidateConfidenceDrift,
+                    ort = new { left.Decision, left.SelectedCandidateIndex, left.OriginalConfidence, left.FinalConfidence },
+                    openVino = new { right.Decision, right.SelectedCandidateIndex, right.OriginalConfidence, right.FinalConfidence },
+                    originalTextMatches = left.OriginalTextSha256 == right.OriginalTextSha256,
+                    finalTextMatches = left.FinalTextSha256 == right.FinalTextSha256,
+                    allCandidateTextMatches = left.Candidates.Select(item => item.TextSha256).SequenceEqual(right.Candidates.Select(item => item.TextSha256)) });
+                if (confidenceDrift <= 0 || confidenceDrift > .001) unexplainedSelectionDifferences++;
+            }
         }
 
-        string outputDirectory = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SROIE_ENHANCEMENT_OUTPUT") ?? TestContext.TestResultsDirectory!);
+        string outputDirectory = Path.GetFullPath(Environment.GetEnvironmentVariable(prefix + "OUTPUT") ?? TestContext.TestResultsDirectory!);
         Directory.CreateDirectory(outputDirectory);
-        string outputPath = Path.Combine(outputDirectory, "paddleocr-sroie-natural-source-enhancement-20261023.json");
+        string outputPath = Path.Combine(outputDirectory, sampleName + ".json");
+        object? detailedRegionEvidence = null;
+        if (useFunsd)
+        {
+            string detailsPath = Path.Combine(outputDirectory, sampleName + "-details.json");
+            File.WriteAllText(detailsPath, JsonSerializer.Serialize(backendReports, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+            detailedRegionEvidence = new { fileName = Path.GetFileName(detailsPath), sha256 = Sha256File(detailsPath), scope = "Full per-region metrics and text hashes retained as local test artifacts; not included in the repository summary." };
+            TestContext.AddResultFile(detailsPath);
+        }
         var evidence = new
         {
             schemaVersion = 1,
@@ -120,14 +200,19 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
             },
             dataset = new
             {
-                name = "jsdnrs/ICDAR2019-SROIE",
-                revision = DatasetRevision,
-                declaredLicense = "CC-BY-4.0 (dataset distributor metadata; benchmark smoke selection only)",
+                name = datasetName,
+                revision = datasetRevision,
+                split = useFunsd ? "test" : "train",
+                declaredLicense = useFunsd ? "FUNSD non-commercial research/education terms; source image rights remain separate; local evaluation only" : "CC-BY-4.0 (dataset distributor metadata; benchmark smoke selection only)",
                 manifestSha256 = manifestPaths.Select(path => new { path = Path.GetFileName(path), sha256 = Sha256File(path) }).ToArray(),
                 pageCount = pages.Count,
                 labeledWordRegionCount = pages.Sum(page => page.Regions.Count),
+                sourcePageCount,
+                sourceRegionCount,
+                executionSubset = measurePairedCost ? "first page in pinned manifest, first 16 valid words in manifest order; selected before recognition" : "all valid words in the pinned manifests",
                 sourceImageSha256 = pages.Select(page => new { page.ImageId, page.Sha256 }).ToArray(),
-                imagingQualityLabels = "unknown in source; this is not a natural low-quality split"
+                imagingQualityLabels = useFunsd ? "low_resolution_noisy_scanned_forms_by_source_description; no per-image severity or degradation-type labels" : "unknown in source; this is not a natural low-quality split",
+                disjointParentEvidence
             },
             environment = new
             {
@@ -136,7 +221,10 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 framework = RuntimeInformation.FrameworkDescription,
                 architecture = RuntimeInformation.ProcessArchitecture.ToString(),
                 logicalProcessorCount = Environment.ProcessorCount,
-                cpuModel = (Environment.GetEnvironmentVariable("DEPLOYSHARP_CPU_MODEL") ?? "unspecified").Trim()
+                cpuModel = (Environment.GetEnvironmentVariable("DEPLOYSHARP_CPU_MODEL") ?? "unspecified").Trim(),
+                testAssemblySha256 = Sha256File(GetType().Assembly.Location),
+                cpuPowerPolicy = Environment.GetEnvironmentVariable("DEPLOYSHARP_CPU_POWER_POLICY") ?? "not recorded",
+                clockControl = "not set by this test; no during-run clock telemetry"
             },
             protocol = new
             {
@@ -146,7 +234,8 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 sessionConcurrency = 1,
                 selection = "ConsensusConfidenceGain(minimumGain=0,minimumMatchingCandidates=2)",
                 recipes = recipes.Select(item => item.Mode.ToString()).ToArray(),
-                pageTiming = "one measured invocation per page; diagnostic only, not a formal 5+50 performance benchmark"
+                pageTiming = "one measured invocation per page; diagnostic only, not a formal 5+50 performance benchmark",
+                pairedCostTiming = measurePairedCost ? "5 warm-up pairs + 50 measured pairs per backend; alternating baseline/enhancement order; fixed 16 word quadrilaterals on one preloaded input; includes crop/REC/CTC/retry, excludes file decode/input preparation/model/session setup" : "not measured"
             },
             backends = backendReports.Select(item => new
             {
@@ -165,9 +254,10 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 selectedEqualWerRegions = item.SelectedEqualWerRegions,
                 candidateRecipes = SummarizeCandidates(item.Regions),
                 consensusThresholdAnalysis = SummarizeConsensusThresholds(item.Regions),
+                pairedCost = item.PairedCost,
                 pageLatencyMs = new { p50 = Percentile(item.Pages.Select(page => page.ElapsedMs), .50), p95 = Percentile(item.Pages.Select(page => page.ElapsedMs), .95), samples = item.Pages.Select(page => new { page.ImageId, page.ElapsedMs }).ToArray() },
                 pages = item.Pages,
-                regions = item.Regions
+                regions = useFunsd ? null : item.Regions
             }).ToArray(),
             crossBackend = new
             {
@@ -175,14 +265,24 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 originalTextMatched = textMatched,
                 enhancedTextMatched = finalTextMatched,
                 allCandidateTextMatched = candidateTextsMatched,
-                decisionAndCandidateIndexMatched = decisionMatched
+                decisionAndCandidateIndexMatched = decisionMatched,
+                maximumConfidenceDrift,
+                confidenceTolerance = .001,
+                selectionDifferences,
+                unexplainedSelectionDifferences,
+                status = decisionMatched == ort.Regions.Count ? "text-and-decision-parity" : "text-parity-with-numerical-selection-differences"
             },
-            boundary = "Natural-source receipts and source word labels; imaging quality is unlabelled. This is a bounded crop-level diagnostic on ten pages, not an independent natural-low-quality split, official SROIE metric, page OCR score, business-field error budget, default enhancement approval, or formal latency result. Enhancement remains opt-in; B1b/B2/B3 stay open."
+            detailedRegionEvidence,
+            boundary = measurePairedCost
+                ? "Paired 5+50 recognition-only cost on one predeclared 16-word FUNSD crop selection. Timing includes source-region crop preparation, REC, CTC and optional three-recipe enhancement retry; excludes page input preparation, DET, CLS, file I/O, model/session setup. This is not full-page latency, quality approval, a business latency budget, cross-device or clock-locked performance."
+                : useFunsd
+                ? "Original noisy low-resolution FUNSD scans with source word labels, using ten pages disjoint from the prior 40-page controlled enhancement parents. No generated degradation, threshold calibration or per-image quality severity labels. This is not page accuracy, an official FUNSD metric, an independent dataset, a business-field safety budget, default enhancement approval, or formal paired latency evidence. B1b/B2/B3 remain open."
+                : "Natural-source receipts and source word labels; imaging quality is unlabelled. This is a bounded crop-level diagnostic on ten pages, not an independent natural-low-quality split, official SROIE metric, page OCR score, business-field error budget, default enhancement approval, or formal latency result. Enhancement remains opt-in; B1b/B2/B3 stay open."
         };
         File.WriteAllText(outputPath, JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         TestContext.AddResultFile(outputPath);
 
-        Console.WriteLine("PADDLEOCR_SROIE_ENHANCEMENT pages=" + pages.Count.ToString(CultureInfo.InvariantCulture)
+        Console.WriteLine((useFunsd ? "PADDLEOCR_FUNSD_ENHANCEMENT pages=" : "PADDLEOCR_SROIE_ENHANCEMENT pages=") + pages.Count.ToString(CultureInfo.InvariantCulture)
             + ";regions=" + ort.Regions.Count.ToString(CultureInfo.InvariantCulture)
             + ";ortSelected=" + ort.SelectedRegions.ToString(CultureInfo.InvariantCulture)
             + ";ortWorseCer=" + ort.SelectedWorseCerRegions.ToString(CultureInfo.InvariantCulture)
@@ -191,10 +291,18 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
             + ";crossBackendText=" + textMatched.ToString(CultureInfo.InvariantCulture) + "/" + ort.Regions.Count.ToString(CultureInfo.InvariantCulture)
             + ";crossBackendDecision=" + decisionMatched.ToString(CultureInfo.InvariantCulture) + "/" + ort.Regions.Count.ToString(CultureInfo.InvariantCulture)
             + ";output=" + outputPath);
+        if (useFunsd)
+        {
+            Assert.AreEqual(ort.Regions.Count, textMatched, "Original texts must match across the CPU backends.");
+            Assert.AreEqual(ort.Regions.Count, candidateTextsMatched, "Each recipe must preserve cross-backend text parity.");
+            Assert.AreEqual(ort.Regions.Count, finalTextMatched, "Enhanced texts must match across the CPU backends.");
+            Assert.IsTrue(maximumConfidenceDrift <= .001, "All original/candidate confidences must remain within the declared cross-backend tolerance.");
+            Assert.AreEqual(0, unexplainedSelectionDifferences, "Selection-only differences require an observed bounded numerical difference; do not silently accept unexplained policy divergence.");
+        }
     }
 
     private async Task<BackendReport> RunBackendAsync(IReadOnlyList<SroiePage> pages,
-        string detectorPath, string recognizerPath, string dictionaryPath, IReadOnlyList<OcrCropEnhancementOptions> recipes, bool useOpenVino)
+        string detectorPath, string recognizerPath, string dictionaryPath, IReadOnlyList<OcrCropEnhancementOptions> recipes, bool useOpenVino, bool measurePairedCost)
     {
         string backend = useOpenVino ? "openvino" : "onnxruntime";
         string runtime = useOpenVino
@@ -217,7 +325,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
         PaddleOcrModelDescriptor recognizerDescriptor = PaddleOcrModelCatalog.Find(new ModelId(RecognizerModelId));
         PaddleOcrReleaseArtifact detectorRelease = PaddleOcrModelCatalog.GetReleaseArtifact(new ModelId(DetectorModelId));
         PaddleOcrReleaseArtifact recognizerRelease = PaddleOcrModelCatalog.GetReleaseArtifact(new ModelId(RecognizerModelId));
-        OcrCharacterSet characterSet = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "sroie-natural-enhancement-v6-small", "v6-small", true, DictionarySha);
+        OcrCharacterSet characterSet = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "natural-enhancement-v6-small", "v6-small", true, DictionarySha);
         PaddleOcrProfile detector = PaddleOcrModelCatalog.CreateProfile(detectorDescriptor, Artifact(detectorRelease));
         PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerDescriptor, Artifact(recognizerRelease, DictionarySha), characterSet, maximumBatch: 16);
 
@@ -238,6 +346,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
 
         var pageReports = new List<PageReport>(pages.Count);
         var regionReports = new List<RegionReport>(pages.Sum(page => page.Regions.Count));
+        object? pairedCost = null;
         foreach (SroiePage page in pages)
         {
             using PreparedVisualInput probe = new OpenCvVisualInputFactory().CreateFromFile(page.ImagePath, "probe",
@@ -300,6 +409,16 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 pageRows.Count(item => item.CandidateSelected),
                 pageRows.Count(item => item.CandidateSelected && item.CandidateCaseFoldedCer > item.OriginalCaseFoldedCer),
                 pageRows.Count(item => item.CandidateSelected && item.CandidateCaseFoldedWer > item.OriginalCaseFoldedWer)));
+            Console.WriteLine("OCR_SOURCE_ENHANCEMENT_PAGE backend=" + backend + ";page=" + page.ImageId
+                + ";regions=" + pageRows.Count.ToString(CultureInfo.InvariantCulture)
+                + ";elapsedMs=" + timer.Elapsed.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture));
+            if (measurePairedCost)
+            {
+                using var baseline = new OcrPipeline(registry, detectorSelection, request, recognizerSelection, request,
+                    recognizer.CropProfile!, new OcrPipelineOptions(maximumRegions: 512, maximumRecognitionBatch: 16,
+                        maximumSourcePixels: 128L * 1024L * 1024L), new SessionOptions(1), new SessionOptions(1));
+                pairedCost = await MeasurePairedCostAsync(baseline, pipeline, input, page.Regions.Select(item => item.Region).ToArray(), backend).ConfigureAwait(false);
+            }
         }
 
         return new BackendReport(backend, runtime, pageReports, regionReports,
@@ -310,7 +429,72 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
             regionReports.Count(item => item.CandidateSelected && item.CandidateCaseFoldedWer < item.OriginalCaseFoldedWer),
             regionReports.Count(item => item.CandidateSelected && item.CandidateCaseFoldedWer > item.OriginalCaseFoldedWer),
             regionReports.Count(item => item.CandidateSelected && item.CandidateCaseFoldedWer == item.OriginalCaseFoldedWer),
-            Aggregate(regionReports, final: false), Aggregate(regionReports, final: true));
+            Aggregate(regionReports, final: false), Aggregate(regionReports, final: true), pairedCost);
+    }
+
+    private static async Task<object> MeasurePairedCostAsync(OcrPipeline baseline, OcrPipeline enhanced,
+        OpenCvOcrImageInput input, IReadOnlyList<TextRegion> regions, string backend)
+    {
+        const int warmup = 5, measured = 50;
+        string? expectedBaseline = null, expectedEnhanced = null;
+        var samples = new List<PairedCostSample>(measured);
+        for (int iteration = -warmup; iteration < measured; iteration++)
+        {
+            bool baselineFirst = (iteration & 1) == 0;
+            RecognitionMeasurement left, right;
+            if (baselineFirst)
+            {
+                left = await MeasureAsync(baseline).ConfigureAwait(false);
+                right = await MeasureAsync(enhanced).ConfigureAwait(false);
+            }
+            else
+            {
+                right = await MeasureAsync(enhanced).ConfigureAwait(false);
+                left = await MeasureAsync(baseline).ConfigureAwait(false);
+            }
+            expectedBaseline ??= left.Fingerprint;
+            expectedEnhanced ??= right.Fingerprint;
+            Assert.AreEqual(expectedBaseline, left.Fingerprint, "Baseline text/candidate contract changed during paired measurements.");
+            Assert.AreEqual(expectedEnhanced, right.Fingerprint, "Enhanced text/candidate contract changed during paired measurements.");
+            Assert.AreEqual(left.OriginalTextSha256, right.OriginalTextSha256, "Enhanced original recognition must match the separately run no-enhancement baseline.");
+            Assert.AreEqual(0, left.CandidateAttempts, "The paired baseline must disable enhancement.");
+            Assert.AreEqual(regions.Count * 3, right.CandidateAttempts, "This predeclared cost probe must actually execute all three candidate recipes for every word.");
+            if (iteration >= 0)
+                samples.Add(new PairedCostSample(iteration, baselineFirst, left.ElapsedMs, right.ElapsedMs,
+                    right.ElapsedMs - left.ElapsedMs, right.ElapsedMs / left.ElapsedMs, right.CandidateAttempts));
+            if (iteration >= 0 && (iteration + 1) % 10 == 0)
+                Console.WriteLine("OCR_ENHANCEMENT_PAIRED_COST backend=" + backend + ";pairs=" + (iteration + 1).ToString(CultureInfo.InvariantCulture));
+        }
+        return new
+        {
+            warmupPairs = warmup, measuredPairs = measured, regions = regions.Count,
+            baselineFirstPairs = samples.Count(item => item.BaselineFirst), enhancementFirstPairs = samples.Count(item => !item.BaselineFirst),
+            baseline = Describe(samples.Select(item => item.BaselineMs)), enhanced = Describe(samples.Select(item => item.EnhancedMs)),
+            pairedDelta = Describe(samples.Select(item => item.AdditionalMs)), pairedRatio = Describe(samples.Select(item => item.Ratio)),
+            baselineTextContractSha256 = expectedBaseline, enhancedTextContractSha256 = expectedEnhanced,
+            stableMeasuredPairs = samples.Count, samples,
+            boundary = "RecognizeOnlyAsync on a preloaded page and fixed quadrilaterals; independently created single-session baseline and enhanced pipelines, batch 16. Timing includes crop/REC/CTC/retry, excludes page preparation/file I/O/DET/CLS/session setup. No forced GC or clock control; one device and one subset, not quality or a business-cost gate."
+        };
+
+        async Task<RecognitionMeasurement> MeasureAsync(OcrPipeline pipeline)
+        {
+            Stopwatch timer = Stopwatch.StartNew();
+            IReadOnlyList<OcrRegionResult> outputs = await pipeline.RecognizeOnlyAsync(input, regions).ConfigureAwait(false);
+            timer.Stop();
+            Assert.AreEqual(regions.Count, outputs.Count);
+            string original = Sha256(JsonSerializer.Serialize(outputs.Select(item => new { item.Region.SourceIndex,
+                Text = item.EnhancementRetry?.Original.Recognition.Text ?? item.Recognition.Text })));
+            string fingerprint = Sha256(JsonSerializer.Serialize(outputs.Select(item => new { item.Region.SourceIndex,
+                item.Recognition.Text, Original = item.EnhancementRetry?.Original.Recognition.Text,
+                Candidates = item.EnhancementRetry?.Candidates.Select(candidate => candidate.Recognition.Text).ToArray() })));
+            return new RecognitionMeasurement(timer.Elapsed.TotalMilliseconds, original, fingerprint, outputs.Sum(item => item.EnhancementRetry?.Candidates.Count ?? 0));
+        }
+
+        static object Describe(IEnumerable<double> values)
+        {
+            double[] samples = values.ToArray();
+            return new { count = samples.Length, mean = samples.Average(), p50 = Percentile(samples, .5), p95 = Percentile(samples, .95), min = samples.Min(), max = samples.Max() };
+        }
     }
 
     private static string GetOpenVinoRuntimeVersion()
@@ -328,7 +512,20 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 : "unknown";
     }
 
-    private static IReadOnlyList<SroiePage> LoadPages(string datasetRoot, IEnumerable<string> manifestPaths)
+    private static HashSet<string> ReadImageIds(string manifestPath)
+    {
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string line in File.ReadLines(manifestPath))
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            using JsonDocument document = JsonDocument.Parse(line);
+            Assert.IsTrue(ids.Add(document.RootElement.GetProperty("image_id").GetString()!), "Duplicate parent image ID in source manifest.");
+        }
+        return ids;
+    }
+
+    private static IReadOnlyList<SroiePage> LoadPages(string datasetRoot, IEnumerable<string> manifestPaths,
+        string datasetName, string datasetRevision, string datasetSplit)
     {
         var pages = new List<SroiePage>();
         foreach (string manifestPath in manifestPaths)
@@ -339,14 +536,19 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                 using JsonDocument document = JsonDocument.Parse(line);
                 JsonElement root = document.RootElement;
                 if (root.TryGetProperty("record_type", out JsonElement recordType) && recordType.GetString() != "image") continue;
-                string imageId = root.GetProperty("image_id").GetString() ?? throw new InvalidDataException("SROIE manifest image_id is missing.");
-                string relativePath = root.GetProperty("image_relpath").GetString() ?? throw new InvalidDataException("SROIE image_relpath is missing.");
+                Assert.AreEqual(datasetName, root.GetProperty("source_dataset").GetString());
+                Assert.AreEqual(datasetRevision, root.GetProperty("source_revision").GetString());
+                Assert.AreEqual(datasetSplit, root.GetProperty("source_split").GetString());
+                if (datasetName == "FUNSD")
+                    Assert.AreEqual("low_resolution_noisy_scanned_forms_by_source_description", root.GetProperty("dimensions").GetProperty("imaging_quality").GetString());
+                string imageId = root.GetProperty("image_id").GetString() ?? throw new InvalidDataException("Source manifest image_id is missing.");
+                string relativePath = root.GetProperty("image_relpath").GetString() ?? throw new InvalidDataException("Source image_relpath is missing.");
                 string imagePath = RequireFile(Path.Combine(datasetRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
                 string imageSha256 = Sha256File(imagePath);
                 if (root.TryGetProperty("source_provenance", out JsonElement provenance)
                     && provenance.TryGetProperty("image_sha256", out JsonElement expectedImageSha))
                 {
-                    Assert.AreEqual(expectedImageSha.GetString(), imageSha256, "SROIE image SHA-256 differs from the pinned manifest: " + imageId);
+                    Assert.AreEqual(expectedImageSha.GetString(), imageSha256, "Source image SHA-256 differs from the pinned manifest: " + imageId);
                 }
 
                 var regions = new List<LabeledRegion>();
@@ -356,7 +558,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                     string text = instance.GetProperty("text").GetString() ?? string.Empty;
                     if (string.IsNullOrWhiteSpace(text)) continue;
                     JsonElement polygon = instance.GetProperty("polygon");
-                    if (polygon.GetArrayLength() != 4) throw new InvalidDataException("SROIE crop quality requires four-point word polygons.");
+                    if (polygon.GetArrayLength() != 4) throw new InvalidDataException("Source crop quality requires four-point word polygons.");
                     var points = new PointF[4];
                     for (int index = 0; index < points.Length; index++)
                     {
@@ -368,7 +570,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
                     var region = new TextRegion(regions.Count, 1f, quad.Polygon, quad, externalId: instanceId);
                     regions.Add(new LabeledRegion(instanceId, text, region));
                 }
-                if (regions.Count == 0) throw new InvalidDataException("SROIE page contains no usable labelled words: " + imageId);
+                if (regions.Count == 0) throw new InvalidDataException("Source page contains no usable labelled words: " + imageId);
                 pages.Add(new SroiePage(imageId, imagePath, imageSha256, regions));
             }
         }
@@ -514,7 +716,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
 
     private static string RequireFile(string path)
     {
-        if (!File.Exists(path)) Assert.Inconclusive("Required SROIE/model input does not exist: " + path);
+        if (!File.Exists(path)) Assert.Inconclusive("Required source/model input does not exist: " + path);
         return path;
     }
 
@@ -544,5 +746,7 @@ public sealed class PaddleOcrSroieNaturalEnhancementIntegrationTests
     private sealed record BackendReport(string Backend, string Runtime, IReadOnlyList<PageReport> Pages, IReadOnlyList<RegionReport> Regions,
         int SelectedRegions, int SelectedBetterCerRegions, int SelectedWorseCerRegions, int SelectedEqualCerRegions,
         int SelectedBetterWerRegions, int SelectedWorseWerRegions, int SelectedEqualWerRegions,
-        AggregateMetrics Baseline, AggregateMetrics Final);
+        AggregateMetrics Baseline, AggregateMetrics Final, object? PairedCost);
+    private sealed record RecognitionMeasurement(double ElapsedMs, string OriginalTextSha256, string Fingerprint, int CandidateAttempts);
+    private sealed record PairedCostSample(int Iteration, bool BaselineFirst, double BaselineMs, double EnhancedMs, double AdditionalMs, double Ratio, int CandidateAttempts);
 }

@@ -320,6 +320,10 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 ### B2/B3 安全与成本证据
 
+对原始低分辨率噪声扫描图的最新验证见 [FUNSD 自然扫描报告](../../eng/models/paddle-ocr/verification/paddleocr-funsd-natural-low-quality-enhancement-20261023.md)。固定十张测试页与此前 40 页受控增强父图不重叠，共 1,769 个有效词区，未生成退化或调参；ORT/OpenVINO 的原文、全部候选和最终文本全部一致，2 处浮点边界选择元数据差异单独保留。两后端的 CER 编辑数均从 `307/8,582` 增至 `311/8,582`，WER 从 `214/1,775` 增至 `219/1,775`，因此不能将三配方共识视为准确率保证。来源仅给出噪声扫描的整体描述，没有逐图严重度标签。
+
+增强成本现有独立的[配对 5+50 测量](../../eng/models/paddle-ocr/verification/paddleocr-funsd-paired-enhancement-cost-20261023.md)：固定第一页前 16 个词区，独立创建禁用增强和三配方增强 Pipeline，按 AB/BA 交替执行，两后端各 50/50 文本合同稳定。每 16 词调用的 baseline/enhanced P50 为 ORT `69.17/258.29 ms`、OpenVINO `91.53/364.82 ms`；配对耗时比中位数为 `3.68×/3.93×`。这包含 crop、REC、CTC 与重试，不含页面输入准备、DET/CLS；是强制三个候选的成本切片，不是整页时延或生产策略。该 16 词子集 CER/WER 无收益，默认增强继续关闭；更细的自然质量分层、业务字段误纠预算和代表性成本门仍待验收。
+
 增强策略不能只看置信度提升。仓库脚本 `eng/models/paddle-ocr/scripts/Summarize-OcrEnhancementEvidence.py` 可对集成测试输出的逐行 JSON 计算：候选被选中的数量、候选 CER/WER 高于原文的误纠率、全部记录和已选候选的 P50/P95 额外耗时、多后端决策/最终文本一致性，以及共识策略的置信度增益阈值曲线。例如 [2026-10-11 汇总](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-cost-20261011.md) 中，SROIE parent-linked crop 的已选子集没有 CER 变差行，而 FUNSD word-crop 子集有 `5/14` 行 CER 变差（`35.71%`）。这正是保持 `ConfidenceGain` 和 `ConsensusConfidenceGain` 显式 opt-in 的依据；该报告是有标签 crop 的边界诊断，不是页/行级鲁棒性、准确率或默认阈值批准。新增退化数据后应重新生成机器 JSON 与 Markdown，并把最大允许误纠率、延迟预算和有效样本量作为业务决策门，而不是只比较平均置信度。
 
 2026-10-23 又使用 PP-OCRv6 Small，在 SROIE 十页的 542 个带词级真值 crop 上比较 `ContrastNormalize`、`GrayClahe`、`UnsharpMask` 三候选共识；ORT CPU 与 OpenVINO CPU 的原文、候选文本、最终选择和候选索引 `542/542` 一致，但被选择的区域 CER 改善/恶化/相同为 `4/5/344`，WER 为 `3/4/346`，整体 CER/WER 编辑数都各增加 1。之后穷举 ORT `348` 个、OpenVINO `350` 个非空候选置信度增益切点，没有找到同时满足“零 CER 误纠且至少一项 CER 改善”的阈值；零误纠点只保留一两个 CER 持平区域。该事后扫描仅描述此样本，不能用来定生产阈值。此样本是自然来源收据，但数据没有成像质量标签，所以不能称为自然低质量验证；它进一步说明后端一致和置信度共识不等于正确。详见[报告](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.md)和[逐区域 JSON](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.json)。默认增强保持关闭，B1b/B2/B3 门禁未关闭。
@@ -851,7 +855,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 随着核心识别器行级证据补入，另有[2026-10-18 状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.json)。它只补充 v4/v5/v6 七个 REC 工件的 14 组 ORT/OpenVINO 诊断和当前开放门禁，基线索引与增量索引都不改变后端支持状态。
 
-本轮新增的[2026-10-23 质量状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.json)记录了 SROIE 自然来源收据 crop 的三配方增强共识诊断；增强后的 CER/WER 编辑数各增加 1，因此默认增强仍关闭。
+本轮新增的[2026-10-23 质量状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.json)记录了 SROIE 自然来源收据、FUNSD 原始噪声扫描的三配方增强共识诊断，以及独立 16 词选集的配对 5+50 成本。两组选集均未显示固定增强策略的总体 CER/WER 收益，默认增强仍关闭；CPU 成本测量不代替业务质量/延迟预算。
 
 该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。自然连续 `>=3,200` 字符（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。
 
@@ -859,7 +863,7 @@ SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都�
 
 A2 又增加了[当前 OCR benchmark manifest 全量盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)：扫描 `F:\OCRBenchmarkTesting\data\annotations\manifests` 下 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行只有 132 字符、最长单页累计 2,348 字符，`>=3,200` 的自然连续行仍为 `0`。这是数据可用性审计，不是 OCR 准确率结果；页面累计、拼接 crop 和合成文本不能关闭 A2。
 
-进一步的[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)直接扫描官方 validation 标注，以目标识别高度 48 投影出 13 条宽度至少 3,200 像素的自然文本行，分布于 9 张图，最大投影宽度 4,725、最大标注文本长度 182。当前本机没有这 9 张源 JPEG，且所用 Open Images metadata CSV 中没有这些候选 ID，因此尚未执行真实图像裁剪、SlidingWindow、接缝映射或 CER/WER；该结果不能被写成自然 3,200 字符长文本证据。待源图像与合法归因元数据补齐后，按报告中的 manifest/哈希继续执行 ORT/OpenVINO，并在条件满足时补做 TensorRT/OpenCV。
+进一步的[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)直接扫描官方 validation 标注，以目标识别高度 48 投影出 13 条宽度至少 3,200 像素的自然文本行，分布于 9 张图，最大投影宽度 4,725、最大标注文本长度 182。9 张源 JPEG 后续已从官方 CVDF 路径补齐并校验 SHA，且已完成 [ORT/OpenVINO 的真实 SlidingWindow 执行](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md)：两后端各匹配 8/13 候选，匹配行平均 CER 为 `23.57%`，候选文本 `13/13` 一致。所用 Open Images metadata CSV 仍缺这些候选的逐图归因行，图像保留在本机、不随仓库或 Release 分发；宽度像素和 182 字符标注也不能替代自然连续 3,200 字符，A2 继续开放。TensorRT/OpenCV 的此选集执行和更完整的质量验收仍待补充。
 
 为避免把单张演示图当成完整覆盖，固定使用 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg`，对 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 共 7 组 DET+CLS+REC 流水线分别运行 ONNX Runtime CPU 与 OpenVINO CPU。21 个组合在两个后端都完成检测、裁剪、方向、识别和合并；区域数与已识别数逐组合一致，按区域文本序列的 SHA-256 也为 `21/21` 一致。v6 没有独立版本化 CLS 归档，明确复用 PP-OCRv5 mobile CLS。
 
