@@ -195,6 +195,7 @@
     "A2": "Original acceptance uses normalized recognition width >3200 pixels, not 3200 characters. Character-count availability audits remain historical data descriptions; the former character-count gate is superseded."
   },
   "openGates": [
+    "paddleocr-vl-end-to-end-and-backend-validation",
     "A2-natural-width-over-3200px-seam-quality-and-backend-matrix",
     "A3-natural-angle-ground-truth",
     "B1b-B2-B3-natural-degradation-and-enhancement-cost",

@@ -942,7 +942,15 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ## 常见问题
 
+### PaddleOCR-VL 是否已经可用于模型推理
+
+PaddleOCR-VL-1.6 的接入已开始，目前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划；它还不是可直接推理的 Session。官方资产格式和 tokenizer 参考向量已[实际核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，但尚未完成权重推理、ONNX Bundle、C# 生成和跨后端验证。现有 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。完整生成接入后才会加入可下载模型 catalog 与对应后端验证状态。
+
+### 自然宽行有哪些真实后端证据
+
 自然宽行的后端结果可查阅 [OpenCV DNN 真实记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-20261023.md)与 [ORT/OpenVINO 同 DLL 参考](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-cpu-reference-20261023.md)：Small/Medium × Clamp/SlidingWindow × 13 个真值四边形，OpenCV/ORT 的 52 对文本、CTC 发射类别、CER/WER 与接缝决策全部一致，52 个原始窗口文字/类别摘要也一致，详见[跨报告比较](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-parity-20261023.md)。这是绕过 DET/CLS 的识别质量诊断，仍不代表独立准确率或速度排名。[TensorRT 11 同范围尝试](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.md)虽已生成两个 Engine，但原生 enqueue 未完成，结束测试后没有有效结果报告；该精确组合保留未验证，不扩展成整个模型或后端不支持。
+
+### 部署中的常见现象
 
 | 现象 | 处理 |
 | --- | --- |

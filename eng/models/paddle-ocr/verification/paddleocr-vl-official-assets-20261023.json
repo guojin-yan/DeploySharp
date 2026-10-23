@@ -1,0 +1,581 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-official-assets-v1",
+  "generatedUtc": "2026-10-23T09:19:11.745509+00:00",
+  "status": "official-format-and-scalar-geometry-inspected",
+  "repository": "PaddlePaddle/PaddleOCR-VL-1.6",
+  "revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "officialAlgorithmUrl": "https://github.com/PaddlePaddle/PaddleOCR/blob/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/docs/version3.x/algorithm/PaddleOCR-VL/PaddleOCR-VL-1.6.en.md",
+  "scriptSha256": "d2990b81441ce1361853c844677212044a35cf9cca8a08b950c97b8dfd82ac95",
+  "files": [
+    {
+      "fileName": "config.json",
+      "bytes": 2059,
+      "sha256": "ce7f4565f8b1db78532ad5d1b9ebe55c2139d49bd4cb04778b580a08a598f171",
+      "hubObjectId": "c54711466ae75457f8e57b909a49dae570bfa5c5",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/config.json"
+    },
+    {
+      "fileName": "generation_config.json",
+      "bytes": 133,
+      "sha256": "a6701d78ab3b4d972307cdec3b69d4c13f46e0d5140514f50ab7d84259324b94",
+      "hubObjectId": "ba87d71b9881c1d52f0be4286fb63e381ce3febf",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/generation_config.json"
+    },
+    {
+      "fileName": "preprocessor_config.json",
+      "bytes": 641,
+      "sha256": "111872ab1e8bb7fd040ac5087bfced7ab8f011f02139b088cba294964c3b1d0e",
+      "hubObjectId": "d873cd63d04d9e6243999759fc30f7752dab3222",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/preprocessor_config.json"
+    },
+    {
+      "fileName": "processor_config.json",
+      "bytes": 137,
+      "sha256": "1568858960a9760c54431dae693a6152e601ff55cdf6d2eab97a4a99958faea0",
+      "hubObjectId": "033053ac4d8b5de2e47884ce85a6b4939cc58e87",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/processor_config.json"
+    },
+    {
+      "fileName": "tokenizer_config.json",
+      "bytes": 186947,
+      "sha256": "1f979337347cc0cb72a6282d8a23ed183539aa81a87a906f022aee2bab83c7c5",
+      "hubObjectId": "cd9eb7da01a3209f4fb9b3561e04be022cd87764",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/tokenizer_config.json"
+    },
+    {
+      "fileName": "special_tokens_map.json",
+      "bytes": 1151,
+      "sha256": "d3a125c03103deb2acaf7730791bdbbf196f620e5a2213b664511ff9b4b25bab",
+      "hubObjectId": "dcd70aaa8c9987899d7593995546d9c0cfc6a1f3",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/special_tokens_map.json"
+    },
+    {
+      "fileName": "added_tokens.json",
+      "bytes": 25381,
+      "sha256": "f59f889088e0fe21c523e7cf121bb6dca3b0bb148cb7159fbb4572c74dfc5644",
+      "hubObjectId": "6a2790e1462ecb007f9b92dfb00f594701462889",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/added_tokens.json"
+    },
+    {
+      "fileName": "tokenizer.json",
+      "bytes": 11189060,
+      "sha256": "c8a215a59183d0d0781adc33bacd3ce6162716f7fd568fb30234a74d69803a7d",
+      "hubObjectId": "e42528d5cae447340ed0a3e403001c88fe9b0f17",
+      "verifiedAgainst": "lfs-sha256",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/tokenizer.json"
+    },
+    {
+      "fileName": "tokenizer.model",
+      "bytes": 1614363,
+      "sha256": "34ef7db83df785924fb83d7b887b6e822a031c56e15cff40aaf9b982988180df",
+      "hubObjectId": "81e33aa7fdb8ef76fceb1a69f1997021f3056770",
+      "verifiedAgainst": "lfs-sha256",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/tokenizer.model"
+    },
+    {
+      "fileName": "chat_template.jinja",
+      "bytes": 1474,
+      "sha256": "2f27812dab7f333e471884e0c803d807f11953d5453140dfb1aaba234f872bc8",
+      "hubObjectId": "d8b8c271d7a7245d4937098f53aa372cff3dba70",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/chat_template.jinja"
+    },
+    {
+      "fileName": "configuration_paddleocr_vl.py",
+      "bytes": 8104,
+      "sha256": "753dd93654c3a9c8c85a3eaee1e3092dd12591b0f2dce0305e1abfb7a41ff160",
+      "hubObjectId": "a8fd139287293301b287db6dfdaac21d7ad1a236",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/configuration_paddleocr_vl.py"
+    },
+    {
+      "fileName": "image_processing_paddleocr_vl.py",
+      "bytes": 25032,
+      "sha256": "a4fa521b9cb16e207f94b7f2d16427771776dfc634420d319fc4916ee58049ec",
+      "hubObjectId": "f7e28fd3c1971331581f73d573b9c4a2a4ce7a58",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/image_processing_paddleocr_vl.py"
+    },
+    {
+      "fileName": "processing_paddleocr_vl.py",
+      "bytes": 12253,
+      "sha256": "e29cb1e5f275f2bd3ce051bd5c9983a33894e693b2823a0e13d4c07c8c4f9e13",
+      "hubObjectId": "73c3faeff201555fc7b52709848e3c669419dbb1",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/processing_paddleocr_vl.py"
+    },
+    {
+      "fileName": "modeling_paddleocr_vl.py",
+      "bytes": 103889,
+      "sha256": "c5013dff57ca8b87dc1de64d0fd839a44313de09d230a4fb2d08289d2cad5111",
+      "hubObjectId": "693782514116586458b12cfd911c88d6565f552c",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/modeling_paddleocr_vl.py"
+    },
+    {
+      "fileName": "inference.yml",
+      "bytes": 43,
+      "sha256": "1587aece2d6442366efce34161d5f7d5f67f09ebfbf043168e5fade892c2780e",
+      "hubObjectId": "93f88dfb31b6dbc3f529094ccfe26ddec98fa8ad",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/inference.yml"
+    },
+    {
+      "fileName": "LICENSE",
+      "bytes": 11376,
+      "sha256": "b8c4d7deccd236af023af1c88c4d4e8f0fc2f41914e0fb23a3ec9678fb5a8456",
+      "hubObjectId": "0491a00e80b424eb709078b57e35d8b83ffee985",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/LICENSE"
+    },
+    {
+      "fileName": "README.md",
+      "bytes": 21424,
+      "sha256": "d6c5b77a660577f6e18021defccd835bdc93a8c6538f5a479d597f3e94288abf",
+      "hubObjectId": "58e9801f72ad5f992f0fc2e397ccf0fb014e5e5f",
+      "verifiedAgainst": "git-blob-sha1",
+      "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/README.md"
+    }
+  ],
+  "weights": {
+    "fileName": "model.safetensors",
+    "bytes": 1917255968,
+    "officialLfsSha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+    "presentInInspectedDirectory": false,
+    "locallyHashVerified": false,
+    "loadedForInference": false,
+    "sourceUrl": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/resolve/c5630abae1d940eafe0697512a0325494b02ab42/model.safetensors"
+  },
+  "architecture": {
+    "architectures": [
+      "PaddleOCRVLForConditionalGeneration"
+    ],
+    "model_type": "paddleocr_vl",
+    "hidden_size": 1024,
+    "head_dim": 128,
+    "num_hidden_layers": 18,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 2,
+    "vocab_size": 103424,
+    "image_token_id": 100295,
+    "vision_start_token_id": 101305,
+    "vision_end_token_id": 101306,
+    "torch_dtype": "bfloat16",
+    "use_cache": false,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "vision_config": {
+      "architectures": [
+        "PaddleOCRVisionModel"
+      ],
+      "attention_dropout": 0.0,
+      "auto_map": {
+        "AutoConfig": "configuration_paddleocr_vl.PaddleOCRVLConfig",
+        "AutoModel": "modeling_paddleocr_vl.PaddleOCRVisionModel"
+      },
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1152,
+      "image_size": 384,
+      "intermediate_size": 4304,
+      "layer_norm_eps": 1e-06,
+      "model_type": "paddleocr_vl",
+      "num_attention_heads": 16,
+      "num_channels": 3,
+      "num_hidden_layers": 27,
+      "pad_token_id": 0,
+      "patch_size": 14,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2,
+      "tokens_per_second": 2,
+      "torch_dtype": "bfloat16"
+    }
+  },
+  "preprocessor": {
+    "auto_map": {
+      "AutoImageProcessor": "image_processing_paddleocr_vl.PaddleOCRVLImageProcessor",
+      "AutoProcessor": "processing_paddleocr_vl.PaddleOCRVLProcessor"
+    },
+    "do_convert_rgb": true,
+    "do_normalize": true,
+    "do_rescale": true,
+    "do_resize": true,
+    "image_mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "image_processor_type": "PaddleOCRVLImageProcessor",
+    "image_std": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "max_pixels": 1003520,
+    "merge_size": 2,
+    "min_pixels": 112896,
+    "patch_size": 14,
+    "processor_class": "PaddleOCRVLProcessor",
+    "resample": 3,
+    "rescale_factor": 0.00392156862745098,
+    "temporal_patch_size": 1
+  },
+  "generation": {
+    "_from_model_config": true,
+    "eos_token_id": 2,
+    "pad_token_id": 0,
+    "transformers_version": "4.55.0",
+    "use_cache": false
+  },
+  "tokenizer": {
+    "declaredClass": "LlamaTokenizer",
+    "jsonModelType": "BPE",
+    "bosToken": "<s>",
+    "clsToken": "<|begin_of_sentence|>",
+    "eosToken": "</s>",
+    "eosTokenId": 2,
+    "imageToken": "<|IMAGE_PLACEHOLDER|>",
+    "addedTokenCount": 1041
+  },
+  "officialTaskPrompts": {
+    "ocr": "OCR:",
+    "table": "Table Recognition:",
+    "formula": "Formula Recognition:",
+    "chart": "Chart Recognition:",
+    "spotting": "Spotting:",
+    "seal": "Seal Recognition:"
+  },
+  "officialScalarResizeCases": [
+    {
+      "sourceHeight": 1000,
+      "sourceWidth": 700,
+      "status": "geometry-only",
+      "resizedHeight": 1008,
+      "resizedWidth": 700,
+      "gridHeight": 72,
+      "gridWidth": 50,
+      "imagePlaceholderTokens": 900
+    },
+    {
+      "sourceHeight": 700,
+      "sourceWidth": 1000,
+      "status": "geometry-only",
+      "resizedHeight": 700,
+      "resizedWidth": 1008,
+      "gridHeight": 50,
+      "gridWidth": 72,
+      "imagePlaceholderTokens": 900
+    },
+    {
+      "sourceHeight": 48,
+      "sourceWidth": 3200,
+      "status": "geometry-only",
+      "resizedHeight": 56,
+      "resizedWidth": 3192,
+      "gridHeight": 4,
+      "gridWidth": 228,
+      "imagePlaceholderTokens": 228
+    },
+    {
+      "sourceHeight": 10,
+      "sourceWidth": 200,
+      "status": "geometry-only",
+      "resizedHeight": 84,
+      "resizedWidth": 1512,
+      "gridHeight": 6,
+      "gridWidth": 108,
+      "imagePlaceholderTokens": 162
+    },
+    {
+      "sourceHeight": 4032,
+      "sourceWidth": 3024,
+      "status": "geometry-only",
+      "resizedHeight": 1148,
+      "resizedWidth": 840,
+      "gridHeight": 82,
+      "gridWidth": 60,
+      "imagePlaceholderTokens": 1230
+    },
+    {
+      "sourceHeight": 336,
+      "sourceWidth": 336,
+      "status": "geometry-only",
+      "resizedHeight": 336,
+      "resizedWidth": 336,
+      "gridHeight": 24,
+      "gridWidth": 24,
+      "imagePlaceholderTokens": 144
+    },
+    {
+      "sourceHeight": 1,
+      "sourceWidth": 201,
+      "status": "official-helper-rejected",
+      "reason": "absolute aspect ratio must be smaller than 200, got 201.0"
+    }
+  ],
+  "tokenizerReference": {
+    "tokenizersVersion": "0.23.2",
+    "sentencepieceVersion": "0.2.2",
+    "ordinaryTextVectors": [
+      {
+        "text": "OCR:",
+        "tokenIds": [
+          93972,
+          2497,
+          93963
+        ],
+        "decoded": "OCR:"
+      },
+      {
+        "text": "Table Recognition:",
+        "tokenIds": [
+          2567,
+          93514,
+          93963
+        ],
+        "decoded": "Table Recognition:"
+      },
+      {
+        "text": "hello world",
+        "tokenIds": [
+          18830,
+          3135
+        ],
+        "decoded": "hello world"
+      },
+      {
+        "text": "hello  world",
+        "tokenIds": [
+          18830,
+          269,
+          10834
+        ],
+        "decoded": "hello  world"
+      },
+      {
+        "text": " leading\ntext",
+        "tokenIds": [
+          8143,
+          23,
+          679
+        ],
+        "decoded": " leading\ntext"
+      },
+      {
+        "text": "你好，世界！",
+        "tokenIds": [
+          5300,
+          93956,
+          2502,
+          94179
+        ],
+        "decoded": "你好，世界！"
+      },
+      {
+        "text": "公式 x^2 + y^2 = z^2",
+        "tokenIds": [
+          21088,
+          843,
+          94082,
+          5,
+          443,
+          398,
+          94082,
+          5,
+          320,
+          616,
+          94082,
+          5
+        ],
+        "decoded": "公式 x^2 + y^2 = z^2"
+      },
+      {
+        "text": "A\tB\nC",
+        "tokenIds": [
+          93957,
+          22,
+          93978,
+          23,
+          93961
+        ],
+        "decoded": "A\tB\nC"
+      },
+      {
+        "text": "🧪",
+        "tokenIds": [
+          253,
+          172,
+          180,
+          183
+        ],
+        "decoded": "🧪"
+      }
+    ],
+    "taskPromptVectors": [
+      {
+        "task": "ocr",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>OCR:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          93972,
+          2497,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 157,
+        "expandedTokenCsvSha256": "092ce0e351a50b0d889c849c6197813fd05f49c0b102044e4f08e5c1cedeb7b9"
+      },
+      {
+        "task": "table",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Table Recognition:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          2567,
+          93514,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 157,
+        "expandedTokenCsvSha256": "3e457def05be10080deb833c5606f696ad14f72d17c5c7b3a54a022810402872"
+      },
+      {
+        "task": "formula",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Formula Recognition:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          59352,
+          93514,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 157,
+        "expandedTokenCsvSha256": "81fe00f64b54b3ebfde95378405a6207e56e680d6c0eb773aa4b6f262a1e594e"
+      },
+      {
+        "task": "chart",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Chart Recognition:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          17720,
+          93514,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 157,
+        "expandedTokenCsvSha256": "83a95b417ca1ce2b57f5546458c8a72987fbafa3454c0bb1f59f5269e85691e3"
+      },
+      {
+        "task": "spotting",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Spotting:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          4844,
+          31422,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 157,
+        "expandedTokenCsvSha256": "f3fb43150ea24e17078526f453c256dd69c3f27f192d2eb58acaef9c760889dd"
+      },
+      {
+        "task": "seal",
+        "prompt": "<|begin_of_sentence|>User: <|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>Seal Recognition:\nAssistant:\n",
+        "tokenIdsBeforeImageExpansion": [
+          100273,
+          2969,
+          93963,
+          93919,
+          101305,
+          100295,
+          101306,
+          1244,
+          286,
+          93514,
+          93963,
+          23,
+          92267,
+          93963,
+          23
+        ],
+        "imagePlaceholderCount": 144,
+        "expandedTokenCount": 158,
+        "expandedTokenCsvSha256": "2ecfd70000285ec03b85ec06a941d4b50772e35fcf1b1567cf132f3792a150cd"
+      }
+    ],
+    "boundary": "Runs local tokenizer assets, not an official full processor/model. Ordinary-text IDs agree between the two upstream assets; added/special markers use tokenizer.json. C# tokenizer, prompt template application, 3D positions, pixel packing and model generation parity remain untested."
+  },
+  "openItems": [
+    "Official image pixel/patch-packing and tokenizer baseline vectors",
+    "Official real-image greedy generation",
+    "Export vision/projector, embeddings, dynamic prefill and decode-with-past ONNX graphs",
+    "C# tokenizer, multimodal positions, KV ownership and generation limits",
+    "ORT end-to-end parity and quality",
+    "Layout/ROI/multipage pipeline",
+    "Exact OpenVINO/TensorRT/OpenCV tests and backend status",
+    "Release model assets and full user samples"
+  ],
+  "boundary": "Source/config/tokenizer acquisition plus official scalar resize only. Weight LFS SHA is upstream metadata, not locally verified weights. No model is imported or run, no ONNX is exported, no C# inference support/performance/quality/backend claim. Processor temporal_patch_size=1 overrides the vision config value 2; image pixel/packing parity remains untested."
+}

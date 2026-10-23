@@ -60,6 +60,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-parity-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-linux-rtx2060-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md',
