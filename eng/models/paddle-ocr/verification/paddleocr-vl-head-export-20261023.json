@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T11:26:13.226251+00:00",
+  "stage": "head",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "weightSha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+  "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+  "scriptSha256": "5fdb4934551ae4c12296e0576da0088ddcb99b8b4b78821477e8f7ca9cef2e55",
+  "adaptersSha256": "7de57a30890c54788fdeeab40fceb7863d03965a99d6aa4106a8f1fe2acf7a2b",
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "transformers": "5.20.2",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.23.2",
+    "onnxscript": "0.5.6",
+    "numpy": "2.2.6"
+  },
+  "protocol": {
+    "dtype": "float32",
+    "device": "cpu",
+    "threads": 4,
+    "opset": 18,
+    "dynamicBatch": false,
+    "singleUnpaddedImage": true,
+    "rtol": 0.001,
+    "atol": 0.003
+  },
+  "status": "export-and-component-parity-passed",
+  "parity": [
+    {
+      "queryTokens": 1,
+      "shape": [
+        1,
+        1,
+        103424
+      ],
+      "referenceShape": [
+        1,
+        1,
+        103424
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 9.5367431640625e-07,
+      "allClose": true
+    },
+    {
+      "queryTokens": 1,
+      "shape": [
+        1,
+        1,
+        103424
+      ],
+      "referenceShape": [
+        1,
+        1,
+        103424
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 8.642673492431641e-07,
+      "allClose": true
+    },
+    {
+      "queryTokens": 1,
+      "shape": [
+        1,
+        1,
+        103424
+      ],
+      "referenceShape": [
+        1,
+        1,
+        103424
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 8.344650268554688e-07,
+      "allClose": true
+    }
+  ],
+  "boundary": "Python CPU FP32 component export/parity; not a C# generation, quality, performance or multi-backend support claim.",
+  "graph": {
+    "file": "head.onnx",
+    "bytes": 423624923,
+    "sha256": "8663d1fd3f2ca1cf2af308c76fadefcee12e65a6a1f402603a81085daa6d0148",
+    "checker": "passed",
+    "inputs": [
+      {
+        "name": "last_hidden_state",
+        "dtype": 1,
+        "shape": [
+          1,
+          1,
+          1024
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "dtype": 1,
+        "shape": [
+          1,
+          1,
+          103424
+        ]
+      }
+    ],
+    "exportMilliseconds": 4974.558127112687
+  }
+}

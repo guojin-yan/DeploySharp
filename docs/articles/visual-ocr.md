@@ -944,7 +944,7 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 的接入已开始，目前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划，以及 `PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开；它们还不是可直接推理的 Session。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[实际合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual` 的实验性 ONNX Runtime CPU 单图路径。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
 
 ```csharp
 using JYPPX.DeploySharp.Visual;
@@ -955,12 +955,27 @@ var imagePlan = PaddleOcrVlInputPlanning.PlanOfficialV16(
     new VisualSize(imageWidth, imageHeight), PaddleOcrVlTask.TableRecognition);
 PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(imagePlan,
     maximumNewTokens: 512, maximumContextTokens: 8192);
-long[] inputIds = prompt.CopyTokenIds(); // 仅准备输入；尚未调用模型。
+long[] inputIds = prompt.CopyTokenIds(); // 也可用于审查展开后的 Prompt。
 ```
 
-官方权重已取得并校验，远端 CPU FP32 的 [Python 六任务真实图像基线](../../eng/models/paddle-ocr/verification/paddleocr-vl-reference-summary-linux-20261023.md)已生成到 EOS；六图的上游/Transformers PIL 像素和 Patch 逐值一致，公式完整 80 Token 的缓存/非缓存输出一致。该结果属于对照工具，尚未提供本库 C# 模型推理，不能当作正式准确率或速度成绩。
+生产 C# ORT 路径要求调用方先按官方 Processor 准备 RGB、归一化的 `[grid_h, grid_w, 3, 14, 14]` Patch Tensor，然后绑定同一导出批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx` 和 `head.onnx`：
 
-普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。C# 图像像素/位置、ONNX Bundle、完整生成、页面/多页编排和跨后端验收仍在开发；完成实际生成接入后才会加入可下载模型 catalog 与对应后端验证状态。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，不能由输入准备或 Python 对照测试推导完整模型可用。
+```csharp
+using var vl = PaddleOcrVlOnnxSession.Create(
+    registry, bundleDirectory, onnxCpuRequest);
+PaddleOcrVlPreparedInput prepared =
+    new PaddleOcrVlPreparedInput(imagePlan, patchTensor, sourceSha256);
+PaddleOcrVlGenerationResult result = await vl.GenerateAsync(
+    prepared, tokenizer,
+    new PaddleOcrVlGenerationOptions(maximumNewTokens: 512));
+Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
+                  $"{result.FinishReason}, {result.Elapsed.TotalMilliseconds:F1} ms");
+Console.WriteLine(result.Text);
+```
+
+Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
+
+普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前能力仍有明确边界：自动图像解码/缩放/patch 准备、页面和多页 PP-Structure 编排、HTML/坐标结构化结果、OpenVINO/TensorRT/OpenCV/CUDA、GPU 性能、标注集质量和正式 P50/P95 尚未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 
 ### 自然宽行有哪些真实后端证据
 

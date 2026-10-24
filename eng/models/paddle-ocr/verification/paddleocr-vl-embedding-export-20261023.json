@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-10-23T11:24:38.107773+00:00",
+  "stage": "embedding",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "weightSha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+  "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+  "scriptSha256": "5fdb4934551ae4c12296e0576da0088ddcb99b8b4b78821477e8f7ca9cef2e55",
+  "adaptersSha256": "7de57a30890c54788fdeeab40fceb7863d03965a99d6aa4106a8f1fe2acf7a2b",
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "transformers": "5.20.2",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.23.2",
+    "onnxscript": "0.5.6",
+    "numpy": "2.2.6"
+  },
+  "protocol": {
+    "dtype": "float32",
+    "device": "cpu",
+    "threads": 4,
+    "opset": 18,
+    "dynamicBatch": false,
+    "singleUnpaddedImage": true,
+    "rtol": 0.001,
+    "atol": 0.003
+  },
+  "status": "export-and-component-parity-passed",
+  "parity": [
+    {
+      "queryTokens": 1,
+      "shape": [
+        1,
+        1,
+        1024
+      ],
+      "referenceShape": [
+        1,
+        1,
+        1024
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 0.0,
+      "allClose": true
+    },
+    {
+      "queryTokens": 13,
+      "shape": [
+        1,
+        13,
+        1024
+      ],
+      "referenceShape": [
+        1,
+        13,
+        1024
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 0.0,
+      "allClose": true
+    },
+    {
+      "queryTokens": 173,
+      "shape": [
+        1,
+        173,
+        1024
+      ],
+      "referenceShape": [
+        1,
+        173,
+        1024
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 0.0,
+      "allClose": true
+    },
+    {
+      "queryTokens": 337,
+      "shape": [
+        1,
+        337,
+        1024
+      ],
+      "referenceShape": [
+        1,
+        337,
+        1024
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 0.0,
+      "allClose": true
+    },
+    {
+      "queryTokens": 1309,
+      "shape": [
+        1,
+        1309,
+        1024
+      ],
+      "referenceShape": [
+        1,
+        1309,
+        1024
+      ],
+      "sameShape": true,
+      "maximumAbsoluteDifference": 0.0,
+      "allClose": true
+    }
+  ],
+  "boundary": "Python CPU FP32 component export/parity; not a C# generation, quality, performance or multi-backend support claim.",
+  "graph": {
+    "file": "embedding.onnx",
+    "bytes": 423624948,
+    "sha256": "1d268b40696b0f1ebf8ee67f6706a9e2feb3b64b71484d6fa87ec624ff734d86",
+    "checker": "passed",
+    "inputs": [
+      {
+        "name": "input_ids",
+        "dtype": 7,
+        "shape": [
+          1,
+          "query_tokens"
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "inputs_embeds",
+        "dtype": 1,
+        "shape": [
+          1,
+          "query_tokens",
+          1024
+        ]
+      }
+    ],
+    "exportMilliseconds": 3484.1716419905424
+  }
+}
