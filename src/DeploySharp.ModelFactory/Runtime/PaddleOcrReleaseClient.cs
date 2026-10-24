@@ -251,6 +251,7 @@ namespace JYPPX.DeploySharp.ModelFactory
                 paths.Add(artifact.Role, await GetAssetAsync(artifact.AssetName, artifact.Size, artifact.Sha256, progress, cancellationToken).ConfigureAwait(false));
             }
             ValidateChart2TableBundle(bundle);
+            ValidatePaddleOcrVlBundle(bundle);
             return new PaddleOcrReleaseBundleMaterialization(bundle, paths, _root);
         }
 
@@ -382,12 +383,13 @@ namespace JYPPX.DeploySharp.ModelFactory
                         string sha = Required(artifact, "sha256").ToLowerInvariant();
                         if (!roles.Add(role) || !names.Add(assetName)) throw new FormatException("Bundle artifact roles and asset filenames must be unique.");
                         if (size <= 0 || sha.Length != 64 || !sha.All(Uri.IsHexDigit)) throw new FormatException("A bundle artifact must declare a positive size and valid SHA-256.");
-                        if (format != "onnx" && format != "tiktoken" && format != "json") throw new FormatException("The release bundle declares an unsupported artifact format: " + format);
+                        if (format != "onnx" && format != "tiktoken" && format != "json" && format != "sentencepiece" && format != "jinja") throw new FormatException("The release bundle declares an unsupported artifact format: " + format);
                         if (format == "onnx" && !assetModelId.StartsWith(modelId + "/", StringComparison.Ordinal)) throw new FormatException("ONNX graph model IDs must be nested below the bundle model ID.");
                         parsed.Add(new PaddleOcrReleaseBundleArtifact(role, assetModelId, assetName, format, size, sha));
                     }
                     var result = new PaddleOcrReleaseBundle(bundleId, modelId, parsed);
                     ValidateChart2TableBundle(result);
+                    ValidatePaddleOcrVlBundle(result);
                     return result;
                 }
             }
@@ -402,6 +404,31 @@ namespace JYPPX.DeploySharp.ModelFactory
             string[] graphRoles = { "vision-projector", "token-embedding", "text-prefill", "text-decode-with-past" };
             if (graphRoles.Any(role => bundle.Artifacts.First(value => value.Role == role).Format != "onnx")) throw new FormatException("All PP-Chart2Table graph artifacts must use ONNX format.");
             if (bundle.Artifacts.First(value => value.Role == "qwen-tokenizer").Format != "tiktoken" || bundle.Artifacts.Where(value => value.Role == "tokenizer-config" || value.Role == "added-tokens").Any(value => value.Format != "json")) throw new FormatException("PP-Chart2Table tokenizer assets have invalid formats.");
+        }
+
+        private static void ValidatePaddleOcrVlBundle(PaddleOcrReleaseBundle bundle)
+        {
+            if (!string.Equals(bundle.ModelId, "paddleocr-vl/1.6", StringComparison.Ordinal)) return;
+            string[] required = { "vision", "embedding", "decoder", "head", "tokenizer-model", "tokenizer-json", "tokenizer-config", "chat-template", "manifest" };
+            if (bundle.Artifacts.Count != required.Length || required.Any(role => !bundle.Artifacts.Any(value => string.Equals(value.Role, role, StringComparison.Ordinal))))
+                throw new FormatException("The PaddleOCR-VL 1.6 release bundle must contain four ONNX graphs, four tokenizer files, and one manifest.");
+            foreach (string role in new[] { "vision", "embedding", "decoder", "head" })
+            {
+                PaddleOcrReleaseBundleArtifact artifact = bundle.Artifacts.First(value => value.Role == role);
+                if (artifact.Format != "onnx" || !string.Equals(artifact.AssetName, role + ".onnx", StringComparison.Ordinal)) throw new FormatException("PaddleOCR-VL graph role has an invalid file or format: " + role);
+            }
+            CheckPaddleOcrVlArtifact(bundle, "tokenizer-model", "tokenizer.model", "sentencepiece");
+            CheckPaddleOcrVlArtifact(bundle, "tokenizer-json", "tokenizer.json", "json");
+            CheckPaddleOcrVlArtifact(bundle, "tokenizer-config", "tokenizer_config.json", "json");
+            CheckPaddleOcrVlArtifact(bundle, "chat-template", "chat_template.jinja", "jinja");
+            CheckPaddleOcrVlArtifact(bundle, "manifest", "paddleocr-vl-bundle.json", "json");
+        }
+
+        private static void CheckPaddleOcrVlArtifact(PaddleOcrReleaseBundle bundle, string role, string assetName, string format)
+        {
+            PaddleOcrReleaseBundleArtifact artifact = bundle.Artifacts.First(value => value.Role == role);
+            if (!string.Equals(artifact.AssetName, assetName, StringComparison.Ordinal) || !string.Equals(artifact.Format, format, StringComparison.Ordinal))
+                throw new FormatException("PaddleOCR-VL role has an invalid file or format: " + role);
         }
 
         private static void AddRows(JsonElement root, string property, string family, List<PaddleOcrReleaseModel> result)

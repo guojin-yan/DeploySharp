@@ -111,6 +111,40 @@ namespace DeploySharp.ModelFactory.Tests
             }
         }
 
+        [TestMethod]
+        public async Task DownloadsAndValidatesPaddleOcrVlBundleWithManifestAndTokenizerSidecars()
+        {
+            var artifactRows = new[]
+            {
+                (Role: "vision", Name: "vision.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("vision")),
+                (Role: "embedding", Name: "embedding.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("embedding")),
+                (Role: "decoder", Name: "decoder.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("decoder")),
+                (Role: "head", Name: "head.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("head")),
+                (Role: "tokenizer-model", Name: "tokenizer.model", Format: "sentencepiece", Bytes: Encoding.UTF8.GetBytes("sentencepiece")),
+                (Role: "tokenizer-json", Name: "tokenizer.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{}")),
+                (Role: "tokenizer-config", Name: "tokenizer_config.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{}")),
+                (Role: "chat-template", Name: "chat_template.jinja", Format: "jinja", Bytes: Encoding.UTF8.GetBytes("template")),
+                (Role: "manifest", Name: "paddleocr-vl-bundle.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{}"))
+            };
+            string rows = string.Join(",", artifactRows.Select(value => "{\"role\":\"" + value.Role + "\",\"modelId\":\"" + (value.Format == "onnx" ? "paddleocr-vl/1.6/" + value.Role : "paddleocr-vl/1.6") + "\",\"assetName\":\"" + value.Name + "\",\"format\":\"" + value.Format + "\",\"size\":" + value.Bytes.Length + ",\"sha256\":\"" + Hash(value.Bytes) + "\"}"));
+            string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[],\"bundles\":[{\"bundleId\":\"paddleocr-vl/1.6\",\"modelId\":\"paddleocr-vl/1.6\",\"artifacts\":[" + rows + "]}]}";
+            var responses = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["paddleocr-release-catalog.json"] = Encoding.UTF8.GetBytes(catalog)
+            };
+            foreach (var artifact in artifactRows) responses.Add(artifact.Name, artifact.Bytes);
+            using var directory = new TestDirectory();
+            using (var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(new StaticHandler(responses))))
+            {
+                PaddleOcrReleaseBundleMaterialization bundle = await client.GetBundleAsync("paddleocr-vl/1.6");
+                Assert.AreEqual(9, bundle.Bundle.Artifacts.Count);
+                Assert.AreEqual("vision.onnx", Path.GetFileName(bundle.GetRequiredPath("vision")));
+                Assert.AreEqual("tokenizer.model", Path.GetFileName(bundle.GetRequiredPath("tokenizer-model")));
+                Assert.AreEqual("paddleocr-vl-bundle.json", Path.GetFileName(bundle.GetRequiredPath("manifest")));
+                CollectionAssert.AreEqual(artifactRows[6].Bytes, File.ReadAllBytes(bundle.GetRequiredPath("tokenizer-config")));
+            }
+        }
+
         private static string Hash(byte[] bytes)
         {
             using var sha = SHA256.Create();

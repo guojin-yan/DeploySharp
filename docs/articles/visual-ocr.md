@@ -974,9 +974,12 @@ Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
 Console.WriteLine(result.Text);
 ```
 
+如果 Bundle 来自 Release 或共享缓存，建议先调用 `PaddleOcrVlBundleManifest.LoadFromDirectory(bundleDirectory).VerifyFiles(bundleDirectory)`，再创建会话。`PaddleOcrVlOnnxSession.CreateVerified` 会在创建四个后端 Session 前校验固定 revision、四图和四个 tokenizer sidecar 的文件名、格式、大小与 SHA-256；`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 会按九个独立资产下载同一 Bundle。仓库内的 `Write-PaddleOcrVlBundleManifest.py` 可在真实图目录和官方 tokenizer 目录存在时生成本地 Bundle 与 manifest；当前 Release 尚未上传这些大体积 ONNX 文件。
+
 Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
 
 普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前能力仍有明确边界：页面和多页 PP-Structure 编排、HTML/坐标结构化结果、OpenVINO/TensorRT/OpenCV DNN/CUDA、GPU 性能、标注集质量和正式 P50/P95 尚未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。
 
 ### 自然宽行有哪些真实后端证据
 

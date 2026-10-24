@@ -25,6 +25,8 @@
 | 可提示分割 | SAM v1 | 点、框、掩码提示 | SAM2/SAM3 不属于当前公开 Preview。 |
 | 本地 LLM | Qwen2.5 0.5B Instruct GGUF | 文本生成、流式、Embedding | 需要应用提供 LLamaSharp 原生运行时。 |
 
+PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；实际四张 ONNX 图和 tokenizer 资产加入 `models-paddleocr` Release 后，才会把下载状态从“待加入 Release”更新为可下载。页面/多页编排与其它后端仍按实测矩阵逐项记录。
+
 精确模型 ID、下载入口、工件格式和发布版本见[官方模型目录](model-catalog.md)；每个模型与后端的真实验证结果见[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
 
 ## 如何阅读一个模型条目
