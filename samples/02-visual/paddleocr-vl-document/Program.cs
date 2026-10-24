@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -28,8 +29,14 @@ internal static class Program
         string manifestPath = Path.GetFullPath(args[2]);
         DocumentSpec spec = JsonSerializer.Deserialize<DocumentSpec>(File.ReadAllText(manifestPath),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidDataException("Empty document manifest.");
-        if (!Enum.TryParse(spec.Task, true, out PaddleOcrVlTask task) || !Enum.IsDefined(typeof(PaddleOcrVlTask), task))
+        bool automaticTasks = string.Equals(spec.Task, "Auto", StringComparison.OrdinalIgnoreCase);
+        PaddleOcrVlTask task = default;
+        if (!automaticTasks && (!Enum.TryParse(spec.Task, true, out task) || !Enum.IsDefined(typeof(PaddleOcrVlTask), task)))
             throw new InvalidDataException("Unknown VL task.");
+        var overrides = spec.TaskByCategory?.Select(mapping => new KeyValuePair<string, PaddleOcrVlTask?>(mapping.Key, ParseOptionalTask(mapping.Value)));
+        PaddleOcrVlTaskRouter router = PaddleOcrVlTaskRouter.CreatePpStructure(overrides, ParseOptionalTask(spec.UnmatchedCategoryTask));
+        if (!automaticTasks && (spec.TaskByCategory != null || spec.UnmatchedCategoryTask != null))
+            throw new InvalidDataException("Category routing options require task=Auto.");
         if (spec.Pages.Length == 0 || spec.Pages.Select(page => page.PageIndex).Distinct().Count() != spec.Pages.Length)
             throw new InvalidDataException("Pages must be nonempty and have unique pageIndex values.");
         int parallelism = args.Length == 5 ? int.Parse(args[4], CultureInfo.InvariantCulture) : 1;
@@ -51,7 +58,8 @@ internal static class Program
         var layoutModel = new PaddleDocumentModelDescriptor("application/manual-regions", "Caller-supplied regions",
             PaddleDocumentModule.LayoutDetection, "https://github.com/guojin-yan/DeploySharp", "page-rectangles");
         var vlModel = new PaddleDocumentModelDescriptor("paddleocr-vl/1.6", "PaddleOCR-VL-1.6",
-            PaddleDocumentVisionLanguageResult.ModuleForTask(task), "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6", "onnx");
+            automaticTasks ? PaddleDocumentModule.VisionLanguageParsing : PaddleDocumentVisionLanguageResult.ModuleForTask(task),
+            "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6", "onnx");
         var layout = new PaddleDocumentPipelineStage(PaddleDocumentModule.LayoutDetection, (context, token) =>
         {
             token.ThrowIfCancellationRequested();
@@ -61,10 +69,12 @@ internal static class Program
                 input.Spec.Regions.Select(region => new PaddleDocumentRegion(region.Category, 1f,
                     new RectangleF(region.X, region.Y, region.Width, region.Height)))));
         });
-        var vl = OpenCvPaddleOcrVlRegionStage.FromSession(vlModel, "onnxruntime-cpu", task, session, tokenizer,
-            page => ((PageInput)page.Source).Source,
-            new PaddleOcrVlGenerationOptions(maximumNewTokens: spec.MaximumNewTokens, timeout: TimeSpan.FromMinutes(15)),
-            continueOnRegionFailure: true);
+        var generationOptions = new PaddleOcrVlGenerationOptions(maximumNewTokens: spec.MaximumNewTokens, timeout: TimeSpan.FromMinutes(15));
+        IPaddleDocumentPipelineStage vl = automaticTasks
+            ? OpenCvPaddleOcrVlLayoutStage.FromSession(vlModel, "onnxruntime-cpu", router, session, tokenizer,
+                page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true)
+            : OpenCvPaddleOcrVlRegionStage.FromSession(vlModel, "onnxruntime-cpu", task, session, tokenizer,
+                page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true);
         var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { layout, vl });
         var results = parallelism == 1
             ? await pipeline.RunManyAsync(pages, cancellation.Token)
@@ -75,11 +85,32 @@ internal static class Program
             int index = result.Page.PageIndex;
             File.WriteAllText(Path.Combine(output, "page-" + index + ".json"), PaddleDocumentPipelineExport.ToJson(result));
             File.WriteAllText(Path.Combine(output, "page-" + index + ".md"), PaddleDocumentPipelineExport.ToMarkdown(result));
-            PaddleDocumentVisionLanguagePageResult generated = result.GetRequired<PaddleDocumentVisionLanguagePageResult>(vl.Module);
-            incomplete |= generated.FailedCount > 0 || generated.Executions.Any(region => region.Result?.FinishReason != GenerationFinishReason.EndOfSequence);
-            Console.WriteLine($"page={index} succeeded={generated.SucceededCount} failed={generated.FailedCount}");
+            int succeeded, failed, skipped;
+            IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions;
+            if (automaticTasks)
+            {
+                var generated = result.GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(vl.Module);
+                succeeded = generated.SucceededCount; failed = generated.FailedCount; skipped = generated.SkippedCount;
+                executions = generated.Executions;
+            }
+            else
+            {
+                var generated = result.GetRequired<PaddleDocumentVisionLanguagePageResult>(vl.Module);
+                succeeded = generated.SucceededCount; failed = generated.FailedCount; skipped = 0;
+                executions = generated.Executions;
+            }
+            incomplete |= failed > 0 || executions.Any(region => !region.Skipped && region.Result?.FinishReason != GenerationFinishReason.EndOfSequence);
+            Console.WriteLine($"page={index} succeeded={succeeded} failed={failed} skipped={skipped}");
         }
         return incomplete ? 1 : 0;
+    }
+
+    private static PaddleOcrVlTask? ParseOptionalTask(string? value)
+    {
+        if (value == null) return null;
+        if (!Enum.TryParse(value, true, out PaddleOcrVlTask task) || !Enum.IsDefined(typeof(PaddleOcrVlTask), task))
+            throw new InvalidDataException("Unknown routed VL task: " + value);
+        return task;
     }
 
     private sealed record PageInput(OpenCvImageSource Source, PageSpec Spec);
@@ -87,6 +118,8 @@ internal static class Program
     {
         public string Task { get; set; } = "TextRecognition";
         public int MaximumNewTokens { get; set; } = 512;
+        public Dictionary<string, string?>? TaskByCategory { get; set; }
+        public string? UnmatchedCategoryTask { get; set; }
         public PageSpec[] Pages { get; set; } = Array.Empty<PageSpec>();
     }
     private sealed class PageSpec

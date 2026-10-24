@@ -118,6 +118,17 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (result is PaddleDocumentSealResult seal)
                 return new { maskWidth = seal.MaskWidth, maskHeight = seal.MaskHeight };
 #if NET8_0 || NET9_0 || NET10_0
+            if (result is PaddleDocumentVisionLanguageRoutedPageResult routedPage)
+                return new
+                {
+                    routing = "layout-category",
+                    succeededCount = routedPage.SucceededCount,
+                    failedCount = routedPage.FailedCount,
+                    skippedCount = routedPage.SkippedCount,
+                    coordinatesAvailable = routedPage.CoordinatesAvailable,
+                    spatialOutputStatus = routedPage.SpatialOutputStatus,
+                    regions = routedPage.Executions.Select(ToVisionLanguageExecutionObject).ToArray()
+                };
             if (result is PaddleDocumentVisionLanguagePageResult visionLanguagePage)
                 return new
                 {
@@ -126,23 +137,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     failedCount = visionLanguagePage.FailedCount,
                     coordinatesAvailable = visionLanguagePage.CoordinatesAvailable,
                     spatialOutputStatus = visionLanguagePage.SpatialOutputStatus,
-                    regions = visionLanguagePage.Executions.Select(execution => new
-                    {
-                        regionIndex = execution.RegionIndex,
-                        source = ToRegionObject(execution.SourceRegion),
-                        succeeded = execution.Succeeded,
-                        failureType = execution.FailureType,
-                        failureMessage = execution.FailureMessage,
-                        result = execution.Result == null ? null : new
-                        {
-                            text = execution.Result.Text,
-                            tokenIds = execution.Result.TokenIds.ToArray(),
-                            finishReason = execution.Result.FinishReason.ToString(),
-                            inputSha256 = execution.Result.Metadata.InputSha256,
-                            elapsedMs = execution.Result.Metadata.Elapsed.TotalMilliseconds,
-                            warnings = execution.Result.Warnings.ToArray()
-                        }
-                    }).ToArray()
+                    regions = visionLanguagePage.Executions.Select(ToVisionLanguageExecutionObject).ToArray()
                 };
             if (result is PaddleDocumentVisionLanguageResult visionLanguage)
                 return new
@@ -177,6 +172,22 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             else if (result is PaddleDocumentSealResult seal)
                 builder.Append("- Seal mask: ").Append(seal.MaskWidth).Append('x').AppendLine(seal.MaskHeight.ToString());
 #if NET8_0 || NET9_0 || NET10_0
+            else if (result is PaddleDocumentVisionLanguageRoutedPageResult routedPage)
+            {
+                builder.AppendLine("- VL tasks: selected by layout category (original layout order)");
+                builder.Append("- Regional success/failure/skipped: ").Append(routedPage.SucceededCount).Append('/').Append(routedPage.FailedCount).Append('/').Append(routedPage.SkippedCount).AppendLine();
+                builder.Append("- Coordinates: ").AppendLine(routedPage.SpatialOutputStatus);
+                foreach (PaddleDocumentVisionLanguageRegionExecution execution in routedPage.Executions)
+                {
+                    builder.Append("- Region ").Append(execution.RegionIndex).Append(" / ").Append(execution.Task?.ToString() ?? "no-task").Append(" / ").Append(execution.Status).Append(": ");
+                    if (execution.Result != null)
+                    {
+                        builder.Append(execution.Result.FinishReason).AppendLine().AppendLine();
+                        AppendRawText(builder, execution.Result.Text);
+                    }
+                    else builder.AppendLine(execution.Skipped ? execution.SkipReason : execution.FailureMessage);
+                }
+            }
             else if (result is PaddleDocumentVisionLanguagePageResult visionLanguagePage)
             {
                 builder.Append("- VL task: `").Append(visionLanguagePage.Task).AppendLine("` (regional routing)");
@@ -207,6 +218,34 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         }
 
 #if NET8_0 || NET9_0 || NET10_0
+        private static object ToVisionLanguageExecutionObject(PaddleDocumentVisionLanguageRegionExecution execution)
+            => new
+            {
+                regionIndex = execution.RegionIndex,
+                source = ToRegionObject(execution.SourceRegion),
+                task = execution.Task?.ToString(),
+                status = execution.Status.ToString(),
+                succeeded = execution.Succeeded,
+                skipped = execution.Skipped,
+                skipReason = execution.SkipReason,
+                failureType = execution.FailureType,
+                failureMessage = execution.FailureMessage,
+                result = execution.Result == null ? null : new
+                {
+                    task = execution.Result.Task.ToString(),
+                    module = execution.Result.Module.ToString(),
+                    modelId = execution.Result.Metadata.Model.ModelId,
+                    backend = execution.Result.Metadata.Backend,
+                    pageIndex = execution.Result.Metadata.PageIndex,
+                    text = execution.Result.Text,
+                    tokenIds = execution.Result.TokenIds.ToArray(),
+                    finishReason = execution.Result.FinishReason.ToString(),
+                    inputSha256 = execution.Result.Metadata.InputSha256,
+                    elapsedMs = execution.Result.Metadata.Elapsed.TotalMilliseconds,
+                    warnings = execution.Result.Warnings.ToArray()
+                }
+            };
+
         private static void AppendRawText(StringBuilder builder, string text)
         {
             // Keep HTML-looking model tokens and Markdown literal. A model-emitted

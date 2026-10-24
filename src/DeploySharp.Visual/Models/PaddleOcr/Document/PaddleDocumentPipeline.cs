@@ -137,7 +137,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             PaddleDocumentModule.TableStructureRecognition,
             PaddleDocumentModule.FormulaRecognition,
             PaddleDocumentModule.SealTextDetection,
-            PaddleDocumentModule.ChartParsing
+            PaddleDocumentModule.ChartParsing,
+            PaddleDocumentModule.TextRecognition,
+            PaddleDocumentModule.VisionLanguageParsing
         };
 
         private readonly IReadOnlyList<IPaddleDocumentPipelineStage> _stages;

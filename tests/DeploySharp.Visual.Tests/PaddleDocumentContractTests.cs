@@ -21,7 +21,8 @@ namespace DeploySharp.Visual.Tests
         public void OfficialCatalogCoversStructureModulesWithoutClaimingRuntimeSupport()
         {
             Assert.IsTrue(PaddleDocumentModelCatalog.Official.Count >= 28);
-            Assert.IsTrue(Enum.GetValues<PaddleDocumentModule>().All(module => module == PaddleDocumentModule.StructurePipeline || PaddleDocumentModelCatalog.Official.Any(model => model.Module == module)));
+            Assert.IsTrue(Enum.GetValues<PaddleDocumentModule>().All(module => module == PaddleDocumentModule.StructurePipeline
+                || module == PaddleDocumentModule.VisionLanguageParsing || PaddleDocumentModelCatalog.Official.Any(model => model.Module == module)));
             Assert.IsTrue(PaddleDocumentModelCatalog.Official
                 .Where(model => model.ModelId != "paddle-chart/pp-chart2table")
                 .All(model => model.Status == PaddleDocumentArtifactStatus.Catalogued));

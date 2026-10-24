@@ -48,7 +48,8 @@ namespace DeploySharp.Visual.Tests
         {
             foreach (PaddleDocumentModule module in Enum.GetValues<PaddleDocumentModule>())
             {
-                if (module == PaddleDocumentModule.StructurePipeline) continue;
+                // Aggregate routing modules do not represent an independently downloadable detector/decoder.
+                if (module == PaddleDocumentModule.StructurePipeline || module == PaddleDocumentModule.VisionLanguageParsing) continue;
                 Assert.IsTrue(PaddleDocumentModelCatalog.ForModule(module).Count > 0, "Missing catalog module: " + module);
             }
 

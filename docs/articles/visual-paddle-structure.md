@@ -365,7 +365,37 @@ PaddleDocumentPipelineResult actualPage = await pipeline.RunAsync(pageInput, can
 
 [Linux CPU 区域验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)从同一官方表格 RGB 拼成两张 PNG 页面，运行三个手工区域。Patch 及 `213` Token/文本全部一致、全部 EOS，并检查页码 7→3 及页面内的调用方区域顺序。该记录验证实际裁剪与页面编排，不等于独立多页质量、自动版面检测或阅读顺序验证。
 
-区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，不是 PaddleOCR-VL 模型返回的 spotting 坐标；`CoordinatesAvailable` 仍为 `false`。该阶段不会自动生成表格 HTML、单元格、公式语义、图表结构或模型坐标。一个阶段对所有布局区域执行同一任务，category 不自动选择任务；混合页面先由调用方按任务分组，通用委托路径仍可实现其它裁剪策略。
+区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，不是 PaddleOCR-VL 模型返回的 spotting 坐标；`CoordinatesAvailable` 仍为 `false`。该阶段不会自动生成表格 HTML、单元格、公式语义、图表结构或模型坐标。`PaddleOcrVlRegionStage` 保留“所有区域运行同一任务”的语义；混合页面使用 `PaddleOcrVlLayoutStage`，或它的 OpenCV 单次解码适配器 `OpenCvPaddleOcrVlLayoutStage`：
+
+```csharp
+var mixedModel = new PaddleDocumentModelDescriptor(
+    "paddleocr-vl/1.6", "PaddleOCR-VL-1.6",
+    PaddleDocumentModule.VisionLanguageParsing,
+    "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6", "onnx");
+var router = PaddleOcrVlTaskRouter.CreatePpStructure(
+    new Dictionary<string, PaddleOcrVlTask?> {
+        ["spotting"] = PaddleOcrVlTask.TextSpotting,
+        ["header"] = null // 应用决定忽略页眉。
+    });
+var mixedStage = OpenCvPaddleOcrVlLayoutStage.FromSession(
+    mixedModel, "onnxruntime-cpu", router, vlSession, vlTokenizer,
+    page => (OpenCvImageSource)page.Source,
+    generationOptions, continueOnRegionFailure: true);
+var mixedPage = await new PaddleDocumentPipeline(
+    new IPaddleDocumentPipelineStage[] { layoutStage, mixedStage })
+    .RunAsync(pageInput, cancellationToken);
+var mixed = mixedPage.GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(
+    PaddleDocumentModule.VisionLanguageParsing);
+foreach (var region in mixed.Executions)
+    Console.WriteLine($"{region.RegionIndex}: {region.Task} / {region.Status} / " +
+        (region.Result?.Text ?? region.SkipReason ?? region.FailureMessage));
+```
+
+`CreatePpStructure` 按现有版面标签选择任务：文字/标题类 → OCR，`table` → 表格，`formula` → 公式，`chart` → 图表，`seal` → 印章。类别匹配忽略大小写和两端空白。图片类及未知类默认跳过；可覆盖映射，也可通过 `unmatchedCategoryTask` 为未知类配置任务。显式 `null` 映射的优先级更高，始终跳过该类别；Spotting 需应用明确配置，不根据图片类别猜测。路由器复制配置后只读，可供并发页面共享。
+
+[Linux 混合页面实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)验证两张无损拼接 PNG 上的六个任务区域和两个跳过项：全部 Patch、765 Token/文本与固定官方参考一致且 EOS，页码/区域索引不变。该集成测试使用手工版面输入，不是自动版面模型、独立多页质量或正式性能结论。
+
+混合结果保留全部原版面区域和索引，分别统计 `SucceededCount`、`FailedCount`、`SkippedCount`；跳过项不准备 Patch、不执行生成、不伪造空文本。单区域失败保留已选任务，成功结果的模型模块按实际任务设置，页面聚合模块为 `VisionLanguageParsing`。`Succeeded` 表示生成返回结果，仍须检查 `FinishReason`，`MaxTokens` 可能意味着截断。JSON/Markdown 导出保留任务、状态、源框和原文。它沿用输入顺序，不重新排序，也不会识别没有检测出的区域。[多页示例](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)提供 `task=Auto` 的完整 manifest。
 
 同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux ORT CPU 已有六任务单图生成证据；OpenVINO、TensorRT、CUDA、OpenCV DNN 推理、页面级质量和正式性能矩阵不能由这个适配器自动获得。
 

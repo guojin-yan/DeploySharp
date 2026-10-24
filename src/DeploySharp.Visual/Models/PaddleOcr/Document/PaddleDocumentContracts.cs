@@ -20,7 +20,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         SealTextDetection = 7,
         ChartParsing = 8,
         StructurePipeline = 9,
-        TextRecognition = 10
+        TextRecognition = 10,
+        /// <summary>Routes layout regions to task-specific vision-language generation. / 将版面区域路由到对应的视觉语言生成任务。</summary>
+        VisionLanguageParsing = 11
     }
 
     /// <summary>Describes the artifact format currently available for a Paddle document model. / 描述 Paddle 文档模型当前可用的工件格式。</summary>

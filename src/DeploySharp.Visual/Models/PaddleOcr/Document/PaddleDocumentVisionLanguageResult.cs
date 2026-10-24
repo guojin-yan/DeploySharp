@@ -79,7 +79,18 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         }
     }
 
-    /// <summary>Describes one routed VL region, including an isolated failure when configured to continue. / 描述一个路由后的 VL 区域，并在允许继续时保留隔离失败。</summary>
+    /// <summary>Identifies a completed, failed or intentionally skipped VL region. / 标识成功、失败或主动跳过的 VL 区域。</summary>
+    public enum PaddleDocumentVisionLanguageRegionStatus
+    {
+        /// <summary>Generation returned a result; inspect its finish reason for truncation. / 生成已返回结果，需检查是否截断。</summary>
+        Succeeded,
+        /// <summary>The configured execution failed. / 配置的执行失败。</summary>
+        Failed,
+        /// <summary>No task was selected for this region. / 未为该区域选择任务。</summary>
+        Skipped
+    }
+
+    /// <summary>Describes one routed VL region, including isolated failures and explicit skips. / 描述一个路由后的 VL 区域，包含隔离失败和明确跳过。</summary>
     public sealed class PaddleDocumentVisionLanguageRegionExecution
     {
         /// <summary>Creates a successful routed region execution. / 创建成功的区域执行记录。</summary>
@@ -91,6 +102,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (result.RegionIndex != regionIndex) throw new ArgumentException("The VL result region index does not match the execution record.", nameof(result));
             if (result.SourceRegion != sourceRegion) throw new ArgumentException("The VL result source region does not match the execution record.", nameof(result));
             RegionIndex = regionIndex;
+            Task = result.Task;
+            Status = PaddleDocumentVisionLanguageRegionStatus.Succeeded;
         }
 
         /// <summary>Creates an isolated failed region execution. / 创建一个被隔离的失败区域执行记录。</summary>
@@ -103,7 +116,30 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             RegionIndex = regionIndex;
             FailureType = failureType;
             FailureMessage = failureMessage;
+            Status = PaddleDocumentVisionLanguageRegionStatus.Failed;
         }
+
+        /// <summary>Creates a failed region with its selected task preserved. / 创建保留已选任务的失败区域。</summary>
+        public PaddleDocumentVisionLanguageRegionExecution(int regionIndex, PaddleDocumentRegion sourceRegion, PaddleOcrVlTask task, string failureType, string failureMessage)
+            : this(regionIndex, sourceRegion, failureType, failureMessage)
+        {
+            if (!Enum.IsDefined(typeof(PaddleOcrVlTask), task)) throw new ArgumentOutOfRangeException(nameof(task));
+            Task = task;
+        }
+
+        private PaddleDocumentVisionLanguageRegionExecution(int regionIndex, PaddleDocumentRegion sourceRegion, string skipReason)
+        {
+            if (regionIndex < 0) throw new ArgumentOutOfRangeException(nameof(regionIndex));
+            SourceRegion = sourceRegion ?? throw new ArgumentNullException(nameof(sourceRegion));
+            if (string.IsNullOrWhiteSpace(skipReason)) throw new ArgumentException("A skip reason is required.", nameof(skipReason));
+            RegionIndex = regionIndex;
+            Status = PaddleDocumentVisionLanguageRegionStatus.Skipped;
+            SkipReason = skipReason;
+        }
+
+        /// <summary>Creates an explicit skipped region without generating a fake result. / 创建明确跳过的区域，不生成虚假结果。</summary>
+        public static PaddleDocumentVisionLanguageRegionExecution CreateSkipped(int regionIndex, PaddleDocumentRegion sourceRegion, string reason)
+            => new PaddleDocumentVisionLanguageRegionExecution(regionIndex, sourceRegion, reason);
 
         /// <summary>Gets the stable page-region index. / 获取稳定的页面区域索引。</summary>
         public int RegionIndex { get; }
@@ -115,6 +151,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public string? FailureType { get; }
         /// <summary>Gets the diagnostic message recorded for an isolated failure. / 获取被隔离失败记录的诊断消息。</summary>
         public string? FailureMessage { get; }
+        /// <summary>Gets the selected task; null for skipped regions or legacy failures without task metadata. / 获取已选任务；跳过区域或不含任务元数据的旧式失败记录为空。</summary>
+        public PaddleOcrVlTask? Task { get; }
+        /// <summary>Gets the explicit execution status. / 获取明确的执行状态。</summary>
+        public PaddleDocumentVisionLanguageRegionStatus Status { get; }
+        /// <summary>Gets the reason for an intentional skip. / 获取主动跳过的原因。</summary>
+        public string? SkipReason { get; }
+        /// <summary>Gets whether this region was intentionally skipped. / 获取该区域是否主动跳过。</summary>
+        public bool Skipped => Status == PaddleDocumentVisionLanguageRegionStatus.Skipped;
         /// <summary>Gets whether this region completed successfully. / 获取该区域是否成功完成。</summary>
         public bool Succeeded => Result != null;
     }
@@ -138,6 +182,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             {
                 PaddleDocumentVisionLanguageRegionExecution execution = executions[index] ?? throw new ArgumentException("A region execution cannot be null.", nameof(executions));
                 if (execution.RegionIndex != index) throw new ArgumentException("Region executions must be ordered and indexed from zero.", nameof(executions));
+                if (execution.Skipped) throw new ArgumentException("Use the routed-page result for skipped regions.", nameof(executions));
                 if (execution.Result != null)
                 {
                     if (execution.Result.Task != task) throw new ArgumentException("A routed VL result task does not match the page result task.", nameof(executions));
@@ -174,6 +219,61 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             {
                 PaddleDocumentVisionLanguageRegionExecution execution = executions[index] ?? throw new ArgumentException("A region execution cannot be null.", nameof(executions));
                 if (execution.RegionIndex != index) throw new ArgumentException("Region executions must be ordered and indexed from zero.", nameof(executions));
+                regions.Add(execution.SourceRegion);
+            }
+            return regions.AsReadOnly();
+        }
+    }
+
+    /// <summary>Contains all source regions of a mixed-task VL page, including failures and skips in original layout order. / 保存混合任务 VL 页面的全部源区域，按原版面顺序保留失败和跳过记录。</summary>
+    public sealed class PaddleDocumentVisionLanguageRoutedPageResult : PaddleDocumentModuleResult
+    {
+        /// <summary>Creates a mixed-task result with page and per-region provenance validation. / 创建验证页面与各区域来源的混合任务结果。</summary>
+        public PaddleDocumentVisionLanguageRoutedPageResult(PaddleDocumentResultMetadata metadata,
+            IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions, IReadOnlyList<string>? warnings = null)
+            : base(PaddleDocumentModule.VisionLanguageParsing, metadata, RegionsFor(executions), warnings)
+        {
+            if (metadata.Model.Module != Module) throw new ArgumentException("The routed-page model must use VisionLanguageParsing.", nameof(metadata));
+            var copied = new List<PaddleDocumentVisionLanguageRegionExecution>(executions.Count);
+            for (int index = 0; index < executions.Count; index++)
+            {
+                PaddleDocumentVisionLanguageRegionExecution execution = executions[index];
+                if (!execution.Skipped && !execution.Task.HasValue) throw new ArgumentException("A routed execution must preserve its selected task.", nameof(executions));
+                if (execution.Result != null)
+                {
+                    PaddleDocumentResultMetadata child = execution.Result.Metadata;
+                    if (child.PageIndex != metadata.PageIndex || child.Model.ModelId != metadata.Model.ModelId || child.Backend != metadata.Backend)
+                        throw new ArgumentException("A routed region's page/model/backend does not match the page result.", nameof(executions));
+                }
+                copied.Add(execution);
+            }
+            Executions = copied.AsReadOnly();
+            SucceededCount = copied.Count(value => value.Succeeded);
+            SkippedCount = copied.Count(value => value.Skipped);
+            FailedCount = copied.Count - SucceededCount - SkippedCount;
+        }
+
+        /// <summary>Gets every original layout region's execution in original index order. / 获取每个原版面区域的执行记录，保持原索引顺序。</summary>
+        public IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> Executions { get; }
+        /// <summary>Gets the count of returned generation results. / 获取返回生成结果的数量。</summary>
+        public int SucceededCount { get; }
+        /// <summary>Gets the count of isolated failures. / 获取隔离失败数量。</summary>
+        public int FailedCount { get; }
+        /// <summary>Gets the count of explicitly skipped source regions. / 获取明确跳过的源区域数量。</summary>
+        public int SkippedCount { get; }
+        /// <summary>Gets whether model-returned coordinates exist; source bounds are only provenance. / 获取模型是否返回坐标；源框只表示来源。</summary>
+        public bool CoordinatesAvailable => false;
+        /// <summary>Gets the stable explanation for source-only geometry. / 获取只有源几何信息的稳定说明。</summary>
+        public string SpatialOutputStatus => "source-regions-only;not-returned-by-paddleocr-vl-task-output";
+
+        private static IReadOnlyList<PaddleDocumentRegion> RegionsFor(IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions)
+        {
+            if (executions == null) throw new ArgumentNullException(nameof(executions));
+            var regions = new List<PaddleDocumentRegion>(executions.Count);
+            for (int index = 0; index < executions.Count; index++)
+            {
+                PaddleDocumentVisionLanguageRegionExecution execution = executions[index] ?? throw new ArgumentException("A region execution cannot be null.", nameof(executions));
+                if (execution.RegionIndex != index) throw new ArgumentException("Region executions must retain all original indices in order, starting at zero.", nameof(executions));
                 regions.Add(execution.SourceRegion);
             }
             return regions.AsReadOnly();

@@ -37,7 +37,36 @@
 
 图片相对路径基于 `pages.json` 所在目录。尺寸使用解码、EXIF 方向归一后的页面像素；与实际图片不符会报错。矩形采用页面坐标，左上向下取整、右下向上取整，并裁至页面边界。完全不相交、非有限或空区域会失败。
 
-这里的区域由调用方提供，不运行版面检测模型。接入真实 PP-Structure 时，用版面检测阶段输出的 `PaddleDocumentRegionResult` 替换示例中的 `manual-layout` 阶段。一个阶段对所有输入区域执行同一任务；`category` 是来源元数据，不会自动选择任务，混合类型页面应由调用方先分组。
+这里的区域由调用方提供，不运行版面检测模型。接入真实 PP-Structure 时，用版面检测阶段输出的 `PaddleDocumentRegionResult` 替换示例中的 `manual-layout` 阶段。上面的固定任务模式对所有区域运行 `TableRecognition`；混合页面可使用下面的类别路由模式。
+
+## 混合页面：按类别选择任务
+
+将 `task` 改为 `Auto`，同一页中的 `text`、`table`、`formula`、`chart`、`seal` 会分别运行对应 VL 任务，无需先分组或重复解码。`Auto` 只表示根据已有类别选择任务，不执行版面检测或推断阅读顺序。
+
+```json
+{
+  "task": "Auto",
+  "maximumNewTokens": 512,
+  "taskByCategory": { "spotting": "TextSpotting", "header": null },
+  "pages": [
+    {
+      "image": "mixed-page.png", "width": 1000, "height": 1400, "pageIndex": 0,
+      "regions": [
+        { "category": "text", "x": 80, "y": 100, "width": 840, "height": 100 },
+        { "category": "table", "x": 80, "y": 230, "width": 840, "height": 500 },
+        { "category": "formula", "x": 80, "y": 760, "width": 840, "height": 100 },
+        { "category": "figure", "x": 80, "y": 900, "width": 400, "height": 300 }
+      ]
+    }
+  ]
+}
+```
+
+默认映射覆盖现有 PP-Structure 的 3/5/17/23/Plus 标签：文字和标题类选择 `TextRecognition`，表格/公式/图表/印章选择各自任务；`image`、`figure`、`header_image`、`footer_image` 和未知类别明确跳过。类别匹配忽略大小写和首尾空白。`taskByCategory` 可覆盖默认映射，`null` 表示主动跳过；例如上面为应用自定义的 `spotting` 类别选择定位任务，并跳过页眉。省略该对象时保留默认映射。
+
+如需对所有未匹配类别执行 OCR，可以增加 `"unmatchedCategoryTask": "TextRecognition"`。显式配置为 `null` 的类别（包括默认图片类）仍然跳过。固定任务模式下配置类别路由选项会报错，防止配置被静默忽略。
+
+混合结果使用 `PaddleDocumentVisionLanguageRoutedPageResult` / `VisionLanguageParsing`，每个原始区域都有连续不变的 `regionIndex`，并记录 `Succeeded`、`Failed` 或 `Skipped`。跳过项保留类别/源框/原因，不生成文本，也不计入失败；失败项保留已选任务。每个成功项单独保存实际任务、模块、Token、结束原因和输入 SHA。示例不会将跳过项视为错误，但任何生成失败或非 EOS 结果都会返回退出码 `1`。
 
 ## 运行与结果
 
@@ -52,8 +81,10 @@ dotnet run --project samples/02-visual/paddleocr-vl-document/PaddleOcrVlDocument
 
 Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-x64 --self-contained false`。程序目标为 .NET 8，需要对应运行时；仅安装 .NET 9/10 时可以显式设置 `DOTNET_ROLL_FORWARD=Major` 后运行已发布的 DLL。[实际 Linux 页面记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)包含两页三个手工表格区域的真实 ORT 运行和示例输出核对。
 
+`Auto` 模式也有[Linux 混合页面运行记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)：由固定六任务 RGB 组成两张 PNG，六个任务区域的全部 765 Token/文本匹配官方参考、均 EOS，另有两个明确跳过项。独立示例实际运行的 JSON/Markdown 与集成测试一致；这是手工版面的拼接页面集成验证，不是独立多页质量或自动版面检测结果。
+
 每页只解码一次；区域用底图的只读视图逐行转换为紧密 RGB，不编码 crop、不克隆整页，不先用 OpenCV 缩放。随后由托管 VL Processor 完成官方重采样、归一化和 Patch 打包。页面结果保存编码文件 SHA；区域结果使用尺寸绑定的 RGB 内容 SHA，相同尺寸/像素的重复区域具有相同身份，位置通过各自的 `sourceRegion` 保存。
 
 页面并发可以重叠准备和等待，但示例共享一个 VL Session，生成仍按 Session 的队列串行执行，不代表模型 Batch 或多个独立推理器。使用多个 Session 前，应按实际权重、KV 和工作区占用检查内存预算。
 
-输出保留原始 VL 文本，`CoordinatesAvailable=false`：源区域坐标来自调用方，不是 VL 预测的文字框。自动阅读顺序、任务分类、HTML/单元格/Spotting 结构化解析和独立标注质量不属于该示例的已验证能力。
+输出保留原始 VL 文本，`CoordinatesAvailable=false`：源区域坐标来自调用方，不是 VL 预测的文字框。自动版面检测与阅读顺序、HTML/单元格/Spotting 结构化解析和独立标注质量不属于该示例的已验证能力。
