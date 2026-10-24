@@ -37,6 +37,10 @@ internal static class Program
         PaddleOcrVlTaskRouter router = PaddleOcrVlTaskRouter.CreatePpStructure(overrides, ParseOptionalTask(spec.UnmatchedCategoryTask));
         if (!automaticTasks && (spec.TaskByCategory != null || spec.UnmatchedCategoryTask != null))
             throw new InvalidDataException("Category routing options require task=Auto.");
+        if (spec.LayoutDetector != null && (!automaticTasks || spec.Pages.Any(page => page.Regions.Length != 0)))
+            throw new InvalidDataException("layoutDetector requires task=Auto and no manual regions.");
+        if (spec.LayoutDetector != null && (spec.LayoutDetector.ModelId != "paddle-doc/pp-doclayout-l" || string.IsNullOrWhiteSpace(spec.LayoutDetector.Path)))
+            throw new InvalidDataException("This detector example requires paddle-doc/pp-doclayout-l and an explicit ONNX path.");
         if (spec.Pages.Length == 0 || spec.Pages.Select(page => page.PageIndex).Distinct().Count() != spec.Pages.Length)
             throw new InvalidDataException("Pages must be nonempty and have unique pageIndex values.");
         int parallelism = args.Length == 5 ? int.Parse(args[4], CultureInfo.InvariantCulture) : 1;
@@ -44,7 +48,9 @@ internal static class Program
         string output = Path.GetFullPath(args[3]);
         Directory.CreateDirectory(output);
         PaddleDocumentPage[] pages = spec.Pages.Select(page => new PaddleDocumentPage(
-            new PageInput(OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image))), page),
+            spec.LayoutDetector != null
+                ? OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image)))
+                : (object)new PageInput(OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image))), page),
             new VisualSize(page.Width, page.Height), page.PageIndex)).ToArray();
 
         using var cancellation = new CancellationTokenSource();
@@ -76,9 +82,27 @@ internal static class Program
             : OpenCvPaddleOcrVlRegionStage.FromSession(vlModel, "onnxruntime-cpu", task, session, tokenizer,
                 page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true);
         var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { layout, vl });
-        var results = parallelism == 1
-            ? await pipeline.RunManyAsync(pages, cancellation.Token)
-            : await pipeline.RunManyConcurrentAsync(pages, parallelism, cancellation.Token);
+        IReadOnlyList<PaddleDocumentPipelineResult> results;
+        if (spec.LayoutDetector != null)
+        {
+            var model = PaddleDocumentModelCatalog.Get(spec.LayoutDetector.ModelId);
+            var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(model, PaddleDocumentProfiles.Layout23Labels,
+                new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: spec.LayoutDetector.ScoreThreshold);
+            var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
+            var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            string modelPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, spec.LayoutDetector.Path));
+            using var detector = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(modelPath), registry, request, VisualTaskId.LayoutDetection), request);
+            var detectedPipeline = OpenCvPaddleOcrVlDocumentPipeline.FromSession(detector, model, vlModel, "onnxruntime-cpu", session, tokenizer,
+                generationOptions, router, maximumRegions: spec.LayoutDetector.MaximumRegions,
+                maximumPagePixels: spec.LayoutDetector.MaximumPagePixels, continueOnRegionFailure: true);
+            results = await detectedPipeline.RunManyAsync(pages, parallelism, cancellation.Token);
+        }
+        else
+        {
+            results = parallelism == 1
+                ? await pipeline.RunManyAsync(pages, cancellation.Token)
+                : await pipeline.RunManyConcurrentAsync(pages, parallelism, cancellation.Token);
+        }
         bool incomplete = false;
         foreach (PaddleDocumentPipelineResult result in results)
         {
@@ -120,7 +144,16 @@ internal static class Program
         public int MaximumNewTokens { get; set; } = 512;
         public Dictionary<string, string?>? TaskByCategory { get; set; }
         public string? UnmatchedCategoryTask { get; set; }
+        public LayoutDetectorSpec? LayoutDetector { get; set; }
         public PageSpec[] Pages { get; set; } = Array.Empty<PageSpec>();
+    }
+    private sealed class LayoutDetectorSpec
+    {
+        public string ModelId { get; set; } = "paddle-doc/pp-doclayout-l";
+        public string Path { get; set; } = "";
+        public float ScoreThreshold { get; set; } = .3f;
+        public int MaximumRegions { get; set; } = 64;
+        public int MaximumPagePixels { get; set; } = 128 * 1024 * 1024;
     }
     private sealed class PageSpec
     {

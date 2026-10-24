@@ -37,7 +37,7 @@
 
 图片相对路径基于 `pages.json` 所在目录。尺寸使用解码、EXIF 方向归一后的页面像素；与实际图片不符会报错。矩形采用页面坐标，左上向下取整、右下向上取整，并裁至页面边界。完全不相交、非有限或空区域会失败。
 
-这里的区域由调用方提供，不运行版面检测模型。接入真实 PP-Structure 时，用版面检测阶段输出的 `PaddleDocumentRegionResult` 替换示例中的 `manual-layout` 阶段。上面的固定任务模式对所有区域运行 `TableRecognition`；混合页面可使用下面的类别路由模式。
+上面的区域由调用方提供，不运行版面检测模型；固定任务模式对所有区域运行 `TableRecognition`。混合页面可使用下面的类别路由模式，需要模型自动产生区域时则启用 `layoutDetector`。
 
 ## 混合页面：按类别选择任务
 
@@ -68,6 +68,33 @@
 
 混合结果使用 `PaddleDocumentVisionLanguageRoutedPageResult` / `VisionLanguageParsing`，每个原始区域都有连续不变的 `regionIndex`，并记录 `Succeeded`、`Failed` 或 `Skipped`。跳过项保留类别/源框/原因，不生成文本，也不计入失败；失败项保留已选任务。每个成功项单独保存实际任务、模块、Token、结束原因和输入 SHA。示例不会将跳过项视为错误，但任何生成失败或非 EOS 结果都会返回退出码 `1`。
 
+## 自动检测版面，再执行 VL
+
+配置 `layoutDetector` 后，示例运行实际 PP-DocLayout-L ONNX 模型，再将全部检测区域按默认/自定义类别映射交给 VL。图片仍由 OpenCV 每页解码一次；检测前处理与 VL 裁剪复用同一底图。
+
+```json
+{
+  "task": "Auto",
+  "maximumNewTokens": 2048,
+  "layoutDetector": {
+    "modelId": "paddle-doc/pp-doclayout-l",
+    "path": "pp-doclayout-l.onnx",
+    "scoreThreshold": 0.3,
+    "maximumRegions": 64,
+    "maximumPagePixels": 134217728
+  },
+  "pages": [
+    { "image": "page-a.png", "width": 771, "height": 1000, "pageIndex": 0 }
+  ]
+}
+```
+
+模型路径也相对 `pages.json` 所在目录；文件须为该模型已验证的 ONNX 导出，不能用任意同名文件替换。当前此示例的检测器配置只接受 `paddle-doc/pp-doclayout-l`；其它已经正确绑定的 LayoutDetection `VisualPipeline` 可直接传给库的 `OpenCvPaddleOcrVlDocumentPipeline`。检测器与 VL 目前都使用 ONNX Runtime CPU。
+
+检测器模式要求 `task=Auto`，且页面不能同时配置手工 `regions`。`scoreThreshold` 过滤低分候选；`maximumRegions` 是过滤后所有检测区域的上限，包括将跳过的图片类。超限会在 VL 生成前明确失败，不静默截断为前 K 个。`maximumPagePixels` 是解码后页面像素上限，超限在检测前失败；它不替代编码文件大小、解码器内存或 VL Token/KV 的独立预算。
+
+返回顺序是检测器顺序，**不是阅读顺序**。默认图片类/未知类别仍跳过；如果模型将正文误判为图片，该内容也不会被默认解析，可显式配置 `"taskByCategory": { "image": "TextRecognition" }`。这改变任务选择，不改善版面模型本身的准确率。检测到重叠类别时保留每个原始区域，不自动合并重复文本。
+
 ## 运行与结果
 
 ```powershell
@@ -87,4 +114,6 @@ Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-
 
 页面并发可以重叠准备和等待，但示例共享一个 VL Session，生成仍按 Session 的队列串行执行，不代表模型 Batch 或多个独立推理器。使用多个 Session 前，应按实际权重、KV 和工作区占用检查内存预算。
 
-输出保留原始 VL 文本，`CoordinatesAvailable=false`：源区域坐标来自调用方，不是 VL 预测的文字框。自动版面检测与阅读顺序、HTML/单元格/Spotting 结构化解析和独立标注质量不属于该示例的已验证能力。
+检测器模式输出的 JSON/Markdown 同时包含实际布局结果和 VL 任务结果。`PaddleDocumentPipelineResult.Elapsed` 统计检测前处理/推理/映射及区域准备/生成阶段，外层文件读取和首次解码不在其中；测量完整调用延迟时应在 `RunAsync` 外部计时，不能直接将该字段作为正式端到端性能。
+
+输出保留原始 VL 文本，`CoordinatesAvailable=false`：源区域坐标来自调用方或检测器，不是 VL 预测的文字框。阅读顺序、HTML/单元格/Spotting 结构化解析和独立标注质量仍需分别验证。

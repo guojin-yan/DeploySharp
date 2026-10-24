@@ -1,0 +1,170 @@
+{
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "pagesManifestSha256": "0fa3bdbe1151099c600bf2315660c5a12aec7d5aa48056df3a58d7d93630f0ff",
+  "preparedReportSha256": "2de5eded207c95de57e7ddad0585be76706e3f6842c23155496db1ae6504ca65",
+  "scriptSha256": "0930b5ceff1e4f6142410687b7c8348f578c404b3682c089d0001d4331922a42",
+  "cases": [
+    {
+      "id": "page-7-region-0",
+      "task": "table",
+      "image": "page-7-region-0.png",
+      "sha256": "7a0a51809036a29cb7449be47b3714c89792ce89ac3b839a6d0a6feba2babf3c",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "87147607.png",
+        "pageSha256": "ac0b4c9f380c1bf2e791b7ba7f9b29725473f6031c34241e5af5f3f3364f07a1",
+        "detectorRegionIndex": 0,
+        "sourceBounds": {
+          "x": 15.869151,
+          "y": 24.340034,
+          "width": 722.5322,
+          "height": 971.8575
+        },
+        "integerCrop": [
+          15,
+          24,
+          739,
+          997
+        ],
+        "cropRgbSha256": "6342d4292bd87dfdc2e7654320c0a37a4aa3ebb1adb8f64f3ce6f660582edcb6",
+        "managedPatchSha256": "9b835420a765883094ff171f144d768fd2da8fbbccc9d63921c313c5fa3aeffc"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    },
+    {
+      "id": "page-7-region-1",
+      "task": "ocr",
+      "image": "page-7-region-1.png",
+      "sha256": "05781e2ceaad3b4f8266620d518e4a50de995e508234869c07a97cfd69d3c198",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "87147607.png",
+        "pageSha256": "ac0b4c9f380c1bf2e791b7ba7f9b29725473f6031c34241e5af5f3f3364f07a1",
+        "detectorRegionIndex": 1,
+        "sourceBounds": {
+          "x": 6.4226384,
+          "y": 30.69006,
+          "width": 5.6686864,
+          "height": 6.2612
+        },
+        "integerCrop": [
+          6,
+          30,
+          13,
+          37
+        ],
+        "cropRgbSha256": "15392e293433415ae4d64664412052ae372bdd5b5a3475ed1d0ea858394a0012",
+        "managedPatchSha256": "e4e9e30d478e9587aa5854849c6d461914af96d9051dee1fb64ea51099157dd8"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    },
+    {
+      "id": "page-7-region-3",
+      "task": "ocr",
+      "image": "page-7-region-3.png",
+      "sha256": "af585c0499dcafe29c5f6b6d2d51e6a6769dc94400d8748b942fd1f74dc4236c",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "87147607.png",
+        "pageSha256": "ac0b4c9f380c1bf2e791b7ba7f9b29725473f6031c34241e5af5f3f3364f07a1",
+        "detectorRegionIndex": 3,
+        "sourceBounds": {
+          "x": 42.988083,
+          "y": 167.6665,
+          "width": 315.80798,
+          "height": 15.162933
+        },
+        "integerCrop": [
+          42,
+          167,
+          359,
+          183
+        ],
+        "cropRgbSha256": "bcfdf1043ee84ba3e56c4b32d93fa445b31e773f5e3a03b9481d9fba1b2e26c5",
+        "managedPatchSha256": "d42627e5c060d005fd68c60e60b0779192b2f0f35f88324a5c99aabad6c2c9f6"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    },
+    {
+      "id": "page-3-region-1",
+      "task": "ocr",
+      "image": "page-3-region-1.png",
+      "sha256": "ad989b87bfb37658bca3257b737494cbd6a82d1a9bc52d02fb5bb0839bbe2679",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "86220490.png",
+        "pageSha256": "391c29fe036015e1c52d9ed0f065e35fc5d2054ab4285aa1123f8a269b79fef9",
+        "detectorRegionIndex": 1,
+        "sourceBounds": {
+          "x": 43.389698,
+          "y": 75.13815,
+          "width": 8.4928055,
+          "height": 8.508446
+        },
+        "integerCrop": [
+          43,
+          75,
+          52,
+          84
+        ],
+        "cropRgbSha256": "4e3e04bee1816d9358d793cf5cbe656f06bb639e57b27dddbd0a5b375748949c",
+        "managedPatchSha256": "70ac9678160498a1e3b0e12d8c413f5758d0edcd68ff67df96001addebbbd7d4"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    },
+    {
+      "id": "page-3-region-2",
+      "task": "ocr",
+      "image": "page-3-region-2.png",
+      "sha256": "7cd6ac019765d51ff8458d36894a51bd74aa67a2444c2a029c8c58d08c2415db",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "86220490.png",
+        "pageSha256": "391c29fe036015e1c52d9ed0f065e35fc5d2054ab4285aa1123f8a269b79fef9",
+        "detectorRegionIndex": 2,
+        "sourceBounds": {
+          "x": 661.2267,
+          "y": 710.3175,
+          "width": 21.45459,
+          "height": 103.797
+        },
+        "integerCrop": [
+          661,
+          710,
+          683,
+          815
+        ],
+        "cropRgbSha256": "4d6f4a4059a3634e37459e274c828c6f6b1299694ab331c1eb88d4eff4c2adc0",
+        "managedPatchSha256": "809f2b4126bf63302ff2ffd9460d81d95f5dceb535cb6c921bf9bba863283418"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    },
+    {
+      "id": "page-3-region-3",
+      "task": "ocr",
+      "image": "page-3-region-3.png",
+      "sha256": "7cd6ac019765d51ff8458d36894a51bd74aa67a2444c2a029c8c58d08c2415db",
+      "source": {
+        "dataset": "FUNSD",
+        "page": "86220490.png",
+        "pageSha256": "391c29fe036015e1c52d9ed0f065e35fc5d2054ab4285aa1123f8a269b79fef9",
+        "detectorRegionIndex": 3,
+        "sourceBounds": {
+          "x": 661.2267,
+          "y": 710.3175,
+          "width": 21.45459,
+          "height": 103.797
+        },
+        "integerCrop": [
+          661,
+          710,
+          683,
+          815
+        ],
+        "cropRgbSha256": "4d6f4a4059a3634e37459e274c828c6f6b1299694ab331c1eb88d4eff4c2adc0",
+        "managedPatchSha256": "809f2b4126bf63302ff2ffd9460d81d95f5dceb535cb6c921bf9bba863283418"
+      },
+      "scope": "Actual detector crop, independent Pillow RGB validation; not labeled quality."
+    }
+  ]
+}

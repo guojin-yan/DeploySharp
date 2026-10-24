@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-detected-document-example-v1",
+  "generatedUtc": "2026-10-24T09:29:34.3954373+00:00",
+  "status": "standalone-example-matches-real-detector-integration",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "sourceReport": "paddleocr-vl-detected-pages-linux-20261024.json",
+  "sourceReportSha256": "69385d1cc5c9951f9d32dfee2f70a5555b894fe0945da9f7e9304691d424d896",
+  "pagesManifestSha256": "0fa3bdbe1151099c600bf2315660c5a12aec7d5aa48056df3a58d7d93630f0ff",
+  "runtime": {
+    "targetFramework": "net8.0",
+    "rid": "ubuntu.22.04-x64",
+    "framework": ".NET 10.0.9",
+    "rollForward": "Major",
+    "ldLibraryPath": "explicitly unset",
+    "provider": "CPUExecutionProvider",
+    "pageParallelism": 1,
+    "sessionCount": 1,
+    "files": [
+      {
+        "name": "PaddleOcrVlDocument.dll",
+        "sha256": "bd58e722eae13f976e6d1ea8b548c1570d1e280f2f288e48c050cdf7368ea631"
+      },
+      {
+        "name": "PaddleOcrVlDocument.deps.json",
+        "sha256": "061e183f5bfa4092bbdda4ec0773420ee2fa696cdf2ee70093f1a07151f01a16"
+      },
+      {
+        "name": "PaddleOcrVlDocument.runtimeconfig.json",
+        "sha256": "db98f097ddbb64e33943e4ba512c0777d0fc725f2ab3b94efa917efd44430cb4"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Core.dll",
+        "sha256": "3aab81ed2d01a6658b69448b7910d2bdbdb49ecd972326c3dff309c21758a5ea"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Extensibility.dll",
+        "sha256": "726f0b8597cd24d0463442159ca038ea852695d16bd47251d298014391c066aa"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Visual.dll",
+        "sha256": "665537580882975f87dd5fd7df69d3711247b8fed19f7ad9ce7ef72afabdd241"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Visual.OpenCV.dll",
+        "sha256": "c2ec69f97afe57c2a85390ce47f5c04d7a00df3bf27c6994eec3cfd0093628fc"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Backend.OnnxRuntime.dll",
+        "sha256": "77b4bcdaffa7a912e4c9b428e9336b851c51d9725f5f507724bd22d7ea38a43d"
+      },
+      {
+        "name": "libJYPPX.OpenCV.Native.so",
+        "sha256": "d7d805813398d1d1bc93aedef4a939fb19d91fa0fa923750ef4a0b5907dee6cc"
+      },
+      {
+        "name": "libonnxruntime.so",
+        "sha256": "1461ef7cc3d9e49982591721683cc3e3a55580aeca9a5254e7aac47b75ee4bab"
+      }
+    ],
+    "localAndRemoteFilesMatch": true
+  },
+  "exitCode": 0,
+  "stdout": [
+    "page=7 succeeded=3 failed=0 skipped=1",
+    "page=3 succeeded=3 failed=0 skipped=1"
+  ],
+  "totalGeneratedTokens": 653,
+  "totalSkippedRegions": 2,
+  "pages": [
+    {
+      "pageIndex": 7,
+      "detectionCount": 4,
+      "succeededCount": 3,
+      "failedCount": 0,
+      "skippedCount": 1,
+      "jsonSha256": "6deb6c8b7e6454b338d758f91d6aee3e9f640a9b131b3800c1f84795d86ce626",
+      "markdownSha256": "89de63777bf8187f8a40bd9d6a11946b30e95b0d42b72a2c507aa3834e302834",
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "table",
+          "task": "TableRecognition",
+          "module": "TableStructureRecognition",
+          "status": "Succeeded",
+          "tokenCount": 613,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "task": "TextRecognition",
+          "module": "TextRecognition",
+          "status": "Succeeded",
+          "tokenCount": 2,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        },
+        {
+          "regionIndex": 2,
+          "category": "image",
+          "status": "Skipped",
+          "skipReason": "no-vl-task-for-layout-category"
+        },
+        {
+          "regionIndex": 3,
+          "category": "table_title",
+          "task": "TextRecognition",
+          "module": "TextRecognition",
+          "status": "Succeeded",
+          "tokenCount": 18,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        }
+      ]
+    },
+    {
+      "pageIndex": 3,
+      "detectionCount": 4,
+      "succeededCount": 3,
+      "failedCount": 0,
+      "skippedCount": 1,
+      "jsonSha256": "d9e4e94420fe882cae5d0ae326702bddd85f26658279f3c74a7e89619a5bcd36",
+      "markdownSha256": "7c0afb9af40ac98a1f6514d0c0f1f608cb2fef0d94d420487229ec243dbafeda",
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "image",
+          "status": "Skipped",
+          "skipReason": "no-vl-task-for-layout-category"
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "task": "TextRecognition",
+          "module": "TextRecognition",
+          "status": "Succeeded",
+          "tokenCount": 2,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        },
+        {
+          "regionIndex": 2,
+          "category": "text",
+          "task": "TextRecognition",
+          "module": "TextRecognition",
+          "status": "Succeeded",
+          "tokenCount": 9,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        },
+        {
+          "regionIndex": 3,
+          "category": "aside_text",
+          "task": "TextRecognition",
+          "module": "TextRecognition",
+          "status": "Succeeded",
+          "tokenCount": 9,
+          "tokenExact": true,
+          "textExact": true,
+          "inputIdentityExact": true,
+          "sourceBoundsExact": true,
+          "rawMarkdownPreserved": true,
+          "finishReason": "EndOfSequence"
+        }
+      ]
+    }
+  ],
+  "boundary": "Independent FUNSD pages, real PP-DocLayout-L and exact-crop VL generation; not labeled document quality, reading order, normalized structure, other backends, or formal performance.",
+  "manualModeCompatibility": {
+    "status": "manual-fixed-task-mode-preserved",
+    "sourceCaseId": "page-7-region-1",
+    "pageIndex": 42,
+    "exitCode": 0,
+    "stdout": "page=42 succeeded=1 failed=0 skipped=0",
+    "tokenCount": 2,
+    "tokensExact": true,
+    "textExact": true,
+    "inputIdentityExact": true,
+    "finishReason": "EndOfSequence",
+    "jsonSha256": "56bb9458ad3cc6362f673192e24496eba11d613001a289b45b394cbbd5204288"
+  }
+}

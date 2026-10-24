@@ -399,6 +399,37 @@ foreach (var region in mixed.Executions)
 
 同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux ORT CPU 已有六任务单图生成证据；OpenVINO、TensorRT、CUDA、OpenCV DNN 推理、页面级质量和正式性能矩阵不能由这个适配器自动获得。
 
+### 真实版面检测与 VL 共享解码底图
+
+在 .NET 8/9/10 中，`OpenCvPaddleOcrVlDocumentPipeline` 将一个已选择正确 Profile 的布局 `VisualPipeline` 接到混合 VL 阶段。它在每页开始时解码一次，检测器与所有区域裁剪共用该底图，页面结束/异常/取消后释放。返回页面的 `Source` 仍是调用方的 `OpenCvImageSource`，不会返回已经释放的 native 图像句柄。
+
+```csharp
+// layoutPipeline 是已经配置模型、后端及布局 Decoder 的 VisualPipeline。
+// session/tokenizer 是同一固定 1.6 Bundle 的 VL Session 与 Tokenizer。
+var detectorModel = PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l");
+var parsingModel = new PaddleDocumentModelDescriptor(
+    "paddleocr-vl/1.6", "PaddleOCR-VL-1.6",
+    PaddleDocumentModule.VisionLanguageParsing,
+    "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6", "onnx");
+var document = OpenCvPaddleOcrVlDocumentPipeline.FromSession(
+    layoutPipeline, detectorModel, parsingModel, "onnxruntime-cpu",
+    session, tokenizer,
+    new PaddleOcrVlGenerationOptions(maximumNewTokens: 2048),
+    maximumRegions: 64, continueOnRegionFailure: true);
+PaddleDocumentPipelineResult parsed = await document.RunAsync(
+    OpenCvImageSource.FromFile(imagePath), pageIndex: 0,
+    cancellationToken: cancellationToken);
+Console.WriteLine(PaddleDocumentPipelineExport.ToMarkdown(parsed));
+```
+
+该入口使用检测器**实际选择的 Profile**，包括应用调整过的缩放、归一化及 Paddle 辅助几何输入；不会另外创建一份默认前处理覆盖它。模型 ID、LayoutDetection 任务及可用的公共图像前处理必须匹配。需要自行编排阶段时，`OpenCvPaddleDocumentPreprocessing.CreateFromPage(decodedPage, documentProfile)` 可直接从已有 `OpenCvDecodedRoiImage` 生成检测张量及准确的 `im_shape/scale_factor`，不再次读取/解码源文件；底图仍由调用方拥有。
+
+`RunAsync(source)` 自动取得实际尺寸；传入 `PaddleDocumentPage` 时，源必须是 `OpenCvImageSource` 且声明尺寸与解码结果一致。`RunManyAsync(pages, maximumConcurrency: 2)` 使用有界页面任务，保持调用方顺序，并在一页失败时取消、等待其他任务结束后才返回异常；单个 VL Session 仍排队生成。包装器不拥有检测器、VL Session 或 Tokenizer，应用负责其生命周期及自定义委托的并发安全。
+
+`maximumPagePixels`（默认 128 Mi 像素）在解码后、检测前检查；它不能防止解码器自身分配。`maximumRegions`（默认 64）包括将跳过的所有候选，超限在任何 VL 生成前失败，不静默丢弃区域。VL 最小/最大像素、上下文、KV、Token 和超时仍独立生效。返回的 `Elapsed` 覆盖文档阶段，不含包装器外层首次解码；完整调用耗时请在 `RunAsync` 外计时。
+
+区域保留检测器顺序和 `layoutModelRegionIndex`，不声称推断阅读顺序。默认图片类跳过，版面模型的漏检/错分类会直接影响解析覆盖；允许覆盖类别映射，但不会自动消除重叠文本或补回漏检。完整配置见[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
+
 外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
 
 四组 `session/page` 组合的同协议对照见[OpenVINO 并发调优报告](../../eng/models/paddle-document/verification/paddle-document-multipage-openvino-concurrency-tuning-20261005.md)。本机这次小样本中 `1/2` 同时降低了 P50/P95，但串行基线在不同进程间有波动，因此仅作为当前设备的候选配置；库和示例不会据此自动改变默认值。

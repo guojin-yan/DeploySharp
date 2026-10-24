@@ -944,7 +944,7 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual` 的实验性 ONNX Runtime CPU 单图路径。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual` 的实验性 ONNX Runtime CPU 路径，提供单图/区域生成和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
 
 ```csharp
 using JYPPX.DeploySharp.Visual;
@@ -1002,6 +1002,8 @@ PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
 混合页面可使用 `PaddleOcrVlTaskRouter.CreatePpStructure()` 和 `OpenCvPaddleOcrVlLayoutStage`，根据已有版面类别分别执行文字、表格、公式、图表或印章任务，仍然每页解码一次。映射可覆盖，未知类别及图片类默认明确跳过；Spotting 由应用显式选择。`PaddleDocumentVisionLanguageRoutedPageResult` 保留所有原始索引、逐区域任务以及成功/失败/跳过状态，不必预先将页面分组。[混合页面用法](visual-paddle-structure.md#paddleocr-vl-原始任务接入页面和多页编排)与[示例 Auto 模式](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)说明配置、原文导出及失败退出码。
 
 [混合页面实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)将六任务的固定 RGB 拼成两张 PNG，使用手工区域类别；全部 `6,818,448` 个 Patch 数值和 `765` 个生成 Token/文本与官方参考精确一致、均 EOS，并保留两个跳过区域。该结果只验证混合路由、实际裁剪和生成一致性，不是自动版面检测或独立文档质量结论。
+
+需要自动检测区域时，`OpenCvPaddleOcrVlDocumentPipeline` 可以将真实布局 `VisualPipeline` 接到混合 VL，检测前处理和全部 crop 共用同一张解码底图。[PP-DocLayout-L 联合实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)使用两张独立 FUNSD 页面：8 个检测区域中 6 个生成、2 个图片区域跳过，全部 `3,960,768` 个 Patch 数值和 `653` 个 Token/文本匹配相同裁剪的官方参考且 EOS。它保留检测器顺序、页码和索引，不推断阅读顺序；默认跳过图片可能漏掉被检测器误分类的正文，重叠类别也可能重复解析。[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)说明如何配置 `layoutDetector`、区域上限和类别覆盖。
 
 `PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均为 `false`，源区域是调用方/版面模型的坐标，不是 VL 预测的文字框。自动阅读顺序、真实版面模型与 VL 的联合质量、结构化 HTML/单元格/Spotting/公式/图表归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。

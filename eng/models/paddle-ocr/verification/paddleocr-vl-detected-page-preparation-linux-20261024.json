@@ -1,0 +1,296 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-detected-pages-v1",
+  "generatedUtc": "2026-10-24T09:12:48.162095+00:00",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "status": "real-layout-crops-prepared",
+  "mode": "real-detector-and-patch-preparation-only",
+  "manifestSha256": "0fa3bdbe1151099c600bf2315660c5a12aec7d5aa48056df3a58d7d93630f0ff",
+  "layoutModelSha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
+  "environment": {
+    "os": "Ubuntu 22.04.5 LTS",
+    "framework": ".NET 10.0.9",
+    "architecture": "X64",
+    "provider": "CPUExecutionProvider",
+    "threads": 4,
+    "openCv": "5.0.0",
+    "pageParallelism": 1,
+    "vlSessionCount": 0
+  },
+  "assemblies": [
+    {
+      "name": "JYPPX.DeploySharp.Visual",
+      "sha256": "8079987932630c9221273d3d4163a26d38d5d3b68e95f746ac1f163747d2e586"
+    },
+    {
+      "name": "JYPPX.DeploySharp.Visual.OpenCV",
+      "sha256": "fa71dfb67282bbd1a0708bafa79eb9ce38bd3e568ee12c7e21f8779acfb1f3a4"
+    },
+    {
+      "name": "JYPPX.DeploySharp.Backend.OnnxRuntime",
+      "sha256": "7accea50f54ddab6dc05850841fd2969b72934ab82bb3df00a18e2fcc0a33f62"
+    },
+    {
+      "name": "Microsoft.ML.OnnxRuntime",
+      "sha256": "de45bad2d06c8530f7563329ab4f4b606e61ac5fcfbba4c75fb64a067e8bb7e3"
+    },
+    {
+      "name": "DeploySharp.Visual.OpenCV.Tests",
+      "sha256": "9292458f64373ce934874fa4ff1abd2e0e2cc488c1fdbceac72a94fe0cebdf88"
+    }
+  ],
+  "regions": [
+    {
+      "id": "page-7-region-0",
+      "pageIndex": 7,
+      "regionIndex": 0,
+      "category": "table",
+      "task": "TableRecognition",
+      "sourceBounds": {
+        "x": 15.869151,
+        "y": 24.340034,
+        "width": 722.5322,
+        "height": 971.8575
+      },
+      "sourceSize": [
+        724,
+        973
+      ],
+      "cropRgbSha256": "6342d4292bd87dfdc2e7654320c0a37a4aa3ebb1adb8f64f3ce6f660582edcb6",
+      "patchSha256": "9b835420a765883094ff171f144d768fd2da8fbbccc9d63921c313c5fa3aeffc",
+      "patchFloatCount": 2140320
+    },
+    {
+      "id": "page-7-region-1",
+      "pageIndex": 7,
+      "regionIndex": 1,
+      "category": "number",
+      "task": "TextRecognition",
+      "sourceBounds": {
+        "x": 6.4226384,
+        "y": 30.69006,
+        "width": 5.6686864,
+        "height": 6.2612
+      },
+      "sourceSize": [
+        7,
+        7
+      ],
+      "cropRgbSha256": "15392e293433415ae4d64664412052ae372bdd5b5a3475ed1d0ea858394a0012",
+      "patchSha256": "e4e9e30d478e9587aa5854849c6d461914af96d9051dee1fb64ea51099157dd8",
+      "patchFloatCount": 338688
+    },
+    {
+      "id": "page-7-region-3",
+      "pageIndex": 7,
+      "regionIndex": 3,
+      "category": "table_title",
+      "task": "TextRecognition",
+      "sourceBounds": {
+        "x": 42.988083,
+        "y": 167.6665,
+        "width": 315.80798,
+        "height": 15.162933
+      },
+      "sourceSize": [
+        317,
+        16
+      ],
+      "cropRgbSha256": "bcfdf1043ee84ba3e56c4b32d93fa445b31e773f5e3a03b9481d9fba1b2e26c5",
+      "patchSha256": "d42627e5c060d005fd68c60e60b0779192b2f0f35f88324a5c99aabad6c2c9f6",
+      "patchFloatCount": 381024
+    },
+    {
+      "id": "page-3-region-1",
+      "pageIndex": 3,
+      "regionIndex": 1,
+      "category": "number",
+      "task": "TextRecognition",
+      "sourceBounds": {
+        "x": 43.389698,
+        "y": 75.13815,
+        "width": 8.4928055,
+        "height": 8.508446
+      },
+      "sourceSize": [
+        9,
+        9
+      ],
+      "cropRgbSha256": "4e3e04bee1816d9358d793cf5cbe656f06bb639e57b27dddbd0a5b375748949c",
+      "patchSha256": "70ac9678160498a1e3b0e12d8c413f5758d0edcd68ff67df96001addebbbd7d4",
+      "patchFloatCount": 338688
+    },
+    {
+      "id": "page-3-region-2",
+      "pageIndex": 3,
+      "regionIndex": 2,
+      "category": "text",
+      "task": "TextRecognition",
+      "sourceBounds": {
+        "x": 661.2267,
+        "y": 710.3175,
+        "width": 21.45459,
+        "height": 103.797
+      },
+      "sourceSize": [
+        22,
+        105
+      ],
+      "cropRgbSha256": "4d6f4a4059a3634e37459e274c828c6f6b1299694ab331c1eb88d4eff4c2adc0",
+      "patchSha256": "809f2b4126bf63302ff2ffd9460d81d95f5dceb535cb6c921bf9bba863283418",
+      "patchFloatCount": 381024
+    },
+    {
+      "id": "page-3-region-3",
+      "pageIndex": 3,
+      "regionIndex": 3,
+      "category": "aside_text",
+      "task": "TextRecognition",
+      "sourceBounds": {
+        "x": 661.2267,
+        "y": 710.3175,
+        "width": 21.45459,
+        "height": 103.797
+      },
+      "sourceSize": [
+        22,
+        105
+      ],
+      "cropRgbSha256": "4d6f4a4059a3634e37459e274c828c6f6b1299694ab331c1eb88d4eff4c2adc0",
+      "patchSha256": "809f2b4126bf63302ff2ffd9460d81d95f5dceb535cb6c921bf9bba863283418",
+      "patchFloatCount": 381024
+    }
+  ],
+  "boundary": "Fixed independent FUNSD document pages, all detector regions at the declared threshold in detector order. Official comparisons use exact crops; not labeled document quality, reading order, structure normalization, other backends or formal performance. Preparation-only mode never runs or validates a VL model.",
+  "pages": [
+    {
+      "pageIndex": 7,
+      "encodedSha256": "ac0b4c9f380c1bf2e791b7ba7f9b29725473f6031c34241e5af5f3f3364f07a1",
+      "detectionCount": 4,
+      "succeeded": null,
+      "skipped": 1,
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "table",
+          "score": 0.91491944,
+          "bounds": {
+            "x": 15.869151,
+            "y": 24.340034,
+            "width": 722.5322,
+            "height": 971.8575
+          },
+          "task": "TableRecognition",
+          "skipped": false,
+          "skipReason": null
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "score": 0.44658265,
+          "bounds": {
+            "x": 6.4226384,
+            "y": 30.69006,
+            "width": 5.6686864,
+            "height": 6.2612
+          },
+          "task": "TextRecognition",
+          "skipped": false,
+          "skipReason": null
+        },
+        {
+          "regionIndex": 2,
+          "category": "image",
+          "score": 0.33038977,
+          "bounds": {
+            "x": 15.869151,
+            "y": 24.340034,
+            "width": 722.5322,
+            "height": 971.8575
+          },
+          "task": null,
+          "skipped": true,
+          "skipReason": "no-vl-task-for-layout-category"
+        },
+        {
+          "regionIndex": 3,
+          "category": "table_title",
+          "score": 0.3243854,
+          "bounds": {
+            "x": 42.988083,
+            "y": 167.6665,
+            "width": 315.80798,
+            "height": 15.162933
+          },
+          "task": "TextRecognition",
+          "skipped": false,
+          "skipReason": null
+        }
+      ]
+    },
+    {
+      "pageIndex": 3,
+      "encodedSha256": "391c29fe036015e1c52d9ed0f065e35fc5d2054ab4285aa1123f8a269b79fef9",
+      "detectionCount": 4,
+      "succeeded": null,
+      "skipped": 1,
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "image",
+          "score": 0.7381599,
+          "bounds": {
+            "x": 72.54758,
+            "y": 152.612,
+            "width": 590.8673,
+            "height": 693.9916
+          },
+          "task": null,
+          "skipped": true,
+          "skipReason": "no-vl-task-for-layout-category"
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "score": 0.4570042,
+          "bounds": {
+            "x": 43.389698,
+            "y": 75.13815,
+            "width": 8.4928055,
+            "height": 8.508446
+          },
+          "task": "TextRecognition",
+          "skipped": false,
+          "skipReason": null
+        },
+        {
+          "regionIndex": 2,
+          "category": "text",
+          "score": 0.35140854,
+          "bounds": {
+            "x": 661.2267,
+            "y": 710.3175,
+            "width": 21.45459,
+            "height": 103.797
+          },
+          "task": "TextRecognition",
+          "skipped": false,
+          "skipReason": null
+        },
+        {
+          "regionIndex": 3,
+          "category": "aside_text",
+          "score": 0.30272943,
+          "bounds": {
+            "x": 661.2267,
+            "y": 710.3175,
+            "width": 21.45459,
+            "height": 103.797
+          },
+          "task": "TextRecognition",
+          "skipped": false,
+          "skipReason": null
+        }
+      ]
+    }
+  ]
+}
