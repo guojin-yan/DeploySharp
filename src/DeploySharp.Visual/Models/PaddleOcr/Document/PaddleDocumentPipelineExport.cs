@@ -126,6 +126,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     failedCount = routedPage.FailedCount,
                     skippedCount = routedPage.SkippedCount,
                     coordinatesAvailable = routedPage.CoordinatesAvailable,
+                    pageCoordinatesAvailable = routedPage.PageCoordinatesAvailable,
                     spatialOutputStatus = routedPage.SpatialOutputStatus,
                     regions = routedPage.Executions.Select(ToVisionLanguageExecutionObject).ToArray()
                 };
@@ -136,6 +137,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     succeededCount = visionLanguagePage.SucceededCount,
                     failedCount = visionLanguagePage.FailedCount,
                     coordinatesAvailable = visionLanguagePage.CoordinatesAvailable,
+                    pageCoordinatesAvailable = visionLanguagePage.PageCoordinatesAvailable,
                     spatialOutputStatus = visionLanguagePage.SpatialOutputStatus,
                     regions = visionLanguagePage.Executions.Select(ToVisionLanguageExecutionObject).ToArray()
                 };
@@ -147,8 +149,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     tokenIds = visionLanguage.TokenIds.ToArray(),
                     finishReason = visionLanguage.FinishReason.ToString(),
                     coordinatesAvailable = visionLanguage.CoordinatesAvailable,
+                    pageCoordinatesAvailable = visionLanguage.PageCoordinatesAvailable,
                     spatialOutputStatus = visionLanguage.SpatialOutputStatus,
-                    table = ToVisionLanguageTableObject(visionLanguage.Table)
+                    table = ToVisionLanguageTableObject(visionLanguage.Table),
+                    spotting = ToVisionLanguageSpottingObject(visionLanguage.Spotting)
                 };
 #endif
             if (result is PaddleDocumentTextResult text)
@@ -186,6 +190,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                         builder.Append(execution.Result.FinishReason).AppendLine().AppendLine();
                         AppendRawText(builder, execution.Result.Text);
                         AppendVisionLanguageTableMarkdown(builder, execution.Result.Table);
+                        AppendVisionLanguageSpottingMarkdown(builder, execution.Result.Spotting);
                     }
                     else builder.AppendLine(execution.Skipped ? execution.SkipReason : execution.FailureMessage);
                 }
@@ -203,6 +208,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                         builder.AppendLine().AppendLine();
                         AppendRawText(builder, execution.Result!.Text);
                         AppendVisionLanguageTableMarkdown(builder, execution.Result.Table);
+                        AppendVisionLanguageSpottingMarkdown(builder, execution.Result.Spotting);
                     }
                     else builder.AppendLine(execution.FailureMessage);
                 }
@@ -215,6 +221,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 builder.Append("- Finish reason: `").Append(visionLanguage.FinishReason).AppendLine("`");
                 builder.Append("- Coordinates: ").AppendLine(visionLanguage.SpatialOutputStatus);
                 AppendVisionLanguageTableMarkdown(builder, visionLanguage.Table);
+                AppendVisionLanguageSpottingMarkdown(builder, visionLanguage.Spotting);
             }
 #endif
             else if (result is PaddleDocumentTextResult text)
@@ -247,7 +254,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     inputSha256 = execution.Result.Metadata.InputSha256,
                     elapsedMs = execution.Result.Metadata.Elapsed.TotalMilliseconds,
                     warnings = execution.Result.Warnings.ToArray(),
-                    table = ToVisionLanguageTableObject(execution.Result.Table)
+                    coordinatesAvailable = execution.Result.CoordinatesAvailable,
+                    pageCoordinatesAvailable = execution.Result.PageCoordinatesAvailable,
+                    spatialOutputStatus = execution.Result.SpatialOutputStatus,
+                    table = ToVisionLanguageTableObject(execution.Result.Table),
+                    spotting = ToVisionLanguageSpottingObject(execution.Result.Spotting)
                 }
             };
 
@@ -272,6 +283,45 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             foreach (string diagnostic in table.Diagnostics) builder.Append("- Table diagnostic: ").AppendLine(diagnostic);
             // Html contains only our own table tags/attributes and escaped model text.
             if (table.Html != null) builder.AppendLine().AppendLine(table.Html).AppendLine();
+        }
+
+        private static object? ToVisionLanguageSpottingObject(PaddleOcrVlSpottingParseResult? spotting)
+            => spotting == null ? null : new
+            {
+                status = spotting.Status.ToString(), succeeded = spotting.Succeeded, text = spotting.Text,
+                sourceSize = new { width = spotting.SourceSize.Width, height = spotting.SourceSize.Height },
+                pageCoordinatesAvailable = spotting.PageCoordinatesAvailable,
+                sourceFrame = spotting.SourceFrame == null ? null : new { pageWidth = spotting.SourceFrame.PageSize.Width,
+                    pageHeight = spotting.SourceFrame.PageSize.Height, offsetX = spotting.SourceFrame.OffsetX, offsetY = spotting.SourceFrame.OffsetY },
+                diagnostics = spotting.Diagnostics.ToArray(),
+                regions = spotting.Regions.Select(region => new { text = region.Text, quantizedCoordinates = region.QuantizedCoordinates.ToArray(),
+                    sourcePolygon = region.SourcePolygon.Select(point => new { x = point.X, y = point.Y }).ToArray(),
+                    pagePolygon = region.PagePolygon?.Select(point => new { x = point.X, y = point.Y }).ToArray() }).ToArray()
+            };
+
+        private static void AppendVisionLanguageSpottingMarkdown(StringBuilder builder, PaddleOcrVlSpottingParseResult? spotting)
+        {
+            if (spotting == null) return;
+            builder.Append("- Spotting: ").Append(spotting.Status).Append("; regions: ").Append(spotting.Regions.Count)
+                .Append("; coordinate frames: ").AppendLine(spotting.PageCoordinatesAvailable ? "source + page pixels" : "source pixels only");
+            foreach (string diagnostic in spotting.Diagnostics) builder.Append("- Spotting diagnostic: ").AppendLine(diagnostic);
+            if (!spotting.Succeeded) return;
+            for (int index = 0; index < spotting.Regions.Count; index++)
+            {
+                PaddleOcrVlSpottingRegion region = spotting.Regions[index];
+                builder.Append("- Spotting region ").Append(index).AppendLine(":");
+                AppendRawText(builder, region.Text);
+                void AppendPolygon(string name, IReadOnlyList<PaddleOcrVlSpottingPoint> points)
+                {
+                    builder.Append("  ").Append(name).Append(": ");
+                    foreach (PaddleOcrVlSpottingPoint point in points)
+                        builder.Append('(').Append(point.X.ToString("R", System.Globalization.CultureInfo.InvariantCulture)).Append(", ")
+                            .Append(point.Y.ToString("R", System.Globalization.CultureInfo.InvariantCulture)).Append(") ");
+                    builder.AppendLine();
+                }
+                AppendPolygon("source pixels", region.SourcePolygon);
+                if (region.PagePolygon != null) AppendPolygon("page pixels", region.PagePolygon);
+            }
         }
 
         private static void AppendRawText(StringBuilder builder, string text)

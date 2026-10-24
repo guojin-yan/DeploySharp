@@ -8,7 +8,7 @@ using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 
 namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 {
-    /// <summary>Stores one raw PaddleOCR-VL task result in page provenance without pretending that the VL text contains coordinates. / 保存一项带页面来源的 PaddleOCR-VL 原始任务结果，不把 VL 文本冒充为坐标结果。</summary>
+    /// <summary>Stores raw VL generation and independently validated table/Spotting analysis with page provenance. / 保存 VL 原始生成、独立验证的表格/Spotting 分析及页面来源。</summary>
     public sealed class PaddleDocumentVisionLanguageResult : PaddleDocumentModuleResult
     {
         /// <summary>Initializes one immutable raw VL result. / 初始化一个不可变的 VL 原始结果。</summary>
@@ -21,6 +21,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             IEnumerable<string>? warnings = null,
             int regionIndex = -1,
             PaddleDocumentRegion? sourceRegion = null)
+            : this(task, metadata, text, tokenIds, finishReason, warnings, regionIndex, sourceRegion, null, null) { }
+
+        /// <summary>Creates a result with exact preparation geometry for structured Spotting output. / 使用精确准备几何创建结构化 Spotting 结果。</summary>
+        public PaddleDocumentVisionLanguageResult(PaddleOcrVlTask task, PaddleDocumentResultMetadata metadata, string text,
+            IEnumerable<int> tokenIds, GenerationFinishReason finishReason, IEnumerable<string>? warnings,
+            int regionIndex, PaddleDocumentRegion? sourceRegion, PaddleOcrVlImagePlan? imagePlan, PaddleOcrVlSourceFrame? sourceFrame)
             : base(ModuleForTask(task), metadata,
                 regions: sourceRegion == null ? null : new[] { sourceRegion },
                 warnings: warnings == null ? null : new List<string>(warnings).AsReadOnly())
@@ -31,6 +37,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (regionIndex < -1) throw new ArgumentOutOfRangeException(nameof(regionIndex));
             if (regionIndex >= 0 && sourceRegion == null) throw new ArgumentException("A source region is required when a region index is supplied.", nameof(sourceRegion));
             if (metadata.Model.Module != Module) throw new ArgumentException("The VL result model module does not match the requested task.", nameof(metadata));
+            if (imagePlan != null && imagePlan.Task != task) throw new ArgumentException("The preparation geometry belongs to a different VL task.", nameof(imagePlan));
+            if (sourceFrame != null && (imagePlan == null || sourceFrame.SourceSize != imagePlan.SourceSize))
+                throw new ArgumentException("A source frame requires matching preparation geometry.", nameof(sourceFrame));
             var copied = tokenIds.ToList();
             if (copied.Any(value => value < 0)) throw new ArgumentException("Generated token IDs cannot be negative.", nameof(tokenIds));
             Task = task;
@@ -39,7 +48,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             FinishReason = finishReason;
             RegionIndex = regionIndex;
             SourceRegion = sourceRegion;
+            ImagePlan = imagePlan;
+            SourceFrame = sourceFrame;
             Table = task == PaddleOcrVlTask.TableRecognition ? PaddleOcrVlTableParser.Parse(text, finishReason) : null;
+            Spotting = task == PaddleOcrVlTask.TextSpotting && imagePlan != null
+                ? PaddleOcrVlSpottingParser.Parse(text, finishReason, imagePlan.SourceSize, sourceFrame) : null;
         }
 
         /// <summary>Gets the original PaddleOCR-VL task. / 获取原始 PaddleOCR-VL 任务。</summary>
@@ -54,10 +67,30 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int RegionIndex { get; }
         /// <summary>Gets the source page region used to prepare this result, when it was routed from layout detection. / 获取用于准备本结果的页面源区域；若未经过版面区域路由则为空。</summary>
         public PaddleDocumentRegion? SourceRegion { get; }
-        /// <summary>Gets whether this result contains model-returned spatial coordinates. This is false for the current raw VL six-task output. / 获取结果是否包含模型返回的空间坐标；当前 VL 六类原始输出均为 false。</summary>
-        public bool CoordinatesAvailable => false;
-        /// <summary>Gets the stable explanation for the absent coordinates. / 获取没有坐标的稳定说明。</summary>
-        public string SpatialOutputStatus => "not-returned-by-paddleocr-vl-task-output";
+        /// <summary>Gets preparation geometry when supplied by the executing stage. / 获取执行阶段提供的准备几何。</summary>
+        public PaddleOcrVlImagePlan? ImagePlan { get; }
+        /// <summary>Gets optional exact crop-to-page translation. / 获取可选精确裁剪到页面平移。</summary>
+        public PaddleOcrVlSourceFrame? SourceFrame { get; }
+        /// <summary>Gets whether complete model-returned Spotting coordinates exist in source pixels. / 获取是否有完整的源像素 Spotting 模型坐标。</summary>
+        public bool CoordinatesAvailable => Spotting?.Succeeded == true;
+        /// <summary>Gets whether complete Spotting polygons also have an exact page mapping. / 获取完整 Spotting 多边形是否同时具有精确页面映射。</summary>
+        public bool PageCoordinatesAvailable => Spotting?.PageCoordinatesAvailable == true;
+        /// <summary>Gets an explicit coordinate frame or the reason coordinates are unavailable. / 获取明确坐标系或坐标不可用原因。</summary>
+        public string SpatialOutputStatus => CoordinatesAvailable
+            ? (PageCoordinatesAvailable ? "spotting-source-and-page-pixels" : "spotting-source-pixels;page-mapping-unavailable")
+            : Task == PaddleOcrVlTask.TextSpotting ? (Spotting == null ? "spotting-source-geometry-unavailable" : "spotting-parse-" + Spotting.Status)
+            : "not-returned-by-paddleocr-vl-task-output";
+
+        /// <summary>Gets bounded strict Spotting analysis when task and original source geometry are available. / 获取任务和原始源几何可用时的有界严格 Spotting 分析。</summary>
+        public PaddleOcrVlSpottingParseResult? Spotting { get; }
+
+        /// <summary>Reparses Spotting with caller-selected limits; raw output and default analysis remain unchanged. / 使用调用方限额重新解析 Spotting，保留原文和默认分析。</summary>
+        public PaddleOcrVlSpottingParseResult ParseSpotting(PaddleOcrVlSpottingParseOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Task != PaddleOcrVlTask.TextSpotting || ImagePlan == null) throw new InvalidOperationException("Spotting requires the original source image geometry.");
+            return options == null ? Spotting! : PaddleOcrVlSpottingParser.Parse(Text, FinishReason, ImagePlan.SourceSize, SourceFrame, options, cancellationToken);
+        }
 
         /// <summary>Gets bounded strict OTSL analysis for table tasks, including explicit invalid/incomplete status; other tasks return null. / 获取表格任务的有界严格 OTSL 分析（含非法或未完成状态），其它任务为空。</summary>
         public PaddleOcrVlTableParseResult? Table { get; }
@@ -219,10 +252,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int SucceededCount { get; }
         /// <summary>Gets the number of failed regions. / 获取失败区域数。</summary>
         public int FailedCount { get; }
-        /// <summary>Gets whether model-returned coordinates exist. Source regions are page provenance, not VL coordinates. / 获取模型是否返回坐标；源区域只是页面来源，不是 VL 模型坐标。</summary>
-        public bool CoordinatesAvailable => false;
+        /// <summary>Gets whether any region has complete model-returned Spotting source coordinates; source layout regions do not count. / 获取是否有区域具备完整 Spotting 源坐标，版面源框不计入。</summary>
+        public bool CoordinatesAvailable => Executions.Any(value => value.Result?.CoordinatesAvailable == true);
+        /// <summary>Gets whether at least one region has exact page-pixel Spotting coordinates; inspect each region for availability. / 获取是否至少一个区域具有精确页面 Spotting 坐标，具体可用性逐区域检查。</summary>
+        public bool PageCoordinatesAvailable => Executions.Any(value => value.Result?.PageCoordinatesAvailable == true);
         /// <summary>Gets the stable spatial-output boundary. / 获取稳定的空间输出边界说明。</summary>
-        public string SpatialOutputStatus => "source-regions-only;not-returned-by-paddleocr-vl-task-output";
+        public string SpatialOutputStatus => CoordinatesAvailable ? "spotting-coordinates-by-region;inspect-region-parse-status"
+            : Executions.Any(value => value.Task == PaddleOcrVlTask.TextSpotting) ? "spotting-unavailable;inspect-region-parse-status"
+            : "source-regions-only;not-returned-by-paddleocr-vl-task-output";
 
         private static IReadOnlyList<PaddleDocumentRegion> RegionsFor(IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions)
         {
@@ -275,9 +312,13 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         /// <summary>Gets the count of explicitly skipped source regions. / 获取明确跳过的源区域数量。</summary>
         public int SkippedCount { get; }
         /// <summary>Gets whether model-returned coordinates exist; source bounds are only provenance. / 获取模型是否返回坐标；源框只表示来源。</summary>
-        public bool CoordinatesAvailable => false;
+        public bool CoordinatesAvailable => Executions.Any(value => value.Result?.CoordinatesAvailable == true);
+        /// <summary>Gets whether any region contains exact page-pixel Spotting coordinates; other task results retain their own status. / 获取是否有区域包含精确页面 Spotting 坐标；其它任务保留自身状态。</summary>
+        public bool PageCoordinatesAvailable => Executions.Any(value => value.Result?.PageCoordinatesAvailable == true);
         /// <summary>Gets the stable explanation for source-only geometry. / 获取只有源几何信息的稳定说明。</summary>
-        public string SpatialOutputStatus => "source-regions-only;not-returned-by-paddleocr-vl-task-output";
+        public string SpatialOutputStatus => CoordinatesAvailable ? "spotting-coordinates-by-region;inspect-region-parse-status"
+            : Executions.Any(value => value.Task == PaddleOcrVlTask.TextSpotting) ? "spotting-unavailable;inspect-region-parse-status"
+            : "source-regions-only;not-returned-by-paddleocr-vl-task-output";
 
         private static IReadOnlyList<PaddleDocumentRegion> RegionsFor(IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions)
         {

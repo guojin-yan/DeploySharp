@@ -126,6 +126,12 @@ internal static class Program
             incomplete |= failed > 0 || executions.Any(region => !region.Skipped && region.Result?.FinishReason != GenerationFinishReason.EndOfSequence);
             foreach (PaddleDocumentVisionLanguageRegionExecution execution in executions)
             {
+                PaddleOcrVlSpottingParseResult? spotting = execution.Result?.Spotting;
+                if (spotting != null)
+                {
+                    incomplete |= !spotting.Succeeded;
+                    Console.WriteLine($"page={index} region={execution.RegionIndex} spotting={spotting.Status} polygons={spotting.Regions.Count} pageCoordinates={spotting.PageCoordinatesAvailable}");
+                }
                 PaddleOcrVlTableParseResult? table = execution.Result?.Table;
                 if (table == null) continue;
                 incomplete |= !table.Succeeded;

@@ -26,6 +26,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (prepared == null) throw new InvalidOperationException("The PaddleOCR-VL region preparation callback returned null.");
             if (prepared.ImagePlan.Task != task)
                 throw new InvalidOperationException("The prepared PaddleOCR-VL task does not match the region stage.");
+            if (prepared.SourceFrame != null && prepared.SourceFrame.PageSize != context.Page.SourceSize)
+                throw new InvalidOperationException("The prepared PaddleOCR-VL source frame does not match the page dimensions.");
             PaddleOcrVlGenerationResult generation;
             bool usedFallback = false;
             try
@@ -49,12 +51,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             string? inputSha = inputIdentity?.Invoke(context, region, index, prepared) ?? prepared.SourceSha256 ?? generation.SourceSha256;
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(inputSha)) throw new InvalidOperationException("PaddleOCR-VL region results require a source/input SHA-256.");
-            var warnings = new List<string> { "vl-regional-output-no-coordinates" };
+            var warnings = new List<string>();
+            if (task != PaddleOcrVlTask.TextSpotting) warnings.Add("vl-regional-output-no-coordinates");
+            else if (prepared.SourceFrame == null) warnings.Add("vl-spotting-page-mapping-unavailable");
             if (generation.FinishReason == GenerationFinishReason.MaxTokens) warnings.Add("missing-eos:sequence-may-be-truncated");
             if (usedFallback) warnings.Add("vl-region-fallback-used");
             var metadata = new PaddleDocumentResultMetadata(model, backend, generation.Elapsed, inputSha, context.Page.PageIndex);
             return new PaddleDocumentVisionLanguageResult(task, metadata, generation.Text, generation.TokenIds, generation.FinishReason,
-                warnings, regionIndex: index, sourceRegion: region);
+                warnings, regionIndex: index, sourceRegion: region, imagePlan: prepared.ImagePlan, sourceFrame: prepared.SourceFrame);
         }
 
         private static void ValidateRegion(PaddleDocumentRegion region, VisualSize sourceSize, int index)

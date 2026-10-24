@@ -69,14 +69,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 {
                     Rect crop = OpenCvVisualInputFactory.ToClippedRect(bounds, decoded.Cols, decoded.Rows);
                     using (Mat view = decoded.SubMat(crop))
-                        return CreateDecoded(view, task, minimumPixels, maximumPixels, null, cancellationToken);
+                        return CreateDecoded(view, task, minimumPixels, maximumPixels, null, cancellationToken,
+                            new PaddleOcrVlSourceFrame(new VisualSize(decoded.Cols, decoded.Rows), new VisualSize(crop.Width, crop.Height), crop.X, crop.Y));
                 }
                 catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while creating the PaddleOCR-VL region view.", exception); }
             });
         }
 
         private PaddleOcrVlPreparedInput CreateDecoded(Mat decoded, PaddleOcrVlTask task, int? minimumPixels,
-            int? maximumPixels, string? sourceSha256, CancellationToken cancellationToken)
+            int? maximumPixels, string? sourceSha256, CancellationToken cancellationToken, PaddleOcrVlSourceFrame? sourceFrame = null)
         {
             OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
             try
@@ -90,7 +91,8 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     outputType: OpenCvOutputType.UInt8);
                 byte[] rgb = OpenCvVisualInputFactory.CopyRowsAndConvertChannels(decoded, conversion);
                 OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
-                return _processor.Create(plan, rgb, sourceSha256 ?? CropIdentity(sourceSize, rgb), cancellationToken);
+                return _processor.Create(plan, rgb, sourceSha256 ?? CropIdentity(sourceSize, rgb), cancellationToken)
+                    .WithSourceFrame(sourceFrame ?? new PaddleOcrVlSourceFrame(sourceSize, sourceSize));
             }
             catch (OpenCvVisualException) { throw; }
             catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The PaddleOCR-VL OpenCV preprocessing operation was cancelled.", exception); }

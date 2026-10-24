@@ -10,7 +10,7 @@ using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 {
     /// <summary>Adapts one PaddleOCR-VL task to the page/multi-page PP-Structure pipeline. / 将一项 PaddleOCR-VL 任务适配到页面和多页 PP-Structure Pipeline。</summary>
-    /// <remarks>The stage preserves raw text, Token IDs, EOS/truncation and page provenance. Table tasks also expose validated logical OTSL cells/HTML; no pixel bounds, polygons or spotting coordinates are invented. / 阶段保留原文、Token、EOS/截断和页面来源；表格任务另提供经验证的 OTSL 逻辑单元格/HTML，不虚构像素框、Polygon 或 Spotting 坐标。</remarks>
+    /// <remarks>Preserves raw text, Token IDs, EOS/truncation and page provenance. Table output exposes validated OTSL; Spotting exposes original-source polygons and optional explicit page mapping. / 保留原文、Token、EOS/截断和页面来源；表格提供经验证 OTSL，Spotting 提供原始源多边形及可选显式页面映射。</remarks>
     public sealed class PaddleOcrVlDocumentStage : IPaddleDocumentPipelineStage
     {
         private readonly PaddleDocumentModelDescriptor _model;
@@ -70,21 +70,32 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             cancellationToken.ThrowIfCancellationRequested();
             Stopwatch watch = Stopwatch.StartNew();
             PaddleOcrVlPreparedInput? input = await _prepare(context, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             if (input == null) throw new InvalidOperationException("The PaddleOCR-VL document preparation callback returned null.");
+            if (input.ImagePlan.Task != _task) throw new InvalidOperationException("The prepared PaddleOCR-VL task does not match the document stage.");
+            if (input.SourceFrame != null && input.SourceFrame.PageSize != context.Page.SourceSize)
+                throw new InvalidOperationException("The prepared PaddleOCR-VL source frame does not match the page dimensions.");
             PaddleOcrVlGenerationResult generation = await _generate(context, input, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             if (generation == null) throw new InvalidOperationException("The PaddleOCR-VL document generation callback returned null.");
             if (generation.Task != _task)
                 throw new InvalidOperationException("The PaddleOCR-VL generation task does not match the document stage. expected=" + _task + ";actual=" + generation.Task);
+            if (input.SourceSha256 != null && generation.SourceSha256 != null
+                && !string.Equals(input.SourceSha256, generation.SourceSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The PaddleOCR-VL generation source does not match the prepared image.");
             string? inputSha = _inputIdentity?.Invoke(context, input) ?? input.SourceSha256;
             if (string.IsNullOrWhiteSpace(inputSha))
                 throw new InvalidOperationException("PaddleOCR-VL document results require a source/input SHA-256. Provide inputIdentity or set PreparedInput.SourceSha256.");
             watch.Stop();
-            var warnings = new List<string> { "vl-raw-output-no-coordinates" };
+            cancellationToken.ThrowIfCancellationRequested();
+            var warnings = new List<string>();
+            if (_task != PaddleOcrVlTask.TextSpotting) warnings.Add("vl-raw-output-no-coordinates");
+            else if (input.SourceFrame == null) warnings.Add("vl-spotting-page-mapping-unavailable");
             if (generation.FinishReason == GenerationFinishReason.MaxTokens)
                 warnings.Add("missing-eos:sequence-may-be-truncated");
             return new PaddleDocumentVisionLanguageResult(_task,
                 new PaddleDocumentResultMetadata(_model, _backend, watch.Elapsed, inputSha, context.Page.PageIndex),
-                generation.Text, generation.TokenIds, generation.FinishReason, warnings);
+                generation.Text, generation.TokenIds, generation.FinishReason, warnings, -1, null, input.ImagePlan, input.SourceFrame);
         }
     }
 }

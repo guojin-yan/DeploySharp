@@ -27,6 +27,8 @@
 
 PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；实际四张 ONNX 图和 tokenizer 资产加入 `models-paddleocr` Release 后，才会把下载状态从“待加入 Release”更新为可下载。页面/多页编排与其它后端仍按实测矩阵逐项记录。
 
+VL 的表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。使用方式和各自边界见[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
+
 精确模型 ID、下载入口、工件格式和发布版本见[官方模型目录](model-catalog.md)；每个模型与后端的真实验证结果见[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
 
 ## 如何阅读一个模型条目

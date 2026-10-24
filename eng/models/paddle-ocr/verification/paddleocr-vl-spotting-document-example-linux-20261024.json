@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-spotting-document-example-v1",
+  "generatedUtc": "2026-10-24T10:53:28.8410519+00:00",
+  "status": "standalone-example-matches-real-generation-and-official-spotting",
+  "sourceReport": "paddleocr-vl-spotting-page-linux-20261024.json",
+  "sourceReportSha256": "a6065b06279750ed8ecac6d4ee59f6656787ab50e509d2206f3024d8ba8cdc26",
+  "spottingReference": "paddleocr-vl-spotting-official-reference-20261024.json",
+  "spottingReferenceSha256": "3ca33f2433c28ba82b3d08cd5f88a57aca6d9b303f67cc203dd30b4ad38f6776",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "runtime": {
+    "targetFramework": "net8.0",
+    "rid": "ubuntu.22.04-x64",
+    "framework": ".NET 10.0.9",
+    "rollForward": "Major",
+    "ldLibraryPath": "explicitly unset",
+    "provider": "CPUExecutionProvider",
+    "pageParallelism": 1,
+    "sessionCount": 1,
+    "localAndRemoteFilesMatch": true,
+    "files": [
+      {
+        "name": "PaddleOcrVlDocument.dll",
+        "sha256": "36ee4a6b1df481430e73b8f60c91ada5d2cd4af0fa8025c8ef7a7575040b3f12"
+      },
+      {
+        "name": "PaddleOcrVlDocument.deps.json",
+        "sha256": "061e183f5bfa4092bbdda4ec0773420ee2fa696cdf2ee70093f1a07151f01a16"
+      },
+      {
+        "name": "PaddleOcrVlDocument.runtimeconfig.json",
+        "sha256": "db98f097ddbb64e33943e4ba512c0777d0fc725f2ab3b94efa917efd44430cb4"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Core.dll",
+        "sha256": "a77a5b01dae6cdc9dfc9331f00bd0df575284700e4f28bdfcd5c58e6e1a95f5a"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Extensibility.dll",
+        "sha256": "b3dec6e0f9d1ce3be95ccf33d5e0c236880787b76eaaaa9f89b9bc4aa4b1eb28"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Visual.dll",
+        "sha256": "da79eee242194ed3b0d39c02c6d219d73c7cd3a0415174d53bbf2029800359aa"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Visual.OpenCV.dll",
+        "sha256": "e019f920b8d789fe55319c1be345e9916bfc4ec16f53414a80beb6df9d86de7d"
+      },
+      {
+        "name": "JYPPX.DeploySharp.Backend.OnnxRuntime.dll",
+        "sha256": "cc492e2470f56a3dfa39e490cc5e88a49271685197f64ed151df4b01a0f7a47f"
+      },
+      {
+        "name": "libJYPPX.OpenCV.Native.so",
+        "sha256": "d7d805813398d1d1bc93aedef4a939fb19d91fa0fa923750ef4a0b5907dee6cc"
+      },
+      {
+        "name": "libonnxruntime.so",
+        "sha256": "1461ef7cc3d9e49982591721683cc3e3a55580aeca9a5254e7aac47b75ee4bab"
+      }
+    ]
+  },
+  "exitCode": 0,
+  "stdout": [
+    "page=7 region=0 spotting=Succeeded polygons=15 pageCoordinates=True",
+    "page=7 succeeded=1 failed=0 skipped=0"
+  ],
+  "page": {
+    "pageIndex": 7,
+    "succeeded": 1,
+    "failed": 0,
+    "tokenCount": 286,
+    "spottingRegionCount": 15,
+    "sourceAndPagePointCount": 60,
+    "tokenAndTextExact": true,
+    "sourceCoordinatesExact": true,
+    "pageCoordinatesExact": true,
+    "quantizedValuesAndFramesExact": true,
+    "jsonSha256": "c16dfa0fdc141a6003f58f63a64d75673ffd97754a5b369c68fa4f93a4cfe6f4",
+    "markdownSha256": "c3a9cb538fe3a200916dfdc52d7c9977f7851d5fc37d10567cd87416cf4486e2"
+  },
+  "boundary": "One lossless assembled Spotting page with fractional manual ROI; independent application generation/JSON/Markdown checked against real integration and pinned official source polygons. Not labelled text/localization quality, automatic layout, reading order, other backends or formal performance."
+}

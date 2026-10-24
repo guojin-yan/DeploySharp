@@ -104,7 +104,7 @@ dotnet run --project samples/02-visual/paddleocr-vl-document/PaddleOcrVlDocument
   E:\Data\document\pages.json E:\Data\document\vl-output 2
 ```
 
-最后的 `2` 是页面并发上限，省略时顺序处理。示例自动引用 Windows x64 或 Ubuntu 22.04 x64 的 OpenCV runtime；原生系统依赖仍需可用。`Ctrl+C` 取消流水线。每页输出 `page-<index>.json` 和 `.md`，包括原始生成文本、Token、结束原因、页面与区域输入身份、源区域坐标、局部失败和阶段耗时。存在失败、未到 EOS 或表格结构解析失败的区域时返回非零退出码。
+最后的 `2` 是页面并发上限，省略时顺序处理。示例自动引用 Windows x64 或 Ubuntu 22.04 x64 的 OpenCV runtime；原生系统依赖仍需可用。`Ctrl+C` 取消流水线。每页输出 `page-<index>.json` 和 `.md`，包括原始生成文本、Token、结束原因、页面与区域输入身份、源区域坐标、局部失败和阶段耗时。存在失败、未到 EOS、表格结构或 Spotting 解析失败的区域时返回非零退出码。
 
 表格任务自动附带严格 OTSL 分析。解析成功的区域另生成 `page-<index>-region-<index>.table.html`，包含横向/纵向合并；JSON 的 `table` 对象保留逻辑单元格、跨度、状态和诊断，Markdown 显示转义后的表格并保留 OTSL 原文。生成成功数仍统计生成结果，表格是否可用应检查 `table.succeeded`；示例控制台单独打印该状态。示例不自动启用行宽修复，库的显式修复用法见[VL 表格教程](../../../docs/articles/visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。输出目录应为本次运行专用目录，避免将以前运行留下的 HTML 误当成本次结果。
 
@@ -118,4 +118,8 @@ Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-
 
 检测器模式输出的 JSON/Markdown 同时包含实际布局结果和 VL 任务结果。`PaddleDocumentPipelineResult.Elapsed` 统计检测前处理/推理/映射及区域准备/生成阶段，外层文件读取和首次解码不在其中；测量完整调用延迟时应在 `RunAsync` 外部计时，不能直接将该字段作为正式端到端性能。
 
-输出保留原始 VL 文本，`CoordinatesAvailable=false`：源区域坐标来自调用方或检测器，不是 VL 预测的文字框。表格的逻辑单元格/HTML 已有[官方对照及真实页面联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)；阅读顺序、单元格像素框、Spotting 等其它任务的结构化解析和独立标注质量仍需分别验证。
+输出保留原始 VL 文本。Spotting 任务自动解析四边形，JSON 的 `spotting.regions` 同时保留八个量化值、`sourcePolygon` 和 `pagePolygon`，Markdown 明确区分源裁剪与整页坐标。源尺寸采用 Spotting 放大前的原图尺寸，页面平移采用实际取整/裁边后的整数 crop 原点，原 `sourceRegion` 仍保留请求框。控制台单独打印解析状态和多边形数，生成成功计数不等于解析成功。
+
+可将 manifest 的 `task` 设置为 `TextSpotting`；混合模式则在 `taskByCategory` 中配置 `"spotting": "TextSpotting"`，并提供对应区域。只有完整 EOS、标记配对及四边形都合法时 `CoordinatesAvailable=true`，本 OpenCV 适配器也会提供 `PageCoordinatesAvailable=true`。源框本身不被当作文字预测框；其它任务不因页面聚合的可用标记变成有坐标。
+
+表格的逻辑单元格/HTML 已有[官方对照及真实页面联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)，Spotting 见[坐标规则及实际 ROI 联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)和[详细使用教程](../../../docs/articles/visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。阅读顺序、单元格像素框、其它任务语义与独立标注质量仍需分别验证。

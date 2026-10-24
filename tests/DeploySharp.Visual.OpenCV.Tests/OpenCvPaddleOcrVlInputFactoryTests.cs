@@ -30,6 +30,9 @@ public sealed class OpenCvPaddleOcrVlInputFactoryTests
 
         Assert.AreEqual(source.Sha256, prepared.SourceSha256);
         Assert.AreEqual(new VisualSize(2, 2), prepared.ImagePlan.SourceSize);
+        Assert.AreEqual(new VisualSize(2, 2), prepared.SourceFrame!.PageSize);
+        Assert.AreEqual(0, prepared.SourceFrame.OffsetX);
+        Assert.AreEqual(0, prepared.SourceFrame.OffsetY);
         Assert.AreEqual(new TensorShape(2, 2, 3, 14, 14), prepared.PixelPatches.Shape);
         Assert.IsTrue(((Tensor<float>)prepared.PixelPatches).ToArray()[0] < 0f);
     }
@@ -73,6 +76,10 @@ public sealed class OpenCvPaddleOcrVlInputFactoryTests
         PaddleOcrVlPreparedInput expected = new PaddleOcrVlImageProcessor().Create(rgb, new VisualSize(5, 3), minimumPixels: 784, maximumPixels: 3136);
 
         Assert.AreEqual(new VisualSize(5, 3), actual.ImagePlan.SourceSize);
+        Assert.AreEqual(new VisualSize(9, 6), actual.SourceFrame!.PageSize);
+        Assert.AreEqual(new VisualSize(5, 3), actual.SourceFrame.SourceSize);
+        Assert.AreEqual(0, actual.SourceFrame.OffsetX);
+        Assert.AreEqual(1, actual.SourceFrame.OffsetY);
         CollectionAssert.AreEqual(expected.PixelPatches.ToArray(), actual.PixelPatches.ToArray());
         Assert.AreNotEqual(source.Sha256, actual.SourceSha256);
         Assert.AreEqual(actual.SourceSha256, factory.CreateRegion(page, new RectangleF(0, 1, 5, 3), minimumPixels: 784, maximumPixels: 3136).SourceSha256);
@@ -125,6 +132,7 @@ public sealed class OpenCvPaddleOcrVlInputFactoryTests
                 Assert.AreEqual(results[0].SourceSha256, result.SourceSha256); // Same RGB content, distinct page locations.
                 CollectionAssert.AreEqual(results[0].PixelPatches.ToArray(), result.PixelPatches.ToArray());
             }
+            CollectionAssert.AreEqual(Enumerable.Range(0, 8).ToArray(), results.Select(value => value.SourceFrame!.OffsetX).ToArray());
         }
         finally { if (File.Exists(path)) File.Delete(path); }
     }

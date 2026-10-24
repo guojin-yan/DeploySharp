@@ -1007,7 +1007,9 @@ PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
 
 需要自动检测区域时，`OpenCvPaddleOcrVlDocumentPipeline` 可以将真实布局 `VisualPipeline` 接到混合 VL，检测前处理和全部 crop 共用同一张解码底图。[PP-DocLayout-L 联合实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)使用两张独立 FUNSD 页面：8 个检测区域中 6 个生成、2 个图片区域跳过，全部 `3,960,768` 个 Patch 数值和 `653` 个 Token/文本匹配相同裁剪的官方参考且 EOS。它保留检测器顺序、页码和索引，不推断阅读顺序；默认跳过图片可能漏掉被检测器误分类的正文，重叠类别也可能重复解析。[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)说明如何配置 `layoutDetector`、区域上限和类别覆盖。
 
-`PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均为 `false`，源区域是调用方/版面模型的坐标，不是 VL 预测的文字框。表格已有经验证的 OTSL 逻辑单元格/HTML；自动阅读顺序、真实版面模型与 VL 的联合质量、Spotting/公式/图表等任务归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+表格已有经验证的 OTSL 逻辑单元格/HTML；Spotting 也提供两种官方标记格式的严格解析。`PaddleDocumentVisionLanguageResult.Spotting` 保留文字、原始量化值及源图多边形，OpenCV 的精确整数 crop 映射另提供整页多边形。`CoordinatesAvailable` 表示该区域解析成功并有源像素坐标，`PageCoordinatesAvailable` 表示同时有页面映射；页面聚合标记只表示至少一个区域可用。源框仍来自调用方/版面模型，不被当作 VL 预测框。详见[Spotting 坐标教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)及[实际裁剪联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)。
+
+自动阅读顺序、真实版面模型与 VL 的联合质量、公式/图表等任务语义归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。
 
 ### 自然宽行有哪些真实后端证据

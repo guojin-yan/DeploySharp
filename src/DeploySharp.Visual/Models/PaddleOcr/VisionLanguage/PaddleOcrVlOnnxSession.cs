@@ -20,6 +20,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         /// <summary>Binds exact processor geometry to caller-prepared patches. / 将精确 Processor 几何绑定到调用方已准备的 Patch。</summary>
         /// <remarks>Pixel values must match the pinned Pillow processor: RGB, bicubic, rescale 1/255, mean/std 0.5; spotting has a preceding Lanczos step. The caller must not mutate the tensor during inference. / 像素须匹配固定 Pillow Processor：RGB、Bicubic、1/255、Mean/Std=0.5；Spotting 另有前置 Lanczos 步骤。推理期间调用方不得修改 Tensor。</remarks>
         public PaddleOcrVlPreparedInput(PaddleOcrVlImagePlan imagePlan, Tensor<float> pixelPatches, string? sourceSha256 = null)
+            : this(imagePlan, pixelPatches, sourceSha256, null) { }
+
+        /// <summary>Binds prepared patches to an optional exact source-to-page crop frame without copying the tensor. / 将 Patch 绑定到可选精确源到页面裁剪坐标系，不复制张量。</summary>
+        public PaddleOcrVlPreparedInput(PaddleOcrVlImagePlan imagePlan, Tensor<float> pixelPatches, string? sourceSha256, PaddleOcrVlSourceFrame? sourceFrame)
         {
             ImagePlan = imagePlan ?? throw new ArgumentNullException(nameof(imagePlan));
             PixelPatches = pixelPatches ?? throw new ArgumentNullException(nameof(pixelPatches));
@@ -27,7 +31,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 throw new ArgumentException("PaddleOCR-VL patches must use [grid_h,grid_w,3,14,14] raster layout.", nameof(pixelPatches));
             if (sourceSha256 != null && (sourceSha256.Length != 64 || sourceSha256.Any(value => !Uri.IsHexDigit(value))))
                 throw new ArgumentException("A source identity must be a SHA256 hex string.", nameof(sourceSha256));
+            if (sourceFrame != null && sourceFrame.SourceSize != imagePlan.SourceSize)
+                throw new ArgumentException("The source frame must match the original processor source size.", nameof(sourceFrame));
             SourceSha256 = sourceSha256;
+            SourceFrame = sourceFrame;
         }
         /// <summary>Gets source, prepared and final image geometry. / 获取源图、准备图与最终图像几何。</summary>
         public PaddleOcrVlImagePlan ImagePlan { get; }
@@ -35,6 +42,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public Tensor<float> PixelPatches { get; }
         /// <summary>Gets an optional source SHA256: encoded image identity, or the adapter's dimension-bound RGB crop identity. / 获取可选源 SHA256：编码图像身份，或适配器按尺寸绑定的 RGB 裁剪身份。</summary>
         public string? SourceSha256 { get; }
+        /// <summary>Gets exact source-to-page translation, or null for caller-prepared input without page mapping. / 获取精确源到页面平移；调用方未提供页面映射时为空。</summary>
+        public PaddleOcrVlSourceFrame? SourceFrame { get; }
+        /// <summary>Attaches an exact crop frame without copying or modifying pixel patches. / 附加精确裁剪坐标系，不复制或修改像素 Patch。</summary>
+        public PaddleOcrVlPreparedInput WithSourceFrame(PaddleOcrVlSourceFrame sourceFrame)
+            => new PaddleOcrVlPreparedInput(ImagePlan, PixelPatches, SourceSha256, sourceFrame ?? throw new ArgumentNullException(nameof(sourceFrame)));
     }
 
     /// <summary>Defines bounded greedy PaddleOCR-VL generation. / 定义有界 PaddleOCR-VL Greedy 生成。</summary>

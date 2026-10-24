@@ -318,7 +318,7 @@ PaddleDocumentVisionLanguageResult raw =
     page.GetRequired<PaddleDocumentVisionLanguageResult>(PaddleDocumentModule.TableStructureRecognition);
 ```
 
-`PaddleDocumentVisionLanguageResult` 的 `Text` 是模型原始输出，`TokenIds` 和 `FinishReason` 可用于回放和截断诊断。表格任务会在 `Table` 中附带经检查的逻辑单元格与 HTML；这不提供单元格像素框。`CoordinatesAvailable` 仍为 `false`，导出器继续写出 `spatialOutputStatus`。公式、图表、印章和 Spotting 的任务级结构化归一仍需分别完成，不能由表格转换结果外推。
+`PaddleDocumentVisionLanguageResult` 的 `Text` 是模型原始输出，`TokenIds` 和 `FinishReason` 可用于回放和截断诊断。表格任务在 `Table` 中附带经检查的逻辑单元格与 HTML，不提供单元格像素框；Spotting 在有原始输入几何时通过 `Spotting` 返回文字四边形。`CoordinatesAvailable` 表示完整的源图坐标是否可用，`PageCoordinatesAvailable` 另表示是否有精确页面映射。公式、图表和印章的任务级语义归一不由上述两种解析结果外推。
 
 #### VL 表格：OTSL、合并单元格与 HTML
 
@@ -362,6 +362,42 @@ PaddleOcrVlTableParseResult repaired = raw.ParseTable(
 上述四个上限也是默认值，限制的是 UTF-16 原文字符数、原始行数、每行原始槽数以及原始/修复后网格大小。超过上限返回 `LimitExceeded`，取消请求传播 `OperationCanceledException`。最终行可以在 EOS 处结束，末尾 `<nl>` 可省略。HTML 仅生成固定的 `table/tr/td` 和跨度属性，单元格内容按官方规则去掉两端空白并做 HTML 转义；原有实体也作为文本保留，不执行模型生成的标签。JSON 导出保留 `table.status/diagnostics/cells/html`；Markdown 同时保留原始 OTSL 代码围栏和转义后的表格。
 
 [官方 OTSL 对照与真实页面联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)覆盖合并、空格/特殊字符和显式行宽修复，也核对已生成的两张真实表格。它验证转换与接入正确性，不评估模型识别内容是否正确。
+
+#### VL Spotting：文字四边形与页面坐标
+
+选择 `PaddleOcrVlTask.TextSpotting` 后，Session 仍返回原始生成结果；页面、区域及混合阶段还会自动解析定位标记。支持 `<|TEXT_START|>…<|TEXT_END|>` / `<|LOC_BEGIN|>…<|LOC_END|>` 块式输出，以及“文本 + 八个 `<|LOC_n|>`”的平铺输出。八个值按模型顺序组成四个点，范围为 `[0,1000]`。坐标按 `x=n/1000.0*原始宽`、`y=n/1000.0*原始高` 还原，使用双精度保留小数，不重排顶点、不裁切预测、不猜测置信度。
+
+Spotting 对较小图像可能先执行 2 倍 Lanczos，再执行 Bicubic。解析使用的是 `ImagePlan.SourceSize`，不是放大后的 `PreparedSize` 或最终 `ResizedSize`。直接使用 Session 时可以显式解析：
+
+```csharp
+PaddleOcrVlSpottingParseResult spotting = PaddleOcrVlSpottingParser.Parse(
+    generation.Text, generation.FinishReason, prepared.ImagePlan.SourceSize,
+    prepared.SourceFrame, cancellationToken: cancellationToken);
+if (spotting.Succeeded)
+{
+    foreach (PaddleOcrVlSpottingRegion line in spotting.Regions)
+    {
+        Console.WriteLine(line.Text);
+        var cropPoints = line.SourcePolygon;
+        var pagePoints = line.PagePolygon; // 没有精确页面映射时为 null。
+    }
+}
+```
+
+OpenCV 的文件、整页和矩形区域准备器会自动附带 `PaddleOcrVlSourceFrame`。区域框经裁边和 floor/ceil 后，框架保存实际整数裁剪尺寸与页面原点；`SourcePolygon` 是裁剪图局部像素，`PagePolygon` 才是加上该原点的整页像素。原有 `SourceRegion` 保留请求框，不能拿它的浮点原点替代实际裁剪原点。区域内容 SHA 相同也不代表页面位置相同，映射随每次请求独立保存。
+
+自定义准备器若只提供 RGB、Patch 和图像规划，仍可得到源图局部坐标，但默认不推测页面位置。对于未经旋转、缩放或透视变换的整数矩形 crop，可显式绑定映射，且不会复制 Patch Tensor：
+
+```csharp
+prepared = prepared.WithSourceFrame(new PaddleOcrVlSourceFrame(
+    pageSize, prepared.ImagePlan.SourceSize, actualCropLeft, actualCropTop));
+```
+
+透视矫正、旋转、额外缩放后的自定义 crop 不能套用此平移映射；调用方需使用自己的逆变换。没有原始几何的手动原文结果不会伪造定位坐标，`ParseSpotting()` 会明确拒绝该情况。
+
+只有 EOS 且所有配对、坐标和四边形合法时 `Spotting.Succeeded=true`。少于八值、额外块内值、未配对文本、越界或错误标记、重复点、退化及自交四边形均返回 `InvalidStructure`；任何失败都不发布部分成功区域。非 EOS 为 `IncompleteGeneration`，不是“完整识别”。默认最多解析 1,048,576 个 UTF-16 字符和 4096 个区域，超限返回 `LimitExceeded`，取消直接传播。用 `result.ParseSpotting(new PaddleOcrVlSpottingParseOptions(...))` 可以独立调整上限，不改变原文或默认分析。
+
+JSON 的 `spotting` 保存状态、诊断、原始量化值、源图/页面多边形和映射元数据，Markdown 显示独立的坐标系与文字代码围栏。页面聚合的坐标可用标记表示“至少一个区域可用”，并不保证所有任务都有模型坐标，必须检查逐区域状态。[官方解析对照与实际 ROI 联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)记录了当前验证范围；它不等于人工标注的文字或定位准确率。
 
 如果版面检测已经产出页面区域，可以使用 `PaddleOcrVlRegionStage` 逐区域路由同一个 VL 任务。它按版面结果顺序准备每个 crop，保留原区域的页面坐标、区域索引和输入 SHA，并返回 `PaddleDocumentVisionLanguagePageResult`。输入任务必须与阶段一致；当输入和生成结果都携带 SHA 时，两者必须相同，防止把另一张 crop 的结果关联到当前区域。`continueOnRegionFailure: true` 时，单个区域的裁剪、生成或身份校验失败会变成带异常类型和消息的隔离记录，后续区域仍会运行；取消请求会向上传播，也不会启动备用推理。`fallback` 只用于调用方提供的另一条 VL 生成路径，不能把普通 CTC OCR 的文本伪装成 VL 结果。
 
@@ -408,7 +444,7 @@ PaddleDocumentPipelineResult actualPage = await pipeline.RunAsync(pageInput, can
 
 [Linux CPU 区域验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)从同一官方表格 RGB 拼成两张 PNG 页面，运行三个手工区域。Patch 及 `213` Token/文本全部一致、全部 EOS，并检查页码 7→3 及页面内的调用方区域顺序。该记录验证实际裁剪与页面编排，不等于独立多页质量、自动版面检测或阅读顺序验证。
 
-区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，不是 PaddleOCR-VL 模型返回的 spotting 坐标；`CoordinatesAvailable` 仍为 `false`。该阶段不会自动生成表格 HTML、单元格、公式语义、图表结构或模型坐标。`PaddleOcrVlRegionStage` 保留“所有区域运行同一任务”的语义；混合页面使用 `PaddleOcrVlLayoutStage`，或它的 OpenCV 单次解码适配器 `OpenCvPaddleOcrVlLayoutStage`：
+区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，区别于 VL 模型通过 `Spotting` 返回的文字多边形。表格的逻辑单元格/HTML 和 Spotting 坐标各自检查解析状态，不会自动补出公式语义、图表结构或单元格像素框。`PaddleOcrVlRegionStage` 保留“所有区域运行同一任务”的语义；混合页面使用 `PaddleOcrVlLayoutStage`，或它的 OpenCV 单次解码适配器 `OpenCvPaddleOcrVlLayoutStage`：
 
 ```csharp
 var mixedModel = new PaddleDocumentModelDescriptor(
