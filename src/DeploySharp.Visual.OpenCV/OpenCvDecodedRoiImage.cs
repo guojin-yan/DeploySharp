@@ -28,6 +28,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         /// <summary>Gets the encoded-source identity when available. / 获取可用的编码源标识。</summary>
         public string? InputId { get; }
 
+        // Keep the native owner alive for optional adapters without exposing a caller-owned Mat.
+        internal T PrepareFromDecoded<T>(Func<Mat, T> prepare)
+        {
+            if (prepare == null) throw new ArgumentNullException(nameof(prepare));
+            EnterPreparation();
+            try { return prepare(_decoded); }
+            finally { ExitPreparation(); }
+        }
+
         /// <summary>Prepares one axis-aligned ROI while retaining original-source geometry. / 准备一个轴对齐 ROI，同时保留原始源图几何。</summary>
         public PreparedVisualInput PrepareRectangle(
             IVisualRoiGeometry geometry,

@@ -978,9 +978,28 @@ Console.WriteLine(result.Text);
 
 Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
 
-图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。这里的 RGB 解码来自上游 Pillow；OpenCV 编码图像解码、多页版面裁剪和其它后端仍需分别验证。
+图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。该六任务对照使用上游 Pillow 解码的 RGB；OpenCV 的 PNG 页面区域另有独立验证，JPEG 解码差异仍需单独检查。
 
-普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前已提供 `PaddleOcrVlDocumentStage` 的单图页面阶段，以及 `PaddleOcrVlRegionStage` 的版面区域路由阶段：后者按区域顺序准备 crop，保留页码、区域索引、源坐标、输入 SHA、Token 和 EOS/截断状态，并可在配置后隔离单区域失败；`PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均明确为 `false`，不会伪造 HTML、单元格、Spotting 坐标或公式结构。该区域路由已经完成接口和合同测试，但裁剪由调用方提供，尚未完成真实 VL 多页页面样例、自动阅读顺序策略、结构化归一和质量结果；OpenVINO/TensorRT/OpenCV DNN/CUDA、GPU 性能、标注集质量和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前已提供 `PaddleOcrVlDocumentStage` 的单图页面阶段、`PaddleOcrVlRegionStage` 的通用区域路由，以及 `OpenCvPaddleOcrVlRegionStage` 的实际页面裁剪适配器。OpenCV 阶段每页只解码一次，对多个区域复用底图，只复制各自的紧密 RGB，不重新编码 crop 或克隆整页。区域结果保留页码、区域索引、源坐标、输入 SHA、Token 和 EOS/截断状态，并可配置单区域失败隔离。[完整页面/多页示例](../../samples/02-visual/paddleocr-vl-document/README.md)提供图片与区域 manifest、取消、页面并发和 JSON/Markdown 导出；[PP-Structure 用法](visual-paddle-structure.md#paddleocr-vl-原始任务接入页面和多页编排)说明如何接在已有版面阶段之后。
+
+如果已经持有解码底图，也可直接准备多个区域：
+
+```csharp
+using var pageImage = new OpenCvVisualInputFactory().DecodeForRois(
+    OpenCvImageSource.FromFile(imagePath), cancellationToken);
+var vlInputs = new OpenCvPaddleOcrVlInputFactory();
+PaddleOcrVlPreparedInput firstRegion = vlInputs.CreateRegion(pageImage,
+    new JYPPX.DeploySharp.Geometry.RectangleF(80, 200, 840, 500),
+    PaddleOcrVlTask.TableRecognition, cancellationToken: cancellationToken);
+PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
+    firstRegion, tokenizer, cancellationToken: cancellationToken);
+```
+
+矩形先左上向下、右下向上取整，再裁至源图边界；不相交区域拒绝执行。`CreateFromPage` 可在不重复解码的情况下准备整页。页面 SHA 是原始编码文件 SHA；区域 `SourceSha256` 是 `SHA256(UTF8("deploysharp-paddleocr-vl-rgb8-v1\n<width>x<height>\n") + packedRGB)`，按尺寸和像素区分输入。同内容区域可共享该身份，位置仍由各自的 `SourceRegion` 保存。适配器持有底图直到准备结束，释放时等待正在进行的准备，不向调用方暴露悬空 Mat。
+
+[区域真实运行记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)使用同一官方表格 RGB 拼出两张 PNG 页面、三个手工区域，验证了 OpenCV 解码和非连续 crop 的 Patch 精确一致，以及全部 `213` Token/文本一致并 EOS。它检查页面/区域来源和顺序，不是独立多页质量集，也不包含真实版面检测模型。
+
+`PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均为 `false`，源区域是调用方/版面模型的坐标，不是 VL 预测的文字框。自动阅读顺序、结构化 HTML/单元格/Spotting/公式/图表归一和独立标注质量尚未完成；每阶段仍执行一个任务，不根据区域 category 自动选任务。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。
 
 ### 自然宽行有哪些真实后端证据

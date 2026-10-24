@@ -64,6 +64,8 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-reference-summary-linux-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md',
+    'samples/02-visual/paddleocr-vl-document/README.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-linux-rtx2060-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md',

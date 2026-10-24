@@ -452,7 +452,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         }
  #endif
 
-        private static Rect ToClippedRect(RectangleF crop, int width, int height)
+        internal static Rect ToClippedRect(RectangleF crop, int width, int height)
         {
             if (float.IsNaN(crop.X) || float.IsNaN(crop.Y) || float.IsNaN(crop.Width) || float.IsNaN(crop.Height) || float.IsInfinity(crop.X) || float.IsInfinity(crop.Y) || float.IsInfinity(crop.Width) || float.IsInfinity(crop.Height) || crop.Width <= 0 || crop.Height <= 0)
             {
@@ -460,10 +460,12 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             }
             if (crop.Right <= 0 || crop.Bottom <= 0 || crop.X >= width || crop.Y >= height) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI rectangle does not intersect the source image.");
 
-            int left = Math.Max(0, Math.Min(width - 1, (int)Math.Floor(crop.X)));
-            int top = Math.Max(0, Math.Min(height - 1, (int)Math.Floor(crop.Y)));
-            int right = Math.Max(left + 1, Math.Min(width, checked((int)Math.Ceiling(crop.Right))));
-            int bottom = Math.Max(top + 1, Math.Min(height, checked((int)Math.Ceiling(crop.Bottom))));
+            // Clip in floating point before converting: a finite, intersecting ROI may
+            // extend past Int32.MaxValue (or overflow RectangleF.Right's float sum).
+            int left = (int)Math.Floor(Math.Max(0d, Math.Min(width - 1d, crop.X)));
+            int top = (int)Math.Floor(Math.Max(0d, Math.Min(height - 1d, crop.Y)));
+            int right = (int)Math.Ceiling(Math.Max(left + 1d, Math.Min(width, (double)crop.X + crop.Width)));
+            int bottom = (int)Math.Ceiling(Math.Max(top + 1d, Math.Min(height, (double)crop.Y + crop.Height)));
             if (right <= left || bottom <= top) throw new OpenCvVisualException(OpenCvErrorCodes.PreprocessInvalid, "The ROI rectangle does not intersect the source image.");
             return new Rect(left, top, right - left, bottom - top);
         }

@@ -33,7 +33,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public PaddleOcrVlImagePlan ImagePlan { get; }
         /// <summary>Gets the prepared normalized patches; no copy is made here. / 获取已归一化 Patch，本类型不复制数据。</summary>
         public Tensor<float> PixelPatches { get; }
-        /// <summary>Gets an optional encoded-source SHA256. / 获取可选编码源 SHA256。</summary>
+        /// <summary>Gets an optional source SHA256: encoded image identity, or the adapter's dimension-bound RGB crop identity. / 获取可选源 SHA256：编码图像身份，或适配器按尺寸绑定的 RGB 裁剪身份。</summary>
         public string? SourceSha256 { get; }
     }
 

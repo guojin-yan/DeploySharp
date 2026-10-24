@@ -184,15 +184,20 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 builder.Append("- Coordinates: ").AppendLine(visionLanguagePage.SpatialOutputStatus);
                 foreach (PaddleDocumentVisionLanguageRegionExecution execution in visionLanguagePage.Executions)
                 {
-                    builder.Append("  - Region ").Append(execution.RegionIndex).Append(execution.Succeeded ? ": " : " failed: ");
-                    if (execution.Succeeded) builder.AppendLine(execution.Result!.Text);
+                    builder.Append("- Region ").Append(execution.RegionIndex).Append(execution.Succeeded ? ":" : " failed: ");
+                    if (execution.Succeeded)
+                    {
+                        builder.AppendLine().AppendLine();
+                        AppendRawText(builder, execution.Result!.Text);
+                    }
                     else builder.AppendLine(execution.FailureMessage);
                 }
             }
             else if (result is PaddleDocumentVisionLanguageResult visionLanguage)
             {
                 builder.Append("- VL task: `").Append(visionLanguage.Task).AppendLine("`");
-                builder.Append("- Raw text: ").AppendLine(visionLanguage.Text);
+                builder.AppendLine("- Raw text:").AppendLine();
+                AppendRawText(builder, visionLanguage.Text);
                 builder.Append("- Finish reason: `").Append(visionLanguage.FinishReason).AppendLine("`");
                 builder.Append("- Coordinates: ").AppendLine(visionLanguage.SpatialOutputStatus);
             }
@@ -200,5 +205,23 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             else if (result is PaddleDocumentTextResult text)
                 foreach (PaddleDocumentTextItem item in text.Items) builder.Append("- [").Append(item.RegionIndex).Append("] ").Append(item.Text).Append(" (score ").Append(item.Confidence.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)).AppendLine(")");
         }
+
+#if NET8_0 || NET9_0 || NET10_0
+        private static void AppendRawText(StringBuilder builder, string text)
+        {
+            // Keep HTML-looking model tokens and Markdown literal. A model-emitted
+            // fence must not terminate the surrounding raw-output block.
+            int longest = 0, current = 0;
+            foreach (char character in text)
+            {
+                current = character == '~' ? current + 1 : 0;
+                longest = Math.Max(longest, current);
+            }
+            string fence = new string('~', Math.Max(3, longest + 1));
+            builder.Append(fence).AppendLine("text").Append(text);
+            if (!text.EndsWith("\n", StringComparison.Ordinal)) builder.AppendLine();
+            builder.AppendLine(fence).AppendLine();
+        }
+#endif
     }
 }

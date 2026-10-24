@@ -345,9 +345,29 @@ foreach (var execution in routed.Executions)
     Console.WriteLine($"region {execution.RegionIndex}: {execution.Result?.Text ?? execution.FailureMessage}");
 ```
 
-区域阶段的 `SourceRegion` 是版面检测提供的页面坐标来源，不是 PaddleOCR-VL 模型返回的 spotting 坐标；`CoordinatesAvailable` 仍为 `false`。因此该阶段已经完成“版面区域 → VL 原始任务 → 页面来源”的路由合同，但不会自动生成表格 HTML、单元格、公式语义、图表结构或模型坐标。裁剪实现仍由调用方提供，以便复用现有 OpenCV ROI/透视裁剪和避免重复解码。
+使用 OpenCV 时，不必自行实现上例的 `PrepareVlCrop`。`OpenCvPaddleOcrVlRegionStage` 每页调用源工厂一次、解码一次，对全部布局矩形复用同一底图，再由官方合同的托管 Processor 准备 RGB Patch：
 
-同一个 stage 可以按页调用 `RunManyAsync`，或在每页使用独立 Session/线程安全适配器时调用 `RunManyConcurrentAsync`。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。当前真实证据仍只有固定 1.6 的 Linux ORT CPU 六任务单图生成，OpenVINO、TensorRT、CUDA、OpenCV DNN、页面级质量和正式性能矩阵不能由这个适配器自动获得。
+```csharp
+var decodedRegions = OpenCvPaddleOcrVlRegionStage.FromSession(
+    vlModel, "onnxruntime-cpu", PaddleOcrVlTask.TableRecognition,
+    vlSession, vlTokenizer,
+    page => (OpenCvImageSource)page.Source,
+    generationOptions: generationOptions,
+    continueOnRegionFailure: true);
+var pipeline = new PaddleDocumentPipeline(
+    new IPaddleDocumentPipelineStage[] { layoutStage, decodedRegions });
+var pageInput = new PaddleDocumentPage(
+    OpenCvImageSource.FromFile(imagePath), pageSize, pageIndex: 0);
+PaddleDocumentPipelineResult actualPage = await pipeline.RunAsync(pageInput, cancellationToken);
+```
+
+该阶段校验页面尺寸与解码尺寸一致，拒绝无交集或无效矩形，支持非连续 stride 的区域视图。裁剪按左上 floor、右下 ceil、源图 clipping 执行；不会重新编码区域、克隆整页或提前使用 OpenCV 缩放。页面 metadata 使用编码文件 SHA，区域 metadata 使用包含裁剪尺寸与紧密 RGB 的内容 SHA。[完整多页案例](../../samples/02-visual/paddleocr-vl-document/README.md)给出输入 manifest、命令、JSON/Markdown 和非零失败退出码。
+
+[Linux CPU 区域验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)从同一官方表格 RGB 拼成两张 PNG 页面，运行三个手工区域。Patch 及 `213` Token/文本全部一致、全部 EOS，并检查页码 7→3 及页面内的调用方区域顺序。该记录验证实际裁剪与页面编排，不等于独立多页质量、自动版面检测或阅读顺序验证。
+
+区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，不是 PaddleOCR-VL 模型返回的 spotting 坐标；`CoordinatesAvailable` 仍为 `false`。该阶段不会自动生成表格 HTML、单元格、公式语义、图表结构或模型坐标。一个阶段对所有布局区域执行同一任务，category 不自动选择任务；混合页面先由调用方按任务分组，通用委托路径仍可实现其它裁剪策略。
+
+同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux ORT CPU 已有六任务单图生成证据；OpenVINO、TensorRT、CUDA、OpenCV DNN 推理、页面级质量和正式性能矩阵不能由这个适配器自动获得。
 
 外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
 

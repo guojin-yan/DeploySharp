@@ -1,6 +1,10 @@
 #if NET8_0 || NET9_0 || NET10_0
 using System;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 using JYPPX.OpenCvSharp;
 using JYPPX.OpenCvSharp.Core;
@@ -32,18 +36,78 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                 using (Mat decoded = OpenCvImageLoader.Decode(source))
                 {
                     OpenCvImageLoader.Validate(decoded, source);
-                    var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
-                    var conversion = new OpenCvPreprocessOptions(sourceSize, OpenCvResizeMode.Resize,
-                        VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, layout: VisualTensorLayout.Hwc,
-                        outputType: OpenCvOutputType.UInt8);
-                    byte[] rgb = OpenCvVisualInputFactory.CopyRowsAndConvertChannels(decoded, conversion);
-                    return _processor.Create(rgb, sourceSize, task, minimumPixels, maximumPixels, source.Sha256, cancellationToken);
+                    return CreateDecoded(decoded, task, minimumPixels, maximumPixels, source.Sha256, cancellationToken);
                 }
             }
             catch (OpenCvVisualException) { throw; }
             catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The PaddleOCR-VL OpenCV preprocessing operation was cancelled.", exception); }
             catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while preparing PaddleOCR-VL pixels.", exception); }
             catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The PaddleOCR-VL image could not be prepared.", exception); }
+        }
+
+        /// <summary>Prepares the full page from an existing decoded ROI owner, without decoding again. / 从已有 ROI 图像所有者准备整页，不重复解码。</summary>
+        public PaddleOcrVlPreparedInput CreateFromPage(OpenCvDecodedRoiImage page,
+            PaddleOcrVlTask task = PaddleOcrVlTask.TextRecognition, int? minimumPixels = null,
+            int? maximumPixels = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (page == null) throw new ArgumentNullException(nameof(page));
+            OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
+            return page.PrepareFromDecoded(decoded => CreateDecoded(decoded, task, minimumPixels, maximumPixels, page.InputId, cancellationToken));
+        }
+
+        /// <summary>Prepares a page-space rectangle using a stride-safe view of the decoded page. / 使用已解码页面的 stride-safe 视图准备页面坐标矩形。</summary>
+        /// <remarks>Bounds use floor(left/top), ceiling(right/bottom), then clipping to the page. No image encoding, page-sized clone or OpenCV resize is performed. SourceSha256 identifies the crop's dimensions and packed RGB pixels, not the encoded page. / 边界先左上向下、右下向上取整，再裁至页面；不重新编码、不克隆整页、不使用 OpenCV 缩放。SourceSha256 标识裁剪尺寸和紧密 RGB 像素，而非页面编码文件。</remarks>
+        public PaddleOcrVlPreparedInput CreateRegion(OpenCvDecodedRoiImage page, RectangleF bounds,
+            PaddleOcrVlTask task = PaddleOcrVlTask.TextRecognition, int? minimumPixels = null,
+            int? maximumPixels = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (page == null) throw new ArgumentNullException(nameof(page));
+            OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
+            return page.PrepareFromDecoded(decoded =>
+            {
+                try
+                {
+                    Rect crop = OpenCvVisualInputFactory.ToClippedRect(bounds, decoded.Cols, decoded.Rows);
+                    using (Mat view = decoded.SubMat(crop))
+                        return CreateDecoded(view, task, minimumPixels, maximumPixels, null, cancellationToken);
+                }
+                catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while creating the PaddleOCR-VL region view.", exception); }
+            });
+        }
+
+        private PaddleOcrVlPreparedInput CreateDecoded(Mat decoded, PaddleOcrVlTask task, int? minimumPixels,
+            int? maximumPixels, string? sourceSha256, CancellationToken cancellationToken)
+        {
+            OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
+            try
+            {
+                var sourceSize = new VisualSize(decoded.Cols, decoded.Rows);
+                // Check the source budget and task geometry before allocating the RGB crop.
+                PaddleOcrVlImagePlan plan = PaddleOcrVlInputPlanning.PlanOfficialV16(sourceSize, task,
+                    minimumPixels, maximumPixels, _processor.MaximumSourcePixels);
+                var conversion = new OpenCvPreprocessOptions(sourceSize, OpenCvResizeMode.Resize,
+                    VisualColorOrder.Rgb, OpenCvAlphaMode.Drop, layout: VisualTensorLayout.Hwc,
+                    outputType: OpenCvOutputType.UInt8);
+                byte[] rgb = OpenCvVisualInputFactory.CopyRowsAndConvertChannels(decoded, conversion);
+                OpenCvVisualInputFactory.ObserveCancellation(cancellationToken);
+                return _processor.Create(plan, rgb, sourceSha256 ?? CropIdentity(sourceSize, rgb), cancellationToken);
+            }
+            catch (OpenCvVisualException) { throw; }
+            catch (OperationCanceledException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.Cancelled, "The PaddleOCR-VL OpenCV preprocessing operation was cancelled.", exception); }
+            catch (OpenCvException exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "OpenCV failed while preparing PaddleOCR-VL pixels.", exception); }
+            catch (Exception exception) { throw new OpenCvVisualException(OpenCvErrorCodes.OperationFailed, "The PaddleOCR-VL image could not be prepared.", exception); }
+        }
+
+        private static string CropIdentity(VisualSize size, byte[] rgb)
+        {
+            using (IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+            {
+                hash.AppendData(Encoding.UTF8.GetBytes("deploysharp-paddleocr-vl-rgb8-v1\n"
+                    + size.Width.ToString(CultureInfo.InvariantCulture) + "x"
+                    + size.Height.ToString(CultureInfo.InvariantCulture) + "\n"));
+                hash.AppendData(rgb);
+                return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            }
         }
 
         /// <summary>Creates an input from an absolute image path. / 从绝对图像路径创建输入。</summary>

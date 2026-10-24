@@ -15,11 +15,14 @@
     <Compile Remove="roi-workflow\**" />
     <Compile Remove="roi-official-sam\**" />
     <Compile Remove="paddleocr-vl-onnx\**" />
+    <Compile Remove="paddleocr-vl-document\**" />
     <EmbeddedResource Remove="roi-workflow\**" />
     <EmbeddedResource Remove="roi-official-sam\**" />
     <EmbeddedResource Remove="paddleocr-vl-onnx\**" />
+    <EmbeddedResource Remove="paddleocr-vl-document\**" />
     <None Remove="roi-workflow\**" />
     <None Remove="roi-official-sam\**" />
     <None Remove="paddleocr-vl-onnx\**" />
+    <None Remove="paddleocr-vl-document\**" />
   </ItemGroup>
 </Project>

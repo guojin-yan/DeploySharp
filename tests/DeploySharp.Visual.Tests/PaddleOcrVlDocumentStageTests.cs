@@ -17,6 +17,21 @@ namespace DeploySharp.Visual.Tests;
 public sealed class PaddleOcrVlDocumentStageTests
 {
     [TestMethod]
+    [DataRow("<fcel>A<nl>**B**", "~~~")]
+    [DataRow("<table>A</table>\n~~~\n# literal heading", "~~~~")]
+    public async Task MarkdownKeepsHtmlTokensAndModelEmittedFencesLiteral(string raw, string fence)
+    {
+        string sourceSha = new string('a', 64);
+        var input = Input(PaddleOcrVlTask.TableRecognition, sourceSha);
+        var stage = new PaddleOcrVlDocumentStage(Model(PaddleDocumentModule.TableStructureRecognition), "test-generator", PaddleOcrVlTask.TableRecognition,
+            (context, token) => Task.FromResult(input),
+            (context, prepared, token) => Task.FromResult(new PaddleOcrVlGenerationResult(PaddleOcrVlTask.TableRecognition,
+                raw, new[] { 1 }, GenerationFinishReason.EndOfSequence, 4, 0, sourceSha, TimeSpan.Zero)));
+        var page = await new PaddleDocumentPipeline(new[] { stage }).RunAsync(new PaddleDocumentPage("page", new VisualSize(336, 336)));
+        StringAssert.Contains(PaddleDocumentPipelineExport.ToMarkdown(page), fence + "text" + Environment.NewLine + raw + Environment.NewLine + fence);
+    }
+
+    [TestMethod]
     public async Task MapsRawVlOutputToPageProvenanceWithoutInventingCoordinates()
     {
         const string sourceSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

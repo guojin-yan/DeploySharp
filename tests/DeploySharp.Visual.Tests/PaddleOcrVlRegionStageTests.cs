@@ -75,6 +75,7 @@ public sealed class PaddleOcrVlRegionStageTests
         Assert.AreEqual("EndOfSequence", exportedRegion.GetProperty("result").GetProperty("finishReason").GetString());
         Assert.AreEqual(Hash(1), exportedRegion.GetProperty("result").GetProperty("inputSha256").GetString());
         StringAssert.Contains(PaddleDocumentPipelineExport.ToMarkdown(page), "regional routing");
+        StringAssert.Contains(PaddleDocumentPipelineExport.ToMarkdown(page), "~~~text" + Environment.NewLine + "region-0" + Environment.NewLine + "~~~");
     }
 
     [TestMethod]

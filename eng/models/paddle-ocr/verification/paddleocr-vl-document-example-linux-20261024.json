@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-document-example-v1",
+  "status": "two-pages-three-regions-verified",
+  "generatedUtc": "2026-10-24T08:08:52.7376653+00:00",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "integrationReportSha256": "772cdc5973b4810a730303bb4c6a842c342270cb20b11471d2d0d8f4525bebaf",
+  "applicationExitCode": 0,
+  "targetFramework": "net8.0",
+  "runtimeIdentifier": "ubuntu.22.04-x64",
+  "actualFramework": ".NET 10.0.9",
+  "rollForward": "Major",
+  "pageParallelism": 2,
+  "sessionCount": 1,
+  "explicitLdLibraryPath": false,
+  "modelAndTokenizer": "external-matching-exports",
+  "assemblies": [
+    {
+      "name": "PaddleOcrVlDocument.dll",
+      "sha256": "928bcf5822633617ed412ed93acee4a39bc8a230684666b92b10cb9ce3c431ce"
+    },
+    {
+      "name": "JYPPX.DeploySharp.Visual.dll",
+      "sha256": "e9c2cde39d0e3eb6a91620456be1f0b60159b30798c2f14fec1572d2058edc73"
+    },
+    {
+      "name": "JYPPX.DeploySharp.Visual.OpenCV.dll",
+      "sha256": "dda6bd408cf9c5982d5a7baf45439090a4b56d703e4146ace1c28914d2a0b9ea"
+    },
+    {
+      "name": "JYPPX.DeploySharp.Backend.OnnxRuntime.dll",
+      "sha256": "7accea50f54ddab6dc05850841fd2969b72934ab82bb3df00a18e2fcc0a33f62"
+    },
+    {
+      "name": "Microsoft.ML.OnnxRuntime.dll",
+      "sha256": "de45bad2d06c8530f7563329ab4f4b606e61ac5fcfbba4c75fb64a067e8bb7e3"
+    }
+  ],
+  "pages": [
+    {
+      "pageIndex": 7,
+      "regionCount": 2,
+      "tokenCount": 142,
+      "pageInputSha256": "01955520fe000b2f116d3a8b8ff6a022ab4006078ec12766f8a91dc20a835d08",
+      "tokenExact": true,
+      "textExact": true,
+      "allEos": true,
+      "sourceBoundsExact": true,
+      "markdownPreservesRawTokens": true,
+      "jsonSha256": "c3c76ac85fd31af675ce5918ca52522da1cc59cd92678964fc9c64fbaeea3770",
+      "markdownSha256": "6402451807d5118e28db2d0c3352232e78221d2cae42216beae97ff3d37a3b63"
+    },
+    {
+      "pageIndex": 3,
+      "regionCount": 1,
+      "tokenCount": 71,
+      "pageInputSha256": "be7a55a2e3ff9923d403c79668da9aa82e29ec72c796b40ae66b6148538da19b",
+      "tokenExact": true,
+      "textExact": true,
+      "allEos": true,
+      "sourceBoundsExact": true,
+      "markdownPreservesRawTokens": true,
+      "jsonSha256": "4b334dd7e5f81b9b7ff7e7261f5b2931d0d7fd6ca4e13688942914ec98b7ac6c",
+      "markdownSha256": "5c5b7ec440dbc82644d049b3a3ea2d49107e7333361cf74a9cee80dfe5d71124"
+    }
+  ],
+  "totalGeneratedTokens": 213,
+  "boundary": "Published sample on two assembled PNG canvases with three manual regions from one real table fixture; output matches the separately verified integration reference. Not independent quality, automatic layout, a performance protocol or another inference backend."
+}
