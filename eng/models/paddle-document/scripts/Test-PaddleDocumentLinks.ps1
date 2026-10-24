@@ -70,6 +70,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md',
     'docs/articles/model-support.md',
     'samples/02-visual/paddleocr-vl-document/README.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md',

@@ -1002,7 +1002,7 @@ PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
 MALLOC_ARENA_MAX=2 DOTNET_GCHeapHardLimit=0x40000000 dotnet YourApplication.dll
 ```
 
-这次配置下的六任务通过不代表内存优化或长时间稳定性已完成；不要把相同的大模型 Session 数量直接扩大到多个通道。
+当前后端会在编译并复制元数据后释放原始模型图，Session 继续持有编译模型与推理资源。同配置的[六任务内存对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md)中，四图加载后 RSS 为 `6.770 → 6.007 GiB`，进程峰值为 `11.861 → 11.616 GiB`，两次生成均与参考完全一致。这是各一次顺序运行的观察，不能当作最优内存上限或稳定性保证；上面的历史 OOM 和进程配置边界仍需考虑，不要直接扩大大模型 Session 数量。
 
 表格输出可以继续转换为逻辑单元格和 HTML：`PaddleOcrVlTableParser.Parse(result.Text, result.FinishReason)`。文档阶段返回的 `PaddleDocumentVisionLanguageResult.Table` 已自动执行同一默认严格解析。支持横向、纵向和矩形合并，保留原文/Token，生成未到 EOS、结构非法或超预算时明确失败；官方行宽修复需显式启用。使用方式、默认预算、修复影响及 JSON/Markdown 格式见[VL 表格解析](visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。逻辑行列不是单元格像素框，转换成功也不等于文字或表格识别准确。
 

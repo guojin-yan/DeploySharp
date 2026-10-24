@@ -52,6 +52,8 @@ public sealed class PaddleOcrVlIntegrationTests
                 processor = Processor(), backend = "OpenVINO", device = "CPU", requestedPrecision = "native-default", compileProperties = options.CompileProperties,
                 threads = 4, streams = 1, requests = 1, modelInstancesPerGraph = 1 },
             ["execution"] = "GenerateAsync; six sequential requests sharing four independent graph sessions",
+            ["runLabel"] = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_RUN_LABEL") ?? "not-recorded",
+            ["memoryBeforeGraphLoads"] = MemorySnapshot(),
             ["resourcePolicy"] = new { gcHeapHardLimit = Environment.GetEnvironmentVariable("DOTNET_GCHeapHardLimit"),
                 availableManagedMemoryBytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
                 glibcArenaMax = Environment.GetEnvironmentVariable("MALLOC_ARENA_MAX") },
@@ -81,12 +83,13 @@ public sealed class PaddleOcrVlIntegrationTests
                 var artifact = new ModelArtifact(new ModelId("paddleocr-vl/1.6/" + role), "onnx", path, sha, OpenVinoBackendProvider.BackendId);
                 var inner = registry.CreateSession(artifact, new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU"));
                 sessions.Add(new ObservedSession(inner));
-                graphRows.Add(new { role, sha256 = sha, loadCompileMilliseconds = watch.Elapsed.TotalMilliseconds,
+                graphRows.Add(new { role, sha256 = sha, loadCompileMilliseconds = watch.Elapsed.TotalMilliseconds, memoryAfterCompilation = MemorySnapshot(),
                     inputs = inner.Metadata.Inputs.Select(port => new { name = port.Name, elementType = port.ElementType.ToString(), shape = port.Shape.ToArray() }).ToArray(),
                     outputs = inner.Metadata.Outputs.Select(port => new { name = port.Name, elementType = port.ElementType.ToString(), shape = port.Shape.ToArray() }).ToArray() });
                 Console.WriteLine("VL_OPENVINO_LOADED " + role); Save();
             }
             report.Remove("loadingGraph");
+            report["memoryAfterGraphLoads"] = MemorySnapshot();
             OpenVinoSharp.Version version = OpenVinoSharp.Ov.get_openvino_version();
             report["nativeRuntime"] = new { buildNumber = version.buildNumber, description = version.description,
                 modules = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
@@ -196,6 +199,13 @@ public sealed class PaddleOcrVlIntegrationTests
         public void Dispose() => _inner.Dispose();
     }
     private sealed record DecoderCall(int QueryLength, int PastLength, int? PresentLength = null);
+    private static object MemorySnapshot()
+    {
+        using Process process = Process.GetCurrentProcess();
+        return new { workingSetBytes = process.WorkingSet64, peakWorkingSetBytes = process.PeakWorkingSet64,
+            privateMemoryBytes = process.PrivateMemorySize64, managedLiveBytes = GC.GetTotalMemory(false),
+            managedHeapSizeBytes = GC.GetGCMemoryInfo().HeapSizeBytes, threads = process.Threads.Count };
+    }
     private static string Processor()
     {
         const string linuxPath = "/proc/cpuinfo";

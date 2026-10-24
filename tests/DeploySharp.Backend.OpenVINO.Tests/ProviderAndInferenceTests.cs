@@ -74,6 +74,35 @@ namespace DeploySharp.Backend.OpenVINO.Tests
         }
 
         [TestMethod]
+        public async Task CompiledSessionPreservesDynamicMetadataAndOwnedOutputsAcrossRequestsAndDisposal()
+        {
+            using IInferenceSession session = OpenVinoTestData.Open(OpenVinoTestData.OnnxArtifact("dynamic-identity.onnx"));
+            ModelMetadata metadata = session.Metadata;
+            Assert.AreEqual("input", metadata.Inputs[0].Name);
+            CollectionAssert.AreEqual(new long[] { -1, 2 }, metadata.Inputs[0].Shape.ToArray());
+            var retained = new List<(Tensor<float> Output, float[] Expected)>();
+            for (int call = 0; call < 16; call++)
+            {
+                int rows = call % 5 + 1;
+                float[] expected = Enumerable.Range(0, rows * 2).Select(value => call * 100f + value).ToArray();
+                var inputs = InferenceInputs.Create("input", new Tensor<float>(new TensorShape(rows, 2), expected));
+                var result = await session.RunAsync(inputs, CancellationToken.None);
+                var output = (Tensor<float>)result.GetRequired("output");
+                CollectionAssert.AreEqual(new long[] { rows, 2 }, output.Shape.ToArray());
+                retained.Add((output, expected));
+            }
+            var invalid = InferenceInputs.Create("input", new Tensor<float>(new TensorShape(1, 3), new float[3]));
+            OpenVinoBackendException error = await Assert.ThrowsExactlyAsync<OpenVinoBackendException>(() => session.RunAsync(invalid, CancellationToken.None));
+            Assert.AreEqual(OpenVinoErrorCodes.TensorInvalid, error.ErrorCode);
+            var final = session.Run(InferenceInputs.Create("input", new Tensor<float>(new TensorShape(1, 2), new[] { 7f, 8f })), CancellationToken.None);
+            CollectionAssert.AreEqual(new[] { 7f, 8f }, ((Tensor<float>)final.GetRequired("output")).ToArray());
+            session.Dispose();
+            CollectionAssert.AreEqual(new long[] { -1, 2 }, metadata.Inputs[0].Shape.ToArray());
+            Assert.AreEqual("output", metadata.Outputs[0].Name);
+            foreach (var entry in retained) CollectionAssert.AreEqual(entry.Expected, entry.Output.ToArray());
+        }
+
+        [TestMethod]
         public void NamedMultiInputNumericTypesRoundTripAndInvalidInputsAreStable()
         {
             using IInferenceSession session = OpenVinoTestData.Open(OpenVinoTestData.OnnxArtifact("numeric-types.onnx"));

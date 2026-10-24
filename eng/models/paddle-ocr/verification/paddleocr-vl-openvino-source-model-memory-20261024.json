@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-openvino-memory-comparison-v1",
+  "generatedUtc": "2026-10-24T12:00:44.4644272+00:00",
+  "status": "six-task-output-and-kv-identical-memory-observations-recorded",
+  "before": {
+    "fileName": "paddleocr-vl-openvino-source-retained-linux-20261024.json",
+    "sha256": "e0633c73a776cfede671c9e0f6a7a0fe72f3a9a9962f17c28d40941527d3d4d4"
+  },
+  "after": {
+    "fileName": "paddleocr-vl-openvino-source-released-linux-20261024.json",
+    "sha256": "ede422d0926c537bebe6a0f708883d86ab5c3924dde731536c21e63f0abb00a7"
+  },
+  "pinnedReference": {
+    "fileName": "paddleocr-vl-openvino-linux-20261024.json",
+    "sha256": "5749f78cd076e7705be81a16c2b8a754183a057a056049022f9197ecb543c2c2"
+  },
+  "scriptSha256": "c7cdf9f027eb5f18813b52f2d15a7094edda1c9b29a18e8ebf863bb62974ec55",
+  "developmentBaseline": "c6c01d6d79000435c5f6fd84abcb9baf37af3b43",
+  "harnessSourceSha256": "748c2ad810f1b4b4fc0824b68c78412e98eb6f3bd6225e8349008670f49bd606",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "tasks": 6,
+  "tokensPerRun": 765,
+  "changedAssemblies": [
+    "JYPPX.DeploySharp.Backend.OpenVINO",
+    "DeploySharp.Backend.OpenVINO.Tests"
+  ],
+  "beforeMemoryAfterGraphLoads": {
+    "workingSetBytes": 7269724160,
+    "peakWorkingSetBytes": 7269724160,
+    "privateMemoryBytes": 7396970496,
+    "managedLiveBytes": 4116680,
+    "managedHeapSizeBytes": 0,
+    "threads": 28
+  },
+  "afterMemoryAfterGraphLoads": {
+    "workingSetBytes": 6449655808,
+    "peakWorkingSetBytes": 6449655808,
+    "privateMemoryBytes": 6568345600,
+    "managedLiveBytes": 4018224,
+    "managedHeapSizeBytes": 0,
+    "threads": 27
+  },
+  "beforePeakWorkingSetBytes": 12736049152,
+  "afterPeakWorkingSetBytes": 12473020416,
+  "peakDifferenceBytes": -263028736,
+  "environment": {
+    "os": "Ubuntu 22.04.5 LTS",
+    "framework": ".NET 10.0.9",
+    "architecture": "X64",
+    "processorCount": 8,
+    "processor": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "backend": "OpenVINO",
+    "device": "CPU",
+    "requestedPrecision": "native-default",
+    "compileProperties": {
+      "PERFORMANCE_HINT": "LATENCY",
+      "NUM_STREAMS": "1",
+      "INFERENCE_NUM_THREADS": "4"
+    },
+    "threads": 4,
+    "streams": 1,
+    "requests": 1,
+    "modelInstancesPerGraph": 1
+  },
+  "resourcePolicy": {
+    "gcHeapHardLimit": "0x40000000",
+    "availableManagedMemoryBytes": 1073741824,
+    "glibcArenaMax": "2"
+  },
+  "rows": [
+    {
+      "id": "ocr-demo-1",
+      "tokens": 162,
+      "beforeWorkingSetBytes": 8561831936,
+      "afterWorkingSetBytes": 8423628800,
+      "workingSetDifferenceBytes": -138203136
+    },
+    {
+      "id": "table-official-example",
+      "tokens": 71,
+      "beforeWorkingSetBytes": 8297500672,
+      "afterWorkingSetBytes": 8337281024,
+      "workingSetDifferenceBytes": 39780352
+    },
+    {
+      "id": "formula-official-example",
+      "tokens": 80,
+      "beforeWorkingSetBytes": 8633286656,
+      "afterWorkingSetBytes": 8641773568,
+      "workingSetDifferenceBytes": 8486912
+    },
+    {
+      "id": "chart-official-example",
+      "tokens": 137,
+      "beforeWorkingSetBytes": 9270792192,
+      "afterWorkingSetBytes": 9228070912,
+      "workingSetDifferenceBytes": -42721280
+    },
+    {
+      "id": "spotting-demo-1",
+      "tokens": 286,
+      "beforeWorkingSetBytes": 12513959936,
+      "afterWorkingSetBytes": 12341284864,
+      "workingSetDifferenceBytes": -172675072
+    },
+    {
+      "id": "seal-official-example",
+      "tokens": 29,
+      "beforeWorkingSetBytes": 12370178048,
+      "afterWorkingSetBytes": 12171767808,
+      "workingSetDifferenceBytes": -198410240
+    }
+  ],
+  "boundary": "Two sequential single-process runs, before then after; same six fixed RGB inputs/graphs/runtime/harness/configuration. No random interleaving, clock telemetry, labelled quality, 5+50 performance, leak proof or long-running stability. Native and total-process memory are not bounded by the managed heap limit."
+}

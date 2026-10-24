@@ -17,7 +17,6 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
         private readonly object _lifetimeGate = new object();
         private readonly ModelArtifact _artifact;
         private readonly Core _core;
-        private readonly Model _model;
         private readonly CompiledModel _compiledModel;
         private readonly SemaphoreSlim _operationGate;
         private readonly CancellationTokenSource _disposeSource = new CancellationTokenSource();
@@ -31,11 +30,10 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
         private List<OvTensor>? _singleNativeInputs;
         private bool _disposed;
 
-        public OpenVinoSession(ModelArtifact artifact, Core core, Model model, CompiledModel compiledModel, int maximumConcurrency, bool allowDynamicShapes, string device)
+        public OpenVinoSession(ModelArtifact artifact, Core core, CompiledModel compiledModel, CoreModelMetadata metadata, int maximumConcurrency, string device)
         {
             _artifact = artifact;
             _core = core;
-            _model = model;
             _compiledModel = compiledModel;
             _maximumConcurrency = maximumConcurrency;
             _device = device;
@@ -45,7 +43,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
             // inference while preserving independent requests for direct multi-channel use.
             _reuseInferRequest = maximumConcurrency == 1;
             _reuseNativeInputList = maximumConcurrency == 1;
-            Metadata = OpenVinoTensorBridge.CreateMetadata(artifact, model, compiledModel, allowDynamicShapes);
+            Metadata = metadata;
             _inputs = Metadata.Inputs.ToDictionary(value => value.Name, StringComparer.Ordinal);
             _outputs = Metadata.Outputs;
         }
@@ -143,14 +141,7 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                     }
                     finally
                     {
-                        try
-                        {
-                            _model.Dispose();
-                        }
-                        finally
-                        {
-                            _core.Dispose();
-                        }
+                        _core.Dispose();
                     }
                 }
             }

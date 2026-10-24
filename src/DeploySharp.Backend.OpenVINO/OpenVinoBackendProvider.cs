@@ -138,9 +138,14 @@ namespace JYPPX.DeploySharp.Backends.OpenVINO
                 model = core.ReadModel(modelPath, weights);
                 Dictionary<string, string> properties = CreateCompileProperties(options);
                 compiled = core.CompileModel(model, _options.Device, properties);
-                var session = new OpenVinoSession(artifact, core, model, compiled, 1, _options.AllowDynamicShapes, _options.Device);
-                core = null;
+                var metadata = OpenVinoTensorBridge.CreateMetadata(artifact, model, compiled, _options.AllowDynamicShapes);
+                // Metadata owns copied names/types/shapes. Inference needs the compiled
+                // model only; retaining the source graph can keep another set of weights alive.
+                // 元数据已复制端口信息；推理只需编译模型，避免长期保留原图及其权重。
+                model.Dispose();
                 model = null;
+                var session = new OpenVinoSession(artifact, core, compiled, metadata, 1, _options.Device);
+                core = null;
                 compiled = null;
                 return session;
             }
