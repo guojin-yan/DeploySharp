@@ -18,13 +18,26 @@
 | --- | --- | --- |
 | YOLO | v5、v6、v7、v8、v9、v10、v11、v12、v13、v26 | 检测、分类、分割、姿态、OBB | 以目录中的精确 ONNX/Engine 工件为准。 |
 | DETR | DEIMv2、PP-YOLOE、RF-DETR、RT-DETR | 检测、实例分割 | 不同导出图的输入输出合同不同。 |
-| PaddleOCR | PP-OCRv5 mobile/server（Preview） | 检测、识别、方向分类 | PP-OCRv4/v6 目前有本地流水线验证记录，但尚未纳入官方可下载目录；组合和后端状态见专门教程与实测矩阵。 |
+| PaddleOCR | PP-OCRv4/v5 mobile/server、PP-OCRv6 tiny/small/medium；PaddleOCR-VL-1.6（实验性） | 检测、识别、方向分类；VL 文本/表格/公式/图表/Spotting/印章生成 | 核心 CTC ONNX 资产见 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)；VL 当前仅固定四图 Bundle + ONNX Runtime CPU 单图生成，调用方需提供官方 Processor Patch，尚未进入下载 catalog 或 Release。代码合同见 `PaddleOcrModelCatalog` 与 `PaddleOcrVlOnnxSession`，后端状态按实测矩阵逐项确认。 |
+| PaddleOCR / PP-Structure（新增 Release 资产） | PP-OCRv4/v5/v6 核心 DET/REC/CLS、版面、表格、公式、矫正、印章 | OCR 与文档结构 | 使用 `PaddleOcrReleaseClient` 从 `models-paddleocr` 按单模型下载并校验；Profile 分别由 `PaddleOcrModelCatalog` 与 `PaddleDocumentModelCatalog` 提供。 |
 | 异常与抠图 | PaDiM、BRIA RMBG 1.4/2.0 | 异常分数/掩码、前景 alpha | RMBG 2.0 的精度和后端按工件分别记录。 |
 | 视觉语言 | CLIP、BLIP Caption Base | 图文相似度、图像描述 | 仅完整的双图/生成工件可复现。 |
 | 可提示分割 | SAM v1 | 点、框、掩码提示 | SAM2/SAM3 不属于当前公开 Preview。 |
 | 本地 LLM | Qwen2.5 0.5B Instruct GGUF | 文本生成、流式、Embedding | 需要应用提供 LLamaSharp 原生运行时。 |
 
 精确模型 ID、下载入口、工件格式和发布版本见[官方模型目录](model-catalog.md)；每个模型与后端的真实验证结果见[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
+
+## 如何阅读一个模型条目
+
+模型族名称只用于导航，真正的运行身份由 `modelId + artifact + revision + SHA-256` 组成。选择模型时还要核对：
+
+- 任务和 decoder 是否匹配，例如检测、实例分割、OBB 不能互换；
+- 输入尺寸、动态维度、颜色空间、归一化和 resize 模式；
+- 输出名称、布局、是否已做 NMS/激活以及标签/词表版本；
+- 后端格式是否匹配：ONNX、OpenVINO IR、TensorRT Engine、GGUF 不是同一种资产；
+- 目录状态是 Preview、External 还是 Planned。
+
+目录可下载、合同测试通过和目标设备实测是三份不同证据。发布说明应分别表达，不用一个“支持”覆盖全部阶段。
 
 ## 可执行但未收录
 
@@ -54,3 +67,9 @@
 同一模型在 ONNX Runtime、OpenVINO、OpenCV DNN 和 TensorRT 上的结果不能互相替代。TensorRT Engine 与 GPU、CUDA、TensorRT 版本和输入 profile 绑定；OpenCV DNN 的动态 shape、辅助输入和 importer 限制按工件记录。PaddleOCR 单图完整流水线的最佳 batch/并发组合和设备耗时见[设备性能实测](device-performance-benchmarks.md)。
 
 本页只表达模型支持状态，不承诺固定延迟、吞吐量或跨平台一致性。部署前请同时阅读[平台与后端支持](platform-support.md)、[安装指南](installation.md)和对应模型教程。
+
+## 新模型进入公开目录的门槛
+
+新条目至少需要：不可变工件及完整 sidecar、ModelPack 校验、Profile/decoder 合同测试、一张固定测试输入、一个后端的真实端到端结果、明确的失败/取消/Dispose 行为以及可执行示例。希望声明多个后端时，每个后端都要单独保留证据；从 ONNX 成功不能推断 OpenCV 或 TensorRT 成功。
+
+后续发现模型合同错误时，不应原地替换 Release 资产。应提升 revision/变体、更新 SHA-256 和验证矩阵，并在迁移说明中记录输入输出变化。

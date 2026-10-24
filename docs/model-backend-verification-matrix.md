@@ -4,7 +4,7 @@
 
 模型目录中的 `External` 条目不纳入本表的通过统计。SAM2/SAM3 视频、Whisper 完整发布 Bundle、Donut 原生多页/TensorRT、BLIP VQA/BLIP-2/InstructBLIP、Qwen2.5-VL、Phi Vision、SigLIP 2，以及部分 LayoutLMv3/Pix2Struct 任务头仍处于合同或局部实验阶段，不能宣称全部后端可用。模型目录、下载边界和状态语义见[模型支持指南](articles/model-support.md)；可复现性能结果见[设备性能实测](articles/device-performance-benchmarks.md)。
 
-截至 2026-10-18，PP-Structure 性能索引已登记 68 个正式证据包、83 个去重模型×后端组合；其中 ORT CPU 有 33 条证据行、29 个去重组合，OpenVINO CPU 有 27 条证据行、23 个去重组合。八个静态版面模型以及七个区域/单元检测模型和两个印章模型现同时有 ORT CPU 与 OpenVINO CPU `5 warm-up + 50 measured` 记录；UVDoc 现同时有 ORT/OpenVINO 正式基准，wireless SLANeXt 原始图另有 ORT 基准，OpenVINO 仍使用兼容图报告。六个公式模型也补充了 ORT CPU 正式性能报告；其较慢的自回归延迟不改变公式质量门当前 blocked 的结论。汇总与逐次样本见[设备性能实测](articles/device-performance-benchmarks.md)、[静态版面 ORT CPU 汇总](../eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md)、[区域/印章 ORT CPU 汇总](../eng/models/paddle-document/verification/paddle-document-ort-region-benchmark-20261018.md)、[公式 ORT CPU 报告](../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.md)、[`UVDoc ORT 报告`](../eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md)、[`UVDoc OpenVINO 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md)、[`SLANeXt wireless ORT 报告`](../eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md)和 [`SLANeXt wireless OpenVINO 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md)。该索引仍是精确工件执行/性能证据，不等于数据集精度、锁频结果、第二设备矩阵或所有 PP-Structure 工件的统一多后端性能承诺。
+截至 2026-10-18，PP-Structure 性能索引已登记 68 个正式证据包、83 个去重模型×后端组合；其中 ORT CPU 有 33 条证据行、29 个去重组合，OpenVINO CPU 有 27 条证据行、23 个去重组合。八个静态版面模型以及七个区域/单元检测模型和两个印章模型现同时有 ORT CPU 与 OpenVINO CPU `5 warm-up + 50 measured` 记录；UVDoc 现同时有 ORT/OpenVINO 正式基准，wireless SLANeXt 原始图另有 ORT 基准，OpenVINO 仍使用兼容图报告。六个公式模型也补充了 ORT CPU 正式性能报告；其较慢的自回归延迟不改变公式质量门当前 blocked 的结论。2026-10-24 新增的 PaddleOCR-VL-1.6 证据是独立的六任务 C# ORT CPU 正确性记录，不计入上述 PP-Structure 性能统计。汇总与逐次样本见[设备性能实测](articles/device-performance-benchmarks.md)、[静态版面 ORT CPU 汇总](../eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md)、[区域/印章 ORT CPU 汇总](../eng/models/paddle-document/verification/paddle-document-ort-region-benchmark-20261018.md)、[公式 ORT CPU 报告](../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.md)、[`UVDoc ORT 报告`](../eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md)、[`UVDoc OpenVINO 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md)、[`SLANeXt wireless ORT 报告`](../eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md)和 [`SLANeXt wireless OpenVINO 报告`](../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md)。该索引仍是精确工件执行/性能证据，不等于数据集精度、锁频结果、第二设备矩阵或所有 PP-Structure 工件的统一多后端性能承诺。
 
 ## 当前工件矩阵
 
@@ -56,6 +56,7 @@
 | `paddleocr/ppocrv6/small-rec` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/medium-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/medium-rec` | ✓ | ✓ | ✓ | ✓ | — |
+| `paddleocr-vl/1.6 (experimental four-graph ONNX)` | ✓ | △ | △ | △ | — |
 | `anomalib/padim/mvtec-bottle` | ✓ | ✓ | ✓ | ✓ | — |
 | `bria/rmbg-1.4` | ✓ | ✓ | ✓ | ✓ | — |
 | `bria/rmbg-2.0 (onnx.fp32)` | ✓ | — | ✗ | ✓ | — |
@@ -64,6 +65,8 @@
 | `vision-language/clip-vit-b-32` | — | — | — | — | — |
 | `segmentation/sam-v1-vit-b` | — | — | — | — | — |
 | `generative-vision-language/blip-caption-base` | — | — | — | — | — |
+
+`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 仅表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行不代表自动图像 Processor、页面/多页 PP-Structure、HTML/坐标结构化结果、质量或正式性能已完成。
 
 ### PP-OCR 核心模型质量证据索引
 
