@@ -949,6 +949,7 @@ PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual` 的实验性 ONNX Runtime CPU �
 ```csharp
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
+using JYPPX.DeploySharp.Visual.OpenCV;
 
 var tokenizer = new PaddleOcrVlTokenizer(modelDirectory);
 var imagePlan = PaddleOcrVlInputPlanning.PlanOfficialV16(
@@ -958,13 +959,13 @@ PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(imagePlan,
 long[] inputIds = prompt.CopyTokenIds(); // 也可用于审查展开后的 Prompt。
 ```
 
-生产 C# ORT 路径要求调用方先按官方 Processor 准备 RGB、归一化的 `[grid_h, grid_w, 3, 14, 14]` Patch Tensor，然后绑定同一导出批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx` 和 `head.onnx`：
+生产 C# ORT 路径可以直接使用 `PaddleOcrVlImageProcessor` 准备紧密 RGB 字节；如果已经引用 `JYPPX.DeploySharp.Visual.OpenCV`，则 `OpenCvPaddleOcrVlInputFactory` 会单次解码 PNG/JPEG、保留编码源 SHA256，并调用同一官方 Processor 合同生成 `[grid_h, grid_w, 3, 14, 14]` Patch Tensor。随后绑定同一导出批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx` 和 `head.onnx`：
 
 ```csharp
+PaddleOcrVlPreparedInput prepared = new OpenCvPaddleOcrVlInputFactory().CreateFromFile(
+    imagePath, PaddleOcrVlTask.TableRecognition);
 using var vl = PaddleOcrVlOnnxSession.Create(
     registry, bundleDirectory, onnxCpuRequest);
-PaddleOcrVlPreparedInput prepared =
-    new PaddleOcrVlPreparedInput(imagePlan, patchTensor, sourceSha256);
 PaddleOcrVlGenerationResult result = await vl.GenerateAsync(
     prepared, tokenizer,
     new PaddleOcrVlGenerationOptions(maximumNewTokens: 512));
@@ -975,7 +976,7 @@ Console.WriteLine(result.Text);
 
 Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
 
-普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前能力仍有明确边界：自动图像解码/缩放/patch 准备、页面和多页 PP-Structure 编排、HTML/坐标结构化结果、OpenVINO/TensorRT/OpenCV/CUDA、GPU 性能、标注集质量和正式 P50/P95 尚未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前能力仍有明确边界：页面和多页 PP-Structure 编排、HTML/坐标结构化结果、OpenVINO/TensorRT/OpenCV DNN/CUDA、GPU 性能、标注集质量和正式 P50/P95 尚未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 
 ### 自然宽行有哪些真实后端证据
 

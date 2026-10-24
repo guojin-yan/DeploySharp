@@ -66,7 +66,7 @@
 | `segmentation/sam-v1-vit-b` | — | — | — | — | — |
 | `generative-vision-language/blip-caption-base` | — | — | — | — | — |
 
-`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 仅表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行不代表自动图像 Processor、页面/多页 PP-Structure、HTML/坐标结构化结果、质量或正式性能已完成。
+`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 仅表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。`PaddleOcrVlImageProcessor` 及 OpenCV 单次解码适配器已覆盖官方单图像素准备，但该行仍不代表页面/多页 PP-Structure、HTML/坐标结构化结果、质量或正式性能已完成。
 
 ### PP-OCR 核心模型质量证据索引
 
