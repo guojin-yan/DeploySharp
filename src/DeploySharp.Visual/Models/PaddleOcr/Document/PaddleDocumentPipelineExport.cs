@@ -117,6 +117,18 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 return new { structuredData = chart.StructuredData, tokenIds = chart.TokenIds.ToArray(), finishReason = chart.FinishReason };
             if (result is PaddleDocumentSealResult seal)
                 return new { maskWidth = seal.MaskWidth, maskHeight = seal.MaskHeight };
+#if NET8_0 || NET9_0 || NET10_0
+            if (result is PaddleDocumentVisionLanguageResult visionLanguage)
+                return new
+                {
+                    task = visionLanguage.Task.ToString(),
+                    text = visionLanguage.Text,
+                    tokenIds = visionLanguage.TokenIds.ToArray(),
+                    finishReason = visionLanguage.FinishReason.ToString(),
+                    coordinatesAvailable = visionLanguage.CoordinatesAvailable,
+                    spatialOutputStatus = visionLanguage.SpatialOutputStatus
+                };
+#endif
             if (result is PaddleDocumentTextResult text)
                 return new { items = text.Items.Select(item => new { item.RegionIndex, item.Text, item.Confidence, bounds = new { x = item.Bounds.X, y = item.Bounds.Y, width = item.Bounds.Width, height = item.Bounds.Height }, metadata = item.Metadata }).ToArray() };
             return null;
@@ -138,6 +150,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 builder.Append("- Chart data: ").AppendLine(chart.StructuredData);
             else if (result is PaddleDocumentSealResult seal)
                 builder.Append("- Seal mask: ").Append(seal.MaskWidth).Append('x').AppendLine(seal.MaskHeight.ToString());
+#if NET8_0 || NET9_0 || NET10_0
+            else if (result is PaddleDocumentVisionLanguageResult visionLanguage)
+            {
+                builder.Append("- VL task: `").Append(visionLanguage.Task).AppendLine("`");
+                builder.Append("- Raw text: ").AppendLine(visionLanguage.Text);
+                builder.Append("- Finish reason: `").Append(visionLanguage.FinishReason).AppendLine("`");
+                builder.Append("- Coordinates: ").AppendLine(visionLanguage.SpatialOutputStatus);
+            }
+#endif
             else if (result is PaddleDocumentTextResult text)
                 foreach (PaddleDocumentTextItem item in text.Items) builder.Append("- [").Append(item.RegionIndex).Append("] ").Append(item.Text).Append(" (score ").Append(item.Confidence.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)).AppendLine(")");
         }

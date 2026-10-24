@@ -65,12 +65,29 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
     /// <summary>Contains raw generated text/tokens and explicit termination, without inventing HTML or spotting coordinates. / 保存原始生成文本、Token 和明确终止原因，不虚构 HTML 或定位坐标。</summary>
     public sealed class PaddleOcrVlGenerationResult
     {
-        internal PaddleOcrVlGenerationResult(PaddleOcrVlTask task, string text, List<int> tokens,
+        /// <summary>Creates a caller-owned generation result for an adapter around another PaddleOCR-VL runtime. / 为其它 PaddleOCR-VL 运行时适配器创建调用方拥有的生成结果。</summary>
+        /// <remarks>This constructor does not parse task text or invent spatial output. Use the document adapter only when the caller can supply the exact task, token sequence and finish reason. / 此构造函数不解析任务文本，也不虚构空间输出；只有调用方能够提供精确任务、Token 序列和结束原因时才应使用文档适配器。</remarks>
+        public PaddleOcrVlGenerationResult(PaddleOcrVlTask task, string text, IEnumerable<int> tokens,
             GenerationFinishReason reason, int promptLength, int ropeDelta, string? sourceSha256, TimeSpan elapsed)
         {
-            Task = task; Text = text; TokenIds = tokens.AsReadOnly(); FinishReason = reason;
+            if (!Enum.IsDefined(typeof(PaddleOcrVlTask), task)) throw new ArgumentOutOfRangeException(nameof(task));
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (tokens == null) throw new ArgumentNullException(nameof(tokens));
+            if (!Enum.IsDefined(typeof(GenerationFinishReason), reason)) throw new ArgumentOutOfRangeException(nameof(reason));
+            if (promptLength < 0) throw new ArgumentOutOfRangeException(nameof(promptLength));
+            if (ropeDelta < 0) throw new ArgumentOutOfRangeException(nameof(ropeDelta));
+            if (sourceSha256 != null && (sourceSha256.Length != 64 || sourceSha256.Any(value => !Uri.IsHexDigit(value))))
+                throw new ArgumentException("A source identity must be a SHA256 hex string.", nameof(sourceSha256));
+            if (elapsed < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(elapsed));
+            var copied = tokens.ToList();
+            if (copied.Any(value => value < 0)) throw new ArgumentException("Generated token IDs cannot be negative.", nameof(tokens));
+            Task = task; Text = text; TokenIds = copied.AsReadOnly(); FinishReason = reason;
             PromptTokenCount = promptLength; RopeDelta = ropeDelta; SourceSha256 = sourceSha256; Elapsed = elapsed;
         }
+
+        internal PaddleOcrVlGenerationResult(PaddleOcrVlTask task, string text, List<int> tokens,
+            GenerationFinishReason reason, int promptLength, int ropeDelta, string? sourceSha256, TimeSpan elapsed)
+            : this(task, text, (IEnumerable<int>)tokens, reason, promptLength, ropeDelta, sourceSha256, elapsed) { }
         /// <summary>Gets the official prompt task. / 获取官方 Prompt 任务。</summary>
         public PaddleOcrVlTask Task { get; }
         /// <summary>Gets completion text, preserving whitespace and structural markers. / 获取保留空白和结构标记的生成文本。</summary>

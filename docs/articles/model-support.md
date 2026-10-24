@@ -18,7 +18,7 @@
 | --- | --- | --- |
 | YOLO | v5、v6、v7、v8、v9、v10、v11、v12、v13、v26 | 检测、分类、分割、姿态、OBB | 以目录中的精确 ONNX/Engine 工件为准。 |
 | DETR | DEIMv2、PP-YOLOE、RF-DETR、RT-DETR | 检测、实例分割 | 不同导出图的输入输出合同不同。 |
-| PaddleOCR | PP-OCRv4/v5 mobile/server、PP-OCRv6 tiny/small/medium；PaddleOCR-VL-1.6（实验性） | 检测、识别、方向分类；VL 文本/表格/公式/图表/Spotting/印章生成 | 核心 CTC ONNX 资产见 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)；VL 当前为固定四图 Bundle + ONNX Runtime CPU 单图生成，`PaddleOcrVlImageProcessor` 和可选 OpenCV 适配器已支持从 RGB/图像文件生成官方 Patch，尚未进入下载 catalog 或 Release。页面/多页编排及其它后端仍按实测矩阵逐项确认。 |
+| PaddleOCR | PP-OCRv4/v5 mobile/server、PP-OCRv6 tiny/small/medium；PaddleOCR-VL-1.6（实验性） | 检测、识别、方向分类；VL 文本/表格/公式/图表/Spotting/印章生成 | 核心 CTC ONNX 资产见 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag=models-paddleocr)；VL 当前为固定四图 Bundle + ONNX Runtime CPU 单图生成，并可通过 `PaddleOcrVlDocumentStage` 接入已有页面/多页编排。`PaddleOcrVlImageProcessor` 和可选 OpenCV 适配器已支持从 RGB/图像文件生成官方 Patch；VL 尚未进入下载 catalog 或 Release，页面级结构化坐标和其它后端仍按实测矩阵逐项确认。 |
 | PaddleOCR / PP-Structure（新增 Release 资产） | PP-OCRv4/v5/v6 核心 DET/REC/CLS、版面、表格、公式、矫正、印章 | OCR 与文档结构 | 使用 `PaddleOcrReleaseClient` 从 `models-paddleocr` 按单模型下载并校验；Profile 分别由 `PaddleOcrModelCatalog` 与 `PaddleDocumentModelCatalog` 提供。 |
 | 异常与抠图 | PaDiM、BRIA RMBG 1.4/2.0 | 异常分数/掩码、前景 alpha | RMBG 2.0 的精度和后端按工件分别记录。 |
 | 视觉语言 | CLIP、BLIP Caption Base | 图文相似度、图像描述 | 仅完整的双图/生成工件可复现。 |

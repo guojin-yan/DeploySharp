@@ -292,6 +292,36 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 `maxDegreeOfParallelism` 是硬上限；调用方必须确认 stage 自身及其 native Session 支持并发。若不能确认，应在该方法外创建多个独立 Pipeline 并自行分片调度。默认串行 `RunManyAsync` 仍适合复用有状态或非线程安全的阶段。
 
+### PaddleOCR-VL 原始任务接入页面和多页编排
+
+PaddleOCR-VL-1.6 的六类任务可以作为页面阶段接入同一个编排器。`PaddleOcrVlDocumentStage` 负责准备输入、调用 `PaddleOcrVlOnnxSession`、保留 Token/EOS 或截断状态，并把页码、输入 SHA、模型和后端写入 `PaddleDocumentVisionLanguageResult`。已有四图 Session 的调用方式如下：
+
+```csharp
+var vlModel = new PaddleDocumentModelDescriptor(
+    "application/paddleocr-vl/1.6", "PaddleOCR-VL 1.6",
+    PaddleDocumentModule.TableStructureRecognition,
+    "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6", "onnx");
+var vlStage = PaddleOcrVlDocumentStage.FromSession(
+    vlModel,
+    backend: "onnxruntime-cpu",
+    task: PaddleOcrVlTask.TableRecognition,
+    session: vlSession,
+    tokenizer: vlTokenizer,
+    prepare: (context, token) =>
+        Task.FromResult(new OpenCvPaddleOcrVlInputFactory().CreateFromFile(
+            (string)context.Page.Source, PaddleOcrVlTask.TableRecognition)),
+    inputIdentity: (context, prepared) => prepared.SourceSha256!);
+
+PaddleDocumentPipelineResult page = await new PaddleDocumentPipeline(new[] { vlStage })
+    .RunAsync(new PaddleDocumentPage(imagePath, new VisualSize(width, height), pageIndex: 0), cancellationToken);
+PaddleDocumentVisionLanguageResult raw =
+    page.GetRequired<PaddleDocumentVisionLanguageResult>(PaddleDocumentModule.TableStructureRecognition);
+```
+
+`PaddleDocumentVisionLanguageResult` 的 `Text` 是模型原始输出，`TokenIds` 和 `FinishReason` 可用于回放和截断诊断；`CoordinatesAvailable` 固定为 `false`，导出器会写出 `spatialOutputStatus`，因此当前阶段不会把 VL 原始文本误报成表格 HTML、单元格或 Spotting 坐标。表格、公式、图表和印章的结构化结果仍需要对应任务 Decoder 或普通 PP-Structure 阶段完成后再映射。
+
+同一个 stage 可以按页调用 `RunManyAsync`，或在每页使用独立 Session/线程安全适配器时调用 `RunManyConcurrentAsync`。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。当前真实证据仍只有固定 1.6 的 Linux ORT CPU 六任务单图生成，OpenVINO、TensorRT、CUDA、OpenCV DNN、页面级质量和正式性能矩阵不能由这个适配器自动获得。
+
 外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
 
 四组 `session/page` 组合的同协议对照见[OpenVINO 并发调优报告](../../eng/models/paddle-document/verification/paddle-document-multipage-openvino-concurrency-tuning-20261005.md)。本机这次小样本中 `1/2` 同时降低了 P50/P95，但串行基线在不同进程间有波动，因此仅作为当前设备的候选配置；库和示例不会据此自动改变默认值。
