@@ -124,6 +124,15 @@ internal static class Program
                 executions = generated.Executions;
             }
             incomplete |= failed > 0 || executions.Any(region => !region.Skipped && region.Result?.FinishReason != GenerationFinishReason.EndOfSequence);
+            foreach (PaddleDocumentVisionLanguageRegionExecution execution in executions)
+            {
+                PaddleOcrVlTableParseResult? table = execution.Result?.Table;
+                if (table == null) continue;
+                incomplete |= !table.Succeeded;
+                if (table.Succeeded)
+                    File.WriteAllText(Path.Combine(output, "page-" + index + "-region-" + execution.RegionIndex + ".table.html"), table.Html!);
+                Console.WriteLine($"page={index} region={execution.RegionIndex} table={table.Status} rows={table.RowCount} columns={table.ColumnCount}");
+            }
             Console.WriteLine($"page={index} succeeded={succeeded} failed={failed} skipped={skipped}");
         }
         return incomplete ? 1 : 0;

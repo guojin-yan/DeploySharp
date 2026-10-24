@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 
@@ -38,6 +39,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             FinishReason = finishReason;
             RegionIndex = regionIndex;
             SourceRegion = sourceRegion;
+            Table = task == PaddleOcrVlTask.TableRecognition ? PaddleOcrVlTableParser.Parse(text, finishReason) : null;
         }
 
         /// <summary>Gets the original PaddleOCR-VL task. / 获取原始 PaddleOCR-VL 任务。</summary>
@@ -56,6 +58,17 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public bool CoordinatesAvailable => false;
         /// <summary>Gets the stable explanation for the absent coordinates. / 获取没有坐标的稳定说明。</summary>
         public string SpatialOutputStatus => "not-returned-by-paddleocr-vl-task-output";
+
+        /// <summary>Gets bounded strict OTSL analysis for table tasks, including explicit invalid/incomplete status; other tasks return null. / 获取表格任务的有界严格 OTSL 分析（含非法或未完成状态），其它任务为空。</summary>
+        public PaddleOcrVlTableParseResult? Table { get; }
+
+        /// <summary>Reparses table output with explicit limits or opt-in row-width repair without changing the raw result or its default table analysis. / 按明确限额或可选行宽修复重新解析，不改变原始结果及默认分析。</summary>
+        public PaddleOcrVlTableParseResult ParseTable(PaddleOcrVlTableParseOptions? options = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Task != PaddleOcrVlTask.TableRecognition) throw new InvalidOperationException("Only a table-recognition result can be parsed as OTSL.");
+            return options == null ? Table! : PaddleOcrVlTableParser.Parse(Text, FinishReason, options, cancellationToken);
+        }
 
         /// <summary>Maps a VL task to the existing document module contract. / 将 VL 任务映射到现有文档模块合同。</summary>
         public static PaddleDocumentModule ModuleForTask(PaddleOcrVlTask task)

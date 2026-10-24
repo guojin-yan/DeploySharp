@@ -974,6 +974,8 @@ Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
 Console.WriteLine(result.Text);
 ```
 
+表格输出可以继续转换为逻辑单元格和 HTML：`PaddleOcrVlTableParser.Parse(result.Text, result.FinishReason)`。文档阶段返回的 `PaddleDocumentVisionLanguageResult.Table` 已自动执行同一默认严格解析。支持横向、纵向和矩形合并，保留原文/Token，生成未到 EOS、结构非法或超预算时明确失败；官方行宽修复需显式启用。使用方式、默认预算、修复影响及 JSON/Markdown 格式见[VL 表格解析](visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。逻辑行列不是单元格像素框，转换成功也不等于文字或表格识别准确。
+
 如果 Bundle 来自 Release 或共享缓存，建议先调用 `PaddleOcrVlBundleManifest.LoadFromDirectory(bundleDirectory).VerifyFiles(bundleDirectory)`，再创建会话。`PaddleOcrVlOnnxSession.CreateVerified` 会在创建四个后端 Session 前校验固定 revision、四图和四个 tokenizer sidecar 的文件名、格式、大小与 SHA-256；`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 会按九个独立资产下载同一 Bundle。仓库内的 `Write-PaddleOcrVlBundleManifest.py` 可在真实图目录和官方 tokenizer 目录存在时生成本地 Bundle 与 manifest；当前 Release 尚未上传这些大体积 ONNX 文件。
 
 Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
@@ -1005,7 +1007,7 @@ PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
 
 需要自动检测区域时，`OpenCvPaddleOcrVlDocumentPipeline` 可以将真实布局 `VisualPipeline` 接到混合 VL，检测前处理和全部 crop 共用同一张解码底图。[PP-DocLayout-L 联合实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)使用两张独立 FUNSD 页面：8 个检测区域中 6 个生成、2 个图片区域跳过，全部 `3,960,768` 个 Patch 数值和 `653` 个 Token/文本匹配相同裁剪的官方参考且 EOS。它保留检测器顺序、页码和索引，不推断阅读顺序；默认跳过图片可能漏掉被检测器误分类的正文，重叠类别也可能重复解析。[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)说明如何配置 `layoutDetector`、区域上限和类别覆盖。
 
-`PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均为 `false`，源区域是调用方/版面模型的坐标，不是 VL 预测的文字框。自动阅读顺序、真实版面模型与 VL 的联合质量、结构化 HTML/单元格/Spotting/公式/图表归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+`PaddleDocumentVisionLanguageResult.CoordinatesAvailable` 和页面聚合结果的同名属性均为 `false`，源区域是调用方/版面模型的坐标，不是 VL 预测的文字框。表格已有经验证的 OTSL 逻辑单元格/HTML；自动阅读顺序、真实版面模型与 VL 的联合质量、Spotting/公式/图表等任务归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。
 
 ### 自然宽行有哪些真实后端证据

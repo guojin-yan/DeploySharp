@@ -66,7 +66,7 @@
 | `segmentation/sam-v1-vit-b` | — | — | — | — | — |
 | `generative-vision-language/blip-caption-base` | — | — | — | — | — |
 
-`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。另有[真实 PP-DocLayout-L → VL 联合记录](../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)：两张 FUNSD 页面、六个路由 crop 的 653 Token/文本匹配官方参考且 EOS，两个图片区域明确跳过；检测与裁剪共用底图。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行仍不代表阅读顺序、独立页面质量、HTML/坐标结构化结果或正式性能已完成。
+`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。另有[真实 PP-DocLayout-L → VL 联合记录](../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)：两张 FUNSD 页面、六个路由 crop 的 653 Token/文本匹配官方参考且 EOS，两个图片区域明确跳过；检测与裁剪共用底图。[OTSL 转换验证](../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)另提供逻辑单元格与 HTML，不提供单元格像素框。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行仍不代表阅读顺序、独立页面质量、其它任务结构化结果或正式性能已完成。
 
 ### PP-OCR 核心模型质量证据索引
 

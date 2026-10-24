@@ -147,7 +147,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     tokenIds = visionLanguage.TokenIds.ToArray(),
                     finishReason = visionLanguage.FinishReason.ToString(),
                     coordinatesAvailable = visionLanguage.CoordinatesAvailable,
-                    spatialOutputStatus = visionLanguage.SpatialOutputStatus
+                    spatialOutputStatus = visionLanguage.SpatialOutputStatus,
+                    table = ToVisionLanguageTableObject(visionLanguage.Table)
                 };
 #endif
             if (result is PaddleDocumentTextResult text)
@@ -184,6 +185,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     {
                         builder.Append(execution.Result.FinishReason).AppendLine().AppendLine();
                         AppendRawText(builder, execution.Result.Text);
+                        AppendVisionLanguageTableMarkdown(builder, execution.Result.Table);
                     }
                     else builder.AppendLine(execution.Skipped ? execution.SkipReason : execution.FailureMessage);
                 }
@@ -200,6 +202,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     {
                         builder.AppendLine().AppendLine();
                         AppendRawText(builder, execution.Result!.Text);
+                        AppendVisionLanguageTableMarkdown(builder, execution.Result.Table);
                     }
                     else builder.AppendLine(execution.FailureMessage);
                 }
@@ -211,6 +214,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 AppendRawText(builder, visionLanguage.Text);
                 builder.Append("- Finish reason: `").Append(visionLanguage.FinishReason).AppendLine("`");
                 builder.Append("- Coordinates: ").AppendLine(visionLanguage.SpatialOutputStatus);
+                AppendVisionLanguageTableMarkdown(builder, visionLanguage.Table);
             }
 #endif
             else if (result is PaddleDocumentTextResult text)
@@ -242,9 +246,33 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     finishReason = execution.Result.FinishReason.ToString(),
                     inputSha256 = execution.Result.Metadata.InputSha256,
                     elapsedMs = execution.Result.Metadata.Elapsed.TotalMilliseconds,
-                    warnings = execution.Result.Warnings.ToArray()
+                    warnings = execution.Result.Warnings.ToArray(),
+                    table = ToVisionLanguageTableObject(execution.Result.Table)
                 }
             };
+
+        private static object? ToVisionLanguageTableObject(PaddleOcrVlTableParseResult? table)
+            => table == null ? null : new
+            {
+                status = table.Status.ToString(),
+                succeeded = table.Succeeded,
+                rowCount = table.RowCount,
+                columnCount = table.ColumnCount,
+                html = table.Html,
+                diagnostics = table.Diagnostics.ToArray(),
+                cells = table.Cells.Select(cell => new { row = cell.Row, column = cell.Column, rowSpan = cell.RowSpan,
+                    columnSpan = cell.ColumnSpan, text = cell.Text, isEmpty = cell.IsEmpty }).ToArray()
+            };
+
+        private static void AppendVisionLanguageTableMarkdown(StringBuilder builder, PaddleOcrVlTableParseResult? table)
+        {
+            if (table == null) return;
+            builder.Append("- OTSL table: ").Append(table.Status).Append("; logical rows/columns: ")
+                .Append(table.RowCount).Append('/').Append(table.ColumnCount).AppendLine();
+            foreach (string diagnostic in table.Diagnostics) builder.Append("- Table diagnostic: ").AppendLine(diagnostic);
+            // Html contains only our own table tags/attributes and escaped model text.
+            if (table.Html != null) builder.AppendLine().AppendLine(table.Html).AppendLine();
+        }
 
         private static void AppendRawText(StringBuilder builder, string text)
         {

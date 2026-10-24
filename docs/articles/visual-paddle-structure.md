@@ -318,7 +318,50 @@ PaddleDocumentVisionLanguageResult raw =
     page.GetRequired<PaddleDocumentVisionLanguageResult>(PaddleDocumentModule.TableStructureRecognition);
 ```
 
-`PaddleDocumentVisionLanguageResult` 的 `Text` 是模型原始输出，`TokenIds` 和 `FinishReason` 可用于回放和截断诊断；`CoordinatesAvailable` 固定为 `false`，导出器会写出 `spatialOutputStatus`，因此当前阶段不会把 VL 原始文本误报成表格 HTML、单元格或 Spotting 坐标。表格、公式、图表和印章的结构化结果仍需要对应任务 Decoder 或普通 PP-Structure 阶段完成后再映射。
+`PaddleDocumentVisionLanguageResult` 的 `Text` 是模型原始输出，`TokenIds` 和 `FinishReason` 可用于回放和截断诊断。表格任务会在 `Table` 中附带经检查的逻辑单元格与 HTML；这不提供单元格像素框。`CoordinatesAvailable` 仍为 `false`，导出器继续写出 `spatialOutputStatus`。公式、图表、印章和 Spotting 的任务级结构化归一仍需分别完成，不能由表格转换结果外推。
+
+#### VL 表格：OTSL、合并单元格与 HTML
+
+VL 的表格生成使用 OTSL 标记，而不是直接返回 HTML。`PaddleOcrVlTableParser` 识别六种标记：`<fcel>` 为带文本的单元格锚点，`<ecel>` 为空单元格锚点，`<lcel>` 为同一单元格向右的延续，`<ucel>` 为向下的延续，`<xcel>` 为同时跨行跨列的内部槽位，`<nl>` 为行分隔。输出 `Row`/`Column` 从零开始，`RowSpan`/`ColumnSpan` 表示逻辑跨度；没有像素坐标、推测的表头角色或虚构的单元格置信度。
+
+对于上面的 `raw`，可直接使用自动解析结果：
+
+```csharp
+PaddleOcrVlTableParseResult table = raw.Table!;
+if (table.Succeeded)
+{
+    File.WriteAllText("table.html", table.Html!);
+    foreach (PaddleOcrVlTableCell cell in table.Cells)
+        Console.WriteLine($"({cell.Row},{cell.Column}) " +
+            $"span={cell.RowSpan}x{cell.ColumnSpan}: {cell.Text}");
+}
+else
+{
+    Console.WriteLine($"{table.Status}: {string.Join(";", table.Diagnostics)}");
+}
+```
+
+直接调用四图 Session、尚未进入文档阶段时，使用 `PaddleOcrVlTableParser.Parse(generation.Text, generation.FinishReason)` 即可。`PaddleDocumentVisionLanguageResult.Table` 仅对 `TableRecognition` 非空；其它任务保持原有输出。
+
+`FinishReason=EndOfSequence` 是完整表格输出的必要条件。即使网格看起来完整，`MaxTokens`、取消、错误、停止字符串或未知结束原因都会返回 `IncompleteGeneration`，不输出 HTML 或部分单元格。EOS 后仍会检查行宽、悬空合并标记、矩形覆盖和非法文本位置：生成成功并不等于 `Table.Succeeded`。
+
+默认严格检查不会自动改行宽。若应用明确接受官方行宽修复，可单独请求：
+
+```csharp
+PaddleOcrVlTableParseResult repaired = raw.ParseTable(
+    new PaddleOcrVlTableParseOptions(
+        repairMode: PaddleOcrVlTableRepairMode.OfficialRowWidth,
+        maximumInputCharacters: 1024 * 1024,
+        maximumRows: 4096,
+        maximumColumns: 1024,
+        maximumGridCells: 65536));
+```
+
+该模式按固定 PaddleX 转换器的最小代价宽度补 `<ecel>`、去掉多余的非文本尾槽和空行，保留所有带文本的锚点。发生改动时状态为 `Repaired`，`Diagnostics` 分别记录补位、裁剪及空行删除数量；修复后仍有非法合并则失败。它可能改变合并跨度或表格结构，不应作为准确率修复。原始 `Text`、Token、来源和默认 `Table` 均不改变，可同时保留严格与修复结果供应用选择。
+
+上述四个上限也是默认值，限制的是 UTF-16 原文字符数、原始行数、每行原始槽数以及原始/修复后网格大小。超过上限返回 `LimitExceeded`，取消请求传播 `OperationCanceledException`。最终行可以在 EOS 处结束，末尾 `<nl>` 可省略。HTML 仅生成固定的 `table/tr/td` 和跨度属性，单元格内容按官方规则去掉两端空白并做 HTML 转义；原有实体也作为文本保留，不执行模型生成的标签。JSON 导出保留 `table.status/diagnostics/cells/html`；Markdown 同时保留原始 OTSL 代码围栏和转义后的表格。
+
+[官方 OTSL 对照与真实页面联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)覆盖合并、空格/特殊字符和显式行宽修复，也核对已生成的两张真实表格。它验证转换与接入正确性，不评估模型识别内容是否正确。
 
 如果版面检测已经产出页面区域，可以使用 `PaddleOcrVlRegionStage` 逐区域路由同一个 VL 任务。它按版面结果顺序准备每个 crop，保留原区域的页面坐标、区域索引和输入 SHA，并返回 `PaddleDocumentVisionLanguagePageResult`。输入任务必须与阶段一致；当输入和生成结果都携带 SHA 时，两者必须相同，防止把另一张 crop 的结果关联到当前区域。`continueOnRegionFailure: true` 时，单个区域的裁剪、生成或身份校验失败会变成带异常类型和消息的隔离记录，后续区域仍会运行；取消请求会向上传播，也不会启动备用推理。`fallback` 只用于调用方提供的另一条 VL 生成路径，不能把普通 CTC OCR 的文本伪装成 VL 结果。
 

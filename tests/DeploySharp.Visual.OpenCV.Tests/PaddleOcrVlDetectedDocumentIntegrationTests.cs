@@ -31,7 +31,11 @@ public sealed class PaddleOcrVlDetectedDocumentIntegrationTests
     [TestCategory("ExternalModels")]
     public Task ActualLayoutDetectorAndVlMatchEveryOfficialCropToken() => Run(generate: true);
 
-    private static async Task Run(bool generate)
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public Task ActualLayoutDetectorAndVlExportOfficialLogicalTableAndHtml() => Run(generate: true, structuredTables: true);
+
+    private static async Task Run(bool generate, bool structuredTables = false)
     {
         string manifestPath = Required("DEPLOYSHARP_PADDLEOCR_VL_DETECTED_MANIFEST");
         string output = Path.GetFullPath(Required("DEPLOYSHARP_PADDLEOCR_VL_DETECTED_OUTPUT"));
@@ -67,7 +71,9 @@ public sealed class PaddleOcrVlDetectedDocumentIntegrationTests
                 typeof(OnnxRuntimeOptions).Assembly, typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly, typeof(PaddleOcrVlDetectedDocumentIntegrationTests).Assembly }
                 .Select(assembly => new { name = assembly.GetName().Name, sha256 = HashFile(assembly.Location) }).ToArray(),
             ["regions"] = rows,
-            ["boundary"] = "Fixed independent FUNSD document pages, all detector regions at the declared threshold in detector order. Official comparisons use exact crops; not labeled document quality, reading order, structure normalization, other backends or formal performance. Preparation-only mode never runs or validates a VL model."
+            ["boundary"] = structuredTables
+                ? "Fixed independent FUNSD pages and exact-crop generation. Logical OTSL cells/HTML compared with pinned official converter; not pixel cell coordinates, labeled table/document quality, reading order, other task normalization, other backends or formal performance."
+                : "Fixed independent FUNSD document pages, all detector regions at the declared threshold in detector order. Official comparisons use exact crops; not labeled document quality, reading order, structure normalization, other backends or formal performance. Preparation-only mode never runs or validates a VL model."
         };
         void Save() => File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         Save();
@@ -83,6 +89,14 @@ public sealed class PaddleOcrVlDetectedDocumentIntegrationTests
             var tokenizer = generate ? new PaddleOcrVlTokenizer(Required("DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT")) : null;
             string? referencePath = generate ? Required("DEPLOYSHARP_PADDLEOCR_VL_DETECTED_REFERENCE") : null;
             using var reference = generate ? JsonDocument.Parse(File.ReadAllBytes(referencePath!)) : null;
+            string? tableReferencePath = structuredTables ? Required("DEPLOYSHARP_PADDLEOCR_VL_TABLE_REFERENCE") : null;
+            using var tableReference = structuredTables ? JsonDocument.Parse(File.ReadAllBytes(tableReferencePath!)) : null;
+            if (structuredTables)
+            {
+                Assert.AreEqual("deploysharp-paddleocr-vl-official-otsl-reference-v1", tableReference!.RootElement.GetProperty("schemaVersion").GetString());
+                Assert.AreEqual("63bf7d0ccf03225dd6be582e2b25628283e2eed0ad0b1c7864e086e3b95f923a", tableReference.RootElement.GetProperty("upstream").GetProperty("sourceSha256").GetString());
+                report["tableReferenceSha256"] = HashFile(tableReferencePath!);
+            }
             if (generate)
             {
                 Assert.AreEqual("reference-generation-complete", reference!.RootElement.GetProperty("status").GetString());
@@ -141,6 +155,39 @@ public sealed class PaddleOcrVlDetectedDocumentIntegrationTests
                         task = execution.Task?.ToString(), skipped = execution.Skipped, skipReason = execution.SkipReason }) });
                 if (generate)
                 {
+                    if (structuredTables)
+                    {
+                        foreach (var execution in generated.Executions.Where(execution => execution.Result != null))
+                        {
+                            var raw = execution.Result!;
+                            if (raw.Task != PaddleOcrVlTask.TableRecognition) { Assert.IsNull(raw.Table); continue; }
+                            string id = "page-" + result.Page.PageIndex + "-region-" + execution.RegionIndex;
+                            JsonElement expected = tableReference!.RootElement.GetProperty("cases").EnumerateArray().Single(item => item.GetProperty("id").GetString() == id);
+                            PaddleOcrVlTableParseResult table = raw.Table!;
+                            Assert.AreEqual(PaddleOcrVlTableParseStatus.Succeeded, table.Status, id);
+                            Assert.AreEqual(expected.GetProperty("rawText").GetString(), raw.Text, id);
+                            Assert.AreEqual(expected.GetProperty("html").GetString(), table.Html, id);
+                            Assert.AreEqual(expected.GetProperty("rowCount").GetInt32(), table.RowCount, id);
+                            Assert.AreEqual(expected.GetProperty("columnCount").GetInt32(), table.ColumnCount, id);
+                            JsonElement[] expectedCells = expected.GetProperty("cells").EnumerateArray().ToArray();
+                            Assert.AreEqual(expectedCells.Length, table.Cells.Count, id);
+                            for (int cellIndex = 0; cellIndex < expectedCells.Length; cellIndex++)
+                            {
+                                JsonElement cell = expectedCells[cellIndex];
+                                PaddleOcrVlTableCell actual = table.Cells[cellIndex];
+                                Assert.AreEqual(cell.GetProperty("row").GetInt32(), actual.Row, id);
+                                Assert.AreEqual(cell.GetProperty("column").GetInt32(), actual.Column, id);
+                                Assert.AreEqual(cell.GetProperty("rowSpan").GetInt32(), actual.RowSpan, id);
+                                Assert.AreEqual(cell.GetProperty("columnSpan").GetInt32(), actual.ColumnSpan, id);
+                                Assert.AreEqual(cell.GetProperty("text").GetString(), actual.Text, id);
+                                Assert.AreEqual(cell.GetProperty("isEmpty").GetBoolean(), actual.IsEmpty, id);
+                            }
+                            var row = rows.Cast<Dictionary<string, object?>>().Single(value => (string)value["id"]! == id);
+                            row["table"] = new { status = table.Status.ToString(), rowCount = table.RowCount, columnCount = table.ColumnCount,
+                                cellCount = table.Cells.Count, cellsExact = true, htmlExact = true, htmlSha256 = Hash(System.Text.Encoding.UTF8.GetBytes(table.Html!)) };
+                            File.WriteAllText(Path.Combine(output, id + ".table.html"), table.Html);
+                        }
+                    }
                     File.WriteAllText(Path.Combine(output, "page-" + result.Page.PageIndex + ".json"), PaddleDocumentPipelineExport.ToJson(result));
                     File.WriteAllText(Path.Combine(output, "page-" + result.Page.PageIndex + ".md"), PaddleDocumentPipelineExport.ToMarkdown(result));
                 }
@@ -151,7 +198,8 @@ public sealed class PaddleOcrVlDetectedDocumentIntegrationTests
                 string[] actualIds = rows.Cast<Dictionary<string, object?>>().Select(row => (string)row["id"]!).OrderBy(value => value, StringComparer.Ordinal).ToArray();
                 CollectionAssert.AreEqual(expectedIds, actualIds, "Every reference crop must execute, without omissions or duplicates.");
             }
-            report["pages"] = layouts; report["status"] = generate ? "real-layout-crop-patches-and-generation-exact" : "real-layout-crops-prepared";
+            report["pages"] = layouts; report["status"] = structuredTables ? "real-layout-generation-and-logical-table-exact"
+                : generate ? "real-layout-crop-patches-and-generation-exact" : "real-layout-crops-prepared";
             Save();
         }
         catch (Exception exception) { report["status"] = "failed"; report["error"] = exception.ToString(); Save(); throw; }

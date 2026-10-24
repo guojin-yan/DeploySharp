@@ -67,6 +67,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md',
     'samples/02-visual/paddleocr-vl-document/README.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-linux-rtx2060-20261023.md',

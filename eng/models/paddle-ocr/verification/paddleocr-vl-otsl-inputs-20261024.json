@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-otsl-inputs-v1",
+  "boundary": "Synthetic parser cases, not model quality. Real generated tables are loaded separately from pinned reports.",
+  "cases": [
+    { "id": "basic-unicode-escaping", "rawText": "<fcel> 名称 <fcel><script>alert(\"x\")</script> & 'value'<nl><ecel><fcel>第二行\n保留换行<nl>", "requiresRepair": false },
+    { "id": "horizontal-merge", "rawText": "<fcel>A<lcel><lcel><nl><fcel>B<fcel>C<fcel>D<nl>", "requiresRepair": false },
+    { "id": "vertical-merge", "rawText": "<fcel>A<fcel>B<nl><ucel><fcel>C<nl><ucel><fcel>D<nl>", "requiresRepair": false },
+    { "id": "rectangular-merge", "rawText": "<fcel>A<lcel><fcel>B<nl><ucel><xcel><fcel>C<nl><fcel>D<fcel>E<fcel>F<nl>", "requiresRepair": false },
+    { "id": "merged-empty-anchor", "rawText": "<ecel><lcel><fcel>A<nl><ucel><xcel><ecel><nl>", "requiresRepair": false },
+    { "id": "optional-final-separator", "rawText": "<fcel>A<fcel>B<nl><fcel>C<fcel>D", "requiresRepair": false },
+    { "id": "one-row-whitespace", "rawText": " \n<fcel>  A\t \n<lcel><ecel> \t", "requiresRepair": false },
+    { "id": "ragged-padding", "rawText": "<fcel>A<fcel>B<fcel>C<nl><fcel>D<nl><fcel>E<fcel>F<nl>", "requiresRepair": true },
+    { "id": "ragged-trimming", "rawText": "<fcel>A<lcel><ecel><nl><fcel>B<ecel><nl><fcel>C<ecel><nl>", "requiresRepair": true },
+    { "id": "minimum-cost-tie", "rawText": "<fcel>A<ecel><ecel><nl><fcel>B<ecel><nl>", "requiresRepair": true },
+    { "id": "padding-and-trimming", "rawText": "<fcel>A<nl><fcel>B<ecel><nl><fcel>C<ecel><ecel><ecel><nl>", "requiresRepair": true },
+    { "id": "empty-rows", "rawText": "<nl><fcel>A<nl><nl><fcel>B<nl>", "requiresRepair": true }
+  ]
+}

@@ -10,7 +10,7 @@ using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 {
     /// <summary>Adapts one PaddleOCR-VL task to the page/multi-page PP-Structure pipeline. / 将一项 PaddleOCR-VL 任务适配到页面和多页 PP-Structure Pipeline。</summary>
-    /// <remarks>The stage preserves raw text, Token IDs, EOS/truncation and page provenance. It deliberately does not manufacture HTML, cells, polygons or spotting coordinates from a task that did not return them. / 阶段保留原始文本、Token、EOS/截断状态和页面来源；对于模型没有返回的内容，不会伪造 HTML、单元格、Polygon 或 Spotting 坐标。</remarks>
+    /// <remarks>The stage preserves raw text, Token IDs, EOS/truncation and page provenance. Table tasks also expose validated logical OTSL cells/HTML; no pixel bounds, polygons or spotting coordinates are invented. / 阶段保留原文、Token、EOS/截断和页面来源；表格任务另提供经验证的 OTSL 逻辑单元格/HTML，不虚构像素框、Polygon 或 Spotting 坐标。</remarks>
     public sealed class PaddleOcrVlDocumentStage : IPaddleDocumentPipelineStage
     {
         private readonly PaddleDocumentModelDescriptor _model;
