@@ -9,6 +9,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
     /// <remarks>The input is packed row-major RGB, immutable for the duration of the call. The output layout is [grid_h,grid_w,3,14,14], matching the pinned official processor. Encoded image decoding belongs to an optional adapter such as DeploySharp.Visual.OpenCV. / 输入为行优先紧密 RGB，调用期间不得修改；输出布局为 [grid_h,grid_w,3,14,14]，匹配固定官方 Processor。编码图像解码由可选适配器（例如 DeploySharp.Visual.OpenCV）负责。</remarks>
     public sealed class PaddleOcrVlImageProcessor
     {
+        // Pillow's 8-bit resampler quantizes normalized coefficients before either pass.
+        private const int ResamplePrecisionBits = 22;
+
         /// <summary>Creates one processor using the official V1.6 interpolation and normalization contract. / 创建使用官方 V1.6 插值和归一化合同的处理器。</summary>
         public PaddleOcrVlImageProcessor(int maximumSourcePixels = 128 * 1024 * 1024)
         {
@@ -96,7 +99,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             => Resize(source, sourceWidth, sourceHeight, targetWidth, targetHeight, 2.0, static distance =>
             {
                 if (distance < 1.0) return ((1.5 * distance - 2.5) * distance * distance) + 1.0;
-                return distance < 2.0 ? (((-.5 * distance + 2.5) * distance - 4.0) * distance) + 2.0 : 0.0;
+                return distance < 2.0 ? (((distance - 5.0) * distance + 8.0) * distance - 4.0) * -.5 : 0.0;
             }, cancellationToken);
 
         private static byte[] LanczosResize(byte[] source, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, CancellationToken cancellationToken)
@@ -124,7 +127,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     ResampleCoefficient coefficient = horizontal[x];
                     for (int channel = 0; channel < 3; channel++)
                     {
-                        double sum = 0.0;
+                        int sum = 1 << (ResamplePrecisionBits - 1);
                         for (int index = 0; index < coefficient.Weights.Length; index++)
                             sum += source[((y * sourceWidth + coefficient.Start + index) * 3) + channel] * coefficient.Weights[index];
                         intermediate[((y * targetWidth + x) * 3) + channel] = ClipByte(sum);
@@ -139,7 +142,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 {
                     for (int channel = 0; channel < 3; channel++)
                     {
-                        double sum = 0.0;
+                        int sum = 1 << (ResamplePrecisionBits - 1);
                         for (int index = 0; index < coefficient.Weights.Length; index++)
                             sum += intermediate[(((coefficient.Start + index) * targetWidth + x) * 3) + channel] * coefficient.Weights[index];
                         destination[((y * targetWidth + x) * 3) + channel] = ClipByte(sum);
@@ -153,6 +156,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         {
             double scale = sourceSize / (double)targetSize;
             double filterScale = Math.Max(scale, 1.0);
+            double inverseFilterScale = 1.0 / filterScale;
             double support = supportRadius * filterScale;
             var result = new ResampleCoefficient[targetSize];
             for (int output = 0; output < targetSize; output++)
@@ -164,29 +168,34 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 double total = 0.0;
                 for (int index = 0; index < weights.Length; index++)
                 {
-                    double distance = Math.Abs((start + index - center + .5) / filterScale);
-                    double weight = filter(distance / 1.0);
+                    double distance = Math.Abs((start + index - center + .5) * inverseFilterScale);
+                    double weight = filter(distance);
                     weights[index] = weight;
                     total += weight;
                 }
                 if (Math.Abs(total) < double.Epsilon) throw new InvalidOperationException("The official image resampling filter produced an empty support.");
-                for (int index = 0; index < weights.Length; index++) weights[index] /= total;
-                result[output] = new ResampleCoefficient(start, weights);
+                var fixedWeights = new int[weights.Length];
+                for (int index = 0; index < weights.Length; index++)
+                {
+                    double normalized = weights[index] / total;
+                    fixedWeights[index] = (int)(normalized * (1 << ResamplePrecisionBits) + (normalized < 0 ? -.5 : .5));
+                }
+                result[output] = new ResampleCoefficient(start, fixedWeights);
             }
             return result;
         }
 
-        private static byte ClipByte(double value)
+        private static byte ClipByte(int value)
         {
-            int rounded = checked((int)Math.Floor(value + .5));
+            int rounded = value >> ResamplePrecisionBits;
             return (byte)Math.Max(0, Math.Min(255, rounded));
         }
 
         private readonly struct ResampleCoefficient
         {
-            internal ResampleCoefficient(int start, double[] weights) { Start = start; Weights = weights; }
+            internal ResampleCoefficient(int start, int[] weights) { Start = start; Weights = weights; }
             internal int Start { get; }
-            internal double[] Weights { get; }
+            internal int[] Weights { get; }
         }
     }
 }
