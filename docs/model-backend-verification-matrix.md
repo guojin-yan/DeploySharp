@@ -1,6 +1,6 @@
 # 模型 × 后端验证矩阵
 
-本页是当前公开模型工件的后端验证总表。验证范围为 Windows x64；`✓` 表示该精确工件在对应后端完成加载、推理和结果解码，`△` 表示已有代码合同和已发布资产但尚无该后端的真实模型证据，`✗` 表示已尝试但当前后端不能完成该工件，`—` 表示没有适用工件或该格式不属于该后端。表格不把“可构建”或“存在适配器”当作推理通过。
+本页汇总公开模型工件与单独注明的实验性 Bundle。除 PaddleOCR-VL 行单独注明的 Linux x64 证据外，验证范围为 Windows x64；`✓` 表示该精确工件在对应后端完成加载、推理和结果解码，`△` 表示已有代码合同但尚无该后端的真实模型证据（是否可下载另行说明），`✗` 表示已尝试但当前后端不能完成该工件，`—` 表示没有适用工件或该格式不属于该后端。表格不把“可构建”或“存在适配器”当作推理通过。
 
 模型目录中的 `External` 条目不纳入本表的通过统计。SAM2/SAM3 视频、Whisper 完整发布 Bundle、Donut 原生多页/TensorRT、BLIP VQA/BLIP-2/InstructBLIP、Qwen2.5-VL、Phi Vision、SigLIP 2，以及部分 LayoutLMv3/Pix2Struct 任务头仍处于合同或局部实验阶段，不能宣称全部后端可用。模型目录、下载边界和状态语义见[模型支持指南](articles/model-support.md)；可复现性能结果见[设备性能实测](articles/device-performance-benchmarks.md)。
 
@@ -56,7 +56,7 @@
 | `paddleocr/ppocrv6/small-rec` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/medium-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv6/medium-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr-vl/1.6 (experimental four-graph ONNX)` | ✓ | △ | △ | △ | — |
+| `paddleocr-vl/1.6 (experimental four-graph ONNX)` | ✓ | ✓ | △ | △ | — |
 | `anomalib/padim/mvtec-bottle` | ✓ | ✓ | ✓ | ✓ | — |
 | `bria/rmbg-1.4` | ✓ | ✓ | ✓ | ✓ | — |
 | `bria/rmbg-2.0 (onnx.fp32)` | ✓ | — | ✗ | ✓ | — |
@@ -66,7 +66,7 @@
 | `segmentation/sam-v1-vit-b` | — | — | — | — | — |
 | `generative-vision-language/blip-caption-base` | — | — | — | — | — |
 
-`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU `✓` 表示固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图在生产 C# Session 中完成六任务单图生成，765 个 Token 和文本与官方 CPU 参考一致。另有[真实 PP-DocLayout-L → VL 联合记录](../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)：两张 FUNSD 页面、六个路由 crop 的 653 Token/文本匹配官方参考且 EOS，两个图片区域明确跳过；检测与裁剪共用底图。[OTSL 转换验证](../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)另提供逻辑单元格与 HTML，不提供单元格像素框。OpenVINO、TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行仍不代表阅读顺序、独立页面质量、其它任务结构化结果或正式性能已完成。
+`paddleocr-vl/1.6 (experimental four-graph ONNX)` 的 ORT CPU 和 OpenVINO CPU `✓` 均限定为 Linux x64 上固定官方 1.6 权重导出的 `vision/embedding/decoder/head` 四图，六任务单图生成的 765 个 Token/文本与官方参考一致。[OpenVINO 2026.3.1 实测](../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)还记录异步入口、36 路空/增长 KV 和每图一次视觉编码；该 16 GB 无 Swap 主机上的异步通过运行使用了报告所列的进程分配器/托管堆配置，峰值 RSS 约 12.05 GiB，未配置的异步运行曾因 OOM 中止。该勾号不表示 Windows VL、内存稳定性或 OpenVINO 页面联合质量通过。ORT 另有[真实 PP-DocLayout-L → VL 联合记录](../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)：两张 FUNSD 页面、六个路由 crop 的 653 Token/文本匹配官方参考且 EOS，两个图片区域明确跳过；检测与裁剪共用底图。[OTSL 转换验证](../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)另提供逻辑单元格与 HTML，不提供单元格像素框。TensorRT 和 OpenCV DNN 目前为 `△`，因为尚无该 Bundle 的真实后端运行证据；它也没有进入模型下载 catalog 或 `models-paddleocr` Release。该行仍不代表阅读顺序、独立页面质量、其它任务结构化结果或正式性能已完成。
 
 ### PP-OCR 核心模型质量证据索引
 

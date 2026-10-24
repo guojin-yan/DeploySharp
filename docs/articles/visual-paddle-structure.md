@@ -296,6 +296,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 PaddleOCR-VL-1.6 的六类任务可以作为页面阶段接入同一个编排器。`PaddleOcrVlDocumentStage` 负责准备输入、调用 `PaddleOcrVlOnnxSession`、保留 Token/EOS 或截断状态，并把页码、输入 SHA、模型和后端写入 `PaddleDocumentVisionLanguageResult`。已有四图 Session 的调用方式如下：
 
+四图 Session 已在 Linux 的 ONNX Runtime CPU 和 OpenVINO CPU 上分别完成六任务单图生成对照。[OpenVINO 配置](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)复用同一 API 和图文件；下方使用 `onnxruntime-cpu` 的页面/版面联合案例仍是 ORT 的实测范围，不据此宣称 OpenVINO 多页联合质量已通过。
+
 ```csharp
 var vlModel = new PaddleDocumentModelDescriptor(
     "application/paddleocr-vl/1.6", "PaddleOCR-VL 1.6",

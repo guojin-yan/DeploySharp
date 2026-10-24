@@ -944,7 +944,7 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual` 的实验性 ONNX Runtime CPU 路径，提供单图/区域生成和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 ONNX Runtime CPU 和 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
 
 ```csharp
 using JYPPX.DeploySharp.Visual;
@@ -973,6 +973,36 @@ Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
                   $"{result.FinishReason}, {result.Elapsed.TotalMilliseconds:F1} ms");
 Console.WriteLine(result.Text);
 ```
+
+如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：
+
+```csharp
+using JYPPX.DeploySharp;
+using JYPPX.DeploySharp.Backends.OpenVINO;
+using JYPPX.DeploySharp.Registry;
+
+using var openVinoRegistry = new BackendRegistry();
+openVinoRegistry.UseOpenVino(new OpenVinoOptions(
+    performanceHint: OpenVinoPerformanceHint.Latency,
+    streams: 1, inferenceThreads: 4, requestCount: 1));
+var openVinoCpu = new BackendRequest(BackendCapabilities.TensorInference,
+    OpenVinoBackendProvider.BackendId, "CPU");
+using var openVinoVl = PaddleOcrVlOnnxSession.Create(
+    openVinoRegistry, bundleDirectory, openVinoCpu);
+PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
+    prepared, tokenizer, new PaddleOcrVlGenerationOptions(maximumNewTokens: 512),
+    cancellationToken);
+```
+
+该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。完整协议、设备、输入/模型/程序集 SHA 和复现入口见 [OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)。这不代表 Windows VL、OpenVINO 页面联合质量或正式性能已经验证。
+
+该 16 GB、无 Swap 的 Linux 主机，异步复测仅限制托管堆仍出现 OOM；最终通过的进程同时设置了 `MALLOC_ARENA_MAX=2` 和 `DOTNET_GCHeapHardLimit=0x40000000`，进程峰值 RSS 约 `12.05 GiB`。复现时在启动命令上设置，按自己的主机与负载调整；1 GiB 是托管堆预算，不包括模型和 OpenVINO 原生内存，也不是进程总内存上限：
+
+```bash
+MALLOC_ARENA_MAX=2 DOTNET_GCHeapHardLimit=0x40000000 dotnet YourApplication.dll
+```
+
+这次配置下的六任务通过不代表内存优化或长时间稳定性已完成；不要把相同的大模型 Session 数量直接扩大到多个通道。
 
 表格输出可以继续转换为逻辑单元格和 HTML：`PaddleOcrVlTableParser.Parse(result.Text, result.FinishReason)`。文档阶段返回的 `PaddleDocumentVisionLanguageResult.Table` 已自动执行同一默认严格解析。支持横向、纵向和矩形合并，保留原文/Token，生成未到 EOS、结构非法或超预算时明确失败；官方行宽修复需显式启用。使用方式、默认预算、修复影响及 JSON/Markdown 格式见[VL 表格解析](visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。逻辑行列不是单元格像素框，转换成功也不等于文字或表格识别准确。
 
@@ -1009,7 +1039,7 @@ PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
 
 表格已有经验证的 OTSL 逻辑单元格/HTML；Spotting 也提供两种官方标记格式的严格解析。`PaddleDocumentVisionLanguageResult.Spotting` 保留文字、原始量化值及源图多边形，OpenCV 的精确整数 crop 映射另提供整页多边形。`CoordinatesAvailable` 表示该区域解析成功并有源像素坐标，`PageCoordinatesAvailable` 表示同时有页面映射；页面聚合标记只表示至少一个区域可用。源框仍来自调用方/版面模型，不被当作 VL 预测框。详见[Spotting 坐标教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)及[实际裁剪联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)。
 
-自动阅读顺序、真实版面模型与 VL 的联合质量、公式/图表等任务语义归一和独立标注质量尚未完成。OpenVINO/TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
+自动阅读顺序、真实版面模型与 VL 的联合质量、公式/图表等任务语义归一和独立标注质量尚未完成。TensorRT/OpenCV DNN 推理/CUDA、GPU 性能和正式 P50/P95 也未完成；OpenVINO 目前有上述 Linux CPU 六任务生成证据，尚不包括页面联合实测。Vision 中间特征存在严格浮点差异边界，当前结论是最终 Token/Text 生成一致，不是所有中间张量逐元素一致；该固定 1.6 实验 Bundle 也没有加入可下载模型 catalog 或 Release。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
 这里的“没有加入 Release”只针对当前实际二进制资产；manifest、下载客户端和校验工厂已经进入代码。等四图和 tokenizer 上传到 `models-paddleocr` 后，将把本段更新为可下载状态，并保留同一 revision/SHA 校验边界。
 
 ### 自然宽行有哪些真实后端证据
