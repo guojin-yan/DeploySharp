@@ -75,7 +75,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             if (tokens == null) throw new ArgumentNullException(nameof(tokens));
             if (!Enum.IsDefined(typeof(GenerationFinishReason), reason)) throw new ArgumentOutOfRangeException(nameof(reason));
             if (promptLength < 0) throw new ArgumentOutOfRangeException(nameof(promptLength));
-            if (ropeDelta < 0) throw new ArgumentOutOfRangeException(nameof(ropeDelta));
+            // Spatial RoPE compresses image-token spans, so the request-local delta can be negative.
             if (sourceSha256 != null && (sourceSha256.Length != 64 || sourceSha256.Any(value => !Uri.IsHexDigit(value))))
                 throw new ArgumentException("A source identity must be a SHA256 hex string.", nameof(sourceSha256));
             if (elapsed < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(elapsed));
@@ -98,7 +98,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public GenerationFinishReason FinishReason { get; }
         /// <summary>Gets expanded image-prompt length. / 获取展开后的图像 Prompt 长度。</summary>
         public int PromptTokenCount { get; }
-        /// <summary>Gets the request-local 3D RoPE delta. / 获取请求独立的三维 RoPE 偏移。</summary>
+        /// <summary>Gets the request-local 3D RoPE delta, which can be negative. / 获取可为负值的请求独立三维 RoPE 偏移。</summary>
         public int RopeDelta { get; }
         /// <summary>Gets optional input image identity. / 获取可选输入图像标识。</summary>
         public string? SourceSha256 { get; }

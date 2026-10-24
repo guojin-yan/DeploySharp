@@ -64,29 +64,31 @@ public sealed class PaddleOcrVlOnnxSessionTests
     [TestMethod]
     public void CacheAndInputBudgetsFailBeforeAnyGraphAndRecoverForNextRequest()
     {
+        PaddleOcrVlTokenizer tokenizer = Tokenizer.Value;
         using var graphs = new Graphs();
         using var session = graphs.Create();
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.Generate(Input(), Tokenizer.Value,
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.Generate(Input(), tokenizer,
             new PaddleOcrVlGenerationOptions(maximumCacheBytes: 1)));
         Assert.AreEqual(0, graphs.Vision.Calls);
         PaddleOcrVlPreparedInput input = Input();
         ((float[])input.PixelPatches.Buffer)[0] = float.NaN;
-        Assert.ThrowsExactly<VisualException>(() => session.Generate(input, Tokenizer.Value));
+        Assert.ThrowsExactly<VisualException>(() => session.Generate(input, tokenizer));
         Assert.AreEqual(0, graphs.Vision.Calls);
-        Assert.AreEqual(GenerationFinishReason.EndOfSequence, session.Generate(Input(), Tokenizer.Value).FinishReason);
+        Assert.AreEqual(GenerationFinishReason.EndOfSequence, session.Generate(Input(), tokenizer).FinishReason);
     }
 
     [TestMethod]
     public void InvalidCacheAndNonFiniteLogitsFailWithoutContaminatingFollowingRequests()
     {
+        PaddleOcrVlTokenizer tokenizer = Tokenizer.Value;
         using var graphs = new Graphs { InvalidCache = true };
         using var session = graphs.Create();
-        Assert.ThrowsExactly<VisualException>(() => session.Generate(Input(), Tokenizer.Value));
+        Assert.ThrowsExactly<VisualException>(() => session.Generate(Input(), tokenizer));
         graphs.InvalidCache = false;
         graphs.InvalidLogits = true;
-        Assert.ThrowsExactly<VisualException>(() => session.Generate(Input(), Tokenizer.Value));
+        Assert.ThrowsExactly<VisualException>(() => session.Generate(Input(), tokenizer));
         graphs.InvalidLogits = false;
-        CollectionAssert.AreEqual(new[] { 65, 66, 2 }, session.Generate(Input(), Tokenizer.Value).TokenIds.ToArray());
+        CollectionAssert.AreEqual(new[] { 65, 66, 2 }, session.Generate(Input(), tokenizer).TokenIds.ToArray());
     }
 
     [TestMethod]

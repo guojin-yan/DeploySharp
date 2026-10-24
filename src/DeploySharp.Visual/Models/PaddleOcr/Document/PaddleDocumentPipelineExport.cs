@@ -118,6 +118,32 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (result is PaddleDocumentSealResult seal)
                 return new { maskWidth = seal.MaskWidth, maskHeight = seal.MaskHeight };
 #if NET8_0 || NET9_0 || NET10_0
+            if (result is PaddleDocumentVisionLanguagePageResult visionLanguagePage)
+                return new
+                {
+                    task = visionLanguagePage.Task.ToString(),
+                    succeededCount = visionLanguagePage.SucceededCount,
+                    failedCount = visionLanguagePage.FailedCount,
+                    coordinatesAvailable = visionLanguagePage.CoordinatesAvailable,
+                    spatialOutputStatus = visionLanguagePage.SpatialOutputStatus,
+                    regions = visionLanguagePage.Executions.Select(execution => new
+                    {
+                        regionIndex = execution.RegionIndex,
+                        source = ToRegionObject(execution.SourceRegion),
+                        succeeded = execution.Succeeded,
+                        failureType = execution.FailureType,
+                        failureMessage = execution.FailureMessage,
+                        result = execution.Result == null ? null : new
+                        {
+                            text = execution.Result.Text,
+                            tokenIds = execution.Result.TokenIds.ToArray(),
+                            finishReason = execution.Result.FinishReason.ToString(),
+                            inputSha256 = execution.Result.Metadata.InputSha256,
+                            elapsedMs = execution.Result.Metadata.Elapsed.TotalMilliseconds,
+                            warnings = execution.Result.Warnings.ToArray()
+                        }
+                    }).ToArray()
+                };
             if (result is PaddleDocumentVisionLanguageResult visionLanguage)
                 return new
                 {
@@ -151,6 +177,18 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             else if (result is PaddleDocumentSealResult seal)
                 builder.Append("- Seal mask: ").Append(seal.MaskWidth).Append('x').AppendLine(seal.MaskHeight.ToString());
 #if NET8_0 || NET9_0 || NET10_0
+            else if (result is PaddleDocumentVisionLanguagePageResult visionLanguagePage)
+            {
+                builder.Append("- VL task: `").Append(visionLanguagePage.Task).AppendLine("` (regional routing)");
+                builder.Append("- Regional success/failure: ").Append(visionLanguagePage.SucceededCount).Append('/').Append(visionLanguagePage.FailedCount).AppendLine();
+                builder.Append("- Coordinates: ").AppendLine(visionLanguagePage.SpatialOutputStatus);
+                foreach (PaddleDocumentVisionLanguageRegionExecution execution in visionLanguagePage.Executions)
+                {
+                    builder.Append("  - Region ").Append(execution.RegionIndex).Append(execution.Succeeded ? ": " : " failed: ");
+                    if (execution.Succeeded) builder.AppendLine(execution.Result!.Text);
+                    else builder.AppendLine(execution.FailureMessage);
+                }
+            }
             else if (result is PaddleDocumentVisionLanguageResult visionLanguage)
             {
                 builder.Append("- VL task: `").Append(visionLanguage.Task).AppendLine("`");
