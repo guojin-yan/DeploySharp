@@ -1,6 +1,6 @@
 ﻿{
     "schemaVersion":  "deploysharp-paddle-document-doc-link-audit-v2",
-    "generatedUtc":  "\/Date(1792919020730)\/",
+    "generatedUtc":  "\/Date(1792922373691)\/",
     "documents":  [
                       "docs/articles/visual-ocr.md",
                       "docs/articles/visual-paddle-structure.md",
@@ -77,6 +77,7 @@
                       "eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-ocr-20261025.md",
                       "eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-formula-20261025.md",
                       "eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-chart-20261025.md",
+                      "eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-seal-20261025.md",
                       "eng/models/paddle-ocr/verification/paddleocr-vl-reading-order-20261025.md",
                       "docs/articles/model-support.md",
                       "samples/02-visual/paddleocr-vl-document/README.md",
@@ -91,7 +92,7 @@
                       "eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md",
                       "eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md"
                   ],
-    "localMarkdownLinksChecked":  871,
+    "localMarkdownLinksChecked":  876,
     "brokenLocalMarkdownLinks":  0,
     "broken":  [
 

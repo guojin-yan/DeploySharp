@@ -1,0 +1,337 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-formal-latency-v1",
+  "generatedUtc": "2026-10-25T09:38:54.853808+00:00",
+  "status": "passed",
+  "backend": "openvino",
+  "device": "CPU",
+  "task": "seal",
+  "model": {
+    "id": "paddleocr-vl/1.6",
+    "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+    "referenceId": "seal-official-example",
+    "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+    "bundleSha256": {
+      "vision": "940600685c0b69453bbfb28371fee5c89782c2ea47fb0ab6f52876ad9f46dd4f",
+      "embedding": "1d268b40696b0f1ebf8ee67f6706a9e2feb3b64b71484d6fa87ec624ff734d86",
+      "decoder": "823f85b8f634f8522d11c4e0b33bed8edfcd18da65f643f0aa43ca496fd138ad",
+      "head": "8663d1fd3f2ca1cf2af308c76fadefcee12e65a6a1f402603a81085daa6d0148"
+    }
+  },
+  "input": {
+    "rgbFile": "seal-official-example.rgb.bin",
+    "rgbSha256": "a013ecd391cb5a60f4da0931176942842cab7a62afea08052cd3922d0dbbc566",
+    "patchSha256": "ab8873bb1087e6affe7595feb691501ca6c616659cd3a284e63997ae6ec841ad",
+    "sourceSize": [
+      640,
+      640
+    ],
+    "grid": [
+      46,
+      46
+    ]
+  },
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "architecture": "X64",
+    "processorCount": 16,
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "sourceCommit": "202b36d"
+  },
+  "protocol": {
+    "warmupCount": 5,
+    "measurementCount": 50,
+    "sessions": 1,
+    "threads": 4,
+    "timing": "Wall clock surrounds GenerateAsync; Session elapsed is the production result.Elapsed and excludes caller preprocessing and session queue.",
+    "percentile": "Nearest-rank",
+    "inputReuse": "One immutable prepared RGB input reused for each generation; model/session creation is excluded."
+  },
+  "warmups": [
+    {
+      "index": 0,
+      "tokenCount": 29,
+      "sessionMilliseconds": 18167.8608
+    },
+    {
+      "index": 1,
+      "tokenCount": 29,
+      "sessionMilliseconds": 13632.3647
+    },
+    {
+      "index": 2,
+      "tokenCount": 29,
+      "sessionMilliseconds": 12789.3603
+    },
+    {
+      "index": 3,
+      "tokenCount": 29,
+      "sessionMilliseconds": 13000.3614
+    },
+    {
+      "index": 4,
+      "tokenCount": 29,
+      "sessionMilliseconds": 12751.2918
+    }
+  ],
+  "samples": [
+    {
+      "WallClockMilliseconds": 13193.023,
+      "SessionMilliseconds": 13190.9792,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12984.6738,
+      "SessionMilliseconds": 12983.1546,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12682.698,
+      "SessionMilliseconds": 12681.4588,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12662.7566,
+      "SessionMilliseconds": 12661.5751,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13154.995,
+      "SessionMilliseconds": 13153.8071,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13350.7576,
+      "SessionMilliseconds": 13349.0587,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12729.8743,
+      "SessionMilliseconds": 12726.7451,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12660.8385,
+      "SessionMilliseconds": 12659.6218,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12492.5922,
+      "SessionMilliseconds": 12490.5423,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13081.3399,
+      "SessionMilliseconds": 13080.1673,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13265.9546,
+      "SessionMilliseconds": 13264.7615,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12451.3407,
+      "SessionMilliseconds": 12449.4975,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12739.432,
+      "SessionMilliseconds": 12738.2654,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12521.5344,
+      "SessionMilliseconds": 12520.3959,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13319.2118,
+      "SessionMilliseconds": 13318.0339,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13181.605,
+      "SessionMilliseconds": 13179.7655,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12591.7998,
+      "SessionMilliseconds": 12590.6748,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12661.0675,
+      "SessionMilliseconds": 12659.611,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12785.0559,
+      "SessionMilliseconds": 12783.8997,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13364.4309,
+      "SessionMilliseconds": 13363.2153,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12850.1562,
+      "SessionMilliseconds": 12848.9202,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12597.2032,
+      "SessionMilliseconds": 12596.0476,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13206.5455,
+      "SessionMilliseconds": 13204.6764,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12579.6682,
+      "SessionMilliseconds": 12578.4647,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13626.0256,
+      "SessionMilliseconds": 13624.1508,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12595.3644,
+      "SessionMilliseconds": 12594.0772,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12615.1415,
+      "SessionMilliseconds": 12613.9631,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12502.0588,
+      "SessionMilliseconds": 12500.9057,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12779.1793,
+      "SessionMilliseconds": 12777.5761,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13136.2363,
+      "SessionMilliseconds": 13133.4566,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12609.7694,
+      "SessionMilliseconds": 12608.4456,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12496.2836,
+      "SessionMilliseconds": 12495.1176,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12539.6068,
+      "SessionMilliseconds": 12538.4536,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12780.6854,
+      "SessionMilliseconds": 12779.3573,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12529.5775,
+      "SessionMilliseconds": 12528.4144,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13062.4526,
+      "SessionMilliseconds": 13061.2742,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12594.7421,
+      "SessionMilliseconds": 12593.6019,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12503.6003,
+      "SessionMilliseconds": 12502.3423,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13340.5141,
+      "SessionMilliseconds": 13339.0237,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13937.1029,
+      "SessionMilliseconds": 13934.9383,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12793.554,
+      "SessionMilliseconds": 12791.7406,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 12668.2301,
+      "SessionMilliseconds": 12667.064,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 13464.9579,
+      "SessionMilliseconds": 13463.3579,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 14623.5027,
+      "SessionMilliseconds": 14622.1719,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 15553.8556,
+      "SessionMilliseconds": 15551.2134,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 16958.0475,
+      "SessionMilliseconds": 16955.1199,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 14785.4494,
+      "SessionMilliseconds": 14778.2063,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 14556.287,
+      "SessionMilliseconds": 14554.3365,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 15429.444,
+      "SessionMilliseconds": 15428.2412,
+      "TokenCount": 29
+    },
+    {
+      "WallClockMilliseconds": 15304.4991,
+      "SessionMilliseconds": 15300.6317,
+      "TokenCount": 29
+    }
+  ],
+  "summary": {
+    "wallClockP50Milliseconds": 12785.0559,
+    "wallClockP95Milliseconds": 15429.444,
+    "sessionP50Milliseconds": 12783.8997,
+    "sessionP95Milliseconds": 15428.2412,
+    "tokenCount": 29
+  },
+  "boundary": "Fixed PaddleOCR-VL-1.6 single-task correctness and repeated latency on one host. Every invocation reached EOS and matched reference tokens/text. This is not labelled quality, page-level quality, backend ranking, clock-locked performance, GPU/TensorRT/OpenCV support, memory-soak or cross-device evidence."
+}

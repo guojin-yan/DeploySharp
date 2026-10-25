@@ -56,6 +56,17 @@ Chart 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `
 
 该切片描述生成延迟和 Token 一致性，不是 ChartQA split accuracy、图表语义正确性、GPU 性能或完整 VL 矩阵。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 Seal CPU 切片（2026-10-25）
+
+Seal 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、29 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Seal 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-seal-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Seal | ONNX Runtime CPU | 20,141.041 | 20,739.562 | 20,138.735 | 20,736.816 | 5 / 50 | 通过 |
+| PaddleOCR-VL-1.6 Seal | OpenVINO CPU | 12,785.056 | 15,429.444 | 12,783.900 | 15,428.241 | 5 / 50 | 通过 |
+
+该切片描述生成延迟和 Token 一致性，不是印章检测/识别准确率、GPU 性能或完整 VL 矩阵。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
