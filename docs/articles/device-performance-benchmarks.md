@@ -23,6 +23,17 @@
 
 这只是一个任务和一台 CPU 主机的正式重复延迟切片，不是 VL 全任务性能矩阵、后端排名、锁频结果或 GPU/TensorRT/OpenCV 结论。其它 VL 任务需要单独测量，Spotting 的长序列成本和显存边界保持单独记录。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 OCR CPU 切片（2026-10-25）
+
+同一 Bundle、同一托管 RGB Processor 和同一主机上，OCR 任务执行 5 次预热、50 次测量；每次检查 EOS、162 个 Token 及完整文本与官方参考一致。模型和 Session 创建不计入耗时，输入 Patch 在测量中复用。完整协议和逐次样本见 [OCR 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-ocr-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 OCR | ONNX Runtime CPU | 19,163.912 | 22,211.472 | 19,157.991 | 22,209.748 | 5 / 50 | 通过 |
+| PaddleOCR-VL-1.6 OCR | OpenVINO CPU | 20,744.661 | 23,868.052 | 20,743.887 | 23,866.677 | 5 / 50 | 通过 |
+
+这仍是一项固定单图任务的 CPU 延迟记录，不能代表 VL 其它任务、页面级质量、GPU/TensorRT/OpenCV DNN 或跨设备排名。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
