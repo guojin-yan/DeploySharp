@@ -37,7 +37,7 @@ The cache isolation regression covers online download, offline reuse and conflic
 
 ## Runtime evidence and support boundary
 
-The fixed bundle has production C# generation evidence on Linux x64 with ONNX Runtime CPU and OpenVINO CPU. OCR, table, formula, chart, spotting and seal prompts reached EOS and matched the pinned official reference tokens/text. The OpenCV adapter can decode an image once, prepare the official RGB patch tensor, and feed the same session; page/region and bounded multi-page orchestration are covered by the linked examples.
+The fixed bundle has production C# generation evidence on Linux x64 and Windows x64 with ONNX Runtime CPU, and with OpenVINO CPU. OCR, table, formula, chart, spotting and seal prompts reached EOS and matched the pinned official reference tokens/text. The OpenCV adapter can decode an image once, prepare the official RGB patch tensor, and feed the same session; page/region and bounded multi-page orchestration are covered by the linked examples.
 
 The support matrix remains deliberately narrower than the download catalog:
 
@@ -48,7 +48,7 @@ The support matrix remains deliberately narrower than the download catalog:
 | ONNX Runtime CUDA | `△` | RTX2060 6 GB partial memory experiment; Spotting allocation still fails |
 | TensorRT | `△` | No complete four-graph real-model run |
 | OpenCV DNN | `△` | No complete four-graph real-model run |
-| Windows | `△` | Bundle is downloadable, but no Windows VL acceptance run is recorded |
+| Windows OpenVINO CPU | `✓` | Windows 10.0.26200 six-task generation and exact token/text comparison; see the [Windows report](paddleocr-vl-windows-openvino-20261025.md) |
 
 The export also retains a known boundary: one intermediate Spotting vision feature comparison exceeded the strict elementwise threshold, while the production greedy tokens/text matched. The release must therefore be described as an experimental PaddleOCR-VL ONNX generation path, not as universal multi-backend or intermediate-tensor parity.
 

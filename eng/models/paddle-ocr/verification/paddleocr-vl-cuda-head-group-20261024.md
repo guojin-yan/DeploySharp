@@ -24,7 +24,7 @@
 
 ## 当前支持结论
 
-PaddleOCR-VL-1.6 当前可宣称：固定四图 Bundle 的 ORT CPU、Linux OpenVINO CPU 六任务单图生成；区域/页面编排、表格 OTSL 和 Spotting 解析按各自报告成立。ORT CUDA 在 RTX2060 6GB 上是 **部分任务通过、完整六任务阻断**，不能在矩阵中标记为全流程可用。Windows CUDA、TensorRT、OpenCV DNN、正式质量集和正式性能仍需独立证据。
+PaddleOCR-VL-1.6 当前可宣称：固定四图 Bundle 的 Windows/Linux ORT CPU、Windows/Linux OpenVINO CPU 六任务单图生成；区域/页面编排、表格 OTSL 和 Spotting 解析按各自报告成立。ORT CUDA 在 RTX2060 6GB 上是 **部分任务通过、完整六任务阻断**，不能在矩阵中标记为全流程可用。Windows CUDA、TensorRT、OpenCV DNN、正式质量集和正式性能仍需独立证据。
 
 ## 复现入口
 

@@ -2,7 +2,7 @@
 
 固定四图 ONNX Bundle 已在生产 `PaddleOcrVlOnnxSession.GenerateAsync` 和 OpenVINO CPU 后端完成六任务生成：全部 765 个 Token 与原始文本精确匹配官方及 ORT 参考，全部正常 EOS。36 路首次空 KV、后续增长和每图一次视觉编码均通过逐步断言。
 
-这是带明确内存配置的 Linux 单图生成正确性证据。它不代表 Windows VL、OpenVINO 页面/版面联合质量、人工标注准确率、其它权重或 GPU 后端验证，也不是正式性能或长时间稳定性结论。16 GB 无 Swap 主机的异步默认配置曾 OOM，不能省略下方资源边界。
+这是带明确内存配置的 Linux 单图生成正确性证据。它不代表 Windows 页面/版面联合质量、人工标注准确率、其它权重或 GPU 后端验证，也不是正式性能或长时间稳定性结论；Windows OpenVINO CPU 的同一组六任务生成另有独立报告。16 GB 无 Swap 主机的异步默认配置曾 OOM，不能省略下方资源边界。
 
 后续已完成[源 Model 提前释放的同配置对照](paddleocr-vl-openvino-source-model-memory-20261024.md)：各一次顺序运行均完成六任务，加载后 RSS `6.770 → 6.007 GiB`、峰值 `11.861 → 11.616 GiB`。下文保留本次历史运行和 OOM 证据，不将不同运行的峰值混为配对结果，也不宣称内存稳定性已完成。
 

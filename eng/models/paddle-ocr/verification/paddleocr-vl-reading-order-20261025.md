@@ -45,4 +45,4 @@ dotnet build src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release --no-re
 dotnet build samples/02-visual/paddleocr-vl-document/PaddleOcrVlDocument.csproj -c Release --no-restore -m:1
 ```
 
-调用和 JSON 配置见[使用教程](../../../../docs/articles/visual-paddle-structure.md#多栏阅读顺序与稳定区域索引)及[文档示例](../../../../samples/02-visual/paddleocr-vl-document/README.md#可选的多栏阅读顺序)。既有 [Linux ORT 六任务](paddleocr-vl-managed-csharp-ort-linux-20261024.json)、[OpenVINO CPU 六任务](paddleocr-vl-openvino-linux-20261024.md)与 [CUDA 显存阻断](paddleocr-vl-cuda-head-group-20261024.md)仍分别保留原始边界。Windows VL、独立页面质量、其它任务语义、正式性能和实际模型 Release 下载仍待完成。
+调用和 JSON 配置见[使用教程](../../../../docs/articles/visual-paddle-structure.md#多栏阅读顺序与稳定区域索引)及[文档示例](../../../../samples/02-visual/paddleocr-vl-document/README.md#可选的多栏阅读顺序)。既有 [Linux ORT 六任务](paddleocr-vl-managed-csharp-ort-linux-20261024.json)、[Linux OpenVINO CPU 六任务](paddleocr-vl-openvino-linux-20261024.md)、[Windows ORT 六任务](paddleocr-vl-windows-ort-20261025.md)和 [Windows OpenVINO 六任务](paddleocr-vl-windows-openvino-20261025.md)与 [CUDA 显存阻断](paddleocr-vl-cuda-head-group-20261024.md)仍分别保留原始边界。独立页面质量、其它任务语义、正式性能和实际模型 Release 下载仍待完成。

@@ -994,7 +994,7 @@ PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
     cancellationToken);
 ```
 
-该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。完整协议、设备、输入/模型/程序集 SHA 和复现入口见 [OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)。这不代表 Windows OpenVINO、OpenVINO 页面联合质量或正式性能已经验证。
+该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。Windows 10.0.26200 / OpenVINO 2026.2.1 也完成同一组六任务，见 [Windows OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md)。两次验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。两份报告的耗时都是单次观察，不是正式性能；也不代表 OpenVINO 页面联合质量、标注准确率或长期内存稳定性。
 
 Windows 10.0.26200 上的 ONNX Runtime CPU 也完成了相同六任务的托管 RGB 生成，六项均 EOS，Token/Text `6/6` 与官方参考一致；见 [Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。每项只运行一次，耗时只是观察值，不是 P50/P95；RGB fixture 来自固定的上游/Pillow 路径，因此不代表 OpenCV 解码 parity。
 

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-windows-openvino-generation-v1",
+  "generatedUtc": "2026-10-25T05:15:48+00:00",
+  "status": "six-task-openvino-managed-rgb-generation-exact",
+  "sourceReportSha256": "12ea9b0129dacfbfd0a5c76b2c15c10a0534957da1db40ac5c96c4dad966ea00",
+  "sourceReportPath": "E:/DeploySharpEvidence/paddleocr-vl-windows-openvino-20261025.json",
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+  "processorFixtureManifestSha256": "ff6ffe322ac3a1373ce830ffc953e18173115b654f265591c0dd214c701db481",
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "architecture": "X64",
+    "processorCount": 16,
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "backend": "OpenVINO",
+    "device": "CPU",
+    "runtime": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+    "requestedPrecision": "native-default",
+    "performanceHint": "LATENCY",
+    "streams": 1,
+    "inferenceThreads": 4,
+    "requests": 1,
+    "modelInstancesPerGraph": 1
+  },
+  "graphs": [
+    { "role": "vision", "sha256": "940600685c0b69453bbfb28371fee5c89782c2ea47fb0ab6f52876ad9f46dd4f" },
+    { "role": "embedding", "sha256": "1d268b40696b0f1ebf8ee67f6706a9e2feb3b64b71484d6fa87ec624ff734d86" },
+    { "role": "decoder", "sha256": "823f85b8f634f8522d11c4e0b33bed8edfcd18da65f643f0aa43ca496fd138ad" },
+    { "role": "head", "sha256": "8663d1fd3f2ca1cf2af308c76fadefcee12e65a6a1f402603a81085daa6d0148" }
+  ],
+  "cases": [
+    { "id": "ocr-demo-1", "task": "ocr", "tokens": 162, "promptTokens": 337, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 27982.7006 },
+    { "id": "table-official-example", "task": "table", "tokens": 71, "promptTokens": 163, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 9204.415 },
+    { "id": "formula-official-example", "task": "formula", "tokens": 80, "promptTokens": 173, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 9295.8319 },
+    { "id": "chart-official-example", "task": "chart", "tokens": 137, "promptTokens": 453, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 26246.8442 },
+    { "id": "spotting-demo-1", "task": "spotting", "tokens": 286, "promptTokens": 1309, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 111908.0353 },
+    { "id": "seal-official-example", "task": "seal", "tokens": 29, "promptTokens": 543, "finishReason": "EndOfSequence", "tokenExact": true, "textExact": true, "elapsedMilliseconds": 18785.95 }
+  ],
+  "test": {
+    "project": "tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVINO.Tests.csproj",
+    "framework": "net10.0",
+    "filter": "FullyQualifiedName~PaddleOcrVlIntegrationTests",
+    "result": "1 passed / 0 failed / 0 skipped"
+  },
+  "boundary": "Windows OpenVINO CPU correctness evidence for the fixed PaddleOCR-VL-1.6 four-graph bundle with managed RGB preparation. Timings are one-run observations, not P50/P95. This does not establish Windows page-pipeline quality, labelled accuracy, CUDA, TensorRT or OpenCV DNN support."
+}

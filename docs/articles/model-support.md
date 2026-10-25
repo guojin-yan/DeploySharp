@@ -43,7 +43,7 @@
 
 以下路径具有部分合同或本机实验，但当前不作为官方可下载模型：
 
-- PaddleOCR-VL-1.6：四图 Bundle 已在 Linux ORT CPU 和 OpenVINO CPU 完成 OCR、表格、公式、图表、Spotting、印章六任务生成，765 Token/文本与官方一致；[OpenVINO 验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)保留进程内存配置和历史 OOM 边界。提前释放原始模型图后的[同配置对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md)峰值 RSS 为 11.616 GiB，仅为单次观察。区域、混合类别和多页 API 可复用解码底图；真实版面模型/页面联合证据目前来自 ORT，不外推到 OpenVINO。RTX2060 6GB 上的[ORT CUDA 显存实验](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-head-group-20261024.md)完成 OCR/表格/公式/图表部分任务，但 Spotting 在视觉或 MLP 工作区分配时失败，因此 CUDA 仍不是六任务全流程勾号。其它后端、稳定性和独立标注质量尚未完成；
+- PaddleOCR-VL-1.6：四图 Bundle 已在 Linux/Windows ORT CPU 和 Linux/Windows OpenVINO CPU 完成 OCR、表格、公式、图表、Spotting、印章六任务生成，765 Token/文本与官方一致；[Linux OpenVINO 验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)保留进程内存配置和历史 OOM 边界，[Windows OpenVINO 验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md)记录匹配的四图、运行时和一次性耗时观察。提前释放原始模型图后的[同配置对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md)峰值 RSS 为 11.616 GiB，仅为单次观察。区域、混合类别和多页 API 可复用解码底图；真实版面模型/页面联合证据目前来自 ORT，不外推到 OpenVINO。RTX2060 6GB 上的[ORT CUDA 显存实验](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-head-group-20261024.md)完成 OCR/表格/公式/图表部分任务，但 Spotting 在视觉或 MLP 工作区分配时失败，因此 CUDA 仍不是六任务全流程勾号。其它后端、稳定性和独立标注质量尚未完成；
 - Wav2Vec2、Whisper tiny.en：有音频预处理或局部图执行证据，但完整可下载 Bundle 和发布边界尚未闭合；
 - Donut CORD-v2：单页 Encoder/Prefill/KV 路径已有局部执行证据，多页和 TensorRT 尚未收录；
 - LLaVA OneVision：单图 ORT/OpenVINO CPU 路径可执行，完整原生多模态包仍由应用提供；
