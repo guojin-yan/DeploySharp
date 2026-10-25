@@ -12,6 +12,17 @@
 - `通过` 表示本轮结果合同通过；“历史均值”只表示旧报告曾通过，不代表满足当前分位数协议。
 - 模型/后端是否支持、未测试或当前不支持的状态以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；本页只列出已经得到有效耗时的组合。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 Table CPU 切片（2026-10-25）
+
+该切片使用固定 PaddleOCR-VL-1.6 四图 Bundle、官方 Table 输入和托管 RGB Processor，在 16 逻辑处理器的 Windows 10.0.26200 主机上执行 5 次预热、50 次测量。每次都检查 EOS、71 个 Token 和完整文本与官方参考一致；模型和 Session 创建不计入耗时，输入 Patch 在测量中复用。完整模型/输入 SHA、运行时、逐次样本和边界见 [正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-table-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Table | ONNX Runtime CPU | 7,268.069 | 7,709.583 | 7,266.868 | 7,708.445 | 5 / 50 | 通过 |
+| PaddleOCR-VL-1.6 Table | OpenVINO CPU | 6,787.859 | 7,318.409 | 6,787.332 | 7,317.973 | 5 / 50 | 通过 |
+
+这只是一个任务和一台 CPU 主机的正式重复延迟切片，不是 VL 全任务性能矩阵、后端排名、锁频结果或 GPU/TensorRT/OpenCV 结论。其它 VL 任务需要单独测量，Spotting 的长序列成本和显存边界保持单独记录。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
