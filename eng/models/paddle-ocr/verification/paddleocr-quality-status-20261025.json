@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-25T13:16:12Z",
+  "kind": "incremental-quality-status-index",
+  "baseline": "paddleocr-quality-status-20261023",
+  "newEvidence": [
+    {
+      "scope": "PP-OCRv6 Tiny HierText ten-image end-to-end smoke",
+      "dataset": "OCRBenchmarkTesting HierText validation sample-002; 10 images; source revision 70b6620b2b112597d8219e11eee9773a1403827c",
+      "model": "paddleocr/ppocrv6/tiny detector + recognizer",
+      "backend": "onnxruntime-cpu",
+      "protocol": "batch=8; inferenceChannels=2; SlidingWindow overlap=0.2; maximumWindowsPerRegion=32; one warm-up and one measured iteration per image",
+      "images": { "expected": 10, "predicted": 10, "errors": 0, "emptyOutputs": 0 },
+      "detectionIoU0_5": { "tp": 115, "fp": 191, "fn": 422, "f1": 0.27283511269276395 },
+      "matchedRecognition": { "regions": 115, "cer": 0.22538860103626943, "wer": 0.5570469798657718, "exactMatchRate": 0.4434782608695652 },
+      "endToEnd": { "cer": 1.1332863187588151, "wer": 1.2649842271293374 },
+      "totalWallP50P95Ms": [219.440, 361.046],
+      "report": "hiertext-v6-tiny-10page-public-ocr-20261025.json",
+      "status": "public-smoke-complete; A2-open",
+      "boundary": "Not release accuracy, formal 5+50 performance, or a backend ranking; no selected ground-truth line reaches normalized width >3200 pixels."
+    },
+    {
+      "scope": "PaddleOCR-VL 1.6 six-task generation",
+      "tasks": ["ocr", "table", "formula", "chart", "spotting", "seal"],
+      "backends": ["onnxruntime-cpu-windows", "onnxruntime-cpu-linux", "openvino-cpu-windows", "openvino-cpu-linux", "onnxruntime-cuda-windows-rtx3060"],
+      "result": "All fixed reference generations reached EOS and matched official token/text outputs.",
+      "status": "generation-correctness-and-bounded-latency-evidence",
+      "boundary": "Does not establish TensorRT/OpenCV DNN, labelled page quality, device-resident KV/logits, cross-device ranking, or long-run stability."
+    },
+    {
+      "scope": "PaddleOCR-VL 1.6 Release Bundle",
+      "localAssetCount": 9,
+      "remoteRelease": "models-paddleocr",
+      "remotePrefix": "paddleocr-vl-1.6-",
+      "remoteAssetCount": 0,
+      "uploadHttpStatus": 404,
+      "viewerPermission": "pull",
+      "status": "remote-upload-blocked",
+      "boundary": "The local manifest and downloader are ready; online download cannot be claimed until a write-capable GitHub account uploads and the assets are read back."
+    }
+  ],
+  "openGates": [
+    "A2-natural-width-over-3200px-seam-quality-and-backend-matrix",
+    "A3-natural-angle-ground-truth",
+    "B1b-B2-B3-natural-degradation-and-enhancement-cost",
+    "formula-semantic-quality",
+    "chart2table-split-accuracy",
+    "remaining-model-backend-matrix",
+    "second-device-deploysharp-performance",
+    "locked-frequency-and-long-running-stability",
+    "paddleocr-vl-tensorrt-opencv-dnn",
+    "paddleocr-vl-labelled-quality-and-reading-order",
+    "paddleocr-vl-release-upload-and-download-readback"
+  ],
+  "boundary": "This is an evidence-navigation increment. It does not change backend support states or approve a release accuracy claim."
+}
