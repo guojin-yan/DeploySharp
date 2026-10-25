@@ -478,7 +478,7 @@ foreach (var region in mixed.Executions)
 
 混合结果保留全部原版面区域和索引，分别统计 `SucceededCount`、`FailedCount`、`SkippedCount`；跳过项不准备 Patch、不执行生成、不伪造空文本。单区域失败保留已选任务，成功结果的模型模块按实际任务设置，页面聚合模块为 `VisionLanguageParsing`。`Succeeded` 表示生成返回结果，仍须检查 `FinishReason`，`MaxTokens` 可能意味着截断。JSON/Markdown 导出保留任务、状态、源框和原文。它沿用输入顺序，不重新排序，也不会识别没有检测出的区域。[多页示例](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)提供 `task=Auto` 的完整 manifest。
 
-同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux/Windows ORT CPU 和 Linux/Windows OpenVINO CPU 已有六任务单图生成证据；Windows RTX 3060 Laptop 上也已有 [ORT CUDA 六任务证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)，但该运行仍有 CPU-owned KV/logits 回读，不代表全设备端流水线。TensorRT、完整 OpenCV DNN 推理、页面级质量和正式 CUDA 性能矩阵仍需单独验证。
+同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux/Windows ORT CPU 和 Linux/Windows OpenVINO CPU 已有六任务单图生成证据；Windows RTX 3060 Laptop 上也已有 [ORT CUDA 六任务证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)，但该运行仍有 CPU-owned KV/logits 回读，不代表全设备端流水线。TensorRT 10.11 的四图 Engine 已构建，embedding/head 固定输入与 ORT CPU 数值一致，但完整生成仍待验证；OpenCV DNN 5.0 对原始 vision/decoder 图在动态 `Shape` 导入失败，此精确 Bundle 当前不支持，见[后端探针报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-backend-boundary-20261025.md)。页面级质量和统一多后端性能仍需独立验证。
 
 ### 真实版面检测与 VL 共享解码底图
 
