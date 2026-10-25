@@ -1000,6 +1000,8 @@ Console.WriteLine(result.Text);
 
 [同构建 ORT CPU/CUDA 全 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)中，默认 CUDA 与 CPU 的生成文本在 120/121 图一致；开启显式 `use_tf32=0` 后，121/121 图的文本、生成 Token 数和结束状态一致。分叉图的单图 Token ID 诊断定位到第 15 个生成 Token；全量报告没有记录逐 Token ID，不能称为 121 图 Token ID 完全一致。此开关只在显式质量测试中设置，不会改变普通 CUDA 后端默认行为，也不证明公式语义准确率或正式性能。
 
+Linux 同构建的[真实标注图 OpenVINO 探针](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-openvino-linux-probe-20261026.md)在 realFormula 前 5 张上与 ORT CPU 的文本、生成 Token ID 和 EOS 全部一致；另有最大尺寸 5 张的 OpenVINO CPU 生成与内存观察。它们仍是有界样本，不能当作 OpenVINO 全 121 图质量或跨后端速度结论。
+
 [后续公式结构诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-structure-20261026.md)中，121 个 VL 输出都可由固定 MathJax 渲染；在 118 个可比较的参考式中，23 个 MathML 结构完全相同。保守数值代入只能够判断 8 个，其中 7 个采样相符、1 个根号作用范围不同，余下 113 个不可判定。可渲染、结构相同或有限点代入一致都不等于全数据集数学正确率。
 
 如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：

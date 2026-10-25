@@ -10,14 +10,18 @@
     <DeploySharpPaddleOcrCuda12 Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">true</DeploySharpPaddleOcrCuda12>
     <CentralPackageTransitivePinningEnabled Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">false</CentralPackageTransitivePinningEnabled>
     <NuGetLockFilePath Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'">$(MSBuildProjectDirectory)\packages.formula-cuda.lock.json</NuGetLockFilePath>
+    <!-- Publish the Linux quality variant with -r ubuntu.22.04-x64 -p:UseRidGraph=true. -->
+    <DeploySharpVlLinuxQuality Condition="'$(DeploySharpVlLinuxQuality)' == ''">false</DeploySharpVlLinuxQuality>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
-    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
-    <PackageReference Include="OpenVINO.runtime.win" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Condition="'$(DeploySharpVlLinuxQuality)' != 'true'" />
+    <PackageReference Include="OpenVINO.runtime.win" Condition="'$(DeploySharpVlLinuxQuality)' != 'true'" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" Condition="'$(DeploySharpVlLinuxQuality)' == 'true'" />
+    <PackageReference Include="OpenVINO.runtime.ubuntu.22-x86_64" Condition="'$(DeploySharpVlLinuxQuality)' == 'true'" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Condition="'$(DeploySharpFormulaOrtCuda)' != 'true'" />
     <!-- ORT 1.23.2 is the CUDA 12.x line used by the local Windows GPU
          runtime. It is never selected by the default CPU test restore. -->
@@ -25,7 +29,7 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" VersionOverride="1.23.2" NoWarn="NU1605" Condition="'$(DeploySharpFormulaOrtCuda)' == 'true'" />
     <PackageReference Include="OnnxSharp" />
     <PackageReference Include="JYPPX.TensorRT.CSharp.API" />
-    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" Condition="'$(DeploySharpVlLinuxQuality)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>

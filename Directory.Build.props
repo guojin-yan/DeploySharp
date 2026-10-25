@@ -20,6 +20,7 @@
     <SymbolPackageFormat Condition="'$(SymbolPackageFormat)' == ''">snupkg</SymbolPackageFormat>
     <GenerateDocumentationFile Condition="'$(IsTestProject)' != 'true'">true</GenerateDocumentationFile>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetLockFilePath Condition="'$(DeploySharpVlLinuxQuality)' == 'true'">$(MSBuildProjectDirectory)\obj\packages.vl-linux.lock.json</NuGetLockFilePath>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages</PackageOutputPath>
     <PackageIcon>logo.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
