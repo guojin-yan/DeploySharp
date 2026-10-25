@@ -112,7 +112,9 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
-        public async Task DownloadsAndValidatesPaddleOcrVlBundleWithManifestAndTokenizerSidecars()
+        [DataRow(false)]
+        [DataRow(true)]
+        public async Task DownloadsAndValidatesPaddleOcrVlBundleWithManifestAndTokenizerSidecars(bool includePrefill)
         {
             var artifactRows = new[]
             {
@@ -125,7 +127,9 @@ namespace DeploySharp.ModelFactory.Tests
                 (Role: "tokenizer-config", Name: "tokenizer_config.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{}")),
                 (Role: "chat-template", Name: "chat_template.jinja", Format: "jinja", Bytes: Encoding.UTF8.GetBytes("template")),
                 (Role: "manifest", Name: "paddleocr-vl-bundle.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{}"))
-            };
+            }.ToList();
+            if (includePrefill)
+                artifactRows.Insert(4, ("prefill", "prefill.onnx", "onnx", Encoding.UTF8.GetBytes("prefill")));
             string rows = string.Join(",", artifactRows.Select(value => "{\"role\":\"" + value.Role + "\",\"modelId\":\"" + (value.Format == "onnx" ? "paddleocr-vl/1.6/" + value.Role : "paddleocr-vl/1.6") + "\",\"assetName\":\"" + value.Name + "\",\"format\":\"" + value.Format + "\",\"size\":" + value.Bytes.Length + ",\"sha256\":\"" + Hash(value.Bytes) + "\"}"));
             string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[],\"bundles\":[{\"bundleId\":\"paddleocr-vl/1.6\",\"modelId\":\"paddleocr-vl/1.6\",\"artifacts\":[" + rows + "]}]}";
             var responses = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
@@ -137,11 +141,13 @@ namespace DeploySharp.ModelFactory.Tests
             using (var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(new StaticHandler(responses))))
             {
                 PaddleOcrReleaseBundleMaterialization bundle = await client.GetBundleAsync("paddleocr-vl/1.6");
-                Assert.AreEqual(9, bundle.Bundle.Artifacts.Count);
+                Assert.AreEqual(includePrefill ? 10 : 9, bundle.Bundle.Artifacts.Count);
                 Assert.AreEqual("vision.onnx", Path.GetFileName(bundle.GetRequiredPath("vision")));
+                if (includePrefill) CollectionAssert.AreEqual(Encoding.UTF8.GetBytes("prefill"), File.ReadAllBytes(bundle.GetRequiredPath("prefill")));
                 Assert.AreEqual("tokenizer.model", Path.GetFileName(bundle.GetRequiredPath("tokenizer-model")));
                 Assert.AreEqual("paddleocr-vl-bundle.json", Path.GetFileName(bundle.GetRequiredPath("manifest")));
-                CollectionAssert.AreEqual(artifactRows[6].Bytes, File.ReadAllBytes(bundle.GetRequiredPath("tokenizer-config")));
+                CollectionAssert.AreEqual(artifactRows.Single(value => value.Role == "tokenizer-config").Bytes,
+                    File.ReadAllBytes(bundle.GetRequiredPath("tokenizer-config")));
             }
         }
 

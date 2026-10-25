@@ -209,7 +209,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             catch { foreach (IInferenceSession session in created) { try { session.Dispose(); } catch { } } throw; }
         }
 
-        /// <summary>Loads a local Bundle only after validating its manifest, all four graph files, and all tokenizer sidecars. / 仅在校验 manifest、四张图和全部 tokenizer sidecar 后加载本地 Bundle。</summary>
+        /// <summary>Loads a local four- or five-graph Bundle only after validating its manifest and every declared file. / 仅在校验 manifest 和全部声明文件后加载本地四图或五图 Bundle。</summary>
         /// <remarks>This is the preferred factory for a downloadable or shared PaddleOCR-VL Bundle. It fails before creating any backend Session when one file is missing, has the wrong size/hash, or belongs to another checkpoint. / 这是可下载或共享 PaddleOCR-VL Bundle 的推荐工厂；任一文件缺失、大小/哈希错误或属于其它 checkpoint 时，会在创建后端 Session 前失败。</remarks>
         public static PaddleOcrVlOnnxSession CreateVerified(BackendRegistry registry, string bundleDirectory, BackendRequest request, SessionOptions? options = null,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -230,14 +230,19 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             var created = new List<IInferenceSession>();
             try
             {
-                foreach (string role in new[] { "vision", "embedding", "decoder", "head" })
+                IEnumerable<string> roles = manifest.HasPrefillGraph
+                    ? new[] { "vision", "embedding", "decoder", "head", "prefill" }
+                    : new[] { "vision", "embedding", "decoder", "head" };
+                foreach (string role in roles)
                 {
                     PaddleOcrVlBundleArtifact descriptor = manifest.GetRequiredArtifact(role);
                     string path = paths[role];
                     var artifact = new ModelArtifact(new ModelId(manifest.BundleId + "/" + role), descriptor.Format, path, descriptor.Sha256, request.BackendId);
                     created.Add(registry.CreateSession(artifact, request, options ?? SessionOptions.Default));
                 }
-                return new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], true);
+                return manifest.HasPrefillGraph
+                    ? new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], created[4], true)
+                    : new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], true);
             }
             catch { foreach (IInferenceSession session in created) { try { session.Dispose(); } catch { } } throw; }
         }

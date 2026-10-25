@@ -53,6 +53,7 @@ $documentRows = [System.Collections.Generic.List[object]]::new()
 $dictionaryAssets = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $chart2TableBundleRows = [System.Collections.Generic.List[object]]::new()
 $paddleOcrVlBundleRows = [System.Collections.Generic.List[object]]::new()
+$vlGraphCount = 4
 
 foreach ($entry in @($catalog.models)) {
     $recordPath = Get-RecordPath $ModelRoot ([string]$entry.id)
@@ -157,6 +158,16 @@ if (-not [string]::IsNullOrWhiteSpace($Chart2TableTextGraphRoot) -or -not [strin
 
 if (-not [string]::IsNullOrWhiteSpace($PaddleOcrVlBundleRoot)) {
     $vlRoot = [IO.Path]::GetFullPath($PaddleOcrVlBundleRoot)
+    $vlManifestPath = Join-Path $vlRoot 'paddleocr-vl-bundle.json'
+    if (-not (Test-Path -LiteralPath $vlManifestPath -PathType Leaf)) { throw "Missing PaddleOCR-VL Bundle manifest: $vlManifestPath" }
+    $vlManifest = Get-Content -Raw -LiteralPath $vlManifestPath | ConvertFrom-Json
+    $vlHasPrefill = [string]$vlManifest.schemaVersion -eq 'deploysharp-paddleocr-vl-bundle-v2'
+    if ([string]$vlManifest.schemaVersion -notin @('deploysharp-paddleocr-vl-bundle-v1', 'deploysharp-paddleocr-vl-bundle-v2') -or
+        [string]$vlManifest.bundleId -ne 'paddleocr-vl/1.6' -or [string]$vlManifest.modelId -ne 'paddleocr-vl/1.6' -or
+        [string]$vlManifest.checkpointRevision -ne 'c5630abae1d940eafe0697512a0325494b02ab42') {
+        throw 'The PaddleOCR-VL Bundle manifest has an unsupported schema or model identity.'
+    }
+    $vlGraphCount = if ($vlHasPrefill) { 5 } else { 4 }
     $vlDescriptors = @(
         [pscustomobject]@{ Role = 'vision'; ModelId = 'paddleocr-vl/1.6/vision'; AssetName = 'paddleocr-vl-1.6-vision.onnx'; LocalName = 'vision.onnx'; Format = 'onnx' },
         [pscustomobject]@{ Role = 'embedding'; ModelId = 'paddleocr-vl/1.6/embedding'; AssetName = 'paddleocr-vl-1.6-embedding.onnx'; LocalName = 'embedding.onnx'; Format = 'onnx' },
@@ -168,6 +179,12 @@ if (-not [string]::IsNullOrWhiteSpace($PaddleOcrVlBundleRoot)) {
         [pscustomobject]@{ Role = 'chat-template'; ModelId = 'paddleocr-vl/1.6'; AssetName = 'paddleocr-vl-1.6-chat-template.jinja'; LocalName = 'chat_template.jinja'; Format = 'jinja' },
         [pscustomobject]@{ Role = 'manifest'; ModelId = 'paddleocr-vl/1.6'; AssetName = 'paddleocr-vl-1.6-bundle.json'; LocalName = 'paddleocr-vl-bundle.json'; Format = 'json' }
     )
+    if ($vlHasPrefill) {
+        $vlDescriptors += [pscustomobject]@{ Role = 'prefill'; ModelId = 'paddleocr-vl/1.6/prefill'; AssetName = 'paddleocr-vl-1.6-prefill.onnx'; LocalName = 'prefill.onnx'; Format = 'onnx' }
+    }
+    if (@($vlManifest.artifacts).Count -ne $vlDescriptors.Count - 1) {
+        throw 'The PaddleOCR-VL Bundle manifest does not contain exactly the declared graph and tokenizer roles.'
+    }
     $releaseArtifacts = [System.Collections.Generic.List[object]]::new()
     foreach ($descriptor in $vlDescriptors) {
         $source = Join-Path $vlRoot $descriptor.LocalName
@@ -177,6 +194,17 @@ if (-not [string]::IsNullOrWhiteSpace($PaddleOcrVlBundleRoot)) {
         $integrityPath = if ($Check) { $source } else { $target }
         $size = (Get-Item -LiteralPath $integrityPath).Length
         $sha256 = Get-Sha256 $integrityPath
+        if ($descriptor.Role -ne 'manifest') {
+            $declared = @($vlManifest.artifacts | Where-Object { [string]$_.role -eq $descriptor.Role })
+            if ($declared.Count -ne 1 -or [string]$declared[0].fileName -cne $descriptor.LocalName -or
+                [string]$declared[0].format -cne $descriptor.Format -or [long]$declared[0].size -ne [long]$size -or
+                [string]$declared[0].sha256 -cne $sha256) {
+                throw "PaddleOCR-VL manifest identity or integrity mismatch: $($descriptor.Role)"
+            }
+            if ($vlHasPrefill -and $descriptor.Role -eq 'prefill' -and $sha256 -ne '9247b437a1551652572b3e25162d4d86fc969edf12ae44577aa6fc75b9fc5bdc') {
+                throw 'The PaddleOCR-VL prefill graph is not the pinned decoder derivation.'
+            }
+        }
         $releaseArtifacts.Add([ordered]@{
             role = $descriptor.Role; modelId = $descriptor.ModelId; assetName = $descriptor.AssetName; localName = $descriptor.LocalName
             format = $descriptor.Format; size = [long]$size; sha256 = $sha256
@@ -202,7 +230,7 @@ $releaseCatalog = [ordered]@{
     notes = @(
         'Each ONNX model and dictionary is a separate release asset; consumers can download only the required files.',
         'PP-Structure single-graph assets are limited to standard ONNX inference graphs; declared multi-file generative bundles list every graph and tokenizer asset with independent size/SHA-256 verification.',
-        'PaddleOCR-VL 1.6 is an experimental four-graph Bundle; its catalog entry lists global Release asset names and Bundle-local filenames separately.',
+        "PaddleOCR-VL 1.6 is an experimental $vlGraphCount-graph Bundle; its catalog entry lists global Release asset names and Bundle-local filenames separately.",
         'The release tag is stable. New models are appended to this release and recorded in the catalog and release notes.'
     )
 }
@@ -259,7 +287,8 @@ if (-not $Check) {
 }
 
 if ($Check) {
-    Write-Output "DEPLOYSHARP_PADDLE_OCR_CHECK models=$($coreRows.Count + $documentRows.Count) core=$($coreRows.Count) ppStructure=$($documentRows.Count) stage=$stageRoot"
+    $vlAssetCount = if ($paddleOcrVlBundleRows.Count -gt 0) { @($paddleOcrVlBundleRows[0].artifacts).Count } else { 0 }
+    Write-Output "DEPLOYSHARP_PADDLE_OCR_CHECK models=$($coreRows.Count + $documentRows.Count) core=$($coreRows.Count) ppStructure=$($documentRows.Count) vlGraphs=$vlGraphCount vlAssets=$vlAssetCount stage=$stageRoot"
     return
 }
 Write-Output "DEPLOYSHARP_PADDLE_OCR_ASSETS_READY tag=$Tag core=$($coreRows.Count) ppStructure=$($documentRows.Count) assets=$($assetFiles.Count) stage=$stageRoot"
@@ -314,7 +343,7 @@ if ($chart2TableBundleRows.Count -gt 0) {
 }
 if ($paddleOcrVlBundleRows.Count -gt 0) {
     $vlAssets = @($paddleOcrVlBundleRows | ForEach-Object { $_.artifacts } | ForEach-Object { $_.assetName })
-    $bodyLines.Add("Added $([DateTime]::UtcNow.ToString('yyyy-MM-dd')): experimental PaddleOCR-VL-1.6 four-graph ONNX generation bundle with the pinned tokenizer and manifest. Download the required files listed under paddleocr-vl/1.6 in the release catalog. Assets: " + ($vlAssets -join ', ') + '.')
+    $bodyLines.Add("Added $([DateTime]::UtcNow.ToString('yyyy-MM-dd')): experimental PaddleOCR-VL-1.6 $vlGraphCount-graph ONNX generation bundle with the pinned tokenizer and manifest. Download the required files listed under paddleocr-vl/1.6 in the release catalog. Assets: " + ($vlAssets -join ', ') + '.')
 }
 $body = $bodyLines -join "`n`n"
 $published = Invoke-RestMethod -Method Patch -Headers $headers -ContentType 'application/json' -Body (@{ name = 'DeploySharp PaddleOCR and PP-Structure Models'; draft = $false; prerelease = $true; body = $body } | ConvertTo-Json) -Uri ($api + '/releases/' + $releaseId)

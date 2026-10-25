@@ -2,9 +2,9 @@
 
 The exporter writes the four ONNX graphs in one directory while the pinned
 tokenizer assets normally live beside the original checkpoint. This helper
-copies only the eight required files, refuses a conflicting existing target,
-and writes a manifest consumed by PaddleOcrVlBundleManifest before backend
-session creation.
+copies the eight required files and, when requested, the pinned derived
+prefill graph. It refuses a conflicting target and writes the manifest
+consumed by PaddleOcrVlBundleManifest before backend Session creation.
 """
 
 from __future__ import annotations
@@ -18,7 +18,10 @@ import shutil
 
 REVISION = "c5630abae1d940eafe0697512a0325494b02ab42"
 SCHEMA = "deploysharp-paddleocr-vl-bundle-v1"
+PREFILL_SCHEMA = "deploysharp-paddleocr-vl-bundle-v2"
 BUNDLE_ID = "paddleocr-vl/1.6"
+DECODER_SHA256 = "823f85b8f634f8522d11c4e0b33bed8edfcd18da65f643f0aa43ca496fd138ad"
+PREFILL_SHA256 = "9247b437a1551652572b3e25162d4d86fc969edf12ae44577aa6fc75b9fc5bdc"
 
 FILES = (
     ("vision", "vision.onnx", "onnx", "graph"),
@@ -62,17 +65,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--graph-root", type=Path, required=True, help="Directory containing vision.onnx, embedding.onnx, decoder.onnx and head.onnx")
     parser.add_argument("--tokenizer-root", type=Path, required=True, help="Pinned checkpoint directory containing tokenizer sidecars")
-    parser.add_argument("--output-root", type=Path, required=True, help="Directory to receive the eight files and manifest")
+    parser.add_argument("--output-root", type=Path, required=True, help="Directory to receive the Bundle files and manifest")
+    parser.add_argument("--prefill-graph", type=Path, help="Pinned derived prefill.onnx; enables the five-graph v2 Bundle")
     args = parser.parse_args()
 
     graph_root = args.graph_root.resolve()
     tokenizer_root = args.tokenizer_root.resolve()
+    prefill_graph = args.prefill_graph.resolve(strict=True) if args.prefill_graph else None
+    if prefill_graph:
+        if sha256(graph_root / "decoder.onnx") != DECODER_SHA256 or sha256(prefill_graph) != PREFILL_SHA256:
+            raise ValueError("The decoder and prefill graphs must match the pinned PaddleOCR-VL-1.6 derivation")
+    files = list(FILES)
+    if prefill_graph:
+        files.insert(4, ("prefill", "prefill.onnx", "onnx", "prefill"))
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
 
     rows = []
-    for role, file_name, file_format, source_group in FILES:
-        source = (graph_root if source_group == "graph" else tokenizer_root) / file_name
+    for role, file_name, file_format, source_group in files:
+        source = prefill_graph if source_group == "prefill" else (graph_root if source_group == "graph" else tokenizer_root) / file_name
         if not source.is_file():
             raise FileNotFoundError(f"Missing PaddleOCR-VL Bundle source: {source}")
         target = output_root / file_name
@@ -86,15 +97,21 @@ def main() -> None:
         })
 
     manifest = {
-        "schemaVersion": SCHEMA,
+        "schemaVersion": PREFILL_SCHEMA if prefill_graph else SCHEMA,
         "bundleId": BUNDLE_ID,
         "modelId": BUNDLE_ID,
         "checkpointRevision": REVISION,
         "artifacts": rows,
     }
     manifest_path = output_root / "paddleocr-vl-bundle.json"
+    manifest_text = json.dumps(manifest, ensure_ascii=True, indent=2) + "\n"
+    if manifest_path.exists():
+        if manifest_path.read_text(encoding="utf-8") != manifest_text:
+            raise FileExistsError(f"Refusing to replace a different Bundle manifest: {manifest_path}")
+        print(json.dumps({"bundleRoot": str(output_root), "manifest": str(manifest_path), "artifacts": rows}, ensure_ascii=True, indent=2))
+        return
     temporary = manifest_path.with_name(manifest_path.name + ".tmp")
-    temporary.write_text(json.dumps(manifest, ensure_ascii=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+    temporary.write_text(manifest_text, encoding="utf-8", newline="\n")
     temporary.replace(manifest_path)
     print(json.dumps({"bundleRoot": str(output_root), "manifest": str(manifest_path), "artifacts": rows}, ensure_ascii=True, indent=2))
 

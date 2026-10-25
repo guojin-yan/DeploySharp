@@ -450,9 +450,13 @@ namespace JYPPX.DeploySharp.ModelFactory
         {
             if (!string.Equals(bundle.ModelId, "paddleocr-vl/1.6", StringComparison.Ordinal)) return;
             string[] required = { "vision", "embedding", "decoder", "head", "tokenizer-model", "tokenizer-json", "tokenizer-config", "chat-template", "manifest" };
-            if (bundle.Artifacts.Count != required.Length || required.Any(role => !bundle.Artifacts.Any(value => string.Equals(value.Role, role, StringComparison.Ordinal))))
-                throw new FormatException("The PaddleOCR-VL 1.6 release bundle must contain four ONNX graphs, four tokenizer files, and one manifest.");
-            foreach (string role in new[] { "vision", "embedding", "decoder", "head" })
+            bool hasPrefill = bundle.Artifacts.Any(value => string.Equals(value.Role, "prefill", StringComparison.Ordinal));
+            if (bundle.Artifacts.Count != required.Length + (hasPrefill ? 1 : 0)
+                || required.Any(role => !bundle.Artifacts.Any(value => string.Equals(value.Role, role, StringComparison.Ordinal))))
+                throw new FormatException("The PaddleOCR-VL 1.6 release bundle must contain four or five ONNX graphs, four tokenizer files, and one manifest.");
+            IEnumerable<string> graphRoles = hasPrefill ? new[] { "vision", "embedding", "decoder", "head", "prefill" }
+                : new[] { "vision", "embedding", "decoder", "head" };
+            foreach (string role in graphRoles)
             {
                 PaddleOcrReleaseBundleArtifact artifact = bundle.Artifacts.First(value => value.Role == role);
                 if (artifact.Format != "onnx" || !string.Equals(artifact.LocalName, role + ".onnx", StringComparison.Ordinal)) throw new FormatException("PaddleOCR-VL graph role has an invalid local file or format: " + role);

@@ -22,10 +22,53 @@ public sealed class PaddleOcrVlBundleManifestTests
         PaddleOcrVlBundleManifest manifest = PaddleOcrVlBundleManifest.Parse(json);
         Assert.AreEqual(PaddleOcrVlBundleManifest.OfficialBundleId, manifest.BundleId);
         Assert.AreEqual(8, manifest.Artifacts.Count);
+        Assert.IsFalse(manifest.HasPrefillGraph);
         IReadOnlyDictionary<string, string> paths = manifest.VerifyFiles(directory.Path);
         Assert.AreEqual(Path.Combine(directory.Path, "vision.onnx"), paths["vision"]);
         Assert.AreEqual(Path.Combine(directory.Path, "tokenizer.model"), manifest.GetVerifiedPath(directory.Path, "tokenizer-model"));
         Assert.AreEqual(PaddleOcrVlBundleManifest.OfficialCheckpointRevision, manifest.CheckpointRevision);
+    }
+
+    [TestMethod]
+    public void FiveGraphSchemaVerifiesPrefillAndRejectsTampering()
+    {
+        using var directory = new TemporaryDirectory();
+        string json = WriteBundle(directory.Path, includePrefill: true);
+        PaddleOcrVlBundleManifest manifest = PaddleOcrVlBundleManifest.Parse(json);
+        Assert.AreEqual(PaddleOcrVlBundleManifest.PrefillSchemaVersion, manifest.SchemaVersion);
+        Assert.IsTrue(manifest.HasPrefillGraph);
+        Assert.AreEqual(9, manifest.Artifacts.Count);
+        Assert.AreEqual(Path.Combine(directory.Path, "prefill.onnx"), manifest.GetVerifiedPath(directory.Path, "prefill"));
+
+        File.AppendAllText(Path.Combine(directory.Path, "prefill.onnx"), "tampered");
+        VisualException exception = Assert.ThrowsExactly<VisualException>(() => manifest.VerifyFiles(directory.Path));
+        StringAssert.Contains(exception.Message, "prefill.onnx");
+    }
+
+    [TestMethod]
+    public void RejectsPrefillWhenManifestSchemaAndRolesDisagree()
+    {
+        using var directory = new TemporaryDirectory();
+        string legacyWithPrefill = WriteBundle(directory.Path, includePrefill: true,
+            schemaVersion: PaddleOcrVlBundleManifest.OfficialSchemaVersion);
+        Assert.ThrowsExactly<VisualException>(() => PaddleOcrVlBundleManifest.Parse(legacyWithPrefill));
+        string missingPrefill = WriteBundle(directory.Path, includePrefill: false,
+            schemaVersion: PaddleOcrVlBundleManifest.PrefillSchemaVersion);
+        Assert.ThrowsExactly<VisualException>(() => PaddleOcrVlBundleManifest.Parse(missingPrefill));
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalIntegration")]
+    public void PinnedFiveGraphBundleVerifiesAllRealFiles()
+    {
+        string? root = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FIVE_GRAPH_BUNDLE_ROOT");
+        if (string.IsNullOrWhiteSpace(root)) Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_VL_FIVE_GRAPH_BUNDLE_ROOT to the pinned local Bundle.");
+        PaddleOcrVlBundleManifest manifest = PaddleOcrVlBundleManifest.LoadFromDirectory(root!);
+        Assert.IsTrue(manifest.HasPrefillGraph);
+        IReadOnlyDictionary<string, string> paths = manifest.VerifyFiles(root!);
+        Assert.AreEqual(9, paths.Count);
+        Assert.AreEqual("9247b437a1551652572b3e25162d4d86fc969edf12ae44577aa6fc75b9fc5bdc",
+            manifest.GetRequiredArtifact("prefill").Sha256);
     }
 
     [TestMethod]
@@ -50,9 +93,9 @@ public sealed class PaddleOcrVlBundleManifestTests
         StringAssert.Contains(exception.Message, "vision");
     }
 
-    private static string WriteBundle(string root)
+    private static string WriteBundle(string root, bool includePrefill = false, string? schemaVersion = null)
     {
-        var files = new (string Role, string Name, string Format)[]
+        var files = new List<(string Role, string Name, string Format)>
         {
             ("vision", "vision.onnx", "onnx"),
             ("embedding", "embedding.onnx", "onnx"),
@@ -63,6 +106,7 @@ public sealed class PaddleOcrVlBundleManifestTests
             ("tokenizer-config", "tokenizer_config.json", "json"),
             ("chat-template", "chat_template.jinja", "jinja")
         };
+        if (includePrefill) files.Insert(4, ("prefill", "prefill.onnx", "onnx"));
         var rows = new List<object>();
         foreach ((string role, string name, string format) in files)
         {
@@ -73,7 +117,7 @@ public sealed class PaddleOcrVlBundleManifestTests
         }
         string manifest = JsonSerializer.Serialize(new
         {
-            schemaVersion = PaddleOcrVlBundleManifest.OfficialSchemaVersion,
+            schemaVersion = schemaVersion ?? (includePrefill ? PaddleOcrVlBundleManifest.PrefillSchemaVersion : PaddleOcrVlBundleManifest.OfficialSchemaVersion),
             bundleId = PaddleOcrVlBundleManifest.OfficialBundleId,
             modelId = PaddleOcrVlBundleManifest.OfficialBundleId,
             checkpointRevision = PaddleOcrVlBundleManifest.OfficialCheckpointRevision,

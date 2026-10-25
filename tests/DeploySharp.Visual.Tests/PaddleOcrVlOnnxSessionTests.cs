@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Models;
+using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
 using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
@@ -100,6 +104,27 @@ public sealed class PaddleOcrVlOnnxSessionTests
         int calls = graphs.Vision.Calls;
         Assert.ThrowsExactly<VisualException>(() => mismatched.Generate(input, Tokenizer.Value));
         Assert.AreEqual(calls, graphs.Vision.Calls);
+    }
+
+    [TestMethod]
+    public void VerifiedFiveGraphBundleCreatesPrefillAndRejectsTamperingBeforeSessionCreation()
+    {
+        using var directory = new BundleDirectory();
+        using var graphs = new Graphs();
+        var provider = new BundleProvider(graphs);
+        using var registry = new BackendRegistry();
+        registry.Register(provider);
+        var request = new BackendRequest(BackendCapabilities.TensorInference, BundleProvider.Backend);
+        using (PaddleOcrVlOnnxSession session = PaddleOcrVlOnnxSession.CreateVerified(registry, directory.Path, request))
+            CollectionAssert.AreEqual(new[] { 65 }, session.Generate(Input(), Tokenizer.Value,
+                new PaddleOcrVlGenerationOptions(1)).TokenIds.ToArray());
+        CollectionAssert.AreEqual(new[] { "vision", "embedding", "decoder", "head", "prefill" }, provider.CreatedRoles.ToArray());
+        Assert.AreEqual(1, graphs.Prefill.Calls);
+        Assert.IsTrue(graphs.AllWithPrefill.All(value => value.Disposals == 1));
+
+        File.AppendAllText(System.IO.Path.Combine(directory.Path, "prefill.onnx"), "tampered");
+        Assert.ThrowsExactly<VisualException>(() => PaddleOcrVlOnnxSession.CreateVerified(registry, directory.Path, request));
+        Assert.AreEqual(5, provider.CreatedRoles.Count);
     }
 
     [TestMethod]
@@ -321,6 +346,72 @@ public sealed class PaddleOcrVlOnnxSessionTests
         public void Dispose() { }
         private static TensorDescriptor P(string name, TensorElementType type, params long[] dimensions) => new(name, type, new TensorShape(dimensions));
         private static Tensor<float> F(TensorShape shape, float value) => new(shape, Enumerable.Repeat(value, checked((int)shape.GetElementCount())).ToArray(), TensorBufferOwnership.Transfer);
+    }
+
+    private sealed class BundleDirectory : IDisposable
+    {
+        internal BundleDirectory()
+        {
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "deploysharp-vl-five-graph-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path);
+            string[] roles = { "vision", "embedding", "decoder", "head", "prefill" };
+            string[] sidecars = { "tokenizer.model", "tokenizer.json", "tokenizer_config.json", "chat_template.jinja" };
+            var artifacts = new List<object>();
+            foreach (string role in roles)
+                Add(role, role + ".onnx", "onnx");
+            Add("tokenizer-model", sidecars[0], "sentencepiece");
+            Add("tokenizer-json", sidecars[1], "json");
+            Add("tokenizer-config", sidecars[2], "json");
+            Add("chat-template", sidecars[3], "jinja");
+            void Add(string role, string name, string format)
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(role + "-fixture");
+                File.WriteAllBytes(System.IO.Path.Combine(Path, name), bytes);
+                artifacts.Add(new { role, fileName = name, format, size = bytes.Length,
+                    sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant() });
+            }
+            File.WriteAllText(System.IO.Path.Combine(Path, "paddleocr-vl-bundle.json"), JsonSerializer.Serialize(new
+            {
+                schemaVersion = PaddleOcrVlBundleManifest.PrefillSchemaVersion,
+                bundleId = PaddleOcrVlBundleManifest.OfficialBundleId,
+                modelId = PaddleOcrVlBundleManifest.OfficialBundleId,
+                checkpointRevision = PaddleOcrVlBundleManifest.OfficialCheckpointRevision,
+                artifacts
+            }));
+        }
+        internal string Path { get; }
+        public void Dispose() { if (Directory.Exists(Path)) Directory.Delete(Path, true); }
+    }
+
+    private sealed class BundleProvider : IBackendProvider
+    {
+        internal static readonly BackendId Backend = new BackendId("paddleocr-vl-five-graph-test");
+        private readonly Graphs _graphs;
+        internal readonly List<string> CreatedRoles = new();
+        internal BundleProvider(Graphs graphs)
+        {
+            _graphs = graphs;
+            Descriptor = new BackendDescriptor(Backend, "PaddleOCR-VL test", "1", BackendCapabilities.TensorInference,
+                new[] { "onnx" });
+        }
+        public BackendDescriptor Descriptor { get; }
+        public bool CanCreate(ModelArtifact artifact, BackendRequest request)
+            => artifact.Format == "onnx" && Descriptor.Supports(request.RequiredCapabilities);
+        public IInferenceSession CreateSession(ModelArtifact artifact, BackendRequest request, SessionOptions options)
+        {
+            string role = artifact.ModelId.Value.Split('/').Last();
+            CreatedRoles.Add(role);
+            return role switch
+            {
+                "vision" => _graphs.Vision,
+                "embedding" => _graphs.Embedding,
+                "decoder" => _graphs.Decoder,
+                "head" => _graphs.Head,
+                "prefill" => _graphs.Prefill,
+                _ => throw new InvalidOperationException("Unexpected PaddleOCR-VL role: " + role)
+            };
+        }
+        public void Dispose() { }
     }
 
     private sealed class Fake : IInferenceSession

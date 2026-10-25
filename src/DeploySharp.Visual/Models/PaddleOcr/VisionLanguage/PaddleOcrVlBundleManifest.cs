@@ -33,12 +33,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public string Sha256 { get; }
     }
 
-    /// <summary>Loads and verifies the fixed PaddleOCR-VL-1.6 four-graph Bundle manifest. / 加载并校验固定 PaddleOCR-VL-1.6 四图 Bundle manifest。</summary>
+    /// <summary>Loads and verifies a fixed PaddleOCR-VL-1.6 four- or five-graph Bundle manifest. / 加载并校验固定 PaddleOCR-VL-1.6 四图或五图 Bundle manifest。</summary>
     /// <remarks>The manifest is intentionally independent of the GitHub catalog. It can be shipped beside a local Bundle and verified before a backend Session is created. / Manifest 独立于 GitHub catalog，可随本地 Bundle 分发，并在创建后端 Session 前完成校验。</remarks>
     public sealed class PaddleOcrVlBundleManifest
     {
         /// <summary>Gets the supported local manifest schema. / 获取支持的本地 manifest schema。</summary>
         public const string OfficialSchemaVersion = "deploysharp-paddleocr-vl-bundle-v1";
+        /// <summary>Gets the schema for a Bundle with a separate no-past prefill graph. / 获取含独立无 Past Prefill 图的 Bundle schema。</summary>
+        public const string PrefillSchemaVersion = "deploysharp-paddleocr-vl-bundle-v2";
         /// <summary>Gets the supported fixed Bundle ID. / 获取支持的固定 Bundle ID。</summary>
         public const string OfficialBundleId = "paddleocr-vl/1.6";
         /// <summary>Gets the pinned official checkpoint revision. / 获取固定官方 checkpoint revision。</summary>
@@ -47,6 +49,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         private static readonly string[] RequiredRoles =
         {
             "vision", "embedding", "decoder", "head",
+            "tokenizer-model", "tokenizer-json", "tokenizer-config", "chat-template"
+        };
+        private static readonly string[] PrefillRoles =
+        {
+            "vision", "embedding", "decoder", "head", "prefill",
             "tokenizer-model", "tokenizer-json", "tokenizer-config", "chat-template"
         };
 
@@ -70,8 +77,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public string ModelId { get; }
         /// <summary>Gets the pinned upstream checkpoint revision. / 获取固定上游 checkpoint revision。</summary>
         public string CheckpointRevision { get; }
+        /// <summary>Gets whether this Bundle includes a separately verified prefill graph. / 获取此 Bundle 是否包含独立校验的 Prefill 图。</summary>
+        public bool HasPrefillGraph => SchemaVersion == PrefillSchemaVersion;
         /// <summary>Gets all graph and tokenizer files in role order. / 获取按角色排列的全部图和 tokenizer 文件。</summary>
-        public IReadOnlyList<PaddleOcrVlBundleArtifact> Artifacts => RequiredRoles.Select(GetRequiredArtifact).ToArray();
+        public IReadOnlyList<PaddleOcrVlBundleArtifact> Artifacts => (HasPrefillGraph ? PrefillRoles : RequiredRoles).Select(GetRequiredArtifact).ToArray();
 
         /// <summary>Gets one required artifact descriptor. / 获取一个必需工件描述。</summary>
         public PaddleOcrVlBundleArtifact GetRequiredArtifact(string role)
@@ -107,7 +116,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     string bundle = Required(root, "bundleId");
                     string model = Required(root, "modelId");
                     string revision = Required(root, "checkpointRevision");
-                    if (!string.Equals(schema, OfficialSchemaVersion, StringComparison.Ordinal)) throw Invalid("Unsupported PaddleOCR-VL Bundle manifest schema: " + schema);
+                    if (schema != OfficialSchemaVersion && schema != PrefillSchemaVersion) throw Invalid("Unsupported PaddleOCR-VL Bundle manifest schema: " + schema);
                     if (!string.Equals(bundle, OfficialBundleId, StringComparison.Ordinal)) throw Invalid("The PaddleOCR-VL Bundle ID is not the pinned 1.6 Bundle: " + bundle);
                     if (!string.Equals(model, OfficialBundleId, StringComparison.Ordinal)) throw Invalid("The PaddleOCR-VL model ID does not match the Bundle ID: " + model);
                     if (!string.Equals(revision, OfficialCheckpointRevision, StringComparison.Ordinal)) throw Invalid("The PaddleOCR-VL checkpoint revision is not the pinned 1.6 revision: " + revision);
@@ -130,12 +139,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                         artifacts.Add(new PaddleOcrVlBundleArtifact(role, fileName, format, size, sha));
                     }
 
-                    if (artifacts.Count != RequiredRoles.Length || RequiredRoles.Any(role => !roles.Contains(role)))
-                        throw Invalid("The PaddleOCR-VL 1.6 manifest must contain exactly the four graphs and four tokenizer files.");
+                    string[] expectedRoles = schema == PrefillSchemaVersion ? PrefillRoles : RequiredRoles;
+                    if (artifacts.Count != expectedRoles.Length || expectedRoles.Any(role => !roles.Contains(role)))
+                        throw Invalid("The PaddleOCR-VL 1.6 manifest does not contain the graph and tokenizer roles required by its schema.");
                     CheckFormat(artifacts, "vision", "vision.onnx", "onnx");
                     CheckFormat(artifacts, "embedding", "embedding.onnx", "onnx");
                     CheckFormat(artifacts, "decoder", "decoder.onnx", "onnx");
                     CheckFormat(artifacts, "head", "head.onnx", "onnx");
+                    if (schema == PrefillSchemaVersion) CheckFormat(artifacts, "prefill", "prefill.onnx", "onnx");
                     CheckFormat(artifacts, "tokenizer-model", "tokenizer.model", "sentencepiece");
                     CheckFormat(artifacts, "tokenizer-json", "tokenizer.json", "json");
                     CheckFormat(artifacts, "tokenizer-config", "tokenizer_config.json", "json");
