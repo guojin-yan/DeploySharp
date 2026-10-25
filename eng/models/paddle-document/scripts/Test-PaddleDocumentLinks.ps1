@@ -81,6 +81,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-formula-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-chart-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-seal-20261025.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-spotting-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-reading-order-20261025.md',
     'docs/articles/model-support.md',
     'samples/02-visual/paddleocr-vl-document/README.md',

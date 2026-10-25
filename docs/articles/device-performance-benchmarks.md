@@ -67,6 +67,17 @@ Seal 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5
 
 该切片描述生成延迟和 Token 一致性，不是印章检测/识别准确率、GPU 性能或完整 VL 矩阵。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 Spotting CPU 有界切片（2026-10-25）
+
+Spotting 的官方生成序列明显长于其它 VL 任务，因此采用单独的 `1 warm-up + 5 measured` 有界协议；每次均检查 EOS、286 个 Token 和完整文本与官方参考一致。完整环境、输入 SHA、逐次样本和边界见 [Spotting 有界延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-spotting-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Spotting | ONNX Runtime CPU | 132,459.805 | 134,999.906 | 132,422.615 | 134,963.577 | 1 / 5 | 通过 |
+| PaddleOCR-VL-1.6 Spotting | OpenVINO CPU | 106,346.339 | 112,527.683 | 106,319.102 | 112,468.801 | 1 / 5 | 通过 |
+
+该行是长序列的有界 CPU 观察，不纳入其它任务的标准 `5+50` 统计，也不是 Spotting 准确率、GPU/TensorRT/OpenCV DNN 或跨设备性能结论。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境

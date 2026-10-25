@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-formal-latency-v1",
+  "generatedUtc": "2026-10-25T10:46:02.266316+00:00",
+  "status": "passed",
+  "backend": "onnxruntime",
+  "device": "cpu",
+  "task": "spotting",
+  "model": {
+    "id": "paddleocr-vl/1.6",
+    "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+    "referenceId": "spotting-demo-1",
+    "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+    "bundleSha256": {
+      "vision": "940600685c0b69453bbfb28371fee5c89782c2ea47fb0ab6f52876ad9f46dd4f",
+      "embedding": "1d268b40696b0f1ebf8ee67f6706a9e2feb3b64b71484d6fa87ec624ff734d86",
+      "decoder": "823f85b8f634f8522d11c4e0b33bed8edfcd18da65f643f0aa43ca496fd138ad",
+      "head": "8663d1fd3f2ca1cf2af308c76fadefcee12e65a6a1f402603a81085daa6d0148"
+    }
+  },
+  "input": {
+    "rgbFile": "spotting-demo-1.rgb.bin",
+    "rgbSha256": "8af74fa7cc066c6bc58beea3907bd3e010e6a266884eec1bfc017de63312e082",
+    "patchSha256": "7e2c1e21f40f59c5b06ecc79cffd08da912ef8c5253559de9fc040877dd7fce4",
+    "sourceSize": [
+      500,
+      500
+    ],
+    "grid": [
+      72,
+      72
+    ]
+  },
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "framework": ".NET 10.0.12",
+    "architecture": "X64",
+    "processorCount": 16,
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "sourceCommit": "1136083"
+  },
+  "protocol": {
+    "warmupCount": 1,
+    "measurementCount": 5,
+    "sessions": 1,
+    "threads": 4,
+    "timing": "Wall clock surrounds GenerateAsync; Session elapsed is the production result.Elapsed and excludes caller preprocessing and session queue.",
+    "percentile": "Nearest-rank",
+    "inputReuse": "One immutable prepared RGB input reused for each generation; model/session creation is excluded."
+  },
+  "warmups": [
+    {
+      "index": 0,
+      "tokenCount": 286,
+      "sessionMilliseconds": 143982.8797
+    }
+  ],
+  "samples": [
+    {
+      "WallClockMilliseconds": 126181.5518,
+      "SessionMilliseconds": 126158.6376,
+      "TokenCount": 286
+    },
+    {
+      "WallClockMilliseconds": 124104.0499,
+      "SessionMilliseconds": 124098.7616,
+      "TokenCount": 286
+    },
+    {
+      "WallClockMilliseconds": 132459.8047,
+      "SessionMilliseconds": 132422.6147,
+      "TokenCount": 286
+    },
+    {
+      "WallClockMilliseconds": 133668.3115,
+      "SessionMilliseconds": 133623.1962,
+      "TokenCount": 286
+    },
+    {
+      "WallClockMilliseconds": 134999.9061,
+      "SessionMilliseconds": 134963.577,
+      "TokenCount": 286
+    }
+  ],
+  "summary": {
+    "wallClockP50Milliseconds": 132459.8047,
+    "wallClockP95Milliseconds": 134999.9061,
+    "sessionP50Milliseconds": 132422.6147,
+    "sessionP95Milliseconds": 134963.577,
+    "tokenCount": 286
+  },
+  "boundary": "Fixed PaddleOCR-VL-1.6 single-task correctness and repeated latency on one host. Every invocation reached EOS and matched reference tokens/text. This is not labelled quality, page-level quality, backend ranking, clock-locked performance, GPU/TensorRT/OpenCV support, memory-soak or cross-device evidence."
+}
