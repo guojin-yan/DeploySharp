@@ -34,6 +34,17 @@
 
 这仍是一项固定单图任务的 CPU 延迟记录，不能代表 VL 其它任务、页面级质量、GPU/TensorRT/OpenCV DNN 或跨设备排名。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 Formula CPU 切片（2026-10-25）
+
+Formula 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、80 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Formula 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-formula-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Formula | ONNX Runtime CPU | 8,446.139 | 8,878.795 | 8,445.385 | 8,877.865 | 5 / 50 | 通过 |
+| PaddleOCR-VL-1.6 Formula | OpenVINO CPU | 8,186.035 | 8,600.807 | 8,185.575 | 8,600.297 | 5 / 50 | 通过 |
+
+该切片描述生成延迟和 Token 一致性，不是公式语义准确率、渲染等价性、GPU 性能或完整 VL 矩阵。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
