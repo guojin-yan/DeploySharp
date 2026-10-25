@@ -37,6 +37,16 @@ internal static class Program
         PaddleOcrVlTaskRouter router = PaddleOcrVlTaskRouter.CreatePpStructure(overrides, ParseOptionalTask(spec.UnmatchedCategoryTask));
         if (!automaticTasks && (spec.TaskByCategory != null || spec.UnmatchedCategoryTask != null))
             throw new InvalidDataException("Category routing options require task=Auto.");
+        if (!automaticTasks && spec.ReadingOrder != null)
+            throw new InvalidDataException("This example's readingOrder option requires task=Auto.");
+        PaddleDocumentReadingOrderOptions? readingOrder = null;
+        if (spec.ReadingOrder != null)
+        {
+            if (!Enum.TryParse(spec.ReadingOrder.Mode, true, out PaddleDocumentReadingOrderMode mode)
+                || !Enum.IsDefined(typeof(PaddleDocumentReadingOrderMode), mode)) throw new InvalidDataException("Unknown reading-order mode.");
+            readingOrder = new PaddleDocumentReadingOrderOptions(mode, spec.ReadingOrder.RightToLeft,
+                spec.ReadingOrder.MinimumColumnGapRatio, spec.ReadingOrder.MinimumRowGapRatio, spec.ReadingOrder.MaximumDepth);
+        }
         if (spec.LayoutDetector != null && (!automaticTasks || spec.Pages.Any(page => page.Regions.Length != 0)))
             throw new InvalidDataException("layoutDetector requires task=Auto and no manual regions.");
         if (spec.LayoutDetector != null && (spec.LayoutDetector.ModelId != "paddle-doc/pp-doclayout-l" || string.IsNullOrWhiteSpace(spec.LayoutDetector.Path)))
@@ -78,7 +88,7 @@ internal static class Program
         var generationOptions = new PaddleOcrVlGenerationOptions(maximumNewTokens: spec.MaximumNewTokens, timeout: TimeSpan.FromMinutes(15));
         IPaddleDocumentPipelineStage vl = automaticTasks
             ? OpenCvPaddleOcrVlLayoutStage.FromSession(vlModel, "onnxruntime-cpu", router, session, tokenizer,
-                page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true)
+                page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true, readingOrderOptions: readingOrder)
             : OpenCvPaddleOcrVlRegionStage.FromSession(vlModel, "onnxruntime-cpu", task, session, tokenizer,
                 page => ((PageInput)page.Source).Source, generationOptions, continueOnRegionFailure: true);
         var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { layout, vl });
@@ -94,7 +104,7 @@ internal static class Program
             using var detector = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(modelPath), registry, request, VisualTaskId.LayoutDetection), request);
             var detectedPipeline = OpenCvPaddleOcrVlDocumentPipeline.FromSession(detector, model, vlModel, "onnxruntime-cpu", session, tokenizer,
                 generationOptions, router, maximumRegions: spec.LayoutDetector.MaximumRegions,
-                maximumPagePixels: spec.LayoutDetector.MaximumPagePixels, continueOnRegionFailure: true);
+                maximumPagePixels: spec.LayoutDetector.MaximumPagePixels, continueOnRegionFailure: true, readingOrderOptions: readingOrder);
             results = await detectedPipeline.RunManyAsync(pages, parallelism, cancellation.Token);
         }
         else
@@ -160,7 +170,16 @@ internal static class Program
         public Dictionary<string, string?>? TaskByCategory { get; set; }
         public string? UnmatchedCategoryTask { get; set; }
         public LayoutDetectorSpec? LayoutDetector { get; set; }
+        public ReadingOrderSpec? ReadingOrder { get; set; }
         public PageSpec[] Pages { get; set; } = Array.Empty<PageSpec>();
+    }
+    private sealed class ReadingOrderSpec
+    {
+        public string Mode { get; set; } = "RecursiveXyCut";
+        public bool RightToLeft { get; set; }
+        public double MinimumColumnGapRatio { get; set; } = .02;
+        public double MinimumRowGapRatio { get; set; } = .005;
+        public int MaximumDepth { get; set; } = 32;
     }
     private sealed class LayoutDetectorSpec
     {

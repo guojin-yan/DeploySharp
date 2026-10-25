@@ -478,7 +478,7 @@ foreach (var region in mixed.Executions)
 
 混合结果保留全部原版面区域和索引，分别统计 `SucceededCount`、`FailedCount`、`SkippedCount`；跳过项不准备 Patch、不执行生成、不伪造空文本。单区域失败保留已选任务，成功结果的模型模块按实际任务设置，页面聚合模块为 `VisionLanguageParsing`。`Succeeded` 表示生成返回结果，仍须检查 `FinishReason`，`MaxTokens` 可能意味着截断。JSON/Markdown 导出保留任务、状态、源框和原文。它沿用输入顺序，不重新排序，也不会识别没有检测出的区域。[多页示例](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)提供 `task=Auto` 的完整 manifest。
 
-同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux ORT CPU 已有六任务单图生成证据；OpenVINO、TensorRT、CUDA、OpenCV DNN 推理、页面级质量和正式性能矩阵不能由这个适配器自动获得。
+同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍按其 Session 合同串行化生成。固定 1.6 的 Linux ORT CPU、指定内存配置下的 Linux OpenVINO CPU 已有六任务单图生成证据；Windows VL、TensorRT、完整 CUDA/OpenCV DNN 推理、页面级质量和正式性能矩阵仍需单独验证。
 
 ### 真实版面检测与 VL 共享解码底图
 
@@ -509,7 +509,42 @@ Console.WriteLine(PaddleDocumentPipelineExport.ToMarkdown(parsed));
 
 `maximumPagePixels`（默认 128 Mi 像素）在解码后、检测前检查；它不能防止解码器自身分配。`maximumRegions`（默认 64）包括将跳过的所有候选，超限在任何 VL 生成前失败，不静默丢弃区域。VL 最小/最大像素、上下文、KV、Token 和超时仍独立生效。返回的 `Elapsed` 覆盖文档阶段，不含包装器外层首次解码；完整调用耗时请在 `RunAsync` 外计时。
 
-区域保留检测器顺序和 `layoutModelRegionIndex`，不声称推断阅读顺序。默认图片类跳过，版面模型的漏检/错分类会直接影响解析覆盖；允许覆盖类别映射，但不会自动消除重叠文本或补回漏检。完整配置见[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
+区域保留检测器顺序和 `layoutModelRegionIndex`，另可选择下述几何阅读顺序视图。默认图片类跳过，版面模型的漏检/错分类会直接影响解析覆盖；允许覆盖类别映射，但不会自动消除重叠文本或补回漏检。完整配置见[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
+
+#### 多栏阅读顺序与稳定区域索引
+
+混合任务阶段 `PaddleOcrVlLayoutStage`、`OpenCvPaddleOcrVlLayoutStage` 和整页入口 `OpenCvPaddleOcrVlDocumentPipeline` 接受 `readingOrderOptions`。省略时仍使用检测器或调用方的原始区域顺序；开启后新增阅读视图，生成委托仍按原索引调用，不重新推理、不复制图片或 Token 张量。
+
+```csharp
+var order = new PaddleDocumentReadingOrderOptions(
+    mode: PaddleDocumentReadingOrderMode.RecursiveXyCut,
+    rightToLeft: false,
+    minimumColumnGapRatio: 0.02,
+    minimumRowGapRatio: 0.005,
+    maximumDepth: 32);
+var document = OpenCvPaddleOcrVlDocumentPipeline.FromSession(
+    layoutPipeline, detectorModel, parsingModel, "onnxruntime-cpu",
+    session, tokenizer, readingOrderOptions: order);
+var parsed = await document.RunAsync(OpenCvImageSource.FromFile(imagePath));
+var page = parsed.GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(
+    PaddleDocumentModule.VisionLanguageParsing);
+foreach (var region in page.ReadingExecutions)
+    Console.WriteLine($"sourceIndex={region.RegionIndex}; status={region.Status}; text={region.Result?.Text}");
+```
+
+| 策略 | 适用场景与行为 |
+|---|---|
+| `SourceOrder` / 空配置 | 上游已提供可信顺序，直接保持来源顺序 |
+| `TopToBottom` | 单栏页面，按上边界、阅读方向起始边、原索引排序 |
+| `RecursiveXyCut` | 正向多栏文档，优先沿贯通的垂直空白分栏；跨栏标题/表格阻挡栏间隙时，沿水平空白分区后递归 |
+
+两个间隙参数始终相对**整页**宽/高，默认分别为 2% 和 0.5%；不是相对当前子区，也不是字符间距阈值。`rightToLeft` 反转栏顺序和水平并列项，上下方向仍保持从上到下。没有可用空白、区域重叠或达到最大递归深度时，剩余区域按 `TopToBottom` 排列。几何模式拒绝非有限、空、完全位于页外的框；部分越界框只对排序几何裁边，原 `SourceRegion.Bounds` 不变。
+
+`Executions` 和 JSON `payload.regions` 始终保持原索引，`ReadingOrder` / JSON `payload.readingOrder` 是包含所有区域的索引排列，`ReadingExecutions` 是相同执行对象的阅读视图。失败与跳过项同样保留，因此不能将阅读位置当成原 `RegionIndex`。Markdown 按阅读视图导出，仍标注原索引；整页顺序与多页输入顺序分别管理。
+
+应用有自己的排序模型时，可直接调用 `PaddleDocumentReadingOrder.GetIndices(layout.Regions, pageSize, order)`，或给 `PaddleDocumentVisionLanguageRoutedPageResult` 的 `readingOrder` 参数传入自定义排列。构造时会复制并检查索引必须完整、唯一且在范围内；不接受静默丢弃跳过项或重复区域。
+
+该功能是可配置的几何启发式，已有多栏/跨栏/方向/导出与原生适配器合同测试，**不是官方阅读顺序模型或独立标注集准确率结论**。任意重叠布局、竖排、复杂浮动插图和表格单元格内部顺序需另行处理；排序不会修复检测漏检、去重、改变 VL 文本或调整模型精度。
 
 外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
 

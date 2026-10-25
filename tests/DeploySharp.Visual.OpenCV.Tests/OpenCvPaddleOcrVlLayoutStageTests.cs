@@ -37,7 +37,7 @@ public sealed class OpenCvPaddleOcrVlLayoutStageTests
                 Assert.IsTrue(router.TryGetTask(categories[index], out var task));
                 Assert.AreEqual(task, input.ImagePlan.Task);
                 return Generation(input, "page-" + context.Page.PageIndex + "-region-" + index);
-            }, minimumPixels: 784, maximumPixels: 784);
+            }, minimumPixels: 784, maximumPixels: 784, readingOrderOptions: new(rightToLeft: true));
         var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { Layout(source, categories), stage });
         var pages = new[] { new PaddleDocumentPage(source, new VisualSize(140, 20), 7), new PaddleDocumentPage(source, new VisualSize(140, 20), 3) };
         var results = await pipeline.RunManyConcurrentAsync(pages, 2);
@@ -51,6 +51,8 @@ public sealed class OpenCvPaddleOcrVlLayoutStageTests
             Assert.AreEqual(6, result.SucceededCount);
             Assert.AreEqual(1, result.SkippedCount);
             Assert.AreEqual(0, result.FailedCount);
+            CollectionAssert.AreEqual(new[] { 6, 5, 4, 3, 2, 1, 0 }, result.ReadingOrder.ToArray());
+            Assert.AreSame(result.Executions[6], result.ReadingExecutions[0]);
             Assert.IsTrue(result.Executions[1].Skipped);
             Assert.AreEqual(2, result.Executions[2].Result!.RegionIndex);
             Assert.AreEqual(PaddleOcrVlTask.FormulaRecognition, result.Executions[2].Result!.Task);

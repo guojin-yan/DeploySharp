@@ -75,6 +75,7 @@ public sealed class OpenCvPaddleOcrVlDocumentPipelineTests
             using var registry = Registry();
             using var layout = Layout(registry);
             int calls = 0;
+            var readingOrder = new PaddleDocumentReadingOrderOptions(PaddleDocumentReadingOrderMode.TopToBottom, rightToLeft: true);
             var pipeline = new OpenCvPaddleOcrVlDocumentPipeline(layout, LayoutModel(), VlModel(), "injected-test",
                 (context, region, index, input, token) =>
                 {
@@ -83,7 +84,7 @@ public sealed class OpenCvPaddleOcrVlDocumentPipelineTests
                     Assert.IsTrue(input.ImagePlan.SourceSize.Width > 0);
                     File.Delete(path); // Every later crop must still work without reopening the file.
                     return Task.FromResult(Generation(input, region.Category));
-                }, minimumPixels: 784, maximumPixels: 12544);
+                }, minimumPixels: 784, maximumPixels: 12544, readingOrderOptions: readingOrder);
             var result = await pipeline.RunAsync(source, 7);
             Assert.AreSame(source, result.Page.Source);
             Assert.AreEqual(new VisualSize(80, 40), result.Page.SourceSize);
@@ -95,6 +96,7 @@ public sealed class OpenCvPaddleOcrVlDocumentPipelineTests
             Assert.AreEqual(2, generated.SucceededCount);
             Assert.AreEqual(source.Sha256, detected.Metadata.InputSha256);
             Assert.AreEqual(source.Sha256, generated.Metadata.InputSha256);
+            CollectionAssert.AreEqual(PaddleDocumentReadingOrder.GetIndices(detected.Regions, result.Page.SourceSize, readingOrder).ToArray(), generated.ReadingOrder.ToArray());
             for (int index = 0; index < generated.Executions.Count; index++)
             {
                 Assert.AreEqual(detected.Regions[index].Bounds, generated.Executions[index].SourceRegion.Bounds);

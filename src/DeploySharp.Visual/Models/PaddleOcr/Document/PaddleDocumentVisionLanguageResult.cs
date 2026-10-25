@@ -278,9 +278,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Contains all source regions of a mixed-task VL page, including failures and skips in original layout order. / 保存混合任务 VL 页面的全部源区域，按原版面顺序保留失败和跳过记录。</summary>
     public sealed class PaddleDocumentVisionLanguageRoutedPageResult : PaddleDocumentModuleResult
     {
+        /// <summary>Retains the original result constructor signature with source-order output. / 保留使用源顺序输出的原结果构造函数签名。</summary>
+        public PaddleDocumentVisionLanguageRoutedPageResult(PaddleDocumentResultMetadata metadata,
+            IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions, IReadOnlyList<string>? warnings)
+            : this(metadata, executions, warnings, null) { }
+
         /// <summary>Creates a mixed-task result with page and per-region provenance validation. / 创建验证页面与各区域来源的混合任务结果。</summary>
         public PaddleDocumentVisionLanguageRoutedPageResult(PaddleDocumentResultMetadata metadata,
-            IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions, IReadOnlyList<string>? warnings = null)
+            IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> executions, IReadOnlyList<string>? warnings = null,
+            IReadOnlyList<int>? readingOrder = null)
             : base(PaddleDocumentModule.VisionLanguageParsing, metadata, RegionsFor(executions), warnings)
         {
             if (metadata.Model.Module != Module) throw new ArgumentException("The routed-page model must use VisionLanguageParsing.", nameof(metadata));
@@ -298,6 +304,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 copied.Add(execution);
             }
             Executions = copied.AsReadOnly();
+            ReadingOrder = PaddleDocumentReadingOrder.CopyIndices(readingOrder, copied.Count);
+            ReadingExecutions = ReadingOrder.Select(index => copied[index]).ToList().AsReadOnly();
             SucceededCount = copied.Count(value => value.Succeeded);
             SkippedCount = copied.Count(value => value.Skipped);
             FailedCount = copied.Count - SucceededCount - SkippedCount;
@@ -305,6 +313,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
         /// <summary>Gets every original layout region's execution in original index order. / 获取每个原版面区域的执行记录，保持原索引顺序。</summary>
         public IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> Executions { get; }
+        /// <summary>Gets a permutation of source indices for reading/export, including skips and failures. Defaults to original order. / 获取用于阅读和导出的源索引排列，含跳过与失败项，默认使用原顺序。</summary>
+        public IReadOnlyList<int> ReadingOrder { get; }
+        /// <summary>Gets a reading-ordered view of the same execution objects; original indices and source geometry remain unchanged. / 获取相同执行对象的阅读顺序视图；原索引和源几何不变。</summary>
+        public IReadOnlyList<PaddleDocumentVisionLanguageRegionExecution> ReadingExecutions { get; }
         /// <summary>Gets the count of returned generation results. / 获取返回生成结果的数量。</summary>
         public int SucceededCount { get; }
         /// <summary>Gets the count of isolated failures. / 获取隔离失败数量。</summary>

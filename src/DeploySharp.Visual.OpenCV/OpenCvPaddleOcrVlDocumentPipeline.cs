@@ -12,7 +12,7 @@ using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 namespace JYPPX.DeploySharp.Visual.OpenCV
 {
     /// <summary>Runs a real layout detector followed by category-routed VL generation, sharing one decoded image per page. / 运行真实版面检测，再按类别执行 VL 生成；每页共享一张解码底图。</summary>
-    /// <remarks>Owns transient decoded images only; detector, VL Session and tokenizer remain caller-owned. Preserves detector order, not inferred reading order. Concurrent calls require thread-safe caller callbacks. / 仅拥有临时解码图像；检测器、VL Session 和 Tokenizer 由调用方拥有。保留检测器顺序，不推断阅读顺序。并发调用要求委托线程安全。</remarks>
+    /// <remarks>Owns transient decoded images only; detector, VL Session and tokenizer remain caller-owned. Preserves detector indices with optional geometric reading order. Concurrent calls require thread-safe caller callbacks. / 仅拥有临时解码图像；检测器、VL Session 和 Tokenizer 由调用方拥有。保留检测器索引，可选择几何阅读排序；并发调用要求委托线程安全。</remarks>
     public sealed class OpenCvPaddleOcrVlDocumentPipeline
     {
         private readonly VisualPipeline _layout;
@@ -28,6 +28,18 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         private readonly int? _minimumPixels;
         private readonly int? _maximumPixels;
         private readonly bool _continueOnRegionFailure;
+        private readonly PaddleDocumentReadingOrderOptions? _readingOrderOptions;
+
+        /// <summary>Retains the original constructor signature with source-order output. / 保留使用源顺序输出的原构造函数签名。</summary>
+        public OpenCvPaddleOcrVlDocumentPipeline(VisualPipeline layout, PaddleDocumentModelDescriptor layoutModel,
+            PaddleDocumentModelDescriptor vlModel, string backend,
+            Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlPreparedInput, CancellationToken, Task<PaddleOcrVlGenerationResult>> generate,
+            PaddleOcrVlTaskRouter? router, OpenCvPaddleOcrVlInputFactory? inputFactory,
+            int maximumRegions, int maximumPagePixels, int? minimumPixels, int? maximumPixels,
+            Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, Exception, CancellationToken, Task<PaddleOcrVlGenerationResult>>? fallback,
+            bool continueOnRegionFailure)
+            : this(layout, layoutModel, vlModel, backend, generate, router, inputFactory, maximumRegions, maximumPagePixels,
+                minimumPixels, maximumPixels, fallback, continueOnRegionFailure, null) { }
 
         /// <summary>Creates a detector/VL pipeline with explicit page and region budgets. Uses the detector's actual selected preprocessing profile. / 使用明确页面及区域预算创建检测/VL 流水线，采用检测器实际选择的预处理 Profile。</summary>
         public OpenCvPaddleOcrVlDocumentPipeline(VisualPipeline layout, PaddleDocumentModelDescriptor layoutModel,
@@ -36,7 +48,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             PaddleOcrVlTaskRouter? router = null, OpenCvPaddleOcrVlInputFactory? inputFactory = null,
             int maximumRegions = 64, int maximumPagePixels = 128 * 1024 * 1024, int? minimumPixels = null, int? maximumPixels = null,
             Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, Exception, CancellationToken, Task<PaddleOcrVlGenerationResult>>? fallback = null,
-            bool continueOnRegionFailure = false)
+            bool continueOnRegionFailure = false, PaddleDocumentReadingOrderOptions? readingOrderOptions = null)
         {
             _layout = layout ?? throw new ArgumentNullException(nameof(layout));
             if (layoutModel == null) throw new ArgumentNullException(nameof(layoutModel));
@@ -57,14 +69,23 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             _maximumRegions = maximumRegions; _maximumPagePixels = maximumPagePixels;
             _minimumPixels = minimumPixels; _maximumPixels = maximumPixels;
             _fallback = fallback; _continueOnRegionFailure = continueOnRegionFailure;
+            _readingOrderOptions = readingOrderOptions;
         }
+
+        /// <summary>Retains the original Session factory signature with source-order output. / 保留使用源顺序输出的原 Session 工厂签名。</summary>
+        public static OpenCvPaddleOcrVlDocumentPipeline FromSession(VisualPipeline layout, PaddleDocumentModelDescriptor layoutModel,
+            PaddleDocumentModelDescriptor vlModel, string backend, PaddleOcrVlOnnxSession session, PaddleOcrVlTokenizer tokenizer,
+            PaddleOcrVlGenerationOptions? generationOptions, PaddleOcrVlTaskRouter? router,
+            int maximumRegions, int maximumPagePixels, int? minimumPixels, int? maximumPixels, bool continueOnRegionFailure)
+            => FromSession(layout, layoutModel, vlModel, backend, session, tokenizer, generationOptions, router,
+                maximumRegions, maximumPagePixels, minimumPixels, maximumPixels, continueOnRegionFailure, null);
 
         /// <summary>Creates a detector/VL pipeline around a caller-owned Session and tokenizer. / 使用调用方拥有的 Session 和 Tokenizer 创建检测/VL 流水线。</summary>
         public static OpenCvPaddleOcrVlDocumentPipeline FromSession(VisualPipeline layout, PaddleDocumentModelDescriptor layoutModel,
             PaddleDocumentModelDescriptor vlModel, string backend, PaddleOcrVlOnnxSession session, PaddleOcrVlTokenizer tokenizer,
             PaddleOcrVlGenerationOptions? generationOptions = null, PaddleOcrVlTaskRouter? router = null,
             int maximumRegions = 64, int maximumPagePixels = 128 * 1024 * 1024, int? minimumPixels = null, int? maximumPixels = null,
-            bool continueOnRegionFailure = false)
+            bool continueOnRegionFailure = false, PaddleDocumentReadingOrderOptions? readingOrderOptions = null)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
@@ -72,7 +93,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             return new OpenCvPaddleOcrVlDocumentPipeline(layout, layoutModel, vlModel, backend,
                 (context, region, index, input, token) => session.GenerateAsync(input, tokenizer, options, token), router,
                 maximumRegions: maximumRegions, maximumPagePixels: maximumPagePixels, minimumPixels: minimumPixels, maximumPixels: maximumPixels,
-                continueOnRegionFailure: continueOnRegionFailure);
+                continueOnRegionFailure: continueOnRegionFailure, readingOrderOptions: readingOrderOptions);
         }
 
         /// <summary>Infers source dimensions by decoding once, then detects and generates a page. / 解码一次取得源尺寸，然后执行版面检测和页面生成。</summary>
@@ -109,7 +130,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
                     });
                 var vl = new PaddleOcrVlLayoutStage(_vlModel, _backend, _router, _ => source.Sha256,
                     (context, region, index, task, current) => Task.FromResult(_inputs.CreateRegion(decoded, region.Bounds, task, _minimumPixels, _maximumPixels, current)),
-                    _generate, fallback: _fallback, continueOnRegionFailure: _continueOnRegionFailure);
+                    _generate, fallback: _fallback, continueOnRegionFailure: _continueOnRegionFailure, readingOrderOptions: _readingOrderOptions);
                 return await new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { detector, vl })
                     .RunAsync(new PaddleDocumentPage(source, decoded.SourceSize, pageIndex), token).ConfigureAwait(false);
             }

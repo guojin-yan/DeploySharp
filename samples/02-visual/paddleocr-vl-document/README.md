@@ -41,7 +41,7 @@
 
 ## 混合页面：按类别选择任务
 
-将 `task` 改为 `Auto`，同一页中的 `text`、`table`、`formula`、`chart`、`seal` 会分别运行对应 VL 任务，无需先分组或重复解码。`Auto` 只表示根据已有类别选择任务，不执行版面检测或推断阅读顺序。
+将 `task` 改为 `Auto`，同一页中的 `text`、`table`、`formula`、`chart`、`seal` 会分别运行对应 VL 任务，无需先分组或重复解码。`Auto` 表示根据已有类别选择任务；检测器和阅读排序通过各自的配置显式启用。
 
 ```json
 {
@@ -67,6 +67,24 @@
 如需对所有未匹配类别执行 OCR，可以增加 `"unmatchedCategoryTask": "TextRecognition"`。显式配置为 `null` 的类别（包括默认图片类）仍然跳过。固定任务模式下配置类别路由选项会报错，防止配置被静默忽略。
 
 混合结果使用 `PaddleDocumentVisionLanguageRoutedPageResult` / `VisionLanguageParsing`，每个原始区域都有连续不变的 `regionIndex`，并记录 `Succeeded`、`Failed` 或 `Skipped`。跳过项保留类别/源框/原因，不生成文本，也不计入失败；失败项保留已选任务。每个成功项单独保存实际任务、模块、Token、结束原因和输入 SHA。示例不会将跳过项视为错误，但任何生成失败或非 EOS 结果都会返回退出码 `1`。
+
+## 可选的多栏阅读顺序
+
+`task=Auto` 时，可在 `pages.json` 顶层加入以下配置，手工区域和自动检测两种模式都适用：
+
+```json
+"readingOrder": {
+  "mode": "RecursiveXyCut",
+  "rightToLeft": false,
+  "minimumColumnGapRatio": 0.02,
+  "minimumRowGapRatio": 0.005,
+  "maximumDepth": 32
+}
+```
+
+这是顶层字段片段，需要与 `task`、`pages` 等字段组成完整 JSON。省略 `readingOrder` 或使用 `mode=SourceOrder` 保持原顺序；单栏也可选 `TopToBottom`。XY-cut 按页面空白分栏/分区，优先读完一栏；`rightToLeft` 可反转栏顺序。阈值相对整页宽/高，重叠区域或深度耗尽时退回从上到下排序。
+
+JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `payload.readingOrder` 指定阅读索引，Markdown 按此顺序展示。跳过/失败项也占据其阅读位置，不重编号；生成委托仍按原索引执行。固定单任务模式配置 `readingOrder` 会明确报错。该功能不推理额外模型，不校正旋转、不去重或补回漏检；几何排序的合同测试不能代替独立页面的阅读顺序准确率。库接口和自定义排列见[详细教程](../../../docs/articles/visual-paddle-structure.md#多栏阅读顺序与稳定区域索引)。
 
 ## 自动检测版面，再执行 VL
 
@@ -122,4 +140,4 @@ Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-
 
 可将 manifest 的 `task` 设置为 `TextSpotting`；混合模式则在 `taskByCategory` 中配置 `"spotting": "TextSpotting"`，并提供对应区域。只有完整 EOS、标记配对及四边形都合法时 `CoordinatesAvailable=true`，本 OpenCV 适配器也会提供 `PageCoordinatesAvailable=true`。源框本身不被当作文字预测框；其它任务不因页面聚合的可用标记变成有坐标。
 
-表格的逻辑单元格/HTML 已有[官方对照及真实页面联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)，Spotting 见[坐标规则及实际 ROI 联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)和[详细使用教程](../../../docs/articles/visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。阅读顺序、单元格像素框、其它任务语义与独立标注质量仍需分别验证。
+表格的逻辑单元格/HTML 已有[官方对照及真实页面联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)，Spotting 见[坐标规则及实际 ROI 联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)和[详细使用教程](../../../docs/articles/visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。几何阅读排序现已可选；标注集阅读顺序质量、单元格像素框、其它任务语义与独立质量仍需分别验证。

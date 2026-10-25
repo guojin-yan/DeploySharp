@@ -128,6 +128,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                     coordinatesAvailable = routedPage.CoordinatesAvailable,
                     pageCoordinatesAvailable = routedPage.PageCoordinatesAvailable,
                     spatialOutputStatus = routedPage.SpatialOutputStatus,
+                    readingOrder = routedPage.ReadingOrder.ToArray(),
                     regions = routedPage.Executions.Select(ToVisionLanguageExecutionObject).ToArray()
                 };
             if (result is PaddleDocumentVisionLanguagePageResult visionLanguagePage)
@@ -179,10 +180,11 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 #if NET8_0 || NET9_0 || NET10_0
             else if (result is PaddleDocumentVisionLanguageRoutedPageResult routedPage)
             {
-                builder.AppendLine("- VL tasks: selected by layout category (original layout order)");
+                builder.AppendLine("- VL tasks: selected by layout category (reading order; original region indices)");
+                builder.Append("- Reading order: ").AppendLine(string.Join(", ", routedPage.ReadingOrder));
                 builder.Append("- Regional success/failure/skipped: ").Append(routedPage.SucceededCount).Append('/').Append(routedPage.FailedCount).Append('/').Append(routedPage.SkippedCount).AppendLine();
                 builder.Append("- Coordinates: ").AppendLine(routedPage.SpatialOutputStatus);
-                foreach (PaddleDocumentVisionLanguageRegionExecution execution in routedPage.Executions)
+                foreach (PaddleDocumentVisionLanguageRegionExecution execution in routedPage.ReadingExecutions)
                 {
                     builder.Append("- Region ").Append(execution.RegionIndex).Append(" / ").Append(execution.Task?.ToString() ?? "no-task").Append(" / ").Append(execution.Status).Append(": ");
                     if (execution.Result != null)

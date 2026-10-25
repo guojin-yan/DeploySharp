@@ -209,15 +209,61 @@ public sealed class PaddleOcrVlLayoutStageTests
             new[] { new PaddleDocumentVisionLanguageRegionExecution(0, region, wrongPage) }));
     }
 
+    [TestMethod]
+    public async Task ReadingOrderKeepsCallbacksAndSourceIndicesWhileExportsIncludeSkipsAndFailures()
+    {
+        var prepared = new List<int>();
+        var stage = Stage((context, region, index, task, token) => { prepared.Add(index); return Task.FromResult(Input(task, index)); },
+            (context, region, index, input, token) => index == 2 ? throw new InvalidOperationException("formula failed") : Task.FromResult(Generation(input, "region-" + index)),
+            continueOnRegionFailure: true, readingOrderOptions: new(rightToLeft: true));
+        PaddleDocumentPipelineResult page = await Run(stage, new[] { "text", "image", "formula", "text" });
+        var result = page.GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        CollectionAssert.AreEqual(new[] { 0, 2, 3 }, prepared);
+        CollectionAssert.AreEqual(new[] { 3, 2, 1, 0 }, result.ReadingOrder.ToArray());
+        for (int index = 0; index < result.Executions.Count; index++)
+        {
+            Assert.AreEqual(index, result.Executions[index].RegionIndex);
+            Assert.AreSame(result.Executions[3 - index], result.ReadingExecutions[index]);
+        }
+        Assert.IsTrue(result.ReadingExecutions[2].Skipped);
+        Assert.AreEqual(PaddleDocumentVisionLanguageRegionStatus.Failed, result.ReadingExecutions[1].Status);
+        using var json = JsonDocument.Parse(PaddleDocumentPipelineExport.ToJson(page));
+        JsonElement payload = json.RootElement.GetProperty("results")[1].GetProperty("payload");
+        CollectionAssert.AreEqual(new[] { 3, 2, 1, 0 }, payload.GetProperty("readingOrder").EnumerateArray().Select(value => value.GetInt32()).ToArray());
+        Assert.AreEqual(0, payload.GetProperty("regions")[0].GetProperty("regionIndex").GetInt32());
+        string markdown = PaddleDocumentPipelineExport.ToMarkdown(page);
+        StringAssert.Contains(markdown, "Reading order: 3, 2, 1, 0");
+        Assert.IsTrue(markdown.IndexOf("- Region 3 /", StringComparison.Ordinal) < markdown.IndexOf("- Region 2 /", StringComparison.Ordinal));
+        Assert.IsTrue(markdown.IndexOf("- Region 2 /", StringComparison.Ordinal) < markdown.IndexOf("- Region 1 /", StringComparison.Ordinal));
+        Assert.IsTrue(markdown.IndexOf("- Region 1 /", StringComparison.Ordinal) < markdown.IndexOf("- Region 0 /", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    public void CustomReadingOrderIsCopiedAndMustIncludeEveryRegionExactlyOnce()
+    {
+        var metadata = new PaddleDocumentResultMetadata(Model(PaddleDocumentModule.VisionLanguageParsing), "test", TimeSpan.Zero, Hash(14));
+        var executions = Enumerable.Range(0, 3).Select(index => PaddleDocumentVisionLanguageRegionExecution.CreateSkipped(index,
+            new PaddleDocumentRegion("image", 1, new RectangleF(index * 20, 4, 15, 12)), "skip")).ToArray();
+        int[] order = { 2, 0, 1 };
+        var result = new PaddleDocumentVisionLanguageRoutedPageResult(metadata, executions, readingOrder: order);
+        order[0] = 0;
+        CollectionAssert.AreEqual(new[] { 2, 0, 1 }, result.ReadingOrder.ToArray());
+        Assert.AreSame(executions[2], result.ReadingExecutions[0]);
+        Assert.ThrowsExactly<NotSupportedException>(() => ((IList<int>)result.ReadingOrder)[0] = 0);
+        foreach (int[] invalid in new[] { new[] { 1, 0 }, new[] { 0, 0, 2 }, new[] { 0, 1, 3 }, new[] { -1, 1, 2 } })
+            Assert.ThrowsExactly<ArgumentException>(() => new PaddleDocumentVisionLanguageRoutedPageResult(metadata, executions, readingOrder: invalid));
+        CollectionAssert.AreEqual(new[] { 0, 1, 2 }, new PaddleDocumentVisionLanguageRoutedPageResult(metadata, executions).ReadingOrder.ToArray());
+    }
+
     private static PaddleOcrVlTaskRouter Router() => PaddleOcrVlTaskRouter.CreatePpStructure(
         new Dictionary<string, PaddleOcrVlTask?> { ["spotting"] = PaddleOcrVlTask.TextSpotting });
     private static PaddleOcrVlLayoutStage Stage(
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, CancellationToken, Task<PaddleOcrVlPreparedInput>> prepare,
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlPreparedInput, CancellationToken, Task<PaddleOcrVlGenerationResult>> generate,
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, Exception, CancellationToken, Task<PaddleOcrVlGenerationResult>>? fallback = null,
-        bool continueOnRegionFailure = false)
+        bool continueOnRegionFailure = false, PaddleDocumentReadingOrderOptions? readingOrderOptions = null)
         => new(Model(PaddleDocumentModule.VisionLanguageParsing), "test", Router(), _ => Hash(14), prepare, generate,
-            fallback: fallback, continueOnRegionFailure: continueOnRegionFailure);
+            fallback: fallback, continueOnRegionFailure: continueOnRegionFailure, readingOrderOptions: readingOrderOptions);
 
     private static Task<PaddleDocumentPipelineResult> Run(PaddleOcrVlLayoutStage stage, string[] categories, CancellationToken token = default)
     {
