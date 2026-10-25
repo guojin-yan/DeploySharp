@@ -944,7 +944,7 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 Windows/Linux 的 ONNX Runtime CPU 和 Linux 的 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 Windows/Linux 的 ONNX Runtime CPU 和 Windows/Linux 的 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
 
 ```csharp
 using JYPPX.DeploySharp.Visual;
