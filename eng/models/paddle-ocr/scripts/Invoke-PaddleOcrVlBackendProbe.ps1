@@ -7,6 +7,7 @@ param(
     [ValidateRange(10, 3600)] [int] $TimeoutSeconds = 300,
     [ValidateSet('ImporterOrBuilder', 'ComponentInference')] [string] $ProbeMode = 'ImporterOrBuilder',
     [string] $EngineRoot,
+    [string] $FixtureRoot,
     [ValidateSet('10', '11')] [string] $TensorRtApi = '10',
     [string] $TensorRtRoot,
     [string] $CudaRoot,
@@ -23,11 +24,15 @@ foreach ($role in $Graph) {
     if (-not (Test-Path -LiteralPath (Join-Path $bundle "$role.onnx") -PathType Leaf)) { throw "Missing graph: $role" }
 }
 if ($ProbeMode -eq 'ComponentInference') {
-    if (@($Backend | Where-Object { $_ -ne 'TensorRT' }).Count -gt 0 -or @($Graph | Where-Object { $_ -notin @('embedding', 'head') }).Count -gt 0) {
-        throw 'ComponentInference currently accepts only TensorRT embedding/head.'
+    if (@($Backend | Where-Object { $_ -ne 'TensorRT' }).Count -gt 0) {
+        throw 'ComponentInference currently accepts only TensorRT.'
     }
     if (-not $EngineRoot) { throw 'ComponentInference requires EngineRoot from a prior successful Builder probe.' }
     $EngineRoot = (Resolve-Path -LiteralPath $EngineRoot).Path
+    if ($Graph -contains 'vision') {
+        if (-not $FixtureRoot) { throw 'Vision component inference requires FixtureRoot with the pinned OCR Patch.' }
+        $env:DEPLOYSHARP_PADDLEOCR_VL_PROBE_FIXTURE_ROOT = (Resolve-Path -LiteralPath $FixtureRoot).Path
+    }
 }
 if ($TensorRtRoot) { $env:JYPPX_TENSORRT_ROOT = (Resolve-Path -LiteralPath $TensorRtRoot).Path }
 if ($CudaRoot) { $env:JYPPX_CUDA_ROOT = (Resolve-Path -LiteralPath $CudaRoot).Path }
@@ -112,7 +117,7 @@ foreach ($selectedBackend in $Backend) {
         $summary = [ordered]@{ schemaVersion = 'deploysharp-paddleocr-vl-backend-probes-v1'; generatedUtc = [DateTimeOffset]::UtcNow.ToString('o')
             sourceCommit = $env:DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT; isolatedPerGraph = $true; timeoutSeconds = $TimeoutSeconds
             probeMode = $ProbeMode
-            boundary = if ($ProbeMode -eq 'ComponentInference') { 'Embedding/head component execution and fixed-input ONNX Runtime CPU comparison only. This does not validate vision, decoder, empty-KV prefill, token parity or full generation.' }
+            boundary = if ($ProbeMode -eq 'ComponentInference') { 'Selected component execution and fixed-input ONNX Runtime CPU comparison only. Untested graphs, empty-KV prefill, token parity and full generation remain unverified.' }
                 else { 'Importer/Builder only. Imported/built graphs are not admitted as full inference; timeouts and missing/unfinished reports remain unverified.' }
             graphs = @($rows) }
         $summary | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $output 'summary.json') -Encoding utf8
