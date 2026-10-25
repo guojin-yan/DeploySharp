@@ -170,7 +170,8 @@ The complete framework list and backend evidence are in [platform and backend su
 
 ## 🤖 Supported Models
 
-The catalog covers YOLO, DETR, PaddleOCR v5 Preview, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. PaddleOCR v4/v6 also have local pipeline evidence but are not presented as downloadable catalog entries. Use the [model support guide](docs/articles/model-support.md) for catalog IDs and the [model/backend matrix](docs/model-backend-verification-matrix.md) for current backend cells.
+The catalog covers YOLO, DETR, PaddleOCR v5 Preview, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. The complete core PaddleOCR v4/v5/v6 ONNX collection (including v6 tiny/small/medium tiers) and the converted PP-Structure document models are distributed individually in the stable [`models-paddleocr` release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr); its catalog and SHA-256 assets are not embedded in the NuGet packages. **PaddleOCR-VL 1.6 is also integrated as an experimental four-graph ONNX generation path** with OCR, table, formula, chart, spotting, seal, region, and multi-page workflows. The fixed bundle has six-task generation/parity evidence on Windows/Linux ONNX Runtime CPU and OpenVINO CPU, plus Windows RTX 3060 Laptop ONNX Runtime CUDA. CUDA still returns KV/logits to CPU; TensorRT still lacks full four-graph generation; the original vision/decoder graphs fail import on OpenCV DNN 5.0. The nine-file VL bundle is staged and catalogued locally for the same release; its remote assets still await release write access. Use the [PaddleOCR pipeline guide](docs/articles/visual-paddle-ocr3.md), [VL/PP-Structure guide](docs/articles/visual-paddle-structure.md), [model support guide](docs/articles/model-support.md) for catalog IDs, and the [model/backend matrix](docs/model-backend-verification-matrix.md) for current backend cells.
+
 
 ## 🧪 Example Series
 

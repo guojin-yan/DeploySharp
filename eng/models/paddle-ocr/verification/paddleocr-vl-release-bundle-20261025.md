@@ -6,9 +6,9 @@ Bundle ID: `paddleocr-vl/1.6`
 
 Publication status: the nine VL assets are staged and catalogued locally; remote upload to `models-paddleocr` is still pending. The current GitHub CLI account has repository `pull` permission only (`push=false`); an upload attempt returned HTTP `404`, and the remote asset list contains no `paddleocr-vl-1.6-*` files.
 
-## What was published
+## Prepared local assets
 
-The local release staging directory contains PaddleOCR-VL-1.6 as nine independently downloadable assets for the stable model release. The four ONNX graphs are the fixed dynamic FP32 export used by `PaddleOcrVlOnnxSession`; the remaining files are the pinned tokenizer, template and manifest sidecars.
+The local release staging directory contains nine separate PaddleOCR-VL-1.6 files prepared for the stable model release; remote download is not yet available. The four ONNX graphs are the fixed dynamic FP32 export used by `PaddleOcrVlOnnxSession`; the remaining files are the pinned tokenizer, template and manifest sidecars.
 
 | Role | Release asset | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
@@ -46,13 +46,15 @@ The support matrix remains deliberately narrower than the download catalog:
 | ONNX Runtime CPU | `✓` | Linux x64 six-task generation and exact token/text comparison |
 | OpenVINO CPU | `✓` | Linux x64 six-task generation and exact token/text comparison |
 | ONNX Runtime CUDA | `✓*` | Windows RTX 3060 fixed four-graph six-task generation and token/text parity; not a device-resident or cross-device performance claim. The earlier RTX2060 allocation experiment remains historical |
-| TensorRT | `△` | No complete four-graph real-model run |
-| OpenCV DNN | `△` | No complete four-graph real-model run |
+| TensorRT | `△` | Four Engines built; embedding/head ran and matched ORT CPU on fixed inputs, but no complete generation |
+| OpenCV DNN | `✗` | Original vision/decoder graphs fail OpenCV 5.0 dynamic-`Shape` import; embedding/head import only |
 | Windows OpenVINO CPU | `✓` | Windows 10.0.26200 six-task generation and exact token/text comparison; see the [Windows report](paddleocr-vl-windows-openvino-20261025.md) |
 
 `✓*` means the fixed Bundle completed generation and reference parity on the named host; it does not imply a complete performance matrix, device-resident KV/logits, locked clocks, quality benchmark or long-running stability.
 
 The export also retains a known boundary: one intermediate Spotting vision feature comparison exceeded the strict elementwise threshold, while the production greedy tokens/text matched. The release must therefore be described as an experimental PaddleOCR-VL ONNX generation path, not as universal multi-backend or intermediate-tensor parity.
+
+The exact OpenCV importer and TensorRT Builder/component-inference results are indexed in the [backend boundary report](paddleocr-vl-backend-boundary-20261025.md). Built TensorRT plans are device/runtime-specific test evidence, not downloadable Release assets.
 
 ## Reproduction
 
@@ -61,4 +63,4 @@ The export also retains a known boundary: one intermediate Spotting vision featu
 3. Run `samples/02-visual/paddleocr-vl-onnx` for a single prepared patch, or `samples/02-visual/paddleocr-vl-document` for decoded pages, region routing and JSON/Markdown export.
 4. Select ONNX Runtime CPU, OpenVINO CPU, or Windows ONNX Runtime CUDA on the named fixed Bundle. TensorRT and OpenCV DNN remain unavailable for this Bundle until each has a complete real-model run.
 
-This report records asset publication and client reproducibility. It does not convert experimental status into a general quality, latency or backend-support claim.
+This report records local asset staging and the client download contract; online upload/download verification remains open. It does not convert experimental status into a general quality, latency or backend-support claim.

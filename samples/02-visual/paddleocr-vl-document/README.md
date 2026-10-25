@@ -1,10 +1,12 @@
 # PaddleOCR-VL 页面区域与多页示例
 
+> 状态：四图 ONNX Bundle 已接入主库并在本地 staging catalog 中完成九个资产映射；远端 `models-paddleocr` Release 资产待具备写权限后上传。
+
 本示例把实际图片解码、版面区域裁剪、VL 生成和页面 JSON/Markdown 导出连成一个完整流程。支持 .NET 8/9/10 的实验性 PaddleOCR-VL-1.6 Bundle；当前使用 ONNX Runtime CPU，OpenCV 只负责图片解码和裁剪。
 
 ## 准备模型和页面
 
-模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。`tokenizer-root` 包含官方 tokenizer/template 文件，`bundle-root` 包含同一批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx`、`head.onnx`。Bundle 的来源、验证工厂和下载状态见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)；九个独立资产已经准备进入 `models-paddleocr` Release，远端上传完成后即可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 按需下载并校验。
+模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。`tokenizer-root` 包含官方 tokenizer/template 文件，`bundle-root` 包含同一批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx`、`head.onnx`。Bundle 的来源、验证工厂和下载状态见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)；九个独立资产已在本地暂存并完成 catalog 映射，远端 Release 尚未提供这些资产；具备写权限并完成上传后，才可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 按需下载并校验。
 
 新建 `pages.json`，为每页指定图片、解码后尺寸、唯一页码和已知区域。例如两页各有一块表格：
 

@@ -74,6 +74,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-cuda-head-group-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-release-bundle-cache-isolation-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-release-bundle-20261025.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-backend-boundary-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-table-20261025.md',
@@ -134,7 +135,11 @@ $output = [ordered]@{
     broken = $broken
     scope = 'Relative local Markdown links only; external URLs and generated runtime paths are not network-validated.'
 }
-$outputPathFull = [IO.Path]::GetFullPath((Join-Path $repoRoot $OutputPath))
+$outputPathFull = if ([IO.Path]::IsPathFullyQualified($OutputPath)) {
+    [IO.Path]::GetFullPath($OutputPath)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $repoRoot $OutputPath))
+}
 $outputDirectory = Split-Path -Parent $outputPathFull
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 $output | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $outputPathFull -Encoding utf8
