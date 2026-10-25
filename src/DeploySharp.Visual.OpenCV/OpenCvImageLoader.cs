@@ -10,17 +10,15 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     // 加载器拥有返回的 Mat；调用方必须在每条成功路径上释放它。
     internal static class OpenCvImageLoader
     {
-        internal static Mat Decode(OpenCvImageSource source)
+        internal static Mat Decode(OpenCvImageSource source, bool normalizeExifOrientation = true)
         {
             try
             {
-                // IMREAD_UNCHANGED intentionally preserves the encoded pixels, which also
-                // means OpenCV does not apply JPEG EXIF orientation. Normalize that metadata
-                // here so detector coordinates, recognition crops and displayed source pixels
-                // share one canonical top-left origin for both file and byte inputs.
+                // IMREAD_UNCHANGED preserves encoded pixels without applying JPEG EXIF orientation.
+                // Most callers need upright page coordinates; VL reference parity can opt into raw pixels.
                 byte[] encoded = source.ReadEncodedBytes();
                 Mat decoded = ImageCodecs.ImDecode(encoded, ImreadModes.Unchanged);
-                try { return ApplyExifOrientation(decoded, ExifOrientationReader.Read(encoded)); }
+                try { return normalizeExifOrientation ? ApplyExifOrientation(decoded, ExifOrientationReader.Read(encoded)) : decoded; }
                 catch { decoded.Dispose(); throw; }
             }
             catch (OpenCvException exception)

@@ -16,11 +16,22 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
     public sealed class OpenCvPaddleOcrVlInputFactory
     {
         private readonly PaddleOcrVlImageProcessor _processor;
+        private readonly bool _normalizeExifOrientation;
 
         /// <summary>Creates an OpenCV PaddleOCR-VL input factory. / 创建 OpenCV PaddleOCR-VL 输入工厂。</summary>
+        /// <param name="maximumSourcePixels">Maximum decoded source pixels. / 解码源图的最大像素数。</param>
         public OpenCvPaddleOcrVlInputFactory(int maximumSourcePixels = 128 * 1024 * 1024)
+            : this(maximumSourcePixels, normalizeExifOrientation: true)
+        {
+        }
+
+        /// <summary>Creates an OpenCV PaddleOCR-VL input factory with explicit EXIF handling. / 创建显式指定 EXIF 处理方式的 OpenCV PaddleOCR-VL 输入工厂。</summary>
+        /// <param name="maximumSourcePixels">Maximum decoded source pixels. / 解码源图的最大像素数。</param>
+        /// <param name="normalizeExifOrientation">True keeps page/display coordinates upright (the default); false preserves encoded JPEG pixels to match the official Pillow processor, which does not apply EXIF orientation. This option affects encoded-image entrypoints only; an already decoded page retains its owner's orientation. / true（默认）按 EXIF 统一页面/显示坐标；false 保留 JPEG 编码像素，以匹配不自动应用 EXIF 方向的官方 Pillow Processor。该选项仅影响编码图入口；已解码页面保留所有者的方向。</param>
+        public OpenCvPaddleOcrVlInputFactory(int maximumSourcePixels, bool normalizeExifOrientation)
         {
             _processor = new PaddleOcrVlImageProcessor(maximumSourcePixels);
+            _normalizeExifOrientation = normalizeExifOrientation;
         }
 
         /// <summary>Decodes and prepares one official task input. / 解码并准备一个官方任务输入。</summary>
@@ -33,7 +44,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             OpenCvRuntimePreflight.Check();
             try
             {
-                using (Mat decoded = OpenCvImageLoader.Decode(source))
+                using (Mat decoded = OpenCvImageLoader.Decode(source, _normalizeExifOrientation))
                 {
                     OpenCvImageLoader.Validate(decoded, source);
                     return CreateDecoded(decoded, task, minimumPixels, maximumPixels, source.Sha256, cancellationToken);

@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Geometry;
@@ -19,6 +22,100 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 [TestClass]
 public sealed class OpenCvPaddleOcrVlInputFactoryTests
 {
+    [TestMethod]
+    [TestCategory("ExternalAssets")]
+    public void EncodedOfficialImagesMatchPinnedPillowPatches()
+    {
+        string? fixtureRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_PROCESSOR_FIXTURES");
+        string? inputManifest = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_INPUT_MANIFEST");
+        string? imageRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_ENCODED_IMAGE_ROOT");
+        if (string.IsNullOrWhiteSpace(fixtureRoot) || string.IsNullOrWhiteSpace(inputManifest) || string.IsNullOrWhiteSpace(imageRoot))
+            Assert.Inconclusive("Set the VL processor fixture, input manifest and encoded image root paths.");
+        if (!BitConverter.IsLittleEndian) Assert.Inconclusive("The pinned float32 patches are little-endian.");
+
+        using JsonDocument fixtures = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot!, "fixtures.json")));
+        using JsonDocument inputs = JsonDocument.Parse(File.ReadAllBytes(inputManifest!));
+        Assert.AreEqual("deploysharp-paddleocr-vl-processor-fixtures-v1", fixtures.RootElement.GetProperty("schemaVersion").GetString());
+        Assert.AreEqual(PaddleOcrVlInputPlanning.OfficialV16Revision, fixtures.RootElement.GetProperty("checkpointRevision").GetString());
+        Assert.AreEqual(PaddleOcrVlInputPlanning.OfficialV16Revision, inputs.RootElement.GetProperty("checkpointRevision").GetString());
+        var rows = new List<object>();
+        var differences = new List<string>();
+        var factory = new OpenCvPaddleOcrVlInputFactory(128 * 1024 * 1024, normalizeExifOrientation: false);
+        string fullImageRoot = Path.GetFullPath(imageRoot!);
+        foreach (JsonElement fixture in fixtures.RootElement.GetProperty("cases").EnumerateArray())
+        {
+            string id = fixture.GetProperty("id").GetString()!;
+            JsonElement source = inputs.RootElement.GetProperty("cases").EnumerateArray()
+                .Single(item => item.GetProperty("id").GetString() == id);
+            string relativePath = source.GetProperty("image").GetString()!.Replace('/', Path.DirectorySeparatorChar);
+            string encodedPath = Path.GetFullPath(Path.Combine(fullImageRoot, relativePath));
+            Assert.IsTrue(encodedPath.StartsWith(fullImageRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase), id);
+            string encodedSha = Hash(File.ReadAllBytes(encodedPath));
+            Assert.AreEqual(source.GetProperty("sha256").GetString(), encodedSha, id);
+            Assert.AreEqual(fixture.GetProperty("inputSha256").GetString(), encodedSha, id);
+            string patchName = fixture.GetProperty("patchFile").GetString()!;
+            Assert.AreEqual(patchName, Path.GetFileName(patchName), id);
+            byte[] reference = File.ReadAllBytes(Path.Combine(fixtureRoot!, patchName));
+            Assert.AreEqual(fixture.GetProperty("patchSha256").GetString(), Hash(reference), id);
+            PaddleOcrVlTask task = Enum.Parse<PaddleOcrVlTask>(fixture.GetProperty("task").GetString()!);
+            PaddleOcrVlPreparedInput prepared = factory.CreateFromFile(encodedPath, task);
+            Assert.AreEqual(encodedSha, prepared.SourceSha256, id);
+            Assert.AreEqual(new TensorShape(fixture.GetProperty("patchShape").EnumerateArray().Select(value => value.GetInt64()).ToArray()),
+                prepared.PixelPatches.Shape, id);
+            float[] actualValues = prepared.PixelPatches.ToArray();
+            Assert.AreEqual(reference.Length, checked(actualValues.Length * sizeof(float)), id);
+            var actual = new byte[reference.Length];
+            Buffer.BlockCopy(actualValues, 0, actual, 0, actual.Length);
+            int bitDifferences = 0;
+            double maximumAbsoluteDifference = 0;
+            for (int index = 0; index < actualValues.Length; index++)
+            {
+                float expected = BitConverter.ToSingle(reference, index * sizeof(float));
+                if (BitConverter.SingleToInt32Bits(expected) != BitConverter.SingleToInt32Bits(actualValues[index])) bitDifferences++;
+                maximumAbsoluteDifference = Math.Max(maximumAbsoluteDifference, Math.Abs((double)expected - actualValues[index]));
+            }
+            PaddleOcrVlPreparedInput canonical = new OpenCvPaddleOcrVlInputFactory().CreateFromFile(encodedPath, task);
+            float[] canonicalValues = canonical.PixelPatches.ToArray();
+            int? canonicalDifferences = canonicalValues.Length == actualValues.Length
+                ? Enumerable.Range(0, actualValues.Length).Count(index =>
+                    BitConverter.SingleToInt32Bits(BitConverter.ToSingle(reference, index * sizeof(float))) != BitConverter.SingleToInt32Bits(canonicalValues[index]))
+                : null;
+            rows.Add(new { id, task = task.ToString(), fileName = Path.GetFileName(encodedPath), encodedSha256 = encodedSha,
+                format = Path.GetExtension(encodedPath).ToLowerInvariant(), patchValues = actualValues.Length,
+                officialPatchSha256 = Hash(reference), rawOpenCvPatchSha256 = Hash(actual), rawBitDifferences = bitDifferences,
+                canonicalPatchShape = canonical.PixelPatches.Shape.ToString(), canonicalBitDifferences = canonicalDifferences,
+                maximumAbsoluteDifference });
+            if (bitDifferences != 0) differences.Add(id + ": " + bitDifferences + " differing patch values");
+        }
+
+        string? reportPath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_ENCODED_PARITY_REPORT");
+        if (!string.IsNullOrWhiteSpace(reportPath))
+        {
+            string fullReportPath = Path.GetFullPath(reportPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullReportPath)!);
+            File.WriteAllText(fullReportPath, JsonSerializer.Serialize(new
+            {
+                schemaVersion = "deploysharp-paddleocr-vl-encoded-parity-v1", generatedUtc = DateTimeOffset.UtcNow,
+                status = differences.Count == 0 ? "all-bit-exact" : "decoder-differences-recorded",
+                checkpointRevision = PaddleOcrVlInputPlanning.OfficialV16Revision,
+                environment = new { os = RuntimeInformation.OSDescription, framework = RuntimeInformation.FrameworkDescription,
+                    architecture = RuntimeInformation.ProcessArchitecture.ToString(), processorCount = Environment.ProcessorCount,
+                    openCvManagedVersion = typeof(Mat).Assembly.GetName().Version?.ToString() },
+                fixtureManifestSha256 = Hash(File.ReadAllBytes(Path.Combine(fixtureRoot!, "fixtures.json"))),
+                inputManifestSha256 = Hash(File.ReadAllBytes(inputManifest!)),
+                visualAssemblySha256 = Hash(File.ReadAllBytes(typeof(PaddleOcrVlImageProcessor).Assembly.Location)),
+                openCvAssemblySha256 = Hash(File.ReadAllBytes(typeof(OpenCvPaddleOcrVlInputFactory).Assembly.Location)),
+                testAssemblySha256 = Hash(File.ReadAllBytes(typeof(OpenCvPaddleOcrVlInputFactoryTests).Assembly.Location)),
+                boundary = "Pinned encoded images through production OpenCV decode and managed patch preparation versus official Pillow patches; no VL generation, labelled quality or performance claim.",
+                cases = rows
+            }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        }
+        Assert.IsTrue(rows.Count > 0);
+        Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences));
+    }
+
+    private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+
     [TestMethod]
     public void DecodesOnceAndPreservesEncodedSourceIdentity()
     {

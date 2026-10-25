@@ -77,6 +77,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-backend-boundary-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-five-graph-bundle-20261026.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-table-20261025.md',

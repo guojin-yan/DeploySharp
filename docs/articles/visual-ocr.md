@@ -980,6 +980,8 @@ Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
 Console.WriteLine(result.Text);
 ```
 
+默认的 OpenCV 图像入口会应用 JPEG EXIF 方向，使页面、检测框与区域裁剪处于同一正向坐标系。若需要**复现官方 Pillow 原始像素输入**（`Image.open(...).convert("RGB")` 不自动应用 EXIF 方向），对单张编码图显式使用 `new OpenCvPaddleOcrVlInputFactory(128 * 1024 * 1024, normalizeExifOrientation: false)`。这个选项不改变已经解码的页面；从默认正向页面取得的区域坐标不能直接用于未旋转原图。[六任务编码图逐值对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md)覆盖五张 JPEG/PNG 源图，其中一张 JPEG 带 EXIF Orientation=3：原始模式的全部 `6,818,448` 个 Patch 值一致，默认模式在该图的 OCR/Spotting 输入上不同。这是预处理正确性，不是识别准确率或 OpenCV DNN 推理支持。
+
 如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：
 
 ```csharp
@@ -1002,7 +1004,7 @@ PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
 
 该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。Windows 10.0.26200 / OpenVINO 2026.2.1 也完成同一组六任务，见 [Windows OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md)。两次验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。两份报告的耗时都是单次观察，不是正式性能；也不代表 OpenVINO 页面联合质量、标注准确率或长期内存稳定性。
 
-Windows 10.0.26200 上的 ONNX Runtime CPU 也完成了相同六任务的托管 RGB 生成，六项均 EOS，Token/Text `6/6` 与官方参考一致；见 [Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。同一主机的 [ORT CUDA 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)也完成六项 EOS 与 Token/Text 精确对照，但 KV/logits 每步仍经过 CPU-owned 中间张量，且为未锁频单次观察；不能把它解释为全设备端 CUDA 流程或正式性能。每项只运行一次，耗时只是观察值，不是 P50/P95；RGB fixture 来自固定的上游/Pillow 路径，因此不代表 OpenCV 解码 parity。
+Windows 10.0.26200 上的 ONNX Runtime CPU 也完成了相同六任务的托管 RGB 生成，六项均 EOS，Token/Text `6/6` 与官方参考一致；见 [Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。同一主机的 [ORT CUDA 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)也完成六项 EOS 与 Token/Text 精确对照，但 KV/logits 每步仍经过 CPU-owned 中间张量，且为未锁频单次观察；不能把它解释为全设备端 CUDA 流程或正式性能。每项只运行一次，耗时只是观察值，不是 P50/P95；这些生成报告从上游/Pillow 解码的 RGB fixture 开始，编码图解码的独立对照见上文。
 
 该 16 GB、无 Swap 的 Linux 主机，异步复测仅限制托管堆仍出现 OOM；最终通过的进程同时设置了 `MALLOC_ARENA_MAX=2` 和 `DOTNET_GCHeapHardLimit=0x40000000`，进程峰值 RSS 约 `12.05 GiB`。复现时在启动命令上设置，按自己的主机与负载调整；1 GiB 是托管堆预算，不包括模型和 OpenVINO 原生内存，也不是进程总内存上限：
 
@@ -1018,7 +1020,7 @@ MALLOC_ARENA_MAX=2 DOTNET_GCHeapHardLimit=0x40000000 dotnet YourApplication.dll
 
 Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。Windows 10.0.26200 上使用同一四图 Bundle 和托管 RGB 处理再次完成六项，CPU 与 CUDA 结果均为 `6/6` 精确一致；见[Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)和 [Windows ORT CUDA 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)。Linux 对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
 
-图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。该六任务对照使用上游 Pillow 解码的 RGB；OpenCV 的 PNG 页面区域另有独立验证，JPEG 解码差异仍需单独检查。
+图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。编码 JPEG/PNG 的生产 OpenCV 入口现有上述独立 Patch 对照；尚未把任意图像格式、EXIF/ICC 变体或编码图到最终生成的全流程逐项验收。
 
 普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前已提供 `PaddleOcrVlDocumentStage` 的单图页面阶段、`PaddleOcrVlRegionStage` 的通用区域路由，以及 `OpenCvPaddleOcrVlRegionStage` 的实际页面裁剪适配器。OpenCV 阶段每页只解码一次，对多个区域复用底图，只复制各自的紧密 RGB，不重新编码 crop 或克隆整页。区域结果保留页码、区域索引、源坐标、输入 SHA、Token 和 EOS/截断状态，并可配置单区域失败隔离。[完整页面/多页示例](../../samples/02-visual/paddleocr-vl-document/README.md)提供图片与区域 manifest、取消、页面并发和 JSON/Markdown 导出；[PP-Structure 用法](visual-paddle-structure.md#paddleocr-vl-原始任务接入页面和多页编排)说明如何接在已有版面阶段之后。
 
